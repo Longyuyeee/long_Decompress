@@ -1,0 +1,539 @@
+{
+  "scope": "Separate three-round native engine observations; same payload manifests, OS cache not flushed, no significant whole-engine speedup demonstrated. Not desktop/transaction/performance percentage evidence.",
+  "before": {
+    "schema_version": 1,
+    "generated_at": "2026-10-16T17:21:06.307Z",
+    "scope": "native_zip_engine_without_window_or_transaction",
+    "git": {
+      "commit": "f2a22b23f925af540918f543ab23f5079c12e421",
+      "dirty_at_start": false,
+      "commit_at_end": "f2a22b23f925af540918f543ab23f5079c12e421",
+      "dirty_at_end": false
+    },
+    "machine": {
+      "platform": "win32",
+      "release": "10.0.22621",
+      "architecture": "x64",
+      "cpu": "AMD Ryzen 7 9700X 8-Core Processor             ",
+      "logical_processors": 16,
+      "memory_bytes": 50588549120
+    },
+    "toolchain": {
+      "rustc": "rustc 1.93.1 (01f6ddf75 2026-02-11)",
+      "cargo": "cargo 1.93.1 (083ac5135 2025-12-15)"
+    },
+    "conditions": {
+      "iterations": 3,
+      "root": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant",
+      "cache": "not_flushed",
+      "scenario_order": [
+        "large",
+        "small",
+        "mixed_media"
+      ],
+      "profile": "release",
+      "cpu_usage": null,
+      "peak_memory": null,
+      "io_counters": null,
+      "ui_latency": null,
+      "note": "Observation only; not an A/B comparison or end-to-end desktop benchmark."
+    },
+    "summary": {
+      "large": {
+        "compression_ms": {
+          "median": 558.9345999999999,
+          "min": 555.4766,
+          "max": 569.7312
+        },
+        "extraction_ms": {
+          "median": 43.2127,
+          "min": 40.550799999999995,
+          "max": 44.9581
+        }
+      },
+      "small": {
+        "compression_ms": {
+          "median": 181.6704,
+          "min": 178.1962,
+          "max": 196.9724
+        },
+        "extraction_ms": {
+          "median": 149.3315,
+          "min": 146.02609999999999,
+          "max": 213.57319999999999
+        }
+      },
+      "mixed_media": {
+        "compression_ms": {
+          "median": 25.4758,
+          "min": 25.3153,
+          "max": 26.9437
+        },
+        "extraction_ms": {
+          "median": 9.126999999999999,
+          "min": 8.7486,
+          "max": 12.5536
+        }
+      }
+    },
+    "samples": [
+      {
+        "schema_version": 1,
+        "scenario": "large",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "24b9edb517aea6c83c79b66b8cdca7a5d3097c6d975c6076cc03beb96093d2ce",
+        "input_bytes": 33554432,
+        "file_count": 1,
+        "archive_bytes": 33559833,
+        "compression_ms": 555.4766,
+        "extraction_ms": 43.2127,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 1
+      },
+      {
+        "schema_version": 1,
+        "scenario": "small",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "5ce0da3cd4b2626b467749d08ade147e421cef4544d68d8ec3070dbe0af56c7d",
+        "input_bytes": 4096000,
+        "file_count": 1000,
+        "archive_bytes": 4215022,
+        "compression_ms": 181.6704,
+        "extraction_ms": 213.57319999999999,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 1
+      },
+      {
+        "schema_version": 1,
+        "scenario": "mixed_media",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "ce0b9eb40a0a20eee28994ea7f5e5911b64a9c72fc3ccda58d19f73dabcfcb9a",
+        "input_bytes": 2782924,
+        "file_count": 35,
+        "archive_bytes": 1183080,
+        "compression_ms": 25.3153,
+        "extraction_ms": 8.7486,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 1
+      },
+      {
+        "schema_version": 1,
+        "scenario": "large",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "24b9edb517aea6c83c79b66b8cdca7a5d3097c6d975c6076cc03beb96093d2ce",
+        "input_bytes": 33554432,
+        "file_count": 1,
+        "archive_bytes": 33559833,
+        "compression_ms": 558.9345999999999,
+        "extraction_ms": 44.9581,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 2
+      },
+      {
+        "schema_version": 1,
+        "scenario": "small",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "5ce0da3cd4b2626b467749d08ade147e421cef4544d68d8ec3070dbe0af56c7d",
+        "input_bytes": 4096000,
+        "file_count": 1000,
+        "archive_bytes": 4215022,
+        "compression_ms": 178.1962,
+        "extraction_ms": 146.02609999999999,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 2
+      },
+      {
+        "schema_version": 1,
+        "scenario": "mixed_media",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "ce0b9eb40a0a20eee28994ea7f5e5911b64a9c72fc3ccda58d19f73dabcfcb9a",
+        "input_bytes": 2782924,
+        "file_count": 35,
+        "archive_bytes": 1183080,
+        "compression_ms": 25.4758,
+        "extraction_ms": 9.126999999999999,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 2
+      },
+      {
+        "schema_version": 1,
+        "scenario": "large",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "24b9edb517aea6c83c79b66b8cdca7a5d3097c6d975c6076cc03beb96093d2ce",
+        "input_bytes": 33554432,
+        "file_count": 1,
+        "archive_bytes": 33559833,
+        "compression_ms": 569.7312,
+        "extraction_ms": 40.550799999999995,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 3
+      },
+      {
+        "schema_version": 1,
+        "scenario": "small",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "5ce0da3cd4b2626b467749d08ade147e421cef4544d68d8ec3070dbe0af56c7d",
+        "input_bytes": 4096000,
+        "file_count": 1000,
+        "archive_bytes": 4215022,
+        "compression_ms": 196.9724,
+        "extraction_ms": 149.3315,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 3
+      },
+      {
+        "schema_version": 1,
+        "scenario": "mixed_media",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "ce0b9eb40a0a20eee28994ea7f5e5911b64a9c72fc3ccda58d19f73dabcfcb9a",
+        "input_bytes": 2782924,
+        "file_count": 35,
+        "archive_bytes": 1183080,
+        "compression_ms": 26.9437,
+        "extraction_ms": 12.5536,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 3
+      }
+    ]
+  },
+  "after": {
+    "schema_version": 1,
+    "generated_at": "2026-10-16T17:25:47.205Z",
+    "scope": "native_zip_engine_without_window_or_transaction",
+    "git": {
+      "commit": "dfe0c1bf5fcbd95250b61084c3bfea709a8154da",
+      "dirty_at_start": false,
+      "commit_at_end": "dfe0c1bf5fcbd95250b61084c3bfea709a8154da",
+      "dirty_at_end": false
+    },
+    "machine": {
+      "platform": "win32",
+      "release": "10.0.22621",
+      "architecture": "x64",
+      "cpu": "AMD Ryzen 7 9700X 8-Core Processor             ",
+      "logical_processors": 16,
+      "memory_bytes": 50588549120
+    },
+    "toolchain": {
+      "rustc": "rustc 1.93.1 (01f6ddf75 2026-02-11)",
+      "cargo": "cargo 1.93.1 (083ac5135 2025-12-15)"
+    },
+    "conditions": {
+      "iterations": 3,
+      "root": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant",
+      "cache": "not_flushed",
+      "scenario_order": [
+        "large",
+        "small",
+        "mixed_media"
+      ],
+      "profile": "release",
+      "cpu_usage": null,
+      "peak_memory": null,
+      "io_counters": null,
+      "ui_latency": null,
+      "note": "Observation only; not an A/B comparison or end-to-end desktop benchmark."
+    },
+    "summary": {
+      "large": {
+        "compression_ms": {
+          "median": 561.7558,
+          "min": 549.0129999999999,
+          "max": 640.0238
+        },
+        "extraction_ms": {
+          "median": 44.820899999999995,
+          "min": 43.8952,
+          "max": 55.112899999999996
+        }
+      },
+      "small": {
+        "compression_ms": {
+          "median": 194.37199999999999,
+          "min": 181.8021,
+          "max": 247.0535
+        },
+        "extraction_ms": {
+          "median": 152.31369999999998,
+          "min": 151.6833,
+          "max": 158.9227
+        }
+      },
+      "mixed_media": {
+        "compression_ms": {
+          "median": 27.1093,
+          "min": 25.278,
+          "max": 37.4332
+        },
+        "extraction_ms": {
+          "median": 10.6092,
+          "min": 9.244499999999999,
+          "max": 12.5429
+        }
+      }
+    },
+    "samples": [
+      {
+        "schema_version": 1,
+        "scenario": "large",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "24b9edb517aea6c83c79b66b8cdca7a5d3097c6d975c6076cc03beb96093d2ce",
+        "input_bytes": 33554432,
+        "file_count": 1,
+        "archive_bytes": 33559833,
+        "compression_ms": 561.7558,
+        "extraction_ms": 43.8952,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 1
+      },
+      {
+        "schema_version": 1,
+        "scenario": "small",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "5ce0da3cd4b2626b467749d08ade147e421cef4544d68d8ec3070dbe0af56c7d",
+        "input_bytes": 4096000,
+        "file_count": 1000,
+        "archive_bytes": 4215022,
+        "compression_ms": 194.37199999999999,
+        "extraction_ms": 158.9227,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 1
+      },
+      {
+        "schema_version": 1,
+        "scenario": "mixed_media",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "ce0b9eb40a0a20eee28994ea7f5e5911b64a9c72fc3ccda58d19f73dabcfcb9a",
+        "input_bytes": 2782924,
+        "file_count": 35,
+        "archive_bytes": 1183080,
+        "compression_ms": 37.4332,
+        "extraction_ms": 12.5429,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 1
+      },
+      {
+        "schema_version": 1,
+        "scenario": "large",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "24b9edb517aea6c83c79b66b8cdca7a5d3097c6d975c6076cc03beb96093d2ce",
+        "input_bytes": 33554432,
+        "file_count": 1,
+        "archive_bytes": 33559833,
+        "compression_ms": 640.0238,
+        "extraction_ms": 55.112899999999996,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 2
+      },
+      {
+        "schema_version": 1,
+        "scenario": "small",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "5ce0da3cd4b2626b467749d08ade147e421cef4544d68d8ec3070dbe0af56c7d",
+        "input_bytes": 4096000,
+        "file_count": 1000,
+        "archive_bytes": 4215022,
+        "compression_ms": 247.0535,
+        "extraction_ms": 152.31369999999998,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 2
+      },
+      {
+        "schema_version": 1,
+        "scenario": "mixed_media",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "ce0b9eb40a0a20eee28994ea7f5e5911b64a9c72fc3ccda58d19f73dabcfcb9a",
+        "input_bytes": 2782924,
+        "file_count": 35,
+        "archive_bytes": 1183080,
+        "compression_ms": 25.278,
+        "extraction_ms": 9.244499999999999,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 2
+      },
+      {
+        "schema_version": 1,
+        "scenario": "large",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "24b9edb517aea6c83c79b66b8cdca7a5d3097c6d975c6076cc03beb96093d2ce",
+        "input_bytes": 33554432,
+        "file_count": 1,
+        "archive_bytes": 33559833,
+        "compression_ms": 549.0129999999999,
+        "extraction_ms": 44.820899999999995,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 3
+      },
+      {
+        "schema_version": 1,
+        "scenario": "small",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "5ce0da3cd4b2626b467749d08ade147e421cef4544d68d8ec3070dbe0af56c7d",
+        "input_bytes": 4096000,
+        "file_count": 1000,
+        "archive_bytes": 4215022,
+        "compression_ms": 181.8021,
+        "extraction_ms": 151.6833,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 3
+      },
+      {
+        "schema_version": 1,
+        "scenario": "mixed_media",
+        "parallel_zip": false,
+        "scope": "native_zip_engine_without_window_or_transaction",
+        "compression": {
+          "method": "deflate",
+          "fast_pack": false,
+          "level": 6,
+          "encrypted": false,
+          "preserve_paths": false
+        },
+        "fixture_sha256": "ce0b9eb40a0a20eee28994ea7f5e5911b64a9c72fc3ccda58d19f73dabcfcb9a",
+        "input_bytes": 2782924,
+        "file_count": 35,
+        "archive_bytes": 1183080,
+        "compression_ms": 27.1093,
+        "extraction_ms": 10.6092,
+        "verified": "output_file_count_size_sha256",
+        "iteration": 3
+      }
+    ]
+  }
+}

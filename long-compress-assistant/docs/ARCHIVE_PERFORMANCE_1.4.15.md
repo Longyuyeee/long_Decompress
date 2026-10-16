@@ -48,8 +48,40 @@ Windows 10.0.22621、Ryzen 7 9700X（16 逻辑线程）、Rust 1.93.1、Release�
 
 复跑：`node scripts/measure-zip-preflight.mjs`。优化前端到端原生引擎三轮基线已在干净的 `f2a22b2` 上完成：32 MiB 大文件、1000 个 4 KiB 小文件及真实混合媒体；所有输出均核对 SHA256。优化后继续用相同输入测量，不能用预检数字代替整条引擎结果。
 
+## 阶段三：完整原生 ZIP 引擎前后观察
+
+基线 `f2a22b2` 与优化提交 `dfe0c1b` 均在干净工作区运行现有 `run-native-zip-baseline.mjs` 各三轮。三类输入清单 SHA256 前后一致，18 次压缩/解压观察全部逐文件核对内容。并行保持默认关闭；单独运行两组而非交错 A/B，系统缓存未清，不能据此声明百分比收益。
+
+| 输入 | 优化前解压中位数 | 优化后解压中位数 |
+| --- | --- | --- |
+| 32 MiB 大文件 | 43.2127 ms | 44.8209 ms |
+| 1000 个 4 KiB 小文件 | 149.3315 ms | 152.3137 ms |
+| 实际混合媒体与文字 | 9.1270 ms | 10.6092 ms |
+
+结论：本轮完整引擎数据未证明整体提速，不能将局部预检收益外推为整体收益；这也不是显著回退的统计证明。保留数据，不修改负载或测试条件换取更好数字。压缩路径未改，压缩耗时的波动亦保留在[精简原始报告](evidence/archive-performance-1.4.15/native-comparison.json)，原报告仍在本机 `test-results/archive-performance-1415/{before,after}-native.json`。下一步使用实际应用确认正确性，TAR/RAR 和资源峰值继续独立处理。
+
+## 阶段四：真实桌面所选解压与密码纠正
+
+使用 `dfe0c1b` 相同产品源码，`npm run build` 及 `cargo build --release --features desktop-e2e,custom-protocol --bin long-compress-assistant` 通过。程序 SHA256 为 `c59e21ab488e3020ab4759e7305977da99681194ee0aa4adaa197969c920da55`，仍显示基线 v1.4.14，未提前升版。测试数据和 WebView 分别隔离在本版 `test-results` 目录，不安装、不替换个人程序或历史。这是隔离 E2E 特性下的真实 Release 桌面，不是正式安装器验证。
+
+通过 Computer Use 原生输入操作实际页面，没有写入任务成功状态。7-Zip 26.04 独立生成一个三文件 ZIP：公开说明、`alpha-password` 的 AES 甲方合同、`beta-password` 的 AES 乙方报价；原包 SHA256 `028ca5c6090e57dea82ec976f16c1258c525248525ea0663d2f3889facebd4b8`。
+
+1. 浏览该包，取消两个密码文件，仅解压公开说明；无需密码，结果只有选中公开文件。
+2. 仅选甲方合同，填 `wrong-password` 后失败，页面明确“提供的密码不正确”，未发布合同或乙方文件。
+3. 保留所选范围，改为 `alpha-password` 后成功；甲方输出与原文件一致，未选的乙方报价不存在。
+4. 保留甲方密码，同时选择甲方与乙方，再次准确失败；未产生乙方文件或额外甲方副本，证明没有仅验证第一个加密文件便放行全部选择。
+
+公开说明原/输出 SHA256 均为 `5fc1441cbcef7914a2c67d5e1e8fd0f051d2e5783b19d6811b232557dd431692`；甲方合同均为 `3e8359c5589b92741a94262f401494c62cfaac0609ca3b58704d5ad36a8bc5c0`。
+
+已实际查看并保存[公开文件](evidence/archive-performance-1.4.15/desktop-public-only.png)、[错误密码](evidence/archive-performance-1.4.15/desktop-wrong-password.png)、[纠正后成功](evidence/archive-performance-1.4.15/desktop-corrected-password.png)、[不同密码不能全部放行](evidence/archive-performance-1.4.15/desktop-distinct-passwords.png)及[920×620 窄窗口](evidence/archive-performance-1.4.15/desktop-narrow.png)。常用大窗口为 1536×816。后端进程一次观察的生命周期峰值工作集为 167,174,144 字节，不包含 WebView 子进程，也不是优化前后内存对比，不宣传内存收益。
+
+操作工具最初捕获到窗口后的背景，Raise 后才取得正确应用页面；辅助功能勾选点击未改变选择，改用当前页面截图坐标后逐次核对。截图附带 13×13 小图层，实际操作和证据只使用真实 1536×816/920×620 页面层。工具问题不计作产品失败或成功证据。
+
+**发现的真实可用性问题：** 920×620 下底部操作仍可见，但上方固定区域挤占列表，文件列表只剩不足一行的可用高度。不能把它写成“窄窗口完美适配”；先记录，再以保持既有布局的局部滚动修正处理。
+
 ## 尚未完成
 
-- 优化后的整条原生 ZIP 引擎可比测量；不能把预检局部收益冒称整条应用提速。
+- 整条应用与资源峰值实测；不能把预检局部收益冒称整条应用提速。
 - RAR 进度扫描、TAR 暂存的实测与取舍。
-- 真实应用链、最终封板、版本统一和正式发布。
+- 矮窗口列表可用高度修正及实际页面复核。
+- 最终封板、版本统一和正式发布；现有桌面检查不替代最终安装生命周期。
