@@ -3323,7 +3323,7 @@ checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
 
 [[package]]
 name = "long-compress-assistant"
-version = "1.4.11"
+version = "1.4.12"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -3353,6 +3353,7 @@ dependencies = [
  "libcaesium",
  "log",
  "lz4_flex",
+ "lzma-rust2 0.22.0",
  "md5",
  "memmap2",
  "mockall",
@@ -3440,6 +3441,12 @@ checksum = "47bb1e988e6fb779cf720ad431242d3f03167c1b3f2b1aae7f1a94b2495b36ae"
 dependencies = [
  "sha2",
 ]
+
+[[package]]
+name = "lzma-rust2"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7277c9742229dc25243236d578b6471a798c554512c6f6a04365ec2e87c2a3bb"
 
 [[package]]
 name = "lzma-sys"
@@ -8157,7 +8164,7 @@ dependencies = [
  "getrandom 0.4.2",
  "hmac 0.13.0",
  "indexmap 2.14.0",
- "lzma-rust2",
+ "lzma-rust2 0.16.2",
  "memchr",
  "pbkdf2 0.13.0",
  "ppmd-rust",

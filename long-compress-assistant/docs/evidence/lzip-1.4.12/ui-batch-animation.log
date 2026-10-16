@@ -1,0 +1,25 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[lzip-1412] resuming UI only; original native assertions and files reused
+[lzip-1412] reusing completed browse/preview/extraction/error UI; continuing compression and conversion
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: The input did not match the regular expression /TAR.LZIP/. Input:
+
+''
+
+    at runLzip1412Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/lzip-1412-gate.mjs:198:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:4881:5 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: '',
+  expected: /TAR.LZIP/,
+  operator: 'match',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

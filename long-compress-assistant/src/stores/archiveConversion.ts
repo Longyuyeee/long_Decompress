@@ -17,6 +17,7 @@ export const conversionFormats = [
   ['zip', 'ZIP'], ['7z', '7Z'], ['rar', 'RAR（需要 WinRAR）'], ['tar', 'TAR'], ['tar.gz', 'TGZ'],
   ['tar.bz2', 'TBZ'], ['tar.xz', 'TXZ'], ['tar.zst', 'TZST'],
   ['tar.lz4', 'TAR.LZ4（快速）'], ['tar.br', 'TAR.BR（Brotli）'],
+  ['tar.lz', 'TAR.LZIP'],
   ['tar.aes', 'TAR.AES（加密）'], ['tar.gz.aes', 'TGZ.AES（加密）'],
   ['tar.bz2.aes', 'TBZ.AES（加密）'], ['tar.xz.aes', 'TXZ.AES（加密）'], ['tar.zst.aes', 'TZST.AES（加密）'], ['wim', 'WIM'],
 ].map(([value, label]) => ({ value, label }))

@@ -1,0 +1,217 @@
+{
+  "root": "C:/Users/39633/AppData/Local/Temp/long-decompress-desktop-e2e-DXKngY/lzip-1412",
+  "applicationSha256": "94DDE39538AAB79840819AD6D4C2C8687461CFAE1077751E302335925ECB46F9",
+  "evidence": "Collected retained native input/output inventory after the initial run passed all native assertions and stopped at the first UI summary. This is not a second execution of native commands.",
+  "files": [
+    {
+      "path": "CRC损坏.tar.lz",
+      "bytes": 14291,
+      "sha256": "b2f49f72abe9ff2c0fe9a29286137db2dfd1b53de5924e3736a2aa217c8bc56f"
+    },
+    {
+      "path": "manifest.json",
+      "bytes": 1597,
+      "sha256": "6eca9e9126851b6a7e178637656799eb3cbfc0c9c6d8132efcae0c7e7406c2ce"
+    },
+    {
+      "path": "ZIP外部回解/中文目录/数据.bin",
+      "bytes": 32791,
+      "sha256": "188d0669b8eb413c579bf4acc7e9c860e8c99fb0e7eb3c5c0a392cfdd4787258"
+    },
+    {
+      "path": "ZIP外部回解/空文件.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "ZIP外部回解/说明.txt",
+      "bytes": 58,
+      "sha256": "0de8963d45a6bea509b9594357dc9e1bf03238bc658de21ca81085b378ac4579"
+    },
+    {
+      "path": "原文件/中文目录/数据.bin",
+      "bytes": 32791,
+      "sha256": "188d0669b8eb413c579bf4acc7e9c860e8c99fb0e7eb3c5c0a392cfdd4787258"
+    },
+    {
+      "path": "原文件/空文件.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "原文件/说明.txt",
+      "bytes": 58,
+      "sha256": "0de8963d45a6bea509b9594357dc9e1bf03238bc658de21ca81085b378ac4579"
+    },
+    {
+      "path": "去密码转换.tlz",
+      "bytes": 12809,
+      "sha256": "7079203f1e8a48f2d78960b40526f9fe67d28273bf0ebaf510403cf8b7a77ccf"
+    },
+    {
+      "path": "去密码转换外部回解/中文目录/数据.bin",
+      "bytes": 32791,
+      "sha256": "188d0669b8eb413c579bf4acc7e9c860e8c99fb0e7eb3c5c0a392cfdd4787258"
+    },
+    {
+      "path": "去密码转换外部回解/空文件.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "去密码转换外部回解/说明.txt",
+      "bytes": 58,
+      "sha256": "0de8963d45a6bea509b9594357dc9e1bf03238bc658de21ca81085b378ac4579"
+    },
+    {
+      "path": "去密码转换外部回解.tar",
+      "bytes": 36864,
+      "sha256": "eba5af09cc4f4b96daacac05b7cc9e37b8cbd407ce759d524aba038e42e774a4"
+    },
+    {
+      "path": "多成员.txt.lz",
+      "bytes": 178,
+      "sha256": "b527766a731b1865b14b9a187e0d86aec1f75449e70929a42788c460988b1fc5"
+    },
+    {
+      "path": "多成员.txt.lz-应用回解/多成员.txt",
+      "bytes": 113,
+      "sha256": "57e825179857c18793bd4dcadfe12f3a89774570d1c0d30e1fee90f88692df21"
+    },
+    {
+      "path": "尾部截断.tar.lz",
+      "bytes": 14290,
+      "sha256": "fa87a8a5abb2842e108e188829f7778574c4596889dde3235527754a4d91ef2e"
+    },
+    {
+      "path": "带密码的原包.zip",
+      "bytes": 27941,
+      "sha256": "41eed82559ed5fc0ba22a89334291a5cf9bdd99393e7f77d2bc3274ba58416a0"
+    },
+    {
+      "path": "应用创建.lz",
+      "bytes": 94,
+      "sha256": "55fe1be5f56c3f153213b661c54a78a3d5d3ae9502c470ef6e140e032e8aebf7"
+    },
+    {
+      "path": "应用创建.lz-应用回解/应用创建",
+      "bytes": 58,
+      "sha256": "0de8963d45a6bea509b9594357dc9e1bf03238bc658de21ca81085b378ac4579"
+    },
+    {
+      "path": "应用创建.tar.lz",
+      "bytes": 12825,
+      "sha256": "6b6d56e254eff14cc647cf7477a846f00a1964a6471483f6c631f9cbe48ea9ea"
+    },
+    {
+      "path": "应用创建.tar.lz-GNU回解/原文件/中文目录/数据.bin",
+      "bytes": 32791,
+      "sha256": "188d0669b8eb413c579bf4acc7e9c860e8c99fb0e7eb3c5c0a392cfdd4787258"
+    },
+    {
+      "path": "应用创建.tar.lz-GNU回解/原文件/空文件.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "应用创建.tar.lz-GNU回解/原文件/说明.txt",
+      "bytes": 58,
+      "sha256": "0de8963d45a6bea509b9594357dc9e1bf03238bc658de21ca81085b378ac4579"
+    },
+    {
+      "path": "应用创建.tar.lz-GNU回解.tar",
+      "bytes": 37376,
+      "sha256": "98d1eb13f37346844b0c675f3282cb252746f59f71b81699e3812ef29eee0247"
+    },
+    {
+      "path": "应用创建.tar.lz-应用回解/原文件/中文目录/数据.bin",
+      "bytes": 32791,
+      "sha256": "188d0669b8eb413c579bf4acc7e9c860e8c99fb0e7eb3c5c0a392cfdd4787258"
+    },
+    {
+      "path": "应用创建.tar.lz-应用回解/原文件/空文件.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "应用创建.tar.lz-应用回解/原文件/说明.txt",
+      "bytes": 58,
+      "sha256": "0de8963d45a6bea509b9594357dc9e1bf03238bc658de21ca81085b378ac4579"
+    },
+    {
+      "path": "应用空文件.lz",
+      "bytes": 36,
+      "sha256": "c080ea5a055b0d5d8e98881b8c3cb4885beb8f274a0a8f9484a880d289c76a5f"
+    },
+    {
+      "path": "应用空文件.lz-应用回解/应用空文件",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "第二段.txt",
+      "bytes": 55,
+      "sha256": "ea1636911569b09fe5850c4eb320f4a3f93ed6121fe8e0dc8cf53731802f3a8a"
+    },
+    {
+      "path": "论坛外来源转换.zip",
+      "bytes": 27456,
+      "sha256": "29ddc3ef442a8fb163774913cd4dbc114983fe3169342e637ee6325479ce4a5d"
+    },
+    {
+      "path": "说明.txt.lz",
+      "bytes": 94,
+      "sha256": "55fe1be5f56c3f153213b661c54a78a3d5d3ae9502c470ef6e140e032e8aebf7"
+    },
+    {
+      "path": "说明.txt.lz-应用回解/说明.txt",
+      "bytes": 58,
+      "sha256": "0de8963d45a6bea509b9594357dc9e1bf03238bc658de21ca81085b378ac4579"
+    },
+    {
+      "path": "资料.tar",
+      "bytes": 40960,
+      "sha256": "aafb0f55c315e5bcdb11d4bfcce45604b27eecbaf16e63fa939ceb26ebc102bb"
+    },
+    {
+      "path": "资料.tar.lz",
+      "bytes": 14291,
+      "sha256": "15c3e893d64bbc97e20ec65c2489945f5a9261f2a1ef82763612bfce7748e645"
+    },
+    {
+      "path": "资料.tar.lz-应用回解/中文目录/数据.bin",
+      "bytes": 32791,
+      "sha256": "188d0669b8eb413c579bf4acc7e9c860e8c99fb0e7eb3c5c0a392cfdd4787258"
+    },
+    {
+      "path": "资料.tar.lz-应用回解/空文件.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "资料.tar.lz-应用回解/说明.txt",
+      "bytes": 58,
+      "sha256": "0de8963d45a6bea509b9594357dc9e1bf03238bc658de21ca81085b378ac4579"
+    },
+    {
+      "path": "资料别名.tlz",
+      "bytes": 14291,
+      "sha256": "15c3e893d64bbc97e20ec65c2489945f5a9261f2a1ef82763612bfce7748e645"
+    },
+    {
+      "path": "资料别名.tlz-应用回解/中文目录/数据.bin",
+      "bytes": 32791,
+      "sha256": "188d0669b8eb413c579bf4acc7e9c860e8c99fb0e7eb3c5c0a392cfdd4787258"
+    },
+    {
+      "path": "资料别名.tlz-应用回解/空文件.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "资料别名.tlz-应用回解/说明.txt",
+      "bytes": 58,
+      "sha256": "0de8963d45a6bea509b9594357dc9e1bf03238bc658de21ca81085b378ac4579"
+    }
+  ]
+}

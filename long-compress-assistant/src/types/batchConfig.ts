@@ -1,5 +1,5 @@
 export interface BatchConfigPatch {
-  format?: 'zip' | '7z' | 'rar'
+  format?: 'zip' | '7z' | 'rar' | 'tar.lz'
   level?: number
   rarRecoveryPercent?: number
   rarRecoveryVolumes?: number

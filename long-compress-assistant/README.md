@@ -30,6 +30,8 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 当前稳定版为 **1.4.11**：ZIP/7Z/RAR 自解压包只读处理、好压论坛 ZIP 分卷及密码兼容、缺卷补回继续处理，保留单条展开和多选弹窗。真实生成物、实际桌面和常用/窄窗口记录见 [实施审计](docs/SFX_AND_VOLUME_COMPATIBILITY_1.4.11.md)、[封板记录](docs/SFX_AND_VOLUME_FREEZE_1.4.11.md)及 [中文更新说明](docs/RELEASE_NOTES_1.4.11.md)，安装器和应用内更新附件见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11)。
 
+当前源码候选版为 **1.4.12**：新增 LZIP / TAR.LZIP 创建、读取、检查和转换，兼容 `.tlz` 与多成员 LZIP，接入原有多选弹窗配置，并保留浏览失败原因。实施与实际检查见 [本版记录](docs/LZIP_AND_TAR_LZIP_1.4.12.md)，范围见 [中文更新说明](docs/RELEASE_NOTES_1.4.12.md)；安装包尚未正式发布。
+
 ## 本地开发
 
 Windows 构建需要受支持的 Node.js（20.19+、22.12+ 或 24）、npm、稳定版 Rust、MSVC C++ 构建工具及 WebView2。
@@ -93,6 +95,8 @@ docs/                  开发路线、格式说明与历史记录
 项目代码使用 [MIT License](../LICENSE)。随包 7-Zip、视频与 PDF 引擎分别遵循各自许可，相关材料位于 `src-tauri/resources/archive-engine/`、`video-engine/licenses/` 和 `pdf-engine/licenses/`。WinRAR 编码器不随项目分发。
 
 ## 更新记录
+
+候选版 **v1.4.12** 新增 LZIP / TAR.LZIP 的完整用户流程及错误提示改善，见 [更新说明](docs/RELEASE_NOTES_1.4.12.md)。
 
 当前正式版 **v1.4.11**，完整变化见 [中文更新说明](docs/RELEASE_NOTES_1.4.11.md)和 [封板记录](docs/SFX_AND_VOLUME_FREEZE_1.4.11.md)，下载以 [Release 页面](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.11)实际附件为准。
 

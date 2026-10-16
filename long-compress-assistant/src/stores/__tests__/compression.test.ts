@@ -28,6 +28,36 @@ describe('Compression Store', () => {
     setActivePinia(createPinia())
   })
 
+  it('applies TAR.LZIP to selected file/group drafts without changing unselected or global settings', () => {
+    const store = useCompressionStore()
+    const first = mockFile('first.txt', 10), second = mockFile('second.txt', 20), untouched = mockFile('untouched.txt', 30)
+    ;[first, second, untouched].forEach(file => store.addFile(file))
+    const groupId = store.createGroup([second.path])
+    store.globalSettings = { ...defaultOptions(), format: '7z', password: 'global-secret', splitArchive: true, createSolidArchive: true, encryptFilenames: true }
+    expect(store.applyBatchConfiguration([first.path, groupId], { format: 'tar.lz' })).toBe(2)
+    const expected = { format: 'tar.lz', password: '', splitArchive: false, createSolidArchive: false, encryptFilenames: false, rarRecoveryPercent: 0, rarRecoveryVolumes: 0 }
+    expect(store.selectedFiles[0].settings).toMatchObject(expected)
+    expect(store.groups[0].settings).toMatchObject(expected)
+    expect(store.selectedFiles[1].settings).toBeUndefined()
+    expect(store.globalSettings).toMatchObject({ format: '7z', password: 'global-secret', splitArchive: true })
+  })
+
+  it('clears saved password prompts when restored file/group drafts switch to LZIP', () => {
+    const store = useCompressionStore()
+    const first = mockFile('restored.txt', 10), second = mockFile('restored-group.txt', 20)
+    store.addFile(first); store.addFile(second)
+    const groupId = store.createGroup([second.path])
+    store.selectedFiles[0].draftPasswordRequired = true
+    store.groups[0].draftPasswordRequired = true
+    store.updateFileSettings(first.path, { ...defaultOptions(), format: 'lz' })
+    store.updateGroupSettings(groupId, { ...defaultOptions(), format: 'tar.lz' })
+    expect(store.selectedFiles[0].draftPasswordRequired).toBe(false)
+    expect(store.groups[0].draftPasswordRequired).toBe(false)
+    store.groups[0].draftPasswordRequired = true
+    store.applyBatchConfiguration([groupId], { format: 'tar.lz' })
+    expect(store.groups[0].draftPasswordRequired).toBe(false)
+  })
+
   it('initializes with current default state', () => {
     const store = useCompressionStore()
 

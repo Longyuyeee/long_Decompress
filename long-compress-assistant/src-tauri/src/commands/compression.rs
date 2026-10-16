@@ -1330,6 +1330,14 @@ impl Drop for ArchiveBrowseGuard {
 
 fn classify_archive_browse_error(error: &str) -> String {
     let lower = error.to_ascii_lowercase();
+    if lower.contains("lzip") {
+        if lower.contains("crc32 mismatch") || lower.contains("data size mismatch") || lower.contains("member size mismatch") {
+            return format!("ARCHIVE_BROWSE_CHECKSUM|LZIP 校验未通过，请检查文件完整性或重新获取文件|{error}");
+        }
+        if lower.contains("truncated") || lower.contains("failed to fill whole buffer") || lower.contains("unexpected") || error.contains("文件头不完整") {
+            return format!("ARCHIVE_BROWSE_DAMAGED|LZIP 文件不完整或已损坏，请重新获取完整文件|{error}");
+        }
+    }
     if error.contains("ARCHIVE_BROWSE_CANCELLED") {
         return "ARCHIVE_BROWSE_CANCELLED|已取消读取压缩包内容".to_string();
     }
@@ -2255,6 +2263,18 @@ mod cancellation_tests {
             .unwrap()
             .load(Ordering::Relaxed));
         ARCHIVE_BROWSE_FLAGS.remove(&browse_id);
+    }
+
+    #[test]
+    fn lzip_browse_failure_describes_integrity_instead_of_requesting_a_password() {
+        for detail in ["LZIP CRC32 mismatch", "LZIP data size mismatch", "LZIP member size mismatch"] {
+            let message = classify_archive_browse_error(detail);
+            assert!(message.starts_with("ARCHIVE_BROWSE_CHECKSUM|LZIP 校验未通过"));
+            assert!(!message.split('|').nth(1).unwrap().contains("密码"));
+        }
+        for detail in ["LZIP 读取失败：failed to fill whole buffer", "truncated LZIP member header", "LZIP 文件头不完整"] {
+            assert!(classify_archive_browse_error(detail).starts_with("ARCHIVE_BROWSE_DAMAGED|LZIP 文件不完整"));
+        }
     }
 
     #[test]

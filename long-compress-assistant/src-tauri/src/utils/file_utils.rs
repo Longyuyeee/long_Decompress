@@ -31,7 +31,7 @@ pub fn is_compressed_file(path: &Path) -> bool {
             extension.as_str(),
             "zip" | "rar" | "7z" | "tar" | "gz" | "tgz" | "bz2" | "tbz2" | "xz" | "txz" |
             "tar.gz" | "tar.bz2" | "tar.xz" | "tar.zst" | "zst" | "zstd" | "tzst"
-            | "z" | "lz" | "lzma" | "lzo" | "rz" | "sz"
+            | "z" | "lz" | "tlz" | "lzma" | "lzo" | "rz" | "sz"
             | "iso" | "img" | "cab" | "lzh" | "lha" | "arj" | "dmg" | "wim"
             | "deb" | "rpm" | "squashfs" | "sfs" | "msi" | "xar" | "cpio"
             | "vhd" | "vhdx" | "chm" | "udf" | "fat" | "ntfs" | "hfs"

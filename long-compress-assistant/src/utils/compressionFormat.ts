@@ -27,6 +27,8 @@ export type CompressionFormatId =
   | 'br'
   | 'tar.lz4'
   | 'tar.br'
+  | 'lz'
+  | 'tar.lz'
 
 export interface CompressionFormatCapability {
   format: CompressionFormatId
@@ -73,6 +75,8 @@ export const FORMAT_CAPABILITIES: CompressionFormatCapability[] = [
   { format: 'tar.br', displayName: 'TAR.BR', extensions: ['tar.br'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
   { format: 'lz4', displayName: 'LZ4', extensions: ['lz4'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
   { format: 'br', displayName: 'Brotli', extensions: ['br'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
+  { format: 'tar.lz', displayName: 'TAR.LZIP', extensions: ['tar.lz', 'tlz'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'LZIP 不提供密码加密；本版暂不支持创建分卷。' },
+  { format: 'lz', displayName: 'LZIP', extensions: ['lz'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: '仅支持单个文件；目录或多个文件请选择 TAR.LZIP。本版不提供密码或分卷。' },
 ]
 
 export interface ExtractOnlyFormatCapability {
@@ -147,9 +151,9 @@ export const DECOMPRESS_ARCHIVE_ACCEPT = DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS
   .map(extension => `.${extension}`)
   .join(',')
 
-export const DECOMPRESS_ARCHIVE_HINT = 'ZIP · 7Z · RAR · TAR · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · ISO · IMG · DMG · WIM · VHD · CAB · DEB · RPM · MSI · JAR · APK · IPA · LZH · CPIO · XAR + 更多'
+export const DECOMPRESS_ARCHIVE_HINT = 'ZIP · 7Z · RAR · TAR · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · LZIP · TAR.LZIP · ISO · IMG · DMG · WIM · VHD · CAB · DEB · RPM · MSI · JAR · APK · IPA · LZH · CPIO · XAR + 更多'
 
-export const COMPRESSION_FORMAT_HINT = 'ZIP · 7Z · RAR · WIM · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · TAR.Zst · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · TAR.LZ4 · TAR.BR · LZMA · TAR.AES 🔒 · TGZ.AES 🔒 · TBZ.AES 🔒 · TXZ.AES 🔒 · TZST.AES 🔒 · GZ.AES 🔒 · BZ2.AES 🔒 · XZ.AES 🔒 · ZST.AES 🔒'
+export const COMPRESSION_FORMAT_HINT = 'ZIP · 7Z · RAR · WIM · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · TAR.Zst · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · TAR.LZ4 · TAR.BR · LZIP · TAR.LZIP · LZMA · TAR.AES 🔒 · TGZ.AES 🔒 · TBZ.AES 🔒 · TXZ.AES 🔒 · TZST.AES 🔒 · GZ.AES 🔒 · BZ2.AES 🔒 · XZ.AES 🔒 · ZST.AES 🔒'
 
 const TAR_FORMATS = new Set(
   FORMAT_CAPABILITIES
@@ -163,11 +167,13 @@ const FORMAT_BY_ID = new Map(FORMAT_CAPABILITIES.map(format => [format.format, f
 
 const normalizeFormatId = (format: string): CompressionFormatId | null => {
   if (format === 'zstd') return 'zst'
+  if (format === 'tlz') return 'tar.lz'
   return FORMAT_BY_ID.has(format as CompressionFormatId) ? format as CompressionFormatId : null
 }
 
 export const effectiveFormatForPassword = (format: string, password?: string) => {
   const normalized = normalizeFormatId(format) || format
+  if (FORMAT_BY_ID.get(normalized as CompressionFormatId)?.supportsPasswordCompress === false) return normalized
   return password && !NATIVE_PASSWORD_FORMATS.has(normalized) ? '7z' : normalized
 }
 

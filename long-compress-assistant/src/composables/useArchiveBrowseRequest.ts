@@ -30,6 +30,9 @@ export const useArchiveBrowseRequest = (
     notice.value = ''
     try {
       return await browseArchive(filePath, password, browseId)
+    } catch (error) {
+      if (activeBrowseId === browseId) notice.value = describeArchiveBrowseError(error)
+      throw error
     } finally {
       if (activeBrowseId === browseId) {
         activeBrowseId = ''

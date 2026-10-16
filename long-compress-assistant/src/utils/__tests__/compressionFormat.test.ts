@@ -10,9 +10,23 @@ import {
   isPotentialSfxPath,
   isPasswordSupportedFormat,
   isSingleFileStreamFormat,
+  supportsArchiveSplit,
 } from '../compressionFormat'
 
 describe('compression format helpers', () => {
+  it('keeps LZIP files in their chosen format and exposes only supported options', () => {
+    for (const extension of ['lz', 'tar.lz', 'tlz']) {
+      expect(isDecompressArchivePath(`C:/下载/中文资料.${extension.toUpperCase()}`)).toBe(true)
+      expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain(`.${extension}`)
+      expect(isPasswordSupportedFormat(extension)).toBe(false)
+      expect(supportsArchiveSplit(extension)).toBe(false)
+    }
+    expect(isSingleFileStreamFormat('lz')).toBe(true)
+    expect(isSingleFileStreamFormat('tar.lz')).toBe(false)
+    expect(effectiveFormatForPassword('lz', 'stale secret')).toBe('lz')
+    expect(effectiveFormatForPassword('tar.lz', 'stale secret')).toBe('tar.lz')
+    expect(extensionForFormat('tar.lz')).toBe('tar.lz')
+  })
   it('treats EXE as an inspection candidate, not an archive format', () => {
     expect(isPotentialSfxPath('C:/收到的文件.EXE')).toBe(true)
     expect(isDecompressArchivePath('C:/program.exe')).toBe(false)
