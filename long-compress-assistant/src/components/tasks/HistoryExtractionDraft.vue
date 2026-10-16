@@ -7,6 +7,9 @@ import { useTaskStore } from '@/stores/task'
 import { generateId, extractErrorMessage } from '@/utils'
 import { isDecompressArchivePath, isPotentialSplitArchivePath, isPotentialSfxPath } from '@/utils/compressionFormat'
 import ExtractionOutputPreview from './ExtractionOutputPreview.vue'
+import ZipPasswordEncodingField from '@/components/ui/ZipPasswordEncodingField.vue'
+import type { ZipPasswordEncoding } from '@/types/zipPassword'
+import { supportsZipPasswordEncoding, zipPasswordEncodingForSource } from '@/utils/zipPasswordSource'
 
 const props = defineProps<{ record: TaskHistoryRecord }>()
 const store = useTaskStore()
@@ -14,6 +17,8 @@ const source = ref('')
 const destination = ref('')
 const extractToSubfolder = ref(true)
 const password = ref('')
+const zipPasswordEncoding = ref<ZipPasswordEncoding>()
+const sourceFormat = computed(() => source.value === props.record.sourcePaths[0] ? props.record.format : undefined)
 const restoredConfig = computed(() => restoredExtractionConfig(props.record))
 const busy = ref(false)
 const error = ref('')
@@ -24,6 +29,7 @@ watch(() => props.record.id, () => {
   source.value = props.record.sourcePaths[0] || ''
   destination.value = restoredConfig.value?.outputDirectory || ''
   extractToSubfolder.value = restoredConfig.value?.extractToSubfolder ?? true
+  zipPasswordEncoding.value = restoredConfig.value?.zipPasswordEncoding
   password.value = ''
   error.value = ''
   created.value = false
@@ -51,6 +57,7 @@ async function createDraft() {
   const outputPath = destination.value.trim()
   const confirmedSubfolder = extractToSubfolder.value
   const confirmedPassword = password.value
+  const confirmedEncoding = zipPasswordEncoding.value
   const recordId = props.record.id
   if (!path || !outputPath) { error.value = '请确认来源文件并选择本次输出目录'; return }
   if (!isDecompressArchivePath(path) && !isPotentialSplitArchivePath(path) && !isPotentialSfxPath(path)) {
@@ -84,6 +91,8 @@ async function createDraft() {
       sourceFiles: [path], outputPath, configurationMode: 'individual',
       extractToSubfolder: confirmedSubfolder, recycleSourceAfterExtract: false,
       password: confirmedPassword || undefined,
+      zipPasswordEncoding: zipPasswordEncodingForSource(path, confirmedEncoding, split?.archive_format),
+      format: split?.archive_format || undefined,
     })
     store.tasks.find(task => task.id === id)!.logs.push({
       task_id: id, severity: 'info', timestamp: new Date().toISOString(),
@@ -101,7 +110,7 @@ async function createDraft() {
   <section class="detail-section" data-testid="history-extraction-draft">
     <h3>再次解压</h3>
     <p class="text-xs text-muted my-3">确认下方设置，再添加到队列。新任务不会自动开始。</p>
-    <p v-if="restoredConfig" data-testid="history-config-restored" class="text-xs text-primary mb-3">已带入上次的输出目录和子目录设置，可直接使用或修改。</p>
+    <p v-if="restoredConfig" data-testid="history-config-restored" class="text-xs text-primary mb-3">已带入上次的解压设置，可直接使用或修改。</p>
     <p v-else data-testid="history-config-missing" class="text-xs text-muted mb-3">这条历史没有可恢复的设置，请选择输出目录，并确认是否创建同名子目录。</p>
     <p class="text-xs text-muted mb-3">本次解压整个归档并保留源文件，不恢复局部选择。密码可重新填写；留空时按当前密码设置尝试，同名文件按当前冲突设置处理。</p>
     <p v-if="record.sourcePaths.length > 1" class="text-xs text-amber-500 mb-2">原记录包含多个来源，请确认此处为归档或首个分卷；本次只创建一个任务。</p>
@@ -118,6 +127,7 @@ async function createDraft() {
       <label class="block text-sm">本次密码（可留空）
         <input v-model="password" data-testid="history-draft-password" type="password" autocomplete="off" class="history-control w-full mt-1" />
       </label>
+      <ZipPasswordEncodingField v-if="supportsZipPasswordEncoding(source, sourceFormat)" v-model="zipPasswordEncoding" :disabled="busy || created" test-id="history-draft-zip-password-encoding" />
       <ExtractionOutputPreview :source="source.trim()" :output="destination.trim()" :subfolder="extractToSubfolder" @change-output="selectPath(true)" />
       <button data-testid="history-draft-create" class="history-control w-full" @click="createDraft">{{ busy ? '正在检查来源…' : '创建待执行任务' }}</button>
     </fieldset>

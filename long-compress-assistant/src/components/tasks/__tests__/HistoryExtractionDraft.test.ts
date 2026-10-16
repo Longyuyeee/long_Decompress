@@ -23,6 +23,20 @@ const setup = async () => {
   return { wrapper, store: useTaskStore() }
 }
 describe('history extraction draft', () => {
+  it('restores the ZIP encoding into a pending draft, then clears it when opening an old history entry', async () => {
+    const pinia = createPinia(); setActivePinia(pinia)
+    const saved: TaskHistoryRecord = { ...record, sourcePaths: ['C:/old.zip'], format: 'ZIP', executionConfig: { schemaVersion: 1, kind: 'archive-extraction', outputDirectory: 'D:/output', extractToSubfolder: false, zipPasswordEncoding: 'cp950' } }
+    mocks.invoke.mockImplementation(async (cmd, args) => cmd === 'detect_split_archive' ? { is_split: false, archive_format: 'ZIP' } : { name: 'old.zip', size: 100, is_dir: args.path === 'D:/output' })
+    const wrapper = mount(HistoryExtractionDraft, { props: { record: saved }, global: { plugins: [pinia], stubs: { ExtractionOutputPreview: true } } })
+    expect(wrapper.get('[data-testid="history-draft-zip-password-encoding"]').text()).toContain('繁体中文')
+    await wrapper.get('[data-testid="history-draft-create"]').trigger('click'); await flushPromises()
+    expect(useTaskStore().tasks[0]).toMatchObject({ zipPasswordEncoding: 'cp950', status: 'pending' })
+    expect(useTaskStore().tasks[0].password).toBeUndefined()
+    await wrapper.setProps({ record: { ...saved, id: 'legacy', executionConfig: undefined } })
+    expect(wrapper.get('[data-testid="history-draft-zip-password-encoding"]').text()).toContain('自动兼容')
+    expect(saved.executionConfig?.zipPasswordEncoding).toBe('cp950')
+    wrapper.unmount()
+  })
   it('rejects an unconfirmed forum member instead of creating a standalone ZIP draft', async () => {
     const {wrapper,store} = await setup()
     await wrapper.get('[data-testid="history-draft-source"]').setValue('C:/资料.haozip02.zip')

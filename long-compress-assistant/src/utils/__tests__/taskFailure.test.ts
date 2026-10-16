@@ -3,6 +3,11 @@ import { archiveInspectionMessageForDisplay, createTaskDiagnosticReport, describ
 import type { TaskHistoryRecord } from '@/types/taskHistory'
 
 describe('task failure evidence', () => {
+  it('keeps password encoding failures distinct from damage and password guessing', () => {
+    const record = { status: 'failed' as const, errorMessage: '[archive-inspection:password-encoding] 无法无损编码' }
+    expect(describeTaskFailure(record)?.category).toBe('password-encoding')
+    expect(getTaskRecoveryGuidance(record)?.steps.join(' ')).toContain('不代表文件损坏')
+  })
   it.each([
     ['[archive-inspection:incomplete] 缺少分卷：资料.z02', '缺少分卷：资料.z02'],
     ['最终失败原因：[archive-inspection:damaged] CRC 校验未通过', '最终失败原因：CRC 校验未通过'],

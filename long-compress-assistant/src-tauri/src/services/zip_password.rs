@@ -243,9 +243,9 @@ fn encode_windows_code_page(password: &str, code_page: u32, require_round_trip: 
     }
     if substituted != 0 {
         if !require_round_trip {
-            return Err(UnrepresentablePassword(format!("ZIP password contains characters unavailable in Windows code page {code_page}; use UTF-8 or 7Z")).into());
+            return Err(UnrepresentablePassword(format!("ZIP password contains characters unavailable in Windows code page {code_page}; confirm the password text and ZIP password encoding; characters will not be replaced")).into());
         }
-        return Err(UnrepresentablePassword(format!("ZIP 密码含有 Windows 代码页 {code_page} 无法表示的字符；请选择 UTF-8 或 7Z，不会替换字符")).into());
+        return Err(UnrepresentablePassword(format!("ZIP 密码含有 Windows 代码页 {code_page} 无法表示的字符；请确认密码文本与 ZIP 密码编码，不会替换字符")).into());
     }
     let mut bytes = vec![0; size as usize];
     // SAFETY: input remains valid; output has exactly the size requested above.
@@ -287,6 +287,14 @@ fn encode_windows_code_page(password: &str, code_page: u32, require_round_trip: 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(windows)]
+    #[test]
+    fn unrepresentable_password_guidance_also_applies_to_existing_archives() {
+        let error = encode("🔒", ZipPasswordEncoding::Cp932).unwrap_err().to_string();
+        assert!(error.contains("932") && error.contains("不会替换字符"));
+        assert!(!error.contains("7Z"), "reading an existing archive cannot change its format");
+    }
 
     #[test]
     fn candidate_encoding_error_distinguishes_lossy_text_from_system_failures() {

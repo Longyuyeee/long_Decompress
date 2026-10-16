@@ -53,6 +53,78 @@ const mountView = (pinia = createPinia()) => mount(DecompressView, {
 })
 
 describe('DecompressView', () => {
+  it('executes restored ZIP input encoding without changing ordinary automatic requests', async () => {
+    const wrapper = mountView()
+    const store = useTaskStore()
+    store.addTask({ id: 'encoded', name: 'old.zip', type: 'decompression', sourceFiles: ['C:/old.zip'], outputPath: 'D:/encoded', zipPasswordEncoding: 'cp932', configurationMode: 'individual' })
+    store.addTask({ id: 'auto', name: 'ordinary.zip', type: 'decompression', sourceFiles: ['C:/ordinary.zip'], outputPath: 'D:/auto' })
+    await nextTick()
+    await wrapper.get('[data-testid="start-decompression-queue"]').trigger('click'); await flushPromises()
+    expect(mocks.decompressFile).toHaveBeenCalledWith('C:/old.zip', expect.objectContaining({ zipPasswordEncoding: 'cp932' }), 'encoded')
+    expect(mocks.decompressFile).toHaveBeenCalledWith('C:/ordinary.zip', expect.objectContaining({ zipPasswordEncoding: undefined }), 'auto')
+    wrapper.unmount()
+  })
+  it('re-detects reopened renamed ZIPs before execution instead of discarding the saved input choice', async () => {
+    const wrapper = mountView()
+    useTaskStore().addTask({ id: 'renamed-draft', name: 'old.7z', type: 'decompression', sourceFiles: ['C:/old.7z'], outputPath: 'D:/out', zipPasswordEncoding: 'cp950', configurationMode: 'individual' })
+    mocks.invoke.mockImplementation(async (cmd) => cmd === 'detect_split_archive' ? { is_split: false, archive_format: 'ZIP' } : undefined)
+    await nextTick()
+    await wrapper.get('[data-testid="start-decompression-queue"]').trigger('click'); await flushPromises()
+    expect(mocks.decompressFile).toHaveBeenCalledWith('C:/old.7z', expect.objectContaining({ zipPasswordEncoding: 'cp950' }), 'renamed-draft')
+    wrapper.unmount()
+  })
+  it('does not start a task cancelled while detecting its restored ZIP encoding', async () => {
+    const wrapper = mountView()
+    const store = useTaskStore()
+    store.addTask({ id: 'cancel-probe', name: 'a.zip', type: 'decompression', sourceFiles: ['C:/a.zip'], outputPath: 'D:/out', zipPasswordEncoding: 'cp932' })
+    let finish!: (value: unknown) => void
+    mocks.invoke.mockImplementation((command: string) => command === 'detect_split_archive' ? new Promise(resolve=>{finish=resolve}) : Promise.resolve([]))
+    await nextTick()
+    await wrapper.get('[data-testid="start-decompression-queue"]').trigger('click'); await flushPromises()
+    expect(finish).toBeTypeOf('function')
+    expect(mocks.decompressFile).not.toHaveBeenCalled()
+    store.tasks[0].status = 'cancelled'
+    finish({ is_split: false, archive_format: 'ZIP' }); await flushPromises()
+    expect(mocks.decompressFile).not.toHaveBeenCalled()
+    expect(mocks.preflightOperationResources).not.toHaveBeenCalled()
+    expect(store.tasks[0].status).toBe('cancelled')
+    wrapper.unmount()
+  })
+  it('batch encoding uses detected ZIP content without detaching global output or touching non-ZIP tasks', async () => {
+    const wrapper = mountView()
+    const store = useTaskStore()
+    for (const id of ['renamed', 'rar', 'other']) store.addTask({ id, name: `${id}.rar`, type: 'decompression', sourceFiles: [`C:/${id}.rar`], outputPath: 'D:/out', password: 'keep', configurationMode: 'global' })
+    mocks.invoke.mockImplementation(async (_cmd, args) => ({ is_split: false, archive_format: args.path.includes('renamed') ? 'ZIP' : 'RAR' }))
+    await nextTick()
+    const table = wrapper.findComponent({ name: 'AeroTable' })
+    table.vm.$emit('toggle-task', 'renamed'); table.vm.$emit('toggle-task', 'rar')
+    await nextTick()
+    const bar = wrapper.findComponent({ name: 'BatchConfigBar' })
+    bar.vm.$emit('apply', { zipPasswordEncoding: 'cp950' }); await flushPromises()
+    expect(store.tasks[0]).toMatchObject({ zipPasswordEncoding: 'cp950', configurationMode: 'global', outputPath: 'D:/out', password: 'keep' })
+    expect(store.tasks[1].zipPasswordEncoding).toBeUndefined()
+    expect(store.tasks[2].zipPasswordEncoding).toBeUndefined()
+    bar.vm.$emit('apply', { zipPasswordEncoding: 'auto' }); await flushPromises()
+    expect(store.tasks[0].zipPasswordEncoding).toBeUndefined()
+    wrapper.unmount()
+  })
+  it.each(['start', 'replace', 'unmount'])('does not apply a late encoding detection after I %s the task', async action => {
+    const wrapper = mountView()
+    const store = useTaskStore()
+    store.addTask({ id: 'late', name: 'a.zip', type: 'decompression', sourceFiles: ['C:/a.zip'], outputPath: 'D:/out', configurationMode: 'global' })
+    await nextTick()
+    wrapper.findComponent({ name: 'AeroTable' }).vm.$emit('toggle-task', 'late'); await nextTick()
+    let finish!: (value: unknown) => void
+    mocks.invoke.mockImplementationOnce(() => new Promise(resolve=>{finish=resolve}))
+    wrapper.findComponent({ name: 'BatchConfigBar' }).vm.$emit('apply', { zipPasswordEncoding: 'cp932' })
+    if (action === 'start') store.tasks[0].status = 'extracting'
+    else if (action === 'replace') store.tasks[0].sourceFiles[0] = 'C:/replacement.zip'
+    else wrapper.unmount()
+    finish({ is_split: false, archive_format: 'ZIP' }); await flushPromises()
+    expect(store.tasks[0].zipPasswordEncoding).toBeUndefined()
+    expect(store.tasks[0].configurationMode).toBe('global')
+    if (action !== 'unmount') wrapper.unmount()
+  })
   it('does not downgrade an unconfirmed forum volume to an ordinary ZIP', async () => {
     const wrapper = mountView()
     mocks.invoke.mockImplementation(async (command: string) => {

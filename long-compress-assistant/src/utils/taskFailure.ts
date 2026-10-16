@@ -18,6 +18,7 @@ export const failureCategories = {
   'engine-start': '引擎启动失败',
   io: '检测读取失败',
   'ambiguous-data': '加密数据异常（原因未确定）',
+  'password-encoding': 'ZIP 密码编码不兼容',
   unknown: '未分类',
 } as const
 
@@ -78,6 +79,11 @@ export function getTaskRecoveryGuidance(record: Pick<TaskHistoryRecord, 'status'
   }
   const report = '可通过下方“导出诊断报告”保留本任务的最终原因、原始错误和路径；旧记录不会因查看指引而改变。'
   switch (failure.category) {
+    case 'password-encoding':
+      return { title: 'ZIP 密码编码不兼容：确认编码后重试', steps: [
+        '确认密码文本及原包使用的密码编码，在下方选择自动兼容或提供者指定的代码页；当前编码无法无损表示此密码，不代表文件损坏。',
+        '明确选择的编码不会自动改用其他编码。修改后创建新任务，原失败记录保留。', report,
+      ] }
     case 'damaged':
       return { title: '文件损坏或不完整：先确认来源', steps: [
         '先重新获取完整文件，或联系提供者核对文件大小与校验值；不要覆盖仍需核对的原文件。',

@@ -22,6 +22,8 @@ import { formatProgressPercent } from '@/utils/progress'
 import { formatFileSize } from '@/utils'
 import { sortTasksByName } from '@/utils/taskOrdering'
 import { archiveInspectionMessageForDisplay } from '@/utils/taskFailure'
+import ZipPasswordEncodingField from '@/components/ui/ZipPasswordEncodingField.vue'
+import { supportsZipPasswordEncoding, zipPasswordEncodingForSource } from '@/utils/zipPasswordSource'
 
 const props = defineProps<{
   selectedTaskIds?: Set<string>
@@ -107,7 +109,8 @@ const testIntegrity = async (task: Task) => {
   try {
     const result = await tauriCommands.testArchiveIntegrity(
       task.sourceFiles[0],
-      task.password || undefined
+      task.password || undefined,
+      zipPasswordEncodingForSource(task.sourceFiles[0], task.zipPasswordEncoding, task.format)
     )
     appStore.setSuccess(result)
   } catch (e: any) {
@@ -473,7 +476,7 @@ async (tasks, _, onCleanup) => {
 
                     <div v-if="task.type === 'decompression'" class="space-y-3.5">
                       <DraftRecoveryNotice v-if="task.status === 'pending'" :sources="task.sourceFiles.map(path => ({ path, issue: task.sourceIssue }))" :needs-password="task.draftPasswordRequired"
-                        @replace="(index, path) => { task.sourceFiles[index] = path; task.name = path.split(/[\\/]/).pop() || path; task.sourceIssue = undefined }"
+                        @replace="(index, path) => { task.sourceFiles[index] = path; task.name = path.split(/[\\/]/).pop() || path; task.sourceIssue = undefined; task.format = undefined }"
                         @password="task.password = $event; task.draftPasswordRequired = false" />
                       <!-- 路径行：增加 flex-wrap 兜底，但在大多数状态下保持并排 -->
                       <div v-if="task.status === 'pending'" class="inherited-config-control space-y-2">
@@ -501,6 +504,8 @@ async (tasks, _, onCleanup) => {
                         :source="task.sourceFiles[0] || ''" :output="task.outputPath" :subfolder="task.extractToSubfolder ?? false"
                         :shared-count="sharedDestinations.get(task.id) || 0" @change-output="handleSelectOutputDir(task)" />
                       <CompletedExtractionOutput v-if="task.status === 'completed' && (!task.workloadKind || task.workloadKind === 'archive')" :path="task.outputPath" />
+                      <ZipPasswordEncodingField v-if="task.status === 'pending' && (supportsZipPasswordEncoding(task.sourceFiles[0] || '', task.format) || (!task.format && task.zipPasswordEncoding !== undefined))"
+                        v-model="task.zipPasswordEncoding" test-id="task-zip-password-encoding" />
                       <ResourcePreflightCard :report="task.resourcePreflight" compact />
                       <FailedExtractionRetry v-if="task.status === 'failed' && (!task.workloadKind || task.workloadKind === 'archive')" :task-ids="[task.id]" inline @created="emit('retry-created', $event)" />
 

@@ -9,6 +9,8 @@ import { extractionRetryPolicy, validateExtractionRetry } from '@/utils/extracti
 import { extractErrorMessage, generateId } from '@/utils'
 import { useAppStore } from '@/stores/app'
 import { parentDirectory } from '@/utils/resultLocation'
+import ZipPasswordEncodingField from '@/components/ui/ZipPasswordEncodingField.vue'
+import { supportsZipPasswordEncoding } from '@/utils/zipPasswordSource'
 
 const props = defineProps<{ taskIds: string[]; suppliedPassword?: string; inline?: boolean }>()
 const emit = defineEmits<{ close: []; created: [ids: string[]] }>()
@@ -29,6 +31,8 @@ const rows = ref(props.taskIds.flatMap(id => {
     // The single-row password action can explicitly hand off the user's input.
     password: props.taskIds.length === 1 ? props.suppliedPassword || '' : '',
     extractToSubfolder: task.extractToSubfolder ?? true,
+    zipPasswordEncoding: draft ? draft.zipPasswordEncoding : task.zipPasswordEncoding,
+    originalSource: task.sourceFiles[0], sourceFormat: task.format,
     createdId: task.retryDraftId || '', error: '', checking: false, missing: [] as string[] }]
 }))
 const busy = ref(false)
@@ -116,6 +120,7 @@ async function createDrafts() {
           retryOfTaskId: parent.id, sourceFiles: [result.path], outputPath: result.outputPath,
           configurationMode: 'individual', extractToSubfolder: row.extractToSubfolder,
           recycleSourceAfterExtract: false, password: row.password || undefined,
+          zipPasswordEncoding: result.zipPasswordEncoding, format: result.format,
         })
         parent.retryDraftId = id
         row.source = result.path
@@ -185,6 +190,7 @@ function close() {
             <label class="block text-xs">本次密码（留空时按当前密码设置尝试）
               <input v-model="row.password" type="password" autocomplete="off" data-testid="retry-password" class="retry-input" />
             </label>
+            <ZipPasswordEncodingField v-if="supportsZipPasswordEncoding(row.source, row.source === row.originalSource ? row.sourceFormat : undefined)" v-model="row.zipPasswordEncoding" :disabled="busy || pickerBusy || !row.selected" test-id="retry-zip-password-encoding" />
             <label class="flex items-center gap-2 text-xs"><input v-model="row.extractToSubfolder" data-testid="retry-subfolder" type="checkbox" />解压到同名子目录</label>
             <ExtractionOutputPreview class="sm:col-span-2" :source="row.source.trim()" :output="row.output.trim()" :subfolder="row.extractToSubfolder" @change-output="choosePath(true, row)" />
           </fieldset>

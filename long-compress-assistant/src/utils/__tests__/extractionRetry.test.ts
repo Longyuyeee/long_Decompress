@@ -5,6 +5,14 @@ vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 beforeEach(() => vi.resetAllMocks())
 
 describe('forum ZIP retry source resolution', () => {
+  it('uses the chosen input encoding for required integrity checks and keeps encoding failures distinct', async () => {
+    mocks.invoke.mockImplementation(async (cmd, args) => cmd === 'detect_split_archive'
+      ? { is_split: false, archive_format: 'ZIP' }
+      : cmd === 'get_file_info' ? { name: 'old.zip', is_dir: args.path === 'D:/output', size: 100 }
+      : { status: 'password_encoding', integrityTested: false })
+    await expect(validateExtractionRetry({ source: 'C:/old.zip', output: 'D:/output', password: '中文', extractToSubfolder: false, zipPasswordEncoding: 'cp932' }, true, 'check-encoding', () => false)).rejects.toThrow('不代表文件损坏')
+    expect(mocks.invoke).toHaveBeenCalledWith('diagnose_archive', expect.objectContaining({ zipPasswordEncoding: 'cp932' }))
+  })
   const input = { source:'C:/资料.haozip02.zip', output:'D:/本次输出', password:'my-password', extractToSubfolder:true }
   it('does not retry an unconfirmed forum volume as an independent ZIP', async () => {
     mocks.invoke.mockResolvedValue({is_split:false})

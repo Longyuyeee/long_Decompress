@@ -1,0 +1,53 @@
+{
+  "verifiedAt": "2026-10-16T19:52:16.945Z",
+  "applicationSha256": "968782203356c4fbe43656e9c8bc12cfbe6e28983e331d36f9b437d0f4fd1edd",
+  "source": "unmodified pinned Info-ZIP originals",
+  "results": [
+    {
+      "code": "cp932",
+      "firstTask": "vinnde63nmvbdvgwa",
+      "completedTask": "6i8uksya4mvbdvzuv",
+      "outputHash": "221dab361693ca1ddc8fd3ab7ef089657414d8069e84efcbd55394971a8fc0ea",
+      "sourceHash": "a9991d69d4f7d5ab41e1290ccaaa1f4adf91acae54ecc59ebae52d0038677123"
+    },
+    {
+      "code": "cp936",
+      "firstTask": "dmwq61x20mvbdw1mj",
+      "completedTask": "p0z45x2zzmvbdw4lh",
+      "outputHash": "221dab361693ca1ddc8fd3ab7ef089657414d8069e84efcbd55394971a8fc0ea",
+      "sourceHash": "df332d71bb85cb40de348e07d52dd7417d8de6dd983b2689b516edaf4add48c9"
+    },
+    {
+      "code": "cp950",
+      "firstTask": "4hspaz3wrmvbdw693",
+      "completedTask": "567i4krk8mvbdw9dd",
+      "outputHash": "221dab361693ca1ddc8fd3ab7ef089657414d8069e84efcbd55394971a8fc0ea",
+      "sourceHash": "0aeb6674db3b100761f05205e6c239f96501478af8c9824ef4eb625b4f8e071c"
+    }
+  ],
+  "negativeCases": [
+    {
+      "kind": "wrong-manual-password",
+      "taskId": "sbub8yp9fmvbdvtob",
+      "category": "unknown"
+    },
+    {
+      "kind": "unrepresentable-manual-password",
+      "taskId": "uxo2bgy9smvbdvvk5",
+      "category": "password-encoding"
+    }
+  ],
+  "historyReplayTask": "sg2aogqnmmvbdwd6s",
+  "screenshots": [
+    "batch-menu-1100x700.png",
+    "batch-menu-760x520.png",
+    "input-menu-1100x700.png",
+    "input-menu-760x520.png",
+    "password-encoding-correction-1100x700.png",
+    "password-encoding-correction-760x520.png",
+    "cp932-complete.png",
+    "cp936-complete.png",
+    "cp950-complete.png",
+    "history-narrow-menu.png"
+  ]
+}
