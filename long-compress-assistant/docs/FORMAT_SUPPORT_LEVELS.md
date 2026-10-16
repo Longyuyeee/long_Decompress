@@ -1,12 +1,12 @@
 # 归档格式支持等级（当前权威口径）
 
-更新时间：2026-10-17（当前正式版 v1.4.13）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级。下载见 [v1.4.13 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13)，历次能力按对应实现和实际产物记录。
+更新时间：2026-10-17（当前正式版 v1.4.15）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级。下载见 [v1.4.15 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15)，历次能力按对应实现和实际产物记录。
 
 ## 当前边界速查（覆盖下方历次演变描述）
 
-- v1.4.15 候选功能已封板，优化 ZIP 重复预检、TAR.LZ4 / TAR.BR 流式创建及 RAR 预检查任务控制，继承下述 v1.4.14 候选能力。不新增格式、不扩大密码/卷型承诺；完整校验、真实错误与默认设置保留。见[实施审计](ARCHIVE_PERFORMANCE_1.4.15.md)和[封板记录](ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)，尚未计入公开正式版。
+- v1.4.15 已交付 ZIP 重复预检优化、TAR.LZ4 / TAR.BR 流式创建及 RAR 预检查任务控制；保留完整校验、真实错误与默认设置，不把局部性能收益外推为整条应用提速比例。见[实施审计](ARCHIVE_PERFORMANCE_1.4.15.md)和[封板记录](ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)。
 
-- v1.4.14 候选新增 ZIP Zstandard 与 ZIPX（XZ）创建。ZIP Zstandard 保留普通/AES/ZipCrypto 及数字/标准分卷；ZIPX 创建提供普通包和密码数字分卷，标准 ZIPX 创建暂不开放。方法跟随转换、批量配置、配置组/模板、草稿和历史保存。证据与可发布状态见 [实施记录](ZIP_OUTPUT_METHODS_1.4.14.md)和 [封板记录](ZIP_OUTPUT_METHODS_FREEZE_1.4.14.md)，尚未计入 v1.4.13 正式版。
+- 原 v1.4.14 候选的 ZIP Zstandard 与 ZIPX（XZ）创建统一随 v1.4.15 发布，不另发 v1.4.14。ZIP Zstandard 保留普通/AES/ZipCrypto 及数字/标准分卷；ZIPX 创建提供普通包和密码数字分卷，标准 ZIPX 创建暂不开放。方法跟随转换、批量配置、配置组/模板、草稿和历史保存。原始证据见 [实施记录](ZIP_OUTPUT_METHODS_1.4.14.md)和 [封板记录](ZIP_OUTPUT_METHODS_FREEZE_1.4.14.md)。
 
 - v1.4.13 已交付目录完整可读的标准 `.z01/…/.zip` 缺卷部分救援，普通/AES/ZipCrypto 的缺首卷和中间卷按现有连续卷读取完整文件；跨缺失卷、不完整或校验失败的条目不恢复。终卷或目录缺失、未知数字卷长度、好压论坛卷缺卷仍不承诺救援。实际证据见 [本版记录](PARTIAL_ZIP_RECOVERY_1.4.13.md)，正式安装器与发布身份见 [封板记录](PARTIAL_ZIP_RECOVERY_FREEZE_1.4.13.md)，下方“任意缺卷不支持”不代表本版的有限救援范围。
 
@@ -33,7 +33,7 @@
 
 ### A：完整创建—解压闭环
 
-- ZIP、7Z、WIM；
+- ZIP（Deflate / Zstandard）、ZIPX（XZ）、7Z、WIM；ZIPX 标准分卷暂不提供，方法及密码组合范围见顶部说明；
 - TAR、TAR.GZ、TAR.BZ2、TAR.XZ、TAR.ZST；
 - GZ、BZ2、XZ、ZST/ZSTD、LZMA；
 - LZ4、Brotli、TAR.LZ4、TAR.BR（v1.4.3 新增，真实 Windows Release Tauri 逐字节回解通过）；

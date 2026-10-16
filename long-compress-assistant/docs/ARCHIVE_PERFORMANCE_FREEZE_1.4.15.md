@@ -1,6 +1,6 @@
 # v1.4.15 封板与发布接续
 
-2026-10-17：功能、实际用户流程和本版资源观察已封板，普通候选安装包通过。[PR #169](https://github.com/Longyuyeee/long_Decompress/pull/169) 已合入，合并及正式标签 `v1.4.15` 均指向 `138a07f71cf20e23034ea8d40b88ccd3973d7018`，文件树与最终候选完全一致。按上一条向用户提出、随后用户要求继续的合并发布方案，v1.4.14 改进一并交付，PR #168 已随提交进入主线自动标为合入，不单独发布 v1.4.14。正式 Release 构建正在运行，资产尚未完成，不能计为已发布。
+2026-10-17：[v1.4.15 已正式发布](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15)。[PR #169](https://github.com/Longyuyeee/long_Decompress/pull/169) 已合入，合并及正式标签均指向 `138a07f71cf20e23034ea8d40b88ccd3973d7018`，文件树与最终候选完全一致。v1.4.14 改进一并交付，PR #168 随提交进入主线自动标为合入，不单独发布 v1.4.14；旧分支与原始证据保留。
 
 ## 冻结范围
 
@@ -26,7 +26,8 @@
 
 1. 最终候选 `d6ceb1e68fa4ed561fbd03e20b24ff2f7a59283b` 的 [Windows package / 38946306372](https://github.com/Longyuyeee/long_Decompress/actions/runs/38946306372) 已成功。附件 `windows-nsis-installer` ID `12066088513`，20,200,357 字节，GitHub 附件 ZIP 摘要 `05b6bee825ddcb00f3dd2c39a68d1c34c7fe8ddd7655dd4923bb48e43e83b620`。
 2. 已下载其中 `Long解压_1.4.15_x64-setup.exe`，20,214,487 字节，ProductVersion `1.4.15`，SHA256 `0c0d89542eaefafaac8be2678a15752b9c9179b9e7ca0fa3421a00db14430d3d`。这是普通候选安装器，不是桌面 E2E 程序或最终签名更新包；本轮没有安装到个人目录或重复安装生命周期矩阵。
-3. 合入后重复主线 CI `38947880568` 已请求取消，仅接续 [正式 Release / 38947945793](https://github.com/Longyuyeee/long_Decompress/actions/runs/38947945793)。后续核对实际安装器、签名更新 ZIP、签名与 latest.json，采用中文正文；两份 README 保留图标，资产完成后才切换为正式下载，不把候选哈希套到最终资产上。
+3. 合入后重复主线 CI `38947880568` 已取消，仅执行 [正式 Release / 38947945793](https://github.com/Longyuyeee/long_Decompress/actions/runs/38947945793)。正式安装器、`.nsis.zip`、`.nsis.zip.sig` 和 `latest.json` 在 Release 发布；中文正文及更新清单说明同步。准确最终资产大小/摘要记入 PR #169 的发布接续节，不把候选哈希套到最终资产上。两份 README 保留原软件图标。
+4. 发布后状态文档与格式口径单独走文档 PR，只有确认正式构建及四项资产完成后才合入；不改正式标签，不为说明回填重新发布安装器。新的文档 PR 按仓库要求完成必需检查，不冒用旧候选的检查状态。
 
 ## 保留边界
 
