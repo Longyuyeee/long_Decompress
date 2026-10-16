@@ -24,6 +24,21 @@ const mockFile = (name: string, size: number): FileObject => ({
 })
 
 describe('Compression Store', () => {
+  it('only applies target encodings to ZIP/ZIPX and does not detach inherited 7Z drafts', () => {
+    const store=useCompressionStore(); store.globalSettings.format='7z'
+    const zip=mockFile('zip.txt',10), zipx=mockFile('zipx.txt',10), other=mockFile('other.txt',10)
+    ;[zip,zipx,other].forEach(f=>store.addFile(f))
+    store.updateFileSettings(zip.path,defaultOptions())
+    store.updateFileSettings(zipx.path,{...defaultOptions(),format:'zipx'})
+    expect(store.applyBatchConfiguration([zip.path,zipx.path,other.path],{zipPasswordEncoding:'cp950'})).toBe(2)
+    expect(store.selectedFiles[0].settings?.zipPasswordEncoding).toBe('cp950')
+    expect(store.selectedFiles[1].settings?.zipPasswordEncoding).toBe('cp950')
+    expect(store.selectedFiles[2].settings).toBeUndefined()
+    expect(store.globalSettings.zipPasswordEncoding).toBeUndefined()
+    expect(()=>store.applyBatchConfiguration([other.path],{zipPasswordEncoding:'cp932'})).toThrow('没有适用')
+    expect(store.applyBatchConfiguration([other.path],{format:'zip',zipPasswordEncoding:'cp932'})).toBe(1)
+    expect(store.selectedFiles[2].settings).toMatchObject({format:'zip',zipPasswordEncoding:'cp932'})
+  })
   it('does not detach inherited non-ZIP drafts when only selected ZIP methods change', () => {
     const store = useCompressionStore(), first = mockFile('one', 1), other = mockFile('two', 1)
     store.globalSettings.format = '7z'; store.addFile(first); store.addFile(other)

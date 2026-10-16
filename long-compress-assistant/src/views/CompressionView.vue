@@ -470,7 +470,7 @@ const runCompression = async () => {
           encryptFilenames: job.settings.encryptFilenames ?? false,
           rarRecoveryPercent: job.settings.format === 'rar' ? (job.settings.rarRecoveryPercent ?? 0) : 0,
           rarRecoveryVolumes: job.settings.format === 'rar' ? (job.settings.rarRecoveryVolumes ?? 0) : 0,
-          zipPasswordEncoding: job.settings.zipPasswordEncoding ?? 'utf8',
+          zipPasswordEncoding: ['zip', 'zipx'].includes(effectiveFormat) ? job.settings.zipPasswordEncoding ?? 'utf8' : 'utf8',
           zipMethod: job.settings.zipMethod ?? 'deflate',
           zipEncryption: job.settings.zipEncryption ?? 'aes256',
           zipSplitMode: job.settings.zipSplitMode ?? 'numeric',

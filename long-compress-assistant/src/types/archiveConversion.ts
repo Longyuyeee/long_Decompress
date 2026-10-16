@@ -22,6 +22,8 @@ export interface ConversionDraft {
   sourcePath: string
   sourceParts?: string[]
   sourceReference?: string
+  /** Content detection, never inferred from a filename suffix. Rechecked before execution. */
+  sourceFormat?: string
   intent: 'convert' | 'reconfigure'
   defaultFormat?: string
   expanded: boolean

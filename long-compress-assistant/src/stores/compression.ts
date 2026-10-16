@@ -443,12 +443,15 @@ export const useCompressionStore = defineStore('compression', () => {
 
   const applyBatchConfiguration = (ids: string[], patch: BatchConfigPatch) => {
     const selected = new Set(ids)
-    if (patch.zipMethod === undefined && patch.format === undefined && patch.level === undefined && patch.rarRecoveryPercent === undefined && patch.rarRecoveryVolumes === undefined && patch.outputDirectory === undefined) return 0
+    if (patch.zipMethod === undefined && patch.zipPasswordEncoding === undefined && patch.format === undefined && patch.level === undefined && patch.rarRecoveryPercent === undefined && patch.rarRecoveryVolumes === undefined && patch.outputDirectory === undefined) return 0
+    if (patch.zipPasswordEncoding === 'auto') throw new Error('创建新包请选择明确的密码编码，默认使用 UTF-8。')
     let count = 0
     const drafts = [...selectedFiles.value.map(file => ({ id: file.path, draft: file })),
       ...groups.value.map(group => ({ id: group.id, draft: group }))]
     const methodOnly = patch.zipMethod !== undefined && Object.entries(patch).every(([field, value]) => field === 'zipMethod' || value === undefined)
+    const zipOptionsOnly = Object.entries(patch).every(([field,value]) => ['zipMethod','zipPasswordEncoding'].includes(field) || value === undefined)
     if (methodOnly && !drafts.some(({ id, draft }) => selected.has(id) && !draft.taskId && getEffectiveSettings(draft.settings).format === 'zip')) throw new Error('所选任务中没有 ZIP 任务，请选择 ZIP 格式或保持各自方法。')
+    if (zipOptionsOnly && !drafts.some(({id,draft}) => selected.has(id) && !draft.taskId && ((patch.zipMethod !== undefined && getEffectiveSettings(draft.settings).format === 'zip') || (patch.zipPasswordEncoding !== undefined && ['zip','zipx'].includes(getEffectiveSettings(draft.settings).format))))) throw new Error('所选任务中没有适用的 ZIP/ZIPX 设置。')
     if (patch.rarRecoveryPercent && drafts.some(({ id, draft }) => selected.has(id) && !draft.taskId && (patch.format || getEffectiveSettings(draft.settings).format) !== 'rar')) throw new Error('恢复保护只适用于 RAR，请先将所选任务设为 RAR，或保持各自恢复设置。')
     if (patch.rarRecoveryVolumes && drafts.some(({ id, draft }) => selected.has(id) && !draft.taskId && (patch.format || getEffectiveSettings(draft.settings).format) !== 'rar')) throw new Error('恢复卷只适用于 RAR 分包，请先调整目标格式。')
     if ((patch.format === 'zip' || patch.format === 'zipx') && drafts.some(({ id, draft }) => selected.has(id) && !draft.taskId && getEffectiveSettings(draft.settings).encryptFilenames)) {
@@ -456,6 +459,7 @@ export const useCompressionStore = defineStore('compression', () => {
     }
     for (const { id, draft } of drafts) {
       if (!selected.has(id) || draft.taskId || (methodOnly && getEffectiveSettings(draft.settings).format !== 'zip')) continue
+      if (zipOptionsOnly && !((patch.zipMethod !== undefined && getEffectiveSettings(draft.settings).format === 'zip') || (patch.zipPasswordEncoding !== undefined && ['zip','zipx'].includes(getEffectiveSettings(draft.settings).format)))) continue
       const settings = cloneSettings(getEffectiveSettings(draft.settings))
       if (patch.format !== undefined) settings.format = patch.format
       if (patch.format === 'tar.lz') {
@@ -468,6 +472,7 @@ export const useCompressionStore = defineStore('compression', () => {
         settings.rarRecoveryVolumes = 0
       }
       if (patch.zipMethod !== undefined && settings.format === 'zip') settings.zipMethod = patch.zipMethod
+      if (patch.zipPasswordEncoding !== undefined && ['zip','zipx'].includes(settings.format)) settings.zipPasswordEncoding = patch.zipPasswordEncoding
       if (settings.format === 'zipx') settings.zipSplitMode = 'numeric'
       if (patch.level !== undefined) settings.level = patch.level
       if (patch.rarRecoveryPercent !== undefined) settings.rarRecoveryPercent = patch.rarRecoveryPercent

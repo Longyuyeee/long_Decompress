@@ -9,6 +9,6 @@ export interface BatchConfigPatch {
   /** undefined keeps each destination; empty string uses each source directory. */
   outputDirectory?: string
   extractToSubfolder?: boolean
-  /** Only ZIP/ZIPX input tasks; auto explicitly clears an old override. */
+  /** ZIP/ZIPX input or output, according to the caller. Only input accepts auto. */
   zipPasswordEncoding?: ZipPasswordEncoding | 'auto'
 }

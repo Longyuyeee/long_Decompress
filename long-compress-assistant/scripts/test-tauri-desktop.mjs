@@ -47,6 +47,7 @@ import { runSevenZipVolumeUiGate } from './seven-zip-volume-ui-gate.mjs'
 import { runTaskExecutionScrollGate } from './task-execution-scroll-gate.mjs'
 import { runLegacyZipInput1416Gate } from './legacy-zip-input-1416-gate.mjs'
 import { runLegacyZipWorkspace1416Gate } from './legacy-zip-workspace-1416-gate.mjs'
+import { runLegacyZipOutput1416Gate } from './legacy-zip-output-1416-gate.mjs'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -4784,6 +4785,9 @@ try {
     }
     completedSuccessfully = true
     console.log('Real Windows Tauri explicit auto-start gate passed.')
+  } else if (process.argv.includes('--legacy-zip-output-1416-only')) {
+    await runLegacyZipOutput1416Gate({ getDriver: () => driver, restart: () => restartDesktopSession({preserveProfile:true}), bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, root, application, bundledSevenZip })
+    completedSuccessfully = true
   } else if (process.argv.includes('--legacy-zip-workspace-1416-only')) {
     await runLegacyZipWorkspace1416Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, root, application })
     completedSuccessfully = true

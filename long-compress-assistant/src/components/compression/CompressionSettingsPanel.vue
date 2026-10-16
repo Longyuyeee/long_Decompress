@@ -18,6 +18,7 @@ import ProfileManager from '@/components/profiles/ProfileManager.vue'
 import PasswordGeneratorDialog from '@/components/password/PasswordGeneratorDialog.vue'
 import { extractErrorMessage } from '@/utils'
 import { useArchiveEngine } from '@/composables/useArchiveEngine'
+import { isZipPasswordEncoding, ZIP_PASSWORD_ENCODING_OPTIONS } from '@/types/zipPassword'
 
 const appStore = useAppStore()
 const tauriCommands = useTauriCommands()
@@ -463,9 +464,9 @@ const closeVaultPasswordsAfterFocus = () => {
         <div v-if="['zip', 'zipx'].includes(compressionOptions.format) && compressionOptions.password" class="flex items-center gap-2 min-w-0" data-testid="zip-password-encoding-row">
           <ThemedSelect test-id="zip-password-encoding" aria-label="ZIP 密码编码" class="min-w-0 flex-1"
             :model-value="compressionOptions.zipPasswordEncoding ?? 'utf8'"
-            @update:model-value="compressionOptions.zipPasswordEncoding = $event as 'utf8' | 'windows_local'"
-            :options="[{ value: 'utf8', label: '密码编码：UTF-8' }, { value: 'windows_local', label: '密码编码：Windows 兼容' }]" floating />
-          <HelpHint label="ZIP 密码编码说明">默认使用 UTF-8。中文密码在部分 Windows 解压软件中可能不兼容；Windows 兼容模式使用本机代码页，跨语言系统仍可能无法读取。无法表示的字符会报错，不会替换字符。跨系统分享中文密码可优先选择 7Z。</HelpHint>
+            @update:model-value="isZipPasswordEncoding($event) && (compressionOptions.zipPasswordEncoding = $event)"
+            :options="ZIP_PASSWORD_ENCODING_OPTIONS.map(option => ({...option,label:`密码编码：${option.label}`}))" floating />
+          <HelpHint label="ZIP 密码编码说明">新包默认使用 UTF-8。与旧工具互通时可明确指定日文、简体或繁体代码页；Windows 模式使用本机代码页，跨语言系统仍可能无法读取。无法表示的字符会报错，不会替换。密码编码不改变文件名。</HelpHint>
         </div>
         <p v-if="usesEncrypted7zContainer" data-testid="encrypted-7z-conversion-hint" class="rounded-lg border border-amber-500/25 bg-amber-500/10 px-2.5 py-2 text-xs leading-5 text-amber-300">
           <i class="pi pi-info-circle mr-1"></i>{{ appStore.t('compress.password_7z_hint') }}
@@ -873,7 +874,7 @@ const closeVaultPasswordsAfterFocus = () => {
 .split-settings-toggle {
   display: flex;
   min-width: 0;
-  flex: 1;
+  flex: 1 0 11rem;
   align-items: center;
   gap: 0.65rem;
   cursor: pointer;
@@ -910,6 +911,7 @@ const closeVaultPasswordsAfterFocus = () => {
 }
 
 .split-settings-copy strong {
+  white-space: nowrap;
   color: var(--text-base);
   font-size: 0.72rem;
 }
@@ -926,6 +928,7 @@ const closeVaultPasswordsAfterFocus = () => {
 .split-size-field {
   display: grid;
   flex: 0 0 auto;
+  margin-left: auto;
   grid-template-columns:auto 5.25rem auto;
   align-items: center;
   gap: 0.42rem;

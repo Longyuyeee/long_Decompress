@@ -12,6 +12,7 @@ import { conversionOutputPath, defaultConversionSettings, normalizeConversionSet
 import { parentDirectory } from '@/utils/resultLocation'
 import { archiveGroupKey, archiveSourceFormat, detectArchiveGroup } from '@/utils/archiveSource'
 import { isPotentialSplitArchivePath, supportsNativePassword, supportsArchiveSplit, supportsFilenameEncryption } from '@/utils/compressionFormat'
+import { supportsZipPasswordEncoding, zipPasswordEncodingForSource } from '@/utils/zipPasswordSource'
 
 export const conversionFormats = [
   ['zip', 'ZIP'], ['zipx', 'ZIPX（XZ）'], ['7z', '7Z'], ['rar', 'RAR（需要 WinRAR）'], ['tar', 'TAR'], ['tar.gz', 'TGZ'],
@@ -34,6 +35,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   const runningTaskId = ref('')
   const stopRequested = ref(false)
   const preparing = ref(false)
+  const batchNotice = ref('')
   const rarSupport = ref<{ available: boolean; message?: string } | null>(null)
   let rarCheck: Promise<void> | undefined
   async function refreshRarSupport() {
@@ -64,7 +66,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   const currentSettings = computed(() => active.value ? effectiveSettings(active.value) : defaults.value)
   function updateItem(id: string, patch: ConversionPatch) {
     const item = items.value.find(item => item.id === id)
-    if (!item || item.taskId || busy.value) return
+    if (!item || item.taskId || busy.value || preparing.value) return
     item.settings = normalizeConversionSettings(effectiveSettings(item), patch)
     if (patch.outputDirectory !== undefined && item.settings.outputPath) {
       const filename = item.settings.outputPath.split(/[\\/]/).pop()
@@ -113,12 +115,14 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       item = current
       try {
         const group = await detectArchiveGroup(reference)
+        if (!items.value.includes(item) || item.sourcePath !== original || item.taskId) return
         // Undefined is only possible in browser previews without native IPC.
         if (!group) return
+        item.sourceFormat = group.archive_format?.toLowerCase() || undefined
         if (!group.is_split) {
           if (isPotentialSplitArchivePath(reference)) throw new Error('没有找到完整卷组，请重新选择来源。')
           item.sourceIssue = undefined
-          if (item.intent === 'reconfigure' && !item.settings && item.defaultFormat !== undefined && group.archive_format && conversionFormats.some(option => option.value === group.archive_format)) item.defaultFormat = group.archive_format
+          if (item.intent === 'reconfigure' && !item.settings && item.defaultFormat !== undefined && item.sourceFormat && conversionFormats.some(option => option.value === item.sourceFormat)) item.defaultFormat = item.sourceFormat
           return
         }
         if (!group.first_part) throw new Error('没有找到完整卷组，请重新选择来源。')
@@ -126,7 +130,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
         item.sourceReference = reference
         item.sourceParts = group.parts
         if (item.intent === 'reconfigure' && !item.settings && item.defaultFormat !== undefined) {
-          const format = group.archive_format || archiveSourceFormat(group.first_part)
+          const format = item.sourceFormat || archiveSourceFormat(group.first_part)
           if (format && conversionFormats.some(option => option.value === format)) item.defaultFormat = format
         }
         const duplicate = items.value.find(current => current.id !== item.id && !current.taskId
@@ -142,7 +146,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
         item.sourceIssue = group.is_complete === false || missing.length
           ? '分卷不完整，请补齐：' + (missing.map(path => path.split(/[\\/]/).pop()).join('、') || '缺失分卷') : undefined
         if (item.sourceIssue) item.expanded = true
-      } catch (failure) { item.sourceIssue = String(failure); item.expanded = true }
+      } catch (failure) { if (items.value.includes(item) && item.sourcePath === original && !item.taskId) { item.sourceFormat = undefined; item.sourceIssue = String(failure); item.expanded = true } }
     })
     sourceResolutions.set(item.id, resolution)
     void resolution.finally(() => { if (sourceResolutions.get(item.id) === resolution) sourceResolutions.delete(item.id) })
@@ -162,34 +166,57 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     visible.value = true
   }
   function show() { visible.value = true }
-  function applySelected(patch: ConversionPatch) {
-    if (busy.value) return '转换正在进行，请稍后修改。'
-    const methodOnly = patch.zipMethod !== undefined && Object.entries(patch).every(([field, value]) => field === 'zipMethod' || value === undefined)
-    if (methodOnly && !selected.value.some(item => effectiveSettings(item).format === 'zip')) return '所选任务中没有 ZIP 任务，请选择 ZIP 格式或保持各自方法。'
-    if (patch.rarRecoveryPercent && selected.value.some(item => (patch.format || effectiveSettings(item).format) !== 'rar')) return '恢复保护只适用于 RAR，请调整所选任务的目标格式。'
-    if (patch.rarRecoveryVolumes && selected.value.some(item => (patch.format || effectiveSettings(item).format) !== 'rar')) return '恢复卷只适用于 RAR 分包，请调整所选任务的目标格式。'
-    if (patch.encryptFilenames && selected.value.some(item => !supportsFilenameEncryption(patch.format || effectiveSettings(item).format))) {
+  async function applySelected(patch: ConversionPatch) {
+    if (busy.value || preparing.value) return '正在读取或转换，请稍后修改。'
+    batchNotice.value = ''
+    const chosen = [...selected.value]
+    const sourceEncodingChanged = Object.hasOwn(patch, 'sourceZipPasswordEncoding')
+    if (sourceEncodingChanged) {
+      preparing.value = true
+      try {
+        await Promise.all(chosen.map(item => sourceResolutions.get(item.id)))
+        for (const item of chosen) if (items.value.includes(item) && !item.taskId) queueSourceResolution(item)
+        await Promise.all(chosen.map(item => sourceResolutions.get(item.id)))
+      } finally { preparing.value = false }
+    }
+    const targets = chosen.filter(item => items.value.includes(item) && item.selected && !item.taskId)
+    const methodOnly = !sourceEncodingChanged && patch.zipMethod !== undefined && Object.entries(patch).every(([field, value]) => field === 'zipMethod' || value === undefined)
+    if (methodOnly && !targets.some(item => effectiveSettings(item).format === 'zip')) return '所选任务中没有 ZIP 任务，请选择 ZIP 格式或保持各自方法。'
+    if (patch.rarRecoveryPercent && targets.some(item => (patch.format || effectiveSettings(item).format) !== 'rar')) return '恢复保护只适用于 RAR，请调整所选任务的目标格式。'
+    if (patch.rarRecoveryVolumes && targets.some(item => (patch.format || effectiveSettings(item).format) !== 'rar')) return '恢复卷只适用于 RAR 分包，请调整所选任务的目标格式。'
+    if (patch.encryptFilenames && targets.some(item => !supportsFilenameEncryption(patch.format || effectiveSettings(item).format))) {
       return '文件名加密只支持 7Z/RAR，请调整所选任务的目标格式。'
     }
-    for (const item of selected.value) if (!methodOnly || effectiveSettings(item).format === 'zip') updateItem(item.id, patch)
+    let applied = 0, skippedSource = 0, skippedTarget = 0
+    for (const item of targets) {
+      const filtered = { ...patch }, format = patch.format || effectiveSettings(item).format
+      if (filtered.zipMethod !== undefined && format !== 'zip') delete filtered.zipMethod
+      if (filtered.zipPasswordEncoding !== undefined && !['zip','zipx'].includes(format)) { delete filtered.zipPasswordEncoding; skippedTarget++ }
+      if (sourceEncodingChanged && (!item.sourceFormat || !supportsZipPasswordEncoding(item.sourcePath, item.sourceFormat))) { delete filtered.sourceZipPasswordEncoding; skippedSource++ }
+      if (!Object.keys(filtered).length) continue
+      updateItem(item.id, filtered); applied++
+    }
+    if (skippedSource || skippedTarget) batchNotice.value = `${skippedSource ? `${skippedSource} 项原包非 ZIP 或格式未确认，未修改读取编码。` : ''}${skippedTarget ? `${skippedTarget} 项目标非 ZIP/ZIPX，未修改新包编码。` : ''}`
+    if (!applied && (sourceEncodingChanged || patch.zipPasswordEncoding !== undefined)) return '所选任务没有适用的 ZIP/ZIPX 密码编码设置。' + batchNotice.value
     return ''
   }
   function updateDefaults(patch: ConversionPatch) {
-    if (busy.value) return
+    if (busy.value || preparing.value) return
     defaults.value = normalizeConversionSettings(defaults.value, patch)
     if (patch.format !== undefined) for (const item of pending.value) if (!item.settings) item.defaultFormat = undefined
   }
   function remove(id: string) {
-    if (busy.value) return
+    if (busy.value || preparing.value) return
     items.value = items.value.filter(item => item.id !== id)
     if (!active.value) activeId.value = items.value[0]?.id || ''
   }
   function replaceSource(id: string, path: string) {
     const item = items.value.find(item => item.id === id)
-    if (!item || busy.value || item.taskId) return
+    if (!item || busy.value || preparing.value || item.taskId) return
     item.sourcePath = path; item.sourceIssue = undefined; item.error = undefined
     item.sourceParts = undefined
     item.sourceReference = undefined
+    item.sourceFormat = undefined
     queueSourceResolution(item)
   }
   function restore(record: TaskHistoryRecord) {
@@ -219,6 +246,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       item.settings!.outputPath = proposed.slice(0, -(config.format.length + 1)) + '_' + suffix + '.' + config.format
     }
     items.value.push(item)
+    queueSourceResolution(item)
     activeId.value = item.id; error.value = ''; visible.value = true
   }
   function validate(item: ConversionDraft) {
@@ -244,10 +272,11 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   async function execute(item: ConversionDraft, settings: ConversionSettings, outputPath: string, allowRarPasswordCli = false) {
     let unlisten: UnlistenFn | undefined
     const id = 'conversion-' + crypto.randomUUID()
+    const sourceEncoding = item.sourceFormat ? zipPasswordEncodingForSource(item.sourcePath, settings.sourceZipPasswordEncoding, item.sourceFormat) : settings.sourceZipPasswordEncoding
     const config: ArchiveConversionConfigV1 = { schemaVersion: 1, kind: 'archive-conversion',
-      ...(settings.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: settings.sourceZipPasswordEncoding } : {}),
+      ...(sourceEncoding ? { sourceZipPasswordEncoding: sourceEncoding } : {}),
       zipMethod: settings.zipMethod ?? 'deflate',
-      zipEncryption: settings.zipEncryption, zipPasswordEncoding: settings.zipPasswordEncoding,
+      zipEncryption: settings.zipEncryption, zipPasswordEncoding: ['zip','zipx'].includes(settings.format) ? settings.zipPasswordEncoding : 'utf8',
       zipSplitMode: settings.zipSplitMode ?? 'numeric',
       outputPath, format: settings.format, level: settings.level, splitSize: settings.splitMiB * 1048576,
       rarRecoveryPercent: settings.format === 'rar' ? (settings.rarRecoveryPercent ?? 0) : 0,
@@ -357,7 +386,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   }
   return { visible, items, defaults, pending, selected, activeId, sourcePath, sourcePassword, password, outputPath,
     format, zipEncryption, zipPasswordEncoding, sourceZipPasswordEncoding, level, splitMiB, encryptFilenames, error, busy, task, phase,
-    supportsPassword, contextIntent, contextSources, stopRequested, preparing, rarSupport, refreshRarSupport, effectiveSettings, outputFor, taskFor, passwordRequirements,
+    supportsPassword, contextIntent, contextSources, stopRequested, preparing, batchNotice, rarSupport, refreshRarSupport, effectiveSettings, outputFor, taskFor, passwordRequirements,
     addSources, chooseContextSource, selectSource, openFromExplorer, show, restore, start, cancel,
     updateItem, applySelected, updateDefaults, remove, replaceSource }
 })

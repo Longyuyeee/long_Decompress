@@ -4,6 +4,16 @@ import ZipPasswordEncodingField from '../ZipPasswordEncodingField.vue'
 import ThemedSelect from '../ThemedSelect.vue'
 
 describe('ZIP input encoding field', () => {
+  it('offers only explicit output encodings with UTF-8 default and a separate target label', () => {
+    const wrapper=mount(ZipPasswordEncodingField,{props:{mode:'output',label:'新包 ZIP 密码编码'}})
+    const select=wrapper.getComponent(ThemedSelect)
+    expect(select.props('modelValue')).toBe('utf8')
+    expect(select.props('options').map(o=>o.value)).toEqual(['utf8','windows_local','cp932','cp936','cp950'])
+    expect(select.props('ariaLabel')).toBe('新包 ZIP 密码编码')
+    select.vm.$emit('update:modelValue','auto');expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+    select.vm.$emit('update:modelValue','cp950');expect(wrapper.emitted('update:modelValue')).toEqual([['cp950']])
+    wrapper.unmount()
+  })
   it('starts automatic and emits only user choices, including clearing an override', () => {
     const wrapper = mount(ZipPasswordEncodingField, { global: { stubs: { Teleport: true } } })
     const select = wrapper.getComponent(ThemedSelect)

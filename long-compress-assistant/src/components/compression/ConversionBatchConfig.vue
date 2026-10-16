@@ -9,21 +9,26 @@ import { conversionFormats, useArchiveConversionStore } from '@/stores/archiveCo
 import ConversionSettingsFields from './ConversionSettingsFields.vue'
 import { normalizeConversionSettings } from '@/utils/archiveConversionDraft'
 import { supportsNativePassword, supportsArchiveSplit } from '@/utils/compressionFormat'
+import { isZipPasswordEncoding, ZIP_PASSWORD_ENCODING_OPTIONS } from '@/types/zipPassword'
+import { useUIStore } from '@/stores/ui'
 const store = useArchiveConversionStore()
 const visible = ref(false)
+const applying = ref(false)
 const applyError = ref('')
 const mode = ref<'selected' | 'defaults'>('selected')
 const format = ref('keep'), level = ref('keep'), destination = ref('keep'), directory = ref('')
 const changePassword = ref(false), password = ref(''), changeSourcePassword = ref(false), sourcePassword = ref('')
 const changeSplit = ref(false), splitMiB = ref(0), hiddenNames = ref('keep'), recovery = ref('keep')
 const recoveryVolumes = ref('keep'), zipMethod = ref('keep')
+const sourceEncoding = ref('keep'), targetEncoding = ref('keep')
 const defaults = ref({ ...store.defaults })
 const keep = { value: 'keep', label: '保持各自设置' }
-const changed = computed(() => format.value !== 'keep' || zipMethod.value !== 'keep' || level.value !== 'keep' || destination.value !== 'keep' || changePassword.value || changeSourcePassword.value || changeSplit.value || hiddenNames.value !== 'keep' || recovery.value !== 'keep' || recoveryVolumes.value !== 'keep')
+const changed = computed(() => sourceEncoding.value !== 'keep' || targetEncoding.value !== 'keep' || format.value !== 'keep' || zipMethod.value !== 'keep' || level.value !== 'keep' || destination.value !== 'keep' || changePassword.value || changeSourcePassword.value || changeSplit.value || hiddenNames.value !== 'keep' || recovery.value !== 'keep' || recoveryVolumes.value !== 'keep')
 const valid = computed(() => (mode.value === 'defaults' || changed.value) && (destination.value !== 'custom' || !!directory.value.trim()) && (!changeSplit.value || Number.isFinite(splitMiB.value) && splitMiB.value >= 0))
 function show(nextMode: 'selected' | 'defaults') {
   mode.value = nextMode; format.value = level.value = destination.value = hiddenNames.value = recovery.value = 'keep'
   recoveryVolumes.value = zipMethod.value = 'keep'
+  sourceEncoding.value = targetEncoding.value = 'keep'
   directory.value = password.value = sourcePassword.value = ''
   changePassword.value = changeSourcePassword.value = changeSplit.value = false; splitMiB.value = 0
   defaults.value = { ...store.defaults }; visible.value = true
@@ -35,10 +40,15 @@ async function chooseDirectory() {
     if (visible.value && typeof path === 'string') { directory.value = path; destination.value = 'custom' }
   } catch { /* The editable path remains available. */ }
 }
-function apply() {
-  if (!valid.value || store.busy) return
+async function apply() {
+  if (!valid.value || store.busy || store.preparing || applying.value) return
+  applying.value = true
+  applyError.value = ''
+  try {
   if (mode.value === 'defaults') store.updateDefaults(defaults.value)
-  else applyError.value = store.applySelected({
+  else applyError.value = await store.applySelected({
+    ...(sourceEncoding.value === 'auto' || isZipPasswordEncoding(sourceEncoding.value) ? {sourceZipPasswordEncoding:sourceEncoding.value === 'auto' ? undefined : sourceEncoding.value} : {}),
+    ...(isZipPasswordEncoding(targetEncoding.value) ? {zipPasswordEncoding:targetEncoding.value} : {}),
     ...(format.value === 'keep' ? {} : { format: format.value }),
     ...(zipMethod.value === 'keep' || (format.value !== 'keep' && format.value !== 'zip') ? {} : { zipMethod: zipMethod.value as 'deflate' | 'zstd' }),
     ...(level.value === 'keep' ? {} : { level: Number(level.value) }),
@@ -51,7 +61,9 @@ function apply() {
     ...(recoveryVolumes.value === 'keep' ? {} : { rarRecoveryVolumes: Number(recoveryVolumes.value) }),
   })
   if (applyError.value) return
+  if (mode.value === 'selected' && store.batchNotice) useUIStore().showToast('info', store.batchNotice)
   visible.value = false
+  } finally { applying.value = false; if (!visible.value) password.value = sourcePassword.value = '' }
 }
 </script>
 <template>
@@ -63,8 +75,8 @@ function apply() {
       <button type="button" class="conversion-button text-muted" :disabled="store.busy || store.preparing" @click="store.pending.forEach(item => item.selected = false)">取消选择</button>
     </div>
   </div>
-  <Modal v-model:visible="visible" :title="mode === 'selected' ? '修改所选转换配置' : '转换默认配置'" icon="pi pi-sliders-h" layer="nested" size="lg">
-    <div class="space-y-4" data-testid="conversion-batch-fields">
+  <Modal v-model:visible="visible" :title="mode === 'selected' ? '修改所选转换配置' : '转换默认配置'" icon="pi pi-sliders-h" layer="nested" size="lg" :show-close-button="!applying" :close-on-escape="!applying" :close-on-backdrop="!applying">
+    <fieldset :disabled="applying" class="space-y-4 min-w-0" data-testid="conversion-batch-fields">
       <p v-if="applyError" role="alert" class="text-xs text-red-500">{{ applyError }}</p>
       <template v-if="mode === 'defaults'">
         <p class="text-xs text-muted">应用到尚未单独编辑的任务；已编辑条目保留自己的配置。</p>
@@ -75,6 +87,8 @@ function apply() {
         <p class="text-xs text-muted">只修改指定参数；名称、目录、密码等未指定的配置保持各自原值。</p>
         <p v-if="format !== 'keep' && (!supportsNativePassword(format) || !supportsArchiveSplit(format))" class="text-xs text-amber-600">此格式不支持的密码或分卷选项会关闭，其余配置保留。</p>
         <div class="grid min-w-0 gap-4 sm:grid-cols-2">
+          <div class="min-w-0 space-y-1.5 text-sm">原包 ZIP 密码编码 <HelpHint label="批量原包编码说明">只修改检测确认的 ZIP/ZIPX 原包；自动兼容会清除各自的明确选择。与目标格式和新包编码无关。</HelpHint><ThemedSelect v-model="sourceEncoding" :options="[keep,{value:'auto',label:'自动兼容（默认）'},...ZIP_PASSWORD_ENCODING_OPTIONS]" :disabled="applying" test-id="conversion-batch-source-encoding" floating /></div>
+          <div class="min-w-0 space-y-1.5 text-sm">新包 ZIP 密码编码 <HelpHint label="批量新包编码说明">只修改目标为 ZIP/ZIPX 的任务。保持各自设置不会覆盖已有值；UTF-8 是新包默认值。</HelpHint><ThemedSelect v-model="targetEncoding" :options="[keep,...ZIP_PASSWORD_ENCODING_OPTIONS]" :disabled="applying" test-id="conversion-batch-target-encoding" floating /></div>
           <label class="min-w-0 text-sm">目标格式 <HelpHint v-if="format === 'zipx'" label="ZIPX 分卷说明">ZIPX 使用 XZ，分卷采用 .zipx.001 数字卷；标准分卷可选择 ZIP。</HelpHint><ThemedSelect v-model="format" :options="[keep, ...conversionFormats]" test-id="conversion-batch-format" floating /></label>
           <label v-if="format === 'keep' || format === 'zip'" class="min-w-0 text-sm">ZIP 压缩方法<ThemedSelect v-model="zipMethod" :options="[keep, { value: 'deflate', label: '兼容 ZIP · Deflate' }, { value: 'zstd', label: 'Zstandard' }]" test-id="conversion-batch-zip-method" floating /><span class="text-xs text-muted">仅修改 ZIP 任务；ZIPX 使用 XZ。</span></label>
           <label class="min-w-0 text-sm">压缩强度<ThemedSelect v-model="level" :options="[keep, ...Array.from({ length: 10 }, (_, n) => ({ value: String(n), label: String(n) }))]" test-id="conversion-batch-level" floating /></label>
@@ -90,10 +104,10 @@ function apply() {
           <div v-if="destination === 'custom'" class="flex min-w-0 gap-2"><input v-model="directory" class="conversion-input min-w-0 flex-1" placeholder="新包保存目录" /><button type="button" class="conversion-button" @click="chooseDirectory">选择目录</button><SavedLocationPicker @select="directory = $event" /></div>
         </div>
       </template>
-    </div>
+    </fieldset>
     <template #footer>
-      <button type="button" class="conversion-button" @click="visible = false">取消</button>
-      <button type="button" class="conversion-button bg-primary text-white" data-testid="conversion-batch-apply" :disabled="!valid || store.busy" @click="apply">{{ mode === 'selected' ? `应用到 ${store.selected.length} 项` : '保存默认配置' }}</button>
+      <button type="button" class="conversion-button" :disabled="applying" @click="visible = false">取消</button>
+      <button type="button" class="conversion-button bg-primary text-white" data-testid="conversion-batch-apply" :disabled="!valid || store.busy || store.preparing || applying" @click="apply">{{ applying ? '正在应用…' : mode === 'selected' ? `应用到 ${store.selected.length} 项` : '保存默认配置' }}</button>
     </template>
   </Modal>
 </template>

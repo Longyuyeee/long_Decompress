@@ -51,6 +51,14 @@ const mountPanel = (modelValue: CompressionOptions, allowSplitArchive = true) =>
 })
 
 describe('CompressionSettingsPanel split archive settings', () => {
+  it.each(['cp932','cp936','cp950'] as const)('keeps %s through the real output encoding select without resetting password or split settings', async encoding => {
+    const wrapper=mountPanel(settings({password:'test password',splitArchive:true}));await flushPromises()
+    await wrapper.get('[data-testid="zip-password-encoding"]').trigger('click')
+    const option=wrapper.findAll('[role="option"]').find(o=>o.text().includes(encoding.toUpperCase()))!
+    expect(option).toBeDefined();await option.trigger('click');await flushPromises()
+    expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({zipPasswordEncoding:encoding,password:'test password',splitArchive:true})
+    wrapper.unmount()
+  })
   it('keeps inherited ZIP defaults until I change its method and preserves ZIPX password/split controls', async () => {
     const wrapper = mountPanel(settings({ splitArchive: true, password: 'secret' }))
     await flushPromises()
