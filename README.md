@@ -130,9 +130,9 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | 能力 | 主要格式与说明 |
 | --- | --- |
 | 创建归档 | ZIP（Deflate / Zstandard）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM |
-| 读取与解压 | ZIP / ZIPX、7Z、RAR、自解压 SFX、TAR 系列、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
+| 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式/日志式当前文件，只读）、自解压 SFX、TAR 系列、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
 | 密码与分卷 | ZIP 支持密码数字切卷与标准 `.z01/.zip` 分卷；7Z 支持密码数字卷；RAR 支持原生密码分卷；7Z / RAR 可加密文件名 |
-| 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合和既有 AES 包装）、WIM；密码和分卷随目标格式提供 |
+| 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合和既有 AES 包装）、WIM；ZPAQ 可作为输入。密码和分卷随目标格式提供，ZPAQ 不作为本版输出格式 |
 | 图片压缩 | JPEG、PNG、WebP；质量、尺寸与格式按对应编码能力调整 |
 | 视频压缩 | MP4、MOV、AVI、WMV、WebM、MKV、M4V 等受支持输入，输出 MP4 / H.264 |
 | PDF 优化 | 分析结构、优化体积；是否适合处理会在分析后显示 |
@@ -233,10 +233,11 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-v1.5.0 已功能封板，正在候选构建与发布：ZPAQ 流式/日志式当前文件、原生密码读取、所选/完整解压、检查与转换输入；另改善重试输出目录原因提示。本版不含 ZPAQ 创建、多部分或历史恢复，正式可下载状态以 Release 实际资产为准。见[实施审计](long-compress-assistant/docs/ZPAQ_READ_1.5.0.md)和[封板记录](long-compress-assistant/docs/ZPAQ_READ_FREEZE_1.5.0.md)。软件图标和既有截图保持。
+**v1.5.0 已封板并[正式发布](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.0)**：新增 ZPAQ 流式/日志式当前文件、原生密码读取、所选/完整解压、检查与转换输入；另改善重试输出目录原因提示。14 项不同 Rust、69 项前端、6 组真实桌面矩阵及 16 张实看页面通过。本版不含 ZPAQ 创建、多部分、增量备份或历史恢复；格式校验不保证检测所有未认证头部变化。见[实施审计](long-compress-assistant/docs/ZPAQ_READ_1.5.0.md)和[封板记录](long-compress-assistant/docs/ZPAQ_READ_FREEZE_1.5.0.md)。软件图标和既有截图保持。
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
+| **v1.5.0** | ZPAQ 当前文件与原生密码读取、所选/完整提取、检查及转换输入；重试目录明确原因 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.0.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.0) |
 | **v1.4.20** | 好压论坛 ZIP 缺卷抢救；逐文件区分已恢复、缺卷、校验失败和未知，恢复副本继续解压 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.20.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.20) |
 | **v1.4.19** | RAR4 旧式恢复卷、缺末卷与多次密码提示修复；无效恢复卷明确说明，修复后继续解压 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.19.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.19) |
 | **v1.4.18** | ZIPX 标准多卷的读取、密码创建、改密/重新分卷/合卷与缺卷补回；窄窗控件及中卷双击入口修正 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.18.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.18) |

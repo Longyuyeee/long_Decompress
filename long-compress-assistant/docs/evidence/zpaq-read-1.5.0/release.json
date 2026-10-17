@@ -1,0 +1,61 @@
+{
+  "verifiedAt": "2026-10-17T23:19:04.034Z",
+  "tag": "v1.5.0",
+  "tagCommit": "1a1d6d02099179341df99bdb8d9a95742c2716e4",
+  "functionalFreeze": "1c40f36a8ffec2b65c7db6bde7742a4d509c5033",
+  "candidateCommit": "debe7c242715984bc044c67e325856d9a96d16ee",
+  "candidateRun": 39076966449,
+  "releaseRun": 39077482272,
+  "url": "https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.0",
+  "publishedAt": "2026-10-17T23:17:56Z",
+  "installerProductVersion": "1.5.0",
+  "assets": [
+    {
+      "name": "Long-Decompress_1.5.0_x64-setup.exe",
+      "bytes": 20523062,
+      "sha256": "6e95a51be8a3bfe36df3dad9e18a77139879d03135cf309c790f27747d6da4db",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.0/Long-Decompress_1.5.0_x64-setup.exe"
+    },
+    {
+      "name": "Long-Decompress_1.5.0_x64-setup.nsis.zip",
+      "bytes": 20523220,
+      "sha256": "bddc60f4064de0d68479ffef37f2b000e5e0642093d6cbf14a655760e9ee52c5",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.0/Long-Decompress_1.5.0_x64-setup.nsis.zip"
+    },
+    {
+      "name": "Long-Decompress_1.5.0_x64-setup.nsis.zip.sig",
+      "bytes": 428,
+      "sha256": "677e2fb307c8eeb21cbf8cf3fffc53c29eb97d71dc3432605d3be19e9df980e3",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.0/Long-Decompress_1.5.0_x64-setup.nsis.zip.sig"
+    },
+    {
+      "name": "latest.json",
+      "bytes": 2880,
+      "sha256": "68079da8717dbed34aee55258051f161a6c51e342e56b6a279249c2c13c41a9a",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.0/latest.json"
+    }
+  ],
+  "updaterExeMatchesInstaller": true,
+  "signatureMatchesManifest": true,
+  "chineseNotesMatch": true,
+  "onlyManifestNotesChanged": true,
+  "embeddedZpaqEngine": {
+    "engineSha256": "2fa606426bca2ac1711c1c7f500aedb20ac35d55d5e84d61557be8833ba5dd12",
+    "licenseSha256": "927b5feda84f7a7f2063998b124829182967f54b954db2c3569e8bd07958bf07",
+    "engineBytes": 489472,
+    "cases": [
+      {
+        "name": "journal.zpaq",
+        "currentFiles": 3,
+        "readWithBundledEngine": true
+      },
+      {
+        "name": "journal-key.zpaq",
+        "currentFiles": 3,
+        "readWithBundledEngine": true
+      }
+    ],
+    "installationExecuted": false,
+    "engineExecutedFromExtractedInstaller": true
+  }
+}
