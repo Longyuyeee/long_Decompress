@@ -1,0 +1,276 @@
+{
+  "checkedAt": "2026-10-17T18:45:55.354Z",
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
+  "binarySha256": "742aa5df740a861651e4abe3fe14efb4f310cfcc9f4116f40ae769dee1b257e7",
+  "fixtureScope": "Original HaoZip GUI 6.6.0.11316 forum 7Z content/header password groups, NOT renamed numeric volumes",
+  "cases": [
+    {
+      "stem": "论坛7Z内容密码",
+      "records": [
+        {
+          "member": "论坛7Z内容密码.haozip01.7z",
+          "grouped": true,
+          "browsed": true,
+          "wrongRejected": true,
+          "extracted": true,
+          "integrityTested": true,
+          "convertedIndependently": true,
+          "cleanPreview": true
+        },
+        {
+          "member": "论坛7Z内容密码.haozip02.7z",
+          "grouped": true,
+          "browsed": true,
+          "wrongRejected": true,
+          "extracted": true,
+          "integrityTested": true,
+          "convertedIndependently": true,
+          "cleanPreview": true
+        },
+        {
+          "member": "论坛7Z内容密码.haozip03.7z",
+          "grouped": true,
+          "browsed": true,
+          "wrongRejected": true,
+          "extracted": true,
+          "integrityTested": true,
+          "convertedIndependently": true,
+          "cleanPreview": true
+        }
+      ],
+      "faults": [
+        {
+          "fault": "missing-first",
+          "supplied": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：论坛7Z内容密码.haozip01.7z"
+        },
+        {
+          "fault": "missing-first",
+          "supplied": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：论坛7Z内容密码.haozip01.7z"
+        },
+        {
+          "fault": "missing-first",
+          "supplied": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：论坛7Z内容密码.haozip01.7z"
+        },
+        {
+          "fault": "missing-middle",
+          "supplied": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：论坛7Z内容密码.haozip02.7z"
+        },
+        {
+          "fault": "missing-middle",
+          "supplied": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：论坛7Z内容密码.haozip02.7z"
+        },
+        {
+          "fault": "missing-middle",
+          "supplied": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：论坛7Z内容密码.haozip02.7z"
+        },
+        {
+          "fault": "missing-tail",
+          "supplied": "none",
+          "error": "[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 166502 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "fault": "missing-tail",
+          "supplied": "wrong",
+          "error": "[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 166502 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "fault": "missing-tail",
+          "supplied": "correct",
+          "error": "[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 166502 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "fault": "truncated-tail",
+          "supplied": "none",
+          "error": "[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 166502 字节，实际只有 166501 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "fault": "truncated-tail",
+          "supplied": "wrong",
+          "error": "[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 166502 字节，实际只有 166501 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "fault": "truncated-tail",
+          "supplied": "correct",
+          "error": "[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 166502 字节，实际只有 166501 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "fault": "damaged-header",
+          "supplied": "none",
+          "error": "[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头"
+        },
+        {
+          "fault": "damaged-header",
+          "supplied": "wrong",
+          "error": "[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头"
+        },
+        {
+          "fault": "damaged-header",
+          "supplied": "correct",
+          "error": "[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头"
+        }
+      ],
+      "originalVolumes": [
+        {
+          "name": "论坛7Z内容密码.haozip01.7z",
+          "sha256": "9547b88b2a9d9297479d63e2156a7315cec4a6c08364207cf95d514114e7be92"
+        },
+        {
+          "name": "论坛7Z内容密码.haozip02.7z",
+          "sha256": "81ca8252f95122710f7bfed816932edc08f9820dd36773da84cca53a150ccbb6"
+        },
+        {
+          "name": "论坛7Z内容密码.haozip03.7z",
+          "sha256": "a32e21efd4dd2ea3215b4f51953596d35769975202addbfed7041fdbaac55093"
+        }
+      ]
+    },
+    {
+      "stem": "论坛7Z文件名密码",
+      "records": [
+        {
+          "member": "论坛7Z文件名密码.haozip01.7z",
+          "grouped": true,
+          "browsed": true,
+          "wrongRejected": true,
+          "extracted": true,
+          "integrityTested": true,
+          "convertedIndependently": true,
+          "cleanPreview": true
+        },
+        {
+          "member": "论坛7Z文件名密码.haozip02.7z",
+          "grouped": true,
+          "browsed": true,
+          "wrongRejected": true,
+          "extracted": true,
+          "integrityTested": true,
+          "convertedIndependently": true,
+          "cleanPreview": true
+        },
+        {
+          "member": "论坛7Z文件名密码.haozip03.7z",
+          "grouped": true,
+          "browsed": true,
+          "wrongRejected": true,
+          "extracted": true,
+          "integrityTested": true,
+          "convertedIndependently": true,
+          "cleanPreview": true
+        }
+      ],
+      "faults": [
+        {
+          "fault": "missing-first",
+          "supplied": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：论坛7Z文件名密码.haozip01.7z"
+        },
+        {
+          "fault": "missing-first",
+          "supplied": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：论坛7Z文件名密码.haozip01.7z"
+        },
+        {
+          "fault": "missing-first",
+          "supplied": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：论坛7Z文件名密码.haozip01.7z"
+        },
+        {
+          "fault": "missing-middle",
+          "supplied": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：论坛7Z文件名密码.haozip02.7z"
+        },
+        {
+          "fault": "missing-middle",
+          "supplied": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：论坛7Z文件名密码.haozip02.7z"
+        },
+        {
+          "fault": "missing-middle",
+          "supplied": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：论坛7Z文件名密码.haozip02.7z"
+        },
+        {
+          "fault": "missing-tail",
+          "supplied": "none",
+          "error": "[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 166552 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "fault": "missing-tail",
+          "supplied": "wrong",
+          "error": "[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 166552 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "fault": "missing-tail",
+          "supplied": "correct",
+          "error": "[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 166552 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "fault": "truncated-tail",
+          "supplied": "none",
+          "error": "[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 166552 字节，实际只有 166551 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "fault": "truncated-tail",
+          "supplied": "wrong",
+          "error": "[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 166552 字节，实际只有 166551 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "fault": "truncated-tail",
+          "supplied": "correct",
+          "error": "[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 166552 字节，实际只有 166551 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "fault": "damaged-header",
+          "supplied": "none",
+          "error": "[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头"
+        },
+        {
+          "fault": "damaged-header",
+          "supplied": "wrong",
+          "error": "[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头"
+        },
+        {
+          "fault": "damaged-header",
+          "supplied": "correct",
+          "error": "[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头"
+        }
+      ],
+      "originalVolumes": [
+        {
+          "name": "论坛7Z文件名密码.haozip01.7z",
+          "sha256": "d0141ca34dab2e7987b1fe71743b384e6d075cf7f482eb96117ab1f51b5cbfa9"
+        },
+        {
+          "name": "论坛7Z文件名密码.haozip02.7z",
+          "sha256": "a309f0a2e52aafa54a220efdb51ded4b95dbf753bf482a40e8ca6c5073519179"
+        },
+        {
+          "name": "论坛7Z文件名密码.haozip03.7z",
+          "sha256": "7bd7d619da3283707ed26937ea1643c79a07b12bfe3b1625d60ff980b9fecbd8"
+        }
+      ]
+    }
+  ],
+  "ui": {
+    "unorderedMembersDeduplicated": true,
+    "correctedHeaderPasswordBrowse": true,
+    "outputNameMatchesActual": true,
+    "missingMiddleBeforePassword": true,
+    "suppliedVolumeRetried": true,
+    "originalFailureRetained": true
+  },
+  "screenshots": [
+    "haozip-forum-7z-1417-corrected-browse.png",
+    "haozip-forum-7z-1417-output-1100x700.png",
+    "haozip-forum-7z-1417-output-760x520.png",
+    "haozip-forum-7z-1417-output-narrow-end.png",
+    "haozip-forum-7z-1417-missing-middle.png",
+    "haozip-forum-7z-1417-restored-completed.png"
+  ]
+}
