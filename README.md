@@ -233,6 +233,8 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
+v1.5.0 已功能封板，正在候选构建与发布：ZPAQ 流式/日志式当前文件、原生密码读取、所选/完整解压、检查与转换输入；另改善重试输出目录原因提示。本版不含 ZPAQ 创建、多部分或历史恢复，正式可下载状态以 Release 实际资产为准。见[实施审计](long-compress-assistant/docs/ZPAQ_READ_1.5.0.md)和[封板记录](long-compress-assistant/docs/ZPAQ_READ_FREEZE_1.5.0.md)。软件图标和既有截图保持。
+
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
 | **v1.4.20** | 好压论坛 ZIP 缺卷抢救；逐文件区分已恢复、缺卷、校验失败和未知，恢复副本继续解压 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.20.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.20) |
