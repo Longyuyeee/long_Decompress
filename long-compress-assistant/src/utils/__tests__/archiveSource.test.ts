@@ -16,3 +16,31 @@ describe('HaoZip forum ZIP sources', () => {
     expect(isPotentialSplitArchivePath('F:\\下载\\not-haozip02.zip')).toBe(false)
   })
 })
+
+describe('HaoZip forum 7Z source names', () => {
+  it.each([
+    ['旅行.haozip01.7z', '旅行'],
+    ['旅行.HAOZIP02.7Z', '旅行'],
+    ['旅行.haozip003.7z', '旅行'],
+    ['haozip01.7z', 'archive'],
+    ['旅行-not-haozip02.7z', '旅行-not-haozip02'],
+    ['旅行.haozip1.7z', '旅行.haozip1'],
+    ['旅行.haozip02.zip', '旅行'],
+  ])('keeps the same logical name as the backend for %s', (source, expected) => {
+    expect(archiveSourceStem(`downloads/${source}`)).toBe(expected)
+  })
+
+  it('groups members without conflating ordinary 7Z or a forum ZIP with the same stem', () => {
+    const first = 'F:\\下载\\资料.haozip01.7z'
+    const middle = 'F:/下载/资料.HAOZIP002.7Z'
+    expect(archiveGroupKey(middle)).toBe(archiveGroupKey(first))
+    expect(archiveGroupKey(first)).not.toBe(archiveGroupKey('F:/下载/资料.7z'))
+    expect(archiveGroupKey(first)).not.toBe(archiveGroupKey('F:/下载/资料.haozip01.zip'))
+    expect(archiveSourceFormat(middle)).toBe('7z')
+    expect(archiveSourceStem(middle)).toBe('资料')
+    expect(archiveSourceStem('F:/下载/HAOZIP02.7Z')).toBe('archive')
+    expect(isPotentialSplitArchivePath(first)).toBe(true)
+    expect(isPotentialSplitArchivePath('F:/下载/HAOZIP02.7Z')).toBe(true)
+    expect(isPotentialSplitArchivePath('F:/下载/not-haozip02.7z')).toBe(false)
+  })
+})

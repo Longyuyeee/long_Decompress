@@ -939,7 +939,7 @@ const extractSelected = async () => {
 .browser-icon-button { width: 2.75rem; height: 2.75rem; border-radius: .85rem; border: 1px solid var(--border-subtle); color: var(--dynamic-accent); background: var(--bg-input); }
 .browser-primary { min-height: 2.85rem; padding: 0 1.15rem; border-radius: .9rem; display: inline-flex; align-items: center; justify-content: center; gap: .55rem; color: white; font-size: .8rem; font-weight: 900; background: var(--dynamic-accent); box-shadow: 0 8px 24px color-mix(in srgb, var(--dynamic-accent) 25%, transparent); }
 .browser-primary:disabled, .browser-icon-button:disabled { opacity: .45; cursor: not-allowed; }
-.browser-empty { cursor: pointer; transition: border-color .2s ease, background .2s ease, transform .2s ease; }
+.browser-empty { flex: 1 0 auto; padding-block: 1.5rem; overflow-wrap: anywhere; cursor: pointer; transition: border-color .2s ease, background .2s ease, transform .2s ease; }
 .browser-empty:hover { border-color: var(--dynamic-accent); background: color-mix(in srgb, var(--dynamic-accent) 5%, var(--bg-card)); transform: translateY(-1px); }
 .browser-drop-hint { display: inline-flex; margin-top: 1rem; padding: .45rem .75rem; border-radius: 999px; background: color-mix(in srgb, var(--dynamic-accent) 10%, transparent); color: var(--dynamic-accent); font-size: .7rem; font-weight: 800; }
 .browser-summary { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; min-height: 2.25rem; }

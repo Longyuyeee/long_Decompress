@@ -45,7 +45,17 @@ impl ZipInputReader {
     }
 
     pub(crate) fn open(path: &Path) -> anyhow::Result<Self> {
-        if Self::is_numeric_first(path) {
+        if super::split_archive_detector::SplitArchiveDetector::is_haozip_seven_zip(path) {
+            let group = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(path)?
+                .ok_or_else(|| anyhow::anyhow!("[archive-inspection:incomplete] 未找到好压 7Z 论坛卷组"))?;
+            anyhow::ensure!(group.is_complete,
+                "[archive-inspection:incomplete] 缺少好压 7Z 论坛分卷：{}", group.missing_part_names());
+            let mut reader = NumericVolumeReader::from_paths(group.parts)?;
+            let length = reader.seek(SeekFrom::End(0))?;
+            super::native_extraction::seven_zip::validate_archive_extent(&mut reader, length)?;
+            reader.seek(SeekFrom::Start(0))?;
+            Ok(Self::Volumes(reader))
+        } else if Self::is_numeric_first(path) {
             Ok(Self::Volumes(NumericVolumeReader::open(path)?))
         } else {
             if let Some(reader) = super::standard_zip_reader::StandardZipReader::try_open(path)? {
@@ -147,6 +157,57 @@ impl Seek for NumericVolumeReader {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn genuine_haozip_forum_seven_zip_rechecks_gaps_tail_and_header_before_password() {
+        use super::super::split_archive_detector::SplitArchiveDetector;
+        let fixtures = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../tests/fixtures/archives/haozip-forum-7z-1417");
+        for stem in ["论坛7Z内容密码", "论坛7Z文件名密码"] {
+            let temp = tempfile::tempdir().unwrap();
+            let parts: Vec<_> = (1..=3).map(|index| {
+                let name = format!("{stem}.haozip{index:02}.7z");
+                let to = temp.path().join(&name);
+                std::fs::copy(fixtures.join(name), &to).unwrap(); to
+            }).collect();
+            let original: Vec<_> = parts.iter().map(|part| std::fs::read(part).unwrap()).collect();
+            for member in &parts {
+                let info = SplitArchiveDetector::detect_split_archive(member).unwrap().unwrap();
+                assert!(info.is_complete);
+                assert_eq!(info.base_name, stem);
+                assert_eq!(info.parts, parts);
+                let mut reader = ZipInputReader::open_seven_zip(member).unwrap();
+                let mut bytes = Vec::new(); reader.read_to_end(&mut bytes).unwrap();
+                assert_eq!(bytes, original.concat());
+                reader.seek(SeekFrom::Start(65_534)).unwrap();
+                let mut boundary = [0; 6]; reader.read_exact(&mut boundary).unwrap();
+                assert_eq!(&boundary, &bytes[65_534..65_540]);
+            }
+            for missing in 0..3 {
+                std::fs::remove_file(&parts[missing]).unwrap();
+                let selected = &parts[if missing == 0 { 2 } else { 0 }];
+                if missing < 2 {
+                    let info = SplitArchiveDetector::detect_split_archive(selected).unwrap().unwrap();
+                    assert!(!info.is_complete);
+                    assert_eq!(info.missing_parts, vec![parts[missing].clone()]);
+                }
+                let error = ZipInputReader::open_seven_zip(selected).err().unwrap().to_string();
+                assert!(error.contains("[archive-inspection:incomplete]"), "{error}");
+                assert!(error.contains(if missing < 2 { parts[missing].file_name().unwrap().to_str().unwrap() } else { "可能缺少尾卷" }), "{error}");
+                std::fs::write(&parts[missing], &original[missing]).unwrap();
+                assert!(ZipInputReader::open_seven_zip(selected).is_ok());
+            }
+            std::fs::write(&parts[2], &original[2][..original[2].len() - 1]).unwrap();
+            assert!(ZipInputReader::open_seven_zip(&parts[1]).err().unwrap().to_string().contains("[archive-inspection:incomplete]"));
+            std::fs::write(&parts[2], &original[2]).unwrap();
+            let mut damaged = original[0].clone(); damaged[12] ^= 1;
+            std::fs::write(&parts[0], damaged).unwrap();
+            assert!(ZipInputReader::open_seven_zip(&parts[2]).err().unwrap().to_string().contains("[archive-inspection:damaged]"));
+            std::fs::write(&parts[0], &original[0]).unwrap();
+            let duplicate = temp.path().join(format!("{stem}.haozip001.7z"));
+            std::fs::copy(&parts[0], &duplicate).unwrap();
+            assert!(SplitArchiveDetector::detect_split_archive(&parts[1]).unwrap_err().to_string().contains("重复"));
+        }
+    }
     #[test]
     fn generic_four_digit_volumes_preserve_padding_and_cross_tiny_headers() {
         let temp = tempfile::tempdir().unwrap();

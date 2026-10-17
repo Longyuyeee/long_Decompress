@@ -53,6 +53,7 @@ impl SplitArchiveDetector {
         Self::is_zip_split(name)
             || Self::is_rar_split(name)
             || Self::is_7z_split(name)
+            || Self::is_haozip_seven_zip(path)
             || Self::is_generic_numeric_split(name)
             || Self::is_generic_part_split(name)
     }
@@ -63,7 +64,9 @@ impl SplitArchiveDetector {
         }
         let name = Self::file_name(path)?;
         let parent = path.parent().ok_or_else(|| anyhow!("无法获取父目录"))?;
-        if Self::is_haozip_split(name) {
+        if Self::is_haozip_seven_zip(path) {
+            Self::detect_haozip_seven_zip(path, parent)
+        } else if Self::is_haozip_split(name) {
             Self::detect_haozip_split(path, parent)
         } else if Self::is_zip_split(name) {
             Self::detect_zip_split(path, parent)
@@ -157,6 +160,31 @@ impl SplitArchiveDetector {
     // numeric byte slices. Their terminal EOCD declares the actual disk count.
     fn is_haozip_split(name: &str) -> bool {
         Regex::new(r"(?i)^(?:.*\.)?haozip\d{2,5}\.zip$").unwrap().is_match(name)
+    }
+
+    pub(crate) fn is_haozip_seven_zip(path: &Path) -> bool {
+        path.file_name().and_then(|name| name.to_str()).is_some_and(|name|
+            Regex::new(r"(?i)^(?:.*\.)?haozip\d{2,5}\.7z$").unwrap().is_match(name))
+    }
+
+    fn detect_haozip_seven_zip(path: &Path, parent: &Path) -> Result<Option<SplitArchiveInfo>> {
+        // Verified against both genuine HaoZip GUI password fixtures: unlike
+        // forum ZIP disks, these are successive slices of one 7Z byte stream.
+        let captures = Regex::new(r"(?i)^(.*?)(haozip)(\d{2,5})(\.7z)$").unwrap()
+            .captures(Self::file_name(path)?).unwrap();
+        let prefix = captures[1].to_string();
+        let marker = captures[2].to_string();
+        let extension = captures[4].to_string();
+        let matcher = Regex::new(&format!(r"(?i)^{}haozip(\d{{2,5}})\.7z$", regex::escape(&prefix)))?;
+        let indexed = Self::collect_indexed(parent, &matcher)?;
+        anyhow::ensure!(indexed.iter().all(|(index, _)| *index > 0)
+            && indexed.windows(2).all(|pair| pair[0].0 != pair[1].0),
+            "[archive-inspection:incomplete] 好压 7Z 论坛分卷编号为 0 或重复，请检查同目录文件");
+        let width = Self::number_width(&indexed, &matcher, captures[3].len());
+        let base = prefix.trim_end_matches('.');
+        Self::indexed_info(SplitFormat::SevenZipSplit,
+            if base.is_empty() { "archive".into() } else { base.into() }, parent,
+            indexed, 1, |_, index| format!("{prefix}{marker}{index:0width$}{extension}"))
     }
 
     fn detect_haozip_split(path: &Path, parent: &Path) -> Result<Option<SplitArchiveInfo>> {

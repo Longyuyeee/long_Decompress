@@ -1368,6 +1368,10 @@ fn classify_archive_browse_error(error: &str) -> String {
         let message = error.replace("[archive-inspection:incomplete]", "");
         return format!("ARCHIVE_BROWSE_INCOMPLETE|{}|{error}", message.trim().replace('|', " / "));
     }
+    if error.contains("[archive-inspection:damaged]") {
+        let message = error.replace("[archive-inspection:damaged]", "");
+        return format!("ARCHIVE_BROWSE_DAMAGED|{}|{error}", message.trim().replace('|', " / "));
+    }
     if lower.contains("unsupported") || lower.contains("did not expose any browseable") {
         return format!("ARCHIVE_BROWSE_UNSUPPORTED|该文件不是受支持的可浏览归档|{error}");
     }
@@ -2304,6 +2308,14 @@ mod cancellation_tests {
         for detail in ["LZIP 读取失败：failed to fill whole buffer", "truncated LZIP member header", "LZIP 文件头不完整"] {
             assert!(classify_archive_browse_error(detail).starts_with("ARCHIVE_BROWSE_DAMAGED|LZIP 文件不完整"));
         }
+    }
+
+    #[test]
+    fn typed_damaged_browse_error_keeps_final_cause_before_password_hints() {
+        let detail = "[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏；更换密码无法修复归档头";
+        assert_eq!(classify_archive_browse_error(detail).split('|').nth(1), Some("7Z 归档头校验失败：文件已损坏；更换密码无法修复归档头"));
+        assert!(classify_archive_browse_error(&format!("{detail}: encrypted header"))
+            .starts_with("ARCHIVE_BROWSE_DAMAGED|7Z 归档头校验失败"));
     }
 
     #[test]

@@ -67,7 +67,7 @@ pub(crate) fn requires_password(file_path: &Path) -> Result<bool> {
 
 // The volume numbering cannot reveal a missing final volume. Check the size
 // declared by a CRC-validated start header before interpreting encrypted data.
-fn validate_archive_extent(reader: &mut (impl Read + Seek), length: u64) -> Result<()> {
+pub(crate) fn validate_archive_extent(reader: &mut (impl Read + Seek), length: u64) -> Result<()> {
     reader.seek(SeekFrom::Start(0))?;
     let mut header = [0u8; 32];
     if let Err(error) = reader.read_exact(&mut header) {
@@ -623,6 +623,32 @@ mod tests {
                 .expect("write fixture entry");
         }
         writer.finish().expect("finish 7z fixture");
+    }
+
+    #[test]
+    fn genuine_haozip_forum_seven_zip_extracts_passwords_and_preserves_empty_directories() {
+        use sha2::{Digest, Sha256};
+        let fixtures = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../tests/fixtures/archives/haozip-forum-7z-1417");
+        let options = DecompressOptions { preserve_paths: true, ..Default::default() };
+        for stem in ["论坛7Z内容密码", "论坛7Z文件名密码"] {
+            for index in 1..=3 {
+                let member = fixtures.join(format!("{stem}.haozip{index:02}.7z"));
+                assert!(requires_password(&member).unwrap());
+                let output = tempfile::tempdir().unwrap();
+                let error = extract(&TestRuntime::default(), None, "forum-wrong", &member.to_string_lossy(),
+                    &output.path().to_string_lossy(), Some("wrong"), &options).unwrap_err();
+                assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::InvalidPassword | CompressionError::ExtractionFailed(_))), "{error}");
+                assert_eq!(std::fs::read_dir(output.path()).unwrap().count(), 0);
+                extract(&TestRuntime::default(), None, "forum-correct", &member.to_string_lossy(),
+                    &output.path().to_string_lossy(), Some("ForumTest-1411"), &options).unwrap();
+                for (file, hash) in [("说明.txt", "b70dfbde85c5ad302aae256db376bb19c84c991ca9c25de18696e93f1178910b"),
+                    ("中文目录/原文件.bin", "47eb7c96a9dea6493faca0336c5225f1d83e0d3e987e96c2287e764b669002c6")] {
+                    assert_eq!(hex::encode(Sha256::digest(std::fs::read(output.path().join(file)).unwrap())), hash);
+                }
+                assert!(output.path().join("中文目录/空目录").is_dir());
+            }
+        }
     }
 
     fn corrupt_first_packed_stream(archive: &Path) {
