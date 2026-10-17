@@ -1,10 +1,10 @@
 # 归档格式支持等级（当前权威口径）
 
-更新时间：2026-10-18（当前正式版 v1.4.17）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级。下载见 [v1.4.17 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.17)，历次能力按对应实现和实际产物记录。
+更新时间：2026-10-18（当前正式版 v1.4.18）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级。下载见 [v1.4.18 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.18)，历次能力按对应实现和实际产物记录。
 
 ## 当前边界速查（覆盖下方历次演变描述）
 
-- v1.4.18 封板候选补齐 ZIPX（XZ）标准 `.zxNN/…/.zipx` 读取及无密码/AES-256/ZipCrypto 创建、转换和重新分卷；缺卷先给最终原因，补回新任务与中卷双击浏览完成真实页面验证。产品输出经 WinRAR 7.23 原名独立回解，不承诺本机 Bandizip Beta 或所有软件互通，数字卷默认及完整校验保持。39 项不同 Rust、146 项相关前端及具体边界见[本版审计](STANDARD_ZIPX_1.4.18.md)和[封板记录](STANDARD_ZIPX_FREEZE_1.4.18.md)，正式版仍为 v1.4.17，候选资产待发布。
+- v1.4.18 已发布 ZIPX（XZ）标准 `.zxNN/…/.zipx` 读取及无密码/AES-256/ZipCrypto 创建、转换和重新分卷；缺卷先给最终原因，补回新任务与中卷双击浏览完成真实页面验证。产品输出经 WinRAR 7.23 原名独立回解，不承诺本机 Bandizip Beta 或所有软件互通，数字卷默认及完整校验保持。39 项不同 Rust、146 项相关前端和正式四资产/中文说明核对完成，具体边界见[本版审计](STANDARD_ZIPX_1.4.18.md)和[封板记录](STANDARD_ZIPX_FREEZE_1.4.18.md)。
 
 - v1.4.17 已发布好压 GUI 原生 `.haozipNN.7z` 内容/文件名密码卷的任意成员浏览、解压、检查和转换，正确归组、缺卷/头损坏优先及补回新任务通过真实桌面与独立回解；保留现有 ZipCrypto 论坛 ZIP。好压 AES ZIP 论坛卷仍不承诺，7Z 有界内容预览、特殊卷创建与缺卷修复不在本版范围。正式资产与中文更新清单已核对，见[实施审计](SPECIAL_VOLUME_COMPATIBILITY_1.4.17.md)与[封板记录](SPECIAL_VOLUME_FREEZE_1.4.17.md)。
 
@@ -39,7 +39,7 @@
 
 ### A：完整创建—解压闭环
 
-- ZIP（Deflate / Zstandard）、ZIPX（XZ）、7Z、WIM；ZIPX 标准分卷在 v1.4.18 封板候选中补齐，公开稳定版及方法/密码组合范围见顶部说明；
+- ZIP（Deflate / Zstandard）、ZIPX（XZ）、7Z、WIM；ZIPX 标准分卷已随 v1.4.18 发布，方法/密码及独立互通组合范围见顶部说明；
 - TAR、TAR.GZ、TAR.BZ2、TAR.XZ、TAR.ZST；
 - GZ、BZ2、XZ、ZST/ZSTD、LZMA；
 - LZ4、Brotli、TAR.LZ4、TAR.BR（v1.4.3 新增，真实 Windows Release Tauri 逐字节回解通过）；
