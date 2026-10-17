@@ -235,7 +235,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
-| **v1.4.19（封板候选）** | RAR4 旧式恢复卷、缺末卷与多次密码提示修复；无效恢复卷明确说明，修复后继续解压 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.19.md) · [封板进度](long-compress-assistant/docs/RAR4_RECOVERY_FREEZE_1.4.19.md) |
+| **v1.4.19** | RAR4 旧式恢复卷、缺末卷与多次密码提示修复；无效恢复卷明确说明，修复后继续解压 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.19.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.19) |
 | **v1.4.18** | ZIPX 标准多卷的读取、密码创建、改密/重新分卷/合卷与缺卷补回；窄窗控件及中卷双击入口修正 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.18.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.18) |
 | **v1.4.17** | 好压论坛 7Z 内容/文件名密码分卷，任意成员读取、缺卷/损坏最终原因及补回继续，输出名称与窄窗错误卡片修正 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.17.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.17) |
 | **v1.4.16** | 日文/简体/繁体旧 ZIP 密码编码，原包与新包独立设置，单条/批量修复结果重开接续及窄窗口表单修正 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.16.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.16) |
