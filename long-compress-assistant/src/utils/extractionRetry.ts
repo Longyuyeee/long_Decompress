@@ -48,7 +48,13 @@ export async function validateExtractionRetry(
   const file = await invoke<{ name: string; is_dir: boolean; size: number }>('get_file_info', { path })
   check()
   if (file.is_dir || file.size <= 0) throw new Error('来源必须是非空归档文件，请确认已下载或复制完成。')
-  const output = await invoke<{ is_dir: boolean }>('get_file_info', { path: outputPath })
+  let output: { is_dir: boolean }
+  try {
+    output = await invoke<{ is_dir: boolean }>('get_file_info', { path: outputPath })
+  } catch (error) {
+    check()
+    throw new Error(`无法读取本次输出目录「${outputPath}」，请创建该目录或选择已存在且可访问的目录。原归档未改动。详情：${String(error)}`)
+  }
   check()
   if (!output.is_dir) throw new Error('输出位置必须是已存在的目录。')
   const zipPasswordEncoding = zipPasswordEncodingForSource(path, input.zipPasswordEncoding, split?.archive_format)

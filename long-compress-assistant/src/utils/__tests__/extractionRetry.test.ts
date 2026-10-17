@@ -5,6 +5,16 @@ vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 beforeEach(() => vi.resetAllMocks())
 
 describe('forum ZIP retry source resolution', () => {
+  it('identifies an unreadable output directory instead of blaming the source archive', async () => {
+    mocks.invoke.mockImplementation(async (cmd, args) => {
+      if (cmd === 'detect_split_archive') return { is_split: false }
+      if (args.path === 'D:/missing-output') throw new Error('IO错误: 系统找不到指定的文件 (os error 2)')
+      return { name: 'input.zpaq', is_dir: false, size: 100 }
+    })
+    await expect(validateExtractionRetry({ source: 'C:/input.zpaq', output: 'D:/missing-output', password: 'secret', extractToSubfolder: false }, false, 'retry-zpaq', () => false))
+      .rejects.toThrow('无法读取本次输出目录「D:/missing-output」，请创建该目录或选择已存在且可访问的目录')
+    expect(mocks.invoke).not.toHaveBeenCalledWith('diagnose_archive', expect.anything())
+  })
   it('uses the chosen input encoding for required integrity checks and keeps encoding failures distinct', async () => {
     mocks.invoke.mockImplementation(async (cmd, args) => cmd === 'detect_split_archive'
       ? { is_split: false, archive_format: 'ZIP' }

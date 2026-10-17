@@ -29,7 +29,7 @@ pub fn is_compressed_file(path: &Path) -> bool {
     if let Some(extension) = get_file_extension(path) {
         matches!(
             extension.as_str(),
-            "zip" | "rar" | "7z" | "tar" | "gz" | "tgz" | "bz2" | "tbz2" | "xz" | "txz" |
+            "zip" | "rar" | "7z" | "zpaq" | "tar" | "gz" | "tgz" | "bz2" | "tbz2" | "xz" | "txz" |
             "tar.gz" | "tar.bz2" | "tar.xz" | "tar.zst" | "zst" | "zstd" | "tzst"
             | "z" | "lz" | "tlz" | "lzma" | "lzo" | "rz" | "sz"
             | "iso" | "img" | "cab" | "lzh" | "lha" | "arj" | "dmg" | "wim"

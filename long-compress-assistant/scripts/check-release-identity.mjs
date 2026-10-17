@@ -143,6 +143,7 @@ export const verifyReleaseIdentity = ({ expected = '', tag = '' } = {}) => {
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   try {
     await import('./check-media-dependencies.mjs')
+    await import('./check-zpaq-engine.mjs')
     const { checkMediaMetrics } = await import('./check-media-metrics.mjs')
     await checkMediaMetrics()
     const { checkMediaReleaseGates } = await import('./check-media-release-gates.mjs')

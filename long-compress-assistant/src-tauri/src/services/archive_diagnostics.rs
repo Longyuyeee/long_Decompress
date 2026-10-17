@@ -130,6 +130,7 @@ fn copy_cancellable_bounded(
 
 fn format_label(path: &Path, header: &[u8]) -> String {
     let magic = ArchiveFormat::from_magic(header);
+    if magic == ArchiveFormat::Unknown && path.extension().is_some_and(|e| e.eq_ignore_ascii_case("zpaq")) { return "ZPAQ".into(); }
     match magic {
         ArchiveFormat::Zip => "ZIP".to_string(),
         ArchiveFormat::SevenZip => "7Z".to_string(),
@@ -481,6 +482,11 @@ pub async fn diagnose_archive_with_encoding(
         }
     } else if actual_format == "7Z" {
         report.encrypted = seven_zip::requires_password(source).unwrap_or(report.encrypted);
+    } else if actual_format == "ZPAQ" {
+        match super::zpaq_engine::requires_password(source) {
+            Ok(encrypted) => report.encrypted = encrypted,
+            Err(error) => { record_failure(&mut report, &error, password.is_some(), false, source); return Ok(report); }
+        }
     }
     if report.encrypted && password.filter(|value| !value.is_empty()).is_none() {
         report.status = "password_required".to_string();
@@ -499,6 +505,11 @@ pub async fn diagnose_archive_with_encoding(
     let verify_password = password.map(str::to_string);
     let verify_cancelled = cancelled.clone();
     let verification = match route {
+        _ if actual_format == "ZPAQ" => {
+            report.integrity_tested = true;
+            report.evidence.push("ZPAQ current-file view; format checksums do not authenticate all header attributes".into());
+            super::zpaq_engine::verify(source, password, cancelled.clone()).await
+        }
         Some(route)
             if !matches!(
                 route,

@@ -25,6 +25,7 @@ const passwordCompressionFormats = computed(() => FORMAT_CAPABILITIES
 const passwordExtractionFormats = computed(() => FORMAT_CAPABILITIES
   .filter(format => format.supportsPasswordExtract)
   .map(format => format.displayName)
+  .concat(archiveEngine.value?.formats.some(format => format.name === 'ZPAQ') ? ['ZPAQ（只读）'] : [])
   .join(' · '))
 
 const refreshEngineDiagnostics = async () => {
@@ -681,7 +682,7 @@ const removeWordlist = (index: number) => {
                   </div>
                   <div class="flex items-start gap-3">
                     <i class="pi pi-unlock text-amber-500 text-xs mt-0.5 shrink-0"></i>
-                    <div class="text-xs text-amber-700 leading-relaxed">
+                    <div class="text-xs text-amber-700 leading-relaxed" data-testid="settings-password-extraction-formats">
                       <span class="font-black">{{ appStore.t('settings.formats.password_decompress') }}:</span> {{ passwordExtractionFormats }}
                     </div>
                   </div>

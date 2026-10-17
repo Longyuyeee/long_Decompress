@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { listen } from '@tauri-apps/api/event'
 import { useAppStore, type ArchiveReadOptions } from '@/stores/app'
 import ZipPasswordEncodingField from '@/components/ui/ZipPasswordEncodingField.vue'
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { zipPasswordEncodingArguments, type ZipPasswordEncoding } from '@/types/zipPassword'
 import { supportsZipPasswordEncoding, zipPasswordEncodingForSource } from '@/utils/zipPasswordSource'
 import { useTauriCommands, type ArchiveBrowseResult, type ArchiveEntryInfo, type ArchiveImagePreview, type ArchiveTextPreview } from '@/composables/useTauriCommands'
@@ -725,6 +726,7 @@ const extractSelected = async () => {
     <template v-else>
       <section class="browser-summary shrink-0" aria-label="压缩包摘要">
         <span><b>{{ result.format }}</b> 格式</span>
+        <span v-if="result.format === 'ZPAQ'" data-testid="zpaq-current-view">当前文件<HelpHint label="ZPAQ 当前文件视图">只显示归档中最新的有效文件，已删除文件和历史修订不会混入。支持流式、日志式及原生密码读取；本版不提供创建、多部分归档或历史恢复。文件检查使用格式自带校验，不能检测所有未认证头部信息的变化。</HelpHint></span>
         <span><b>{{ result.totalFiles }}</b> 个文件</span>
         <span>展开后 <b>{{ result.entries.some(entry => entry.sizeKnown === false && !entry.isDir) ? '大小未知' : formatBytes(result.totalUncompressedSize) }}</b></span>
         <span><i :class="result.encrypted ? 'pi pi-lock' : 'pi pi-lock-open'"></i> {{ result.encrypted ? '已加密' : '未加密' }}</span>

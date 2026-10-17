@@ -14,6 +14,12 @@ import {
 } from '../compressionFormat'
 
 describe('compression format helpers', () => {
+  it('accepts ZPAQ input without claiming creation or volume output', () => {
+    expect(isDecompressArchivePath('C:/下载/资料.ZPAQ')).toBe(true)
+    expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.zpaq')
+    expect(COMPRESSIBLE_FORMATS.some(format => String(format.value) === 'zpaq')).toBe(false)
+    expect(supportsArchiveSplit('zpaq')).toBe(false)
+  })
   it('keeps LZIP files in their chosen format and exposes only supported options', () => {
     for (const extension of ['lz', 'tar.lz', 'tlz']) {
       expect(isDecompressArchivePath(`C:/下载/中文资料.${extension.toUpperCase()}`)).toBe(true)
