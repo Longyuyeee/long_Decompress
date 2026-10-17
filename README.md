@@ -235,7 +235,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
-| **v1.4.17**（发布中） | 好压论坛 7Z 内容/文件名密码分卷，任意成员读取、缺卷/损坏最终原因及补回继续，输出名称与窄窗错误卡片修正 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.17.md) · [版本发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.17) |
+| **v1.4.17** | 好压论坛 7Z 内容/文件名密码分卷，任意成员读取、缺卷/损坏最终原因及补回继续，输出名称与窄窗错误卡片修正 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.17.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.17) |
 | **v1.4.16** | 日文/简体/繁体旧 ZIP 密码编码，原包与新包独立设置，单条/批量修复结果重开接续及窄窗口表单修正 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.16.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.16) |
 | **v1.4.15** | ZIP 重复预检优化、TAR.LZ4 / TAR.BR 流式创建、RAR 暂停取消、矮窗口列表修正；合并交付 ZIP Zstandard / ZIPX（XZ）创建与密码分卷配置链 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.15.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15) |
 | **v1.4.13** | 标准 ZIP 缺卷部分抢救、AES / ZipCrypto 密码包、按需展开的恢复文件与原因清单 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.13.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13) |

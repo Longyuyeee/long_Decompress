@@ -2,7 +2,7 @@
 
 批准日期：2026-10-17。用户要求将规划写入开发文档并继续开发。
 
-当前：v1.4.16 已封板并[正式发布](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.16)，PR #171 已合入，标签为 `5b4c317`。功能冻结 `436e02e`，438 项相关回归、普通构建及最后两条救援/重开桌面链通过；候选及正式构建、安装器/签名更新资产核对完成。见[实施审计](LEGACY_ZIP_PASSWORD_ENCODING_1.4.16.md)及[封板记录](LEGACY_ZIP_PASSWORD_FREEZE_1.4.16.md)。下一版为 v1.4.17 特殊分卷兼容；v1.4.15 及随其交付的 v1.4.14 记录保留，不重复发旧候选。
+当前：v1.4.17 已封板并[正式发布](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.17)，PR #173 已合入，标签为 `3781178`。功能冻结 `837683b`，38 项不同 Rust、146 项相关前端、普通构建与真实论坛 7Z 桌面链通过；候选及正式安装器/签名更新资产、中文说明核对完成。见[实施审计](SPECIAL_VOLUME_COMPATIBILITY_1.4.17.md)及[封板记录](SPECIAL_VOLUME_FREEZE_1.4.17.md)。下一版为 v1.4.18 ZIPX 标准多卷，尚未开始；此前发布记录保留，不重复发旧候选。
 
 ## 基线与顺序
 

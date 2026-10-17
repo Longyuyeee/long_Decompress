@@ -1,10 +1,10 @@
 # 归档格式支持等级（当前权威口径）
 
-更新时间：2026-10-17（当前正式版 v1.4.16）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级。下载见 [v1.4.16 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.16)，历次能力按对应实现和实际产物记录。
+更新时间：2026-10-18（当前正式版 v1.4.17）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级。下载见 [v1.4.17 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.17)，历次能力按对应实现和实际产物记录。
 
 ## 当前边界速查（覆盖下方历次演变描述）
 
-- v1.4.17 封板候选补齐好压 GUI 原生 `.haozipNN.7z` 内容/文件名密码卷的任意成员浏览、解压、检查和转换，正确归组、缺卷/头损坏优先及补回新任务通过真实桌面与独立回解；保留现有 ZipCrypto 论坛 ZIP。好压 AES ZIP 论坛卷仍不承诺，7Z 有界内容预览、特殊卷创建与缺卷修复不在本版范围。见[实施审计](SPECIAL_VOLUME_COMPATIBILITY_1.4.17.md)与[封板记录](SPECIAL_VOLUME_FREEZE_1.4.17.md)；正式资产齐全后再更新本节发布状态。
+- v1.4.17 已发布好压 GUI 原生 `.haozipNN.7z` 内容/文件名密码卷的任意成员浏览、解压、检查和转换，正确归组、缺卷/头损坏优先及补回新任务通过真实桌面与独立回解；保留现有 ZipCrypto 论坛 ZIP。好压 AES ZIP 论坛卷仍不承诺，7Z 有界内容预览、特殊卷创建与缺卷修复不在本版范围。正式资产与中文更新清单已核对，见[实施审计](SPECIAL_VOLUME_COMPATIBILITY_1.4.17.md)与[封板记录](SPECIAL_VOLUME_FREEZE_1.4.17.md)。
 
 - v1.4.16 补齐 ZIP/ZIPX 的明确 CP932/936/950 密码编码，贯通读取、创建、检查恢复及源/目标独立转换，保持输入自动与新包 UTF-8 默认、无损编码和完整校验。配置/草稿/历史保留选择，修复结果保存生成时参数并可重开接续；不新增格式或特殊卷型，不扩大 ZIPX 标准多卷范围。真实原包、66 个创建组合、独立回解及桌面范围见[实施审计](LEGACY_ZIP_PASSWORD_ENCODING_1.4.16.md)和[封板记录](LEGACY_ZIP_PASSWORD_FREEZE_1.4.16.md)。
 
