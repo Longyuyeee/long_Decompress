@@ -28,7 +28,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 详细格式能力见 [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md)；RAR 创建依赖用户安装的 WinRAR，视频暂不保证支持 Windows N。功能介绍和快速上手见 [项目首页](../README.md)。
 
-本次 **1.4.17** 功能已冻结，正在发布：补齐好压原生 7Z 论坛内容/文件名密码分卷，任意成员归组、浏览、解压、检查与转换共用完整卷组；缺卷/截断/头损坏在密码前说明，补回继续且保留原失败及独立目录。普通 7Z 浏览预检与窄窗长错误说明同步修正。暂不承诺好压 AES ZIP 论坛卷，保留现有 ZipCrypto 支持。见[本版审计](docs/SPECIAL_VOLUME_COMPATIBILITY_1.4.17.md)、[封板记录](docs/SPECIAL_VOLUME_FREEZE_1.4.17.md)、[中文更新说明](docs/RELEASE_NOTES_1.4.17.md)及 [Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.17)；发布资产齐全前，稳定下载仍为 v1.4.16。
+当前稳定版为 **1.4.17**：补齐好压原生 7Z 论坛内容/文件名密码分卷，任意成员归组、浏览、解压、检查与转换共用完整卷组；缺卷/截断/头损坏在密码前说明，补回继续且保留原失败及独立目录。普通 7Z 浏览预检与窄窗长错误说明同步修正。暂不承诺好压 AES ZIP 论坛卷，保留现有 ZipCrypto 支持。见[本版审计](docs/SPECIAL_VOLUME_COMPATIBILITY_1.4.17.md)、[封板记录](docs/SPECIAL_VOLUME_FREEZE_1.4.17.md)、[中文更新说明](docs/RELEASE_NOTES_1.4.17.md)及[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.17)。安装器、签名更新 ZIP/签名和中文更新清单已发布并核对。
 
 ## 本地开发
 
