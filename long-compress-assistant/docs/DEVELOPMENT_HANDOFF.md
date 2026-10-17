@@ -1,5 +1,9 @@
 # 开发交接
 
+## 当前：v1.4.19 RAR4 恢复链实施中（2026-10-18）
+
+从 `5336f6b` 接续，分支 `codex/v1.4.19-rar4-recovery`。真实 RAR 6.24 原卷已固定，修正旧式 REV 家族、缺末卷和 RAR4 多次密码提示。首轮 17 项 RAR 相关 Rust 检查通过，包含当前 Rar.exe 创建旧格式恢复卷及原件保护。范围、失败记录及边界见 [RAR4 实施审计](RAR4_RECOVERY_1.4.19.md)。真实桌面、最终审计和发布尚未完成，不把本轮写成已封板。当前正式版仍为 v1.4.18。
+
 ## 最新：v1.4.18 已正式发布，接续 RAR4 恢复链（2026-10-18）
 
 [PR #175](https://github.com/Longyuyeee/long_Decompress/pull/175) 已受保护合入，[v1.4.18 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.18) 已发布；标签 `9b700e1008df523d5a92f5fa67b7764acb092795` 与候选 `81d87d9` 文件树一致，功能冻结 `688f1fc`。39 项不同 Rust、146 项相关前端、真实 ZIPX 标准多卷矩阵和 11 张实看页面通过；原卷、载荷及独立工具哈希、准确程序身份已入库。

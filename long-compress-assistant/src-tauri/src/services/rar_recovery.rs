@@ -7,7 +7,7 @@ use regex::Regex;
 use serde::Serialize;
 use std::{
     fs,
-    io::{Read, Write},
+    io::{Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -53,42 +53,66 @@ fn numbered_parts(name: &str) -> bool {
         .is_match(name)
 }
 
+#[derive(Debug)]
 struct Group {
     files: Vec<PathBuf>,
     data: Vec<PathBuf>,
     recovery: Vec<PathBuf>,
+    rar4: bool,
+    recovery_data_count: Option<usize>,
+    rejected_recovery: Vec<String>,
 }
 pub(crate) fn diagnosis_group_path(path: &Path) -> Result<PathBuf> {
     let group = collect(path)?;
     Ok(group.data.first().or(group.recovery.first()).cloned().unwrap_or_else(|| path.to_path_buf()))
 }
 fn collect(path: &Path) -> Result<Group> {
-    let key = family(path.file_name().and_then(|n| n.to_str()).unwrap_or(""))
+    let mut key = family(path.file_name().and_then(|n| n.to_str()).unwrap_or(""))
         .context("不是 RAR 或恢复卷")?;
     let part_style = numbered_parts(path.file_name().and_then(|n| n.to_str()).unwrap_or(""));
+    let entries = fs::read_dir(path.parent().unwrap_or(Path::new(".")))?
+        .map(|e| e.map(|e| e.path())).collect::<std::io::Result<Vec<_>>>()?;
+    let mut rar4_families = entries.iter().filter(|p| rar4_header(p).1)
+        .filter_map(|p| family(p.file_name()?.to_str()?)).collect::<Vec<_>>();
+    rar4_families.sort(); rar4_families.dedup();
+    // RAR4 -vn creates base1.rev, not base.rev or base.part1.rev.
+    // Resolve against actual RAR4 volume families rather than stripping every
+    // trailing digit (which would confuse "backup" and "backup2024").
+    if path.extension().is_some_and(|e| e.eq_ignore_ascii_case("rev")) && !part_style {
+        let mut candidates = rar4_families.iter().cloned()
+            .filter(|base| recovery_name_matches(path, base, false, true))
+            .collect::<Vec<_>>();
+        candidates.sort(); candidates.dedup();
+        ensure!(candidates.len() <= 1, "恢复卷名称对应多个 RAR4 卷组，请将原卷组放到单独目录后重试");
+        if let Some(base) = candidates.pop() { key = base; }
+    }
+    let rar4 = entries.iter().any(|p| family(p.file_name().and_then(|n| n.to_str()).unwrap_or("")).as_ref() == Some(&key)
+        && numbered_parts(p.file_name().and_then(|n| n.to_str()).unwrap_or("")) == part_style && rar4_header(p).0);
     let mut group = Group {
         files: vec![],
         data: vec![],
         recovery: vec![],
+        rar4,
+        recovery_data_count: None,
+        rejected_recovery: vec![],
     };
-    for entry in fs::read_dir(path.parent().unwrap_or(Path::new(".")))? {
-        let entry = entry?;
-        if !entry.file_type()?.is_file() {
+    for file in entries {
+        if !file.is_file() {
             continue;
         }
-        if family(entry.file_name().to_str().unwrap_or("")).as_ref() != Some(&key) {
-            continue;
-        }
-        if numbered_parts(entry.file_name().to_str().unwrap_or("")) != part_style {
-            continue;
-        }
-        let file = entry.path();
         if file
             .extension()
             .is_some_and(|e| e.eq_ignore_ascii_case("rev"))
         {
+            if !recovery_name_matches(&file, &key, part_style, rar4) { continue; }
+            if rar4 && !part_style {
+                ensure!(rar4_families.iter().filter(|base| recovery_name_matches(&file, base, false, true)).count() <= 1,
+                    "恢复卷名称对应多个 RAR4 卷组，请将原卷组放到单独目录后重试");
+            }
             group.recovery.push(file.clone());
         } else {
+            if family(file.file_name().and_then(|n| n.to_str()).unwrap_or("")).as_ref() != Some(&key)
+                || numbered_parts(file.file_name().and_then(|n| n.to_str()).unwrap_or("")) != part_style { continue; }
             group.data.push(file.clone());
         }
         group.files.push(file);
@@ -106,7 +130,90 @@ fn collect(path: &Path) -> Result<Group> {
             .unwrap_or(0);
         (index, name)
     });
+    group.recovery.sort();
     Ok(group)
+}
+
+fn rar4_header(path: &Path) -> (bool, bool) {
+    let mut bytes = [0; 13];
+    if fs::File::open(path).and_then(|mut f| f.read_exact(&mut bytes)).is_err() { return (false, false); }
+    let rar4 = bytes[..7] == *b"Rar!\x1a\x07\x00";
+    (rar4, rar4 && bytes[9] == 0x73 && bytes[10] & 1 != 0)
+}
+
+fn recovery_name_matches(path: &Path, key: &str, part_style: bool, rar4: bool) -> bool {
+    let name = path.file_name().unwrap_or_default().to_string_lossy().to_lowercase();
+    if numbered_parts(&name) != part_style { return false; }
+    if family(&name).as_deref() == Some(key) { return true; }
+    rar4 && !part_style && name.strip_prefix(key).and_then(|s| s.strip_suffix(".rev"))
+        .is_some_and(|s| !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit()))
+}
+
+// RAR 3.10–4.x REV footer: data count - 1, recovery count - 1,
+// recovery index - 1, then CRC32 of all preceding bytes. Stream the checksum
+// with cancellation; never treat a matching filename as verified recovery data.
+fn check_rar4_recovery(group: &mut Group, flag: &AtomicBool) -> Result<()> {
+    if !group.rar4 { return Ok(()); }
+    let mut set = None;
+    let mut indices = std::collections::HashSet::new();
+    let mut valid = Vec::new();
+    for path in &group.recovery {
+        cancelled(flag)?;
+        // RAR 3.0's name_#_#_#.rev has no footer checksum; keep its existing
+        // external-tool path, but do not infer a reliable volume count from it.
+        if Regex::new(r"(?i)_\d+_\d+_\d+\.rev$").unwrap().is_match(&path.to_string_lossy()) {
+            valid.push(path.clone()); continue;
+        }
+        let mut file = fs::File::open(path)?;
+        let len = file.metadata()?.len();
+        let metadata = (|| -> Result<(usize, usize, usize)> {
+            ensure!(len >= 7, "恢复卷过短");
+            file.seek(SeekFrom::End(-7))?;
+            let mut footer = [0; 7]; file.read_exact(&mut footer)?;
+            let data = footer[0] as usize + 1;
+            let recovery = footer[1] as usize + 1;
+            let index = footer[2] as usize + 1;
+            ensure!(data + recovery <= 255 && index <= recovery, "恢复卷计数无效");
+            file.rewind()?;
+            let mut remaining = len - 4;
+            let mut hasher = crc32fast::Hasher::new();
+            let mut buffer = [0; 256 * 1024];
+            while remaining > 0 {
+                cancelled(flag)?;
+                let count = remaining.min(buffer.len() as u64) as usize;
+                file.read_exact(&mut buffer[..count])?; hasher.update(&buffer[..count]); remaining -= count as u64;
+            }
+            ensure!(hasher.finalize() == u32::from_le_bytes(footer[3..].try_into().unwrap()), "恢复卷校验失败");
+            Ok((data, recovery, index))
+        })();
+        cancelled(flag)?;
+        match metadata {
+            Ok((data, recovery, index)) => {
+                let identity = (data, recovery, len);
+                ensure!(set.is_none_or(|previous| previous == identity), "同名恢复卷的卷数或尺寸不一致，请使用同一原卷组的恢复卷");
+                ensure!(indices.insert(index), "恢复卷序号重复，请去除重复副本后重试");
+                set = Some(identity); valid.push(path.clone());
+            }
+            Err(error) => group.rejected_recovery.push(format!("{}：{error}", path.file_name().unwrap().to_string_lossy())),
+        }
+    }
+    group.recovery = valid;
+    group.files.retain(|p| !p.extension().is_some_and(|e| e.eq_ignore_ascii_case("rev")) || group.recovery.contains(p));
+    group.recovery_data_count = set.map(|(data, _, _)| data);
+    Ok(())
+}
+
+fn recovery_missing(group: &Group) -> Vec<String> {
+    let (Some(total), Some(first)) = (group.recovery_data_count, group.data.first()) else { return vec![]; };
+    let name = first.file_name().unwrap().to_string_lossy();
+    let key = family(&name).unwrap();
+    let modern = Regex::new(r"(?i)\.part(\d+)\.rar$").unwrap();
+    let width = modern.captures(&name).map(|c| c[1].len());
+    (0..total).map(|i| match width {
+        Some(width) => format!("{key}.part{:0width$}.rar", i + 1),
+        None if i == 0 => format!("{key}.rar"),
+        None => format!("{key}.r{:02}", i - 1),
+    }).filter(|expected| !group.data.iter().any(|p| p.file_name().unwrap().to_string_lossy().eq_ignore_ascii_case(expected))).collect()
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -181,18 +288,19 @@ pub async fn diagnose(
     let password = password.map(str::to_owned);
     tauri::async_runtime::spawn_blocking(move || {
         let sfx = super::sfx_archive::is_executable_path(&path);
-        let group = if sfx {
+        let mut group = if sfx {
             ensure!(super::sfx_archive::detect(&path)?.is_some_and(|(format, _)|
                 format == super::archive_format::ArchiveFormat::Rar), "不是可读取的 RAR 自解压归档");
-            Group { files: vec![path.clone()], data: vec![path.clone()], recovery: vec![] }
+            Group { files: vec![path.clone()], data: vec![path.clone()], recovery: vec![], rar4: false, recovery_data_count: None, rejected_recovery: vec![] }
         } else { collect(&path)? };
+        check_rar4_recovery(&mut group, &flag)?;
         let tool = CompressionService::find_rar_encoder().is_some();
         let first = group.data.first();
         let split = first
             .map(|p| SplitArchiveDetector::detect_split_archive(p))
             .transpose()?
             .flatten();
-        let missing: Vec<String> = split
+        let mut missing: Vec<String> = split
             .as_ref()
             .map(|g| {
                 g.missing_parts
@@ -201,6 +309,7 @@ pub async fn diagnose(
                     .collect()
             })
             .unwrap_or_default();
+        for name in recovery_missing(&group) { if !missing.iter().any(|p| p.eq_ignore_ascii_case(&name)) { missing.push(name); } }
         let mut report = ArchiveDiagnosticReport {
             file_path: path.to_string_lossy().to_string(),
             file_size: group
@@ -230,6 +339,10 @@ pub async fn diagnose(
             group.data.len(),
             group.recovery.len()
         ));
+        if group.rar4 { report.evidence.push("RAR4 旧格式；恢复记录与恢复卷在副本中处理，结果须通过逐文件校验".into()); }
+        for detail in &group.rejected_recovery {
+            report.issues.push(DiagnosticIssue { code: "invalid_recovery_volume".into(), severity: "warning".into(), title: "已忽略无效恢复卷".into(), detail: detail.clone() });
+        }
         let readable = split
             .as_ref()
             .map(|g| &g.first_part)
@@ -310,6 +423,8 @@ pub async fn diagnose(
                 title: "修复需要本机 RAR 工具".into(),
                 detail: "安装 WinRAR 后重新检查即可；普通 RAR 解压不需要安装。".into(),
             });
+        } else if group.recovery_data_count.is_some() && report.missing_volumes.len() > group.recovery.len() {
+            report.issues.push(DiagnosticIssue { code: "insufficient_recovery_volumes".into(), severity: "warning".into(), title: "恢复卷不足".into(), detail: format!("缺少 {} 个数据卷，仅有 {} 个校验通过的恢复卷；请补齐原卷或更多同组恢复卷。", report.missing_volumes.len(), group.recovery.len()) });
         } else if first.is_some()
             && (!group.recovery.is_empty() || report.missing_volumes.is_empty())
             && !report.status.contains("password")
@@ -327,7 +442,7 @@ pub async fn diagnose(
     .await?
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RarRepairResult {
     pub output_path: String,
@@ -378,6 +493,7 @@ async fn run(
     work: &Path,
     password: Option<&str>,
     flag: &AtomicBool,
+    password_prompts: usize,
 ) -> Result<()> {
     let input = match password
         .filter(|p| !p.is_empty())
@@ -400,13 +516,17 @@ async fn run(
     if operation == "r" {
         command.arg(work);
     }
-    let output = crate::utils::process::cancellable_output_with_stdin(
+    let output = if password_prompts > 0 && input.is_some() {
+        crate::utils::process::cancellable_output_with_rar_prompts(
+            &mut command, flag, std::time::Duration::from_secs(3600), input, password_prompts,
+        ).await?
+    } else { crate::utils::process::cancellable_output_with_stdin(
         &mut command,
         flag,
         std::time::Duration::from_secs(3600),
         input,
     )
-    .await?;
+    .await? };
     cancelled(flag)?;
     if operation.starts_with("rv") {
         ensure!(output.status.success(), "恢复卷创建未完成，请确认密码、WinRAR 版本和可用空间（退出码 {:?}）", output.status.code());
@@ -467,7 +587,7 @@ pub async fn create_recovery_volumes(path: &Path, destination: &Path, count: u32
         ensure!(contents.volume && contents.files + contents.directories > 0, "原分包未通过完整读取，请先检查或修复后再创建恢复卷");
         Ok(())
     }).await??;
-    run(&tool, &format!("rv{count}"), &selected, work.path(), password, &flag).await?;
+    run(&tool, &format!("rv{count}"), &selected, work.path(), password, &flag, if group.rar4 { group.data.len().saturating_add(2) } else { 0 }).await?;
     let generated = collect(&work.path().join(selected.file_name().unwrap()))?.recovery;
     ensure!(generated.len() == count as usize, "没有完整生成所选数量的恢复卷，请确认 WinRAR 版本");
     let mut published = Vec::new();
@@ -499,14 +619,21 @@ pub async fn repair(
     let requested_destination = std::path::absolute(destination)?;
     let destination = fs::canonicalize(destination)?;
     ensure!(destination.is_dir(), "请选择用于保存修复结果的文件夹");
-    let group = collect(&source)?;
+    let collect_path = source.clone();
+    let collect_flag = flag.clone();
+    let group = tauri::async_runtime::spawn_blocking(move || -> Result<Group> {
+        let mut group = collect(&collect_path)?;
+        check_rar4_recovery(&mut group, &collect_flag)?;
+        Ok(group)
+    }).await??;
     ensure!(
         !group.data.is_empty(),
         "没有找到同组 RAR 数据卷，请先补齐仍保留的分卷"
     );
     let tool = CompressionService::find_rar_encoder().context("修复需要本机安装 WinRAR/Rar.exe")?;
-    let stem =
-        family(source.file_name().unwrap().to_str().unwrap_or("")).context("无效的 RAR 名称")?;
+    let stem = family(group.data[0].file_name().unwrap().to_str().unwrap_or("")).context("无效的 RAR 名称")?;
+    let missing = recovery_missing(&group);
+    ensure!(missing.is_empty() || missing.len() <= group.recovery.len(), "恢复卷不足：缺少 {} 个数据卷，仅有 {} 个校验通过的恢复卷。原件保持不变。", missing.len(), group.recovery.len());
     let final_dir = destination.join(format!("{stem}.repaired"));
     let display_dir = requested_destination.join(format!("{stem}.repaired"));
     ensure!(
@@ -546,13 +673,14 @@ pub async fn repair(
             work.path(),
             password,
             &flag,
+            if group.rar4 { group.recovery_data_count.unwrap_or(group.data.len()).saturating_add(2) } else { 0 },
         )
         .await?;
     } else {
         // RAR repairs one damaged volume at a time and leaves healthy volumes
         // untouched. Assemble replacement and original copies under common names.
         for file in &group.data {
-            run(&tool, "r", file, work.path(), password, &flag).await?;
+            run(&tool, "r", file, work.path(), password, &flag, 0).await?;
         }
     }
     let output = tempfile::Builder::new()
@@ -651,6 +779,10 @@ pub async fn repair(
         output_encrypted: contents.encrypted,
     })
 }
+
+#[cfg(test)]
+#[path = "rar4_recovery_tests.rs"]
+mod rar4_tests;
 
 #[cfg(test)]
 mod tests {
