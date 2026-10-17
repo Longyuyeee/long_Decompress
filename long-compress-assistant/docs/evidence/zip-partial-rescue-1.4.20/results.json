@@ -1,0 +1,306 @@
+{
+  "completedAt": "2026-10-17T21:43:31.345Z",
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
+  "binarySha256": "6b3902a2423667c088964b5bb5a262d3477acd5516f3c31ef22e596d0a992ff1",
+  "independentDecoder": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\resources\\archive-engine\\7z.exe",
+  "decoderSha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53",
+  "cases": [
+    {
+      "missing": 1,
+      "selected": 2,
+      "result": {
+        "directoryRebuilt": false,
+        "entryResults": [
+          {
+            "name": "中文目录/原文件.bin",
+            "reason": "文件涉及缺失分卷",
+            "status": "missing"
+          },
+          {
+            "name": "说明.txt",
+            "reason": "完整读取并通过内容校验",
+            "status": "recovered"
+          }
+        ],
+        "outputEncrypted": true,
+        "outputPath": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-hOyMsj\\ZIP真实缺卷抢救\\抢救-1-2.zip",
+        "partial": true,
+        "recoveredDirectories": 1,
+        "recoveredEntries": [
+          "说明.txt"
+        ],
+        "recoveredFiles": 1,
+        "skippedEntries": [
+          "缺少：论坛密码验收.haozip01.zip。本次仅救回现有连续分卷中内容完整的文件，原卷保持不变。",
+          "中文目录/：文件涉及缺失分卷，未恢复",
+          "中文目录/原文件.bin：文件涉及缺失分卷，未恢复"
+        ],
+        "verified": true
+      },
+      "originalUnchanged": true,
+      "independentContentMatch": true
+    },
+    {
+      "missing": 1,
+      "selected": 3,
+      "result": {
+        "directoryRebuilt": false,
+        "entryResults": [
+          {
+            "name": "中文目录/原文件.bin",
+            "reason": "文件涉及缺失分卷",
+            "status": "missing"
+          },
+          {
+            "name": "说明.txt",
+            "reason": "完整读取并通过内容校验",
+            "status": "recovered"
+          }
+        ],
+        "outputEncrypted": true,
+        "outputPath": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-hOyMsj\\ZIP真实缺卷抢救\\抢救-1-3.zip",
+        "partial": true,
+        "recoveredDirectories": 1,
+        "recoveredEntries": [
+          "说明.txt"
+        ],
+        "recoveredFiles": 1,
+        "skippedEntries": [
+          "缺少：论坛密码验收.haozip01.zip。本次仅救回现有连续分卷中内容完整的文件，原卷保持不变。",
+          "中文目录/：文件涉及缺失分卷，未恢复",
+          "中文目录/原文件.bin：文件涉及缺失分卷，未恢复"
+        ],
+        "verified": true
+      },
+      "originalUnchanged": true,
+      "independentContentMatch": true
+    },
+    {
+      "missing": 2,
+      "selected": 1,
+      "result": {
+        "directoryRebuilt": false,
+        "entryResults": [
+          {
+            "name": "中文目录/原文件.bin",
+            "reason": "内容涉及缺失分卷或被截断，请补齐原卷后重试",
+            "status": "missing"
+          },
+          {
+            "name": "说明.txt",
+            "reason": "完整读取并通过内容校验",
+            "status": "recovered"
+          }
+        ],
+        "outputEncrypted": true,
+        "outputPath": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-hOyMsj\\ZIP真实缺卷抢救\\抢救-2-1.zip",
+        "partial": true,
+        "recoveredDirectories": 2,
+        "recoveredEntries": [
+          "说明.txt"
+        ],
+        "recoveredFiles": 1,
+        "skippedEntries": [
+          "缺少：论坛密码验收.haozip02.zip。本次仅救回现有连续分卷中内容完整的文件，原卷保持不变。",
+          "中文目录/原文件.bin：内容涉及缺失分卷或被截断，请补齐原卷后重试，未恢复"
+        ],
+        "verified": true
+      },
+      "originalUnchanged": true,
+      "independentContentMatch": true
+    },
+    {
+      "missing": 2,
+      "selected": 3,
+      "result": {
+        "directoryRebuilt": false,
+        "entryResults": [
+          {
+            "name": "中文目录/原文件.bin",
+            "reason": "内容涉及缺失分卷或被截断，请补齐原卷后重试",
+            "status": "missing"
+          },
+          {
+            "name": "说明.txt",
+            "reason": "完整读取并通过内容校验",
+            "status": "recovered"
+          }
+        ],
+        "outputEncrypted": true,
+        "outputPath": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-hOyMsj\\ZIP真实缺卷抢救\\抢救-2-3.zip",
+        "partial": true,
+        "recoveredDirectories": 2,
+        "recoveredEntries": [
+          "说明.txt"
+        ],
+        "recoveredFiles": 1,
+        "skippedEntries": [
+          "缺少：论坛密码验收.haozip02.zip。本次仅救回现有连续分卷中内容完整的文件，原卷保持不变。",
+          "中文目录/原文件.bin：内容涉及缺失分卷或被截断，请补齐原卷后重试，未恢复"
+        ],
+        "verified": true
+      },
+      "originalUnchanged": true,
+      "independentContentMatch": true
+    },
+    {
+      "kind": "content-check-failed",
+      "result": {
+        "directoryRebuilt": false,
+        "entryResults": [
+          {
+            "name": "中文目录/原文件.bin",
+            "reason": "内容校验失败",
+            "status": "checksum_failed"
+          },
+          {
+            "name": "说明.txt",
+            "reason": "完整读取并通过内容校验",
+            "status": "recovered"
+          }
+        ],
+        "outputEncrypted": true,
+        "outputPath": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-hOyMsj\\ZIP真实缺卷抢救\\校验失败排除.zip",
+        "partial": true,
+        "recoveredDirectories": 2,
+        "recoveredEntries": [
+          "说明.txt"
+        ],
+        "recoveredFiles": 1,
+        "skippedEntries": [
+          "中文目录/原文件.bin: 内容校验失败，未恢复此条目"
+        ],
+        "verified": true
+      },
+      "originalUnchanged": true,
+      "independentContentMatch": true
+    },
+    {
+      "kind": "missing-terminal",
+      "rejectedWithoutOutput": true
+    },
+    {
+      "kind": "ZIPX-regression",
+      "mode": "none",
+      "result": {
+        "directoryRebuilt": false,
+        "entryResults": [
+          {
+            "name": "中文目录/原文件.bin",
+            "reason": "内容涉及缺失分卷或被截断，请补齐原卷后重试",
+            "status": "missing"
+          },
+          {
+            "name": "说明.txt",
+            "reason": "完整读取并通过内容校验",
+            "status": "recovered"
+          }
+        ],
+        "outputEncrypted": false,
+        "outputPath": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-hOyMsj\\ZIP真实缺卷抢救\\ZIPX-none.zip",
+        "partial": true,
+        "recoveredDirectories": 2,
+        "recoveredEntries": [
+          "说明.txt"
+        ],
+        "recoveredFiles": 1,
+        "skippedEntries": [
+          "缺少：真实原包.zx02。本次仅救回现有连续分卷中内容完整的文件，原卷保持不变。",
+          "中文目录/原文件.bin：内容涉及缺失分卷或被截断，请补齐原卷后重试，未恢复"
+        ],
+        "verified": true
+      },
+      "independentContentMatch": true
+    },
+    {
+      "kind": "ZIPX-regression",
+      "mode": "password",
+      "result": {
+        "directoryRebuilt": false,
+        "entryResults": [
+          {
+            "name": "中文目录/原文件.bin",
+            "reason": "内容涉及缺失分卷或被截断，请补齐原卷后重试",
+            "status": "missing"
+          },
+          {
+            "name": "说明.txt",
+            "reason": "完整读取并通过内容校验",
+            "status": "recovered"
+          }
+        ],
+        "outputEncrypted": true,
+        "outputPath": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-hOyMsj\\ZIP真实缺卷抢救\\ZIPX-password.zip",
+        "partial": true,
+        "recoveredDirectories": 2,
+        "recoveredEntries": [
+          "说明.txt"
+        ],
+        "recoveredFiles": 1,
+        "skippedEntries": [
+          "缺少：真实原包.zx02。本次仅救回现有连续分卷中内容完整的文件，原卷保持不变。",
+          "中文目录/原文件.bin：内容涉及缺失分卷或被截断，请补齐原卷后重试，未恢复"
+        ],
+        "verified": true
+      },
+      "independentContentMatch": true
+    },
+    {
+      "kind": "unknown-boundary",
+      "result": {
+        "directoryRebuilt": true,
+        "entryResults": [
+          {
+            "name": "unknown.txt",
+            "reason": "unknown.txt: 数据描述符缺少可确定的文件边界，未扫描后续内容",
+            "status": "unknown"
+          },
+          {
+            "name": null,
+            "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目",
+            "status": "unknown"
+          },
+          {
+            "name": "good.txt",
+            "reason": "完整读取并通过内容校验",
+            "status": "recovered"
+          }
+        ],
+        "outputEncrypted": false,
+        "outputPath": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-hOyMsj\\ZIP真实缺卷抢救\\未知边界抢救.zip",
+        "partial": true,
+        "recoveredDirectories": 0,
+        "recoveredEntries": [
+          "good.txt"
+        ],
+        "recoveredFiles": 1,
+        "skippedEntries": [
+          "unknown.txt: 数据描述符缺少可确定的文件边界，未扫描后续内容"
+        ],
+        "verified": true
+      },
+      "unknownTailNotCalledMissing": true,
+      "independentContentMatch": true
+    }
+  ],
+  "screenshots": [
+    "zip-partial-diagnosis-1100x700.png",
+    "zip-partial-diagnosis-760x520.png",
+    "zip-partial-result-folded-1100x700.png",
+    "zip-partial-result-folded-760x520.png",
+    "zip-partial-result-files-1100x700.png",
+    "zip-partial-result-files-760x520.png",
+    "zip-partial-batch-files-1100x700.png",
+    "zip-partial-batch-files-760x520.png",
+    "zip-partial-checksum-1100x700.png",
+    "zip-partial-checksum-760x520.png",
+    "zip-partial-unknown-1100x700.png",
+    "zip-partial-unknown-760x520.png"
+  ],
+  "realFailurePasswordCorrectionRescueQueueExtraction": true,
+  "originalFailureRetained": true,
+  "destinationAndPasswordRetained": true,
+  "originalVolumesUnchanged": true,
+  "restoredDiskFullExtraction": true,
+  "batchPageVerified": true
+}
