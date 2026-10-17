@@ -23,14 +23,14 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 特殊压缩 | JPEG/PNG/WebP 图片编码与缩放、视频压缩预设、PDF 分析与结构优化 |
 | 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、受支持预览与选择性解压 |
 | 密码保险箱 | 本地加密保存常用解压密码，分类、搜索、导入导出与使用统计 |
-| 文件完整性 | CRC32/MD5/SHA256 校验、归档诊断，以及保留原包的 ZIP 完整文件救援，支持密码包与目录可读的标准 ZIP 缺卷部分抢救 |
+| 文件完整性 | CRC32/MD5/SHA256 校验、归档诊断、RAR4/RAR5 副本修复与恢复卷（需本机 Rar.exe），以及密码 ZIP 与目录可读的标准卷完整文件救援 |
 | 历史与系统集成 | 搜索和再次执行、统一结果操作、托盘、资源管理器经典菜单与应用内更新 |
 
 详细格式能力见 [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md)；RAR 创建依赖用户安装的 WinRAR，视频暂不保证支持 Windows N。功能介绍和快速上手见 [项目首页](../README.md)。
 
-当前稳定版为 **1.4.18**：补齐 ZIPX（XZ）标准多卷的任意成员读取、无密码/AES-256/ZipCrypto 创建、改密/重新分卷/合卷及缺卷补回；修正卷型保存、窄窗控件和文件浏览器中卷双击入口。产品输出已用 WinRAR 7.23 原名独立回解，本机 Bandizip Beta 解码异常及 7-Zip 卷名限制明确保留，原数字卷默认不变。见[本版审计](docs/STANDARD_ZIPX_1.4.18.md)、[封板记录](docs/STANDARD_ZIPX_FREEZE_1.4.18.md)、[中文更新说明](docs/RELEASE_NOTES_1.4.18.md)及[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.18)。安装器、签名更新 ZIP/签名及中文更新清单均已发布并核对。
+当前稳定版为 **1.4.19**：补齐实测 RAR4 单包、旧式 `.rar/.r00` 和现代 `.partN.rar` 的恢复记录/恢复卷链路，覆盖无密码、内容密码和文件名密码；修正旧式 REV 关联、缺末卷及多次密码提示，并明确无效恢复卷原因。20 项不同 Rust、26 项前端及真实桌面任务链通过，10 张常用/窄窗页面已查看。修复和恢复卷创建需本机 Rar.exe，普通解压不需要；不外推只剩 REV 或全部历史卷型。见[实施审计](docs/RAR4_RECOVERY_1.4.19.md)、[封板记录](docs/RAR4_RECOVERY_FREEZE_1.4.19.md)、[更新说明](docs/RELEASE_NOTES_1.4.19.md)及[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.19)。
 
-v1.4.19 已完成功能封板（`e675076`），当前准备统一版本及正式安装器。新增 RAR4 旧式恢复卷关联、缺末卷识别、损坏恢复卷排除及多次密码提示修复；20 项不同 Rust、26 项前端及真实桌面链通过，10 张常用/窄窗页面已查看。见[实施审计](docs/RAR4_RECOVERY_1.4.19.md)、[封板记录](docs/RAR4_RECOVERY_FREEZE_1.4.19.md)和[更新说明](docs/RELEASE_NOTES_1.4.19.md)。尚未发布，不将候选当作稳定安装包。
+**v1.4.18** 的 ZIPX（XZ）标准多卷、密码创建、改密/重新分卷/合卷及缺卷补回继续保留。产品输出已用 WinRAR 7.23 独立回解，Bandizip Beta 解码异常及 7-Zip 卷名限制明确保留，原数字卷默认不变。见[ZIPX 审计](docs/STANDARD_ZIPX_1.4.18.md)和[更新说明](docs/RELEASE_NOTES_1.4.18.md)。
 
 ## 本地开发
 
