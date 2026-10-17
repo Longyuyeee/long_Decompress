@@ -208,7 +208,14 @@ export interface ArchiveDiagnosticReport {
   evidence: string[]
 }
 
+export interface ArchiveRecoveryEntryResult {
+  name: string | null
+  status: 'recovered' | 'missing' | 'checksum_failed' | 'unknown'
+  reason: string
+}
+
 export interface ZipRepairResult {
+  entryResults?: ArchiveRecoveryEntryResult[]
   recoveredEntries?: string[]
   format?: string
   outputFiles?: string[]

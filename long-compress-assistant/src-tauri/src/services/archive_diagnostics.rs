@@ -5,6 +5,7 @@ use crate::services::compression_format::{
 };
 use crate::services::compression_verification::verify_native_with_zip_encoding;
 use crate::services::zip_password::ZipPasswordEncoding;
+use crate::services::zip_recovery_outcome::{RecoveryEntryResult, RecoveryStatus};
 use crate::services::extraction_transaction;
 use crate::services::native_extraction::seven_zip;
 use crate::services::numeric_volume_reader::ZipInputReader;
@@ -55,6 +56,7 @@ pub struct ZipRepairResult {
     pub output_path: String,
     pub recovered_files: usize,
     pub recovered_entries: Vec<String>,
+    pub entry_results: Vec<RecoveryEntryResult>,
     pub recovered_directories: usize,
     pub skipped_entries: Vec<String>,
     pub verified: bool,
@@ -634,6 +636,7 @@ pub fn repair_zip_with_encoding_to_new(
     let mut recovered_bytes = 0u64;
     let mut recovered_encrypted_files = 0usize;
     let mut skipped_entries = source.notes.clone();
+    let mut entry_results = source.entry_results.clone();
     let mut written_names = std::collections::HashSet::new();
 
     for index in 0..entry_count {
@@ -651,6 +654,7 @@ pub fn repair_zip_with_encoding_to_new(
                     zip_aes::result::ZipError::UnsupportedArchive(_) => "当前不支持此条目的压缩或加密方法，未恢复".to_string(),
                     other => format!("无法读取此条目，未恢复：{other}"),
                 };
+                entry_results.push(RecoveryEntryResult::new(Some(label.clone()), RecoveryStatus::Unknown, &reason));
                 skipped_entries.push(format!("{label}: {reason}")); continue;
             }
         };
@@ -658,6 +662,7 @@ pub fn repair_zip_with_encoding_to_new(
         let declared_entry_size = entry.size();
         let entry_encrypted = entry.encrypted();
         if entry.enclosed_name().is_none() {
+            entry_results.push(RecoveryEntryResult::new(Some(name.clone()), RecoveryStatus::Unknown, "条目路径不能写入输出目录"));
             skipped_entries.push(format!("{name}: unsafe path"));
             continue;
         }
@@ -698,20 +703,24 @@ pub fn repair_zip_with_encoding_to_new(
                     return Err(error);
                 }
                 let detail = error.to_string();
+                let failed_check = ["checksum", "crc", "authentication"].iter().any(|marker| detail.to_ascii_lowercase().contains(marker));
                 let reason = if detail.to_ascii_lowercase().contains("checksum") || detail.to_ascii_lowercase().contains("crc") {
                     "内容校验失败".to_string()
                 } else if detail.to_ascii_lowercase().contains("authentication") {
                     "加密内容校验失败".to_string()
                 } else { detail };
                 skipped_entries.push(format!("{name}: {reason}，未恢复此条目"));
+                entry_results.push(RecoveryEntryResult::new(Some(name), if failed_check { RecoveryStatus::ChecksumFailed } else { RecoveryStatus::Unknown }, reason));
                 continue;
             }
         };
         if copied != declared_entry_size {
+            entry_results.push(RecoveryEntryResult::new(Some(name.clone()), RecoveryStatus::ChecksumFailed, "条目声明大小与实际读取大小不一致"));
             skipped_entries.push(format!("{name}: 条目声明大小与实际读取大小不一致，未恢复"));
             continue;
         }
         if !written_names.insert(name.clone()) {
+            entry_results.push(RecoveryEntryResult::new(Some(name.clone()), RecoveryStatus::Unknown, "包内名称重复，未恢复此条目"));
             skipped_entries.push(format!("{name}: 包内名称重复，未恢复此条目"));
             continue;
         }
@@ -722,6 +731,7 @@ pub fn repair_zip_with_encoding_to_new(
         copy_cancellable(&mut spool, &mut writer, cancelled)?;
         recovered_bytes = next_recovered_bytes;
         recovered_files += 1;
+        entry_results.push(RecoveryEntryResult::new(Some(name.clone()), RecoveryStatus::Recovered, "完整读取并通过内容校验"));
         recovered_entries.push(name);
         if entry_encrypted { recovered_encrypted_files += 1; }
         std::fs::remove_file(&spool_path)?;
@@ -748,6 +758,7 @@ pub fn repair_zip_with_encoding_to_new(
         output_path: output.to_string_lossy().to_string(),
         recovered_files,
         recovered_entries,
+        entry_results,
         recovered_directories,
         skipped_entries,
         verified: true,
@@ -1440,6 +1451,8 @@ mod tests {
             if matches!(scenario, "descriptor" | "bad-zip64") {
                 let result = result.unwrap(); assert_eq!(result.recovered_files, 1);
                 assert!(result.partial && result.directory_rebuilt && !result.skipped_entries.is_empty());
+                assert!(result.entry_results.iter().any(|entry| entry.name.as_deref() == Some("damaged.txt") && entry.status == RecoveryStatus::Unknown));
+                assert!(result.entry_results.iter().any(|entry| entry.name.is_none() && entry.status == RecoveryStatus::Unknown));
             } else {
                 assert!(result.is_err());
                 if scenario == "existing" { assert_eq!(std::fs::read(&output).unwrap(), b"keep this file"); }

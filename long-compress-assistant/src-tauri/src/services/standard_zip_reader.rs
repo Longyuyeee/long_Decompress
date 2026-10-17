@@ -7,6 +7,7 @@ use super::{
     split_archive_detector::{SplitArchiveDetector, SplitFormat},
 };
 use anyhow::{ensure, Context, Result};
+use super::zip_recovery_outcome::{RecoveryEntryResult, RecoveryStatus};
 use std::{
     io::{self, Read, Seek, SeekFrom},
     path::Path,
@@ -20,6 +21,7 @@ pub(crate) struct StandardZipReader {
     position: u64,
     pub(crate) recovery_notes: Vec<String>,
     pub(crate) recovery_encrypted: bool,
+    pub(crate) recovery_entries: Vec<RecoveryEntryResult>,
 }
 
 // Compact positions are private to this view. Missing disk lengths are never
@@ -96,16 +98,19 @@ impl StandardZipReader {
             group.missing_part_names()
         );
         let partial = !group.is_complete;
+        let forum = SplitArchiveDetector::forum_zip_disk(path).is_some();
         let mut indices = vec![None; group.total_parts];
-        if partial {
+        if partial && !forum {
             ensure!(group.first_part.is_file()
                 && group.first_part.file_stem().and_then(|name| name.to_str())
                     .is_some_and(|name| name.eq_ignore_ascii_case(&group.base_name)),
-                "缺卷救援需要标准 ZIP 的可读终卷 .zip；请补齐终卷，论坛卷暂不提供缺卷救援");
+                "缺卷救援需要可读终卷目录，请补齐终卷后重试");
         }
         let mut starts = vec![0u64];
         for (index, part) in group.parts.iter().enumerate() {
-            let disk = if !partial { index } else if part == &group.first_part {
+            let disk = if forum {
+                SplitArchiveDetector::forum_zip_disk(part).context("无法确定论坛 ZIP 分卷编号")?
+            } else if !partial { index } else if part == &group.first_part {
                 group.total_parts - 1
             } else {
                 part.extension().and_then(|extension| extension.to_str())
@@ -196,6 +201,7 @@ impl StandardZipReader {
         let mut retained = 0u64;
         let mut recovery_notes = Vec::new();
         let mut recovery_encrypted = false;
+        let mut recovery_entries = Vec::new();
         if partial {
             recovery_notes.push(format!("缺少：{missing_names}。本次仅救回现有连续分卷中内容完整的文件，原卷保持不变。"));
         }
@@ -284,6 +290,21 @@ impl StandardZipReader {
                 Err(error) if partial => {
                     let name = String::from_utf8_lossy(&original[cursor + 46..cursor + 46 + name_len]);
                     recovery_notes.push(format!("{name}：{error}，未恢复"));
+                    // Only name a missing-volume cause when a referenced disk,
+                    // header or declared payload actually crosses a known gap.
+                    let missing = layout.indices.get(disk as usize).is_some_and(Option::is_none)
+                        || layout.absolute(disk, offset).ok().is_some_and(|start| {
+                            let available = layout.contiguous_end(disk).unwrap_or(0);
+                            available < directory_start && (start.checked_add(30).is_some_and(|end| end > available)
+                                || read_at(&mut source, start, 30).ok().is_some_and(|local| {
+                                &local[..4] == b"PK\x03\x04" && start.checked_add(30 + u16_at(&local, 26) as u64 + u16_at(&local, 28) as u64)
+                                    .and_then(|data| data.checked_add(compressed)).is_some_and(|end| end > available)
+                            }))
+                        });
+                    if !name.ends_with(['/', '\\']) {
+                        recovery_entries.push(RecoveryEntryResult::new(Some(name.into_owned()),
+                            if missing { RecoveryStatus::Missing } else { RecoveryStatus::Unknown }, error.to_string()));
+                    }
                     cursor = entry_end;
                     continue;
                 }
@@ -342,6 +363,7 @@ impl StandardZipReader {
             position: 0,
             recovery_notes,
             recovery_encrypted,
+            recovery_entries,
         }))
     }
 }
@@ -563,6 +585,10 @@ mod tests {
         let result = repair_zip_with_password_to_new(&main, &root.path().join("partial.zip"), None, &AtomicBool::new(false)).unwrap();
         assert_eq!(result.recovered_files, 2);
         assert!(result.skipped_entries.iter().any(|note| note.contains("文件3.txt") && note.contains("校验")));
+        assert!(result.entry_results.iter().any(|entry| entry.name.as_deref() == Some("中文目录/文件3.txt")
+            && entry.status == RecoveryStatus::ChecksumFailed));
+        assert!(result.entry_results.iter().any(|entry| entry.name.as_deref() == Some("中文目录/文件1.txt")
+            && entry.status == RecoveryStatus::Missing));
         std::fs::remove_file(&main).unwrap();
         let report = diagnose_archive(&part, None, Arc::new(AtomicBool::new(false))).await.unwrap();
         assert_eq!(report.status, "missing_volume"); assert!(!report.can_repair);

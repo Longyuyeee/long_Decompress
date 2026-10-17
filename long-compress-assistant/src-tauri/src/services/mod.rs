@@ -3,6 +3,9 @@ pub mod archive_browser;
 pub(crate) mod standard_zip_reader;
 pub mod standard_zip_writer;
 pub(crate) mod zip_recovery_reader;
+pub mod zip_recovery_outcome;
+#[cfg(test)]
+mod zip_partial_rescue_tests;
 pub mod archive_diagnostics;
 pub mod rar_recovery;
 pub mod archive_preview;
