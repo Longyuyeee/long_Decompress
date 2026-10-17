@@ -28,13 +28,37 @@ pub async fn cancellable_output(
     cancellable_output_with_stdin(command, cancelled, timeout, None).await
 }
 
-/// RAR's interactive password prompt reads redirected stdin in the OEM charset.
+/// RAR's interactive password prompt reads redirected stdin in the ANSI charset.
 /// Close the pipe after one line so an unexpected second prompt cannot hang.
 pub async fn cancellable_output_with_stdin(
     command: &mut tokio::process::Command,
     cancelled: &std::sync::atomic::AtomicBool,
     timeout: std::time::Duration,
     input: Option<Vec<u8>>,
+) -> std::io::Result<std::process::Output> {
+    output_with_stdin_mode(command, cancelled, timeout, input, 0).await
+}
+
+/// RAR4 rc opens each surviving volume with a separate password prompt.
+/// Reply once per actual prompt, with a caller-supplied finite limit. Writing
+/// repeated lines at once does not work: RAR consumes a whole pipe read as one
+/// password. No password is added to arguments or the environment.
+pub async fn cancellable_output_with_rar_prompts(
+    command: &mut tokio::process::Command,
+    cancelled: &std::sync::atomic::AtomicBool,
+    timeout: std::time::Duration,
+    input: Option<Vec<u8>>,
+    max_prompts: usize,
+) -> std::io::Result<std::process::Output> {
+    output_with_stdin_mode(command, cancelled, timeout, input, max_prompts.clamp(1, 512)).await
+}
+
+async fn output_with_stdin_mode(
+    command: &mut tokio::process::Command,
+    cancelled: &std::sync::atomic::AtomicBool,
+    timeout: std::time::Duration,
+    mut input: Option<Vec<u8>>,
+    max_prompts: usize,
 ) -> std::io::Result<std::process::Output> {
     use std::{io, process::Stdio, sync::atomic::Ordering};
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -50,7 +74,8 @@ pub async fn cancellable_output_with_stdin(
         .stderr(Stdio::piped())
         .kill_on_drop(true)
         .spawn()?;
-    if let Some(mut bytes) = input {
+    let mut prompt_stdin = if max_prompts > 0 { child.stdin.take() } else { None };
+    if max_prompts == 0 { if let Some(mut bytes) = input.take() {
         let mut stdin = child.stdin.take().expect("piped stdin");
         let result = stdin.write_all(&bytes).await;
         bytes.fill(0);
@@ -59,7 +84,7 @@ pub async fn cancellable_output_with_stdin(
         if let Err(error) = result {
             if error.kind() != io::ErrorKind::BrokenPipe { let _ = child.kill().await; return Err(error); }
         }
-    }
+    } }
     let mut stdout = child.stdout.take().expect("piped stdout");
     let mut stderr = child.stderr.take().expect("piped stderr");
     let stdout_reader = tokio::spawn(async move {
@@ -68,7 +93,35 @@ pub async fn cancellable_output_with_stdin(
     });
     let stderr_reader = tokio::spawn(async move {
         let mut bytes = Vec::new();
-        stderr.read_to_end(&mut bytes).await.map(|_| bytes)
+        let mut prompt_input = input.unwrap_or_default();
+        let mut seen = 0;
+        let mut scan_from: usize = 0;
+        let prompt = b"Enter password (will not be echoed)";
+        let result = async {
+            let mut buffer = [0; 8192];
+            loop {
+                let count = stderr.read(&mut buffer).await?;
+                if count == 0 { break; }
+                bytes.extend_from_slice(&buffer[..count]);
+                if max_prompts == 0 { continue; }
+                while let Some(offset) = bytes[scan_from..].windows(prompt.len()).position(|w| w == prompt) {
+                    scan_from += offset + prompt.len();
+                    if seen < max_prompts {
+                        if let Some(stdin) = prompt_stdin.as_mut() {
+                            if let Err(error) = stdin.write_all(&prompt_input).await {
+                                if error.kind() != io::ErrorKind::BrokenPipe { return Err(error); }
+                            }
+                        }
+                        seen += 1;
+                    }
+                    if seen >= max_prompts { prompt_stdin.take(); }
+                }
+                scan_from = scan_from.max(bytes.len().saturating_sub(prompt.len() - 1));
+            }
+            Ok(bytes)
+        }.await;
+        prompt_input.fill(0);
+        result
     });
     let cancellation = async {
         while !cancelled.load(Ordering::Acquire) {

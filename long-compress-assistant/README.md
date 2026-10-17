@@ -30,6 +30,8 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 当前稳定版为 **1.4.18**：补齐 ZIPX（XZ）标准多卷的任意成员读取、无密码/AES-256/ZipCrypto 创建、改密/重新分卷/合卷及缺卷补回；修正卷型保存、窄窗控件和文件浏览器中卷双击入口。产品输出已用 WinRAR 7.23 原名独立回解，本机 Bandizip Beta 解码异常及 7-Zip 卷名限制明确保留，原数字卷默认不变。见[本版审计](docs/STANDARD_ZIPX_1.4.18.md)、[封板记录](docs/STANDARD_ZIPX_FREEZE_1.4.18.md)、[中文更新说明](docs/RELEASE_NOTES_1.4.18.md)及[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.18)。安装器、签名更新 ZIP/签名及中文更新清单均已发布并核对。
 
+v1.4.19 已完成功能封板（`e675076`），当前准备统一版本及正式安装器。新增 RAR4 旧式恢复卷关联、缺末卷识别、损坏恢复卷排除及多次密码提示修复；20 项不同 Rust、26 项前端及真实桌面链通过，10 张常用/窄窗页面已查看。见[实施审计](docs/RAR4_RECOVERY_1.4.19.md)、[封板记录](docs/RAR4_RECOVERY_FREEZE_1.4.19.md)和[更新说明](docs/RELEASE_NOTES_1.4.19.md)。尚未发布，不将候选当作稳定安装包。
+
 ## 本地开发
 
 Windows 构建需要受支持的 Node.js（20.19+、22.12+ 或 24）、npm、稳定版 Rust、MSVC C++ 构建工具及 WebView2。

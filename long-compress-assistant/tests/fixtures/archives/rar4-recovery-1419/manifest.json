@@ -1,0 +1,412 @@
+{
+  "generatedAt": "2026-10-17T20:39:36.657Z",
+  "tool": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+  "toolSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+  "toolVersion": "6.24 x64",
+  "publicPassword": "Rar4-1419-中文!",
+  "source": [
+    {
+      "name": "中文目录\\原文件.bin",
+      "bytes": 180123,
+      "sha256": "a02525d268e68d65a5c0d86faa207c38790dfb0ea96e6b4afcf00dcd1332222f"
+    },
+    {
+      "name": "说明.txt",
+      "bytes": 828,
+      "sha256": "57dd8339d0be2bb93847ce0cd9c50c1b9d0f970e194b1c4f4732bca1d31328ea"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "single-none",
+      "style": "single",
+      "mode": "none",
+      "args": [
+        "a",
+        "-ma4",
+        "-m0",
+        "-idq",
+        "-cfg-",
+        "-rr5p",
+        "-r",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\single-none\\原始归档.rar",
+        ".\\*"
+      ],
+      "listing": "\r\nRAR 6.24 x64   Copyright (c) 1993-2023 Alexander Roshal   3 Oct 2023\r\nTrial version             Type 'rar -?' for help\r\n\r\nArchive: E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\single-none\\ԭʼ�鵵.rar\r\nDetails: RAR 4, recovery record\r\n\r\n        Name: ����Ŀ¼\\ԭ�ļ�.bin\r\n        Type: File\r\n        Size: 180123\r\n Packed size: 180123\r\n       Ratio: 100%\r\n    Modified: 2026-10-18 04:39:34,366320500\r\n  Attributes: ..A....\r\n       CRC32: 7178D0AB\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v20) -m0 -md=128K\r\n\r\n        Name: ˵��.txt\r\n        Type: File\r\n        Size: 828\r\n Packed size: 828\r\n       Ratio: 100%\r\n    Modified: 2026-10-18 04:39:34,367319200\r\n  Attributes: ..A....\r\n       CRC32: CE42F229\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v20) -m0 -md=128K\r\n\r\n        Name: ����Ŀ¼\\��Ŀ¼\r\n        Type: Directory\r\n    Modified: 2026-10-18 04:39:34,366320500\r\n  Attributes: ...D...\r\n       CRC32: 00000000\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v20) -m0 -md=0K\r\n\r\n        Name: ����Ŀ¼\r\n        Type: Directory\r\n    Modified: 2026-10-18 04:39:34,366320500\r\n  Attributes: ...D...\r\n       CRC32: 00000000\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v20) -m0 -md=0K\r\n\r\n",
+      "files": [
+        {
+          "name": "原始归档.rar",
+          "bytes": 191215,
+          "sha256": "84f2a848e7801dd814b8d4335d9d381af3253e2e0d351788637d350f4f467e0d"
+        }
+      ]
+    },
+    {
+      "name": "single-content",
+      "style": "single",
+      "mode": "content",
+      "args": [
+        "a",
+        "-ma4",
+        "-m0",
+        "-idq",
+        "-cfg-",
+        "-rr5p",
+        "-r",
+        "-pRar4-1419-中文!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\single-content\\原始归档.rar",
+        ".\\*"
+      ],
+      "listing": "\r\nRAR 6.24 x64   Copyright (c) 1993-2023 Alexander Roshal   3 Oct 2023\r\nTrial version             Type 'rar -?' for help\r\n\r\nArchive: E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\single-content\\ԭʼ�鵵.rar\r\nDetails: RAR 4, recovery record\r\n\r\n        Name: ����Ŀ¼\\ԭ�ļ�.bin\r\n        Type: File\r\n        Size: 180123\r\n Packed size: 180128\r\n       Ratio: 100%\r\n    Modified: 2026-10-18 04:39:34,366320500\r\n  Attributes: ..A....\r\n       CRC32: 7178D0AB\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v29) -m0 -md=128K\r\n       Flags: encrypted \r\n\r\n        Name: ˵��.txt\r\n        Type: File\r\n        Size: 828\r\n Packed size: 832\r\n       Ratio: 100%\r\n    Modified: 2026-10-18 04:39:34,367319200\r\n  Attributes: ..A....\r\n       CRC32: CE42F229\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v29) -m0 -md=128K\r\n       Flags: encrypted \r\n\r\n        Name: ����Ŀ¼\\��Ŀ¼\r\n        Type: Directory\r\n    Modified: 2026-10-18 04:39:34,366320500\r\n  Attributes: ...D...\r\n       CRC32: 00000000\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v29) -m0 -md=0K\r\n\r\n        Name: ����Ŀ¼\r\n        Type: Directory\r\n    Modified: 2026-10-18 04:39:34,366320500\r\n  Attributes: ...D...\r\n       CRC32: 00000000\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v29) -m0 -md=0K\r\n\r\n",
+      "files": [
+        {
+          "name": "原始归档.rar",
+          "bytes": 191242,
+          "sha256": "dc186aa1a63edccb06ff2b352c7c464f57dc1dd08ba8013a28774b1b032ce4c8"
+        }
+      ]
+    },
+    {
+      "name": "single-headers",
+      "style": "single",
+      "mode": "headers",
+      "args": [
+        "a",
+        "-ma4",
+        "-m0",
+        "-idq",
+        "-cfg-",
+        "-rr5p",
+        "-r",
+        "-hpRar4-1419-中文!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\single-headers\\原始归档.rar",
+        ".\\*"
+      ],
+      "listing": "\r\nRAR 6.24 x64   Copyright (c) 1993-2023 Alexander Roshal   3 Oct 2023\r\nTrial version             Type 'rar -?' for help\r\n\r\nArchive: E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\single-headers\\ԭʼ�鵵.rar\r\nDetails: RAR 4, recovery record, encrypted headers\r\n\r\n        Name: ����Ŀ¼\\ԭ�ļ�.bin\r\n        Type: File\r\n        Size: 180123\r\n Packed size: 180128\r\n       Ratio: 100%\r\n    Modified: 2026-10-18 04:39:34,366320500\r\n  Attributes: ..A....\r\n       CRC32: 7178D0AB\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v29) -m0 -md=128K\r\n       Flags: encrypted \r\n\r\n        Name: ˵��.txt\r\n        Type: File\r\n        Size: 828\r\n Packed size: 832\r\n       Ratio: 100%\r\n    Modified: 2026-10-18 04:39:34,367319200\r\n  Attributes: ..A....\r\n       CRC32: CE42F229\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v29) -m0 -md=128K\r\n       Flags: encrypted \r\n\r\n        Name: ����Ŀ¼\\��Ŀ¼\r\n        Type: Directory\r\n    Modified: 2026-10-18 04:39:34,366320500\r\n  Attributes: ...D...\r\n       CRC32: 00000000\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v29) -m0 -md=0K\r\n\r\n        Name: ����Ŀ¼\r\n        Type: Directory\r\n    Modified: 2026-10-18 04:39:34,366320500\r\n  Attributes: ...D...\r\n       CRC32: 00000000\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v29) -m0 -md=0K\r\n\r\n",
+      "files": [
+        {
+          "name": "原始归档.rar",
+          "bytes": 191338,
+          "sha256": "cc6b461e63f6df201b78d66ae29badb06aa65a91da2bad3601039ce6a2285de5"
+        }
+      ]
+    },
+    {
+      "name": "old-none",
+      "style": "old",
+      "mode": "none",
+      "args": [
+        "a",
+        "-ma4",
+        "-m0",
+        "-idq",
+        "-cfg-",
+        "-rr5p",
+        "-r",
+        "-v60000b",
+        "-vn",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\old-none\\原始归档.rar",
+        ".\\*"
+      ],
+      "listing": "\r\nRAR 6.24 x64   Copyright (c) 1993-2023 Alexander Roshal   3 Oct 2023\r\nTrial version             Type 'rar -?' for help\r\n\r\nArchive: E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\old-none\\ԭʼ�鵵.rar\r\nDetails: RAR 4, volume, recovery record\r\n\r\n        Name: ����Ŀ¼\\ԭ�ļ�.bin\r\n        Type: File\r\n        Size: 180123\r\n Packed size: 56006\r\n       Ratio: -->\r\n    Modified: 2026-10-18 04:39:34,366320500\r\n  Attributes: ..A....\r\n  Pack-CRC32: 691BEC47\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v20) -m0 -md=128K\r\n\r\n",
+      "files": [
+        {
+          "name": "原始归档.r00",
+          "bytes": 60000,
+          "sha256": "e78dbb1664160b33180db3c5af414861e6550d5e3a48c945404b8bd329d51dec"
+        },
+        {
+          "name": "原始归档.r01",
+          "bytes": 60000,
+          "sha256": "17e5bbcae48abd0ebe84ed48c5bbcb63e6074f2c6ee77634132fbbf5b0ddbb40"
+        },
+        {
+          "name": "原始归档.r02",
+          "bytes": 14874,
+          "sha256": "100b9f03f05fda07de28a9a4f421bc0f2c570ad895a3ca0c87dd3e42de69c6c7"
+        },
+        {
+          "name": "原始归档.rar",
+          "bytes": 60000,
+          "sha256": "fa7246a8f4997ccaed930ec46516b6db1d94393f54b061e977ca450566489dac"
+        },
+        {
+          "name": "原始归档1.rev",
+          "bytes": 60000,
+          "sha256": "4e31c3d960fc7eed27508317b2ff875a309a937473c6f1196d9890764d662956"
+        },
+        {
+          "name": "原始归档2.rev",
+          "bytes": 60000,
+          "sha256": "cb86479adcbd9a280e0a60c0a372b5977e081ab5415c47f6f2f8f9f52577cf6d"
+        }
+      ]
+    },
+    {
+      "name": "old-content",
+      "style": "old",
+      "mode": "content",
+      "args": [
+        "a",
+        "-ma4",
+        "-m0",
+        "-idq",
+        "-cfg-",
+        "-rr5p",
+        "-r",
+        "-v60000b",
+        "-vn",
+        "-pRar4-1419-中文!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\old-content\\原始归档.rar",
+        ".\\*"
+      ],
+      "listing": "\r\nRAR 6.24 x64   Copyright (c) 1993-2023 Alexander Roshal   3 Oct 2023\r\nTrial version             Type 'rar -?' for help\r\n\r\nArchive: E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\old-content\\ԭʼ�鵵.rar\r\nDetails: RAR 4, volume, recovery record\r\n\r\n        Name: ����Ŀ¼\\ԭ�ļ�.bin\r\n        Type: File\r\n        Size: 180123\r\n Packed size: 55998\r\n       Ratio: -->\r\n    Modified: 2026-10-18 04:39:34,366320500\r\n  Attributes: ..A....\r\n  Pack-CRC32: D6DEB297\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v29) -m0 -md=128K\r\n       Flags: encrypted \r\n\r\n",
+      "files": [
+        {
+          "name": "原始归档.r00",
+          "bytes": 60000,
+          "sha256": "1bbd43f6fb702128151e32455e94460a8c4af8a8d74ce9dddfe76704ee316480"
+        },
+        {
+          "name": "原始归档.r01",
+          "bytes": 60000,
+          "sha256": "12bb1882e5d78bfd026647a15d3c06f8b45d7f8cc1f95ce6e0350c4b2ca5b647"
+        },
+        {
+          "name": "原始归档.r02",
+          "bytes": 14923,
+          "sha256": "5e6b7590338034d19d37dcff9a72f6afee2a4b20900cf775f9ab81e2ca623e20"
+        },
+        {
+          "name": "原始归档.rar",
+          "bytes": 60000,
+          "sha256": "9f66baf627bbb725b049cd31216ce97832c1f443860007de1170c41e614c950a"
+        },
+        {
+          "name": "原始归档1.rev",
+          "bytes": 60000,
+          "sha256": "1a27fe26c67a94d96aacb665ad8c1cac844a6cf32d64948671146aa08da0b6d1"
+        },
+        {
+          "name": "原始归档2.rev",
+          "bytes": 60000,
+          "sha256": "b78cf6dacaee39f01543e0fba431a3f6bb3dda61ec098d062979a38e5307f9a5"
+        }
+      ]
+    },
+    {
+      "name": "old-headers",
+      "style": "old",
+      "mode": "headers",
+      "args": [
+        "a",
+        "-ma4",
+        "-m0",
+        "-idq",
+        "-cfg-",
+        "-rr5p",
+        "-r",
+        "-v60000b",
+        "-vn",
+        "-hpRar4-1419-中文!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\old-headers\\原始归档.rar",
+        ".\\*"
+      ],
+      "listing": "\r\nRAR 6.24 x64   Copyright (c) 1993-2023 Alexander Roshal   3 Oct 2023\r\nTrial version             Type 'rar -?' for help\r\n\r\nArchive: E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\old-headers\\ԭʼ�鵵.rar\r\nDetails: RAR 4, volume, recovery record, encrypted headers\r\n\r\n        Name: ����Ŀ¼\\ԭ�ļ�.bin\r\n        Type: File\r\n        Size: 180123\r\n Packed size: 55940\r\n       Ratio: -->\r\n    Modified: 2026-10-18 04:39:34,366320500\r\n  Attributes: ..A....\r\n  Pack-CRC32: 80E56459\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v29) -m0 -md=128K\r\n       Flags: encrypted \r\n\r\n",
+      "files": [
+        {
+          "name": "原始归档.r00",
+          "bytes": 60000,
+          "sha256": "9c5086c8093ef7255cb273c5f1bf6a3aa39dd6718dfb8067a840925e6f77ac3f"
+        },
+        {
+          "name": "原始归档.r01",
+          "bytes": 60000,
+          "sha256": "65d431cbfc71407dde429af96e118d32ae7804bead16251a57b631dcfeee5a6a"
+        },
+        {
+          "name": "原始归档.r02",
+          "bytes": 15198,
+          "sha256": "5a0c1cae3762ef2947cf26f99d45c7bf727dbc98b7b54275052584680d60c5ad"
+        },
+        {
+          "name": "原始归档.rar",
+          "bytes": 60000,
+          "sha256": "f5c9ec4b2200e6556c81cc0ccbfec8ef040d504f496266a0c0bbd585fff00799"
+        },
+        {
+          "name": "原始归档1.rev",
+          "bytes": 60000,
+          "sha256": "6d1a1f8d6ac1285870668c2e3363d71ba61d2b6ff1b0a5db57050be2d34abaf9"
+        },
+        {
+          "name": "原始归档2.rev",
+          "bytes": 60000,
+          "sha256": "7ef0351a483e9e708848962a2bbde6fbf09453ca3eaa9864e5e82a0a78618a87"
+        }
+      ]
+    },
+    {
+      "name": "modern-none",
+      "style": "modern",
+      "mode": "none",
+      "args": [
+        "a",
+        "-ma4",
+        "-m0",
+        "-idq",
+        "-cfg-",
+        "-rr5p",
+        "-r",
+        "-v60000b",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\modern-none\\原始归档.rar",
+        ".\\*"
+      ],
+      "listing": "\r\nRAR 6.24 x64   Copyright (c) 1993-2023 Alexander Roshal   3 Oct 2023\r\nTrial version             Type 'rar -?' for help\r\n\r\nArchive: E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\modern-none\\ԭʼ�鵵.part1.rar\r\nDetails: RAR 4, volume, recovery record\r\n\r\n        Name: ����Ŀ¼\\ԭ�ļ�.bin\r\n        Type: File\r\n        Size: 180123\r\n Packed size: 56006\r\n       Ratio: -->\r\n    Modified: 2026-10-18 04:39:34,366320500\r\n  Attributes: ..A....\r\n  Pack-CRC32: 691BEC47\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v20) -m0 -md=128K\r\n\r\n",
+      "files": [
+        {
+          "name": "原始归档.part1.rar",
+          "bytes": 60000,
+          "sha256": "ba4dc4ebef44eeb5f76d7d81c665c0699a2d4e7f95f125fa884ab00f139c452c"
+        },
+        {
+          "name": "原始归档.part1.rev",
+          "bytes": 60000,
+          "sha256": "8b7ed82c96db50950958c778d172bcdce1e6c7ed730001bd8f06772260ad85e0"
+        },
+        {
+          "name": "原始归档.part2.rar",
+          "bytes": 60000,
+          "sha256": "26f21f86ceb8c9d4232c122125e5b4134eb4d7421bea1164b42047c21904ab96"
+        },
+        {
+          "name": "原始归档.part2.rev",
+          "bytes": 60000,
+          "sha256": "30f1fb7dfe6eb2f380c08a39a6c358341bbad7f929f8b4ae22f536a7da46e5f0"
+        },
+        {
+          "name": "原始归档.part3.rar",
+          "bytes": 60000,
+          "sha256": "3969208dcad80975950402c95e16dc8dcc52359b5005efe33d37066f573d1925"
+        },
+        {
+          "name": "原始归档.part4.rar",
+          "bytes": 14874,
+          "sha256": "f7ebd24604afe84a32fc63b6887ae2c67e9bc4f99d7a476735c326c2204fedc8"
+        }
+      ]
+    },
+    {
+      "name": "modern-content",
+      "style": "modern",
+      "mode": "content",
+      "args": [
+        "a",
+        "-ma4",
+        "-m0",
+        "-idq",
+        "-cfg-",
+        "-rr5p",
+        "-r",
+        "-v60000b",
+        "-pRar4-1419-中文!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\modern-content\\原始归档.rar",
+        ".\\*"
+      ],
+      "listing": "\r\nRAR 6.24 x64   Copyright (c) 1993-2023 Alexander Roshal   3 Oct 2023\r\nTrial version             Type 'rar -?' for help\r\n\r\nArchive: E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\modern-content\\ԭʼ�鵵.part1.rar\r\nDetails: RAR 4, volume, recovery record\r\n\r\n        Name: ����Ŀ¼\\ԭ�ļ�.bin\r\n        Type: File\r\n        Size: 180123\r\n Packed size: 55998\r\n       Ratio: -->\r\n    Modified: 2026-10-18 04:39:34,366320500\r\n  Attributes: ..A....\r\n  Pack-CRC32: 00DD0FCB\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v29) -m0 -md=128K\r\n       Flags: encrypted \r\n\r\n",
+      "files": [
+        {
+          "name": "原始归档.part1.rar",
+          "bytes": 60000,
+          "sha256": "28e53a1cda4ab17c2d61e345492ba6fde9c73464222a1dcc718200282f4d3783"
+        },
+        {
+          "name": "原始归档.part1.rev",
+          "bytes": 60000,
+          "sha256": "29afa9fa04065c989f76665c0e1059d5a2ff171598dda39a219b309d7cfe753c"
+        },
+        {
+          "name": "原始归档.part2.rar",
+          "bytes": 60000,
+          "sha256": "6e50cb0d91a8506d558d90df84963e7ad4c39c8a3f48b9a64050dc11535781df"
+        },
+        {
+          "name": "原始归档.part2.rev",
+          "bytes": 60000,
+          "sha256": "bf5f557012622e5c95f1f30f2d544027d7b46977d703c34d0e9b8d1ddf81a79e"
+        },
+        {
+          "name": "原始归档.part3.rar",
+          "bytes": 60000,
+          "sha256": "ae4ce83f44411d84aa244688c3a7bb98fd2c458886b987d45c284647ce17ae85"
+        },
+        {
+          "name": "原始归档.part4.rar",
+          "bytes": 14923,
+          "sha256": "061d96a887aa88b096b7d81642d6442a6ce8875253ebc06d315fb5d4403d7f85"
+        }
+      ]
+    },
+    {
+      "name": "modern-headers",
+      "style": "modern",
+      "mode": "headers",
+      "args": [
+        "a",
+        "-ma4",
+        "-m0",
+        "-idq",
+        "-cfg-",
+        "-rr5p",
+        "-r",
+        "-v60000b",
+        "-hpRar4-1419-中文!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\modern-headers\\原始归档.rar",
+        ".\\*"
+      ],
+      "listing": "\r\nRAR 6.24 x64   Copyright (c) 1993-2023 Alexander Roshal   3 Oct 2023\r\nTrial version             Type 'rar -?' for help\r\n\r\nArchive: E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-original\\modern-headers\\ԭʼ�鵵.part1.rar\r\nDetails: RAR 4, volume, recovery record, encrypted headers\r\n\r\n        Name: ����Ŀ¼\\ԭ�ļ�.bin\r\n        Type: File\r\n        Size: 180123\r\n Packed size: 55940\r\n       Ratio: -->\r\n    Modified: 2026-10-18 04:39:34,366320500\r\n  Attributes: ..A....\r\n  Pack-CRC32: 26586C2D\r\n     Host OS: Windows\r\n Compression: RAR 1.5(v29) -m0 -md=128K\r\n       Flags: encrypted \r\n\r\n",
+      "files": [
+        {
+          "name": "原始归档.part1.rar",
+          "bytes": 60000,
+          "sha256": "e13e60d55af6360ce2d407cb517e62f6c042fe43b1a0fbd8b11d9814660cd75d"
+        },
+        {
+          "name": "原始归档.part1.rev",
+          "bytes": 60000,
+          "sha256": "a7025a3f4abd1a350ca8c409b46fb27be8aa9c43cc44037f241dcd1a1ff0e55b"
+        },
+        {
+          "name": "原始归档.part2.rar",
+          "bytes": 60000,
+          "sha256": "512d8a2b4b209837394688918262ab3b20b4b3a3e485a47315a126fa04354ea1"
+        },
+        {
+          "name": "原始归档.part2.rev",
+          "bytes": 60000,
+          "sha256": "dfe696fd8a1f09eb3e7dec9a28e1a1d4f6c1e3947165822ffb0be09a7af1ee55"
+        },
+        {
+          "name": "原始归档.part3.rar",
+          "bytes": 60000,
+          "sha256": "e95ed48f3a87336e74ecf79a3ae6b754f6ab570810cc2e4bbae1ed1745077f0d"
+        },
+        {
+          "name": "原始归档.part4.rar",
+          "bytes": 15198,
+          "sha256": "b8264954c1b221a019132485c63c880e7376dfe510e4b019588d7ea5957267da"
+        }
+      ]
+    },
+    {
+      "name": "no-record",
+      "files": [
+        {
+          "name": "无恢复记录.rar",
+          "bytes": 181237,
+          "sha256": "bb58eb43ebef842e0921c1439cdea431cd8258c125067cb0c0325d813dfe367c"
+        }
+      ]
+    }
+  ]
+}

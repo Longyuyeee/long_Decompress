@@ -1,0 +1,122 @@
+{
+  "completedAt": "2026-10-17T20:55:45.498Z",
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
+  "binarySha256": "ab6d21cebf23686c5e9570050f3b776abd8f3183c0825cdbd6f9bdfd891a69b1",
+  "tool": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\archive-upgrade-tools\\winrar\\Rar.exe",
+  "toolSha256": "f561764bc3e9ed208744321a89a819b562edeaf06e203c02a06976121fda1991",
+  "cases": [
+    {
+      "name": "single-none",
+      "kind": "recovery-record",
+      "originalUnchanged": true,
+      "independentAndApplicationContentMatch": true
+    },
+    {
+      "name": "single-content",
+      "kind": "recovery-record",
+      "originalUnchanged": true,
+      "independentAndApplicationContentMatch": true
+    },
+    {
+      "name": "single-headers",
+      "kind": "recovery-record",
+      "originalUnchanged": true,
+      "independentAndApplicationContentMatch": true
+    },
+    {
+      "name": "old-none",
+      "kind": "recovery-record",
+      "originalUnchanged": true,
+      "independentAndApplicationContentMatch": true
+    },
+    {
+      "name": "old-content",
+      "kind": "recovery-record",
+      "originalUnchanged": true,
+      "independentAndApplicationContentMatch": true
+    },
+    {
+      "name": "old-headers",
+      "kind": "recovery-record",
+      "originalUnchanged": true,
+      "independentAndApplicationContentMatch": true
+    },
+    {
+      "name": "modern-none",
+      "kind": "recovery-record",
+      "originalUnchanged": true,
+      "independentAndApplicationContentMatch": true
+    },
+    {
+      "name": "modern-content",
+      "kind": "recovery-record",
+      "originalUnchanged": true,
+      "independentAndApplicationContentMatch": true
+    },
+    {
+      "name": "modern-headers",
+      "kind": "recovery-record",
+      "originalUnchanged": true,
+      "independentAndApplicationContentMatch": true
+    },
+    {
+      "name": "old-none",
+      "kind": "missing-tail",
+      "structuralErrorBeforePassword": true,
+      "independentContentMatch": true,
+      "originalUnchanged": true
+    },
+    {
+      "name": "old-content",
+      "kind": "missing-tail",
+      "structuralErrorBeforePassword": true,
+      "independentContentMatch": true,
+      "originalUnchanged": true
+    },
+    {
+      "name": "old-headers",
+      "kind": "missing-tail",
+      "structuralErrorBeforePassword": true,
+      "independentContentMatch": true,
+      "originalUnchanged": true
+    },
+    {
+      "name": "modern-none",
+      "kind": "missing-tail",
+      "structuralErrorBeforePassword": true,
+      "independentContentMatch": true,
+      "originalUnchanged": true
+    },
+    {
+      "name": "modern-content",
+      "kind": "missing-tail",
+      "structuralErrorBeforePassword": true,
+      "independentContentMatch": true,
+      "originalUnchanged": true
+    },
+    {
+      "name": "modern-headers",
+      "kind": "missing-tail",
+      "structuralErrorBeforePassword": true,
+      "independentContentMatch": true,
+      "originalUnchanged": true
+    }
+  ],
+  "screenshots": [
+    "rar4-missing-first-1100x700.png",
+    "rar4-missing-first-760x520.png",
+    "rar4-repaired-result-1100x700.png",
+    "rar4-repaired-result-760x520.png",
+    "rar4-create-recovery-1100x700.png",
+    "rar4-create-recovery-760x520.png",
+    "rar4-created-recovery-1100x700.png",
+    "rar4-created-recovery-760x520.png",
+    "rar4-invalid-recovery-1100x700.png",
+    "rar4-invalid-recovery-760x520.png"
+  ],
+  "userFailureRepairQueueExtraction": true,
+  "originalFailureRetained": true,
+  "modifiedOutputAndPasswordRetained": true,
+  "userCreatedRar4RecoveryVolume": true,
+  "originalFilesUnchanged": true
+}
