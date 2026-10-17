@@ -23,9 +23,8 @@ const passwordCompressionFormats = computed(() => FORMAT_CAPABILITIES
   .map(format => format.displayName)
   .join(' · '))
 const passwordExtractionFormats = computed(() => FORMAT_CAPABILITIES
-  .filter(format => format.supportsPasswordExtract)
+  .filter(format => format.supportsPasswordExtract && (format.format !== 'zpaq' || archiveEngine.value?.formats.some(item => item.name === 'ZPAQ')))
   .map(format => format.displayName)
-  .concat(archiveEngine.value?.formats.some(format => format.name === 'ZPAQ') ? ['ZPAQ（只读）'] : [])
   .join(' · '))
 
 const refreshEngineDiagnostics = async () => {

@@ -123,6 +123,8 @@ static int long_scan_errors=0;
 using std::string;
 using std::vector;
 static vector<string> long_selected;
+static bool long_create=false;
+static std::map<string, string> long_create_names;
 
 static unsigned long_input_u32() {
   unsigned char b[4];
@@ -434,15 +436,44 @@ FP fopen(const char* filename, MODE mode) {
                     NULL, disp, FILE_ATTRIBUTE_NORMAL, NULL);
 }
 
+// Fail the isolated adapter process from any worker, including destructors.
+// Upstream callers do not all check stdio-style return values. Never let an
+// OS I/O failure become EOF, a skipped block, or a successful fragment count.
+static void long_io_error(const char* operation, DWORD code) {
+  fprintf(stderr, "LONG_ZPAQ_IO:%s:%lu\n", operation, (unsigned long)code);
+  fflush(stderr);
+  ExitProcess(2);
+}
+
+// Only the separately compiled fault-test executable contains this hook.
+#ifdef LONG_ZPAQ_TEST_IO
+static bool long_fault(const char* operation) {
+  const char* fault=getenv("LONG_ZPAQ_TEST_IO");
+  return fault && strcmp(fault, operation)==0;
+}
+#else
+static bool long_fault(const char*) { return false; }
+#endif
+
+static void long_flush_output(FP fp) {
+  if (long_fault("flush")) long_io_error("flush", ERROR_WRITE_FAULT);
+  if (!FlushFileBuffers(fp)) long_io_error("flush", GetLastError());
+}
+
 // Close file
 int fclose(FP fp) {
-  return CloseHandle(fp) ? 0 : EOF;
+  if (long_fault("close")) long_io_error("close", ERROR_INVALID_HANDLE);
+  if (!CloseHandle(fp)) long_io_error("close", GetLastError());
+  return 0;
 }
 
 // Read nobj objects of size size into ptr. Return number of objects read.
 size_t fread(void* ptr, size_t size, size_t nobj, FP fp) {
   DWORD r=0;
-  ReadFile(fp, ptr, size*nobj, &r, NULL);
+  if (long_fault("read")) long_io_error("read", ERROR_READ_FAULT);
+  if (size && nobj>MAXDWORD/size) long_io_error("read", ERROR_INVALID_PARAMETER);
+  if (!ReadFile(fp, ptr, DWORD(size*nobj), &r, NULL))
+    long_io_error("read", GetLastError());
   if (size>1) r/=size;
   return r;
 }
@@ -450,7 +481,13 @@ size_t fread(void* ptr, size_t size, size_t nobj, FP fp) {
 // Write nobj objects of size size from ptr to fp. Return number written.
 size_t fwrite(const void* ptr, size_t size, size_t nobj, FP fp) {
   DWORD r=0;
-  WriteFile(fp, ptr, size*nobj, &r, NULL);
+  if (long_fault("write")) long_io_error("write", ERROR_DISK_FULL);
+  if (size && nobj>MAXDWORD/size) long_io_error("write", ERROR_INVALID_PARAMETER);
+  DWORD requested=DWORD(size*nobj);
+  DWORD actual=requested;
+  if (long_fault("shortwrite") && actual>0) actual/=2;
+  if (!WriteFile(fp, ptr, actual, &r, NULL)) long_io_error("write", GetLastError());
+  if (r!=requested) long_io_error("write", ERROR_WRITE_FAULT);
   if (size>1) r/=size;
   return r;
 }
@@ -461,16 +498,20 @@ int fseeko(FP fp, int64_t offset, int origin) {
   if (origin==SEEK_SET) origin=FILE_BEGIN;
   else if (origin==SEEK_CUR) origin=FILE_CURRENT;
   else if (origin==SEEK_END) origin=FILE_END;
-  LONG h=uint64_t(offset)>>32;
-  SetFilePointer(fp, offset&0xffffffffull, &h, origin);
-  return GetLastError()!=NO_ERROR;
+  LARGE_INTEGER position;
+  position.QuadPart=offset;
+  if (long_fault("seek")) long_io_error("seek", ERROR_SEEK);
+  if (!SetFilePointerEx(fp, position, NULL, origin)) long_io_error("seek", GetLastError());
+  return 0;
 }
 
 // Get file position
 int64_t ftello(FP fp) {
-  LONG h=0;
-  DWORD r=SetFilePointer(fp, 0, &h, FILE_CURRENT);
-  return r+(uint64_t(h)<<32);
+  LARGE_INTEGER distance, position;
+  distance.QuadPart=0;
+  if (!SetFilePointerEx(fp, distance, &position, FILE_CURRENT))
+    long_io_error("tell", GetLastError());
+  return position.QuadPart;
 }
 
 #endif
@@ -547,6 +588,7 @@ void close(const char* filename, int64_t date, int64_t attr, FP fp=FPNULL) {
     chmod(filename, attr>>8);
 #else
   const bool ads=strstr(filename, ":$DATA")!=0;  // alternate data stream?
+  if (fp!=FPNULL) long_flush_output(fp);
   if (date>0 && !ads) {
     if (fp==FPNULL)
       fp=CreateFile(utow(filename).c_str(),
@@ -568,7 +610,7 @@ void close(const char* filename, int64_t date, int64_t attr, FP fp=FPNULL) {
       SetFileTime(fp, NULL, NULL, &ft);
     }
   }
-  if (fp!=FPNULL) CloseHandle(fp);
+  if (fp!=FPNULL) fclose(fp);
   if ((attr&255)=='w' && !ads)
     SetFileAttributes(utow(filename).c_str(), attr>>8);
 #endif
@@ -821,6 +863,7 @@ public:
   void close() {
     if (fp!=FPNULL) {
       flush();
+      long_flush_output(fp);
       fclose(fp);
     }
     fp=FPNULL;
@@ -1179,6 +1222,11 @@ string append_path(string a, string b) {
 
 // Rename name using tofiles[]
 string Jidac::rename(string name) {
+  if (long_create) {
+    std::map<string, string>::const_iterator p=long_create_names.find(name);
+    if (p==long_create_names.end()) error("Long source mapping missing");
+    return p->second;
+  }
   if (files.size()==0 && tofiles.size()>0)  // append prefix tofiles[0]
     name=append_path(tofiles[0], name);
   else {  // replace prefix files[i] with tofiles[i]
@@ -1297,6 +1345,20 @@ int Jidac::doCommand(int argc, const char** argv) {
       n=long_input_u32();
       if (n>100000) error("Long selection too large");
       for (unsigned j=0; j<n; ++j) long_selected.push_back(long_input_string(long_input_u32()));
+    }
+    else if (opt=="-long-create") {
+      long_create=true;
+      unsigned n=long_input_u32();
+      if (n==0 || n>100000) error("Long source list empty or too large");
+      for (unsigned j=0; j<n; ++j) {
+        string source=long_input_string(long_input_u32());
+        string name=long_input_string(long_input_u32());
+        if (source.empty() || name.empty() || source.find('\0')!=string::npos
+            || name.find('\0')!=string::npos) error("Long invalid source mapping");
+        if (!long_create_names.insert(std::make_pair(source, name)).second)
+          error("Long duplicate source mapping");
+        files.push_back(source);
+      }
     }
     else if (opt=="-test") dotest=true;
     else if (opt=="-to") {  // read tofiles
@@ -2165,6 +2227,11 @@ struct WriterPair: public libzpaq::Writer {
 // Add or delete files from archive. Return 1 if error else 0.
 int Jidac::add() {
 
+  // Product creation is always a fresh staged archive, never an incremental
+  // update. Names come from the shared Rust entry policy, not recursive CLI
+  // scanning (which would add absolute paths, ADS, or unwanted siblings).
+  if (long_create && exists(archive)) error("Long creation output already exists");
+
   // Read archive or index into ht, dt, ver.
   int errors=0;
   const bool archive_exists=exists(subpart(archive, 1).c_str());
@@ -2272,8 +2339,22 @@ int Jidac::add() {
   }
 
   // Make list of files to add or delete
-  for (unsigned i=0; i<files.size(); ++i)
-    scandir(files[i].c_str());
+  for (unsigned i=0; i<files.size(); ++i) {
+    if (!long_create) scandir(files[i].c_str());
+    else {
+      WIN32_FILE_ATTRIBUTE_DATA data;
+      if (!GetFileAttributesEx(utow(files[i].c_str()).c_str(), GetFileExInfoStandard, &data))
+        long_io_error("source-metadata", GetLastError());
+      if (data.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
+        error("Long source is a reparse point");
+      SYSTEMTIME st;
+      if (!FileTimeToSystemTime(&data.ftLastWriteTime, &st))
+        long_io_error("source-date", GetLastError());
+      int64_t edate=st.wYear*10000000000LL+st.wMonth*100000000LL+st.wDay*1000000
+          +st.wHour*10000+st.wMinute*100+st.wSecond;
+      addfile(files[i], edate, data.nFileSizeLow+(int64_t(data.nFileSizeHigh)<<32), 0);
+    }
+  }
 
   // Sort the files to be added by filename extension and decreasing size
   vector<DTMap::iterator> vf;
@@ -3009,6 +3090,7 @@ ThreadReturn decompressThread(void* arg) {
             assert(job.lastdt->second.date);
             assert(job.lastdt->second.data
                    <int64_t(job.lastdt->second.ptr.size()));
+            long_flush_output(job.outf);
             fclose(job.outf);
             job.outf=FPNULL;
           }
@@ -3463,7 +3545,7 @@ int Jidac::extract() {
                   break;
               }
               if (k<b.files.size()) {  // found new file
-                if (outf!=FPNULL) fclose(outf);
+                if (outf!=FPNULL) { long_flush_output(outf); fclose(outf); }
                 outf=FPNULL;
                 string outname=rename(b.files[k]->first);
                 dtptr=b.files[k];
@@ -3481,7 +3563,7 @@ int Jidac::extract() {
                 release(job.mutex);
               }
               else {  // end of file
-                if (outf!=FPNULL) fclose(outf);
+                if (outf!=FPNULL) { long_flush_output(outf); fclose(outf); }
                 outf=FPNULL;
                 dtptr=dt.end();
               }
@@ -3516,7 +3598,7 @@ int Jidac::extract() {
         }
       }
     }
-    if (outf!=FPNULL) fclose(outf);
+    if (outf!=FPNULL) { long_flush_output(outf); fclose(outf); }
   }
   if (segments>0) printf("%u streaming segments extracted\n", segments);
 

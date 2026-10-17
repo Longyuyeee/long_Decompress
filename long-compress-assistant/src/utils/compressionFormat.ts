@@ -1,4 +1,5 @@
 export type CompressionFormatId =
+  | 'zpaq'
   | 'zip'
   | 'zipx'
   | '7z'
@@ -49,6 +50,7 @@ export interface CompressionFormatCapability {
 }
 
 export const FORMAT_CAPABILITIES: CompressionFormatCapability[] = [
+  { format: 'zpaq', displayName: 'ZPAQ', extensions: ['zpaq'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', engineFormat: 'ZPAQ', knownLimitations: '创建新的日志式归档，支持原生密码；密码同时保护目录和内容。压缩强度 1～9 对应引擎 1～5 级，使用 16 MiB 块和两个线程。不提供固定大小分卷、增量更新或历史恢复。' },
   { format: 'zip', displayName: 'ZIP', extensions: ['zip'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
   { format: 'zipx', knownLimitations: '使用 XZ 方法；支持数字卷与 .zx01/…/.zipx 标准卷，接收方需使用支持该卷型及方法的软件。', displayName: 'ZIPX（XZ）', extensions: ['zipx'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
   { format: '7z', displayName: '7Z', extensions: ['7z'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
@@ -88,7 +90,6 @@ export interface ExtractOnlyFormatCapability {
 }
 
 export const EXTRACT_ONLY_FORMATS: ExtractOnlyFormatCapability[] = [
-  { displayName: 'ZPAQ（当前文件，只读，支持原生密码）', extensions: ['zpaq'], requires7za: false },
   { displayName: 'Application packages', extensions: ['jar', 'xpi', 'ipa', 'apk', 'appx'], requires7za: false },
   { displayName: 'Disk images', extensions: ['iso', 'img', 'udf', 'dmg', 'vhd', 'vhdx', 'qcow', 'qcow2', 'qcow2c', 'vdi', 'vmdk'], requires7za: true },
   { displayName: 'Installers and packages', extensions: ['cab', 'deb', 'udeb', 'rpm', 'msi', 'msp', 'msm', 'nsis'], requires7za: true },
@@ -167,7 +168,7 @@ const TAR_FORMATS = new Set(
 )
 // RAR stays in this set so a stale RAR+password configuration is rejected as
 // unsupported instead of silently changing the requested output format to 7Z.
-const NATIVE_PASSWORD_FORMATS = new Set(['zip', 'zipx', '7z', 'rar', 'tar.aes', 'tar.gz.aes', 'tar.bz2.aes', 'tar.xz.aes', 'tar.zst.aes', 'gz.aes', 'bz2.aes', 'xz.aes', 'zst.aes'])
+const NATIVE_PASSWORD_FORMATS = new Set(['zip', 'zipx', '7z', 'rar', 'zpaq', 'tar.aes', 'tar.gz.aes', 'tar.bz2.aes', 'tar.xz.aes', 'tar.zst.aes', 'gz.aes', 'bz2.aes', 'xz.aes', 'zst.aes'])
 const FORMAT_BY_ID = new Map(FORMAT_CAPABILITIES.map(format => [format.format, format]))
 
 const normalizeFormatId = (format: string): CompressionFormatId | null => {

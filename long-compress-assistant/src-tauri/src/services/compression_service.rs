@@ -1118,6 +1118,12 @@ impl CompressionService {
         zip_password_encoding: Option<ZipPasswordEncoding>,
         split_requested: bool,
     ) -> Result<()> {
+        if route == CompressionRoute::Zpaq {
+            self.check_cancellation()?;
+            let result = tauri::async_runtime::block_on(crate::services::zpaq_engine::verify(output, password, self.cancellation_flag.clone()));
+            self.check_cancellation()?;
+            return result;
+        }
         if split_requested && route == CompressionRoute::Zip {
             return compression_verification::verify_numeric_zip_with_encoding(
                 output, password, zip_password_encoding, || self.check_cancellation().is_err());
@@ -1255,6 +1261,11 @@ impl CompressionService {
             let mut options = options;
             if generic_split { options.split_size = None; }
             let res = match route {
+                CompressionRoute::Zpaq => {
+                    service.check_cancellation()?;
+                    let result = tauri::async_runtime::block_on(crate::services::zpaq_engine::create(&source_files, &working_output, &options, service.cancellation_flag.clone()));
+                    service.check_cancellation().and(result)
+                },
                 CompressionRoute::TarAes => service.do_compress_tar_aes(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::TarGzipAes => service.do_compress_tar_gz_aes(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::TarBzip2Aes => service.do_compress_tar_bz2_aes(&window, &task_id, &source_files, &working_output_string, options),

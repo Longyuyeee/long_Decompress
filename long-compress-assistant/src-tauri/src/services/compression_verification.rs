@@ -338,7 +338,7 @@ pub(crate) fn verify_native_with_zip_encoding(
             verify_wrapped_aes(route, path, password, &is_cancelled)?;
             Ok(true)
         }
-        CompressionRoute::Rar | CompressionRoute::Wim | CompressionRoute::Lzma => Ok(false),
+        CompressionRoute::Zpaq | CompressionRoute::Rar | CompressionRoute::Wim | CompressionRoute::Lzma => Ok(false),
     }
 }
 

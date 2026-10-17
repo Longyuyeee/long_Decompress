@@ -999,6 +999,26 @@ mod tests {
     }
 
     #[test]
+    fn zpaq_native_password_template_round_trip_without_fixed_volume_claim() {
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path().join("zpaq.longtask.json");
+        let mut original = profile();
+        original.config.format = "zpaq".into();
+        original.config.create_solid_archive = false;
+        original.config.split_archive = false;
+        export_profile_template(&original, &path).unwrap();
+        let preview = preview_template_file(&path).unwrap();
+        assert_eq!(preview.template.compression.format, "zpaq");
+        let imported = import_template_profile(&path, &preview.content_sha256).unwrap();
+        assert_eq!(imported.config.format, "zpaq");
+        assert!(!imported.config.split_archive);
+        let mut invalid = preview.template;
+        invalid.compression.split_archive = true;
+        invalid.compression.split_size_mib = Some(10);
+        assert!(validate_template(&invalid).is_err());
+    }
+
+    #[test]
     fn zip_output_1414_template_methods_round_trip() {
         let temp = tempfile::tempdir().unwrap();
         for (format, method) in [("zip", "zstd"), ("zipx", "deflate")] {

@@ -35,7 +35,7 @@ describe('SettingsView archive engine diagnostics', () => {
             { name: 'zip', extensions: ['zip', 'zipx'], canCreate: true },
             { name: 'wim', extensions: ['wim', 'esd'], canCreate: true },
             { name: 'APFS', extensions: ['apfs'], canCreate: false },
-            { name: 'ZPAQ', extensions: ['zpaq'], canCreate: false },
+            { name: 'ZPAQ', extensions: ['zpaq'], canCreate: true },
           ],
         })
       }
@@ -56,8 +56,10 @@ describe('SettingsView archive engine diagnostics', () => {
     expect(wrapper.text()).toContain('Full engine ready')
     expect(wrapper.text()).toContain('RAR')
     expect(wrapper.text()).toContain('WIM')
-    expect(wrapper.text()).toContain('密码解压: ZIP · ZIPX（XZ） · 7Z · RAR · TAR.AES')
-    expect(wrapper.get('[data-testid="settings-password-extraction-formats"]').text()).toContain('ZPAQ（只读）')
+    expect(wrapper.text()).toContain('密码解压: ZPAQ · ZIP · ZIPX（XZ） · 7Z · RAR · TAR.AES')
+    expect(wrapper.get('[data-testid="settings-password-extraction-formats"]').text().match(/ZPAQ/g)).toHaveLength(1)
+    expect(wrapper.get('[data-testid="settings-password-extraction-formats"]').text()).toContain('ZPAQ')
+    expect(wrapper.get('[data-testid="settings-password-extraction-formats"]').text()).not.toContain('只读')
     expect(wrapper.text()).toContain('TGZ.AES')
     expect(wrapper.text()).toContain('ZST.AES')
     expect(wrapper.text()).toContain('软件更新')

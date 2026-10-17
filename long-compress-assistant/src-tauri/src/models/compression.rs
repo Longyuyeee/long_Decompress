@@ -53,6 +53,7 @@ impl Default for CompressionTask {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum CompressionFormat {
+    Zpaq,
     Zip,
     Zipx,
     SevenZip,
@@ -74,6 +75,7 @@ pub enum CompressionFormat {
 impl CompressionFormat {
     pub fn from_extension(ext: &str) -> Self {
         match ext.to_lowercase().as_str() {
+            "zpaq" => Self::Zpaq,
             "zipx" => Self::Zipx,
             "7z" => Self::SevenZip,
             "rar" => Self::Rar,
@@ -95,6 +97,7 @@ impl CompressionFormat {
 
     pub fn extension(&self) -> &'static str {
         match self {
+            Self::Zpaq => "zpaq",
             Self::Zip => "zip",
             Self::Zipx => "zipx",
             Self::SevenZip => "7z",

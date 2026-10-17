@@ -301,7 +301,7 @@ pub fn detect_archive_engine_capabilities() -> ArchiveEngineCapabilities {
     let stdout = String::from_utf8_lossy(&result.stdout);
     let mut formats = parse_archive_engine_formats(&stdout);
     if crate::services::zpaq_engine::command_path().is_some() {
-        formats.push(ArchiveEngineFormatCapability { name: "ZPAQ".into(), extensions: vec!["zpaq".into()], can_create: false });
+        formats.push(ArchiveEngineFormatCapability { name: "ZPAQ".into(), extensions: vec!["zpaq".into()], can_create: true });
     }
     let workspace = workspace_capability_fields(&formats);
     let full_engine = ["APFS", "QCOW", "VDI", "VMDK", "wim"]
