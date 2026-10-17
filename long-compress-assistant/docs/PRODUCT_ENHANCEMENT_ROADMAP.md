@@ -1,6 +1,10 @@
 # Long解压产品增强路线
 
-## 当前：v1.4.15 正式发布，下一步旧密码编码（2026-10-17）
+## 当前：v1.4.20 功能封板，准备正式发布（2026-10-18）
+
+按[已批准路线](ARCHIVE_ROADMAP_1.4.15_TO_1.5.5.md)完成 v1.4.15～v1.4.19 发布，v1.4.20 论坛 ZIP 部分抢救和逐文件结果已完成 40 项 Rust、29 项前端、真实桌面及 12 张页面验收。功能冻结 `4388e9d`，正在准备版本身份和候选构建，尚未发布，准确状态见[开发交接](DEVELOPMENT_HANDOFF.md)及[封板记录](ZIP_PARTIAL_RESCUE_FREEZE_1.4.20.md)。发布后进入 v1.5.0 ZPAQ；后续路线未耗尽，不重复规划。下方“当前”均为历史阶段快照。
+
+## 历史：v1.4.15 正式发布，下一步旧密码编码（2026-10-17）
 
 ZIP 重复预检、TAR.LZ4 / TAR.BR 流式创建、RAR 暂停取消和矮窗口归档列表改善已交付，同时包含原 v1.4.14 候选的 ZIP Zstandard / ZIPX（XZ）输出方法链。安装器与签名更新包见 [v1.4.15 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15)，准确合入/标签与构建见[封板记录](ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)。不单独发布 v1.4.14；既有功能与页面证据保持。
 
