@@ -340,8 +340,8 @@ pub async fn diagnose(
             group.recovery.len()
         ));
         if group.rar4 { report.evidence.push("RAR4 旧格式；恢复记录与恢复卷在副本中处理，结果须通过逐文件校验".into()); }
-        for detail in &group.rejected_recovery {
-            report.issues.push(DiagnosticIssue { code: "invalid_recovery_volume".into(), severity: "warning".into(), title: "已忽略无效恢复卷".into(), detail: detail.clone() });
+        if !group.rejected_recovery.is_empty() {
+            report.issues.push(DiagnosticIssue { code: "invalid_recovery_volume".into(), severity: "warning".into(), title: "已忽略无效恢复卷".into(), detail: group.rejected_recovery.join("；") });
         }
         let readable = split
             .as_ref()

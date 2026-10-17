@@ -33,6 +33,16 @@ fn invalid_recovery_is_not_counted_or_copied() {
     let mut g = collect(&first).unwrap(); check_rar4_recovery(&mut g, &flag()).unwrap();
     assert!(g.recovery.is_empty()); assert_eq!(g.rejected_recovery.len(), 2);
 }
+#[tokio::test]
+async fn duplicate_indices_are_rejected_and_invalid_recovery_has_one_complete_issue() {
+    let dir = tempfile::tempdir().unwrap(); let first = copy_case("old-none", dir.path());
+    fs::copy(dir.path().join("原始归档1.rev"), dir.path().join("原始归档2.rev")).unwrap();
+    let mut g = collect(&first).unwrap(); assert!(check_rar4_recovery(&mut g, &flag()).unwrap_err().to_string().contains("序号重复"));
+    for name in ["原始归档1.rev", "原始归档2.rev"] { fs::write(dir.path().join(name), b"short").unwrap(); }
+    let r = diagnose(&first, None, flag()).await.unwrap();
+    let issues = r.issues.iter().filter(|i| i.code == "invalid_recovery_volume").collect::<Vec<_>>();
+    assert_eq!(issues.len(), 1); assert!(issues[0].detail.contains("1.rev") && issues[0].detail.contains("2.rev"));
+}
 #[test]
 fn ambiguous_trailing_digits_do_not_mix_families() {
     let dir = tempfile::tempdir().unwrap(); let first = copy_case("old-none", dir.path());
