@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import type { ZipPasswordEncoding } from '@/types/zipPassword'
 import { ref, computed } from 'vue'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
@@ -85,11 +86,12 @@ export interface Task {
   heartbeatSecondsSinceProgress?: number
   heartbeatAt?: string
   // 密码相关
+  zipPasswordEncoding?: ZipPasswordEncoding
   password?: string
   passwordRequired?: boolean
   compressionOptions?: {
     fast_pack?: boolean
-    zip_password_encoding?: 'utf8' | 'windows_local'
+    zip_password_encoding?: ZipPasswordEncoding
     zip_method?: 'deflate' | 'zstd'
     zip_encryption?: 'aes256' | 'zipcrypto'
     zip_split_mode?: 'numeric' | 'standard'

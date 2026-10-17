@@ -16,6 +16,19 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('AeroTable', () => {
+  it('edits only the pending ZIP input choice and leaves shared output inheritance intact', async () => {
+    const pinia = createPinia(); setActivePinia(pinia)
+    const store = useTaskStore()
+    store.addTask({ id: 'zip-choice', name: 'a.zip', type: 'decompression', sourceFiles: ['C:/a.zip'], outputPath: 'D:/out', configurationMode: 'global' })
+    const wrapper = mount(AeroTable, { props: { taskType: 'decompression' }, global: { plugins: [pinia], stubs: { Teleport: true, ExtractionOutputPreview: true } } })
+    await wrapper.get('[data-testid="toggle-archive-task-zip-choice"]').trigger('click'); await flushPromises()
+    const field = wrapper.findComponent({ name: 'ZipPasswordEncodingField' })
+    field.vm.$emit('update:modelValue', 'cp936')
+    expect(store.tasks[0]).toMatchObject({ zipPasswordEncoding: 'cp936', outputPath: 'D:/out', configurationMode: 'global' })
+    store.tasks[0].status = 'extracting'; await flushPromises()
+    expect(wrapper.find('[data-testid="task-zip-password-encoding"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
   it('displays a readable final reason without changing the original log evidence', async () => {
     const pinia = createPinia()
     setActivePinia(pinia)

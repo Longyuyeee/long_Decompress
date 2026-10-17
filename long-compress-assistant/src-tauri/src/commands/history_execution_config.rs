@@ -27,6 +27,17 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
         _ => &[],
     };
     output.extend(project(&value, fields)?);
+    let input_encoding_key = match kind {
+        "archive-extraction" => Some("zipPasswordEncoding"),
+        "archive-conversion" => Some("sourceZipPasswordEncoding"),
+        _ => None,
+    };
+    if let Some(key) = input_encoding_key {
+        if let Some(selected) = value.get(key).filter(|selected| !selected.is_null()) {
+            let encoding = crate::services::zip_password::ZipPasswordEncoding::from_setting(selected.as_str()?)?;
+            output.insert(key.into(), encoding.as_str().into());
+        }
+    }
     if kind == "archive-conversion" {
         if let Some(count) = value.get("rarRecoveryVolumes") {
             if !count.as_u64().is_some_and(|n| n <= 10) { return None; }
@@ -37,12 +48,16 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
             output.insert("rarRecoveryPercent".into(), percent.clone());
         }
         for (key, default, allowed) in [("zipMethod", "deflate", ["deflate", "zstd"]), ("zipEncryption", "aes256", ["aes256", "zipcrypto"]),
-            ("zipPasswordEncoding", "utf8", ["utf8", "windows_local"]),
             ("zipSplitMode", "numeric", ["numeric", "standard"])] {
             let selected = value.get(key).and_then(Value::as_str).unwrap_or(default);
             if !allowed.contains(&selected) { return None; }
             output.insert(key.into(), selected.into());
         }
+        let encoding = match value.get("zipPasswordEncoding") {
+            Some(selected) => crate::services::zip_password::ZipPasswordEncoding::from_setting(selected.as_str()?)?,
+            None => Default::default(),
+        };
+        output.insert("zipPasswordEncoding".into(), encoding.as_str().into());
     }
     if kind == "archive-extraction" && output["outputDirectory"].as_str()?.trim().is_empty() { return None; }
     let settings_fields: &[(&str, char)] = match kind {
@@ -82,7 +97,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
                 settings.insert("encryptFilenames".into(), encrypted_names.clone());
             }
             if let Some(encoding) = value.get("settings")?.get("zipPasswordEncoding") {
-                if !matches!(encoding.as_str(), Some("utf8" | "windows_local")) { return None; }
+                crate::services::zip_password::ZipPasswordEncoding::from_setting(encoding.as_str()?)?;
                 settings.insert("zipPasswordEncoding".into(), encoding.clone());
             }
         }
@@ -104,6 +119,49 @@ fn project(value: &Value, fields: &[(&str, char)]) -> Option<Map<String, Value>>
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn input_zip_encoding_snapshots_keep_auto_and_explicit_modes_without_passwords() {
+        for (input, task_type, key) in [
+            (serde_json::json!({"schemaVersion":1,"kind":"archive-extraction","outputDirectory":"D:/out","extractToSubfolder":true,"password":"not-persisted"}), "decompression", "zipPasswordEncoding"),
+            (serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","outputPath":"D:/new.zip","format":"zip","level":6,"splitSize":0,"encryptFilenames":false,"passwordRequired":true,"sourcePassword":"not-persisted"}), "compression", "sourceZipPasswordEncoding"),
+        ] {
+            assert!(super::sanitize(input.clone(), task_type, "archive").unwrap().get(key).is_none());
+            let mut automatic = input.clone(); automatic[key] = serde_json::Value::Null;
+            assert!(super::sanitize(automatic, task_type, "archive").unwrap().get(key).is_none());
+            for mode in ["utf8", "windows_local", "cp932", "cp936", "cp950"] {
+                let mut configured = input.clone(); configured[key] = mode.into();
+                let saved = super::sanitize(configured, task_type, "archive").unwrap();
+                assert_eq!(saved[key], mode);
+                assert!(!saved.to_string().contains("not-persisted"));
+                if task_type == "compression" { assert_eq!(saved["zipPasswordEncoding"], "utf8"); }
+            }
+            for invalid in [serde_json::json!("unknown"), serde_json::json!(true), serde_json::json!(932)] {
+                let mut configured = input.clone(); configured[key] = invalid;
+                assert!(super::sanitize(configured, task_type, "archive").is_none());
+            }
+        }
+    }
+
+    #[test]
+    fn conversion_password_encoding_keeps_fixed_pages_and_rejects_invalid_values() {
+        let input = serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","outputPath":"D:/new.zip",
+            "format":"zip","level":6,"splitSize":0,"encryptFilenames":false,"passwordRequired":true,
+            "password":"not-to-be-persisted","sourcePassword":"not-to-be-persisted"});
+        assert_eq!(super::sanitize(input.clone(), "compression", "archive").unwrap()["zipPasswordEncoding"], "utf8");
+        for mode in ["utf8", "windows_local", "cp932", "cp936", "cp950"] {
+            let mut value = input.clone();
+            value["zipPasswordEncoding"] = mode.into();
+            let saved = super::sanitize(value, "compression", "archive").unwrap();
+            assert_eq!(saved["zipPasswordEncoding"], mode);
+            assert!(!saved.to_string().contains("not-to-be-persisted"));
+        }
+        for invalid in [serde_json::json!("unknown"), serde_json::json!(true), serde_json::json!(null), serde_json::json!(932)] {
+            let mut value = input.clone();
+            value["zipPasswordEncoding"] = invalid;
+            assert!(super::sanitize(value, "compression", "archive").is_none());
+        }
+    }
+
     #[test]
     fn zip_output_1414_history_keeps_method_for_compression_and_conversion() {
         let mut conversion = serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","outputPath":"D:/new.zip",
@@ -176,7 +234,7 @@ mod tests {
             current["settings"]["encryptFilenames"] = invalid;
             assert!(super::sanitize(current, "compression", "archive").is_none());
         }
-        for mode in ["utf8", "windows_local"] {
+        for mode in ["utf8", "windows_local", "cp932", "cp936", "cp950"] {
             let mut current = original.clone();
             current["settings"]["zipPasswordEncoding"] = mode.into();
             let saved = super::sanitize(current, "compression", "archive").unwrap();

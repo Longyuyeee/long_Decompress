@@ -2,6 +2,7 @@ use crate::services::aes_wrapper::AesWrapper;
 use crate::services::compression_format::CompressionRoute;
 use crate::services::compression_service::CompressionError;
 use crate::services::tar_aes_engine::TarAesEngine;
+use crate::services::zip_password::ZipPasswordEncoding;
 use anyhow::Result;
 use std::fs::File;
 use std::io::Read;
@@ -56,6 +57,7 @@ fn verify_plain_zip(path: &Path, is_cancelled: &impl Fn() -> bool) -> Result<()>
 fn verify_encrypted_zip(
     path: &Path,
     password: &str,
+    encoding: Option<ZipPasswordEncoding>,
     is_cancelled: &impl Fn() -> bool,
 ) -> Result<()> {
     let file = super::numeric_volume_reader::ZipInputReader::open(path)?;
@@ -63,7 +65,7 @@ fn verify_encrypted_zip(
     let mut buffer = vec![0u8; 256 * 1024];
     for index in 0..archive.len() {
         check_cancelled(is_cancelled)?;
-        let mut entry = crate::services::zip_password::open_entry(&mut archive, index, password)?;
+        let mut entry = super::zip_password::open_entry_with_encoding(&mut archive, index, password, encoding)?;
         while !entry.is_dir() {
             check_cancelled(is_cancelled)?;
             let read = entry.read(&mut buffer)?;
@@ -75,7 +77,17 @@ fn verify_encrypted_zip(
     Ok(())
 }
 
+#[cfg(test)]
 pub(crate) fn verify_numeric_zip(path: &Path, password: Option<&str>, is_cancelled: impl Fn() -> bool) -> Result<()> {
+    verify_numeric_zip_with_encoding(path, password, None, is_cancelled)
+}
+
+pub(crate) fn verify_numeric_zip_with_encoding(
+    path: &Path,
+    password: Option<&str>,
+    encoding: Option<ZipPasswordEncoding>,
+    is_cancelled: impl Fn() -> bool,
+) -> Result<()> {
     check_cancelled(&is_cancelled)?;
     // Compression can publish either numeric chunks or real ZIP disks. Use
     // the same logical view as extraction instead of requiring a .001 path.
@@ -85,7 +97,7 @@ pub(crate) fn verify_numeric_zip(path: &Path, password: Option<&str>, is_cancell
     for index in 0..archive.len() {
         check_cancelled(&is_cancelled)?;
         let mut entry = match password.filter(|value| !value.is_empty()) {
-            Some(password) => super::zip_password::open_entry(&mut archive, index, password)?,
+            Some(password) => super::zip_password::open_entry_with_encoding(&mut archive, index, password, encoding)?,
             None => archive.by_index(index)?,
         };
         loop {
@@ -211,6 +223,18 @@ pub(crate) fn verify_native(
     password: Option<&str>,
     is_cancelled: impl Fn() -> bool,
 ) -> Result<bool> {
+    verify_native_with_zip_encoding(route, path, password, None, is_cancelled)
+}
+
+/// Creation must pass the exact output encoding; inspection keeps `None` for
+/// historical UTF-8/current-Windows compatibility until an input mode is chosen.
+pub(crate) fn verify_native_with_zip_encoding(
+    route: CompressionRoute,
+    path: &Path,
+    password: Option<&str>,
+    encoding: Option<ZipPasswordEncoding>,
+    is_cancelled: impl Fn() -> bool,
+) -> Result<bool> {
     check_cancelled(&is_cancelled)?;
     match route {
         CompressionRoute::Lz4 | CompressionRoute::Brotli | CompressionRoute::TarLz4 | CompressionRoute::TarBrotli | CompressionRoute::Lzip | CompressionRoute::TarLzip => {
@@ -222,7 +246,7 @@ pub(crate) fn verify_native(
         },
         CompressionRoute::Zip => {
             if let Some(password) = password.filter(|value| !value.is_empty()) {
-                verify_encrypted_zip(path, password, &is_cancelled)?;
+                verify_encrypted_zip(path, password, encoding, &is_cancelled)?;
             } else {
                 verify_plain_zip(path, &is_cancelled)?;
             }

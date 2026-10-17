@@ -1,0 +1,96 @@
+{
+  "verifiedAt": "2026-10-17T06:17:16.183Z",
+  "applicationSha256": "1de0bc549d84ff545aa0f42896a5647c753ab6a1f8b3fdb21cf0b7952307f740",
+  "source": "pinned Info-ZIP originals; private damaged copies remove only central directories",
+  "sameProfileNativeRestarts": 2,
+  "results": [
+    {
+      "scenario": "failed-task-single-rescue-native-restart-browse-extract",
+      "failedTask": "vcpzuxen0mvc075mp",
+      "completedTask": "1jk9njr7xmvc07k1l",
+      "sourceEncoding": "cp950",
+      "resultEncoding": "cp932",
+      "outputHash": "221dab361693ca1ddc8fd3ab7ef089657414d8069e84efcbd55394971a8fc0ea",
+      "repairedHash": "d572d35a61655c3b1a61135fb293529b80396d4c3bf38056aba92892360c16c1"
+    },
+    {
+      "scenario": "batch-repair-native-restart-browse-extract",
+      "code": "cp932",
+      "taskId": "lk568y2eimvc082rm",
+      "repairedHash": "3fcf7912746321da3fbdeb5bc4292736bb8c394167fa629e67a2c0577e07db6e",
+      "payloadHash": "221dab361693ca1ddc8fd3ab7ef089657414d8069e84efcbd55394971a8fc0ea"
+    },
+    {
+      "scenario": "batch-repair-native-restart-browse-extract",
+      "code": "cp936",
+      "taskId": "azp3lj866mvc082rq",
+      "repairedHash": "c9abb6e07ef06c20c9394677a9f7b12a70c49e0bde6ea454a3bb02b1d9a90284",
+      "payloadHash": "221dab361693ca1ddc8fd3ab7ef089657414d8069e84efcbd55394971a8fc0ea"
+    },
+    {
+      "scenario": "batch-repair-native-restart-browse-extract",
+      "code": "cp950",
+      "taskId": "e8dsktkspmvc082rr",
+      "repairedHash": "4a260ba6643d626f0d56ed68a792c18910a3e1d1c7094c000673f14e57bcd32c",
+      "payloadHash": "221dab361693ca1ddc8fd3ab7ef089657414d8069e84efcbd55394971a8fc0ea"
+    }
+  ],
+  "screenshots": [
+    "single-result-restored-1100.png",
+    "single-result-restored-760.png",
+    "batch-result-restored-cp932.png",
+    "batch-result-restored-cp936.png",
+    "batch-result-restored-cp950.png",
+    "completed-real-extractions.png"
+  ],
+  "layouts": [
+    {
+      "name": "single-result-restored-1100",
+      "height": 700,
+      "panelScroll": 446,
+      "panelWidth": 446,
+      "scroll": 1100,
+      "width": 1100
+    },
+    {
+      "name": "single-result-restored-760",
+      "height": 520,
+      "panelScroll": 446,
+      "panelWidth": 446,
+      "scroll": 760,
+      "width": 760
+    },
+    {
+      "name": "batch-result-restored-cp932",
+      "height": 520,
+      "panelScroll": 525,
+      "panelWidth": 525,
+      "scroll": 760,
+      "width": 760
+    },
+    {
+      "name": "batch-result-restored-cp936",
+      "height": 520,
+      "panelScroll": 525,
+      "panelWidth": 525,
+      "scroll": 760,
+      "width": 760
+    },
+    {
+      "name": "batch-result-restored-cp950",
+      "height": 520,
+      "panelScroll": 525,
+      "panelWidth": 525,
+      "scroll": 760,
+      "width": 760
+    },
+    {
+      "name": "completed-real-extractions",
+      "height": 700,
+      "panelScroll": 24,
+      "panelWidth": 24,
+      "scroll": 1100,
+      "width": 1100
+    }
+  ]
+}

@@ -1,4 +1,7 @@
+import type { ZipPasswordEncoding } from './zipPassword'
+
 export interface ConversionSettings {
+  sourceZipPasswordEncoding?: ZipPasswordEncoding
   format: string
   level: number
   outputDirectory: string
@@ -12,13 +15,15 @@ export interface ConversionSettings {
   zipMethod?: 'deflate' | 'zstd'
   zipEncryption: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
-  zipPasswordEncoding: 'utf8' | 'windows_local'
+  zipPasswordEncoding: ZipPasswordEncoding
 }
 export interface ConversionDraft {
   id: string
   sourcePath: string
   sourceParts?: string[]
   sourceReference?: string
+  /** Content detection, never inferred from a filename suffix. Rechecked before execution. */
+  sourceFormat?: string
   intent: 'convert' | 'reconfigure'
   defaultFormat?: string
   expanded: boolean

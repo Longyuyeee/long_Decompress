@@ -45,6 +45,27 @@ describe('useTauriCommands', () => {
     expect(mocks.invoke).toHaveBeenCalledWith('extract_file', expect.objectContaining({ options: expect.objectContaining({ parallel_zip: enabled }) }))
   })
 
+  it.each(['cp932', 'cp936', 'cp950'] as const)('keeps %s input across extraction and archive command wrappers', async encoding => {
+    mocks.invoke.mockImplementation(async command => command === 'extract_file' ? 'C:/output' : undefined)
+    const api = useTauriCommands()
+    await api.decompressFile('C:/old.zip', { ...decompressionOptions, password: 'not-persisted', zipPasswordEncoding: encoding })
+    expect(mocks.invoke).toHaveBeenCalledWith('extract_file', expect.objectContaining({ options: expect.objectContaining({ zip_password_encoding: encoding }) }))
+    expect(useTaskStore().tasks[0].executionConfig).toMatchObject({ zipPasswordEncoding: encoding })
+    expect(JSON.stringify(useTaskStore().tasks[0].executionConfig)).not.toContain('not-persisted')
+    await api.browseArchive('C:/old.zip', 'secret', 'browse', encoding)
+    await api.previewArchiveImage('C:/old.zip', 'image.png', 'secret', encoding)
+    await api.previewArchiveText('C:/old.zip', 'readme.txt', 'secret', encoding)
+    await api.openArchiveEntry('C:/old.zip', 'readme.txt', 'secret', false, encoding)
+    await api.materializeNestedArchive('C:/old.zip', 'nested.zip', 'secret', 1, [], encoding)
+    await api.testArchiveIntegrity('C:/old.zip', 'secret', encoding)
+    await api.diagnoseArchive('diagnostic', 'C:/old.zip', 'secret', encoding)
+    await api.repairZip('repair', 'C:/old.zip', 'C:/new.zip', 'secret', encoding)
+    await api.repairArchiveBatchItem('batch-repair', 'C:/old.zip', 'C:/output', 'ZIP', 'secret', encoding)
+    for (const name of ['browse_archive', 'preview_archive_image', 'preview_archive_text', 'open_archive_entry', 'materialize_nested_archive', 'test_archive_integrity', 'diagnose_archive', 'repair_zip', 'repair_archive_batch_item']) {
+      expect(mocks.invoke).toHaveBeenCalledWith(name, expect.objectContaining({ zipPasswordEncoding: encoding }))
+    }
+  })
+
   it('selects files while skipping metadata entries that cannot be read', async () => {
     mocks.open.mockResolvedValue(['C:/archives/good.zip', 'C:/archives/blocked.zip'])
     mocks.invoke.mockImplementation(async (command: string, payload: { path?: string }) => {

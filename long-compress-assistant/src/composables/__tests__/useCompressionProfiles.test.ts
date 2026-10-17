@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ZIP_PASSWORD_ENCODINGS } from '@/types/zipPassword'
 import type { CompressionProfile, CreateProfileRequest, PasswordStrategy } from '@/types'
 import { useCompressionProfiles } from '@/composables/useCompressionProfiles'
 
@@ -82,6 +83,24 @@ const profile = (passwordStrategy: PasswordStrategy = { type: 'none' }): Compres
 })
 
 describe('useCompressionProfiles', () => {
+  it.each(ZIP_PASSWORD_ENCODINGS)('keeps %s through camel/snake profile normalization and saving', async encoding => {
+    const raw = rawProfile()
+    for (const config of [
+      { ...raw.config, zipPasswordEncoding: encoding },
+      { ...raw.config, extra_params: { ...raw.config.extra_params, zip_password_encoding: encoding } },
+      { ...raw.config, extraParams: { zip_password_encoding: encoding } },
+    ]) {
+      mocks.invoke.mockResolvedValueOnce({ ...raw, config })
+      const api = useCompressionProfiles()
+      const profile = await api.getProfileById(raw.id)
+      expect(profile?.config.zipPasswordEncoding).toBe(encoding)
+      mocks.invoke.mockResolvedValueOnce(undefined)
+      await api.updateProfile(profile!)
+      expect(mocks.invoke).toHaveBeenLastCalledWith('update_compression_profile', expect.objectContaining({
+        profile: expect.objectContaining({ config: expect.objectContaining({ extra_params: expect.objectContaining({ zip_password_encoding: encoding }) }) }),
+      }))
+    }
+  })
   it('retains RAR recovery-volume configuration across profile load and update', async () => {
     const raw=rawProfile(); raw.config.format='rar'; raw.config.extra_params={...raw.config.extra_params,rar_recovery_volumes:'2'} as typeof raw.config.extra_params
     mocks.invoke.mockResolvedValueOnce([raw])

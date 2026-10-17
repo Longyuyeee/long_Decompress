@@ -16,14 +16,66 @@ function draft() {
   return store
 }
 describe('archive conversion lifecycle', () => {
-  it('does not detach inherited non-ZIP conversion drafts when only ZIP methods change', () => {
+  it('filters input by detected content and output by target without detaching unrelated drafts', async () => {
+    mocks.invoke.mockImplementation(async (command,args)=>command==='detect_split_archive' ? {is_split:false,archive_format:args.path==='C:/renamed.7z'?'ZIP':'7Z'} : undefined)
+    const store=useArchiveConversionStore(); store.addSources(['C:/renamed.7z','C:/renamed.zip','C:/other.7z'])
+    store.updateItem(store.items[1].id,{format:'zipx'})
+    expect(await store.applySelected({sourceZipPasswordEncoding:'cp932',zipPasswordEncoding:'cp950'})).toBe('')
+    expect(store.items[0].settings).toMatchObject({format:'7z',sourceZipPasswordEncoding:'cp932',zipPasswordEncoding:'utf8'})
+    expect(store.items[1].settings).toMatchObject({format:'zipx',zipPasswordEncoding:'cp950'})
+    expect(store.items[1].settings?.sourceZipPasswordEncoding).toBeUndefined()
+    expect(store.items[2].settings).toBeUndefined()
+    expect(store.batchNotice).toContain('2 项原包')
+    store.items[1].selected=store.items[2].selected=false
+    expect(await store.applySelected({sourceZipPasswordEncoding:undefined,zipMethod:'zstd'})).toBe('')
+    expect(store.items[0].settings?.sourceZipPasswordEncoding).toBeUndefined()
+    expect(store.defaults.sourceZipPasswordEncoding).toBeUndefined()
+  })
+  it('does not let a late source probe overwrite a replacement source format', async () => {
+    let finish!:(value:unknown)=>void
+    mocks.invoke.mockImplementation(async (command,args)=>command==='detect_split_archive' ? args.path==='C:/old.zip' ? new Promise(resolve=>{finish=resolve}) : {is_split:false,archive_format:'7z'} : undefined)
+    const store=useArchiveConversionStore(); store.addSources(['C:/old.zip'])
+    await vi.waitFor(()=>expect(finish).toBeTypeOf('function'))
+    store.replaceSource(store.items[0].id,'C:/replacement.7z')
+    finish({is_split:false,archive_format:'zip'})
+    await vi.waitFor(()=>expect(store.items[0].sourceFormat).toBe('7z'))
+    expect(await store.applySelected({sourceZipPasswordEncoding:'cp932'})).toContain('没有适用')
+    expect(store.items[0].settings).toBeUndefined()
+  })
+  it('omits a ZIP input override from detected non-ZIP execution and keeps non-ZIP output UTF-8 defaults', async () => {
+    mocks.invoke.mockImplementation(async (command,args)=>command==='detect_split_archive' ? {is_split:false,archive_format:'7z'} : command==='convert_archive' ? {primaryPath:args.outputPath,files:[],totalBytes:10,split:false} : undefined)
+    const store=useArchiveConversionStore();store.addSources(['C:/renamed.zip'])
+    store.updateItem(store.items[0].id,{sourceZipPasswordEncoding:'cp950',zipPasswordEncoding:'cp932'})
+    await store.start()
+    const args=mocks.invoke.mock.calls.find(([c])=>c==='convert_archive')![1]
+    expect(args).not.toHaveProperty('sourceZipPasswordEncoding')
+    expect(args.options.zip_password_encoding).toBe('utf8')
+    expect(useTaskStore().tasks[0].executionConfig).toMatchObject({zipPasswordEncoding:'utf8'})
+  })
+  it.each([['cp932', 'cp950'], ['cp950', 'cp936'], ['cp936', 'cp932']] as const)('keeps input %s separate from target %s through execution and history retry', async (sourceEncoding, targetEncoding) => {
+    mocks.invoke.mockImplementation(async (command, args) => command === 'convert_archive' ? { primaryPath: args.outputPath, files: [], totalBytes: 20, split: false } : undefined)
+    const store = useArchiveConversionStore()
+    store.addSources(['C:/old.zip'])
+    store.updateItem(store.pending[0].id, { format: 'zip', outputPath: 'C:/new.zip',
+      sourcePassword: 'input-secret', password: 'output-secret', sourceZipPasswordEncoding: sourceEncoding, zipPasswordEncoding: targetEncoding })
+    await store.start()
+    expect(mocks.invoke.mock.calls.find(([command]) => command === 'convert_archive')?.[1]).toMatchObject({
+      sourceZipPasswordEncoding: sourceEncoding, options: { zip_password_encoding: targetEncoding },
+    })
+    const task = useTaskStore().tasks[0]
+    expect(task.executionConfig).toMatchObject({ sourceZipPasswordEncoding: sourceEncoding, zipPasswordEncoding: targetEncoding })
+    expect(JSON.stringify(task.executionConfig)).not.toMatch(/input-secret|output-secret/)
+    store.restore(createTaskHistoryRecord(task))
+    expect(store.pending.at(-1)?.settings).toMatchObject({ sourceZipPasswordEncoding: sourceEncoding, zipPasswordEncoding: targetEncoding, sourcePassword: '', password: '' })
+  })
+  it('does not detach inherited non-ZIP conversion drafts when only ZIP methods change', async () => {
     const store = useArchiveConversionStore(); store.addSources(['C:/one.zip', 'C:/two.7z'])
     store.updateItem(store.pending[0].id, { format: 'zip' })
-    expect(store.applySelected({ zipMethod: 'zstd' })).toBe('')
+    expect(await store.applySelected({ zipMethod: 'zstd' })).toBe('')
     expect(store.pending[0].settings).toMatchObject({ format: 'zip', zipMethod: 'zstd' })
     expect(store.pending[1].settings).toBeUndefined()
     store.pending[0].selected = false
-    expect(store.applySelected({ zipMethod: 'zstd' })).toContain('没有 ZIP')
+    expect(await store.applySelected({ zipMethod: 'zstd' })).toContain('没有 ZIP')
   })
   it.each(['zip', 'zipx'])('keeps %s method/password/standard volumes through conversion and history retry', async format => {
     mocks.invoke.mockImplementation(async (command, args) => command === 'convert_archive' ? { primaryPath: args.outputPath, files: [], totalBytes: 20, split: true } : undefined)

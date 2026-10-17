@@ -395,7 +395,13 @@ impl RecoveryReader {
     }
     // Only check password headers here. Full content/authentication validation
     // happens once while rescuing each file, before any output is published.
+    #[cfg(test)]
     pub fn check_password_headers(&mut self, password: &str) -> zip_aes::result::ZipResult<()> {
+        self.check_password_headers_with_encoding(password, None)
+    }
+
+    pub fn check_password_headers_with_encoding(&mut self, password: &str,
+        encoding: Option<super::zip_password::ZipPasswordEncoding>) -> zip_aes::result::ZipResult<()> {
         let mut invalid = false;
         let mut other = None;
         for index in 0..self.archive.len() {
@@ -403,7 +409,7 @@ impl RecoveryReader {
             let encrypted_file = raw.encrypted() && !raw.is_dir();
             drop(raw);
             if !encrypted_file { continue; }
-            match super::zip_password::open_entry(&mut self.archive, index, password) {
+            match super::zip_password::open_entry_with_encoding(&mut self.archive, index, password, encoding) {
                 Ok(_) => return Ok(()),
                 Err(zip_aes::result::ZipError::InvalidPassword) => invalid = true,
                 Err(error) => other = Some(error),
@@ -413,9 +419,15 @@ impl RecoveryReader {
         else if invalid { Err(zip_aes::result::ZipError::InvalidPassword) }
         else { Err(zip_aes::result::ZipError::UnsupportedArchive("未找到具有明确边界的完整加密文件".into())) }
     }
+    #[cfg(test)]
     pub fn entry(&mut self, index: usize, password: Option<&str>) -> zip_aes::result::ZipResult<zip_aes::read::ZipFile<'_, RecoveryZipInput>> {
+        self.entry_with_encoding(index, password, None)
+    }
+
+    pub fn entry_with_encoding(&mut self, index: usize, password: Option<&str>,
+        encoding: Option<super::zip_password::ZipPasswordEncoding>) -> zip_aes::result::ZipResult<zip_aes::read::ZipFile<'_, RecoveryZipInput>> {
         match password {
-            Some(password) => super::zip_password::open_entry(&mut self.archive, index, password),
+            Some(password) => super::zip_password::open_entry_with_encoding(&mut self.archive, index, password, encoding),
             None => self.archive.by_index(index),
         }
     }

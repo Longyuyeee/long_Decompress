@@ -2,6 +2,8 @@
  * 压缩配置组类型定义
  */
 
+import type { ZipPasswordEncoding } from './zipPassword'
+
 export interface CompressionProfile {
   id: string
   name: string
@@ -16,7 +18,7 @@ export interface CompressionProfile {
 }
 
 export interface CompressionConfig {
-  zipPasswordEncoding?: 'utf8' | 'windows_local'
+  zipPasswordEncoding?: ZipPasswordEncoding
   zipMethod?: 'deflate' | 'zstd'
   zipEncryption?: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
@@ -136,7 +138,7 @@ export interface TaskTemplate {
     level: number
     splitArchive: boolean
     splitSizeMib: number | null
-    zipPasswordEncoding?: 'utf8' | 'windows_local'
+    zipPasswordEncoding?: ZipPasswordEncoding
     zipMethod?: 'deflate' | 'zstd'
     zipEncryption?: 'aes256' | 'zipcrypto'
     zipSplitMode?: 'numeric' | 'standard'

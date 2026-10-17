@@ -14,6 +14,28 @@ afterEach(() => { session?.dispose(); session = undefined })
 function file(path: string) { return { path, name: path.split('/').pop()!, size: 20, type: 'file', isDirectory: false } }
 function reopen() { session?.dispose(); setActivePinia(createPinia()); session = usePendingDraftStore(); session.initialize(); return session }
 describe('pending archive draft recovery', () => {
+  it('keeps extraction, compression and separate conversion encodings after reopening without secrets', async () => {
+    session = usePendingDraftStore(); session.initialize()
+    const compression = useCompressionStore(), tasks = useTaskStore(), conversion = useArchiveConversionStore()
+    compression.globalSettings.zipPasswordEncoding = 'cp950'
+    compression.addFile(file('C:/source.txt'))
+    tasks.addTask({ id: 'encoded-input', name: 'old.zip', type: 'decompression', sourceFiles: ['C:/old.zip'],
+      outputPath: 'D:/out', zipPasswordEncoding: 'cp932', password: 'input-secret' })
+    conversion.addSources(['C:/convert.zip'])
+    conversion.updateItem(conversion.pending[0].id, { sourceZipPasswordEncoding: 'cp936', zipPasswordEncoding: 'cp950',
+      sourcePassword: 'source-secret', password: 'target-secret' })
+    session.flush()
+    const saved = JSON.parse(localStorage.getItem(PENDING_DRAFTS_KEY)!)
+    expect(saved.extraction.items[0].zipPasswordEncoding).toBe('cp932')
+    expect(saved.compression.defaults.zipPasswordEncoding).toBe('cp950')
+    expect(saved.conversion.items[0].settings).toMatchObject({ sourceZipPasswordEncoding: 'cp936', zipPasswordEncoding: 'cp950' })
+    expect(JSON.stringify(saved)).not.toMatch(/input-secret|source-secret|target-secret/)
+    await reopen().restore()
+    expect(useTaskStore().tasks[0].zipPasswordEncoding).toBe('cp932')
+    expect(useCompressionStore().globalSettings.zipPasswordEncoding).toBe('cp950')
+    expect(useArchiveConversionStore().effectiveSettings(useArchiveConversionStore().pending[0])).toMatchObject({ sourceZipPasswordEncoding: 'cp936', zipPasswordEncoding: 'cp950', sourcePassword: '', password: '' })
+    expect(mocks.invoke.mock.calls.some(([command]) => ['extract_file', 'compress_files', 'convert_archive'].includes(command))).toBe(false)
+  })
   it('retains the new package password requirement after only the source password was reentered', async () => {
     session = usePendingDraftStore(); session.initialize()
     const conversion = useArchiveConversionStore()

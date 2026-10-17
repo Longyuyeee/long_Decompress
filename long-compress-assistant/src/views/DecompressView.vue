@@ -26,6 +26,7 @@ import type { BatchConfigPatch } from '@/types/batchConfig'
 import { parentDirectory } from '@/utils/resultLocation'
 import { storeToRefs } from 'pinia'
 import { useDecompressionPreferences } from '@/stores/decompressionPreferences'
+import { zipPasswordEncodingForSource } from '@/utils/zipPasswordSource'
 
 const taskStore = useTaskStore()
 const batchStore = useDecompressionBatchStore()
@@ -61,18 +62,40 @@ watch(() => decompressionTasks.value.filter(task => task.status === 'pending').m
   const valid = new Set(ids)
   selectedTaskIds.value = new Set([...selectedTaskIds.value].filter(id => valid.has(id)))
 })
-function applySelectedConfiguration(patch: BatchConfigPatch, complete?: (error?: string) => void) {
-  if (patch.outputDirectory === undefined && patch.extractToSubfolder === undefined) return
-  const selected = selectedPendingTasks.value
-  for (const task of selected) {
-    if (patch.outputDirectory !== undefined) {
-      const source = task.sourceFiles[0] || ''
-      task.outputPath = patch.outputDirectory || parentDirectory(source)
+async function applySelectedConfiguration(patch: BatchConfigPatch, complete?: (error?: string) => void) {
+  const encodingChanged = patch.zipPasswordEncoding !== undefined
+  if (patch.outputDirectory === undefined && patch.extractToSubfolder === undefined && !encodingChanged) return
+  const selected = selectedPendingTasks.value.map(task => ({ task, source: task.sourceFiles[0] }))
+  let skipped = 0, updated = 0
+  for (const { task, source } of selected) {
+    let changed = false
+    if (encodingChanged) {
+      // Read the actual input format, not its possibly renamed extension.
+      try {
+        const group = await detectArchiveGroup(source)
+        if (disposed || !taskStore.tasks.includes(task) || task.status !== 'pending' || task.sourceFiles[0] !== source) continue
+        if (group?.archive_format) task.format = group.archive_format
+        const encoding = patch.zipPasswordEncoding === 'auto' ? undefined : patch.zipPasswordEncoding
+        if (group?.archive_format && ['zip', 'zipx'].includes(group.archive_format.toLowerCase())) {
+          task.zipPasswordEncoding = encoding
+          changed = true
+        } else skipped++
+      } catch { skipped++ }
     }
-    if (patch.extractToSubfolder !== undefined) task.extractToSubfolder = patch.extractToSubfolder
-    task.configurationMode = 'individual'
+    if (disposed || !taskStore.tasks.includes(task) || task.status !== 'pending' || task.sourceFiles[0] !== source) continue
+    if (patch.outputDirectory !== undefined) {
+      task.outputPath = patch.outputDirectory || parentDirectory(source || '')
+      changed = true
+    }
+    if (patch.extractToSubfolder !== undefined) { task.extractToSubfolder = patch.extractToSubfolder; changed = true }
+    if (changed) {
+      // Encoding is task-local; changing only it must not detach output defaults.
+      if (patch.outputDirectory !== undefined || patch.extractToSubfolder !== undefined) task.configurationMode = 'individual'
+      updated++
+    }
   }
-  if (selected.length) appStore.setSuccess(`已更新 ${selected.length} 项配置，其他设置保持不变。`)
+  if (updated) appStore.setSuccess(`已更新 ${updated} 项配置，其他设置保持不变。${skipped ? ` ${skipped} 项非 ZIP 或格式未确认，未修改密码编码。` : ''}`)
+  if (!updated && skipped) { complete?.('未找到已确认的 ZIP/ZIPX 来源，未修改密码编码。'); return }
   complete?.()
 }
 
@@ -178,7 +201,7 @@ const onFilesSelected = async (files: any[]) => {
     decompressionTasks.value.flatMap(task => task.sourceFiles.map(normalizePath))
   )
 
-  const createTask = (sourcePath: string, name: string, splitCount?: number) => {
+  const createTask = (sourcePath: string, name: string, splitCount?: number, actualFormat?: string | null) => {
     const parentDir = sourcePath.substring(0, Math.max(sourcePath.lastIndexOf('/'), sourcePath.lastIndexOf('\\')))
     const taskId = taskStore.addTask({
       id: generateId(),
@@ -189,6 +212,7 @@ const onFilesSelected = async (files: any[]) => {
       extractToSubfolder: globalExtractToSubfolder.value,
       recycleSourceAfterExtract: globalRecycleSourceAfterExtract.value,
       configurationMode: 'global',
+      format: actualFormat || undefined,
     })
     createdTaskIds.push(taskId)
     appStore.addRecentFile(sourcePath)
@@ -209,8 +233,10 @@ const onFilesSelected = async (files: any[]) => {
     if (handledPaths.has(normalizedSource) || existingSources.has(normalizedSource)) continue
     handledPaths.add(normalizedSource)
 
+    let detectedFormat: string | null | undefined
     try {
       const splitInfo = await detectArchiveGroup(sourcePath)
+      detectedFormat = splitInfo?.archive_format
       if (isPotentialSfxPath(sourcePath) && !splitInfo?.archive_format) {
         throw new Error('不是可读取的 ZIP、7Z 或 RAR 自解压归档；不会执行此程序')
       }
@@ -233,7 +259,7 @@ const onFilesSelected = async (files: any[]) => {
         const normalizedFirst = normalizePath(firstPart)
         if (existingSources.has(normalizedFirst)) continue
         const displayName = splitInfo.base_name || firstPart.split(/[\\/]/).pop() || file.name || 'Unknown'
-        createTask(firstPart, displayName, Number(splitInfo.total_parts || groupPaths.length || 1))
+        createTask(firstPart, displayName, Number(splitInfo.total_parts || groupPaths.length || 1), detectedFormat)
         groupedSplitCount++
         existingSources.add(normalizedFirst)
         continue
@@ -257,7 +283,7 @@ const onFilesSelected = async (files: any[]) => {
       errors.push(appStore.t('decompress.split.group_not_found').replace('{0}', file.name || sourcePath))
       continue
     }
-    createTask(sourcePath, file.name || sourcePath.split(/[\\/]/).pop() || 'Unknown')
+    createTask(sourcePath, file.name || sourcePath.split(/[\\/]/).pop() || 'Unknown', undefined, detectedFormat)
   }
 
   if (unsupportedCount > 0) errors.push(appStore.t('decompress.unsupported_files').replace('{0}', String(unsupportedCount)))
@@ -351,6 +377,14 @@ const isProcessing = ref(false)
 
 const runDecompressionResourcePreflight = async (task: Task) => {
   taskStore.updateTaskStatus(task.id, 'preparing')
+  const stopped = () => task.status === 'cancelled' || task.status === 'cancelling'
+  // Old/reopened drafts may have an explicit ZIP encoding but no detected
+  // format. A renamed ZIP must not lose that choice because of its suffix.
+  if (task.zipPasswordEncoding !== undefined && !task.format) {
+    try { task.format = (await detectArchiveGroup(task.sourceFiles[0]))?.archive_format || undefined }
+    catch { /* The actual extraction owns source errors; do not change the chosen encoding. */ }
+  }
+  if (stopped()) return false
   try {
     const report = await tauriCommands.preflightOperationResources({
       operation: 'decompression',
@@ -358,6 +392,7 @@ const runDecompressionResourcePreflight = async (task: Task) => {
       sourcePaths: task.sourceFiles,
       password: task.password,
     })
+    if (stopped()) return false
     attachResourcePreflight(task, report)
     if (!report.canStart) {
       taskStore.failTask(task.id, report.summary)
@@ -367,7 +402,7 @@ const runDecompressionResourcePreflight = async (task: Task) => {
   } catch (error) {
     appendResourcePreflightFallback(task, error)
   }
-  return true
+  return !stopped()
 }
 
 const startDecompression = async (onlyTaskIds?: string[]) => {
@@ -408,12 +443,16 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
       deleteAfter: task.recycleSourceAfterExtract ?? false,
       createSubdirectory: task.extractToSubfolder ?? false,
       password: task.password || undefined, // 只使用用户手动输入的密码
+      zipPasswordEncoding: zipPasswordEncodingForSource(task.sourceFiles[0], task.zipPasswordEncoding, task.format),
       fileFilter: task.fileFilter || null
       ,conflictPolicy: appStore.settings.conflictPolicy
     }
 
     try {
       if (!await runDecompressionResourcePreflight(task)) return
+      options.zipPasswordEncoding = task.format
+        ? zipPasswordEncodingForSource(task.sourceFiles[0], task.zipPasswordEncoding, task.format)
+        : task.zipPasswordEncoding
       task.passwordRequired = false
       await tauriCommands.decompressFile(task.sourceFiles[0], options, task.id)
 

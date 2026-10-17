@@ -2,8 +2,10 @@ import type { CompressionOptions } from '@/stores/compression'
 import type { ImageCompressionSettings } from '@/utils/imageCompressionWorkspace'
 import type { VideoCompressionSettings } from '@/types/video'
 import type { PdfOptimizationMode } from '@/types/pdf'
+import { isZipPasswordEncoding, type ZipPasswordEncoding } from './zipPassword'
 
 export interface ExtractionConfigV1 {
+  zipPasswordEncoding?: ZipPasswordEncoding
   schemaVersion: 1
   kind: 'archive-extraction'
   outputDirectory: string
@@ -35,10 +37,11 @@ export interface PdfConfigV1 {
   allowLargerOutput: boolean
 }
 export interface ArchiveConversionConfigV1 {
+  sourceZipPasswordEncoding?: ZipPasswordEncoding
   zipMethod?: 'deflate' | 'zstd'
   zipEncryption?: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
-  zipPasswordEncoding?: 'utf8' | 'windows_local'
+  zipPasswordEncoding?: ZipPasswordEncoding
   schemaVersion: 1
   kind: 'archive-conversion'
   outputPath: string
@@ -55,8 +58,17 @@ export type ExecutionConfigV1 = ExtractionConfigV1 | ArchiveCompressionConfigV1 
 /** Explicit fields only: never serialize passwords, deletion or transient consent. */
 export function copyExecutionConfig(config?: ExecutionConfigV1 | null): ExecutionConfigV1 | null {
   if (!config || config.schemaVersion !== 1) return null
+  if (config.kind === 'archive-extraction' && config.zipPasswordEncoding != null
+      && !isZipPasswordEncoding(config.zipPasswordEncoding)) return null
+  if (config.kind === 'archive-conversion' && config.zipPasswordEncoding !== undefined
+      && !isZipPasswordEncoding(config.zipPasswordEncoding)) return null
+  if (config.kind === 'archive-conversion' && config.sourceZipPasswordEncoding != null
+      && !isZipPasswordEncoding(config.sourceZipPasswordEncoding)) return null
+  if (config.kind === 'archive-compression' && config.settings.zipPasswordEncoding !== undefined
+      && !isZipPasswordEncoding(config.settings.zipPasswordEncoding)) return null
   switch (config.kind) {
     case 'archive-conversion': return { schemaVersion: 1, kind: config.kind,
+      ...(config.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: config.sourceZipPasswordEncoding } : {}),
       zipMethod: config.zipMethod ?? 'deflate',
       zipEncryption: config.zipEncryption ?? 'aes256', zipPasswordEncoding: config.zipPasswordEncoding ?? 'utf8',
       ...(config.zipSplitMode ? { zipSplitMode: config.zipSplitMode } : {}),
@@ -65,6 +77,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
       rarRecoveryVolumes: config.rarRecoveryVolumes ?? 0,
       splitSize: config.splitSize, encryptFilenames: config.encryptFilenames, passwordRequired: config.passwordRequired }
     case 'archive-extraction': return { schemaVersion: 1, kind: config.kind,
+      ...(config.zipPasswordEncoding ? { zipPasswordEncoding: config.zipPasswordEncoding } : {}),
       outputDirectory: config.outputDirectory, extractToSubfolder: config.extractToSubfolder }
     case 'archive-compression': {
       const s = config.settings

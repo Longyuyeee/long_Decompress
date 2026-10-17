@@ -104,6 +104,14 @@ impl UniversalCliEngine {
 
     fn zip_inspection_error(error: zip_aes::result::ZipError) -> anyhow::Error {
         use zip_aes::result::ZipError;
+        if let ZipError::Io(cause) = &error {
+            if let Some(encoding) = cause.get_ref().and_then(|cause| cause.downcast_ref::<super::zip_password::ZipPasswordEncodingError>()) {
+                let summary = if encoding.is_unrepresentable() { "此密码无法按所选 ZIP 编码无损表示，请更换编码" }
+                    else { "ZIP 密码编码转换失败，请查看原始错误后重试" };
+                let message = format!("[archive-inspection:password-encoding] {summary}：{cause}");
+                return anyhow::Error::new(error).context(message);
+            }
+        }
         let (code, summary) = match &error {
             ZipError::InvalidArchive(_) => ("damaged", "ZIP 归档结构损坏或不完整，请确认下载完整后重试"),
             ZipError::Io(cause) if cause.kind() == std::io::ErrorKind::UnexpectedEof =>
@@ -148,7 +156,8 @@ impl UniversalCliEngine {
         let mut buffer = None;
         for index in selection.encrypted_indices {
             check_control()?;
-            match crate::services::zip_password::open_entry(&mut archive, index, password) {
+            match crate::services::zip_password::open_entry_with_encoding(
+                &mut archive, index, password, options.zip_password_encoding) {
                 Ok(mut entry) => {
                     if entry.is_dir() {
                         continue;
@@ -595,6 +604,18 @@ impl UniversalCliEngine {
 
     /// 检测归档文件的完整性（通过 7z CLI 的 t 命令）
     pub async fn test_integrity(file_path: &Path, password: Option<&str>) -> Result<()> {
+        Self::test_integrity_with_zip_encoding(file_path, password, None).await
+    }
+
+    pub async fn test_integrity_with_zip_encoding(file_path: &Path, password: Option<&str>, encoding: Option<super::zip_password::ZipPasswordEncoding>) -> Result<()> {
+        if Self::is_zip_password_input(file_path)? {
+            let path = file_path.to_path_buf();
+            let password = password.map(str::to_owned);
+            return tokio::task::spawn_blocking(move || {
+                super::compression_verification::verify_native_with_zip_encoding(
+                    super::compression_format::CompressionRoute::Zip, &path, password.as_deref(), encoding, || false).map(|_| ())
+            }).await?;
+        }
         let mut args = vec!["t".to_string()];
         if password.is_some() {
             args.push("-p".to_string()); // 使用环境变量传递密码

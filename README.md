@@ -226,6 +226,8 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
+v1.4.16 已功能封板，正在准备发布：补齐日文、简体、繁体旧 ZIP 密码编码及单条修复结果重开接续。当前稳定版仍为下表 v1.4.15；见 [v1.4.16 更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.16.md)。
+
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
 | **v1.4.15** | ZIP 重复预检优化、TAR.LZ4 / TAR.BR 流式创建、RAR 暂停取消、矮窗口列表修正；合并交付 ZIP Zstandard / ZIPX（XZ）创建与密码分卷配置链 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.15.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15) |

@@ -93,7 +93,7 @@ function toggle(id: string) {
               <div v-if="item.sourceIssue" class="flex items-center gap-2"><button type="button" class="conversion-button" @click="chooseSource(item.id)">重新选择来源</button></div>
               <p v-if="item.passwordRequired" class="rounded-lg bg-amber-500/5 p-2 text-xs text-amber-600">密码未保存在草稿中，请在对应输入框重新填写；不再需要时可选择下方的免密码选项。</p>
               <label class="block min-w-0 text-sm">新包保存位置<div class="mt-1 flex min-w-0 gap-2"><input :value="outputEdit?.id === item.id ? outputEdit.value : store.outputFor(item)" data-testid="conversion-output" class="conversion-input min-w-0 flex-1" :disabled="store.busy || store.preparing" @input="editOutput(item.id, $event)" @blur="outputEdit = null" /><button type="button" class="conversion-button" :disabled="store.busy || store.preparing" @click="chooseOutput(item.id)">另存为</button></div></label>
-              <ConversionSettingsFields :settings="store.effectiveSettings(item)" :disabled="store.busy || store.preparing"
+              <ConversionSettingsFields :settings="store.effectiveSettings(item)" :source-path="item.sourcePath" :source-format="item.sourceFormat" :disabled="store.busy || store.preparing"
                 :source-password-required="store.passwordRequirements(item).source" :target-password-required="store.passwordRequirements(item).target"
                 @update="store.updateItem(item.id, $event)" />
             </template>

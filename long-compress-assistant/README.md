@@ -30,6 +30,8 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 当前稳定版为 **1.4.15**：减少 ZIP 重复预检，TAR.LZ4 / TAR.BR 使用有界流式创建，改善 RAR 预检查暂停/取消及矮窗口归档浏览。合并交付 v1.4.14 候选的 ZIP Zstandard / ZIPX（XZ）创建、密码分卷与完整配置保存链，不单独发布 v1.4.14。单条展开、多选弹窗及等宽详情保持。实施与实际检查见 [本版记录](docs/ARCHIVE_PERFORMANCE_1.4.15.md)、[封板记录](docs/ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)及 [中文更新说明](docs/RELEASE_NOTES_1.4.15.md)，安装器和签名更新附件见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15)。
 
+v1.4.16 已功能封板，正在准备发布：ZIP/ZIPX 可明确选择 CP932/936/950 密码编码，原包与新包独立设置，单条修复结果可重开接续。见 [更新说明](docs/RELEASE_NOTES_1.4.16.md)和[封板记录](docs/LEGACY_ZIP_PASSWORD_FREEZE_1.4.16.md)；正式资产齐全后更新稳定版状态。
+
 ## 本地开发
 
 Windows 构建需要受支持的 Node.js（20.19+、22.12+ 或 24）、npm、稳定版 Rust、MSVC C++ 构建工具及 WebView2。

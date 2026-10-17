@@ -36,6 +36,20 @@ beforeEach(() => {
 })
 
 describe('failed extraction corrections', () => {
+  it('inherits the failed input encoding and creates a new corrected task without rewriting the original', async () => {
+    const { wrapper, store, ids, pinia } = setup(['[archive-inspection:password-encoding] 无法表示密码'])
+    wrapper.unmount(); store.tasks[0].zipPasswordEncoding = 'cp932'
+    const reopened = mount(FailedExtractionRetry, { props: { taskIds: ids, inline: true }, global: { plugins: [pinia], stubs: { ExtractionOutputPreview: true, Teleport: true } } })
+    expect(reopened.get('[data-testid="retry-zip-password-encoding"]').text()).toContain('日文')
+    const field = reopened.findComponent({ name: 'ZipPasswordEncodingField' })
+    field.vm.$emit('update:modelValue', 'cp950')
+    await reopened.get('[data-testid="retry-password"]').setValue('fresh password')
+    await reopened.get('[data-testid="create-retry-drafts"]').trigger('click'); await flushPromises()
+    expect(store.tasks[1]).toMatchObject({ zipPasswordEncoding: 'cp950', status: 'pending', password: 'fresh password', retryOfTaskId: ids[0] })
+    expect(store.tasks[0]).toMatchObject({ zipPasswordEncoding: 'cp932', status: 'failed' })
+    expect(reopened.text()).not.toContain('需要确认解压密码')
+    reopened.unmount()
+  })
   it('keeps a single correction inline and hands the chosen source and fresh password to rescue', async () => {
     const { wrapper, store, ids, pinia } = setup()
     wrapper.unmount()
@@ -44,8 +58,9 @@ describe('failed extraction corrections', () => {
     expect(inline.find('[role="dialog"]').exists()).toBe(false)
     await inline.get('[data-testid="retry-source"]').setValue('C:/complete/reselected.zip')
     await inline.get('[data-testid="retry-password"]').setValue('new rescue password')
+    inline.findComponent({name:'ZipPasswordEncodingField'}).vm.$emit('update:modelValue','cp950')
     await inline.get('[data-testid="retry-rescue"]').trigger('click')
-    expect(useAppStore().pendingArchiveDiagnosis).toMatchObject({ path: 'C:/complete/reselected.zip', taskId: ids[0], password: 'new rescue password', outputPath: 'C:/output' })
+    expect(useAppStore().pendingArchiveDiagnosis).toMatchObject({ path: 'C:/complete/reselected.zip', taskId: ids[0], password: 'new rescue password', zipPasswordEncoding:'cp950', outputPath: 'C:/output' })
     expect(store.tasks[0].sourceFiles).toEqual(['C:/original-0.zip'])
     expect((inline.get('[data-testid="retry-password"]').element as HTMLInputElement).value).toBe('')
     inline.unmount()

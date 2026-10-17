@@ -1,0 +1,479 @@
+{
+  "verifiedAt": "2026-10-16T20:21:11.297Z",
+  "applicationSha256": "9e3671c38aea112ea0bd1f46361dc26c10d53f63a13fc3e878f1d660201919c3",
+  "source": "unmodified pinned Info-ZIP archives; real UI-created multi-volume ZIP/ZIPX; same-profile native restart",
+  "results": [
+    {
+      "scenario": "real-compression-volumes",
+      "format": "zip",
+      "encoding": "cp932",
+      "taskId": "s90u8toc1mvbewqts",
+      "volumes": 3,
+      "inputHash": "eda27b5e813069dfe964ff983aa84d96cfcd09984eaa3202b9e3f2ca491644e4"
+    },
+    {
+      "scenario": "real-compression-volumes",
+      "format": "zipx",
+      "encoding": "cp936",
+      "taskId": "mvpg2pudkmvbewqts",
+      "volumes": 3,
+      "inputHash": "eda27b5e813069dfe964ff983aa84d96cfcd09984eaa3202b9e3f2ca491644e4"
+    },
+    {
+      "scenario": "restarted-cross-encoding-conversion",
+      "source": "cp932",
+      "target": "cp950",
+      "taskId": "conversion-2abc3422-501a-4130-9857-b3fb7dc5c600",
+      "archiveHash": "f54af95d54b63844275abdff8d3a2171c1d5ba3a9483ee9669655ff9db11e816",
+      "payloadHash": "221dab361693ca1ddc8fd3ab7ef089657414d8069e84efcbd55394971a8fc0ea"
+    },
+    {
+      "scenario": "restarted-cross-encoding-conversion",
+      "source": "cp936",
+      "target": "cp932",
+      "taskId": "conversion-7b05a08d-c8ff-4ec5-a211-16ea529a09cb",
+      "archiveHash": "3d49a671c02a073a4fabc2d0b3db621b52b4712f3e8006ebe39a2734cfad9a6e",
+      "payloadHash": "221dab361693ca1ddc8fd3ab7ef089657414d8069e84efcbd55394971a8fc0ea"
+    },
+    {
+      "scenario": "restarted-cross-encoding-conversion",
+      "source": "cp950",
+      "target": "cp936",
+      "taskId": "conversion-81960fc6-91c4-4a29-9cbf-fd0ac5624608",
+      "archiveHash": "eba4f9bc2feb9ab2d8497fb9464e0a7baf60bb44eebe50a659576ab862ce4822",
+      "payloadHash": "221dab361693ca1ddc8fd3ab7ef089657414d8069e84efcbd55394971a8fc0ea"
+    }
+  ],
+  "screenshots": [
+    "compression-output-menu-1100x700.png",
+    "compression-output-menu-760x520.png",
+    "compression-batch-menu-1100x700.png",
+    "compression-batch-menu-760x520.png",
+    "conversion-batch-source-1100x700.png",
+    "conversion-batch-source-760x520.png",
+    "conversion-batch-target-1100x700.png",
+    "conversion-batch-target-760x520.png",
+    "conversion-inline-source-1100x700.png",
+    "conversion-inline-source-760x520.png",
+    "conversion-inline-target-1100x700.png",
+    "conversion-inline-target-760x520.png",
+    "conversion-restored-passwords.png",
+    "conversion-completed.png"
+  ],
+  "layouts": [
+    {
+      "name": "compression-output-menu-1100x700",
+      "encodingPair": [
+        null,
+        null
+      ],
+      "height": 700,
+      "menus": [
+        {
+          "r": {
+            "bottom": 613.4750213623047,
+            "height": 198.3625030517578,
+            "left": 290.3999938964844,
+            "right": 602.2000122070312,
+            "top": 415.1125183105469,
+            "width": 311.8000183105469,
+            "x": 290.3999938964844,
+            "y": 415.1125183105469
+          },
+          "scroll": 310,
+          "width": 310
+        }
+      ],
+      "passwordPair": [
+        null,
+        null
+      ],
+      "scroll": 1100,
+      "splitTitles": [
+        {
+          "fontSize": 11.52,
+          "height": 18.42500114440918
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "compression-output-menu-760x520",
+      "encodingPair": [
+        null,
+        null
+      ],
+      "height": 520,
+      "menus": [
+        {
+          "r": {
+            "bottom": 268.7125062942505,
+            "height": 259.7875061035156,
+            "left": 138.40000915527344,
+            "right": 366.20001220703125,
+            "top": 8.925000190734863,
+            "width": 227.8000030517578,
+            "x": 138.40000915527344,
+            "y": 8.925000190734863
+          },
+          "scroll": 226,
+          "width": 226
+        }
+      ],
+      "passwordPair": [
+        null,
+        null
+      ],
+      "scroll": 760,
+      "splitTitles": [
+        {
+          "fontSize": 11.52,
+          "height": 18.42500114440918
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "compression-batch-menu-1100x700",
+      "encodingPair": [
+        null,
+        null
+      ],
+      "height": 700,
+      "menus": [
+        {
+          "r": {
+            "bottom": 588.375,
+            "height": 235.47500610351562,
+            "left": 318.8000183105469,
+            "right": 771.2000122070312,
+            "top": 352.8999938964844,
+            "width": 452.3999938964844,
+            "x": 318.8000183105469,
+            "y": 352.8999938964844
+          },
+          "scroll": 451,
+          "width": 451
+        }
+      ],
+      "passwordPair": [
+        null,
+        null
+      ],
+      "scroll": 1100,
+      "splitTitles": [],
+      "width": 1100
+    },
+    {
+      "name": "compression-batch-menu-760x520",
+      "encodingPair": [
+        null,
+        null
+      ],
+      "height": 520,
+      "menus": [
+        {
+          "r": {
+            "bottom": 239.10000610351562,
+            "height": 233.10000610351562,
+            "left": 174.8000030517578,
+            "right": 575.1999969482422,
+            "top": 6,
+            "width": 400.3999938964844,
+            "x": 174.8000030517578,
+            "y": 6
+          },
+          "scroll": 389,
+          "width": 389
+        }
+      ],
+      "passwordPair": [
+        null,
+        null
+      ],
+      "scroll": 760,
+      "splitTitles": [],
+      "width": 760
+    },
+    {
+      "name": "conversion-batch-source-1100x700",
+      "encodingPair": [
+        null,
+        null
+      ],
+      "height": 700,
+      "menus": [
+        {
+          "r": {
+            "bottom": 548.7875061035156,
+            "height": 272.5874938964844,
+            "left": 206.8000030517578,
+            "right": 537.0000152587891,
+            "top": 276.20001220703125,
+            "width": 330.20001220703125,
+            "x": 206.8000030517578,
+            "y": 276.20001220703125
+          },
+          "scroll": 329,
+          "width": 329
+        }
+      ],
+      "passwordPair": [
+        null,
+        null
+      ],
+      "scroll": 1100,
+      "splitTitles": [],
+      "width": 1100
+    },
+    {
+      "name": "conversion-batch-source-760x520",
+      "encodingPair": [
+        null,
+        null
+      ],
+      "height": 520,
+      "menus": [
+        {
+          "r": {
+            "bottom": 514,
+            "height": 257.6000061035156,
+            "left": 48.79999923706055,
+            "right": 367.0000114440918,
+            "top": 256.3999938964844,
+            "width": 318.20001220703125,
+            "x": 48.79999923706055,
+            "y": 256.3999938964844
+          },
+          "scroll": 307,
+          "width": 307
+        }
+      ],
+      "passwordPair": [
+        null,
+        null
+      ],
+      "scroll": 760,
+      "splitTitles": [],
+      "width": 760
+    },
+    {
+      "name": "conversion-batch-target-1100x700",
+      "encodingPair": [
+        null,
+        null
+      ],
+      "height": 700,
+      "menus": [
+        {
+          "r": {
+            "bottom": 511.6750183105469,
+            "height": 235.47500610351562,
+            "left": 553,
+            "right": 883.2000122070312,
+            "top": 276.20001220703125,
+            "width": 330.20001220703125,
+            "x": 553,
+            "y": 276.20001220703125
+          },
+          "scroll": 329,
+          "width": 329
+        }
+      ],
+      "passwordPair": [
+        null,
+        null
+      ],
+      "scroll": 1100,
+      "splitTitles": [],
+      "width": 1100
+    },
+    {
+      "name": "conversion-batch-target-760x520",
+      "encodingPair": [
+        null,
+        null
+      ],
+      "height": 520,
+      "menus": [
+        {
+          "r": {
+            "bottom": 491.875,
+            "height": 235.47500610351562,
+            "left": 383,
+            "right": 701.2000122070312,
+            "top": 256.3999938964844,
+            "width": 318.20001220703125,
+            "x": 383,
+            "y": 256.3999938964844
+          },
+          "scroll": 317,
+          "width": 317
+        }
+      ],
+      "passwordPair": [
+        null,
+        null
+      ],
+      "scroll": 760,
+      "splitTitles": [],
+      "width": 760
+    },
+    {
+      "name": "conversion-inline-source-1100x700",
+      "encodingPair": [
+        332.4250183105469,
+        332.4250183105469
+      ],
+      "height": 700,
+      "menus": [
+        {
+          "r": {
+            "bottom": 616.3000183105469,
+            "height": 235.47500610351562,
+            "left": 135.60000610351562,
+            "right": 539,
+            "top": 380.82501220703125,
+            "width": 403.3999938964844,
+            "x": 135.60000610351562,
+            "y": 380.82501220703125
+          },
+          "scroll": 402,
+          "width": 402
+        }
+      ],
+      "passwordPair": [
+        257.1499938964844,
+        257.1499938964844
+      ],
+      "scroll": 1100,
+      "splitTitles": [],
+      "width": 1100
+    },
+    {
+      "name": "conversion-inline-source-760x520",
+      "encodingPair": [
+        242.22500610351562,
+        242.22500610351562
+      ],
+      "height": 520,
+      "menus": [
+        {
+          "r": {
+            "bottom": 236.22500610351562,
+            "height": 230.22500610351562,
+            "left": 73.5999984741211,
+            "right": 368.99999237060547,
+            "top": 6,
+            "width": 295.3999938964844,
+            "x": 73.5999984741211,
+            "y": 6
+          },
+          "scroll": 284,
+          "width": 284
+        }
+      ],
+      "passwordPair": [
+        166.9499969482422,
+        166.9499969482422
+      ],
+      "scroll": 760,
+      "splitTitles": [],
+      "width": 760
+    },
+    {
+      "name": "conversion-inline-target-1100x700",
+      "encodingPair": [
+        332.4250183105469,
+        332.4250183105469
+      ],
+      "height": 700,
+      "menus": [
+        {
+          "r": {
+            "bottom": 579.1875152587891,
+            "height": 198.3625030517578,
+            "left": 551,
+            "right": 954.3999938964844,
+            "top": 380.82501220703125,
+            "width": 403.3999938964844,
+            "x": 551,
+            "y": 380.82501220703125
+          },
+          "scroll": 402,
+          "width": 402
+        }
+      ],
+      "passwordPair": [
+        257.1499938964844,
+        257.1499938964844
+      ],
+      "scroll": 1100,
+      "splitTitles": [],
+      "width": 1100
+    },
+    {
+      "name": "conversion-inline-target-760x520",
+      "encodingPair": [
+        242.22500610351562,
+        242.22500610351562
+      ],
+      "height": 520,
+      "menus": [
+        {
+          "r": {
+            "bottom": 236.22500228881836,
+            "height": 198.3625030517578,
+            "left": 381,
+            "right": 676.3999938964844,
+            "top": 37.86249923706055,
+            "width": 295.3999938964844,
+            "x": 381,
+            "y": 37.86249923706055
+          },
+          "scroll": 294,
+          "width": 294
+        }
+      ],
+      "passwordPair": [
+        166.9499969482422,
+        166.9499969482422
+      ],
+      "scroll": 760,
+      "splitTitles": [],
+      "width": 760
+    },
+    {
+      "name": "conversion-restored-passwords",
+      "encodingPair": [
+        368.4250183105469,
+        368.4250183105469
+      ],
+      "height": 620,
+      "menus": [],
+      "passwordPair": [
+        293.1499938964844,
+        293.1499938964844
+      ],
+      "scroll": 920,
+      "splitTitles": [],
+      "width": 920
+    },
+    {
+      "name": "conversion-completed",
+      "encodingPair": [
+        null,
+        null
+      ],
+      "height": 620,
+      "menus": [],
+      "passwordPair": [
+        null,
+        null
+      ],
+      "scroll": 920,
+      "splitTitles": [],
+      "width": 920
+    }
+  ]
+}

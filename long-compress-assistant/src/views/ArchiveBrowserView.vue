@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { listen } from '@tauri-apps/api/event'
-import { useAppStore } from '@/stores/app'
+import { useAppStore, type ArchiveReadOptions } from '@/stores/app'
+import ZipPasswordEncodingField from '@/components/ui/ZipPasswordEncodingField.vue'
+import { zipPasswordEncodingArguments, type ZipPasswordEncoding } from '@/types/zipPassword'
+import { supportsZipPasswordEncoding, zipPasswordEncodingForSource } from '@/utils/zipPasswordSource'
 import { useTauriCommands, type ArchiveBrowseResult, type ArchiveEntryInfo, type ArchiveImagePreview, type ArchiveTextPreview } from '@/composables/useTauriCommands'
 import { useArchiveBrowserCapabilities } from '@/composables/useArchiveBrowserCapabilities'
 import { describeArchiveBrowseError, useArchiveBrowseRequest } from '@/composables/useArchiveBrowseRequest'
@@ -12,6 +15,7 @@ interface ArchiveWorkspaceFrame {
   archivePath: string
   displayName: string
   password: string
+  zipPasswordEncoding?: ZipPasswordEncoding
   outputPath: string
   result: ArchiveBrowseResult
   selected: string[]
@@ -33,6 +37,10 @@ const browseRequest = useArchiveBrowseRequest(commands.browseArchive, commands.c
 const archivePath = ref('')
 const outputPath = ref('')
 const password = ref('')
+const zipPasswordEncoding = ref<ZipPasswordEncoding>()
+const inputEncoding = computed(() => result.value
+  ? zipPasswordEncodingForSource(archivePath.value, zipPasswordEncoding.value, result.value.format) : zipPasswordEncoding.value)
+const inputArguments = computed(() => zipPasswordEncodingArguments(inputEncoding.value))
 const result = ref<ArchiveBrowseResult | null>(null)
 const selected = ref(new Set<string>())
 const query = ref('')
@@ -48,6 +56,7 @@ const {
 const loading = browseRequest.loading
 const extracting = ref(false)
 const openingEntryPath = ref('')
+const inputBusy = computed(() => loading.value || extracting.value || !!openingEntryPath.value)
 const dangerousOpenEntry = ref<ArchiveEntryInfo | null>(null)
 const imagePreview = ref<ArchiveImagePreview | null>(null)
 const textPreview = ref<ArchiveTextPreview | null>(null)
@@ -147,10 +156,12 @@ const cancelArchiveLoad = () => {
   archiveLoadSequence++
 }
 
-const openArchivePath = async (path: string) => {
-  if (!path || loading.value) return
+const openArchivePath = async (path: string, options: ArchiveReadOptions = {}) => {
+  if (!path || inputBusy.value) return
   try {
     archivePath.value = path
+    password.value = options.password || ''
+    zipPasswordEncoding.value = options.zipPasswordEncoding
     parentFrames.value = []
     currentContentSha256.value = ''
     nestedLoadError.value = ''
@@ -189,7 +200,7 @@ const loadArchive = async () => {
   navigation.reset()
   closePreview()
   try {
-    const loaded = await browseRequest.run(archivePath.value, password.value)
+    const loaded = await browseRequest.run(archivePath.value, password.value, inputEncoding.value)
     if (sequence !== archiveLoadSequence) return
     result.value = loaded
     selected.value = new Set(loaded.entries.filter(entry => !entry.isDir).map(entry => entry.path))
@@ -227,10 +238,10 @@ const openPreview = async (entry: ArchiveEntryInfo) => {
   previewLoading.value = true
   try {
     if (previewKind(entry) === 'image') {
-      const value = await commands.previewArchiveImage(archivePath.value, entry.path, password.value)
+      const value = await commands.previewArchiveImage(archivePath.value, entry.path, password.value, ...inputArguments.value)
       if (sequence === previewSequence) imagePreview.value = value
     } else {
-      const value = await commands.previewArchiveText(archivePath.value, entry.path, password.value)
+      const value = await commands.previewArchiveText(archivePath.value, entry.path, password.value, ...inputArguments.value)
       if (sequence === previewSequence) textPreview.value = value
     }
   } catch (error) {
@@ -265,7 +276,7 @@ const refreshDirectory = async () => {
   selectionAnchorPath = ''
   closePreview()
   try {
-    const refreshed = await browseRequest.run(archivePath.value, password.value)
+    const refreshed = await browseRequest.run(archivePath.value, password.value, inputEncoding.value)
     if (sequence !== archiveLoadSequence) return
     result.value = refreshed
     const availableFiles = new Set(refreshed.entries.filter(entry => !entry.isDir).map(entry => entry.path))
@@ -283,7 +294,7 @@ const openWithDefaultApplication = async (entry: ArchiveEntryInfo, allowDangerou
   closeContextMenu()
   openingEntryPath.value = entry.path
   try {
-    const opened = await commands.openArchiveEntry(archivePath.value, entry.path, password.value, allowDangerous)
+    const opened = await commands.openArchiveEntry(archivePath.value, entry.path, password.value, allowDangerous, ...inputArguments.value)
     if (opened.status === 'confirmationRequired') {
       dangerousOpenEntry.value = entry
       return
@@ -309,6 +320,7 @@ const captureCurrentFrame = (contentSha256: string): ArchiveWorkspaceFrame | nul
     archivePath: archivePath.value,
     displayName: archiveName.value,
     password: password.value,
+    zipPasswordEncoding: zipPasswordEncoding.value,
     outputPath: outputPath.value,
     result: result.value,
     selected: [...selected.value],
@@ -331,6 +343,7 @@ const restoreFrame = (index: number) => {
   parentFrames.value = parentFrames.value.slice(0, index)
   archivePath.value = frame.archivePath
   password.value = frame.password
+  zipPasswordEncoding.value = frame.zipPasswordEncoding
   outputPath.value = frame.outputPath
   result.value = frame.result
   selected.value = new Set(frame.selected)
@@ -368,12 +381,14 @@ const enterNestedArchive = async (entry: ArchiveEntryInfo) => {
       password.value,
       archiveDepth.value + 1,
       ancestorHashes,
+      ...inputArguments.value,
     )
     const frame = captureCurrentFrame(currentContentSha256.value || materialized.parentSha256)
     if (!frame) throw new Error('外层归档状态不可用')
     parentFrames.value = [...parentFrames.value, frame]
     archivePath.value = materialized.cachePath
     password.value = ''
+    zipPasswordEncoding.value = undefined
     currentContentSha256.value = materialized.contentSha256
     outputPath.value = frame.outputPath
     nestedLoadError.value = ''
@@ -457,6 +472,7 @@ const extractPaths = async (paths: string[], destination: string) => {
     await commands.decompressFile(archivePath.value, {
       outputPath: destination,
       password: password.value || undefined,
+      ...(inputEncoding.value !== undefined ? { zipPasswordEncoding: inputEncoding.value } : {}),
       keepStructure: true,
       overwrite: false,
       deleteAfter: false,
@@ -591,8 +607,13 @@ const droppedBrowserFiles = (event: DragEvent) => {
 }
 
 watch(() => appStore.pendingArchiveBrowserPath, path => {
-  if (path) void openArchivePath(appStore.takeArchiveBrowserPath())
+  if (path) {
+    const options = appStore.takeArchiveBrowserOptions()
+    void openArchivePath(appStore.takeArchiveBrowserPath(), options)
+  }
 }, { immediate: true })
+
+watch([password, zipPasswordEncoding], () => { closePreview(); dangerousOpenEntry.value = null })
 
 onMounted(() => {
   if (import.meta.env.MODE === 'test') return
@@ -608,6 +629,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  previewSequence++
   browseRequest.cancel(false)
   window.removeEventListener('keydown', handleWorkspaceKeydown)
   unlistenHover?.()
@@ -648,7 +670,7 @@ const extractSelected = async () => {
       </div>
       <div class="browser-header-actions flex min-w-0 flex-wrap items-center gap-2">
         <slot name="header-actions" />
-        <button class="browser-primary" type="button" @click="chooseArchive">
+        <button class="browser-primary" type="button" :disabled="inputBusy" @click="chooseArchive">
           <i class="pi pi-folder-open"></i><span>打开压缩包</span>
         </button>
       </div>
@@ -664,20 +686,21 @@ const extractSelected = async () => {
       <span class="archive-depth">{{ archiveDepth }} / 3 层</span>
     </nav>
 
-    <section class="aero-card shrink-0 p-3 grid gap-3 browser-toolbar">
+    <section class="aero-card shrink-0 p-3 grid gap-3 browser-toolbar" :class="{'has-zip-encoding': archivePath && supportsZipPasswordEncoding(archivePath, result?.format)}">
       <div class="min-w-0 browser-field">
         <span class="browser-label">当前压缩包</span>
-        <button class="browser-input text-left truncate" type="button" :title="archivePath" @click="chooseArchive">{{ archiveName || '选择或拖入需要浏览的压缩包' }}</button>
+        <button class="browser-input text-left truncate" type="button" :disabled="inputBusy" :title="archivePath" @click="chooseArchive">{{ archiveName || '选择或拖入需要浏览的压缩包' }}</button>
       </div>
       <div class="min-w-0 browser-field">
         <span class="browser-label">密码</span>
         <div class="flex min-w-0 gap-2">
-          <input v-model="password" class="browser-input min-w-0 flex-1" type="password" placeholder="留空则尝试密码保险箱" @keyup.enter="loadArchive">
+          <input v-model="password" :disabled="inputBusy" class="browser-input min-w-0 flex-1" type="password" placeholder="留空则尝试密码保险箱" @keyup.enter="loadArchive">
           <button class="browser-icon-button" type="button" :disabled="!archivePath || loading" @click="loadArchive" title="重新读取">
             <i :class="loading ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"></i>
           </button>
         </div>
       </div>
+      <ZipPasswordEncodingField v-if="archivePath && supportsZipPasswordEncoding(archivePath, result?.format)" v-model="zipPasswordEncoding" :disabled="inputBusy" test-id="browser-zip-password-encoding" />
     </section>
 
     <div v-if="loading" class="aero-card flex-1 min-h-0 grid place-items-center">
@@ -906,6 +929,9 @@ const extractSelected = async () => {
 .nested-return { display: inline-grid; place-items: center; }
 .browser-title { font-size: clamp(1.75rem, 3vw, 2.5rem); line-height: 1; }
 .browser-toolbar { grid-template-columns: minmax(0, 1fr) minmax(14rem, .42fr); }
+.browser-toolbar.has-zip-encoding { grid-template-columns: minmax(0, 1fr) minmax(10rem, .7fr) minmax(10rem, .6fr); align-items:end; }
+@media (max-width: 1050px) { .browser-toolbar.has-zip-encoding { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } .browser-toolbar.has-zip-encoding > :first-child { grid-column:1 / -1; } }
+@media (max-width: 760px) { .browser-toolbar.has-zip-encoding { grid-template-columns:minmax(0,1fr); } }
 .browser-field { display: flex; flex-direction: column; gap: .4rem; }
 .browser-label { color: var(--text-muted); font-size: .7rem; font-weight: 900; letter-spacing: .12em; }
 .browser-input, .browser-search, .browser-select { height: 2.75rem; border: 1px solid var(--border-subtle); border-radius: .85rem; background: var(--bg-input); color: var(--text-content); padding: 0 .9rem; outline: none; }

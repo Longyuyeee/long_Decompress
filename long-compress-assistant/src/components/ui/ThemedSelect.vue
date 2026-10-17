@@ -76,6 +76,8 @@ onUnmounted(() => { document.removeEventListener('pointerdown', onDocumentPointe
 </template>
 
 <style scoped>
+.select-menu { overflow-x:hidden; }
+.select-menu [role='option']:focus-visible { outline-offset:-3px !important; transform:none !important; box-shadow:inset 0 0 0 3px color-mix(in srgb,var(--dynamic-accent) 16%,transparent) !important; }
 .select-menu.floating { position:fixed; z-index:10000; right:auto; box-sizing:border-box; overscroll-behavior:contain; }
 .select-menu button[aria-disabled='true'] { opacity:.5; cursor:not-allowed; }
 .select-menu.floating strong { font-size:.8rem; }

@@ -3,6 +3,8 @@ import type { Task } from '@/stores/task'
 import type { ArchiveDiagnosticReport } from '@/composables/useTauriCommands'
 import { describeTaskFailure, getTaskRecoveryGuidance } from './taskFailure'
 import { isDecompressArchivePath, isPotentialSplitArchivePath, isPotentialSfxPath } from './compressionFormat'
+import type { ZipPasswordEncoding } from '@/types/zipPassword'
+import { zipPasswordEncodingForSource } from './zipPasswordSource'
 
 export function extractionRetryPolicy(task: Task) {
   const record = { status: task.status === 'failed' ? 'failed' as const : 'cancelled' as const, errorMessage: task.error }
@@ -20,6 +22,7 @@ export interface ExtractionRetryInput {
   output: string
   password: string
   extractToSubfolder: boolean
+  zipPasswordEncoding?: ZipPasswordEncoding
 }
 
 export async function validateExtractionRetry(
@@ -48,16 +51,20 @@ export async function validateExtractionRetry(
   const output = await invoke<{ is_dir: boolean }>('get_file_info', { path: outputPath })
   check()
   if (!output.is_dir) throw new Error('输出位置必须是已存在的目录。')
+  const zipPasswordEncoding = zipPasswordEncodingForSource(path, input.zipPasswordEncoding, split?.archive_format)
   if (requireIntegrity) {
     const report = await invoke<ArchiveDiagnosticReport>('diagnose_archive', {
       diagnosticId, filePath: path, password: input.password || null,
+      ...(zipPasswordEncoding !== undefined ? { zipPasswordEncoding } : {}),
     })
     check()
     if (report.status !== 'healthy' || !report.integrityTested) {
-      throw new Error(report.status === 'password_required' || report.status === 'wrong_password'
+      throw new Error(report.status === 'password_encoding'
+        ? '密码无法按所选 ZIP 编码表示，请确认密码和编码后重新检查；这不代表文件损坏。'
+        : report.status === 'password_required' || report.status === 'wrong_password'
         ? '检查完整性需要正确密码，请填写后重新检查。'
         : '来源尚未通过完整性检查，请重新获取完整文件，或先到文件完整性页面诊断。')
     }
   }
-  return { path, outputPath, name: file.name }
+  return { path, outputPath, name: file.name, zipPasswordEncoding, format: split?.archive_format || undefined }
 }
