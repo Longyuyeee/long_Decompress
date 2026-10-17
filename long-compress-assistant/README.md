@@ -28,7 +28,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 详细格式能力见 [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md)；RAR 创建依赖用户安装的 WinRAR，视频暂不保证支持 Windows N。功能介绍和快速上手见 [项目首页](../README.md)。
 
-当前稳定版为 **1.4.16**：ZIP/ZIPX 可明确选择日文 CP932、简体 CP936、繁体 CP950 密码编码，贯通解压、浏览、修复、压缩和转换；原包与新包独立设置，单条及批量修复结果可重开、重填密码后继续处理。默认读取自动兼容、新包 UTF-8 及完整内容校验保持，不新增格式或 ZIPX 标准多卷。实施与真实页面见[本版审计](docs/LEGACY_ZIP_PASSWORD_ENCODING_1.4.16.md)、[封板记录](docs/LEGACY_ZIP_PASSWORD_FREEZE_1.4.16.md)及[中文更新说明](docs/RELEASE_NOTES_1.4.16.md)，安装器和签名更新附件见[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.16)。
+本次 **1.4.17** 功能已冻结，正在发布：补齐好压原生 7Z 论坛内容/文件名密码分卷，任意成员归组、浏览、解压、检查与转换共用完整卷组；缺卷/截断/头损坏在密码前说明，补回继续且保留原失败及独立目录。普通 7Z 浏览预检与窄窗长错误说明同步修正。暂不承诺好压 AES ZIP 论坛卷，保留现有 ZipCrypto 支持。见[本版审计](docs/SPECIAL_VOLUME_COMPATIBILITY_1.4.17.md)、[封板记录](docs/SPECIAL_VOLUME_FREEZE_1.4.17.md)、[中文更新说明](docs/RELEASE_NOTES_1.4.17.md)及 [Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.17)；发布资产齐全前，稳定下载仍为 v1.4.16。
 
 ## 本地开发
 
@@ -94,7 +94,7 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.4.16**：旧 ZIP 密码跨系统兼容、原包/新包编码分别保存、失败转救援与修复结果重开接续，修正窄窗口下拉和表单。见[更新说明](docs/RELEASE_NOTES_1.4.16.md)、[封板记录](docs/LEGACY_ZIP_PASSWORD_FREEZE_1.4.16.md)及[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.16)。
+**v1.4.17**：好压论坛 7Z 密码分卷、缺卷与损坏准确分类、补卷继续和输出名称修正。见[更新说明](docs/RELEASE_NOTES_1.4.17.md)、[封板记录](docs/SPECIAL_VOLUME_FREEZE_1.4.17.md)及 [Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.17)。
 
 **v1.4.15**：减少 ZIP 重复预检，TAR.LZ4 / TAR.BR 流式创建，改善 RAR 预检查暂停/取消和矮窗口归档列表。保留完整校验，不承诺整条流程固定百分比提速；见 [实施审计](docs/ARCHIVE_PERFORMANCE_1.4.15.md)、[封板记录](docs/ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)、[中文更新说明](docs/RELEASE_NOTES_1.4.15.md)及 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15)。
 
