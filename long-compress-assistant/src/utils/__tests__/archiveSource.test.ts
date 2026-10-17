@@ -18,6 +18,18 @@ describe('HaoZip forum ZIP sources', () => {
 })
 
 describe('HaoZip forum 7Z source names', () => {
+  it.each([
+    ['旅行.haozip01.7z', '旅行'],
+    ['旅行.HAOZIP02.7Z', '旅行'],
+    ['旅行.haozip003.7z', '旅行'],
+    ['haozip01.7z', 'archive'],
+    ['旅行-not-haozip02.7z', '旅行-not-haozip02'],
+    ['旅行.haozip1.7z', '旅行.haozip1'],
+    ['旅行.haozip02.zip', '旅行'],
+  ])('keeps the same logical name as the backend for %s', (source, expected) => {
+    expect(archiveSourceStem(`downloads/${source}`)).toBe(expected)
+  })
+
   it('groups members without conflating ordinary 7Z or a forum ZIP with the same stem', () => {
     const first = 'F:\\下载\\资料.haozip01.7z'
     const middle = 'F:/下载/资料.HAOZIP002.7Z'

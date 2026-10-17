@@ -2822,7 +2822,7 @@ impl CompressionService {
     fn archive_output_dir_name(path: &Path) -> String {
         let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("archive");
         let mut candidate = file_name.to_string();
-        if let Some(captures) = regex::Regex::new(r"(?i)^(.*\.)?haozip\d{2,5}\.zip$").unwrap().captures(file_name) {
+        if let Some(captures) = regex::Regex::new(r"(?i)^(.*\.)?haozip\d{2,5}\.(zip|7z)$").unwrap().captures(file_name) {
             return captures.get(1).map(|prefix| prefix.as_str().trim_end_matches('.'))
                 .filter(|base| !base.is_empty()).unwrap_or("archive").to_string();
         }
@@ -5050,6 +5050,23 @@ mod tests_continued {
             &nested_output.to_string_lossy(),
             &CompressionOptions::default(),
         ).is_err());
+    }
+
+    #[test]
+    fn forum_seven_zip_uses_a_clean_output_directory_name() {
+        // Name/path contract only; this does NOT validate HaoZip forum bytes.
+        for name in ["旅行.haozip01.7z", "旅行.HAOZIP02.7Z", "旅行.haozip003.7z"] {
+            let source = Path::new("downloads").join(name);
+            assert_eq!(CompressionService::archive_output_dir_name(&source), "旅行");
+            assert_eq!(CompressionService::extraction_output_path(&source, Some("chosen"), true), Path::new("chosen").join("旅行"));
+            assert_eq!(CompressionService::extraction_output_path(&source, None, true), Path::new("downloads").join("旅行"));
+            assert_eq!(CompressionService::extraction_output_path(&source, Some("chosen"), false), PathBuf::from("chosen"));
+            assert_eq!(CompressionService::extraction_output_path(&source, None, false), PathBuf::from("downloads"));
+        }
+        assert_eq!(CompressionService::archive_output_dir_name(Path::new("haozip01.7z")), "archive");
+        assert_eq!(CompressionService::archive_output_dir_name(Path::new("旅行-not-haozip02.7z")), "旅行-not-haozip02");
+        assert_eq!(CompressionService::archive_output_dir_name(Path::new("旅行.haozip1.7z")), "旅行.haozip1");
+        assert_eq!(CompressionService::archive_output_dir_name(Path::new("旅行.haozip02.zip")), "旅行");
     }
 
     #[test]
