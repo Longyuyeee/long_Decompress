@@ -16,7 +16,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 ## 功能概览
 
-v1.5.0 已功能封板，正在候选构建与正式发布：新增 ZPAQ 当前文件浏览、原生密码、所选/完整提取、检查和转换输入；不含 ZPAQ 创建、原生多部分或历史恢复。14 项不同 Rust、69 项前端、6 组真实桌面矩阵及 16 张实看页面通过，见[本版审计](docs/ZPAQ_READ_1.5.0.md)和[封板记录](docs/ZPAQ_READ_FREEZE_1.5.0.md)。当前正式下载仍以 Release 实际资产为准。
+当前稳定版为 **1.5.0**，已封板并[正式发布](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.0)：新增 ZPAQ 当前文件浏览、原生密码、所选/完整提取、检查和转换输入；不含 ZPAQ 创建、原生多部分、增量备份或历史恢复。14 项不同 Rust、69 项前端、6 组真实桌面矩阵及 16 张实看页面通过，见[本版审计](docs/ZPAQ_READ_1.5.0.md)、[封板记录](docs/ZPAQ_READ_FREEZE_1.5.0.md)和[更新说明](docs/RELEASE_NOTES_1.5.0.md)。格式自带校验不保证检测所有未认证头部变化，具体边界以审计为准。
 
 | 工作区 | 用户可以做什么 |
 | --- | --- |
@@ -30,7 +30,7 @@ v1.5.0 已功能封板，正在候选构建与正式发布：新增 ZPAQ 当前�
 
 详细格式能力见 [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md)；RAR 创建依赖用户安装的 WinRAR，视频暂不保证支持 Windows N。功能介绍和快速上手见 [项目首页](../README.md)。
 
-当前稳定版为 **1.4.20**：扩展真实好压 ZipCrypto 论坛 ZIP 的缺卷部分抢救，逐文件区分已恢复、涉及缺卷、校验失败与无法确认；保留原任务设置继续解压。40 项不同 Rust、29 项前端和真实桌面流程通过，12 张常用/窄窗截图已查看。PR #179 已受保护合入，正式四资产、安装器版本及中文更新说明已回下载核对。见[实施审计](docs/ZIP_PARTIAL_RESCUE_1.4.20.md)、[封板记录](docs/ZIP_PARTIAL_RESCUE_FREEZE_1.4.20.md)、[更新说明](docs/RELEASE_NOTES_1.4.20.md)及[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.20)。软件图标及原截图保留。
+此前 **v1.4.20**：扩展真实好压 ZipCrypto 论坛 ZIP 的缺卷部分抢救，逐文件区分已恢复、涉及缺卷、校验失败与无法确认；保留原任务设置继续解压。40 项不同 Rust、29 项前端和真实桌面流程通过，12 张常用/窄窗截图已查看。PR #179 已受保护合入，正式四资产、安装器版本及中文更新说明已回下载核对。见[实施审计](docs/ZIP_PARTIAL_RESCUE_1.4.20.md)、[封板记录](docs/ZIP_PARTIAL_RESCUE_FREEZE_1.4.20.md)、[更新说明](docs/RELEASE_NOTES_1.4.20.md)及[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.20)。软件图标及原截图保留。
 
 **v1.4.18** 的 ZIPX（XZ）标准多卷、密码创建、改密/重新分卷/合卷及缺卷补回继续保留。产品输出已用 WinRAR 7.23 独立回解，Bandizip Beta 解码异常及 7-Zip 卷名限制明确保留，原数字卷默认不变。见[ZIPX 审计](docs/STANDARD_ZIPX_1.4.18.md)和[更新说明](docs/RELEASE_NOTES_1.4.18.md)。
 
