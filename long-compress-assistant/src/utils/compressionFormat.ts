@@ -120,6 +120,7 @@ const DECOMPRESS_ARCHIVE_SUFFIXES = [...DECOMPRESS_ARCHIVE_EXTENSIONS]
 export const isDecompressArchivePath = (path: string) => {
   const normalizedPath = path.trim().toLowerCase()
   return DECOMPRESS_ARCHIVE_SUFFIXES.some(suffix => normalizedPath.endsWith(suffix))
+    || /\.zx\d{2,5}$/.test(normalizedPath)
 }
 
 // Candidates only: native code verifies the embedded ZIP/7Z/RAR before import.

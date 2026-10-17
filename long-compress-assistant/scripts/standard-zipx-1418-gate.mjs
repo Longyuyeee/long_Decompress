@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { createHash } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
@@ -37,9 +37,9 @@ export async function runStandardZipx1418Gate({ driver, bridge, failure, waitFor
     window.__TAURI_IPC__({cmd,...args,callback:ids[0],error:ids[1]});`, cmd, args)
   const ipc = async (cmd, args) => { const result = await invoke(cmd, args); assert.equal(result.ok, true, result.error); return result.value }
   const click = async selector => {
-    const element = await waitForElement(selector)
+    const element = typeof selector === 'string' ? await waitForElement(selector) : selector
     await driver.executeScript(el => el.scrollIntoView({ block: 'center', behavior: 'instant' }), element)
-    await driver.wait(() => driver.executeScript(el => { const r = el.getBoundingClientRect(), hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return !el.disabled && (hit === el || el.contains(hit)) }, element), 10000, selector)
+    await driver.wait(() => driver.executeScript(el => { el.scrollIntoView({ block: 'center', behavior: 'instant' }); const r = el.getBoundingClientRect(), hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return r.width > 0 && r.height > 0 && !el.disabled && (hit === el || el.contains(hit)) }, element), 10000, String(selector))
     await element.click()
   }
   const fill = async (selector, value) => {
@@ -70,7 +70,28 @@ export async function runStandardZipx1418Gate({ driver, bridge, failure, waitFor
   const sizes = async (name, anchor) => {
     for (const [width, height] of [[1100, 700], [760, 520]]) {
       await driver.manage().window().setRect({ width, height })
-      await driver.executeScript(el => el.scrollIntoView({ block: 'center', behavior: 'instant' }), await waitForElement(anchor))
+      await driver.wait(async () => Math.abs(await driver.executeScript(() => innerWidth) - width) <= 2, 10000, 'Wait for the actual WebView width after native resizing')
+      await driver.executeAsyncScript('const done=arguments[arguments.length-1]; requestAnimationFrame(()=>requestAnimationFrame(done))')
+      await driver.wait(() => driver.executeScript(() => document.getAnimations().filter(a => a.effect?.getTiming().iterations !== Infinity).every(a => a.playState !== 'running')), 10000)
+      const element = await waitForElement(anchor)
+      // Native resizing and the modal max-height layout settle asynchronously.
+      // Do not call a clipped bottom edge a verified narrow-window control.
+      await driver.wait(() => driver.executeScript(el => {
+        el.scrollIntoView({ block: 'center', behavior: 'instant' })
+        const r = el.getBoundingClientRect()
+        if (r.top < 0 || r.bottom > innerHeight) return false
+        for (let parent = el.parentElement; parent; parent = parent.parentElement) {
+          if (/auto|scroll|hidden/.test(getComputedStyle(parent).overflowY)) {
+            const p = parent.getBoundingClientRect()
+            if (r.top < p.top - 1 || r.bottom > p.bottom + 1) return false
+          }
+        }
+        return true
+      }, element), 10000, 'The whole configured control must be visible: ' + anchor)
+      // Let the native WebView compositor present the checked scroll position.
+      await driver.sleep(180)
+      await driver.executeScript(el => el.scrollIntoView({ block: 'center', behavior: 'instant' }), element)
+      await driver.executeAsyncScript('const done=arguments[arguments.length-1]; requestAnimationFrame(()=>requestAnimationFrame(done))')
       await shot(`${name}-${width}x${height}`)
     }
     await driver.manage().window().setRect({ width: 1100, height: 700 })
@@ -153,12 +174,34 @@ export async function runStandardZipx1418Gate({ driver, bridge, failure, waitFor
     for (const mode of ['none', 'password']) groups.push({ mode, members: ['zx01', 'zx02', 'zipx'].map(ext => path.join(work, mode, '真实原包.' + ext)), secret: mode === 'password' ? password : null })
     console.log('[zipx-1418] reuse completed unchanged native/independent matrix; continue real UI')
   }
+  const checkFileManagerEntry = async () => {
+    await click('[data-testid="nav-ArchiveBrowser"]')
+    await fill('[data-testid="file-manager-path-input-left"]', path.dirname(groups[1].members[1]))
+    await (await waitForElement('[data-testid="file-manager-path-input-left"]')).sendKeys(Key.ENTER)
+    const entry = await driver.wait(async () => {
+      for (const row of await driver.findElements(By.css('.file-row'))) if (await row.getAttribute('data-path') === groups[1].members[1]) return row
+      return false
+    }, 10000, 'Find the genuine middle ZIPX disk in the real file manager')
+    assert.equal((await entry.findElements(By.css('.pi-box'))).length, 1)
+    await driver.actions().doubleClick(entry).perform()
+    await waitForElement('.browser-summary')
+    assert.match(await (await waitForElement('.browser-page')).getText(), /说明.txt/)
+    await fill('.browser-toolbar input[type="password"]', password)
+    await click('.browser-toolbar button[title="重新读取"]'); await waitForElement('.browser-summary')
+    await sizes('zipx-file-manager-browse', '.browser-summary')
+    return { middleVolumeOpenedByActualDoubleClick: true, archiveIcon: true, genuineContentsListed: true, applicationSha256: sha(application), screenshots: screenshots.filter(name => name.startsWith('zipx-file-manager-browse')) }
+  }
+  if (process.env.LONG_ZIPX_1418_BROWSER_ONLY === '1') {
+    const result = await checkFileManagerEntry()
+    writeFileSync(path.join(artifactDirectory, 'standard-zipx-1418-browser.json'), JSON.stringify(result, null, 2))
+    return
+  }
 
   // UI: a real file import, explicit standard ZIPX choice, normal start button.
   await bridge('clearTasks'); await bridge('clearCompressionWorkspace'); await click('[data-testid="nav-Compress"]')
   const ui = path.join(work, '用户操作-' + Date.now()); mkdirSync(ui)
   const uiFile = path.join(ui, '界面真实资料.bin')
-  writeFileSync(uiFile, Buffer.concat(Array.from({ length: 10 }, () => readFileSync(path.join(source, '中文目录/原文件.bin')))))
+  writeFileSync(uiFile, randomBytes(1_701_230))
   await bridge('queueDesktopDialogSelections', [[uiFile]]); await click('[data-testid="compression-center"] [data-testid="dropzone-file"]')
   await click('[data-testid="compression-draft-row"] [data-testid="compression-archive-name"]')
   await select('[data-testid="compression-format-select"]', 'ZIPX（XZ）')
@@ -166,8 +209,22 @@ export async function runStandardZipx1418Gate({ driver, bridge, failure, waitFor
   await fill('[data-testid="compression-filename-input"]', '用户实际创建')
   await fill('[data-testid="compression-output-path"]', ui)
   await click('[data-testid="compression-split-toggle"]'); await fill('[data-testid="compression-split-size"]', '1')
-  await select('[data-testid="compression-zip-split-mode"]', '标准 ZIPX · .zx01/.zipx')
+  await select('[data-testid="compression-zip-split-mode"]', '标准 ZIPX')
   await sizes('zipx-create', '[data-testid="compression-zip-split-mode"]')
+  await click('[data-testid="manage-compression-profiles"]')
+  const newButton = await driver.wait(async () => {
+    for (const button of await driver.findElements(By.css('.profile-manager button'))) if ((await button.getText()).includes('新建配置组')) return button
+    return false
+  }, 10000, 'Wait for the real configuration manager to mount')
+  await click(newButton)
+  await fill('[role="dialog"] form input[maxlength="50"]', 'ZIPX标准卷分享')
+  await (await (await waitForElement('[role="dialog"] form select')).findElement(By.css('option[value="zipx"]'))).click()
+  for (const label of await driver.findElements(By.css('[role="dialog"] form label'))) if ((await label.getText()).includes('将压缩包拆分为多个文件')) { await click(await label.findElement(By.css('input'))); break }
+  await select('[data-testid="profile-zip-split-mode"]', '标准 ZIPX')
+  await sizes('zipx-profile', '[data-testid="profile-zip-split-mode"]')
+  await click('[role="dialog"] form button[type="submit"]')
+  await driver.wait(async () => (await driver.findElements(By.css('[role="dialog"] form'))).length === 0, 10000)
+  await click('[data-testid="close-compression-profiles"]')
   await click('[data-testid="start-compression"]')
   const uiOutput = path.join(ui, '用户实际创建.zipx')
   const created = await driver.wait(async () => (await bridge('taskHistory')).find(item => item.outputPath === uiOutput && ['completed', 'failed'].includes(item.status)), 60000)
@@ -176,26 +233,53 @@ export async function runStandardZipx1418Gate({ driver, bridge, failure, waitFor
   independent(uiOutput, uiOutput + '-独立回解', password, [{ path: path.basename(uiFile), sha256: sha(uiFile) }])
   cases.push({ userCreated: true, historyPreservesStandardZipx: true, independentlyDecoded: true })
 
+  await click('[data-testid="open-archive-conversion"]')
+  await bridge('queueDesktopDialogSelections', [[uiOutput.replace(/\.zipx$/, '.zx01')]]); await click('[data-testid="conversion-choose-source"]')
+  await driver.wait(async () => (await driver.findElements(By.css('[data-testid="conversion-item"]'))).length === 1, 10000)
+  await click('[data-testid="conversion-row"]')
+  await select('[data-testid="conversion-format"]', 'ZIPX（XZ）')
+  await fill('[data-testid="conversion-source-password"]', password)
+  await fill('[data-testid="conversion-password"]', 'UserChanged-1418')
+  await fill('[data-testid="conversion-split"]', '1')
+  await select('[data-testid="conversion-zip-split-mode"]', '标准 ZIPX')
+  const uiConverted = path.join(ui, '用户实际改密分卷.zipx')
+  await fill('[data-testid="conversion-output"]', uiConverted)
+  await sizes('zipx-conversion', '[data-testid="conversion-zip-split-mode"]')
+  await click('[data-testid="conversion-start"]')
+  const convertedRecord = await driver.wait(async () => (await bridge('taskHistory')).find(item => item.outputPath === uiConverted && ['completed', 'failed'].includes(item.status)), 60000)
+  assert.equal(convertedRecord.status, 'completed', JSON.stringify(convertedRecord)); assert.ok(convertedRecord.archiveOutput.files.length > 1)
+  independent(uiConverted, uiConverted + '-独立回解', 'UserChanged-1418', [{ path: path.basename(uiFile), sha256: sha(uiFile) }])
+  await click('[role="dialog"] button[aria-label="Close dialog"]')
+  cases.push({ realConversionPage: true, standardZipxRetained: true, changedPasswordIndependentlyDecoded: true })
+
   // Actual page import of all three members deduplicates; missing middle fails
   // before passwords, restored original creates a retry draft and completes.
+  const retryDirectory = path.join(ui, '收到的ZIPX'); mkdirSync(retryDirectory)
+  const retryMembers = groups[1].members.map(file => { const target = path.join(retryDirectory, path.basename(file)); copyFileSync(file, target); return target })
   await bridge('clearTasks'); await click('[data-testid="nav-Decompress"]')
-  await bridge('queueDesktopDialogSelections', [[groups[1].members[1], groups[1].members[0], groups[1].members[2]]]); await click('.decompress-view [data-testid="dropzone-file"]')
+  await bridge('queueDesktopDialogSelections', [[retryMembers[1], retryMembers[0], retryMembers[2]]]); await click('.decompress-view [data-testid="dropzone-file"]')
   await driver.wait(async () => (await bridge('archiveBrowserTaskState')).length === 1, 10000)
-  renameSync(groups[1].members[1], groups[1].members[1] + '.暂缺')
+  await click('[data-testid^="toggle-archive-task-"]')
+  if (await (await waitForElement('.task-subfolder-option')).getAttribute('aria-checked') !== 'true') await click('.task-subfolder-option')
+  renameSync(retryMembers[1], retryMembers[1] + '.暂缺')
   let failed
   try {
     await click('[data-testid="start-decompression-queue"]')
     failed = await driver.wait(async () => { const task = (await bridge('archiveBrowserTaskState'))[0]; return task?.status === 'failed' ? task : false }, 15000)
     assert.ok(failed.error.includes('真实原包.zx02'), failed.error); assert.doesNotMatch(failed.error, /密码不正确|需要输入密码/)
     await waitForElement('[data-testid="retry-missing-volumes"]'); await sizes('zipx-missing-middle', '[data-testid="retry-missing-volumes"]')
-  } finally { renameSync(groups[1].members[1] + '.暂缺', groups[1].members[1]) }
+  } finally { renameSync(retryMembers[1] + '.暂缺', retryMembers[1]) }
   await fill('[data-testid="retry-password"]', password); await click('[data-testid="create-retry-drafts"]')
   await driver.wait(async () => (await bridge('archiveBrowserTaskState')).length === 2, 10000)
   await click('[data-testid="start-decompression-queue"]')
   const completed = await driver.wait(async () => { const task = (await bridge('archiveBrowserTaskState'))[1]; return ['completed', 'failed'].includes(task?.status) ? task : false }, 60000)
   assert.equal(completed.status, 'completed', JSON.stringify(completed)); assert.equal((await bridge('archiveBrowserTaskState'))[0].error, failed.error)
-  verify(path.join(path.dirname(groups[1].members[0]), '真实原包'))
+  verify(path.join(retryDirectory, '真实原包'))
+  cases.push({ realRetryPage: true, unorderedMembersDeduplicated: true, preciseOriginalFailure: failed.error, restoredCompleted: true, originalFailureRetained: true, outputSha256Matched: true })
+  const finalRow = (await driver.findElements(By.css('[data-testid="task-row"]'))).at(-1)
+  await driver.executeScript(el => el.scrollIntoView({ block: 'center', behavior: 'instant' }), finalRow)
   await shot('zipx-restored-completed')
+  cases.push(await checkFileManagerEntry())
   cases.forEach(item => { if (item.volumes) item.volumes.forEach(volume => assert.equal(sha(path.join(original, item.mode, volume.name)), volume.sha256)) })
   writeFileSync(path.join(artifactDirectory, 'standard-zipx-1418-results.json'), JSON.stringify({ checkedAt: new Date().toISOString(), application, applicationSha256: sha(application), nativeApplicationSha256: JSON.parse(readFileSync(nativeReportPath, 'utf8')).applicationSha256, originalToolSha256: sha(tool), independentOutputDecoder: winrar, independentOutputDecoderSha256: sha(winrar), cases, layouts, screenshots }, null, 2))
 }

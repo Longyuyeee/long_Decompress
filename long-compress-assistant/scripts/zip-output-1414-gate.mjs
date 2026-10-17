@@ -68,8 +68,11 @@ export async function runZipOutput1414Gate({ driver, bridge, waitForElement, fix
         zip_split_mode: split === 'none' ? 'numeric' : split, split_size: split === 'none' ? null : 65536,
         preserve_paths: true, verify_after: true, delete_after: false }
       if (format === 'zipx' && split === 'standard') {
-        await assert.rejects(() => ipc('compress_files', { taskId: 'unsupported-' + label, files: [source], outputPath: output + '-rejected.zipx', options }), /ZIPX.*数字分卷/)
-        results.push({ label, explicitUnsupportedCombination: true, noPublishedOutput: !existsSync(output + '-rejected.zipx') }); writeFileSync(progress, JSON.stringify(results, null, 2)); continue
+        // This historical gate retains its original 15 positive combinations.
+        // The v1.4.18 genuine ZIPX disk/WinRAR gate supersedes the old rejection;
+        // 7-Zip cannot independently decode the native .zxNN names used here.
+        results.push({ label, coveredBy: 'standard-zipx-1418-gate.mjs', notExecutedByThisHistoricalGate: true });
+        writeFileSync(progress, JSON.stringify(results, null, 2)); continue
       }
       const published = await ipc('compress_files', { taskId: 'zip-output-' + label, files: [source], outputPath: output, options })
       assert.equal(published.split, split !== 'none')
@@ -212,5 +215,5 @@ export async function runZipOutput1414Gate({ driver, bridge, waitForElement, fix
   await shot('zip-output-conversion-completed-760')
   writeFileSync(path.join(artifactDirectory, 'zip-output-1414-results.json'), JSON.stringify({ version: '1.4.14', application, sha256: hash(application), retainedRoot: root,
     engine: bundledSevenZip, results, screenshots, geometry, uiResumedFrom: uiFrom,
-    scope: 'ZIP Zstandard: no/AES256/ZipCrypto × ordinary/numeric/standard disks; ZIPX XZ: no/AES256/ZipCrypto × ordinary/numeric disks; standard ZIPX creation explicitly rejected; real commands, publication, verification, application and independent readback; inline and modal UI with 50/50 columns; isolated picker responses' }, null, 2))
+    scope: 'ZIP Zstandard: no/AES256/ZipCrypto × ordinary/numeric/standard disks; ZIPX XZ: no/AES256/ZipCrypto × ordinary/numeric disks; standard ZIPX is tested separately by the v1.4.18 gate; real commands, publication, verification, application and independent readback; inline and modal UI with 50/50 columns; isolated picker responses' }, null, 2))
 }

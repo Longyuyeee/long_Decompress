@@ -7,3 +7,5 @@ long-compress-assistant/tests/fixtures/archives/lzip-1412/原文件/** -text
 long-compress-assistant/tests/fixtures/archives/partial-zip-1413/*/*.z* binary
 long-compress-assistant/docs/evidence/zip-output-1.4.14/*.txt -text -whitespace
 long-compress-assistant/tests/fixtures/archives/legacy-zip-password-1416/** -text
+long-compress-assistant/tests/fixtures/archives/standard-zipx-1418/none/* binary
+long-compress-assistant/tests/fixtures/archives/standard-zipx-1418/password/* binary

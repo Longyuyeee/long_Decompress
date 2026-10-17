@@ -700,7 +700,7 @@ const formatDate = (timestamp: number | null) =>
         </label>
         <label v-if="formData.config.splitArchive && ['zip','zipx'].includes(formData.config.format)" class="block">
           <span class="mb-2 block text-xs font-black text-muted">ZIP 卷型</span>
-          <ThemedSelect :model-value="formData.config.zipSplitMode ?? 'numeric'" :options="[{ value: 'numeric', label: `数字切卷 · .${formData.config.format}.001` }, { value: 'standard', label: formData.config.format === 'zipx' ? '标准 ZIPX · .zx01/.zipx' : '标准 ZIP · .z01/.zip' }]" test-id="profile-zip-split-mode" floating @update:model-value="formData.config.zipSplitMode = $event as 'numeric' | 'standard'" />
+          <ThemedSelect :model-value="formData.config.zipSplitMode ?? 'numeric'" :options="[{ value: 'numeric', label: `数字切卷 · .${formData.config.format}.001` }, { value: 'standard', label: formData.config.format === 'zipx' ? '标准 ZIPX' : '标准 ZIP · .z01/.zip', detail: formData.config.format === 'zipx' ? '.zx01/.zipx' : undefined }]" test-id="profile-zip-split-mode" floating @update:model-value="formData.config.zipSplitMode = $event as 'numeric' | 'standard'" />
         </label>
 
         <p v-if="formError" role="alert" class="rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs font-bold text-red-400"><i class="pi pi-exclamation-circle mr-2"></i>{{ formError }}</p>

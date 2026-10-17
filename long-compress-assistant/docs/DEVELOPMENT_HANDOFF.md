@@ -1,5 +1,11 @@
 # 开发交接
 
+## 最新：v1.4.18 ZIPX 标准多卷功能封板，进入发布（2026-10-18）
+
+从 `a7ce1f9` 接续，`codex/v1.4.18-standard-zipx` 实现 `1a4c11e` 已推送，末轮真实页面、窄窗标签与文件浏览器中卷入口已补齐。39 项不同 Rust、146 项相关前端通过；两组独立原卷、三类创建与改密/重新分卷/合卷、24 次结构失败、真实缺卷补回和双击中卷浏览均完成，11 张实看截图及准确程序身份已入库。详见[实施审计](STANDARD_ZIPX_1.4.18.md)与[封板记录](STANDARD_ZIPX_FREEZE_1.4.18.md)。
+
+产品输出通过 WinRAR 7.23 原名独立回解；本机 Bandizip Beta 解码异常与 7-Zip 卷名限制已明示，不关闭校验或改低验收范围。数字卷默认、个人安装/设置/历史保持。接续统一 1.4.18、普通构建、受保护 PR、README/中文 Release 与四项正式资产；公开版仍为 v1.4.17。发布后再进入 v1.4.19 RAR4 恢复链，后续已批准路线仍未完成。
+
 ## 最新：v1.4.17 已正式发布，接续 ZIPX 标准多卷（2026-10-18）
 
 [PR #173](https://github.com/Longyuyeee/long_Decompress/pull/173) 已合入，[v1.4.17 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.17) 已发布，标签 `3781178f8f5fb06476d93eab29eef48debc023f8` 与候选 `98c0fbf` 文件树一致。功能冻结 `837683b`，38 项不同 Rust、146 项相关前端、普通构建与两组真实原卷/桌面矩阵通过；原卷、六张页面和准确程序身份已入库。候选 Windows package、正式 Release 均成功，四项正式资产实际回下载核对，安装器 1.4.17、更新 ZIP 内 EXE 相同、中文更新说明及签名/地址一致。详见[实施审计](SPECIAL_VOLUME_COMPATIBILITY_1.4.17.md)和[封板记录](SPECIAL_VOLUME_FREEZE_1.4.17.md)。

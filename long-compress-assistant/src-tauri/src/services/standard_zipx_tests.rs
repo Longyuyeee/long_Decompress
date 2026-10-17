@@ -82,6 +82,32 @@ fn zipx_standard_missing_members_are_named_and_do_not_mix_zip_or_numeric_disks()
     }
 }
 
+#[tokio::test]
+async fn zipx_standard_reuses_only_verified_complete_files_when_middle_disk_is_missing() {
+    use std::sync::{Arc, atomic::AtomicBool};
+    use super::archive_diagnostics::{diagnose_archive, repair_zip_with_password_to_new};
+    for mode in ["none", "password"] {
+        let temp = tempfile::tempdir().unwrap(); copy_fixture(mode, temp.path());
+        let main = temp.path().join("真实原包.zipx");
+        std::fs::remove_file(main.with_extension("zx02")).unwrap();
+        let password = (mode == "password").then_some(PASSWORD);
+        let before = std::fs::read(&main).unwrap();
+        let report = diagnose_archive(&main, password, Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert_eq!(report.status, "partial_recovery", "{report:?}");
+        assert!(report.can_repair && !report.integrity_tested);
+        let output = temp.path().join("仅救回完整说明.zip");
+        let result = repair_zip_with_password_to_new(&main, &output, password, &AtomicBool::new(false)).unwrap();
+        assert_eq!(result.recovered_files, 1);
+        let mut archive = zip_aes::ZipArchive::new(std::fs::File::open(&output).unwrap()).unwrap();
+        assert!(archive.index_for_name("中文目录/原文件.bin").is_none());
+        let mut entry = if let Some(password) = password { archive.by_name_decrypt("说明.txt", password.as_bytes()).unwrap() }
+            else { archive.by_name("说明.txt").unwrap() };
+        let mut text = String::new(); entry.read_to_string(&mut text).unwrap();
+        assert_eq!(text, "真实 ZIPX 标准分卷测试。中文、空目录和跨卷内容。\n".repeat(20));
+        assert_eq!(std::fs::read(&main).unwrap(), before);
+    }
+}
+
 #[test]
 #[ignore = "Requires independent WinRAR via LONG_WINRAR"]
 fn zipx_standard_creation_publishes_and_independent_winrar_extracts_all_password_modes() {
