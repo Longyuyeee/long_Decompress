@@ -1,0 +1,268 @@
+{
+  "completedAt": "2026-10-17T22:50:18.074Z",
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
+  "binarySha256": "646537d2549f3f8e38233289c6dade6520b53f4b4f4357ec7b5b60dee12d6b06",
+  "cases": [
+    {
+      "name": "journal.zpaq",
+      "currentFiles": 3,
+      "wholeExtraction": true,
+      "integrity": true,
+      "convertedZipIndependentlyDecoded": true,
+      "originalUnchanged": true
+    },
+    {
+      "name": "journal-key.zpaq",
+      "currentFiles": 3,
+      "wholeExtraction": true,
+      "integrity": true,
+      "convertedZipIndependentlyDecoded": true,
+      "originalUnchanged": true
+    },
+    {
+      "name": "stream.zpaq",
+      "currentFiles": 3,
+      "wholeExtraction": true,
+      "integrity": true,
+      "convertedZipIndependentlyDecoded": true,
+      "originalUnchanged": true
+    },
+    {
+      "name": "stream-key.zpaq",
+      "currentFiles": 3,
+      "wholeExtraction": true,
+      "integrity": true,
+      "convertedZipIndependentlyDecoded": true,
+      "originalUnchanged": true
+    },
+    {
+      "actualFileManagerDoubleClick": true,
+      "actualSelectedExtraction": true,
+      "actualWrongThenCorrectPassword": true,
+      "damageNoPublishedOutput": true
+    },
+    {
+      "realFailedTaskPasswordCorrection": true,
+      "retryNewTaskCompleted": true,
+      "originalFailureRetained": true,
+      "payloadHashesMatch": true
+    }
+  ],
+  "screenshots": [
+    "zpaq-current-files-1100x700.png",
+    "zpaq-current-files-760x520.png",
+    "zpaq-current-help-1100x700.png",
+    "zpaq-current-help-760x520.png",
+    "zpaq-selected-extraction-1100x700.png",
+    "zpaq-selected-extraction-760x520.png",
+    "zpaq-password-correction-1100x700.png",
+    "zpaq-password-correction-760x520.png",
+    "zpaq-encrypted-current-files-1100x700.png",
+    "zpaq-encrypted-current-files-760x520.png",
+    "zpaq-real-failed-task-retry-1100x700.png",
+    "zpaq-real-failed-task-retry-760x520.png",
+    "zpaq-retry-output-cause-1100x700.png",
+    "zpaq-retry-output-cause-760x520.png",
+    "zpaq-settings-password-support-1100x700.png",
+    "zpaq-settings-password-support-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "zpaq-current-files",
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "rect": {
+            "left": 216,
+            "right": 1100
+          }
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "zpaq-current-files",
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "rect": {
+            "left": 76,
+            "right": 760
+          }
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "zpaq-current-help",
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "rect": {
+            "left": 216,
+            "right": 1100
+          }
+        },
+        {
+          "overflow": 0,
+          "rect": {
+            "left": 378.38751220703125,
+            "right": 682.3875122070312
+          }
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "zpaq-current-help",
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "rect": {
+            "left": 76,
+            "right": 760
+          }
+        },
+        {
+          "overflow": 0,
+          "rect": {
+            "left": 238.3874969482422,
+            "right": 542.3874969482422
+          }
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "zpaq-selected-extraction",
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "rect": {
+            "left": 216,
+            "right": 1100
+          }
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "zpaq-selected-extraction",
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "rect": {
+            "left": 76,
+            "right": 760
+          }
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "zpaq-password-correction",
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "rect": {
+            "left": 216,
+            "right": 1100
+          }
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "zpaq-password-correction",
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "rect": {
+            "left": 76,
+            "right": 760
+          }
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "zpaq-encrypted-current-files",
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "rect": {
+            "left": 216,
+            "right": 1100
+          }
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "zpaq-encrypted-current-files",
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "rect": {
+            "left": 76,
+            "right": 760
+          }
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "zpaq-real-failed-task-retry",
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "zpaq-real-failed-task-retry",
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "zpaq-retry-output-cause",
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "zpaq-retry-output-cause",
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "zpaq-settings-password-support",
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "zpaq-settings-password-support",
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    }
+  ],
+  "fixtureHashes": {
+    "journal.zpaq": "00730d8fa5b19c39600d9b272d778f4317aed04816c6b1819c8017e39689b430",
+    "journal-key.zpaq": "8c826a156678042c997640e766dcada7493f16dfcadc5ab3bb3f095fa0df7727",
+    "stream.zpaq": "1d60e9af118cfed0f175376fa9d52a402d311cd739a427bdfeb780933e78548c",
+    "stream-key.zpaq": "d2e7c7a699fe5eebb034ee85f61447ee0e9e406798bda39edcc49c868a8e3b47"
+  },
+  "independentOutputDecoder": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\resources\\archive-engine\\7z.exe"
+}

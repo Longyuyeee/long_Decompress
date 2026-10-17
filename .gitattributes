@@ -15,4 +15,5 @@ long-compress-assistant/tests/fixtures/archives/rar4-recovery-1419/*/*.r?? binar
 long-compress-assistant/tests/fixtures/archives/rar4-recovery-1419/source/** binary
 long-compress-assistant/vendor/zpaq/** -text -whitespace
 long-compress-assistant/src-tauri/resources/zpaq-engine/** -text
+long-compress-assistant/src-tauri/resources/zpaq-engine/COPYING -whitespace
 long-compress-assistant/src-tauri/tests/fixtures/zpaq/*.zpaq binary

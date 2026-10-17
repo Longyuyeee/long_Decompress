@@ -70,6 +70,12 @@ struct Directory { kind: String, versions: u64, entries: Vec<Entry> }
 #[derive(Deserialize)]
 struct Entry { path: String, size: i64, date: i64, directory: bool }
 
+fn modified_date(date: i64) -> Option<String> {
+    let s = date.to_string();
+    (s.len() == 14 && s.bytes().all(|c| c.is_ascii_digit())).then(||
+        format!("{}-{}-{} {}:{}:{} UTC", &s[..4], &s[4..6], &s[6..8], &s[8..10], &s[10..12], &s[12..]))
+}
+
 fn parse_directory(bytes: &[u8], encrypted: bool) -> Result<ArchiveBrowseResult> {
     let text = std::str::from_utf8(bytes).context("ZPAQ 目录不是有效 UTF-8")?.replace("\r\n", "\n");
     let json = text.split_once("\nLONG_ZPAQ_JSON\n").context("ZPAQ 引擎缺少目录响应")?.1;
@@ -82,7 +88,7 @@ fn parse_directory(bytes: &[u8], encrypted: bool) -> Result<ArchiveBrowseResult>
         entries.push(ArchiveEntryInfo {
             name: path.rsplit('/').next().unwrap_or(&path).to_string(), path,
             size: item.size.max(0) as u64, size_known: Some(is_dir || item.size >= 0),
-            compressed_size: None, modified: Some(item.date.to_string()), crc: None, encrypted, is_dir,
+            compressed_size: None, modified: modified_date(item.date), crc: None, encrypted, is_dir,
         });
     }
     let total_files = entries.iter().filter(|e| !e.is_dir).count();
@@ -188,6 +194,7 @@ mod tests {
     fn streaming_unknown_size_is_not_reported_as_known_zero() {
         let result = parse_directory(b"\nLONG_ZPAQ_JSON\n{\"kind\":\"streaming\",\"versions\":1,\"entries\":[{\"path\":\"file\",\"size\":-1,\"date\":20261018000000,\"directory\":false}]}", false).unwrap();
         assert_eq!(result.entries[0].size_known, Some(false));
+        assert_eq!(result.entries[0].modified.as_deref(), Some("2026-10-18 00:00:00 UTC"));
     }
     #[test]
     fn metadata_rejects_unsafe_paths_and_missing_protocol() {

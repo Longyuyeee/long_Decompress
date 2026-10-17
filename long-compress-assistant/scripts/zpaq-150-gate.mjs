@@ -17,7 +17,7 @@ export async function runZpaq150Gate({ driver, bridge, failure, waitForElement, 
   const invoke = (cmd,args) => driver.executeAsyncScript(`const [cmd,args,done]=arguments,ids=crypto.getRandomValues(new Uint32Array(2));const clean=()=>ids.forEach(id=>Reflect.deleteProperty(window,'_'+id));window['_'+ids[0]]=value=>{clean();done({ok:true,value})};window['_'+ids[1]]=error=>{clean();done({ok:false,error:String(error)})};window.__TAURI_IPC__({cmd,...args,callback:ids[0],error:ids[1]});`,cmd,args)
   const ipc = async(cmd,args)=>{const r=await invoke(cmd,args);assert.equal(r.ok,true,r.error);return r.value}
   const click = async selector => {const el=typeof selector==='string'?await waitForElement(selector):selector;await driver.executeScript(el=>el.scrollIntoView({block:'center',behavior:'instant'}),el);await driver.wait(()=>driver.executeScript(el=>{const r=el.getBoundingClientRect(),h=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !el.disabled&&(h===el||el.contains(h))},el),10000);await el.click()}
-  const fill = async(selector,value)=>{const el=await waitForElement(selector);await driver.executeScript(el=>el.scrollIntoView({block:'center',behavior:'instant'}),el);await el.sendKeys(Key.chord(Key.CONTROL,'a'),Key.BACK_SPACE);if(value) await el.sendKeys(value)}
+  const fill = async(selector,value)=>{const el=await waitForElement(selector);await driver.wait(()=>el.isEnabled(),10000);await driver.executeScript(el=>el.scrollIntoView({block:'center',behavior:'instant'}),el);await el.sendKeys(Key.chord(Key.CONTROL,'a'),Key.BACK_SPACE);if(value) await el.sendKeys(value)}
   const sizes = async(name,anchor)=>{
     for(const [width,height] of [[1100,700],[760,520]]) {
       await driver.manage().window().setRect({width,height});await driver.wait(()=>driver.executeScript(w=>Math.abs(innerWidth-w)<=2,width),10000)
@@ -52,7 +52,8 @@ export async function runZpaq150Gate({ driver, bridge, failure, waitForElement, 
   await driver.actions().sendKeys(Key.ESCAPE).perform()
   // Enter folder, select one actual file, choose destination, extract through UI.
   const folder=await waitForElement('[data-entry-path="项目 文档/"]');await driver.executeScript(el=>el.scrollIntoView({block:'center',behavior:'instant'}),folder);await driver.actions().doubleClick(folder).perform()
-  await waitForElement('[data-entry-path="项目 文档/说明.txt"]');await click('[data-entry-path="项目 文档/说明.txt"] .browser-checkbox')
+  await waitForElement('[data-entry-path="项目 文档/说明.txt"]');await click('.browser-table-head .browser-checkbox');await click('[data-entry-path="项目 文档/说明.txt"] .browser-checkbox')
+  assert.match(await (await waitForElement('.footer-status')).getText(),/已选择 1 \/ 3/)
   const selectedOutput=path.join(work,'用户只要说明文件');mkdirSync(selectedOutput)
   await bridge('queueDesktopDialogSelections',[selectedOutput]);await click('.output-target');await sizes('zpaq-selected-extraction','footer .browser-primary')
   await click('footer .browser-primary');await driver.wait(()=>existsSync(path.join(selectedOutput,'项目 文档/说明.txt')),30000)
@@ -69,9 +70,26 @@ export async function runZpaq150Gate({ driver, bridge, failure, waitForElement, 
   const prefix=Buffer.from(Array.from({length:64},(_,i)=>i*37&255)),offset=bytes.indexOf(prefix);assert.ok(offset>=0);bytes[offset+100]^=0x55;writeFileSync(damaged,bytes)
   const failedOutput=path.join(work,'失败不能留下文件');const detail=await failure('extractArchive',damaged,failedOutput,null);assert.match(detail,/ZPAQ|校验/);assert.deepEqual(tree(failedOutput),[])
   cases.push({actualFileManagerDoubleClick:true,actualSelectedExtraction:true,actualWrongThenCorrectPassword:true,damageNoPublishedOutput:true})
+  await bridge('clearTasks')
+  const retryOutput=path.join(work,'纠正密码后的真实输出'),encryptedSource=path.join(original,'journal-key.zpaq');mkdirSync(retryOutput)
+  const wrongDetail=await failure('extractArchive',encryptedSource,retryOutput,'wrong');assert.match(wrongDetail,/密码不匹配或文件已损坏/)
+  const [failed]=await bridge('extractionRecoveryTasks');assert.equal(failed.status,'failed')
+  await click('[data-testid="nav-Decompress"]');await click(`[data-task-id="${failed.id}"]`)
+  await fill('[data-testid="retry-password"]',manifest.password);await fill('[data-testid="retry-output"]',path.join(work,'尚未创建的目录'))
+  const subfolder=await waitForElement('[data-testid="retry-subfolder"]');if(await subfolder.isSelected())await click(subfolder)
+  await sizes('zpaq-real-failed-task-retry','[data-testid="create-retry-drafts"]')
+  await click('[data-testid="create-retry-drafts"]')
+  await driver.wait(async()=>{for(const el of await driver.findElements(By.css('[role="alert"]')))if((await el.getText()).includes('无法读取本次输出目录'))return true;return false},10000)
+  assert.equal((await bridge('extractionRecoveryTasks')).filter(t=>t.status==='pending').length,0)
+  await sizes('zpaq-retry-output-cause','[data-testid="create-retry-drafts"]')
+  await fill('[data-testid="retry-output"]',retryOutput);await click('[data-testid="create-retry-drafts"]')
+  const queued=await driver.wait(async()=>(await bridge('extractionRecoveryTasks')).find(t=>t.status==='pending')||false,15000)
+  await click('[data-testid="start-decompression-queue"]');await driver.wait(async()=>await bridge('taskStatus',queued.id)==='completed',30000)
+  assert.deepEqual(tree(retryOutput),expected);assert.equal((await bridge('extractionRecoveryTasks')).find(t=>t.id===failed.id).status,'failed')
+  cases.push({realFailedTaskPasswordCorrection:true,retryNewTaskCompleted:true,originalFailureRetained:true,payloadHashesMatch:true})
   await click('[data-testid="nav-Settings"]');await waitForElement('[data-testid="settings-password-extraction-formats"]')
-  assert.match(await (await waitForElement('[data-testid="settings-password-extraction-formats"]')).getText(),/ZPAQ（只读）/)
   await sizes('zpaq-settings-password-support','[data-testid="settings-password-extraction-formats"]')
+  await driver.wait(async()=>/ZPAQ（只读）/.test(await (await waitForElement('[data-testid="settings-password-extraction-formats"]')).getText()),10000,'Wait for the scrolled settings card to render and the engine capability response')
   for(const [name,hash] of Object.entries(manifest.hashes))assert.equal(sha(path.join(original,name)),hash)
   writeFileSync(path.join(artifactDirectory,'zpaq-150-results.json'),JSON.stringify({completedAt:new Date().toISOString(),application,binarySha256:sha(application),cases,screenshots,layouts,fixtureHashes:manifest.hashes,independentOutputDecoder:bundledSevenZip},null,2))
 }
