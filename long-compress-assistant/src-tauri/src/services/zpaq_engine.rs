@@ -70,7 +70,9 @@ fn io_failure(detail: &str) -> Option<anyhow::Error> {
     let line = detail.lines().find_map(|line| line.strip_prefix("LONG_ZPAQ_IO:"))?;
     let (operation, code) = line.split_once(':')?;
     let code = code.trim().parse::<i32>().ok()?;
-    Some(anyhow::anyhow!("ZPAQ 文件读写失败（{operation}）：{}；请检查目标空间、磁盘连接和文件访问权限，不要反复试密码。", std::io::Error::from_raw_os_error(code)))
+    let cause = std::io::Error::from_raw_os_error(code);
+    let message = format!("[zpaq-io] ZPAQ 文件读写失败（{operation}）：{cause}；请检查目标空间、磁盘连接和文件访问权限，不要反复试密码。");
+    Some(anyhow::Error::new(cause).context(message))
 }
 
 pub async fn create(sources: &[String], output: &Path, options: &crate::models::compression::CompressionOptions, cancelled: Arc<AtomicBool>) -> Result<()> {

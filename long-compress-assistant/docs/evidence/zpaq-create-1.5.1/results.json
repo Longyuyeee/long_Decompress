@@ -1,0 +1,260 @@
+{
+  "completedAt": "2026-10-17T23:56:39.377Z",
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
+  "binarySha256": "7374e67d01459ef43fb3c63e641d6b4d9853b9e86c1c75a7773b074fdcbed436",
+  "officialToolSha256": "7a94b4f1d6323a758c7b0b6344036f166bff0fd44f1c3c86f05b3688023496cb",
+  "sourcePayload": [
+    {
+      "path": "空文件.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "说明.txt",
+      "sha256": "4443bd95e6e5dff0c46fa8e56a2fde59d91f3cfa2dc1e0f3207424bd100caaf1"
+    },
+    {
+      "path": "子目录/数据.bin",
+      "sha256": "e32d92510f7e1c6acbf14afec28643fb51ef2a877202d3f1d73105425891775d"
+    }
+  ],
+  "cases": [
+    {
+      "created": "普通目录",
+      "archiveSha256": "3762fbc3ffbe9601cb2e38b1f000d6c19fbac7be8dd63a11de33c2d173b646d8",
+      "applicationRoundtrip": true,
+      "officialReadback": true,
+      "payloadHashes": true,
+      "emptyDirectory": true
+    },
+    {
+      "created": "原生中文密码",
+      "archiveSha256": "def0c9735dd8c0c6d15d49df554be775d240e571f3556fc3ec29f84ea01daac4",
+      "applicationRoundtrip": true,
+      "officialReadback": true,
+      "payloadHashes": true,
+      "emptyDirectory": true
+    },
+    {
+      "nativeReencrypt": true,
+      "sourceUnchanged": true,
+      "officialReadback": true
+    },
+    {
+      "realEncoderCancellation": true,
+      "sourcePreservedWithDeleteAfter": true,
+      "noPublishedOrStagedOutput": true
+    },
+    {
+      "actualPickerAndCompressionControls": true,
+      "savedProfileNativePassword": true,
+      "historySnapshotFormat": true,
+      "officialReadback": true
+    },
+    {
+      "actualHistoryRerun": true,
+      "requiresPasswordAgain": true,
+      "createsDraftOnly": true,
+      "oldRecordUnchanged": true,
+      "officialReadback": true
+    },
+    {
+      "actualConversionControls": true,
+      "sourceFormat": "AES ZIP",
+      "nativePasswordOutput": true,
+      "officialReadback": true,
+      "sourceUnchanged": true
+    }
+  ],
+  "screenshots": [
+    "zpaq-create-inline-1100x700.png",
+    "zpaq-create-inline-760x520.png",
+    "zpaq-save-profile-1100x700.png",
+    "zpaq-save-profile-760x520.png",
+    "zpaq-profile-applied-1100x700.png",
+    "zpaq-profile-applied-760x520.png",
+    "zpaq-history-rerun-1100x700.png",
+    "zpaq-history-rerun-760x520.png",
+    "zpaq-conversion-1100x700.png",
+    "zpaq-conversion-760x520.png",
+    "zpaq-settings-1100x700.png",
+    "zpaq-settings-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "zpaq-create-inline",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 610.4000091552734,
+          "left": 273.6000061035156,
+          "overflow": 0,
+          "right": 1032.3999938964844,
+          "top": 198.40000915527344
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "zpaq-create-inline",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 456,
+          "left": 125.5999984741211,
+          "overflow": 0,
+          "right": 700.3999862670898,
+          "top": 136
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "zpaq-save-profile",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 591.6000061035156,
+          "left": 273.6000061035156,
+          "overflow": 0,
+          "right": 1032.3999938964844,
+          "top": 179.60000610351562
+        },
+        {
+          "bottom": 620.3999862670898,
+          "left": 326,
+          "overflow": 0,
+          "right": 774,
+          "top": 79.5999984741211
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "zpaq-save-profile",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 503.6000061035156,
+          "left": 125.5999984741211,
+          "overflow": 0,
+          "right": 700.3999862670898,
+          "top": 183.60000610351562
+        },
+        {
+          "bottom": 504,
+          "left": 156,
+          "overflow": 0,
+          "right": 604,
+          "top": 16
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "zpaq-profile-applied",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 610.4000091552734,
+          "left": 273.6000061035156,
+          "overflow": 0,
+          "right": 1032.3999938964844,
+          "top": 198.40000915527344
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "zpaq-profile-applied",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 456,
+          "left": 125.5999984741211,
+          "overflow": 0,
+          "right": 700.3999862670898,
+          "top": 136
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "zpaq-history-rerun",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "zpaq-history-rerun",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "zpaq-conversion",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 707.6000061035156,
+          "left": 257.6000061035156,
+          "overflow": 0,
+          "right": 1048.3999938964844,
+          "top": 295.6000061035156
+        },
+        {
+          "bottom": 700,
+          "left": 0,
+          "overflow": 0,
+          "right": 1100,
+          "top": 0
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "zpaq-conversion",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 611.6000061035156,
+          "left": 113.5999984741211,
+          "overflow": 0,
+          "right": 712.3999862670898,
+          "top": 291.6000061035156
+        },
+        {
+          "bottom": 520,
+          "left": 0,
+          "overflow": 0,
+          "right": 760,
+          "top": 0
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "zpaq-settings",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "zpaq-settings",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    }
+  ]
+}

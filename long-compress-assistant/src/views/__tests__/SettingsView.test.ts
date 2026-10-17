@@ -60,6 +60,7 @@ describe('SettingsView archive engine diagnostics', () => {
     expect(wrapper.get('[data-testid="settings-password-extraction-formats"]').text().match(/ZPAQ/g)).toHaveLength(1)
     expect(wrapper.get('[data-testid="settings-password-extraction-formats"]').text()).toContain('ZPAQ')
     expect(wrapper.get('[data-testid="settings-password-extraction-formats"]').text()).not.toContain('只读')
+    expect(wrapper.get('[data-testid="settings-zpaq-creation"]').text()).toContain('不提供固定大小分卷')
     expect(wrapper.text()).toContain('TGZ.AES')
     expect(wrapper.text()).toContain('ZST.AES')
     expect(wrapper.text()).toContain('软件更新')

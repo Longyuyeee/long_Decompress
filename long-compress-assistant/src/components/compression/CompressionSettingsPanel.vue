@@ -488,6 +488,7 @@ const closeVaultPasswordsAfterFocus = () => {
       <!-- 保存为配置组按钮 -->
       <button
         @click="openSaveProfileModal"
+        data-testid="save-compression-profile"
         class="min-w-0 max-w-full px-4 py-2 rounded-xl border border-subtle text-xs font-black leading-5 transition-all bg-input text-muted hover:text-content hover:border-sky-500/30"
         :title="appStore.t('profiles.save_as_new')"
       >
@@ -622,7 +623,7 @@ const closeVaultPasswordsAfterFocus = () => {
 <!-- 保存为配置组弹窗 -->
 <transition name="pop">
   <div v-if="showSaveProfileModal" class="fixed inset-0 z-[330] flex items-center justify-center bg-black/65 p-4" @click.self="showSaveProfileModal = false">
-    <div class="modal-no-glass rounded-[2rem] p-8 w-full max-w-md shadow-2xl text-content">
+    <div data-testid="save-compression-profile-dialog" class="modal-no-glass custom-scrollbar max-h-[calc(100vh-2rem)] overflow-y-auto rounded-[2rem] p-8 w-full max-w-md shadow-2xl text-content">
       <h3 class="text-sm font-black mb-4 uppercase tracking-widest">{{ appStore.t('profiles.save_as_profile') }}</h3>
 
       <!-- 图标选择 -->
@@ -646,6 +647,7 @@ const closeVaultPasswordsAfterFocus = () => {
         <label class="block text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('profiles.name_label') }}</label>
         <input
           v-model="newProfileName"
+          data-testid="compression-profile-name"
           @keyup.enter="saveAsNewProfile"
           class="w-full h-10 rounded-xl bg-input border border-subtle px-4 text-sm font-mono text-content outline-none focus:border-primary transition-all"
           autofocus
@@ -664,11 +666,11 @@ const closeVaultPasswordsAfterFocus = () => {
       </div>
 
       <!-- 当前配置预览 -->
-      <div class="mb-4 p-3 rounded-xl bg-slate-700/30 border border-slate-600/30">
+      <div class="mb-4 p-3 rounded-xl bg-input border border-subtle">
         <p class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('profiles.current_config') }}</p>
         <div class="flex flex-wrap gap-2 text-xs">
-          <span class="px-2 py-1 bg-slate-700/50 rounded text-slate-300">{{ compressionOptions.format.toUpperCase() }}</span>
-          <span class="px-2 py-1 bg-slate-700/50 rounded text-slate-300">L{{ compressionOptions.level }}</span>
+          <span class="px-2 py-1 bg-primary/10 rounded text-primary">{{ compressionOptions.format.toUpperCase() }}</span>
+          <span class="px-2 py-1 bg-primary/10 rounded text-primary">L{{ compressionOptions.level }}</span>
           <span v-if="compressionOptions.password" class="px-2 py-1 bg-sky-500/10 text-sky-400 rounded">{{ appStore.t('profiles.badge_encrypted') }}</span>
           <span v-if="compressionOptions.splitArchive" class="px-2 py-1 bg-purple-500/10 text-purple-400 rounded">{{ appStore.t('profiles.badge_split') }}</span>
           <span v-if="compressionOptions.createSolidArchive" class="px-2 py-1 bg-amber-500/10 text-amber-400 rounded">{{ appStore.t('profiles.badge_solid') }}</span>
@@ -677,7 +679,7 @@ const closeVaultPasswordsAfterFocus = () => {
 
       <div class="flex gap-2">
         <button @click="showSaveProfileModal = false" class="flex-1 py-2.5 rounded-xl bg-input border border-subtle text-muted text-xs font-black uppercase tracking-widest hover:text-content transition-all">{{ appStore.t('vault.confirm.cancel') }}</button>
-        <button @click="saveAsNewProfile" class="flex-1 py-2.5 rounded-xl bg-sky-500 text-white text-xs font-black uppercase tracking-widest hover:brightness-110 transition-all">{{ appStore.t('profiles.save_button') }}</button>
+        <button data-testid="confirm-save-compression-profile" @click="saveAsNewProfile" class="flex-1 py-2.5 rounded-xl bg-sky-500 text-white text-xs font-black uppercase tracking-widest hover:brightness-110 transition-all">{{ appStore.t('profiles.save_button') }}</button>
       </div>
     </div>
   </div>
