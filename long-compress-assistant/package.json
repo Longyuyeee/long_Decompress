@@ -91,6 +91,7 @@
     "test:e2e:desktop:tar-telemetry": "node scripts/test-tauri-desktop.mjs --tar-telemetry-only",
     "test:e2e:desktop:legacy-zip-workspace-1416": "node scripts/test-tauri-desktop.mjs --legacy-zip-workspace-1416-only",
     "test:e2e:desktop:legacy-zip-output-1416": "node scripts/test-tauri-desktop.mjs --legacy-zip-output-1416-only",
+    "test:e2e:desktop:legacy-zip-continuity-1416": "node scripts/test-tauri-desktop.mjs --legacy-zip-continuity-1416-only",
     "test:e2e:desktop:responsive-layout": "node scripts/test-tauri-desktop.mjs --responsive-layout-only",
     "test:e2e:desktop:shell-polish": "node scripts/test-tauri-desktop.mjs --shell-polish-only",
     "test:e2e:desktop:volume-root": "node scripts/test-tauri-desktop.mjs --volume-root-only",

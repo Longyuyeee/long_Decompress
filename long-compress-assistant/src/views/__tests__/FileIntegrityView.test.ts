@@ -5,6 +5,7 @@ import FileIntegrityView from '../FileIntegrityView.vue'
 import { useAppStore } from '@/stores/app'
 import { useUIStore } from '@/stores/ui'
 import { useTaskStore } from '@/stores/task'
+import { ARCHIVE_RECOVERY_DRAFT_KEY } from '@/composables/useArchiveRecoveryBatch'
 
 const mocks = vi.hoisted(() => ({
   open: vi.fn(),
@@ -37,6 +38,39 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('FileIntegrityView', () => {
+  it('restores a single repaired result without secrets, preserves its own encoding and requires re-entering its password', async () => {
+    const pinia=createPinia(); setActivePinia(pinia)
+    mocks.diagnoseArchive.mockResolvedValue({filePath:'C:/old.zip',actualFormat:'ZIP',status:'directory_lost',encrypted:true,issues:[],evidence:[],missingVolumes:[],totalFiles:1,totalDirectories:0,canRepair:true})
+    mocks.repairZip.mockResolvedValue({outputPath:'D:/rescued.zip',format:'ZIP',outputEncrypted:true,recoveredFiles:1,recoveredDirectories:0,skippedEntries:[],verified:true})
+    mocks.save.mockResolvedValue('D:/rescued.zip')
+    useAppStore().openArchiveForDiagnosis({path:'C:/old.zip',password:'original secret',zipPasswordEncoding:'cp932',outputPath:'E:/chosen',extractToSubfolder:false})
+    let wrapper=mount(FileIntegrityView,{global:{plugins:[pinia]}}); await flushPromises()
+    await wrapper.get('[data-testid="start-archive-repair"]').trigger('click'); await flushPromises()
+    wrapper.findComponent({name:'ZipPasswordEncodingField'}).vm.$emit('update:modelValue','cp950')
+    await wrapper.get('.archive-password').setValue('changed source secret'); await flushPromises()
+    expect(localStorage.getItem(ARCHIVE_RECOVERY_DRAFT_KEY)).not.toContain('secret')
+    wrapper.unmount()
+    const reopened=createPinia(); setActivePinia(reopened)
+    wrapper=mount(FileIntegrityView,{global:{plugins:[reopened]}}); await flushPromises()
+    expect(wrapper.find('[data-testid="repair-result"]').exists()).toBe(false)
+    await wrapper.get('[data-testid="archive-recovery-restore"]').trigger('click'); await flushPromises()
+    expect(wrapper.find('[data-testid="diagnostic-report"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="repair-output-encryption"]').text()).toContain('CP932')
+    expect(wrapper.findComponent({name:'ZipPasswordEncodingField'}).props('modelValue')).toBe('cp950')
+    expect(wrapper.get('[data-testid="single-repair-result-password"]').element).toHaveProperty('value','')
+    await wrapper.get('[data-testid="queue-recovered-archive"]').trigger('click'); await flushPromises()
+    expect(useTaskStore().tasks).toHaveLength(0)
+    await wrapper.get('[data-testid="single-repair-result-password"]').setValue('original secret')
+    await wrapper.get('[data-testid="browse-repaired-archive"]').trigger('click')
+    expect(useAppStore().takeArchiveBrowserOptions()).toEqual({password:'original secret',zipPasswordEncoding:'cp932'})
+    mocks.invoke.mockRejectedValueOnce(new Error('file moved'))
+    await wrapper.get('[data-testid="queue-recovered-archive"]').trigger('click'); await flushPromises()
+    expect(useTaskStore().tasks).toHaveLength(0)
+    await wrapper.get('[data-testid="queue-recovered-archive"]').trigger('click'); await flushPromises()
+    expect(useTaskStore().tasks[0]).toMatchObject({sourceFiles:['D:/rescued.zip'],zipPasswordEncoding:'cp932',password:'original secret',outputPath:'E:/chosen',extractToSubfolder:false})
+    expect(localStorage.getItem(ARCHIVE_RECOVERY_DRAFT_KEY)).not.toContain('secret')
+    wrapper.unmount()
+  })
   it.each(['cp932','cp936','cp950'] as const)('keeps %s on rescued output even after editing the source password and encoding', async encoding => {
     const pinia=createPinia(); setActivePinia(pinia)
     mocks.diagnoseArchive.mockResolvedValue({filePath:'C:/old.zip',actualFormat:'ZIP',status:'directory_lost',encrypted:true,issues:[],evidence:[],missingVolumes:[],totalFiles:1,totalDirectories:0,canRepair:true})

@@ -23,6 +23,7 @@ const taskStore = useTaskStore()
 const recoveryTaskId = ref('')
 const recoveredDraftId = ref('')
 const recoveredPassword = ref('')
+const recoveredPasswordRequired = ref(false)
 const recoveredZipPasswordEncoding = ref<ZipPasswordEncoding>()
 const archiveZipPasswordEncoding = ref<ZipPasswordEncoding>()
 const sourceFormat = ref<string>()
@@ -240,6 +241,7 @@ const clearResults = () => {
   recoveredDraftId.value = ''
   recoveredPassword.value = ''
   recoveredZipPasswordEncoding.value = undefined
+  recoveredPasswordRequired.value = false
 }
 
 function resumeRecoveryWorkspace() {
@@ -248,6 +250,7 @@ function resumeRecoveryWorkspace() {
   diagnosticSources.value = [...recoveryWorkspace.sourcePaths]
   archivePath.value = diagnosticSources.value[0] || ''
   batchDetailOpen.value = false
+  restoreSingleResult()
 }
 function openArchiveMode() {
   clearResults()
@@ -329,8 +332,10 @@ const repairArchive = async () => {
       ? await tauriCommands.repairRar(repairId.value, archivePath.value, outputPath, archivePassword.value)
       : await tauriCommands.repairZip(repairId.value, source, outputPath, secret, ...zipPasswordEncodingArguments(encoding))
     recoveredPassword.value = repairResult.value.outputEncrypted ? archivePassword.value : ''
+    recoveredPasswordRequired.value = false
     recoveredZipPasswordEncoding.value = repairResult.value.outputEncrypted && repairResult.value.format !== 'RAR' ? encoding ?? 'utf8' : undefined
     recoveredDraftId.value = ''
+    rememberSingleResult()
     if (repairResult.value.partial || repairResult.value.skippedEntries.length) {
       uiStore.showToast('warning', '部分恢复：已恢复可读条目，请核对内容是否齐全', 6000)
     } else { appStore.setSuccess('修复结果已另存并通过完整性校验') }
@@ -433,6 +438,16 @@ watch(() => isDiagnosing.value || isRepairing.value || batchBusy.value ? null : 
 const queueRecoveredArchive = async () => {
   const result = repairResult.value
   if (!result || recoveredDraftId.value) return
+  if (recoveredPasswordRequired.value && !recoveredPassword.value) {
+    appStore.setError('请填写恢复结果密码后再加入解压队列')
+    return
+  }
+  try {
+    for (const path of result.outputFiles?.length ? result.outputFiles : [result.outputPath]) await tauriCommands.invoke('get_file_info', {path})
+  } catch {
+    appStore.setError('恢复结果已移动、删除或无法读取，请定位结果或重新检查并修复原包')
+    return
+  }
   const original = taskStore.tasks.find(task => task.id === recoveryTaskId.value)
   if (original && !await (original.historySaveError ? taskStore.retryHistoryPersistence(original.id) : taskStore.waitForHistoryPersistence(original.id))) {
     appStore.setError('原失败记录尚未保存，请先重试保存历史后再添加。')
@@ -446,11 +461,39 @@ const queueRecoveredArchive = async () => {
     extractToSubfolder: recoveryOptions.value.extractToSubfolder ?? original?.extractToSubfolder ?? true, configurationMode: 'individual',
     recycleSourceAfterExtract: false, password: recoveredPassword.value || undefined,
     zipPasswordEncoding: recoveredZipPasswordEncoding.value,
-    retryOfTaskId: original?.id })
+    retryOfTaskId: original?.id || recoveryTaskId.value || undefined })
   recoveredDraftId.value = id
   if (original) original.retryDraftId = id
+  rememberSingleResult()
   appStore.setSuccess('已加入解压队列，原输出设置已保留；请核对后开始解压。')
 }
+
+function rememberSingleResult() {
+  if (!repairResult.value || diagnosticSources.value.length !== 1) return
+  const original = taskStore.tasks.find(task => task.id === recoveryTaskId.value)
+  recoveryWorkspace.rememberSingle({path:archivePath.value, password:archivePassword.value,
+    zipPasswordEncoding:archiveZipPasswordEncoding.value, sourceFormat:sourceFormat.value,
+    report:diagnosticReport.value || undefined, result:repairResult.value,
+    resultPassword:recoveredPassword.value, resultPasswordRequired:recoveredPasswordRequired.value,
+    resultZipPasswordEncoding:recoveredZipPasswordEncoding.value, queuedId:recoveredDraftId.value || undefined,
+    retryOfTaskId:recoveryTaskId.value || undefined,
+    extractDirectory:recoveryOptions.value.outputPath || original?.outputPath || '',
+    extractToSubfolder:recoveryOptions.value.extractToSubfolder ?? original?.extractToSubfolder ?? true})
+}
+function restoreSingleResult() {
+  if (diagnosticSources.value.length !== 1 || recoveryWorkspace.rows.length !== 1) return
+  const row = recoveryWorkspace.rows[0]!
+  if (!row.result) return
+  archivePath.value = row.path; archivePassword.value = row.password
+  archiveZipPasswordEncoding.value = row.zipPasswordEncoding; sourceFormat.value = row.sourceFormat
+  diagnosticReport.value = null; repairResult.value = row.result
+  recoveredPassword.value = row.resultPassword || ''; recoveredPasswordRequired.value = !!row.resultPasswordRequired
+  recoveredZipPasswordEncoding.value = row.resultZipPasswordEncoding
+  recoveredDraftId.value = row.queuedId || ''; recoveryTaskId.value = row.retryOfTaskId || ''
+  recoveryOptions.value = {outputPath:row.extractDirectory,extractToSubfolder:row.extractToSubfolder}
+}
+restoreSingleResult()
+watch([archivePassword, archiveZipPasswordEncoding, recoveredPassword], rememberSingleResult, {flush:'post'})
 
 onUnmounted(() => {
   void cancelDiagnosis()
@@ -712,6 +755,7 @@ onUnmounted(() => {
             <p class="mt-3 text-xs text-muted break-all">{{ repairResult.outputPath }}</p>
             <p class="mt-3 text-sm text-content">恢复 {{ repairResult.recoveredFiles }} 个文件、{{ repairResult.recoveredDirectories }} 个目录；未恢复说明 {{ repairResult.skippedEntries.length }} 项。</p>
             <p class="repair-password-note mt-3" data-testid="repair-output-encryption"><i :class="repairResult.outputEncrypted ? 'pi pi-lock' : 'pi pi-folder'"></i><span>{{ repairResult.outputEncrypted ? repairResult.format === 'RAR' ? '修复后的 RAR 保留原加密方式与密码。' : `新包已使用 AES-256 加密，密码与恢复时填写的一致（${zipPasswordEncodingLabel(recoveredZipPasswordEncoding ?? 'utf8')}）。` : '新包未设置密码。' }}</span></p>
+            <label v-if="recoveredPasswordRequired && !recoveredDraftId" class="mt-3 block text-xs text-muted">恢复结果密码<input v-model="recoveredPassword" type="password" autocomplete="off" placeholder="重启后需重新填写，不保存密码" class="archive-password mt-1 block w-full max-w-md" data-testid="single-repair-result-password" /></label>
             <p v-if="repairResult.outputFiles && repairResult.outputFiles.length > 1" class="mt-2 text-xs text-muted" data-testid="rar-repair-volumes">已保存 {{ repairResult.outputFiles.length }} 个数据卷，请整组保留；加入队列时会自动从首卷解压。</p>
             <p v-if="repairResult.directoryRebuilt" class="mt-2 text-xs text-amber-600">目录信息已重建，原包总条目数无法确认，请核对内容是否齐全。</p>
             <ArchiveRecoveryDetails class="mt-3" :recovered-entries="repairResult.recoveredEntries" :skipped-entries="repairResult.skippedEntries" />

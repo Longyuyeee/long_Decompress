@@ -16,6 +16,7 @@ export interface ArchiveRecoveryRow {
   report?: ArchiveDiagnosticReport; result?: ZipRepairResult; resultPassword?: string; queuedId?: string; error?: string
   needsRecheck?: boolean; resultPasswordRequired?: boolean
   zipPasswordEncoding?: ZipPasswordEncoding; resultZipPasswordEncoding?: ZipPasswordEncoding; sourceFormat?: string
+  retryOfTaskId?: string; extractToSubfolder?: boolean
 }
 export const ARCHIVE_RECOVERY_DRAFT_KEY = 'long-archive-recovery-workspace-v1'
 interface RecoverySnapshot { version: 1; paths: string[]; rootDirectory: string; rows: ArchiveRecoveryRow[] }
@@ -68,6 +69,12 @@ export const useArchiveRecoveryStore = defineStore('archiveRecovery', () => {
     if (busy.value || preparing.value) return
     for (const row of rows.value) { row.password = ''; row.resultPassword = '' }
     rows.value = []; sourcePaths.value = []; rootDirectory.value = ''; persist()
+  }
+  function rememberSingle(patch: Pick<ArchiveRecoveryRow, 'path' | 'result'> & Partial<ArchiveRecoveryRow>) {
+    if (busy.value || preparing.value || !patch.result) return
+    const previous = rows.value.length === 1 && rows.value[0]?.path === patch.path ? rows.value[0] : undefined
+    sourcePaths.value = [patch.path]
+    rows.value = [{id:generateId(),selectedMembers:1,selected:true,expanded:true,password:'',outputDirectory:'',extractDirectory:'',state:'repaired',...previous,...patch}]
   }
   const selected = computed(() => rows.value.filter(row => row.selected))
   const repairable = computed(() => selected.value.filter(row => row.report?.canRepair && !row.needsRecheck && !row.result))
@@ -164,7 +171,7 @@ export const useArchiveRecoveryStore = defineStore('archiveRecovery', () => {
       || (Object.hasOwn(patch,'zipPasswordEncoding') && patch.zipPasswordEncoding !== row.zipPasswordEncoding)) { row.report = undefined; row.error = ''; row.state = row.result ? 'repaired' : 'pending' }
     Object.assign(row, patch)
   }
-  return {rows,busy,preparing,selected,repairable,queueable,completed,sourcePaths,rootDirectory,saveError,recoveryCount,restore,discardPrevious,clear,load,check,repair,stop,queue,update,forgetResult}
+  return {rows,busy,preparing,selected,repairable,queueable,completed,sourcePaths,rootDirectory,saveError,recoveryCount,restore,discardPrevious,clear,rememberSingle,load,check,repair,stop,queue,update,forgetResult}
 })
 export function useArchiveRecoveryBatch() {
   const store = useArchiveRecoveryStore()
