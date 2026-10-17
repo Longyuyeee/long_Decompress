@@ -1,0 +1,35 @@
+{
+  "verifiedAt": "2026-10-17T20:26:34.266Z",
+  "tag": "v1.4.18",
+  "url": "https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.18",
+  "publishedAt": "2026-10-17T20:25:18Z",
+  "assets": [
+    {
+      "name": "Long-Decompress_1.4.18_x64-setup.exe",
+      "bytes": 20229064,
+      "sha256": "cdba047ce1f48cf9b0009071886667aba18116830370c04717b8a69f27dc3521",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.4.18/Long-Decompress_1.4.18_x64-setup.exe"
+    },
+    {
+      "name": "Long-Decompress_1.4.18_x64-setup.nsis.zip",
+      "bytes": 20229224,
+      "sha256": "b14aa26c8e15e993e9329c62d73d664a554b8fc8ee8ab6f32ffa3b64e50f6811",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.4.18/Long-Decompress_1.4.18_x64-setup.nsis.zip"
+    },
+    {
+      "name": "Long-Decompress_1.4.18_x64-setup.nsis.zip.sig",
+      "bytes": 428,
+      "sha256": "7ce600787525e4ad0a1fcef0c3a8a6cc140e2a93a438264f8a0480ce99048637",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.4.18/Long-Decompress_1.4.18_x64-setup.nsis.zip.sig"
+    },
+    {
+      "name": "latest.json",
+      "bytes": 2327,
+      "sha256": "802416c30e32ceeaede0b46c0fcce5786b130dbaaaf37b1f3a4a8c5125607396",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.4.18/latest.json"
+    }
+  ],
+  "updaterExeMatchesInstaller": true,
+  "signatureMatchesManifest": true,
+  "chineseNotesMatch": true
+}

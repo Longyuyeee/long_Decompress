@@ -28,11 +28,9 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 详细格式能力见 [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md)；RAR 创建依赖用户安装的 WinRAR，视频暂不保证支持 Windows N。功能介绍和快速上手见 [项目首页](../README.md)。
 
-当前稳定版为 **1.4.17**：补齐好压原生 7Z 论坛内容/文件名密码分卷，任意成员归组、浏览、解压、检查与转换共用完整卷组；缺卷/截断/头损坏在密码前说明，补回继续且保留原失败及独立目录。普通 7Z 浏览预检与窄窗长错误说明同步修正。暂不承诺好压 AES ZIP 论坛卷，保留现有 ZipCrypto 支持。见[本版审计](docs/SPECIAL_VOLUME_COMPATIBILITY_1.4.17.md)、[封板记录](docs/SPECIAL_VOLUME_FREEZE_1.4.17.md)、[中文更新说明](docs/RELEASE_NOTES_1.4.17.md)及[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.17)。安装器、签名更新 ZIP/签名和中文更新清单已发布并核对。
+当前稳定版为 **1.4.18**：补齐 ZIPX（XZ）标准多卷的任意成员读取、无密码/AES-256/ZipCrypto 创建、改密/重新分卷/合卷及缺卷补回；修正卷型保存、窄窗控件和文件浏览器中卷双击入口。产品输出已用 WinRAR 7.23 原名独立回解，本机 Bandizip Beta 解码异常及 7-Zip 卷名限制明确保留，原数字卷默认不变。见[本版审计](docs/STANDARD_ZIPX_1.4.18.md)、[封板记录](docs/STANDARD_ZIPX_FREEZE_1.4.18.md)、[中文更新说明](docs/RELEASE_NOTES_1.4.18.md)及[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.18)。安装器、签名更新 ZIP/签名及中文更新清单均已发布并核对。
 
 ## 本地开发
-
-v1.4.18 功能已封板（`688f1fc`），补齐 ZIPX 标准多卷、密码创建及改密/重新分卷/合卷与缺卷补回，窄窗控件和中卷双击入口完成实际页面检查；当前接续候选安装器及正式发布，尚不将候选写成公开稳定版。见[本版审计](docs/STANDARD_ZIPX_1.4.18.md)、[封板记录](docs/STANDARD_ZIPX_FREEZE_1.4.18.md)及[中文更新说明](docs/RELEASE_NOTES_1.4.18.md)。
 
 Windows 构建需要受支持的 Node.js（20.19+、22.12+ 或 24）、npm、稳定版 Rust、MSVC C++ 构建工具及 WebView2。
 

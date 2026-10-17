@@ -1,6 +1,6 @@
 # v1.4.18 ZIPX 标准多卷实施审计
 
-基线 `a7ce1f9`，公开版 v1.4.17；分支 `codex/v1.4.18-standard-zipx`。本版按已批准路线补 `.zx01/…/.zipx` 标准多卷，不重复计算已有 ZIPX 数字卷，不扩张到未实现的 ZIPX 专有方法。
+基线 `a7ce1f9`（启动时公开版 v1.4.17），分支 `codex/v1.4.18-standard-zipx`。本版已封板并[正式发布 v1.4.18](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.18)，按已批准路线补 `.zx01/…/.zipx` 标准多卷，不重复计算已有 ZIPX 数字卷，不扩张到未实现的 ZIPX 专有方法。精确候选、标签及正式资产见[封板记录](STANDARD_ZIPX_FREEZE_1.4.18.md)。
 
 ## 实际代码与范围
 
