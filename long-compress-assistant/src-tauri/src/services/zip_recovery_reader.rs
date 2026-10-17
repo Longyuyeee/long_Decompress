@@ -1,6 +1,7 @@
 //! A read-only ZIP view rebuilt from declared local-record boundaries.
 //! Payloads stay in the source; only a synthetic directory is held in memory.
 use super::{extraction_transaction, numeric_volume_reader::ZipInputReader};
+use super::zip_recovery_outcome::{RecoveryEntryResult, RecoveryStatus};
 use anyhow::{ensure, Context, Result};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{io::{self, Read, Seek, SeekFrom}, path::Path};
@@ -109,6 +110,7 @@ pub(crate) struct RecoveryReader {
     pub encrypted: bool,
     pub directory_rebuilt: bool,
     pub notes: Vec<String>,
+    pub entry_results: Vec<RecoveryEntryResult>,
 }
 fn word(bytes: &[u8], at: usize) -> u16 { u16::from_le_bytes(bytes[at..at + 2].try_into().unwrap()) }
 fn dword(bytes: &[u8], at: usize) -> u32 { u32::from_le_bytes(bytes[at..at + 4].try_into().unwrap()) }
@@ -261,7 +263,8 @@ impl RecoveryReader {
             names.push(raw.name().to_string());
             expanded_bytes = expanded_bytes.saturating_add(raw.size());
         }
-        Ok(Self { archive, names, expanded_bytes, encrypted, directory_rebuilt, notes })
+        let entry_results = notes.iter().map(|reason| RecoveryEntryResult::new(None, RecoveryStatus::Unknown, reason.clone())).collect();
+        Ok(Self { archive, names, expanded_bytes, encrypted, directory_rebuilt, notes, entry_results })
     }
     pub fn open(path: &Path, cancelled: &AtomicBool) -> Result<Self> {
         if super::split_archive_detector::SplitArchiveDetector::detect_split_archive(path)?
@@ -270,10 +273,12 @@ impl RecoveryReader {
             let mut partial = super::standard_zip_reader::StandardZipReader::try_open_recovery(path, cancelled)?
                 .context("此卷型暂不提供缺卷救援，请补齐原始分卷后重试")?;
             let notes = std::mem::take(&mut partial.recovery_notes);
+            let entries = std::mem::take(&mut partial.recovery_entries);
             let encrypted = partial.recovery_encrypted;
             let input = RecoveryZipInput::from_source(ZipInputReader::StandardZip(partial))?;
             let mut result = Self::from_archive(zip_aes::ZipArchive::new(input)?, false, notes, cancelled)?;
             result.encrypted |= encrypted;
+            result.entry_results = entries;
             return Ok(result);
         }
         if let Ok(input) = RecoveryZipInput::original(path) {
@@ -289,26 +294,34 @@ impl RecoveryReader {
         let mut seen_names = std::collections::HashSet::new();
         let mut metadata_bytes = 0usize;
         let mut notes = Vec::new();
+        let mut unknown_entries = Vec::new();
+        macro_rules! unknown {
+            ($name:expr, $reason:expr) => {{
+                let reason = $reason;
+                notes.push(reason.clone());
+                unknown_entries.push(RecoveryEntryResult::new($name, RecoveryStatus::Unknown, reason));
+            }};
+        }
         let mut observed_encrypted = false;
         while position < length {
             ensure!(!cancelled.load(Ordering::SeqCst), "ZIP recovery cancelled");
             reader.seek(SeekFrom::Start(position))?;
-            if length - position < 4 { notes.push(format!("尾部在偏移 {position} 被截断，后续内容无法确认")); break; }
+            if length - position < 4 { unknown!(None, format!("尾部在偏移 {position} 被截断，后续内容无法确认")); break; }
             let mut signature = [0; 4];
             reader.read_exact(&mut signature)?;
             // APPNOTE spanning marker belongs to the volume set, not a file.
             if position == 0 && &signature == b"PK\x07\x08" { position = 4; continue; }
             if &signature == b"PK\x01\x02" { break; }
-            if &signature != b"PK\x03\x04" { notes.push(format!("偏移 {position} 不是可信本地文件头，未扫描后续内容")); break; }
+            if &signature != b"PK\x03\x04" { unknown!(None, format!("偏移 {position} 不是可信本地文件头，未扫描后续内容")); break; }
             ensure!(count < extraction_transaction::MAX_EXTRACTED_ENTRIES, "ZIP 可恢复条目数超过读取上限");
-            if length - position < 30 { notes.push(format!("偏移 {position} 的文件头被截断")); break; }
+            if length - position < 30 { unknown!(None, format!("偏移 {position} 的文件头被截断")); break; }
             let mut header = [0; 30];
             header[..4].copy_from_slice(&signature);
             reader.read_exact(&mut header[4..])?;
             let name_length = word(&header, 26) as usize;
             let extra_length = word(&header, 28) as usize;
             let header_end = position.checked_add(30 + name_length as u64 + extra_length as u64).context("ZIP 本地头大小溢出")?;
-            if header_end > length { notes.push(format!("偏移 {position} 的名称或扩展信息被截断")); break; }
+            if header_end > length { unknown!(None, format!("偏移 {position} 的名称或扩展信息被截断")); break; }
             metadata_bytes = metadata_bytes.checked_add(30 + name_length + extra_length).context("ZIP 元数据大小溢出")?;
             ensure!(metadata_bytes <= 256 * 1024 * 1024, "ZIP 本地元数据超过读取上限");
             let mut name = vec![0; name_length];
@@ -317,7 +330,7 @@ impl RecoveryReader {
             let flags = word(&header, 6);
             observed_encrypted |= flags & 1 != 0;
             if flags & (0x40 | 0x2000) != 0 {
-                notes.push(format!("{label}: 当前不支持此加密或隐藏元数据方式，未扫描后续内容")); break;
+                unknown!(Some(label.to_string()), format!("{label}: 当前不支持此加密或隐藏元数据方式，未扫描后续内容")); break;
             }
             let mut extra = vec![0; extra_length];
             reader.read_exact(&mut extra)?;
@@ -350,37 +363,37 @@ impl RecoveryReader {
             })();
             let (mut expanded, mut compressed) = match sizes {
                 Ok(sizes) => sizes,
-                Err(error) => { notes.push(format!("{label}: {error}；未扫描后续内容")); break; }
+                Err(error) => { unknown!(Some(label.to_string()), format!("{label}: {error}；未扫描后续内容")); break; }
             };
             let mut decoded_crc = None;
             if flags & 8 != 0 && compressed == 0 && !name.ends_with(b"/") {
                 if flags & 1 == 0 && word(&header, 8) == 8 {
                     match deflate_boundary(&mut reader, header_end, cancelled) {
                         Ok((input, output, crc)) => { compressed = input; expanded = output; decoded_crc = Some(crc); }
-                        Err(error) => { notes.push(format!("{label}: {error}；未扫描后续内容")); break; }
+                        Err(error) => { unknown!(Some(label.to_string()), format!("{label}: {error}；未扫描后续内容")); break; }
                     }
                 } else {
-                    notes.push(format!("{label}: 数据描述符缺少可确定的文件边界，未扫描后续内容")); break;
+                    unknown!(Some(label.to_string()), format!("{label}: 数据描述符缺少可确定的文件边界，未扫描后续内容")); break;
                 }
             }
-            let Some(mut end) = header_end.checked_add(compressed) else { notes.push(format!("{label}: 本地条目范围溢出，未扫描后续内容")); break; };
-            if end > length { notes.push(format!("{label}: 内容被截断，未恢复此条目和后续内容")); break; }
+            let Some(mut end) = header_end.checked_add(compressed) else { unknown!(Some(label.to_string()), format!("{label}: 本地条目范围溢出，未扫描后续内容")); break; };
+            if end > length { unknown!(Some(label.to_string()), format!("{label}: 内容被截断，未恢复此条目和后续内容")); break; }
             if flags & 8 != 0 {
                 let known_crc = decoded_crc.or_else(|| (dword(&header, 14) != 0).then(|| dword(&header, 14)));
                 let zip64 = dword(&header, 18) == u32::MAX || dword(&header, 22) == u32::MAX;
                 let expected_expanded = (expanded != 0 || decoded_crc.is_some() || name.ends_with(b"/")).then_some(expanded);
                 match descriptor(&mut reader, end, compressed, expected_expanded, known_crc, zip64) {
                     Ok((next, size, crc)) => { end = next; expanded = size; put_dword(&mut header, 14, crc); }
-                    Err(error) => { notes.push(format!("{label}: {error}；未扫描后续内容")); break; }
+                    Err(error) => { unknown!(Some(label.to_string()), format!("{label}: {error}；未扫描后续内容")); break; }
                 }
             }
             if !seen_names.insert(name.clone()) {
-                notes.push(format!("{label}: 包内名称重复，未恢复此条目"));
+                unknown!(Some(label.to_string()), format!("{label}: 包内名称重复，未恢复此条目"));
                 position = end;
                 continue;
             }
             if let Err(error) = append_central(&mut directory, &header, &name, &extra, position, expanded, compressed) {
-                notes.push(format!("{label}: {error}；未扫描后续内容")); break;
+                unknown!(Some(label.to_string()), format!("{label}: {error}；未扫描后续内容")); break;
             }
             count += 1;
             position = end;
@@ -390,6 +403,10 @@ impl RecoveryReader {
         let input = RecoveryZipInput { source: reader, prefix_len: position, directory, position: 0 };
         let archive = zip_aes::ZipArchive::new(input).context("无法读取具有明确边界的 ZIP 条目")?;
         let mut result = Self::from_archive(archive, true, notes, cancelled)?;
+        // With no complete directory the total file list is not knowable, even
+        // when every bounded local record was read successfully.
+        unknown_entries.push(RecoveryEntryResult::new(None, RecoveryStatus::Unknown, "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"));
+        result.entry_results = unknown_entries;
         result.encrypted |= observed_encrypted;
         Ok(result)
     }

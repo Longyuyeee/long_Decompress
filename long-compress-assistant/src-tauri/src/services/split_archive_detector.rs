@@ -169,6 +169,12 @@ impl SplitArchiveDetector {
         Regex::new(r"(?i)^(?:.*\.)?haozip\d{2,5}\.zip$").unwrap().is_match(name)
     }
 
+    pub(crate) fn forum_zip_disk(path: &Path) -> Option<usize> {
+        let captures = Regex::new(r"(?i)^(?:.*\.)?haozip(\d{2,5})\.zip$").unwrap()
+            .captures(path.file_name()?.to_str()?)?;
+        captures[1].parse::<usize>().ok()?.checked_sub(1)
+    }
+
     pub(crate) fn is_haozip_seven_zip(path: &Path) -> bool {
         path.file_name().and_then(|name| name.to_str()).is_some_and(|name|
             Regex::new(r"(?i)^(?:.*\.)?haozip\d{2,5}\.7z$").unwrap().is_match(name))

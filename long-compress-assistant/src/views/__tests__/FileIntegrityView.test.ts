@@ -120,6 +120,18 @@ describe('FileIntegrityView', () => {
     expect(useTaskStore().tasks[0]).toMatchObject({sourceFiles:['D:/rescued.zip'],password:'original password',outputPath:'D:/chosen',extractToSubfolder:false})
     wrapper.unmount()
   })
+  it('counts known unrecovered files separately from unknown directory contents and general notes', async () => {
+    const pinia=createPinia(); setActivePinia(pinia)
+    mocks.diagnoseArchive.mockResolvedValue({filePath:'C:/lost.zip',actualFormat:'ZIP',status:'directory_lost',encrypted:false,issues:[],evidence:[],missingVolumes:[],totalFiles:1,totalDirectories:0,canRepair:true})
+    mocks.repairZip.mockResolvedValue({outputPath:'D:/rescued.zip',recoveredFiles:1,recoveredDirectories:0,skippedEntries:['general note','file note'],verified:true,partial:true,directoryRebuilt:true,outputEncrypted:false,
+      entryResults:[{name:'good.txt',status:'recovered',reason:'verified'},{name:'unknown.txt',status:'unknown',reason:'unknown boundary'},{name:null,status:'unknown',reason:'unknown directory'}]})
+    mocks.save.mockResolvedValue('D:/rescued.zip');useAppStore().openArchiveForDiagnosis({path:'C:/lost.zip'})
+    const wrapper=mount(FileIntegrityView,{global:{plugins:[pinia]}});await flushPromises()
+    await wrapper.get('[data-testid="start-archive-repair"]').trigger('click');await flushPromises()
+    expect(wrapper.get('[data-testid="repair-result-summary"]').text()).toContain('未恢复 1 个已知文件，另有内容无法确认')
+    expect(wrapper.get('[data-testid="recovery-outcome-unknown"]').text()).toContain('unknown.txt')
+    wrapper.unmount()
+  })
   it('creates recovery volumes for a healthy RAR group in a compact dialog', async () => {
     const pinia=createPinia(); setActivePinia(pinia)
     mocks.diagnoseArchive.mockResolvedValue({filePath:'C:/parts.part1.rar',fileSize:8000,actualFormat:'RAR',status:'healthy',encrypted:true,splitArchive:true,volumesFound:3,missingVolumes:[],totalFiles:1,totalDirectories:0,totalUncompressedSize:100,integrityTested:true,canRepair:false,recoverability:'healthy',issues:[],evidence:[]})
