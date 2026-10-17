@@ -473,7 +473,6 @@ export const useCompressionStore = defineStore('compression', () => {
       }
       if (patch.zipMethod !== undefined && settings.format === 'zip') settings.zipMethod = patch.zipMethod
       if (patch.zipPasswordEncoding !== undefined && ['zip','zipx'].includes(settings.format)) settings.zipPasswordEncoding = patch.zipPasswordEncoding
-      if (settings.format === 'zipx') settings.zipSplitMode = 'numeric'
       if (patch.level !== undefined) settings.level = patch.level
       if (patch.rarRecoveryPercent !== undefined) settings.rarRecoveryPercent = patch.rarRecoveryPercent
       if (patch.rarRecoveryVolumes !== undefined) settings.rarRecoveryVolumes = patch.rarRecoveryVolumes

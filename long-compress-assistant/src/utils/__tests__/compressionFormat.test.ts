@@ -105,6 +105,9 @@ describe('compression format helpers', () => {
   })
 
   it('recognizes common split-volume names without treating documents as archives', () => {
+    expect(isDecompressArchivePath('C:/downloads/资料.ZX02')).toBe(true)
+    expect(isDecompressArchivePath('C:/downloads/资料.zx100')).toBe(true)
+    expect(isDecompressArchivePath('C:/documents/资料.zxnote')).toBe(false)
     expect(isPotentialSplitArchivePath('C:/downloads/project.zip.001')).toBe(true)
     expect(isPotentialSplitArchivePath('C:/downloads/project.7z.005')).toBe(true)
     expect(isPotentialSplitArchivePath('C:/downloads/project.z01')).toBe(true)

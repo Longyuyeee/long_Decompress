@@ -2,6 +2,17 @@ import { describe, expect, it } from 'vitest'
 import { archiveGroupKey, archiveSourceFormat, archiveSourceStem } from '../archiveSource'
 import { isPotentialSplitArchivePath } from '../compressionFormat'
 
+describe('standard ZIPX sources', () => {
+  it.each(['资料.zx01', '资料.ZX02', '资料.zx100', '资料.zipx'])('uses a clean name and distinct group for %s', name => {
+    expect(archiveGroupKey(`F:/下载/${name}`)).toBe('f:/下载/资料.zipx')
+    expect(archiveSourceFormat(name)).toBe('zipx')
+    expect(archiveSourceStem(name)).toBe('资料')
+    expect(archiveGroupKey(name)).not.toBe(archiveGroupKey('资料.zip'))
+    expect(archiveGroupKey(name)).not.toBe(archiveGroupKey('资料.zipx.001'))
+    if (!name.endsWith('.zipx')) expect(isPotentialSplitArchivePath(name)).toBe(true)
+  })
+})
+
 describe('HaoZip forum ZIP sources', () => {
   it('normalizes any member without merging a same-basename ordinary ZIP', () => {
     const first = 'F:\\下载\\资料.haozip01.zip'

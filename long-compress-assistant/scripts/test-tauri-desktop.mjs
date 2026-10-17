@@ -51,6 +51,7 @@ import { runLegacyZipOutput1416Gate } from './legacy-zip-output-1416-gate.mjs'
 import { runLegacyZipContinuity1416Gate } from './legacy-zip-continuity-1416-gate.mjs'
 import { runSevenZipBrowser1417Gate } from './seven-zip-browser-1417-gate.mjs'
 import { runHaozipForum7z1417Gate } from './haozip-forum-7z-1417-gate.mjs'
+import { runStandardZipx1418Gate } from './standard-zipx-1418-gate.mjs'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -4904,6 +4905,9 @@ try {
     await runPartialZip1413Gate({ driver, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, forwardContextAction })
   } else if (process.argv.includes('--lzip-only')) {
     await runLzip1412Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, root })
+    completedSuccessfully = true
+  } else if (process.argv.includes('--standard-zipx-1418-only')) {
+    await runStandardZipx1418Gate({ driver, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, waitForElement, fixtureDirectory, artifactDirectory, application, root })
     completedSuccessfully = true
   } else if (process.argv.includes('--haozip-forum-7z-1417-only')) {
     await runHaozipForum7z1417Gate({ driver, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, waitForElement, fixtureDirectory, artifactDirectory, application, bundledSevenZip, root })

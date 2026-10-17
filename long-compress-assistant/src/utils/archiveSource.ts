@@ -20,6 +20,7 @@ export function archiveGroupKey(path: string): string {
     .replace(/(^|[/.])haozip\d{2,5}\.(zip|7z)$/, '$1haozip01.$2')
     .replace(/\.part\d+\.rar$/, '.rar')
     .replace(/\.r\d{2,3}$/, '.rar')
+    .replace(/\.zx\d{2,5}$/, '.zipx')
     .replace(/\.z\d{2,5}$/, '.zip')
     .replace(/\.\d{3,}$/, '.001')
     .replace(/\.part\d+$/, '.part1')
@@ -27,6 +28,7 @@ export function archiveGroupKey(path: string): string {
 
 export function archiveSourceFormat(path: string): string | undefined {
   const name = path.toLowerCase().replace(/\.\d{3,}$|\.part\d+$/, '')
+  if (/\.zx\d{2,5}$/.test(name)) return 'zipx'
   if (/\.z\d{2,5}$/.test(name)) return 'zip'
   if (/\.r\d{2,3}$|\.part\d+\.rar$/.test(name)) return 'rar'
   const formats = FORMAT_CAPABILITIES.flatMap(format => format.extensions.map(extension => ({ extension, format: format.format })))
@@ -39,7 +41,7 @@ export function archiveSourceStem(path: string): string {
   let name = path.split(/[\\/]/).pop() || 'archive'
   name = name.replace(/^(.*\.)?haozip\d{2,5}\.(zip|7z)$/i,
     (_, prefix, extension) => (prefix || 'archive.') + extension)
-  name = name.replace(/\.part\d+\.rar$/i, '.rar').replace(/\.r\d{2,3}$/i, '.rar').replace(/\.z\d{2,5}$/i, '.zip')
+  name = name.replace(/\.part\d+\.rar$/i, '.rar').replace(/\.r\d{2,3}$/i, '.rar').replace(/\.zx\d{2,5}$/i, '.zipx').replace(/\.z\d{2,5}$/i, '.zip')
     .replace(/\.\d{3,}$|\.part\d+$/i, '')
   const extensions = [...FORMAT_CAPABILITIES.flatMap(format => format.extensions), ...EXTRACT_ONLY_FORMATS.flatMap(format => format.extensions)].sort((a, b) => b.length - a.length)
   const extension = extensions.find(extension => name.toLowerCase().endsWith('.' + extension))

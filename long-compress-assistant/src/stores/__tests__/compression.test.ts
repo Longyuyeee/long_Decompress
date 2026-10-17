@@ -24,6 +24,14 @@ const mockFile = (name: string, size: number): FileObject => ({
 })
 
 describe('Compression Store', () => {
+  it('keeps a selected standard volume type when changing ZIP to ZIPX in batch', () => {
+    const store = useCompressionStore(), file = mockFile('share.bin', 1700000)
+    store.addFile(file)
+    store.updateFileSettings(file.path, { ...defaultOptions(), splitArchive: true, zipSplitMode: 'standard' })
+    store.applyBatchConfiguration([file.path], { format: 'zipx' })
+    expect(store.selectedFiles[0].settings).toMatchObject({ format: 'zipx', splitArchive: true, zipSplitMode: 'standard' })
+    expect(store.globalSettings.zipSplitMode).toBeUndefined()
+  })
   it('only applies target encodings to ZIP/ZIPX and does not detach inherited 7Z drafts', () => {
     const store=useCompressionStore(); store.globalSettings.format='7z'
     const zip=mockFile('zip.txt',10), zipx=mockFile('zipx.txt',10), other=mockFile('other.txt',10)

@@ -1,0 +1,298 @@
+{
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
+  "applicationSha256": "648baf3956a74f0ea4365061f84c86ffe95a3968794f71cc2458849bcb86ca64",
+  "cases": [
+    {
+      "mode": "none",
+      "records": [
+        {
+          "member": "真实原包.zx01",
+          "grouped": true,
+          "browsed": true,
+          "wrongRejected": false,
+          "extracted": true,
+          "integrityTested": true,
+          "convertedIndependently": true,
+          "cleanOutputName": true
+        },
+        {
+          "member": "真实原包.zx02",
+          "grouped": true,
+          "browsed": true,
+          "wrongRejected": false,
+          "extracted": true,
+          "integrityTested": true,
+          "convertedIndependently": true,
+          "cleanOutputName": true
+        },
+        {
+          "member": "真实原包.zipx",
+          "grouped": true,
+          "browsed": true,
+          "wrongRejected": false,
+          "extracted": true,
+          "integrityTested": true,
+          "convertedIndependently": true,
+          "cleanOutputName": true
+        }
+      ],
+      "faults": [
+        {
+          "fault": "missing-first",
+          "supplied": "none",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zx01"
+        },
+        {
+          "fault": "missing-first",
+          "supplied": "wrong",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zx01"
+        },
+        {
+          "fault": "missing-first",
+          "supplied": "correct",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zx01"
+        },
+        {
+          "fault": "missing-middle",
+          "supplied": "none",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zx02"
+        },
+        {
+          "fault": "missing-middle",
+          "supplied": "wrong",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zx02"
+        },
+        {
+          "fault": "missing-middle",
+          "supplied": "correct",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zx02"
+        },
+        {
+          "fault": "missing-tail",
+          "supplied": "none",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zipx"
+        },
+        {
+          "fault": "missing-tail",
+          "supplied": "wrong",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zipx"
+        },
+        {
+          "fault": "missing-tail",
+          "supplied": "correct",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zipx"
+        },
+        {
+          "fault": "truncated-tail",
+          "supplied": "none",
+          "finalReason": "[archive-inspection:damaged] ZIP 终卷目录损坏或不完整"
+        },
+        {
+          "fault": "truncated-tail",
+          "supplied": "wrong",
+          "finalReason": "[archive-inspection:damaged] ZIP 终卷目录损坏或不完整"
+        },
+        {
+          "fault": "truncated-tail",
+          "supplied": "correct",
+          "finalReason": "[archive-inspection:damaged] ZIP 终卷目录损坏或不完整"
+        }
+      ],
+      "volumes": [
+        {
+          "name": "真实原包.zx01",
+          "sha256": "f39398781681a444fa324ea494edeaf2a67b63f2d33a320d7b893df8059fdf00"
+        },
+        {
+          "name": "真实原包.zx02",
+          "sha256": "411def7b97714b7195c1abaf97e748e01cd907198c20ff42ed21ba28b8fdde25"
+        },
+        {
+          "name": "真实原包.zipx",
+          "sha256": "5d9f7469e40124cd1a0b42edbfa0c686f932c2ba1c1cb000c7c22527203db6d3"
+        }
+      ]
+    },
+    {
+      "mode": "password",
+      "records": [
+        {
+          "member": "真实原包.zx01",
+          "grouped": true,
+          "browsed": true,
+          "wrongRejected": true,
+          "extracted": true,
+          "integrityTested": true,
+          "convertedIndependently": true,
+          "cleanOutputName": true
+        },
+        {
+          "member": "真实原包.zx02",
+          "grouped": true,
+          "browsed": true,
+          "wrongRejected": true,
+          "extracted": true,
+          "integrityTested": true,
+          "convertedIndependently": true,
+          "cleanOutputName": true
+        },
+        {
+          "member": "真实原包.zipx",
+          "grouped": true,
+          "browsed": true,
+          "wrongRejected": true,
+          "extracted": true,
+          "integrityTested": true,
+          "convertedIndependently": true,
+          "cleanOutputName": true
+        }
+      ],
+      "faults": [
+        {
+          "fault": "missing-first",
+          "supplied": "none",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zx01"
+        },
+        {
+          "fault": "missing-first",
+          "supplied": "wrong",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zx01"
+        },
+        {
+          "fault": "missing-first",
+          "supplied": "correct",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zx01"
+        },
+        {
+          "fault": "missing-middle",
+          "supplied": "none",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zx02"
+        },
+        {
+          "fault": "missing-middle",
+          "supplied": "wrong",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zx02"
+        },
+        {
+          "fault": "missing-middle",
+          "supplied": "correct",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zx02"
+        },
+        {
+          "fault": "missing-tail",
+          "supplied": "none",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zipx"
+        },
+        {
+          "fault": "missing-tail",
+          "supplied": "wrong",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zipx"
+        },
+        {
+          "fault": "missing-tail",
+          "supplied": "correct",
+          "finalReason": "[archive-inspection:incomplete] 缺少分卷：真实原包.zipx"
+        },
+        {
+          "fault": "truncated-tail",
+          "supplied": "none",
+          "finalReason": "[archive-inspection:damaged] ZIP 终卷目录损坏或不完整"
+        },
+        {
+          "fault": "truncated-tail",
+          "supplied": "wrong",
+          "finalReason": "[archive-inspection:damaged] ZIP 终卷目录损坏或不完整"
+        },
+        {
+          "fault": "truncated-tail",
+          "supplied": "correct",
+          "finalReason": "[archive-inspection:damaged] ZIP 终卷目录损坏或不完整"
+        }
+      ],
+      "volumes": [
+        {
+          "name": "真实原包.zx01",
+          "sha256": "ca256f65c462e49a67686fe53cdcc267b97ab5953b1ef0c2b6ec375da8792958"
+        },
+        {
+          "name": "真实原包.zx02",
+          "sha256": "06710822c8a95781bd472393849223cd88bd5da47d2c5af9d03ee114f22ca9b0"
+        },
+        {
+          "name": "真实原包.zipx",
+          "sha256": "cd3b29e89126e5acadfa95b21cb9949dd8425b7c5b323ef0196741f7b7650409"
+        }
+      ]
+    },
+    {
+      "creation": "none",
+      "files": [
+        {
+          "bytes": 39716,
+          "path": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-fCHSkb\\收到的ZIPX标准卷\\发给朋友-none.zipx",
+          "sha256": "7b1621365144e6d5fffd18f70d6e762696f0b5dff8bd2e5b04a513171aa7e46a"
+        },
+        {
+          "bytes": 65536,
+          "path": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-fCHSkb\\收到的ZIPX标准卷\\发给朋友-none.zx01",
+          "sha256": "cdf9f108333f2fab988c295f97b10ac73d01f9617fe5c3119345dda9cd2a84e5"
+        },
+        {
+          "bytes": 65536,
+          "path": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-fCHSkb\\收到的ZIPX标准卷\\发给朋友-none.zx02",
+          "sha256": "0dd355618c71eaede9c55c1583e364f6beb0de1969a0553c1d4baf75bc5c8afd"
+        }
+      ],
+      "independentReadback": true,
+      "applicationReadback": true
+    },
+    {
+      "creation": "aes256",
+      "files": [
+        {
+          "bytes": 39816,
+          "path": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-fCHSkb\\收到的ZIPX标准卷\\发给朋友-aes256.zipx",
+          "sha256": "9873d6c585b75a0334c5e2b872854f01301e71573600712380cd4372b6aa7097"
+        },
+        {
+          "bytes": 65536,
+          "path": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-fCHSkb\\收到的ZIPX标准卷\\发给朋友-aes256.zx01",
+          "sha256": "60341801ca4717a57ceac9e7fee13920da5f8ff5d197e06abb1112002f01f329"
+        },
+        {
+          "bytes": 65536,
+          "path": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-fCHSkb\\收到的ZIPX标准卷\\发给朋友-aes256.zx02",
+          "sha256": "73a07b6610d47939c255a6a6a4d85d762fdb954e226e148f81c507b755ad2404"
+        }
+      ],
+      "independentReadback": true,
+      "applicationReadback": true
+    },
+    {
+      "creation": "zipcrypto",
+      "files": [
+        {
+          "bytes": 39772,
+          "path": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-fCHSkb\\收到的ZIPX标准卷\\发给朋友-zipcrypto.zipx",
+          "sha256": "447adf4eeef2031492b414062554ea9d4840f5781095e730e3eaf0158cb2a5de"
+        },
+        {
+          "bytes": 65536,
+          "path": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-fCHSkb\\收到的ZIPX标准卷\\发给朋友-zipcrypto.zx01",
+          "sha256": "31db27546583708cbd420bd605855d450b8877ecdf5c6c0105d5d458f69a4183"
+        },
+        {
+          "bytes": 65536,
+          "path": "C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-fCHSkb\\收到的ZIPX标准卷\\发给朋友-zipcrypto.zx02",
+          "sha256": "7f86f46b6257c87c7bbe0869654ba4add66c7b331109ef70f91e09e448ae6b3a"
+        }
+      ],
+      "independentReadback": true,
+      "applicationReadback": true
+    },
+    {
+      "reconfigure": "AES original → new ZipCrypto standard ZIPX → merged unencrypted ZIPX",
+      "independentReadback": true
+    }
+  ]
+}

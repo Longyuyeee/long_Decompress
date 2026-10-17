@@ -129,7 +129,7 @@ pub(crate) fn publish_verified_volumes(
     destination: &Path,
     mut is_cancelled: impl FnMut() -> bool,
 ) -> Result<(), PublishError> {
-    if staged.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("zip"))
+    if staged.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("zip") || ext.eq_ignore_ascii_case("zipx"))
         && (staged.is_file() || crate::services::archive_volumes::volume_paths(staged).is_ok_and(|paths|
             paths.iter().any(|(_, path)| path.extension().is_some_and(|ext| ext.to_string_lossy().starts_with('z')))))
     {

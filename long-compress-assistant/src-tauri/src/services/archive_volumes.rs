@@ -34,8 +34,9 @@ pub(crate) fn volume_paths(output: &Path) -> Result<Vec<(usize, PathBuf)>> {
         format!(r"(?i)^{}\.(\d{{3,}})$", regex::escape(name))
     };
     let matcher = regex::Regex::new(&pattern)?;
-    let standard_matcher = output.extension().filter(|ext| ext.eq_ignore_ascii_case("zip"))
-        .map(|_| regex::Regex::new(&format!(r"(?i)^{}\.z(\d{{2,5}})$", regex::escape(output.file_stem().unwrap().to_str().unwrap())))).transpose()?;
+    let standard_matcher = output.file_name().and_then(|name| name.to_str())
+        .and_then(super::split_archive_detector::SplitArchiveDetector::zip_disk_family)
+        .map(|(_, marker)| regex::Regex::new(&format!(r"(?i)^{}\.{}(\d{{2,5}})$", regex::escape(output.file_stem().unwrap().to_str().unwrap()), marker))).transpose()?;
     let mut standard = Vec::new();
     let mut parts = Vec::new();
     for entry in std::fs::read_dir(output.parent().unwrap_or(Path::new(".")))? {
@@ -87,7 +88,7 @@ pub(crate) fn complete_volume_paths(output: &Path) -> Result<Vec<PathBuf>> {
 }
 
 fn is_standard_zip_set(output: &Path, parts: &[(usize, PathBuf)]) -> bool {
-    output.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("zip"))
+    output.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("zip") || ext.eq_ignore_ascii_case("zipx"))
         && parts.iter().any(|(_, path)| path == output || path.extension().is_some_and(|ext| ext.to_string_lossy().to_ascii_lowercase().starts_with('z')))
 }
 

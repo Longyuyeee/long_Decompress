@@ -32,6 +32,8 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 ## 本地开发
 
+v1.4.18 功能已封板（`688f1fc`），补齐 ZIPX 标准多卷、密码创建及改密/重新分卷/合卷与缺卷补回，窄窗控件和中卷双击入口完成实际页面检查；当前接续候选安装器及正式发布，尚不将候选写成公开稳定版。见[本版审计](docs/STANDARD_ZIPX_1.4.18.md)、[封板记录](docs/STANDARD_ZIPX_FREEZE_1.4.18.md)及[中文更新说明](docs/RELEASE_NOTES_1.4.18.md)。
+
 Windows 构建需要受支持的 Node.js（20.19+、22.12+ 或 24）、npm、稳定版 Rust、MSVC C++ 构建工具及 WebView2。
 
 ```powershell

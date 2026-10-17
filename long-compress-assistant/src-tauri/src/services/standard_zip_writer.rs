@@ -201,9 +201,8 @@ impl Disks {
             self.paths.len() < 65_536,
             "标准 ZIP 分卷数量超过当前读取范围，请增大每卷大小"
         );
-        let path = self
-            .output
-            .with_extension(format!("z{:02}", self.paths.len() + 1));
+        let marker = if self.output.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("zipx")) { "zx" } else { "z" };
+        let path = self.output.with_extension(format!("{marker}{:02}", self.paths.len() + 1));
         let file = OpenOptions::new()
             .write(true)
             .create_new(true)

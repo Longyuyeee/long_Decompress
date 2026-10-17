@@ -151,10 +151,17 @@ impl SplitArchiveDetector {
         }
     }
 
-    fn is_zip_split(name: &str) -> bool {
-        name.to_lowercase().ends_with(".zip")
-            || Regex::new(r"(?i)\.z\d{2,5}$").unwrap().is_match(name)
+    /// Keep standard ZIP and ZIPX families separate, even with the same stem.
+    pub(crate) fn zip_disk_family(name: &str) -> Option<(&'static str, &'static str)> {
+        let lower = name.to_ascii_lowercase();
+        if lower.ends_with(".zipx") || Regex::new(r"(?i)\.zx\d{2,5}$").unwrap().is_match(name) {
+            Some(("zipx", "zx"))
+        } else if lower.ends_with(".zip") || Regex::new(r"(?i)\.z\d{2,5}$").unwrap().is_match(name) {
+            Some(("zip", "z"))
+        } else { None }
     }
+
+    fn is_zip_split(name: &str) -> bool { Self::zip_disk_family(name).is_some() }
 
     // HaoZip's forum ZIPs are native ZIP disks, not independent ZIP files or
     // numeric byte slices. Their terminal EOCD declares the actual disk count.
@@ -236,16 +243,20 @@ impl SplitArchiveDetector {
 
     fn detect_zip_split(path: &Path, parent: &Path) -> Result<Option<SplitArchiveInfo>> {
         let name = Self::file_name(path)?;
-        let base = Regex::new(r"(?i)\.(?:zip|z\d{2,5})$")
+        let (extension, marker) = Self::zip_disk_family(name).unwrap();
+        let base = Regex::new(r"(?i)\.(?:zipx?|zx?\d{2,5})$")
             .unwrap()
             .replace(name, "")
             .to_string();
-        let matcher = Regex::new(&format!(r"(?i)^{}\.z(\d{{2,5}})$", regex::escape(&base)))?;
+        let matcher = Regex::new(&format!(r"(?i)^{}\.{}(\d{{2,5}})$", regex::escape(&base), marker))?;
         let indexed = Self::collect_indexed(parent, &matcher)?;
+        anyhow::ensure!(indexed.iter().all(|(index, _)| *index > 0)
+            && indexed.windows(2).all(|pair| pair[0].0 != pair[1].0),
+            "[archive-inspection:incomplete] ZIP 分卷编号为 0 或重复，请检查同目录文件");
         let width = Self::number_width(&indexed, &matcher, 2);
         let mut max = indexed.last().map(|item| item.0).unwrap_or(0);
-        let expected_main = parent.join(format!("{base}.zip"));
-        let actual_main = Self::actual_case_insensitive(parent, &format!("{base}.zip"))?;
+        let expected_main = parent.join(format!("{base}.{extension}"));
+        let actual_main = Self::actual_case_insensitive(parent, &format!("{base}.{extension}"))?;
         // The final directory declares the disk count. A missing highest .zNN
         // member would otherwise look complete when only existing names count.
         if let Some(main) = &actual_main {
@@ -274,7 +285,7 @@ impl SplitArchiveDetector {
         let mut missing = Vec::new();
         for index in 1..=max {
             if !indexed.iter().any(|(found, _)| *found == index) {
-                missing.push(parent.join(format!("{base}.z{index:0width$}")));
+                missing.push(parent.join(format!("{base}.{marker}{index:0width$}")));
             }
         }
         if actual_main.is_none() {

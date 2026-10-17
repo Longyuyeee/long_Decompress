@@ -506,7 +506,6 @@ const formatBytes = (bytes: number) => {
 
 const formatDate = (timestamp: number | null) =>
   timestamp ? new Date(timestamp).toLocaleDateString() : '从未使用'
-watch(() => formData.value.config.format, format => { if (format === 'zipx') formData.value.config.zipSplitMode = 'numeric' })
 </script>
 
 <template>
@@ -699,9 +698,9 @@ watch(() => formData.value.config.format, format => { if (format === 'zipx') for
           <span class="mb-2 block text-xs font-black text-muted">每个分卷大小（MiB）</span>
           <input v-model.number="formData.config.splitSize" type="number" min="1" step="1" class="h-10 w-full rounded-xl border border-subtle bg-input px-3 text-sm text-content outline-none focus:border-primary" />
         </label>
-        <label v-if="formData.config.splitArchive && formData.config.format === 'zip'" class="block">
+        <label v-if="formData.config.splitArchive && ['zip','zipx'].includes(formData.config.format)" class="block">
           <span class="mb-2 block text-xs font-black text-muted">ZIP 卷型</span>
-          <ThemedSelect :model-value="formData.config.zipSplitMode ?? 'numeric'" :options="[{ value: 'numeric', label: `数字切卷 · .${formData.config.format}.001` }, { value: 'standard', label: `标准 ZIP · .z01/.${formData.config.format}` }]" test-id="profile-zip-split-mode" floating @update:model-value="formData.config.zipSplitMode = $event as 'numeric' | 'standard'" />
+          <ThemedSelect :model-value="formData.config.zipSplitMode ?? 'numeric'" :options="[{ value: 'numeric', label: `数字切卷 · .${formData.config.format}.001` }, { value: 'standard', label: formData.config.format === 'zipx' ? '标准 ZIPX' : '标准 ZIP · .z01/.zip', detail: formData.config.format === 'zipx' ? '.zx01/.zipx' : undefined }]" test-id="profile-zip-split-mode" floating @update:model-value="formData.config.zipSplitMode = $event as 'numeric' | 'standard'" />
         </label>
 
         <p v-if="formError" role="alert" class="rounded-xl border border-red-500/25 bg-red-500/10 px-3 py-2 text-xs font-bold text-red-400"><i class="pi pi-exclamation-circle mr-2"></i>{{ formError }}</p>
@@ -762,7 +761,7 @@ watch(() => formData.value.config.format, format => { if (format === 'zipx') for
               <div v-if="['zip', 'zipx'].includes(templatePreview.template.compression.format)" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">压缩方法</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.format === 'zipx' ? 'XZ' : templatePreview.template.compression.zipMethod === 'zstd' ? 'Zstandard' : '兼容 ZIP · Deflate' }}</dd></div>
               <div data-testid="template-filename-encryption" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">文件名加密</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.encryptFilenames ? '开启' : '关闭' }}</dd></div>
               <div v-if="['zip', 'zipx'].includes(templatePreview.template.compression.format)" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">ZIP 加密方式</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.zipEncryption === 'zipcrypto' ? 'ZipCrypto（传统兼容，较弱）' : 'AES-256' }}</dd></div>
-              <div v-if="['zip', 'zipx'].includes(templatePreview.template.compression.format) && templatePreview.template.compression.splitArchive" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">ZIP 卷型</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.zipSplitMode === 'standard' ? `标准 ZIP · .z01/.${templatePreview.template.compression.format}` : `数字切卷 · .${templatePreview.template.compression.format}.001` }}</dd></div>
+              <div v-if="['zip', 'zipx'].includes(templatePreview.template.compression.format) && templatePreview.template.compression.splitArchive" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">ZIP 卷型</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.zipSplitMode === 'standard' ? templatePreview.template.compression.format === 'zipx' ? '标准 ZIPX · .zx01/.zipx' : '标准 ZIP · .z01/.zip' : `数字切卷 · .${templatePreview.template.compression.format}.001` }}</dd></div>
               <div class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">完整性校验</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.verifyAfter ? '开启' : '关闭' }}</dd></div>
               <div class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">目录结构</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.keepStructure ? '保留' : '不保留' }}</dd></div>
             </dl>

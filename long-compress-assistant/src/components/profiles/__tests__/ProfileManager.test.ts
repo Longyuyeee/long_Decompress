@@ -79,6 +79,21 @@ const mountManager = () => mount(ProfileManager, {
 })
 
 describe('ProfileManager', () => {
+  it('saves standard ZIPX without silently switching the volume type', async () => {
+    const wrapper = mountManager()
+    await flushPromises()
+    await wrapper.findAll('button').find(button => button.text().includes('新建配置组'))!.trigger('click')
+    await wrapper.get('input[maxlength="50"]').setValue('分享 ZIPX 标准卷')
+    await wrapper.get('select').setValue('zipx')
+    await wrapper.findAll('label').find(label => label.text().includes('将压缩包拆分为多个文件'))!.get('input').setValue(true)
+    await wrapper.get('[data-testid="profile-zip-split-mode"]').trigger('click')
+    await wrapper.findAll('[role="option"]').find(option => option.text().includes('.zx01/.zipx'))!.trigger('click')
+    await wrapper.get('select').setValue('zip')
+    await wrapper.get('select').setValue('zipx')
+    expect(wrapper.get('[data-testid="profile-zip-split-mode"]').text()).toContain('.zx01/.zipx')
+    await wrapper.get('form').trigger('submit'); await flushPromises()
+    expect(mocks.addProfile).toHaveBeenCalledWith(expect.objectContaining({ config: expect.objectContaining({ format: 'zipx', splitArchive: true, zipSplitMode: 'standard' }) }))
+  })
   beforeEach(() => {
     vi.clearAllMocks()
     mocks.profiles.splice(0)
