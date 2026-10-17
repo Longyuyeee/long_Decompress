@@ -110,6 +110,9 @@ fn browse_7z(
     ensure_not_cancelled(cancelled)?;
     let mut file = super::numeric_volume_reader::ZipInputReader::open_seven_zip(path)?;
     let length = file.seek(SeekFrom::End(0))?;
+    // Explicitly supplied passwords bypass password resolution. Apply the same
+    // CRC/extent preflight here so truncated volumes cannot become password errors.
+    super::native_extraction::seven_zip::validate_archive_extent(&mut file, length)?;
     file.seek(SeekFrom::Start(0))?;
     let password = password.map(sevenz_rust::Password::from);
     let archive = sevenz_rust::Archive::read(
@@ -381,6 +384,60 @@ mod tests {
     use std::io::Write;
     use std::sync::atomic::AtomicBool;
     use std::sync::Arc;
+
+    #[cfg(windows)]
+    #[tokio::test]
+    async fn seven_zip_browser_checks_missing_tail_before_supplied_password() {
+        // Independent ordinary 7-Zip volumes, NOT a genuine HaoZip forum fixture.
+        // The same browser preflight must be correct before adding another reader.
+        let encoder = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("resources/archive-engine/7z.exe");
+        for mode in ["plain", "content", "header"] {
+            let temp = tempfile::tempdir().unwrap();
+            let source = temp.path().join("payload.bin");
+            let payload: Vec<u8> = (0..163_871).map(|index| (index % 251) as u8).collect();
+            std::fs::write(&source, &payload).unwrap();
+            let archive = temp.path().join("收到的资料.7z");
+            let mut command = crate::utils::process::command(&encoder);
+            command.args(["a", "-t7z", "-mx=0", "-v64k", "-y"]);
+            if mode != "plain" {
+                command.args(["-pknown-test-password", if mode == "header" { "-mhe=on" } else { "-mhe=off" }]);
+            }
+            let result = command.arg(&archive).arg(&source).output().unwrap();
+            assert!(result.status.success(), "{}", String::from_utf8_lossy(&result.stderr));
+            let first = temp.path().join("收到的资料.7z.001");
+            let last = temp.path().join("收到的资料.7z.003");
+            let original_tail = std::fs::read(&last).unwrap();
+            let supplied = (mode != "plain").then_some("known-test-password");
+            assert_eq!(browse_archive(&first, supplied).await.unwrap().total_files, 1);
+            std::fs::remove_file(&last).unwrap();
+            for password in [None, Some("wrong"), Some("known-test-password")] {
+                let error = browse_archive(&first, password).await.unwrap_err().to_string();
+                assert!(error.contains("[archive-inspection:incomplete]"), "mode={mode}, password={password:?}: {error}");
+                assert!(error.contains("可能缺少尾卷"), "{error}");
+            }
+            std::fs::write(&last, &original_tail).unwrap();
+            assert_eq!(browse_archive(&first, supplied).await.unwrap().total_files, 1);
+            std::fs::write(&last, &original_tail[..original_tail.len() - 1]).unwrap();
+            for password in [None, Some("wrong"), Some("known-test-password")] {
+                let error = browse_archive(&first, password).await.unwrap_err().to_string();
+                assert!(error.contains("[archive-inspection:incomplete]"), "{mode}: {error}");
+            }
+            std::fs::write(&last, &original_tail).unwrap();
+            let original_first = std::fs::read(&first).unwrap();
+            let mut corrupt_first = original_first.clone();
+            corrupt_first[12] ^= 1;
+            std::fs::write(&first, &corrupt_first).unwrap();
+            for password in [None, Some("wrong"), Some("known-test-password")] {
+                let error = browse_archive(&first, password).await.unwrap_err().to_string();
+                assert!(error.contains("[archive-inspection:damaged]"), "{mode}: {error}");
+                assert!(error.contains("归档头校验失败"), "{error}");
+            }
+            std::fs::write(&first, &original_first).unwrap();
+            assert_eq!(browse_archive(&first, supplied).await.unwrap().total_files, 1);
+            assert_eq!(std::fs::read(&source).unwrap(), payload);
+        }
+    }
 
     #[tokio::test]
     async fn browses_zip_sfx_payload_instead_of_executable_resources() {

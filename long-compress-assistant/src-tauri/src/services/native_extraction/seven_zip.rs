@@ -67,7 +67,7 @@ pub(crate) fn requires_password(file_path: &Path) -> Result<bool> {
 
 // The volume numbering cannot reveal a missing final volume. Check the size
 // declared by a CRC-validated start header before interpreting encrypted data.
-fn validate_archive_extent(reader: &mut (impl Read + Seek), length: u64) -> Result<()> {
+pub(crate) fn validate_archive_extent(reader: &mut (impl Read + Seek), length: u64) -> Result<()> {
     reader.seek(SeekFrom::Start(0))?;
     let mut header = [0u8; 32];
     if let Err(error) = reader.read_exact(&mut header) {

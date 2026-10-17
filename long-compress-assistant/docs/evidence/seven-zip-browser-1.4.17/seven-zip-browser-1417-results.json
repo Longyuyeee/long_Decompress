@@ -1,0 +1,156 @@
+{
+  "checkedAt": "2026-10-17T07:30:30.933Z",
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
+  "binarySha256": "a04e7abe2c73f339eebe69a179a511105e16f2701671b65ae2a4d1744db3b048",
+  "encoder": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\haozip-tools\\portable\\HaoZipC.exe",
+  "encoderSha256": "7ed88c6a87df06fdfcf079968b39fd4c5e2541aa17b71980ab6be78fe4aeb758",
+  "sourceBytes": 163871,
+  "sourceSha256": "d033eab836933fec3152092a666cedd425b4040ca3760b8974f71ae6c7ab0c77",
+  "fixtureScope": "Original HaoZip CLI ordinary numeric volumes, NOT forum volumes",
+  "cases": [
+    {
+      "mode": "plain",
+      "originalVolumes": [
+        {
+          "name": "plain.7z.001",
+          "sha256": "09550f932d0284da0e5d2e8e9aaf4aa01b81b1e05421576f9ee3684615be77f5"
+        },
+        {
+          "name": "plain.7z.002",
+          "sha256": "ae688fb85f02793464d1f3b4f419e28759954dd74dbc53cb3ee62066959d268b"
+        },
+        {
+          "name": "plain.7z.003",
+          "sha256": "9d3371f13a20c08bc05ad1cf358a821f8c4cb780925d8dd1c23c79a6a96b88b8"
+        }
+      ],
+      "failures": [
+        {
+          "supplied": "none",
+          "error": "ARCHIVE_BROWSE_INCOMPLETE|7Z 文件或卷组不完整：归档声明至少 163999 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载|[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 163999 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "supplied": "wrong",
+          "error": "ARCHIVE_BROWSE_INCOMPLETE|7Z 文件或卷组不完整：归档声明至少 163999 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载|[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 163999 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "supplied": "correct",
+          "error": "ARCHIVE_BROWSE_INCOMPLETE|7Z 文件或卷组不完整：归档声明至少 163999 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载|[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 163999 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        }
+      ],
+      "headerFailures": [
+        {
+          "supplied": "none",
+          "error": "ARCHIVE_BROWSE_DAMAGED|7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头|[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头"
+        },
+        {
+          "supplied": "wrong",
+          "error": "ARCHIVE_BROWSE_DAMAGED|7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头|[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头"
+        },
+        {
+          "supplied": "correct",
+          "error": "ARCHIVE_BROWSE_DAMAGED|7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头|[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头"
+        }
+      ],
+      "restoredBrowse": true
+    },
+    {
+      "mode": "content",
+      "originalVolumes": [
+        {
+          "name": "content.7z.001",
+          "sha256": "5ff7b716f8b3abd4c78977ef0e875674f7a1fa33356ea7a9a9f7de64c00034e6"
+        },
+        {
+          "name": "content.7z.002",
+          "sha256": "a27d46a4fbdfb0e43a5a6ae7321b2305613adcad92e3366a80fe7b6284bd6ef6"
+        },
+        {
+          "name": "content.7z.003",
+          "sha256": "6b71425ee170c37e480338154b52578b8d12f01d2589291ffe60adc85dae1fc5"
+        }
+      ],
+      "failures": [
+        {
+          "supplied": "none",
+          "error": "ARCHIVE_BROWSE_INCOMPLETE|7Z 文件或卷组不完整：归档声明至少 164021 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载|[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 164021 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "supplied": "wrong",
+          "error": "ARCHIVE_BROWSE_INCOMPLETE|7Z 文件或卷组不完整：归档声明至少 164021 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载|[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 164021 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "supplied": "correct",
+          "error": "ARCHIVE_BROWSE_INCOMPLETE|7Z 文件或卷组不完整：归档声明至少 164021 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载|[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 164021 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        }
+      ],
+      "headerFailures": [
+        {
+          "supplied": "none",
+          "error": "ARCHIVE_BROWSE_DAMAGED|7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头|[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头"
+        },
+        {
+          "supplied": "wrong",
+          "error": "ARCHIVE_BROWSE_DAMAGED|7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头|[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头"
+        },
+        {
+          "supplied": "correct",
+          "error": "ARCHIVE_BROWSE_DAMAGED|7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头|[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头"
+        }
+      ],
+      "restoredBrowse": true
+    },
+    {
+      "mode": "header",
+      "originalVolumes": [
+        {
+          "name": "header.7z.001",
+          "sha256": "789e001863de6520e17c60fe64411ab85eb2d8b8bbcd8528d94d17aea9f56634"
+        },
+        {
+          "name": "header.7z.002",
+          "sha256": "3059fe14c14f72352a34c8789d6c51f182fc55e91ee29670121ef53388ab75d6"
+        },
+        {
+          "name": "header.7z.003",
+          "sha256": "6f13c0895ae275569b1eda95d2c0d9d493503709289bae4b40d89e1348b18cb1"
+        }
+      ],
+      "failures": [
+        {
+          "supplied": "none",
+          "error": "ARCHIVE_BROWSE_INCOMPLETE|7Z 文件或卷组不完整：归档声明至少 164073 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载|[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 164073 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "supplied": "wrong",
+          "error": "ARCHIVE_BROWSE_INCOMPLETE|7Z 文件或卷组不完整：归档声明至少 164073 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载|[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 164073 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        },
+        {
+          "supplied": "correct",
+          "error": "ARCHIVE_BROWSE_INCOMPLETE|7Z 文件或卷组不完整：归档声明至少 164073 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载|[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 164073 字节，实际只有 131072 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载"
+        }
+      ],
+      "headerFailures": [
+        {
+          "supplied": "none",
+          "error": "ARCHIVE_BROWSE_DAMAGED|7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头|[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头"
+        },
+        {
+          "supplied": "wrong",
+          "error": "ARCHIVE_BROWSE_DAMAGED|7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头|[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头"
+        },
+        {
+          "supplied": "correct",
+          "error": "ARCHIVE_BROWSE_DAMAGED|7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头|[archive-inspection:damaged] 7Z 归档头校验失败：文件已损坏，请重新下载；更换密码无法修复归档头"
+        }
+      ],
+      "restoredBrowse": true
+    }
+  ],
+  "screenshots": [
+    "seven-zip-browser-1417-missing-tail-1100x700.png",
+    "seven-zip-browser-1417-missing-tail-760x520.png",
+    "seven-zip-browser-1417-damaged-header.png",
+    "seven-zip-browser-1417-restored.png"
+  ]
+}

@@ -49,6 +49,7 @@ import { runLegacyZipInput1416Gate } from './legacy-zip-input-1416-gate.mjs'
 import { runLegacyZipWorkspace1416Gate } from './legacy-zip-workspace-1416-gate.mjs'
 import { runLegacyZipOutput1416Gate } from './legacy-zip-output-1416-gate.mjs'
 import { runLegacyZipContinuity1416Gate } from './legacy-zip-continuity-1416-gate.mjs'
+import { runSevenZipBrowser1417Gate } from './seven-zip-browser-1417-gate.mjs'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -4902,6 +4903,9 @@ try {
     await runPartialZip1413Gate({ driver, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, forwardContextAction })
   } else if (process.argv.includes('--lzip-only')) {
     await runLzip1412Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, root })
+    completedSuccessfully = true
+  } else if (process.argv.includes('--seven-zip-browser-1417-only')) {
+    await runSevenZipBrowser1417Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, application, root })
     completedSuccessfully = true
   } else if (process.argv.includes('--haozip-forum-encrypted-only')) {
     assert.ok(process.env.LONG_HAOZIP_FORUM_MANIFEST,'requires prepared inputs and genuine GUI forum volumes via LONG_HAOZIP_FORUM_MANIFEST')
