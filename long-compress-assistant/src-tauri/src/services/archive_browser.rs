@@ -385,6 +385,23 @@ mod tests {
     use std::sync::atomic::AtomicBool;
     use std::sync::Arc;
 
+    #[tokio::test]
+    async fn genuine_haozip_forum_seven_zip_browses_every_original_member() {
+        let fixtures = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../tests/fixtures/archives/haozip-forum-7z-1417");
+        for stem in ["论坛7Z内容密码", "论坛7Z文件名密码"] {
+            for index in 1..=3 {
+                let member = fixtures.join(format!("{stem}.haozip{index:02}.7z"));
+                let result = browse_archive(&member, Some("ForumTest-1411")).await.unwrap();
+                assert_eq!(result.format, "7Z");
+                assert_eq!(result.total_files, 2);
+                assert_eq!(result.total_directories, 2);
+                assert_eq!(result.total_uncompressed_size, 163_995);
+                assert!(result.entries.iter().any(|entry| entry.path.trim_end_matches('/') == "中文目录/空目录" && entry.is_dir));
+            }
+        }
+    }
+
     #[cfg(windows)]
     #[tokio::test]
     async fn seven_zip_browser_checks_missing_tail_before_supplied_password() {

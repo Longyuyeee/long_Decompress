@@ -2740,7 +2740,8 @@ impl CompressionService {
     }
 
     fn uses_native_seven_zip_volumes(path: &Path, format: &ArchiveFormat) -> bool {
-        *format == ArchiveFormat::SevenZip && crate::services::numeric_volume_reader::ZipInputReader::is_numeric_first(path)
+        *format == ArchiveFormat::SevenZip && (crate::services::numeric_volume_reader::ZipInputReader::is_numeric_first(path)
+            || SplitArchiveDetector::is_haozip_seven_zip(path))
     }
 
     async fn preflight_extraction(
