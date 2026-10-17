@@ -206,6 +206,13 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 </details>
 
 <details>
+<summary><strong>密码明明正确，旧 ZIP 为什么仍打不开？</strong></summary>
+
+旧工具可能使用不同的密码编码。v1.4.16 可在“ZIP 密码编码”中明确选择日文 CP932、简体 CP936 或繁体 CP950；只在已知原包编码时指定，通常保持自动兼容。它不改变文件名编码，也不能修复损坏或缺失的数据。转换时原包与新包编码分开设置，新包默认 UTF-8。
+
+</details>
+
+<details>
 <summary><strong>Windows 提示安装程序的发布者未知，怎么办？</strong></summary>
 
 当前安装程序未使用商业 Windows 代码签名证书。请从本仓库 [Releases](https://github.com/Longyuyeee/long_Decompress/releases/latest)下载，核对来源后决定是否继续；应用内更新包另有签名校验。
@@ -226,10 +233,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-v1.4.16 已功能封板，正在准备发布：补齐日文、简体、繁体旧 ZIP 密码编码及单条修复结果重开接续。当前稳定版仍为下表 v1.4.15；见 [v1.4.16 更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.16.md)。
-
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
+| **v1.4.16** | 日文/简体/繁体旧 ZIP 密码编码，原包与新包独立设置，单条/批量修复结果重开接续及窄窗口表单修正 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.16.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.16) |
 | **v1.4.15** | ZIP 重复预检优化、TAR.LZ4 / TAR.BR 流式创建、RAR 暂停取消、矮窗口列表修正；合并交付 ZIP Zstandard / ZIPX（XZ）创建与密码分卷配置链 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.15.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15) |
 | **v1.4.13** | 标准 ZIP 缺卷部分抢救、AES / ZipCrypto 密码包、按需展开的恢复文件与原因清单 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.13.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13) |
 | **v1.4.12** | LZIP / TAR.LZIP 创建与读取、`.tlz` 别名及多成员、批量配置和转换、浏览失败原因保留 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.12.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.12) |

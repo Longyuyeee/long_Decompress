@@ -1,8 +1,10 @@
 # 归档格式支持等级（当前权威口径）
 
-更新时间：2026-10-17（当前正式版 v1.4.15）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级。下载见 [v1.4.15 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15)，历次能力按对应实现和实际产物记录。
+更新时间：2026-10-17（当前正式版 v1.4.16）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级。下载见 [v1.4.16 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.16)，历次能力按对应实现和实际产物记录。
 
 ## 当前边界速查（覆盖下方历次演变描述）
+
+- v1.4.16 补齐 ZIP/ZIPX 的明确 CP932/936/950 密码编码，贯通读取、创建、检查恢复及源/目标独立转换，保持输入自动与新包 UTF-8 默认、无损编码和完整校验。配置/草稿/历史保留选择，修复结果保存生成时参数并可重开接续；不新增格式或特殊卷型，不扩大 ZIPX 标准多卷范围。真实原包、66 个创建组合、独立回解及桌面范围见[实施审计](LEGACY_ZIP_PASSWORD_ENCODING_1.4.16.md)和[封板记录](LEGACY_ZIP_PASSWORD_FREEZE_1.4.16.md)。
 
 - v1.4.15 已交付 ZIP 重复预检优化、TAR.LZ4 / TAR.BR 流式创建及 RAR 预检查任务控制；保留完整校验、真实错误与默认设置，不把局部性能收益外推为整条应用提速比例。见[实施审计](ARCHIVE_PERFORMANCE_1.4.15.md)和[封板记录](ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)。
 
