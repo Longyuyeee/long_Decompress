@@ -1,0 +1,32 @@
+{
+  "checkedAt": "2026-10-17T23:03:27.178Z",
+  "candidateCommit": "debe7c242715984bc044c67e325856d9a96d16ee",
+  "candidateRun": 39076966449,
+  "tagCommit": "1a1d6d02099179341df99bdb8d9a95742c2716e4",
+  "candidateAndTagTree": "0e555e23e0f62cfa47cc5bdb615b60cd47be3444",
+  "installer": "Long解压_1.5.0_x64-setup.exe",
+  "installerBytes": 20524431,
+  "installerSha256": "3d9f1861a36b2f4bd3451d654abfcea8c31aabf925063eb6ae553c7664ba698d",
+  "installerProductVersion": "1.5.0",
+  "embeddedResourcePaths": [
+    "resources/zpaq-engine/long-zpaq.exe",
+    "resources/zpaq-engine/COPYING"
+  ],
+  "engineSha256": "2fa606426bca2ac1711c1c7f500aedb20ac35d55d5e84d61557be8833ba5dd12",
+  "licenseSha256": "927b5feda84f7a7f2063998b124829182967f54b954db2c3569e8bd07958bf07",
+  "engineBytes": 489472,
+  "cases": [
+    {
+      "name": "journal.zpaq",
+      "currentFiles": 3,
+      "readWithBundledEngine": true
+    },
+    {
+      "name": "journal-key.zpaq",
+      "currentFiles": 3,
+      "readWithBundledEngine": true
+    }
+  ],
+  "installationExecuted": false,
+  "engineExecutedFromExtractedInstaller": true
+}
