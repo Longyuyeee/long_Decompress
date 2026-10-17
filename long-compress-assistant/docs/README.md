@@ -1,8 +1,8 @@
 # 文档导航与维护规则
 
-- **当前候选：[v1.4.16 旧密码编码](LEGACY_ZIP_PASSWORD_ENCODING_1.4.16.md)**已功能封板，冻结提交 `436e02e`。438 项相关回归及普通构建通过，失败转救援、单条/批量修复结果真实重开接续完成；UI 已实看，进入候选构建与正式发布流程。身份及构建进度见[封板记录](LEGACY_ZIP_PASSWORD_FREEZE_1.4.16.md)，用户变化见[中文说明](RELEASE_NOTES_1.4.16.md)。当前正式版仍见下方。
+- **当前正式版：[v1.4.16 旧密码编码](LEGACY_ZIP_PASSWORD_ENCODING_1.4.16.md)**已封板发布，[PR #171](https://github.com/Longyuyeee/long_Decompress/pull/171) 已合入，正式标签为 `5b4c317`。438 项相关回归和真实桌面链通过；安装器、签名更新 ZIP、签名及中文更新清单已回下载核对，见[封板记录](LEGACY_ZIP_PASSWORD_FREEZE_1.4.16.md)、[中文说明](RELEASE_NOTES_1.4.16.md)及[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.16)。下一版按路线推进 v1.4.17 特殊分卷兼容，准确接续见[开发交接](DEVELOPMENT_HANDOFF.md)。
 
-- **当前正式版：[v1.4.15 封板记录](ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)**、[实施审计](ARCHIVE_PERFORMANCE_1.4.15.md)、[中文更新说明](RELEASE_NOTES_1.4.15.md)、[十二版本路线](ARCHIVE_ROADMAP_1.4.15_TO_1.5.5.md)。PR #169 及所含 PR #168 已合入，两轮改进统一由 v1.4.15 交付，不单独发布 v1.4.14；安装器、签名更新包与更新清单见 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15)。下一步为旧工具密码编码兼容，准确接续见[开发交接](DEVELOPMENT_HANDOFF.md)。
+- **前版记录：[v1.4.15 封板记录](ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)**、[实施审计](ARCHIVE_PERFORMANCE_1.4.15.md)、[中文更新说明](RELEASE_NOTES_1.4.15.md)、[十二版本路线](ARCHIVE_ROADMAP_1.4.15_TO_1.5.5.md)。PR #169 及所含 PR #168 已合入，两轮改进统一由 v1.4.15 交付，不单独发布 v1.4.14；历史安装器及更新附件见[v1.4.15 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15)。
 
 - **前版记录：[v1.4.13 缺卷 ZIP 部分抢救](PARTIAL_ZIP_RECOVERY_1.4.13.md)**、[封板与发布记录](PARTIAL_ZIP_RECOVERY_FREEZE_1.4.13.md)、[中文更新说明](RELEASE_NOTES_1.4.13.md)。标准 ZIP 缺卷、密码包与恢复结果接续已交付；安装器及签名更新附件见 [v1.4.13 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13)。
 
