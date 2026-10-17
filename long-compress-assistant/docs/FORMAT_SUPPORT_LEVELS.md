@@ -4,6 +4,8 @@
 
 ## 当前边界速查（覆盖下方历次演变描述）
 
+- v1.4.18 封板候选补齐 ZIPX（XZ）标准 `.zxNN/…/.zipx` 读取及无密码/AES-256/ZipCrypto 创建、转换和重新分卷；缺卷先给最终原因，补回新任务与中卷双击浏览完成真实页面验证。产品输出经 WinRAR 7.23 原名独立回解，不承诺本机 Bandizip Beta 或所有软件互通，数字卷默认及完整校验保持。39 项不同 Rust、146 项相关前端及具体边界见[本版审计](STANDARD_ZIPX_1.4.18.md)和[封板记录](STANDARD_ZIPX_FREEZE_1.4.18.md)，正式版仍为 v1.4.17，候选资产待发布。
+
 - v1.4.17 已发布好压 GUI 原生 `.haozipNN.7z` 内容/文件名密码卷的任意成员浏览、解压、检查和转换，正确归组、缺卷/头损坏优先及补回新任务通过真实桌面与独立回解；保留现有 ZipCrypto 论坛 ZIP。好压 AES ZIP 论坛卷仍不承诺，7Z 有界内容预览、特殊卷创建与缺卷修复不在本版范围。正式资产与中文更新清单已核对，见[实施审计](SPECIAL_VOLUME_COMPATIBILITY_1.4.17.md)与[封板记录](SPECIAL_VOLUME_FREEZE_1.4.17.md)。
 
 - v1.4.16 补齐 ZIP/ZIPX 的明确 CP932/936/950 密码编码，贯通读取、创建、检查恢复及源/目标独立转换，保持输入自动与新包 UTF-8 默认、无损编码和完整校验。配置/草稿/历史保留选择，修复结果保存生成时参数并可重开接续；不新增格式或特殊卷型，不扩大 ZIPX 标准多卷范围。真实原包、66 个创建组合、独立回解及桌面范围见[实施审计](LEGACY_ZIP_PASSWORD_ENCODING_1.4.16.md)和[封板记录](LEGACY_ZIP_PASSWORD_FREEZE_1.4.16.md)。
@@ -37,7 +39,7 @@
 
 ### A：完整创建—解压闭环
 
-- ZIP（Deflate / Zstandard）、ZIPX（XZ）、7Z、WIM；ZIPX 标准分卷暂不提供，方法及密码组合范围见顶部说明；
+- ZIP（Deflate / Zstandard）、ZIPX（XZ）、7Z、WIM；ZIPX 标准分卷在 v1.4.18 封板候选中补齐，公开稳定版及方法/密码组合范围见顶部说明；
 - TAR、TAR.GZ、TAR.BZ2、TAR.XZ、TAR.ZST；
 - GZ、BZ2、XZ、ZST/ZSTD、LZMA；
 - LZ4、Brotli、TAR.LZ4、TAR.BR（v1.4.3 新增，真实 Windows Release Tauri 逐字节回解通过）；
