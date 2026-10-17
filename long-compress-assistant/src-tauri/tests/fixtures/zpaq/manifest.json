@@ -1,0 +1,15 @@
+{
+  "generator": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\zpaq-150-tools\\upstream\\zpaq64.exe",
+  "password": "中文 密码!-钥匙",
+  "hashes": {
+    "journal.zpaq": "00730d8fa5b19c39600d9b272d778f4317aed04816c6b1819c8017e39689b430",
+    "journal-key.zpaq": "8c826a156678042c997640e766dcada7493f16dfcadc5ab3bb3f095fa0df7727",
+    "stream.zpaq": "1d60e9af118cfed0f175376fa9d52a402d311cd739a427bdfeb780933e78548c",
+    "stream-key.zpaq": "d2e7c7a699fe5eebb034ee85f61447ee0e9e406798bda39edcc49c868a8e3b47"
+  },
+  "payload": {
+    "说明.txt": "008770b479f58026614769e68fca1a3bec6ffcd24bb03712934a03298106cd5c",
+    "空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "数据.bin": "ac9f39dd7127a87752e102df83502adb52a644d2a0516fe41ef620d2208d346a"
+  }
+}

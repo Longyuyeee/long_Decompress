@@ -88,6 +88,7 @@ export interface ExtractOnlyFormatCapability {
 }
 
 export const EXTRACT_ONLY_FORMATS: ExtractOnlyFormatCapability[] = [
+  { displayName: 'ZPAQ（当前文件，只读，支持原生密码）', extensions: ['zpaq'], requires7za: false },
   { displayName: 'Application packages', extensions: ['jar', 'xpi', 'ipa', 'apk', 'appx'], requires7za: false },
   { displayName: 'Disk images', extensions: ['iso', 'img', 'udf', 'dmg', 'vhd', 'vhdx', 'qcow', 'qcow2', 'qcow2c', 'vdi', 'vmdk'], requires7za: true },
   { displayName: 'Installers and packages', extensions: ['cab', 'deb', 'udeb', 'rpm', 'msi', 'msp', 'msm', 'nsis'], requires7za: true },

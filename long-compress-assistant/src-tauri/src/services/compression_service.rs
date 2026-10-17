@@ -301,6 +301,7 @@ impl CompressionService {
             ArchiveFormat::Zip => if name.ends_with(".zipx") || regex::Regex::new(r"\.zx\d{2,5}$").unwrap().is_match(&name) { "zipx" } else { "zip" }.to_string(),
             ArchiveFormat::SevenZip => "7z".to_string(),
             ArchiveFormat::Rar => "rar".to_string(),
+            ArchiveFormat::Zpaq => "zpaq".to_string(),
             ArchiveFormat::AesEncrypted => [
                 "tar.gz.aes", "tar.bz2.aes", "tar.xz.aes", "tar.zst.aes",
                 "tar.aes", "gz.aes", "bz2.aes", "xz.aes", "zst.aes",
@@ -1890,6 +1891,7 @@ impl CompressionService {
 
     async fn archive_requires_password(&self, file_path: &str, format: ArchiveFormat) -> Result<bool> {
         match format {
+            ArchiveFormat::Zpaq => crate::services::zpaq_engine::requires_password(Path::new(file_path)),
             // 通过 7z CLI 处理的格式
             ArchiveFormat::Universal | ArchiveFormat::Iso | ArchiveFormat::Cab |
             ArchiveFormat::Lzh | ArchiveFormat::Arj | ArchiveFormat::Dmg |
@@ -2196,6 +2198,9 @@ impl CompressionService {
                 if format == ArchiveFormat::Rar {
                     return Err(CompressionError::ExtractionFailed("[archive-inspection:ambiguous-data] RAR 密码预检未能通过内容校验：可能是密码不匹配，也可能是归档损坏或分卷混用。请核对密码，或检查并尝试修复。".into()).into());
                 }
+                if format == ArchiveFormat::Zpaq {
+                    return Err(CompressionError::ExtractionFailed("[archive-inspection:ambiguous-data] ZPAQ 密码不匹配或文件已损坏，请核对密码和源文件。".into()).into());
+                }
                 return Err(CompressionError::InvalidPassword.into());
             }
             password_verified = true;
@@ -2328,6 +2333,8 @@ impl CompressionService {
         let effective_format = format;
 
         let result = match effective_format {
+            ArchiveFormat::Zpaq => crate::services::zpaq_engine::extract(
+                path, &out_dir, final_password.as_deref(), &options.selected_entries, service.cancellation_flag.clone()).await,
             ArchiveFormat::Zip => {
                 let srv = service.clone();
                 let f_path = file_path.clone();
@@ -2753,6 +2760,12 @@ impl CompressionService {
         options: &DecompressOptions,
     ) -> Result<Option<(usize, u64)>> {
         let stats = match format {
+            ArchiveFormat::Zpaq => {
+                let directory = crate::services::zpaq_engine::browse(archive_path, password, self.cancellation_flag.clone()).await?;
+                if directory.entries.iter().all(|e| e.size_known != Some(false)) {
+                    Some((directory.entries.len(), directory.total_uncompressed_size))
+                } else { None }
+            }
             ArchiveFormat::Zip => {
                 let file = crate::services::numeric_volume_reader::ZipInputReader::open(archive_path)?;
                 let mut archive = zip_aes::ZipArchive::new(file)?;
@@ -3473,6 +3486,9 @@ impl CompressionService {
 
     pub async fn test_archive_password(&self, file_path: &str, password: &str) -> Result<bool> {
         self.check_cancellation()?;
+        if Self::detect_password_format(file_path)? == ArchiveFormat::Zpaq {
+            return crate::services::zpaq_engine::try_password(Path::new(file_path), password, self.cancellation_flag.clone()).await;
+        }
         let file = file_path.to_string();
         let pwd = password.to_string();
         let path = Path::new(&file);

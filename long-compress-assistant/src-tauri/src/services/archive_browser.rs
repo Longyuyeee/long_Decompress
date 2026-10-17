@@ -308,6 +308,9 @@ pub async fn browse_archive_cancellable(
     let password = password.map(str::to_string);
     let operation_cancelled = cancelled.clone();
     let operation = async move {
+        if format == ArchiveFormat::Zpaq {
+            return super::zpaq_engine::browse(&path, password.as_deref(), operation_cancelled).await;
+        }
         if is_tar_family
             || matches!(
                 format,

@@ -15,6 +15,7 @@ pub mod compression_service;
 pub mod compression_analysis;
 pub(crate) mod compression_verification;
 pub mod archive_format;
+pub mod zpaq_engine;
 pub mod compression_format;
 pub(crate) mod compression_entries;
 pub mod extraction_transaction;

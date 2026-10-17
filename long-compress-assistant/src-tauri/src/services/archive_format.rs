@@ -4,6 +4,7 @@ pub enum ArchiveFormat {
     Zip,
     SevenZip,
     Rar,
+    Zpaq,
     AesEncrypted,
     Tar,
     Gzip,
@@ -44,6 +45,7 @@ pub enum ArchiveFormat {
 
 impl ArchiveFormat {
     pub fn from_magic(header: &[u8]) -> Self {
+        if header.starts_with(b"7kSt") || header.starts_with(b"zPQ") { return Self::Zpaq; }
         if header.starts_with(b"PK\x03\x04") {
             return Self::Zip;
         }
@@ -134,6 +136,7 @@ impl ArchiveFormat {
             | "ipa" | "apk" | "appx" => Self::Zip,
             "7z" => Self::SevenZip,
             "rar" => Self::Rar,
+            "zpaq" => Self::Zpaq,
             "aes" => Self::AesEncrypted,
             "tar" | "ova" => Self::Tar,
             "gz" | "gzip" | "tgz" | "tpz" => Self::Gzip,
@@ -181,6 +184,7 @@ impl ArchiveFormat {
             Self::Zip => Self::Zip,
             Self::SevenZip => Self::SevenZip,
             Self::Rar => Self::Rar,
+            Self::Zpaq => Self::Zpaq,
             Self::AesEncrypted => Self::AesEncrypted,
             _ => Self::Universal,
         }
@@ -189,7 +193,7 @@ impl ArchiveFormat {
     pub fn supports_password(&self) -> bool {
         matches!(
             self,
-            Self::Zip | Self::SevenZip | Self::Rar | Self::AesEncrypted | Self::Universal
+            Self::Zip | Self::SevenZip | Self::Rar | Self::Zpaq | Self::AesEncrypted | Self::Universal
         )
     }
 }

@@ -608,6 +608,9 @@ impl UniversalCliEngine {
     }
 
     pub async fn test_integrity_with_zip_encoding(file_path: &Path, password: Option<&str>, encoding: Option<super::zip_password::ZipPasswordEncoding>) -> Result<()> {
+        if super::archive_browser::detect_format(file_path)? == super::archive_format::ArchiveFormat::Zpaq {
+            return super::zpaq_engine::verify(file_path, password, Arc::new(AtomicBool::new(false))).await;
+        }
         if Self::is_zip_password_input(file_path)? {
             let path = file_path.to_path_buf();
             let password = password.map(str::to_owned);

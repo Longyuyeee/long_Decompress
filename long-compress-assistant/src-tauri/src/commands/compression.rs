@@ -1350,6 +1350,14 @@ impl Drop for ArchiveBrowseGuard {
 
 fn classify_archive_browse_error(error: &str) -> String {
     let lower = error.to_ascii_lowercase();
+    if error.contains("ZPAQ") {
+        if error.contains("[archive-inspection:ambiguous-data]") || error.contains("[archive-inspection:password-required]") {
+            return format!("ARCHIVE_BROWSE_PASSWORD|ZPAQ 需要有效密码；密码不匹配或文件头损坏时均可能无法读取，请同时核对源文件|{error}");
+        }
+        if error.contains("[archive-inspection:damaged]") {
+            return format!("ARCHIVE_BROWSE_DAMAGED|ZPAQ 结构或内容损坏，或事务未完成，请重新获取完整文件|{error}");
+        }
+    }
     if lower.contains("lzip") {
         if lower.contains("crc32 mismatch") || lower.contains("data size mismatch") || lower.contains("member size mismatch") {
             return format!("ARCHIVE_BROWSE_CHECKSUM|LZIP 校验未通过，请检查文件完整性或重新获取文件|{error}");

@@ -57,6 +57,7 @@
         "icons/icon.ico"
       ],
       "resources": [
+        "resources/zpaq-engine/*",
         "resources/long_compress_shell_extension_*.dll",
         "resources/long_compress_context_menu*",
         "resources/archive-engine/7z.exe",
