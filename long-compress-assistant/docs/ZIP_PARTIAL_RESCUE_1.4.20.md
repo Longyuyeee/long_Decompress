@@ -2,7 +2,7 @@
 
 ## 当前状态
 
-从 v1.4.19 发布交接 `b2a4dbb` 接续，功能与真实页面验收已收口，进入统一身份、候选构建和正式发布阶段，尚未发布。路线仍是格式、密码、分卷及真实失败恢复，不转向无关功能。
+从 v1.4.19 发布交接 `b2a4dbb` 接续，功能冻结 `4388e9d`，[PR #179](https://github.com/Longyuyeee/long_Decompress/pull/179) 已受保护合入，[v1.4.20 已正式发布](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.20)。标签 `64e65f7` 与候选 `306c50b` 文件树相同，八处身份、普通生产构建、候选 CI 与正式发布构建通过；正式四资产和中文说明已回下载核对，见[发布收据](evidence/zip-partial-rescue-1.4.20/release.json)。路线仍是格式、密码、分卷及真实失败恢复，不转向无关功能。
 
 ## 本版范围
 
