@@ -191,8 +191,6 @@ watch(compressionOptions, (newOptions) => {
 }, { deep: true })
 
 watch(() => compressionOptions.value.format, () => {
-  if (compressionOptions.value.format === 'zipx' && compressionOptions.value.zipSplitMode === 'standard') compressionOptions.value.zipSplitMode = 'numeric'
-
   if (!supportsPassword.value && compressionOptions.value.password) {
     compressionOptions.value.password = ''
   }
@@ -532,7 +530,7 @@ const closeVaultPasswordsAfterFocus = () => {
       <span v-else-if="canCreateSplitArchive" class="split-settings-state">关闭</span>
       <div v-if="compressionOptions.splitArchive && ['zip', 'zipx'].includes(compressionOptions.format)" class="zip-split-kind">
         <span class="shrink-0 text-xs">ZIP 卷型</span>
-        <ThemedSelect :model-value="compressionOptions.zipSplitMode ?? 'numeric'" :options="compressionOptions.format === 'zipx' ? [{ value: 'numeric', label: '数字切卷 · .zipx.001' }] : [{ value: 'numeric', label: '数字切卷 · .zip.001' }, { value: 'standard', label: '标准 ZIP · .z01/.zip' }]" test-id="compression-zip-split-mode" floating @update:model-value="compressionOptions.zipSplitMode = $event as 'numeric' | 'standard'" />
+        <ThemedSelect :model-value="compressionOptions.zipSplitMode ?? 'numeric'" :options="[{ value: 'numeric', label: `数字切卷 · .${compressionOptions.format}.001` }, { value: 'standard', label: compressionOptions.format === 'zipx' ? '标准 ZIPX · .zx01/.zipx' : '标准 ZIP · .z01/.zip' }]" test-id="compression-zip-split-mode" floating @update:model-value="compressionOptions.zipSplitMode = $event as 'numeric' | 'standard'" />
         <HelpHint label="ZIP 卷型说明">标准 ZIP 分卷供其他支持该卷型的软件打开，入口是 .zip；数字切卷保留旧版方式。两种方式解压都需要全部分卷。</HelpHint>
       </div>
     </section>

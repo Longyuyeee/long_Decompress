@@ -308,7 +308,7 @@ const cancelDiagnosis = async () => {
   try { await tauriCommands.cancelArchiveDiagnosis(diagnosticId.value) } catch { /* command may have just completed */ }
 }
 
-const defaultRepairPath = () => archivePath.value.replace(/(?:\.z\d+|\.\d{3,})$/i, '').replace(/\.zipx?$/i, '') + '.repaired.zip'
+const defaultRepairPath = () => archivePath.value.replace(/(?:\.zx?\d+|\.\d{3,})$/i, '').replace(/\.zipx?$/i, '') + '.repaired.zip'
 
 const repairArchive = async () => {
   if (!diagnosticReport.value?.canRepair || isRepairing.value) return

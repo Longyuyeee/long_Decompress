@@ -298,7 +298,7 @@ impl CompressionService {
             suffixes.iter().any(|suffix| name.ends_with(suffix)).then(|| canonical.to_string())
         };
         match format {
-            ArchiveFormat::Zip => if name.ends_with(".zipx") { "zipx" } else { "zip" }.to_string(),
+            ArchiveFormat::Zip => if name.ends_with(".zipx") || regex::Regex::new(r"\.zx\d{2,5}$").unwrap().is_match(&name) { "zipx" } else { "zip" }.to_string(),
             ArchiveFormat::SevenZip => "7z".to_string(),
             ArchiveFormat::Rar => "rar".to_string(),
             ArchiveFormat::AesEncrypted => [
@@ -2827,6 +2827,9 @@ impl CompressionService {
             return captures.get(1).map(|prefix| prefix.as_str().trim_end_matches('.'))
                 .filter(|base| !base.is_empty()).unwrap_or("archive").to_string();
         }
+        if let Some(captures) = regex::Regex::new(r"(?i)^(.*)\.zx?\d{2,5}$").unwrap().captures(file_name) {
+            return captures[1].to_string();
+        }
         let lower = candidate.to_lowercase();
         if let Some((_, extension)) = lower.rsplit_once('.') {
             if extension.len() >= 3 && extension.chars().all(|character| character.is_ascii_digit()) {
@@ -5122,13 +5125,6 @@ mod tests_continued {
                         assert!(options.verify_after);
                         let service = CompressionService::for_testing();
                         let staged = CompressionService::temporary_compression_output(&output).unwrap();
-                        if format == "zipx" && split == Some(ZipSplitMode::Standard) {
-                            let error = native_compression::zip::compress(&service, None, "1416",
-                                &sources, &staged.to_string_lossy(), options).unwrap_err();
-                            assert!(error.to_string().contains("数字分卷"));
-                            assert!(!staged.exists());
-                            continue;
-                        }
                         CompressionService::validate_compression_request(&sources, &output.to_string_lossy(), &options).unwrap();
                         native_compression::zip::compress(&service, None, "1416", &sources,
                             &staged.to_string_lossy(), options).unwrap();

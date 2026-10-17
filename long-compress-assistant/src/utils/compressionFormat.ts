@@ -50,7 +50,7 @@ export interface CompressionFormatCapability {
 
 export const FORMAT_CAPABILITIES: CompressionFormatCapability[] = [
   { format: 'zip', displayName: 'ZIP', extensions: ['zip'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
-  { format: 'zipx', knownLimitations: '使用 XZ 方法；分卷采用 .zipx.001 数字卷。', displayName: 'ZIPX（XZ）', extensions: ['zipx'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
+  { format: 'zipx', knownLimitations: '使用 XZ 方法；支持数字卷与 .zx01/…/.zipx 标准卷，接收方需使用支持该卷型及方法的软件。', displayName: 'ZIPX（XZ）', extensions: ['zipx'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
   { format: '7z', displayName: '7Z', extensions: ['7z'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
   { format: 'rar', displayName: 'RAR', extensions: ['rar'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: true, fallbackEngine: 'winrar', knownLimitations: 'RAR creation, including encrypted RAR, requires user-installed WinRAR/RAR command line tools.' },
   { format: 'wim', displayName: 'WIM', extensions: ['wim'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: false, requires7za: true, requiresWinRar: false, fallbackEngine: '7za', engineFormat: 'wim', knownLimitations: 'WIM creation requires the bundled full 7-Zip engine and does not support password encryption.' },
@@ -133,7 +133,7 @@ export const isPotentialSplitArchivePath = (path: string) => {
   const normalizedPath = path.trim().toLowerCase()
   return /(?:^|[\\/.])haozip\d{2,5}\.(zip|7z)$/.test(normalizedPath)
     || /(?:\.7z)?\.\d{3,}$/.test(normalizedPath)
-    || /\.z\d{2,5}$/.test(normalizedPath)
+    || /\.zx?\d{2,5}$/.test(normalizedPath)
     || /\.r\d{2,3}$/.test(normalizedPath)
     || /\.part\d+(?:\.rar)?$/.test(normalizedPath)
 }
@@ -145,6 +145,7 @@ export const DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS = [
   ...DECOMPRESS_ARCHIVE_EXTENSIONS,
   '001',
   'z01',
+  'zx01',
   'r00',
   'exe',
 ]

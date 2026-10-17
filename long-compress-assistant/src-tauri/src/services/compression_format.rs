@@ -424,9 +424,6 @@ pub fn validate_compression_request(
         .is_some_and(|password| !password.is_empty());
     let split_requested = options.split_size.is_some_and(|size| size > 0);
 
-    if requested_format == "zipx" && split_requested && options.zip_split_mode == super::standard_zip_writer::ZipSplitMode::Standard {
-        anyhow::bail!("本版 ZIPX 创建请使用数字分卷（.zipx.001）；标准分卷可选择 ZIP 格式。");
-    }
     if options.encrypt_filenames && (!matches!(requested_format.as_str(), "7z" | "rar") || !has_password) {
         return Err(CompressionError::CompressionFailed(
             "文件名加密仅支持 7Z/RAR，且必须设置压缩密码。".to_string(),

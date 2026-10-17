@@ -1,0 +1,83 @@
+{
+  "generatedAt": "2026-10-17T19:28:47.064Z",
+  "tool": "E:/Bandzip/Bandizip/bz.exe",
+  "toolSha256": "d69bc4d2605f0ecac20e8cfae11e313fb011649ed7f182cfcb25d6be73dcf4e2",
+  "publicPassword": "ZipxTest-1418",
+  "source": [
+    {
+      "name": "中文目录\\原文件.bin",
+      "bytes": 170123,
+      "sha256": "ec69f497c6ea5ecc2cf2a2b64bed3a4cc6c243ce1e6d562ec5661f66d76e5575"
+    },
+    {
+      "name": "说明.txt",
+      "bytes": 1400,
+      "sha256": "35059548fa9d6c8b3c9f7a86d2159449befdaaa5eff21b6a70e4a583df378d0d"
+    }
+  ],
+  "outputs": [
+    {
+      "mode": "none",
+      "args": [
+        "c",
+        "-fmt:zipx",
+        "-l:5",
+        "-v:65536",
+        "-r",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\zipx-1418-original\\none\\真实原包.zipx",
+        ".\\*"
+      ],
+      "listing": "bz 7.38(Beta,x64) - Bandizip console tool. Copyright (C) 2025 Bandisoft\r\nListing archive: E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\zipx-1418-original\\none\\真实原包.zipx\r\nArchive format: Zip/Zipx\r\n\r\n      Date  Time    Attr         Size     CompSize Name                     \r\n------------------- ---- ------------ ------------ -------------------------\r\n2026-10-18 03:28:46 D___            0            0 中文目录\\\r\n2026-10-18 03:28:46 A___       170123       170188 中文目录\\原文件.bin\r\n2026-10-18 03:28:46 D___            0            0 中文目录\\空目录\\\r\n2026-10-18 03:28:46 A___         1400          140 说明.txt\r\n------------------- ---- ------------ ------------ -------------------------\r\n2026-10-18 03:28:46            171523       170328 2 files, 2 folders       \r\n",
+      "test": "bz 7.38(Beta,x64) - Bandizip console tool. Copyright (C) 2025 Bandisoft\r\nTesting archive: E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\zipx-1418-original\\none\\真实原包.zipx\r\n中文目录\\原文件.bin  19.3% / 19.1% \r说明.txt  100.0% / 100.0% \r\r\nAll OK\r\n",
+      "files": [
+        {
+          "name": "真实原包.zipx",
+          "bytes": 40090,
+          "sha256": "5d9f7469e40124cd1a0b42edbfa0c686f932c2ba1c1cb000c7c22527203db6d3"
+        },
+        {
+          "name": "真实原包.zx01",
+          "bytes": 65536,
+          "sha256": "f39398781681a444fa324ea494edeaf2a67b63f2d33a320d7b893df8059fdf00"
+        },
+        {
+          "name": "真实原包.zx02",
+          "bytes": 65536,
+          "sha256": "411def7b97714b7195c1abaf97e748e01cd907198c20ff42ed21ba28b8fdde25"
+        }
+      ]
+    },
+    {
+      "mode": "password",
+      "args": [
+        "c",
+        "-fmt:zipx",
+        "-l:5",
+        "-v:65536",
+        "-r",
+        "-p:ZipxTest-1418",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\zipx-1418-original\\password\\真实原包.zipx",
+        ".\\*"
+      ],
+      "listing": "bz 7.38(Beta,x64) - Bandizip console tool. Copyright (C) 2025 Bandisoft\r\nListing archive: E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\zipx-1418-original\\password\\真实原包.zipx\r\nArchive format: Zip/Zipx\r\n\r\n      Date  Time    Attr         Size     CompSize Name                     \r\n------------------- ---- ------------ ------------ -------------------------\r\n2026-10-18 03:28:46 D___            0            0 中文目录\\\r\n2026-10-18 03:28:46 A___       170123       170216 中文目录\\原文件.bin\r\n2026-10-18 03:28:46 D___            0            0 中文目录\\空目录\\\r\n2026-10-18 03:28:46 A___         1400          168 说明.txt\r\n------------------- ---- ------------ ------------ -------------------------\r\n2026-10-18 03:28:47            171523       170384 2 files, 2 folders       \r\n",
+      "test": "bz 7.38(Beta,x64) - Bandizip console tool. Copyright (C) 2025 Bandisoft\r\nTesting archive: E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\zipx-1418-original\\password\\真实原包.zipx\r\n中文目录\\原文件.bin  19.3% / 19.1% \r说明.txt  100.0% / 100.0% \r\r\nAll OK\r\n",
+      "files": [
+        {
+          "name": "真实原包.zipx",
+          "bytes": 40190,
+          "sha256": "cd3b29e89126e5acadfa95b21cb9949dd8425b7c5b323ef0196741f7b7650409"
+        },
+        {
+          "name": "真实原包.zx01",
+          "bytes": 65536,
+          "sha256": "ca256f65c462e49a67686fe53cdcc267b97ab5953b1ef0c2b6ec375da8792958"
+        },
+        {
+          "name": "真实原包.zx02",
+          "bytes": 65536,
+          "sha256": "06710822c8a95781bd472393849223cd88bd5da47d2c5af9d03ee114f22ca9b0"
+        }
+      ]
+    }
+  ]
+}

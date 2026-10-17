@@ -152,10 +152,6 @@ pub(crate) fn compress<R: CompressionRuntime>(
         .into());
     }
 
-    if output.to_ascii_lowercase().ends_with(".zipx") && options.split_size.is_some_and(|size| size > 0)
-        && options.zip_split_mode == crate::services::standard_zip_writer::ZipSplitMode::Standard {
-        anyhow::bail!("本版 ZIPX 创建请使用数字分卷（.zipx.001）；标准分卷可选择 ZIP 格式。");
-    }
     if let Some(parent) = Path::new(output).parent() {
         std::fs::create_dir_all(parent)?;
     }
@@ -243,10 +239,6 @@ mod tests {
                         zip_encryption: password.unwrap_or_default(),
                         zip_split_mode: split.unwrap_or_default(), split_size: split.map(|_| 65_536),
                         preserve_paths: Some(true), ..Default::default() };
-                    if format == "zipx" && split == Some(ZipSplitMode::Standard) {
-                        let error = compress(&TestRuntime::default(), None, "1414", &[source.to_string_lossy().into()], &output.to_string_lossy(), options).unwrap_err();
-                        assert!(error.to_string().contains("数字分卷")); assert!(!output.exists()); continue;
-                    }
                     compress(&TestRuntime::default(), None, "1414", &[source.to_string_lossy().into()], &output.to_string_lossy(), options).unwrap();
                     let input = if split.is_some() { crate::services::archive_volumes::first_volume_path(&output) } else { output.clone() };
                     let reader = crate::services::numeric_volume_reader::ZipInputReader::open(&input).unwrap();

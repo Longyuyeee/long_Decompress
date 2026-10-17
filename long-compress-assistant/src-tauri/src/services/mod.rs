@@ -73,3 +73,5 @@ pub mod pdf_analysis;
 pub mod pdf_transform;
 pub mod pdf_output_validation;
 pub mod pdf_publish;
+#[cfg(test)]
+mod standard_zipx_tests;

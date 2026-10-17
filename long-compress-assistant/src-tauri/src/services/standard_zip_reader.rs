@@ -81,15 +81,8 @@ impl StandardZipReader {
     }
 
     fn open(path: &Path, allow_missing: bool, cancelled: Option<&AtomicBool>) -> Result<Option<Self>> {
-        let extension = path
-            .extension()
-            .and_then(|value| value.to_str())
-            .unwrap_or("")
-            .to_ascii_lowercase();
-        if extension != "zip"
-            && !(extension.starts_with('z')
-                && extension[1..].bytes().all(|byte| byte.is_ascii_digit()))
-        {
+        if !path.file_name().and_then(|name| name.to_str())
+            .is_some_and(|name| SplitArchiveDetector::zip_disk_family(name).is_some()) {
             return Ok(None);
         }
         let Some(group) = SplitArchiveDetector::detect_split_archive(path)?
@@ -116,8 +109,9 @@ impl StandardZipReader {
                 group.total_parts - 1
             } else {
                 part.extension().and_then(|extension| extension.to_str())
-                    .and_then(|extension| extension.get(1..))
-                    .and_then(|number| number.parse::<usize>().ok())
+                    .map(str::to_ascii_lowercase)
+                    .and_then(|extension| extension.strip_prefix("zx").or_else(|| extension.strip_prefix('z'))
+                        .and_then(|number| number.parse::<usize>().ok()))
                     .and_then(|number| number.checked_sub(1)).context("无法确定 ZIP 分卷编号")?
             };
             ensure!(disk < indices.len() && indices[disk].is_none(), "ZIP 分卷编号重复或越界");
