@@ -1,4 +1,4 @@
-use std::io::{Cursor, Read, Write};
+use std::io::{BufReader, Cursor, Read, Take, Write};
 
 use crate::crypto::Decryptor;
 use crate::error::{EggError, EggResult};
@@ -25,54 +25,65 @@ pub fn extract_lzma<R: Read, W: Write>(
 
     // Bytes 0..4: reserved (discard)
     // Bytes 4..9: LZMA properties
-    let lzma_props = &header[4..9];
-
-    // Read remaining compressed data, growing from the bytes actually present
-    // so a bogus compressed_size can't trigger a huge up-front allocation.
-    let data_size = compressed_size - 9;
-    let mut compressed_data = Vec::new();
-    if (&mut *reader)
-        .take(data_size)
-        .read_to_end(&mut compressed_data)? as u64
-        != data_size
-    {
-        return Err(EggError::LzmaFailed("truncated LZMA block".into()));
+    let dictionary = u32::from_le_bytes(header[5..9].try_into().unwrap()).max(4096);
+    // Bound decoder history, not the total length of an otherwise valid stream.
+    // Large input must never create an input-sized Vec or a second full copy.
+    const MAX_DICTIONARY: u32 = 256 * 1024 * 1024;
+    if dictionary > MAX_DICTIONARY {
+        return Err(EggError::UnsupportedFeature("EGG LZMA 字典超过 256 MiB".into()));
     }
-    if let Some(ref mut c) = crypto {
-        c.decrypt(&mut compressed_data);
-    }
-
-    // Build standard LZMA header: 5 props + 8 bytes uncompressed size (-1 = unknown)
-    let mut full_stream = Vec::with_capacity(13 + compressed_data.len());
-    full_stream.extend_from_slice(lzma_props);
-    full_stream.extend_from_slice(&u64::MAX.to_le_bytes());
-    full_stream.extend_from_slice(&compressed_data);
-
-    // Cap lzma-rs's buffer to the declared size; its default memlimit is
-    // unlimited, so a crafted stream could otherwise buffer hundreds of MiB
-    // before the caller's LimitWriter sees the first byte.
-    let memlimit = (max_output.saturating_add(1 << 16)).min(usize::MAX as u64) as usize;
+    let mut standard_header = [0u8; 13];
+    standard_header[..5].copy_from_slice(&header[4..9]);
+    standard_header[5..].copy_from_slice(&u64::MAX.to_le_bytes());
+    let payload = DecryptedInput { inner: reader.take(compressed_size - 9), crypto, error: None };
+    let mut input = BufReader::with_capacity(64 * 1024, Cursor::new(standard_header).chain(payload));
+    let memlimit = max_output.saturating_add(1 << 16).min(MAX_DICTIONARY as u64) as usize;
     let options = lzma_rs::decompress::Options {
         unpacked_size: lzma_rs::decompress::UnpackedSize::ReadFromHeader,
         memlimit: Some(memlimit),
         allow_incomplete: false,
     };
 
-    let mut cursor = Cursor::new(full_stream);
     let mut hasher = crc32fast::Hasher::new();
     {
         let mut sink = HashingWriter {
             inner: writer,
             hasher: &mut hasher,
         };
-        lzma_rs::lzma_decompress_with_options(&mut cursor, &mut sink, &options)
-            .map_err(|e| EggError::LzmaFailed(e.to_string()))?;
+        let mut limited = super::LimitWriter::new(&mut sink, max_output);
+        let result = lzma_rs::lzma_decompress_with_options(&mut input, &mut limited, &options);
+        // lzma-rs turns range-decoder input errors into LzmaError strings.
+        // Keep the actual error at the input boundary, not a text heuristic.
+        if let Some(error) = input.get_mut().get_mut().1.error.take() { return Err(EggError::Io(error)); }
+        result.map_err(|e| match e {
+                lzma_rs::error::Error::IoError(e) | lzma_rs::error::Error::HeaderTooShort(e) => EggError::Io(e),
+                e => EggError::LzmaFailed(e.to_string()),
+            })?;
     }
 
-    if cursor.position() != cursor.get_ref().len() as u64 {
-        return Err(EggError::LzmaFailed("trailing data after LZMA end".into()));
+    // BufRead may prefetch past the end marker. Count unread buffered bytes too;
+    // Take reaching zero alone is not evidence that the decoder consumed them.
+    if !input.buffer().is_empty() || input.get_ref().get_ref().1.inner.limit() != 0 {
+        return Err(EggError::LzmaFailed("unused or truncated data after LZMA end".into()));
     }
     Ok(hasher.finalize())
+}
+
+struct DecryptedInput<'a, R: Read> {
+    inner: Take<R>,
+    crypto: Option<&'a mut dyn Decryptor>,
+    error: Option<std::io::Error>,
+}
+impl<R: Read> Read for DecryptedInput<'_, R> {
+    fn read(&mut self, data: &mut [u8]) -> std::io::Result<usize> {
+        let size = data.len().min(64 * 1024);
+        let n = match self.inner.read(&mut data[..size]) {
+            Ok(n) => n,
+            Err(error) => { let forwarded = std::io::Error::new(error.kind(), error.to_string()); self.error = Some(error); return Err(forwarded); }
+        };
+        if let Some(cipher) = self.crypto.as_mut() { cipher.decrypt(&mut data[..n]); }
+        Ok(n)
+    }
 }
 
 /// Writer adapter that CRC32-hashes bytes as they pass through to `inner`.
@@ -145,6 +156,20 @@ mod tests {
     fn output_io_kind_is_preserved_for_final_classification() {
         struct Denied;impl Write for Denied {fn write(&mut self,_:&[u8])->io::Result<usize>{Err(io::Error::from(io::ErrorKind::PermissionDenied))}fn flush(&mut self)->io::Result<()>{Ok(())}}
         let(data,egg)=sample();let n=egg.len();let err=extract_lzma(&mut Cursor::new(egg),&mut Denied,n as u64,data.len() as u64,None).unwrap_err();
+        assert!(matches!(err,EggError::Io(ref e) if e.kind()==io::ErrorKind::PermissionDenied),"{err:?}");
+    }
+    #[test]
+    fn dictionary_and_output_limits_remain_bounded() {
+        let(data,mut egg)=sample();let n=egg.len();
+        assert!(extract_lzma(&mut Cursor::new(&egg),&mut io::sink(),n as u64,1,None).is_err());
+        egg[5..9].copy_from_slice(&u32::MAX.to_le_bytes());
+        assert!(matches!(extract_lzma(&mut Cursor::new(egg),&mut io::sink(),n as u64,data.len() as u64,None),Err(EggError::UnsupportedFeature(_))));
+    }
+    #[test]
+    fn input_io_kind_is_preserved_for_final_classification() {
+        struct DeniedAfterHeader { input: Cursor<Vec<u8>> }
+        impl Read for DeniedAfterHeader { fn read(&mut self,b:&mut[u8])->io::Result<usize>{if self.input.position()>=9 {Err(io::Error::from(io::ErrorKind::PermissionDenied))}else{let n=b.len().min(9-self.input.position() as usize);self.input.read(&mut b[..n])}} }
+        let(data,egg)=sample();let n=egg.len();let err=extract_lzma(&mut DeniedAfterHeader{input:Cursor::new(egg)},&mut io::sink(),n as u64,data.len() as u64,None).unwrap_err();
         assert!(matches!(err,EggError::Io(ref e) if e.kind()==io::ErrorKind::PermissionDenied),"{err:?}");
     }
 }

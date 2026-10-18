@@ -1,5 +1,7 @@
 # Long EGG reader changes
 
+v1.5.10 replaces LZMA whole-input buffering and its duplicate copy with a 64 KiB buffered reader over a length-limited, continuously decrypted input. The synthesized 13-byte standard header remains separate from EGG's decrypted 9-byte header. Decoder lookahead is counted when enforcing complete compressed-input consumption; output length/CRC checks remain. The former 256 MiB compressed-input restriction is replaced by a 256 MiB dictionary ceiling, with the declared-output memory limit and bounded output retained. Native input/output I/O errors keep their original kind for the application's final-cause classifier. No EGG encoder or new encryption/solid combination is added.
+
 Upstream unegg 0.2.1 at 9929009ca4d010e8cd88bb796f7a1868162026d4, MIT, copyright Sungjoon Moon.
 
 The parser, strict names, ZipCrypto, AES/LEA and Store/Deflate/Bzip2/LZMA/AZO decoders are compiled. AES/LEA receive explicitly encoded password bytes, not implicit UTF-8 strings. AZO uses vendored libazo 0.1.1 with streaming and exact terminal checks; its I/O errors retain their type. The original CLI, extraction and volume discovery remain for traceability but are not compiled or exposed. The app helper implements bounded solid input and separate file/block-CRC output spans. Native .volN.egg framing and strict two-way IDs use the app's shared egg_volumes.rs. No EGG creation.

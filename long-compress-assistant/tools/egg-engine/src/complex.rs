@@ -7,7 +7,6 @@ use unegg::archive::EggBlock;
 pub fn validate(a: &EggArchive<egg_volumes::Reader>, selected: &[EggFileEntry]) -> Result<()> {
     let dependencies = if a.is_solid { &a.entries[..] } else { selected };
     let mut method = None;
-    let mut packed = 0u64;
     let mut expanded = 0u64;
     for e in dependencies {
         if let Some(i) = &e.encrypt_info {
@@ -30,19 +29,12 @@ pub fn validate(a: &EggArchive<egg_volumes::Reader>, selected: &[EggFileEntry]) 
                 !matches!(b.compression_method, CompressionMethod::Unknown(_)),
                 "[archive-inspection:unsupported] EGG 压缩方法不受支持"
             );
-            if b.compression_method == CompressionMethod::Lzma {
-                ensure!(
-                    b.compressed_size <= 256 * 1024 * 1024,
-                    "[archive-inspection:unsupported] EGG LZMA 单块压缩输入超过 256 MiB"
-                );
-            }
             if a.is_solid {
                 ensure!(
                     method.is_none_or(|m| m == b.compression_method),
                     "[archive-inspection:unsupported] EGG 固实流内混合压缩方法尚不受支持"
                 );
                 method = Some(b.compression_method);
-                packed += b.compressed_size as u64;
                 expanded += b.uncompressed_size as u64;
             }
         }
@@ -56,10 +48,6 @@ pub fn validate(a: &EggArchive<egg_volumes::Reader>, selected: &[EggFileEntry]) 
                     .map(|e| e.uncompressed_size)
                     .sum::<u64>(),
             "[archive-inspection:damaged] EGG 固实文件大小与数据块之和不符"
-        );
-        ensure!(
-            method != Some(CompressionMethod::Lzma) || packed <= 256 * 1024 * 1024,
-            "[archive-inspection:unsupported] EGG LZMA 固实压缩输入超过 256 MiB"
         );
     }
     ensure!(
