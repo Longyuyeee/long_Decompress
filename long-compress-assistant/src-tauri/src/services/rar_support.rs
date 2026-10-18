@@ -390,7 +390,7 @@ impl RarSupportService {
     }
 
     /// 尝试使用unrar解压
-    fn normalized_archive_path(path: &Path, preserve_paths: bool) -> Option<PathBuf> {
+    pub(crate) fn normalized_archive_path(path: &Path, preserve_paths: bool) -> Option<PathBuf> {
         let source = if preserve_paths {
             path.to_path_buf()
         } else {
@@ -411,7 +411,7 @@ impl RarSupportService {
         }
     }
 
-    fn matches_file_filter(path: &Path, filter: Option<&str>) -> bool {
+    pub(crate) fn matches_file_filter(path: &Path, filter: Option<&str>) -> bool {
         let Some(filter) = filter.map(str::trim).filter(|value| !value.is_empty()) else {
             return true;
         };

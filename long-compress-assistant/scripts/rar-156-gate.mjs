@@ -31,6 +31,8 @@ export async function runRar156Gate({driver,bridge,waitForElement,fixtureDirecto
     const progress=(await events(taskId)).filter(e=>e.stage!=='password-attempt'&&e.processed_bytes>0)
     assert.ok(progress.length>0);assert.ok(progress.some(e=>e.processed_bytes===c.expected.bytes))
     assert.ok(progress.every(e=>e.processed_bytes<=c.expected.bytes&&!e.output_bytes_estimated))
+    assert.ok(progress.every(e=>e.total_bytes===c.expected.bytes),'Volume continuation headers must not multiply the logical total')
+    for(const e of progress.filter(e=>e.progress<0.99))assert.ok(Math.abs(e.progress-e.processed_bytes/c.expected.bytes)<1e-6)
     assert.ok(progress.filter(e=>e.progress<1).every(e=>e.progress<=0.99+1e-6))
     for(const m of c.members)assert.equal(sha(path.join(base,c.name,m.name)),m.sha256)
     cases.push({original:c.name,sourceMembers:c.members,expected:c.expected,actualBytes:progress.map(e=>e.processed_bytes),progress:progress.map(e=>e.progress),noOutputLengthEstimate:true,outputSha256:c.expected.sha256})
@@ -78,6 +80,8 @@ export async function runRar156Gate({driver,bridge,waitForElement,fixtureDirecto
     const first=staged(work);assert.ok(first&&first.actualPrefixBytes>1024*1024&&first.actualPrefixBytes<known.length,JSON.stringify(first))
     const samples=await events(task.id),last=samples.filter(e=>e.processed_bytes>0).at(-1)
     assert.ok(last&&last.processed_bytes>0&&last.processed_bytes<known.length,JSON.stringify(last))
+    assert.equal(last.total_bytes,known.length)
+    assert.ok(Math.abs(last.progress-last.processed_bytes/known.length)<1e-6,'Visible percentage uses the real logical total')
     assert.equal(first.logicalBytes,known.length,'Real preallocation must be present for this regression')
     assert.ok(last.processed_bytes<=first.actualPrefixBytes+4*1024*1024,'Decoded count cannot jump to unwritten allocation')
     assert.ok(last.processed_bytes>=first.actualPrefixBytes,'Pause flushes the latest decoded count, not an old throttled sample')
@@ -89,6 +93,9 @@ export async function runRar156Gate({driver,bridge,waitForElement,fixtureDirecto
       await driver.wait(async()=>await bridge('taskStatus',task.id)==='cancelled',30000)
       await driver.wait(()=>!readdirSync(work).some(n=>n.startsWith('.long-extract-')),30000)
       assert.deepEqual(readdirSync(target).sort(),control.members.map(m=>m.name).sort())
+      const record=await driver.wait(async()=>(await bridge('taskHistory')).find(h=>h.id===task.id)||false,10000)
+      assert.equal(record.status,'cancelled');assert.equal(record.errorMessage,null)
+      await sizes('rar156-cancelled-not-failed',`[data-task-id="${task.id}"]`)
       cases.push({actualQueueCancel:true,actualKnownBytesBeforePause:first.actualPrefixBytes,logicalBytes:first.logicalBytes,reportedBytes:last.processed_bytes,pauseStopsWriting:true,cancelWhilePaused:true,noStagedOrPublishedOutput:true})
     }else{
       await driver.manage().window().setRect({width:1100,height:700})
@@ -103,6 +110,7 @@ export async function runRar156Gate({driver,bridge,waitForElement,fixtureDirecto
       await click('[data-testid="nav-History"]');await sizes('rar156-real-history','[data-testid="history-record-row"]');await click('[data-testid="nav-Decompress"]')
       cases.push({actualQueuePauseResumeComplete:true,actualKnownBytesBeforePause:first.actualPrefixBytes,logicalBytes:first.logicalBytes,reportedBytes:last.processed_bytes,reportedProgress:last.progress,pauseStopsWriting:true,pausedMs,wallMs,historyDurationMs:history.durationMs,excludedMs,outputSha256:control.expected[0].sha256})
     }
+    for(const m of control.members)assert.equal(sha(path.join(target,m.name)),m.sha256)
   }
   for(const m of control.members)assert.equal(sha(path.join(controlBase,m.name)),m.sha256)
   writeFileSync(path.join(artifactDirectory,'rar-156-results.json'),JSON.stringify({completedAt:new Date().toISOString(),application,binarySha256:sha(application),originals,control,cases,screenshots,layouts,events:await driver.executeScript(()=>window.__rar156Progress)},null,2)+'\n')

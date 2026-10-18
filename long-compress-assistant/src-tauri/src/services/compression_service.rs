@@ -2857,10 +2857,11 @@ impl CompressionService {
                 let service = self.clone();
                 let path = archive_path.to_path_buf();
                 let password = password.map(str::to_owned);
+                let options = options.clone();
                 // Header walking and pause gates must not occupy an async
                 // runtime worker. Keep full stats and the resource checks below.
                 Some(tokio::task::spawn_blocking(move || {
-                    crate::services::rar_preflight::stats(&path, password.as_deref(), || service.check_cancellation())
+                    crate::services::rar_preflight::stats_with_options(&path, password.as_deref(), &options, || service.check_cancellation())
                 }).await.map_err(|error| CompressionError::ExtractionFailed(
                     format!("RAR 预检查线程异常退出: {error}")
                 ))??)
