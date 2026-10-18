@@ -1,0 +1,415 @@
+{
+  "completedAt": "2026-10-18T06:05:41.835Z",
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
+  "binarySha256": "f0ecaeadf443f5f685f16e2a0e44999095a62b0f044192b7dad81a8cb350d271",
+  "cases": [
+    {
+      "original": "rar4-single-plain",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true,
+      "wrongKeyRejected": null
+    },
+    {
+      "original": "rar4-single-contents",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true,
+      "wrongKeyRejected": true
+    },
+    {
+      "original": "rar4-single-headers",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true,
+      "wrongKeyRejected": true
+    },
+    {
+      "original": "rar4-old-plain",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true,
+      "wrongKeyRejected": null
+    },
+    {
+      "original": "rar4-old-contents",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true,
+      "wrongKeyRejected": true
+    },
+    {
+      "original": "rar4-old-headers",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true,
+      "wrongKeyRejected": true
+    },
+    {
+      "original": "rar4-modern-plain",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true,
+      "wrongKeyRejected": null
+    },
+    {
+      "original": "rar4-modern-contents",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true,
+      "wrongKeyRejected": true
+    },
+    {
+      "original": "rar4-modern-headers",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true,
+      "wrongKeyRejected": true
+    },
+    {
+      "original": "rar5-modern-plain",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true,
+      "wrongKeyRejected": null
+    },
+    {
+      "original": "rar5-modern-contents",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true,
+      "wrongKeyRejected": true
+    },
+    {
+      "original": "rar5-modern-headers",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true,
+      "wrongKeyRejected": true
+    },
+    {
+      "original": "7z-volumes-plain",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true,
+      "wrongKeyRejected": null
+    },
+    {
+      "original": "7z-volumes-contents",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true,
+      "wrongKeyRejected": true
+    },
+    {
+      "original": "7z-volumes-headers",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true,
+      "wrongKeyRejected": true
+    },
+    {
+      "control": {
+        "createdAt": "2026-10-18T05:15:13.149Z",
+        "producer": "E:/Winrar/Rar.exe",
+        "producerSha256": "08ce9c66600fd07580304cbaff9241c1b9fda33eb70cc3d28c16a1084d3bc3ca",
+        "archive": "控制原包.part01.exe",
+        "members": [
+          {
+            "name": "控制原包.part01.exe",
+            "bytes": 33554432,
+            "sha256": "0f056febdfd1cb109c3ee8bb4487bd775c2a86418d52b29610e53468514302e4"
+          },
+          {
+            "name": "控制原包.part02.rar",
+            "bytes": 33554432,
+            "sha256": "4e6ecc121d9bfdca262fa9e49979fdd74ddbba0790819bd4f20a37cfab557e53"
+          },
+          {
+            "name": "控制原包.part03.rar",
+            "bytes": 33554432,
+            "sha256": "b52b95dcf22e58d3a50bfe0b73c5575a8ccf942361faf9f8210f3bf7652b6a9b"
+          },
+          {
+            "name": "控制原包.part04.rar",
+            "bytes": 33554432,
+            "sha256": "903bf8fece7cd155222982767bb427007beb6759d29cf721981efbf81a09b8aa"
+          },
+          {
+            "name": "控制原包.part05.rar",
+            "bytes": 33554432,
+            "sha256": "2ea26a160f7a381ff4c5761c737b62645353b7dc60595aca749c0566175558d3"
+          },
+          {
+            "name": "控制原包.part06.rar",
+            "bytes": 33554432,
+            "sha256": "68c29cadc8b84b819efd52f5fbaa169f76a098ed09333c884be68b1110d8755c"
+          },
+          {
+            "name": "控制原包.part07.rar",
+            "bytes": 33554432,
+            "sha256": "f1ff1e4ec1d930bc635b90430178b8e54127ad904f1053795d7422383f886f1d"
+          },
+          {
+            "name": "控制原包.part08.rar",
+            "bytes": 33554432,
+            "sha256": "306be4531f30ebe333650d062e5dc411c00ea557eab305ac32280c9da2d55d0b"
+          },
+          {
+            "name": "控制原包.part09.rar",
+            "bytes": 461890,
+            "sha256": "f327ae93c623ced845de88f5353897aa94147ea657db0c71d4137a8905bf0e95"
+          }
+        ],
+        "expected": [
+          {
+            "path": "payload.bin",
+            "bytes": 268435456,
+            "sha256": "1a04258f4db4d37deb6804f922cdb9740756353babd645b4c23ec77b7d058279"
+          }
+        ]
+      },
+      "actualKnownPayloadBeforePause": 20971520,
+      "logicalFileBytesWhenPaused": 268435456,
+      "pauseStopsContentWrites": true,
+      "resumeWrites": true,
+      "cancelWhilePaused": true,
+      "sourceRetained": true,
+      "noPublishedOrStagedOutput": true
+    },
+    {
+      "actualFileManagerMiddleDoubleClick": true,
+      "actualSelectedExtract": true
+    },
+    {
+      "actualExeAndAllMembersDeduplicated": true
+    },
+    {
+      "actualMissingFirstExplainsExeAlternative": true,
+      "noInvalidTaskQueued": true
+    },
+    {
+      "actualMissingMiddleFinalCause": true,
+      "supplementedOriginal": true,
+      "freshRetry": true,
+      "oldFailureRetained": true
+    },
+    {
+      "actualSfxHistoryReexecution": true,
+      "passwordNotSaved": true,
+      "oldRecordRetained": true
+    },
+    {
+      "actualEmptyFirstFileWrongKeyFailure": true,
+      "actualPasswordCorrection": true,
+      "oldWrongKeyRecordRetained": true
+    },
+    {
+      "actualLoaderConversion": true,
+      "independentZipReadback": true
+    },
+    {
+      "actualSfxDiagnosticPage": true,
+      "noUnsupportedRepairAction": true
+    }
+  ],
+  "screenshots": [
+    "sfx155-rar4-middle-browser-1100x700.png",
+    "sfx155-rar4-middle-browser-760x520.png",
+    "sfx155-selected-extract-1100x700.png",
+    "sfx155-selected-extract-760x520.png",
+    "sfx155-one-group-1100x700.png",
+    "sfx155-one-group-760x520.png",
+    "sfx155-missing-first-explanation-1100x700.png",
+    "sfx155-missing-first-explanation-760x520.png",
+    "sfx155-missing-retry-1100x700.png",
+    "sfx155-missing-retry-760x520.png",
+    "sfx155-history-reexecution-1100x700.png",
+    "sfx155-history-reexecution-760x520.png",
+    "sfx155-password-correction-1100x700.png",
+    "sfx155-password-correction-760x520.png",
+    "sfx155-conversion-1100x700.png",
+    "sfx155-conversion-760x520.png",
+    "sfx155-readonly-diagnosis-1100x700.png",
+    "sfx155-readonly-diagnosis-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "sfx155-rar4-middle-browser",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 216,
+          "overflow": 0,
+          "right": 1100
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "sfx155-rar4-middle-browser",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 76,
+          "overflow": 0,
+          "right": 760
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "sfx155-selected-extract",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 216,
+          "overflow": 0,
+          "right": 1100
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "sfx155-selected-extract",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 76,
+          "overflow": 0,
+          "right": 760
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "sfx155-one-group",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "sfx155-one-group",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "sfx155-missing-first-explanation",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "sfx155-missing-first-explanation",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "sfx155-missing-retry",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "sfx155-missing-retry",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "sfx155-history-reexecution",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "sfx155-history-reexecution",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "sfx155-password-correction",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "sfx155-password-correction",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "sfx155-conversion",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 0,
+          "overflow": 0,
+          "right": 1100
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "sfx155-conversion",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 0,
+          "overflow": 0,
+          "right": 760
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "sfx155-readonly-diagnosis",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "sfx155-readonly-diagnosis",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    }
+  ]
+}

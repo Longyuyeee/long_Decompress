@@ -1,0 +1,38 @@
+{
+  "control": {
+    "error": "RAR 解压失败: 系统命令执行失败: RAR extraction cancelled",
+    "ok": false
+  },
+  "logs": [
+    {
+      "message": "确定解压格式: Rar (后缀: exe)",
+      "severity": "Info",
+      "task_id": "sfx155-control-1792303498698",
+      "timestamp": "2026-10-18T06:04:58.832713400Z"
+    },
+    {
+      "message": "正在检测归档加密状态...",
+      "severity": "Info",
+      "task_id": "sfx155-control-1792303498698",
+      "timestamp": "2026-10-18T06:04:58.832728Z"
+    },
+    {
+      "message": "加密状态检测完成：本次解压内容无需密码，正在准备解压...",
+      "severity": "Success",
+      "task_id": "sfx155-control-1792303498698",
+      "timestamp": "2026-10-18T06:04:58.849658100Z"
+    },
+    {
+      "message": "开始解压：控制原包.part01.exe",
+      "severity": "Info",
+      "task_id": "sfx155-control-1792303498698",
+      "timestamp": "2026-10-18T06:04:58.871637900Z"
+    },
+    {
+      "message": "最终失败原因：RAR 解压失败: 系统命令执行失败: RAR extraction cancelled",
+      "severity": "Error",
+      "task_id": "sfx155-control-1792303498698",
+      "timestamp": "2026-10-18T06:04:59.893413800Z"
+    }
+  ]
+}
