@@ -1,0 +1,19 @@
+import assert from 'node:assert/strict'
+import {readFileSync,readdirSync,existsSync,writeFileSync} from 'node:fs'
+import {createHash} from 'node:crypto'
+import {execFileSync} from 'node:child_process'
+import path from 'node:path'
+const base='docs/evidence/egg-passwords-1.5.11/',load=p=>JSON.parse(readFileSync(p,'utf8')),r=load(base+'results.json'),m=load('tests/fixtures/archives/egg-1511/manifest.json'),sha=p=>createHash('sha256').update(readFileSync(p)).digest('hex')
+assert.equal(m.cases.length,20);assert.equal(m.attempts.filter(a=>!a.produced&&a.name.startsWith('solid-')&&a.producerExitCode===1).length,20);assert.equal(m.attempts.filter(a=>a.originalProducerRoundtrip).length,2)
+for(const c of m.cases){assert.equal(c.actual.solid,false);assert.equal(c.actual.encryption.length,1);for(const f of c.members)assert.equal(sha('tests/fixtures/archives/egg-1511/'+f.name),f.sha256)}
+assert.equal(r.cases.filter(c=>c.original).length,20);for(const c of r.cases.filter(c=>c.original))for(const k of ['browse','integrity','diagnosis','whole','selectedLast','payloadHashes'])assert.equal(c[k],true)
+for(const k of ['actualLeaMiddleBrowseAndSelected','actualDefaultEncodingFailure','actualUnrepresentablePasswordCause','actualHistoryReexecution','actualLeaMissingMiddle','actualLeaConversion'])assert.ok(r.cases.some(c=>c[k]),k)
+assert.equal(r.cases.length,25);assert.equal(r.screenshots.length,12);for(const f of r.screenshots)assert.ok(existsSync(base+f));for(const l of r.layouts)assert.ok(l.overflow<=1);assert.equal(r.originalsUnchanged,true)
+assert.equal(r.helperSha256,sha('src-tauri/resources/egg-engine/long-egg.exe'));assert.equal(r.helperSha256,load('docs/evidence/egg-large-lzma-1.5.10/results.json').helperSha256)
+const logs=readdirSync('test-results').filter(n=>/^egg1511-.*-tests.log$/.test(n)).map(n=>readFileSync('test-results/'+n,'utf8')).join('\n'),tests=[...new Set(logs.match(/^test .* \.\.\. ok$/gm))].sort();assert.equal(tests.length,101);assert.ok(!logs.includes('test result: FAILED'));assert.match(readFileSync('test-results/egg1511-frontend.log','utf8'),/170 passed/);assert.match(readFileSync('test-results/egg1511-production-build.log','utf8'),/Finished `release`/)
+const main='src-tauri/target/release/Long解压.exe',version=execFileSync('powershell.exe',['-NoProfile','-Command',`(Get-Item -LiteralPath '${main}').VersionInfo.ProductVersion`],{encoding:'utf8'}).trim();assert.equal(version,'1.5.11');assert.notEqual(sha(main),r.binarySha256)
+const images=s=>[...s.matchAll(/<img\b[^>]*>|!\[[^\]]*\]\([^)]+\)/g)].map(m=>m[0]);for(const f of ['README.md','long-compress-assistant/README.md'])assert.deepEqual(images(readFileSync('../'+f,'utf8')),images(execFileSync('git',['show','6849a6a:'+f],{encoding:'utf8'})))
+// This receipt is the sole generated link target; all source evidence must
+// already exist before writing it, including on the first audit invocation.
+for(const f of ['EGG_PASSWORD_COMBINATIONS_1.5.11.md','EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md','RELEASE_NOTES_1.5.11.md'])for(const link of readFileSync('docs/'+f,'utf8').matchAll(/\]\(([^)]+)\)/g))if(!/^[a-z]+:|^#/i.test(link[1])&&link[1]!=='evidence/egg-passwords-1.5.11/checks.json')assert.ok(existsSync(path.resolve('docs',link[1].split('#')[0])),link[1])
+writeFileSync(base+'checks.json',JSON.stringify({checkedAt:new Date().toISOString(),rustDistinct:101,rustTests:tests,frontend:170,frontendFiles:6,typeCheck:true,desktopCases:25,viewedScreenshots:12,originalGroups:20,unproducedEncryptedSolidRequests:20,independentBandizipGroups:18,originalProducerRoundtripGroups:2,helperSha256:r.helperSha256,unchangedHelperControlEvidence:'../egg-large-lzma-1.5.10/results.json',production:{mainProductVersion:version,mainSha256:sha(main),installationExecuted:false},desktop:r.binarySha256,readmeImagesPreserved:true},null,2)+'\n');console.log('101 Rust / 170 frontend / 20 original combinations / 25 desktop records / 12 viewed pages / normal production passed')
