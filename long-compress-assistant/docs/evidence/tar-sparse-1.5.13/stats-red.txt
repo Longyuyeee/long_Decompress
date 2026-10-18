@@ -1,0 +1,45 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling long-compress-assistant v1.5.13 (E:\ProjectSave\ClaudeProject\Long-Decompress\long-compress-assistant\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 15.65s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-cc588218719b7387.exe)
+
+running 1 test
+
+thread 'services::native_extraction::tar_compatibility_tests::preflight_statistics_use_logical_tar_sizes_not_condensed_stream_size' (38852) panicked at src\services\native_extraction\tar_compatibility_tests.rs:545:9:
+assertion `left == right` failed: "old-gnu.tar.gz"
+  left: 40960
+ right: 8521131
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::native_extraction::tar_compatibility_tests::preflight_statistics_use_logical_tar_sizes_not_condensed_stream_size ... FAILED
+
+failures:
+
+failures:
+    services::native_extraction::tar_compatibility_tests::preflight_statistics_use_logical_tar_sizes_not_condensed_stream_size
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 724 filtered out; finished in 0.11s
+
+error: test failed, to rerun pass `--lib`

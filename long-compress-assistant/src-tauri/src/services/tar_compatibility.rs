@@ -138,6 +138,7 @@ pub(crate) struct LogicalEntry<'a, R: Read> {
     entry: tar::Entry<'a, R>,
     path: PathBuf,
     size: u64,
+    payload_size: u64,
     blocks: Option<Blocks>,
     block: usize,
     position: u64,
@@ -146,6 +147,11 @@ impl<'a, R: Read> LogicalEntry<'a, R> {
     pub(crate) fn new(mut entry: tar::Entry<'a, R>) -> io::Result<Self> {
         let mut path = entry.path()?.into_owned();
         let mut size = entry.size();
+        let mut payload_size = if entry.header().entry_type().is_gnu_sparse() {
+            entry.header().entry_size()?
+        } else {
+            size
+        };
         let mut pax = Vec::new();
         if let Some(extensions) = entry.pax_extensions()? {
             for extension in extensions {
@@ -261,6 +267,7 @@ impl<'a, R: Read> LogicalEntry<'a, R> {
                 .checked_sub(consumed)
                 .ok_or_else(|| damaged("稀疏映射超出声明条目大小"))?;
             validate(&map, size, stored)?;
+            payload_size = stored;
             blocks = Some(map);
         }
         // GNU tar commonly prefixes entries with ./; keep traversal/root
@@ -273,6 +280,7 @@ impl<'a, R: Read> LogicalEntry<'a, R> {
             entry,
             path,
             size,
+            payload_size,
             blocks,
             block: 0,
             position: 0,
@@ -283,6 +291,9 @@ impl<'a, R: Read> LogicalEntry<'a, R> {
     }
     pub(crate) fn size(&self) -> u64 {
         self.size
+    }
+    pub(crate) fn payload_size(&self) -> u64 {
+        self.payload_size
     }
     pub(crate) fn header(&self) -> &tar::Header {
         self.entry.header()
@@ -310,6 +321,102 @@ impl<'a, R: Read> LogicalEntry<'a, R> {
             self.path.display()
         )))
     }
+}
+
+#[derive(Debug)]
+pub(crate) struct Plan {
+    pub entries: usize,
+    pub logical_bytes: u64,
+    pub payload_bytes: u64,
+}
+
+pub(crate) fn plan(
+    path: &Path,
+    route: super::compression_format::CompressionRoute,
+    options: &crate::models::compression::DecompressOptions,
+    check: impl Fn() -> anyhow::Result<()>,
+) -> anyhow::Result<Plan> {
+    use super::compression_format::CompressionRoute as Route;
+    let result = (|| -> anyhow::Result<Plan> {
+        let reader: Box<dyn Read + Send> = match route {
+            Route::Tar => Box::new(super::numeric_volume_reader::ZipInputReader::open(path)?),
+            Route::TarGzip => Box::new(flate2::read::GzDecoder::new(
+                super::numeric_volume_reader::ZipInputReader::open(path)?,
+            )),
+            Route::TarBzip2 => Box::new(bzip2::read::BzDecoder::new(
+                super::numeric_volume_reader::ZipInputReader::open(path)?,
+            )),
+            Route::TarXz => Box::new(xz2::read::XzDecoder::new(
+                super::numeric_volume_reader::ZipInputReader::open(path)?,
+            )),
+            Route::TarZstd => Box::new(zstd::stream::read::Decoder::new(
+                super::numeric_volume_reader::ZipInputReader::open(path)?,
+            )?),
+            Route::TarLz4 => super::codec_stream::decoder(path, "lz4")?,
+            Route::TarBrotli => super::codec_stream::decoder(path, "br")?,
+            Route::TarLzip => super::codec_stream::decoder(path, "lz")?,
+            _ => anyhow::bail!("Not a native TAR route"),
+        };
+        struct Cancellable<'a> {
+            reader: Box<dyn Read + Send>,
+            check: &'a dyn Fn() -> anyhow::Result<()>,
+        }
+        impl Read for Cancellable<'_> {
+            fn read(&mut self, b: &mut [u8]) -> io::Result<usize> {
+                (self.check)().map_err(io::Error::other)?;
+                self.reader.read(b)
+            }
+        }
+        let mut archive = tar::Archive::new(Cancellable {
+            reader,
+            check: &check,
+        });
+        let filter =
+            super::extraction_transaction::compile_file_filter(options.file_filter.as_deref());
+        let mut stats = Plan {
+            entries: 0,
+            logical_bytes: 0,
+            payload_bytes: 0,
+        };
+        for entry in archive.entries()? {
+            check()?;
+            let entry = LogicalEntry::new(entry?)?;
+            if entry.path().as_os_str().is_empty()
+                || !super::extraction_transaction::matches_selected_entries(
+                    entry.path(),
+                    &options.selected_entries,
+                )
+                || !super::extraction_transaction::matches_compiled_file_filter(
+                    entry.path(),
+                    &filter,
+                )
+            {
+                continue;
+            }
+            stats.entries = stats
+                .entries
+                .checked_add(1)
+                .ok_or_else(|| damaged("条目数溢出"))?;
+            if !entry.header().entry_type().is_dir() {
+                stats.logical_bytes = stats
+                    .logical_bytes
+                    .checked_add(entry.size())
+                    .ok_or_else(|| damaged("逻辑总量溢出"))?;
+                stats.payload_bytes = stats
+                    .payload_bytes
+                    .checked_add(entry.payload_size())
+                    .ok_or_else(|| damaged("数据总量溢出"))?;
+            }
+        }
+        let mut reader = archive.into_inner();
+        let mut buffer = [0u8; 65536];
+        while reader.read(&mut buffer)? > 0 {
+            check()?;
+        }
+        Ok(stats)
+    })();
+    check()?;
+    result.map_err(inspection_error)
 }
 
 #[cfg(test)]

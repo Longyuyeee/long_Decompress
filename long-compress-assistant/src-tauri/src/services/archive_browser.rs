@@ -339,7 +339,7 @@ pub async fn browse_archive_cancellable_with_encoding(
         if is_tar_family
             || matches!(
                 format,
-                ArchiveFormat::Zip | ArchiveFormat::SevenZip | ArchiveFormat::Rar | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip
+                ArchiveFormat::Zip | ArchiveFormat::SevenZip | ArchiveFormat::Rar | ArchiveFormat::Tar | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip
             )
         {
             let native_cancelled = operation_cancelled.clone();
@@ -348,6 +348,7 @@ pub async fn browse_archive_cancellable_with_encoding(
                     return Ok(result);
                 }
                 match format {
+                    ArchiveFormat::Tar => browse_tar_reader(super::numeric_volume_reader::ZipInputReader::open(&path)?, "TAR", &native_cancelled),
                     ArchiveFormat::Zip => browse_zip(&path, &native_cancelled)
                         .context("Unable to read ZIP metadata"),
                     ArchiveFormat::SevenZip => {

@@ -64,6 +64,94 @@ fn fixture() -> (PathBuf, serde_json::Value) {
     let m = serde_json::from_slice(&std::fs::read(p.join("manifest.json")).unwrap()).unwrap();
     (p, m)
 }
+
+#[test]
+fn logical_plan_counts_validated_sparse_payload_without_reading_holes() {
+    let (base, m) = fixture();
+    for c in m["cases"].as_array().unwrap() {
+        let file = base.join(c["archive"].as_str().unwrap());
+        let plan = crate::services::tar_compatibility::plan(
+            &file,
+            route(&file),
+            &DecompressOptions::default(),
+            || Ok(()),
+        )
+        .unwrap();
+        assert_eq!(plan.logical_bytes, 8521131, "{}", file.display());
+        assert_eq!(
+            plan.payload_bytes,
+            if c["layout"] == "pax-ordinary" {
+                8521131
+            } else {
+                30090
+            },
+            "{}",
+            file.display()
+        );
+        let selected = DecompressOptions {
+            selected_entries: vec!["稀疏.bin".into()],
+            ..Default::default()
+        };
+        let plan =
+            crate::services::tar_compatibility::plan(&file, route(&file), &selected, || Ok(()))
+                .unwrap();
+        assert_eq!(plan.entries, 1);
+        assert_eq!(plan.logical_bytes, 8388641);
+        assert_eq!(
+            plan.payload_bytes,
+            if c["layout"] == "pax-ordinary" {
+                8388641
+            } else {
+                28672
+            }
+        );
+    }
+    let file = base.join("control/control.tar");
+    let plan = crate::services::tar_compatibility::plan(
+        &file,
+        route(&file),
+        &DecompressOptions::default(),
+        || Ok(()),
+    )
+    .unwrap();
+    assert_eq!(
+        (plan.entries, plan.logical_bytes, plan.payload_bytes),
+        (1, 2147483665, 16384)
+    );
+    crate::services::extraction_transaction::validate_sparse_resource_limits(
+        &file,
+        plan.entries,
+        plan.logical_bytes,
+        plan.payload_bytes,
+    )
+    .unwrap();
+}
+
+#[test]
+fn sparse_plan_rejects_bad_maps_and_preserves_cancellation() {
+    let (base, m) = fixture();
+    for c in m["faults"].as_array().unwrap() {
+        let file = base.join(c["archive"].as_str().unwrap());
+        assert!(crate::services::tar_compatibility::plan(
+            &file,
+            route(&file),
+            &DecompressOptions::default(),
+            || Ok(())
+        )
+        .is_err());
+    }
+    let error = crate::services::tar_compatibility::plan(
+        &base.join("control/control.tar"),
+        crate::services::compression_format::CompressionRoute::Tar,
+        &DecompressOptions::default(),
+        || Err(crate::services::compression_service::CompressionError::Cancelled.into()),
+    )
+    .unwrap_err();
+    assert!(matches!(
+        error.downcast_ref::<crate::services::compression_service::CompressionError>(),
+        Some(crate::services::compression_service::CompressionError::Cancelled)
+    ));
+}
 fn decoder(file: &Path) -> Box<dyn Read + Send> {
     let f = std::fs::File::open(file).unwrap();
     match file.extension().unwrap().to_str().unwrap() {
@@ -469,6 +557,94 @@ async fn user_integrity_entry_point_uses_native_tar_layout_not_a_7z_fallback() {
                 "[archive-inspection:damaged]"
             }),
             "{e:#}"
+        );
+    }
+}
+
+#[tokio::test]
+async fn diagnosis_retains_actual_tar_mapping_version_or_footer_cause() {
+    let (base, m) = fixture();
+    for c in m["faults"].as_array().unwrap() {
+        let report = crate::services::archive_diagnostics::diagnose_archive(
+            &base.join(c["archive"].as_str().unwrap()),
+            None,
+            std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),
+        )
+        .await
+        .unwrap();
+        assert_eq!(
+            report.status,
+            if c["expectedCategory"] == "unsupported" {
+                "unsupported_feature"
+            } else {
+                "damaged"
+            }
+        );
+        assert!(
+            report.issues.iter().any(|e| e.detail.contains("TAR")),
+            "{report:?}"
+        );
+    }
+}
+
+#[test]
+fn bzip2_and_xz_truncated_compressed_tails_are_not_success() {
+    let (base, _) = fixture();
+    for extension in ["bz2", "xz"] {
+        let scratch = tempfile::tempdir().unwrap();
+        let file = scratch.path().join(format!("truncated.tar.{extension}"));
+        let bytes = std::fs::read(base.join(format!("pax10.tar.{extension}"))).unwrap();
+        std::fs::write(&file, &bytes[..bytes.len() - 5]).unwrap();
+        let out = tempfile::tempdir().unwrap();
+        let result = extract_inner(
+            &Runtime::default(),
+            None,
+            "trailer",
+            file.to_str().unwrap(),
+            out.path(),
+            Some(decoder(&file)),
+            &DecompressOptions {
+                preserve_paths: true,
+                ..Default::default()
+            },
+        );
+        assert!(
+            result.is_err(),
+            "{extension} extraction must read compressed trailer"
+        );
+        let checked = crate::services::compression_verification::verify_native(
+            route(&file),
+            &file,
+            None,
+            || false,
+        );
+        assert!(
+            checked.is_err(),
+            "{extension} integrity must read compressed trailer"
+        );
+    }
+}
+
+#[tokio::test]
+async fn preflight_statistics_use_logical_tar_sizes_not_condensed_stream_size() {
+    let (base, m) = fixture();
+    for c in m["cases"].as_array().unwrap() {
+        let (_, bytes) =
+            crate::services::universal_engine::UniversalCliEngine::archive_uncompressed_stats(
+                &base.join(c["archive"].as_str().unwrap()),
+            )
+            .await
+            .unwrap();
+        assert_eq!(
+            bytes,
+            c["expected"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|e| e["bytes"].as_u64().unwrap())
+                .sum::<u64>(),
+            "{}",
+            c["archive"]
         );
     }
 }

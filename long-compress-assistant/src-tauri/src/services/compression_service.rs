@@ -2274,9 +2274,12 @@ impl CompressionService {
             password_verified = true;
         }
 
-        let preflight_stats = service
-            .preflight_extraction(path, &format, final_password.as_deref(), &final_out_dir, &options)
-            .await?;
+        let tar_plan = service.preflight_tar_extraction(path, &format, &final_out_dir, &options).await?;
+        let preflight_stats = if let Some(plan) = &tar_plan {
+            Some((plan.entries, plan.logical_bytes))
+        } else {
+            service.preflight_extraction(path, &format, final_password.as_deref(), &final_out_dir, &options).await?
+        };
         let expected_expanded_bytes = preflight_stats.map(|(_, expanded_bytes)| expanded_bytes);
         if password_required == Some(true) && password_verified {
             service.emit_log(
@@ -2665,7 +2668,7 @@ impl CompressionService {
         if let Some(password) = final_password.as_deref() {
             service.mark_matching_vault_password_used(password).await;
         }
-        if let Err(error) = service.prepare_staging_layout(path, &out_dir, &options) {
+        if let Err(error) = extraction_transaction::prepare_staging_layout_with_tar_plan(path, &out_dir, &options, tar_plan.as_ref()) {
             let _ = staging.cleanup();
             return Err(error);
         }
@@ -2806,6 +2809,23 @@ impl CompressionService {
             || SplitArchiveDetector::is_haozip_seven_zip(path))
     }
 
+    async fn preflight_tar_extraction(
+        &self,
+        archive_path: &Path,
+        format: &ArchiveFormat,
+        output: &Path,
+        options: &DecompressOptions,
+    ) -> Result<Option<crate::services::tar_compatibility::Plan>> {
+        let Some(route) = crate::services::tar_compatibility::integrity_route(archive_path, format) else { return Ok(None); };
+        let service = self.clone();
+        let path = archive_path.to_path_buf();
+        let options = options.clone();
+        let plan = tokio::task::spawn_blocking(move || crate::services::tar_compatibility::plan(&path, route, &options, || service.check_cancellation())).await??;
+        extraction_transaction::validate_sparse_resource_limits(archive_path, plan.entries, plan.logical_bytes, plan.payload_bytes)?;
+        extraction_transaction::validate_disk_capacity(output.parent().unwrap_or(output), plan.logical_bytes)?;
+        Ok(Some(plan))
+    }
+
     async fn preflight_extraction(
         &self,
         archive_path: &Path,
@@ -2814,6 +2834,9 @@ impl CompressionService {
         output: &Path,
         options: &DecompressOptions,
     ) -> Result<Option<(usize, u64)>> {
+        if let Some(plan) = self.preflight_tar_extraction(archive_path, format, output, options).await? {
+            return Ok(Some((plan.entries,plan.logical_bytes)));
+        }
         let stats = match format {
             ArchiveFormat::Egg => {
                 let directory = crate::services::egg_engine::plan(archive_path, options, self.cancellation_flag.clone()).await?;
@@ -3952,6 +3975,21 @@ mod tests {
             .test_archive_password(&encrypted.to_string_lossy(), "wrong-password")
             .await
             .expect("wrong password check"));
+    }
+
+    #[tokio::test]
+    async fn tar_preflight_keeps_logical_size_payload_accounting_and_cancellation() {
+        let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/tar-1513/control/control.tar");
+        let temp = tempfile::tempdir().unwrap();
+        let service = CompressionService::for_testing();
+        service.cancel();
+        let error = service.preflight_extraction(&source, &ArchiveFormat::Tar, None, temp.path(), &DecompressOptions::default()).await.unwrap_err();
+        assert!(matches!(error.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled)));
+        service.reset_cancellation();
+        assert_eq!(service.preflight_extraction(&source, &ArchiveFormat::Tar, None, temp.path(), &DecompressOptions::default()).await.unwrap(), Some((1, 2147483665)));
+        let selected = DecompressOptions { selected_entries: vec!["not-present.txt".into()], ..Default::default() };
+        assert_eq!(service.preflight_extraction(&source, &ArchiveFormat::Tar, None, temp.path(), &selected).await.unwrap(), Some((0, 0)));
+        assert!(!temp.path().join("control.bin").exists(), "preflight must not materialize holes");
     }
 
     #[tokio::test]

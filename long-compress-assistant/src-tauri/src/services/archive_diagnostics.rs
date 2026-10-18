@@ -274,8 +274,12 @@ fn record_failure(report: &mut ArchiveDiagnosticReport, error: &anyhow::Error, p
         else if report.can_repair { "repairable" }
         else if matches!(code, "password_required" | "wrong_password") { "password_required" }
         else { "diagnostic_only" }.to_string();
+    let message=format!("{error:#}");
+    let detail=if message.contains("[archive-inspection:damaged] TAR") || message.contains("[archive-inspection:unsupported] TAR") {
+        format!("{detail}。原始原因：{message}")
+    } else {detail.to_string()};
     report.issues.push(DiagnosticIssue { code: code.to_string(), severity: "error".to_string(),
-        title: title.to_string(), detail: detail.to_string() });
+        title: title.to_string(), detail });
     report.evidence.push(format!("Integrity failure class: {code}"));
 }
 
