@@ -130,7 +130,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | 能力 | 主要格式与说明 |
 | --- | --- |
 | 创建归档 | ZIP（Deflate / Zstandard）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式与原生密码）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM |
-| 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式/日志式当前文件）、自解压 SFX、TAR 系列、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
+| 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式/日志式当前文件）、ALZ（已验证方法、传统密码与原生分卷）、自解压 SFX、TAR 系列、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
 | 密码与分卷 | ZIP 支持密码数字切卷与标准 `.z01/.zip` 分卷；7Z 支持密码数字卷；RAR 支持原生密码分卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合和既有 AES 包装）、WIM、ZPAQ（含输出与改密）；密码和分卷随目标格式提供，ZPAQ 不提供固定大小分卷 |
 | 图片压缩 | JPEG、PNG、WebP；质量、尺寸与格式按对应编码能力调整 |
@@ -233,10 +233,11 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.1 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.1)。本版补齐 ZPAQ 普通/原生密码创建、配置保存、历史再执行和转换输出，修复 Windows I/O 错误传播、实际子进程暂停及窄窗保存配置弹窗。23 项不同 Rust、128 项前端、18 项 I/O 故障及七组真实桌面流程通过，12 张页面已查看，产品输出通过作者原版工具独立回解。PR #183 已受保护合入，正式四资产、中文说明及包内引擎读取/创建均已回下载核对。见[实施审计](long-compress-assistant/docs/ZPAQ_CREATE_1.5.1.md)和[封板记录](long-compress-assistant/docs/ZPAQ_CREATE_FREEZE_1.5.1.md)。不提供 ZPAQ 固定大小分卷、增量备份或历史恢复；后续接续 v1.5.2 ALZ，软件图标和既有截图保留。
+**v1.5.2 功能封板，进入发布流程**。本版补齐 ALZ 普通/传统密码包与原生分卷的浏览、解压、检查和转换，缺卷与损坏优先说明原因；可明确选择文件名/密码编码，历史和重试保留读取参数。71 项不同 Rust、235 项前端和真实桌面流程通过，22 张页面已查看，载荷及转换 ZIP 经独立工具核对。见[实施审计](long-compress-assistant/docs/ALZ_READ_1.5.2.md)、[封板记录](long-compress-assistant/docs/ALZ_READ_FREEZE_1.5.2.md)和[本版发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.2)。ALZ 只读，不提供创建、损坏修复或缺卷部分救援；后续推进 EGG 与外置卷 SFX。软件图标和既有截图保留。
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
+| **v1.5.2** | ALZ 只读、传统密码与原生分卷，编码选择、浏览/检查/转换及失败接续 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.2.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.2) |
 | **v1.5.1** | ZPAQ 创建、原生密码、配置与历史重做、转换输出；I/O 失败原因、实际暂停及窄窗弹窗修正 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.1.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.1) |
 | **v1.5.0** | ZPAQ 当前文件与原生密码读取、所选/完整提取、检查及转换输入；重试目录明确原因 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.0.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.0) |
 | **v1.4.20** | 好压论坛 ZIP 缺卷抢救；逐文件区分已恢复、缺卷、校验失败和未知，恢复副本继续解压 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.4.20.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.20) |

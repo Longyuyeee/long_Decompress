@@ -16,7 +16,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 ## 功能概览
 
-**v1.5.1 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.1)。本版补齐 ZPAQ 普通/原生密码创建、配置保存、历史再执行和转换输出，修复 Windows I/O 错误传播、实际子进程暂停与窄窗保存配置弹窗。23 项不同 Rust、128 项前端、18 项故障和七组真实桌面流程通过，12 张实看页面及官方工具独立回解已完成。正式四资产、中文说明和包内引擎的读取/创建已回下载核对，PR #183 已受保护合入。见[实施审计](docs/ZPAQ_CREATE_1.5.1.md)、[封板记录](docs/ZPAQ_CREATE_FREEZE_1.5.1.md)和[更新说明](docs/RELEASE_NOTES_1.5.1.md)。不提供 ZPAQ 固定大小分卷、增量备份或历史恢复，格式校验也不能保证检测所有头部变化。后续按原路线推进 v1.5.2 ALZ，软件图标与既有截图保留。
+**v1.5.2 功能封板，进入发布流程**。新增 ALZ 只读引擎，贯通普通/传统密码/原生分卷的浏览、所选与整包提取、检查、转换及失败接续。默认 CP949，可明确选择原工具代码页；历史与重试保留编码，不保存密码或局部选择。71 项不同 Rust、235 项前端、真实桌面与独立载荷核对通过，22 张页面已查看。见[实施审计](docs/ALZ_READ_1.5.2.md)、[封板记录](docs/ALZ_READ_FREEZE_1.5.2.md)、[更新说明](docs/RELEASE_NOTES_1.5.2.md)和[发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.2)。ALZ 不提供创建、损坏修复或缺卷部分救援；继续按原路线推进 EGG 与外置卷 SFX，图标和既有截图保留。
 
 | 工作区 | 用户可以做什么 |
 | --- | --- |
@@ -94,9 +94,11 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 许可证与第三方组件
 
-项目代码使用 [MIT License](../LICENSE)。随包 7-Zip、视频与 PDF 引擎分别遵循各自许可，相关材料位于 `src-tauri/resources/archive-engine/`、`video-engine/licenses/` 和 `pdf-engine/licenses/`。WinRAR 编码器不随项目分发。
+项目代码使用 [MIT License](../LICENSE)。随包 7-Zip、ZPAQ、ALZ、视频与 PDF 引擎分别遵循各自许可；ALZ 的源码、构建与完整依赖许可位于 `vendor/unalz/`、`tools/alz-engine/`、`src-tauri/resources/alz-engine/`，其他引擎材料保留在对应 resources 目录。WinRAR 编码器不随项目分发。
 
 ## 更新记录
+
+**v1.5.2**：ALZ 只读、传统密码和原生分卷、编码选择及失败接续，见[更新说明](docs/RELEASE_NOTES_1.5.2.md)与[封板记录](docs/ALZ_READ_FREEZE_1.5.2.md)。
 
 **v1.4.17**：好压论坛 7Z 密码分卷、缺卷与损坏准确分类、补卷继续和输出名称修正。见[更新说明](docs/RELEASE_NOTES_1.4.17.md)、[封板记录](docs/SPECIAL_VOLUME_FREEZE_1.4.17.md)及 [Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.17)。
 

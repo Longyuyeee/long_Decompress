@@ -1,0 +1,409 @@
+{
+  "completedAt": "2026-10-18T01:42:13.292Z",
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
+  "binarySha256": "61d19fb84a7c8d73640ffb6e5d4567765f830f63cd5fc9d041a5b1cff4492d22",
+  "helperSha256": "593e1f96812b8b18752aadc786966bb7ba8ab3ea29a47115b1059049f717afa7",
+  "cases": [
+    {
+      "original": "store",
+      "wholeNativeExtraction": true,
+      "integrity": true,
+      "diagnostic": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "normal",
+      "wholeNativeExtraction": true,
+      "integrity": true,
+      "diagnostic": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "low",
+      "wholeNativeExtraction": true,
+      "integrity": true,
+      "diagnostic": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "bzip2",
+      "wholeNativeExtraction": true,
+      "integrity": true,
+      "diagnostic": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "dir_tree",
+      "wholeNativeExtraction": true,
+      "integrity": true,
+      "diagnostic": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "enc_store",
+      "wholeNativeExtraction": true,
+      "integrity": true,
+      "diagnostic": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "enc_deflate",
+      "wholeNativeExtraction": true,
+      "integrity": true,
+      "diagnostic": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "zip20",
+      "wholeNativeExtraction": true,
+      "integrity": true,
+      "diagnostic": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "split",
+      "wholeNativeExtraction": true,
+      "integrity": true,
+      "diagnostic": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "split_store",
+      "wholeNativeExtraction": true,
+      "integrity": true,
+      "diagnostic": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "native-cn-key-volumes.alz",
+      "chineseNameAndPassword": true,
+      "nativeVolumes": true,
+      "convertedZipIndependentlyDecoded": true,
+      "emptyDirectory": true
+    },
+    {
+      "original": "native-cn-key.alz",
+      "chineseNameAndPassword": true,
+      "nativeVolumes": false,
+      "convertedZipIndependentlyDecoded": true,
+      "emptyDirectory": true
+    },
+    {
+      "genuineControlArchive": {
+        "createdAt": "2026-10-18T01:24:46.426Z",
+        "generatorSha256": "13c664d8b809348104999efb734587e2847aab04e5511af2e5345e13d2528433",
+        "archiveSha256": "e4d76e96f2348e89655acf23b12611f9feb33a82ffd34300ec17e155731d02e4",
+        "sourceSha256": "1a04258f4db4d37deb6804f922cdb9740756353babd645b4c23ec77b7d058279",
+        "bytes": 268435456,
+        "password": "PublicALZ+control!"
+      },
+      "actualPauseNoCpuProgress": true,
+      "resume": true,
+      "cancelWhilePaused": true,
+      "noPublishedOutput": true,
+      "sourceRetainedWithDeleteAfter": true
+    },
+    {
+      "actualFileManagerMiddleMember": true,
+      "actualExplicitCodepage": true,
+      "actualSelectedExtraction": true
+    },
+    {
+      "actualHistoryRerun": true,
+      "cp936Restored": true,
+      "passwordNotPersisted": true,
+      "actualWholeExtractionAfterPartialHistory": true,
+      "oldRecordUnchanged": true
+    },
+    {
+      "actualMissingMiddleFinalCause": true,
+      "originalMemberRestored": true,
+      "actualNewRetryTask": true,
+      "oldFailureRetained": true
+    },
+    {
+      "actualPickerMultiMemberDedup": true
+    },
+    {
+      "actualConversionControls": true,
+      "explicitCp936Source": true,
+      "independentZipReadback": true
+    },
+    {
+      "actualDiagnosticControls": true,
+      "noFakeAlzRepair": true
+    }
+  ],
+  "screenshots": [
+    "alz-native-member-browser-1100x700.png",
+    "alz-native-member-browser-760x520.png",
+    "alz-read-help-1100x700.png",
+    "alz-read-help-760x520.png",
+    "alz-history-codepage-1100x700.png",
+    "alz-history-codepage-760x520.png",
+    "alz-missing-volume-retry-1100x700.png",
+    "alz-missing-volume-retry-760x520.png",
+    "alz-pending-task-encoding-1100x700.png",
+    "alz-pending-task-encoding-760x520.png",
+    "alz-batch-task-encoding-1100x700.png",
+    "alz-batch-task-encoding-760x520.png",
+    "alz-batch-conversion-encoding-1100x700.png",
+    "alz-batch-conversion-encoding-760x520.png",
+    "alz-conversion-source-codepage-1100x700.png",
+    "alz-conversion-source-codepage-760x520.png",
+    "alz-integrity-report-1100x700.png",
+    "alz-integrity-report-760x520.png",
+    "alz-batch-diagnosis-encoding-1100x700.png",
+    "alz-batch-diagnosis-encoding-760x520.png",
+    "alz-settings-readonly-1100x700.png",
+    "alz-settings-readonly-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "alz-native-member-browser",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 216,
+          "overflow": 0,
+          "right": 1100
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "alz-native-member-browser",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 76,
+          "overflow": 0,
+          "right": 760
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "alz-read-help",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 216,
+          "overflow": 0,
+          "right": 1100
+        },
+        {
+          "left": 348.0187683105469,
+          "overflow": 0,
+          "right": 652.0187683105469
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "alz-read-help",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 76,
+          "overflow": 0,
+          "right": 760
+        },
+        {
+          "left": 208.0187530517578,
+          "overflow": 0,
+          "right": 512.0187530517578
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "alz-history-codepage",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "alz-history-codepage",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "alz-missing-volume-retry",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "alz-missing-volume-retry",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "alz-pending-task-encoding",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "alz-pending-task-encoding",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "alz-batch-task-encoding",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 0,
+          "overflow": 0,
+          "right": 1100
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "alz-batch-task-encoding",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 0,
+          "overflow": 0,
+          "right": 760
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "alz-batch-conversion-encoding",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 0,
+          "overflow": 0,
+          "right": 1100
+        },
+        {
+          "left": 0,
+          "overflow": 0,
+          "right": 1100
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "alz-batch-conversion-encoding",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 0,
+          "overflow": 0,
+          "right": 760
+        },
+        {
+          "left": 0,
+          "overflow": 0,
+          "right": 760
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "alz-conversion-source-codepage",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 0,
+          "overflow": 0,
+          "right": 1100
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "alz-conversion-source-codepage",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 0,
+          "overflow": 0,
+          "right": 760
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "alz-integrity-report",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "alz-integrity-report",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "alz-batch-diagnosis-encoding",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 0,
+          "overflow": 0,
+          "right": 1100
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "alz-batch-diagnosis-encoding",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 0,
+          "overflow": 0,
+          "right": 760
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "alz-settings-readonly",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "alz-settings-readonly",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    }
+  ]
+}
