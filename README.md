@@ -233,7 +233,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.1 功能封板，正在完成候选构建和正式发布**，当前公开版仍为 [v1.5.0](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.0)。本版补齐 ZPAQ 普通/原生密码创建、配置保存、历史再执行和转换输出，修复 Windows I/O 错误传播及窄窗保存配置弹窗。20 项不同 Rust、128 项前端、18 项 I/O 故障及七组真实桌面流程通过，12 张页面已查看，产品输出通过作者原版工具独立回解。见[实施审计](long-compress-assistant/docs/ZPAQ_CREATE_1.5.1.md)和[封板记录](long-compress-assistant/docs/ZPAQ_CREATE_FREEZE_1.5.1.md)。不提供 ZPAQ 固定大小分卷、增量备份或历史恢复；软件图标和既有截图保留。
+**v1.5.1 功能封板，正在完成候选构建和正式发布**，当前公开版仍为 [v1.5.0](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.0)。本版补齐 ZPAQ 普通/原生密码创建、配置保存、历史再执行和转换输出，修复 Windows I/O 错误传播、实际子进程暂停及窄窗保存配置弹窗。23 项不同 Rust、128 项前端、18 项 I/O 故障及七组真实桌面流程通过，12 张页面已查看，产品输出通过作者原版工具独立回解。见[实施审计](long-compress-assistant/docs/ZPAQ_CREATE_1.5.1.md)和[封板记录](long-compress-assistant/docs/ZPAQ_CREATE_FREEZE_1.5.1.md)。不提供 ZPAQ 固定大小分卷、增量备份或历史恢复；软件图标和既有截图保留。
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |

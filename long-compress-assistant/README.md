@@ -16,7 +16,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 ## 功能概览
 
-**v1.5.1 功能封板，进入候选构建与发布**；当前公开稳定版仍为 [v1.5.0](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.0)。本版补齐 ZPAQ 普通/原生密码创建、配置保存、历史再执行和转换输出，修复 Windows I/O 错误传播与窄窗保存配置弹窗。20 项不同 Rust、128 项前端、18 项故障和七组真实桌面流程通过，12 张实看页面及官方工具独立回解已完成。见[实施审计](docs/ZPAQ_CREATE_1.5.1.md)、[封板记录](docs/ZPAQ_CREATE_FREEZE_1.5.1.md)和[更新说明](docs/RELEASE_NOTES_1.5.1.md)。不提供 ZPAQ 固定大小分卷、增量备份或历史恢复，格式校验也不能保证检测所有头部变化。
+**v1.5.1 功能封板，进入候选构建与发布**；当前公开稳定版仍为 [v1.5.0](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.0)。本版补齐 ZPAQ 普通/原生密码创建、配置保存、历史再执行和转换输出，修复 Windows I/O 错误传播、实际子进程暂停与窄窗保存配置弹窗。23 项不同 Rust、128 项前端、18 项故障和七组真实桌面流程通过，12 张实看页面及官方工具独立回解已完成。见[实施审计](docs/ZPAQ_CREATE_1.5.1.md)、[封板记录](docs/ZPAQ_CREATE_FREEZE_1.5.1.md)和[更新说明](docs/RELEASE_NOTES_1.5.1.md)。不提供 ZPAQ 固定大小分卷、增量备份或历史恢复，格式校验也不能保证检测所有头部变化。
 
 | 工作区 | 用户可以做什么 |
 | --- | --- |
