@@ -135,6 +135,11 @@ fn classify_error(
     ) {
         return CompressionError::DiskFull;
     }
+    // A decoder's invalid input is not the same as an invalid output path or
+    // a device/permission failure. Preserve OS errors before data/password rules.
+    if matches!(&error, sevenz_rust::Error::Io(io, _) if io.raw_os_error().is_some()) {
+        return CompressionError::ExtractionFailed(error.to_string());
+    }
 
     if archive_encrypted {
         if !password_provided {
@@ -173,10 +178,11 @@ fn into_sevenz_error(error: anyhow::Error) -> sevenz_rust::Error {
         .chain()
         .find_map(|cause| cause.downcast_ref::<std::io::Error>())
     {
-        return sevenz_rust::Error::io(std::io::Error::new(
-            io_error.kind(),
-            error.to_string(),
-        ));
+        let mapped = match io_error.raw_os_error() {
+            Some(code) => std::io::Error::from_raw_os_error(code),
+            None => std::io::Error::new(io_error.kind(), error.to_string()),
+        };
+        return sevenz_rust::Error::io_msg(mapped, error.to_string());
     }
     sevenz_rust::Error::other(error.to_string())
 }
@@ -475,6 +481,18 @@ pub(crate) fn extract<R: ExtractionRuntime>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn output_os_failures_are_not_password_or_corruption_failures() {
+        for code in [5, 123] {
+            for encrypted in [false, true] {
+                let mapped = into_sevenz_error(anyhow::Error::new(std::io::Error::from_raw_os_error(code)).context("creating output file"));
+                assert!(matches!(&mapped, sevenz_rust::Error::Io(io, _) if io.raw_os_error() == Some(code)));
+                let classified = classify_error(mapped, encrypted, false);
+                assert!(matches!(classified, CompressionError::ExtractionFailed(message)
+                    if message.contains("creating output file") && !message.contains("archive-inspection:damaged") && !message.contains("ambiguous-data")));
+            }
+        }
+    }
     #[test]
     fn unsupported_method_and_memory_limit_are_not_wrong_passwords() {
         for error in [sevenz_rust::Error::UnsupportedCompressionMethod("future-codec".into()),
