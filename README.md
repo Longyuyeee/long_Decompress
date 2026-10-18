@@ -233,7 +233,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.2 功能封板，进入发布流程**。本版补齐 ALZ 普通/传统密码包与原生分卷的浏览、解压、检查和转换，缺卷与已确认的损坏优先说明原因；可明确选择文件名/密码编码，历史和重试保留读取参数。73 项不同 Rust、235 项前端和真实桌面流程通过，22 张页面已查看，载荷及转换 ZIP 经独立工具核对。见[实施审计](long-compress-assistant/docs/ALZ_READ_1.5.2.md)、[封板记录](long-compress-assistant/docs/ALZ_READ_FREEZE_1.5.2.md)和[本版发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.2)。ALZ 只读，不提供创建、损坏修复或缺卷部分救援；后续推进 EGG 与外置卷 SFX。软件图标和既有截图保留。
+**v1.5.2 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.2)。本版补齐 ALZ 普通/传统密码包与原生分卷的浏览、解压、检查和转换，缺卷与已确认的损坏优先说明原因；可明确选择文件名/密码编码，历史和重试保留读取参数。73 项不同 Rust、235 项前端和真实桌面流程通过，22 张页面已查看，载荷及转换 ZIP 经独立工具核对。PR #185 已受保护合入，正式四资产、中文说明与包内引擎已回下载核对，见[实施审计](long-compress-assistant/docs/ALZ_READ_1.5.2.md)及[封板记录](long-compress-assistant/docs/ALZ_READ_FREEZE_1.5.2.md)。ALZ 只读，不提供创建、损坏修复或缺卷部分救援；后续推进 EGG 与外置卷 SFX。软件图标和既有截图保留。
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
