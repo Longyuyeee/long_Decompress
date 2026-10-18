@@ -234,7 +234,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.14 正在收口 TAR 升级与真实格式路由**。v1.5.13 发布前发现误后缀路由回归，正式构建已取消，原标签保留不移动，未发布安装包；同一 TAR 交付并入本版。二十 GNU/PAX 真原包及既有内容证据保持，新增 ZIP/TAR 误后缀实际用户场景，完成重新验收后发布。见[本版审计](long-compress-assistant/docs/TAR_ROUTING_1.5.14.md)与[原候选记录](long-compress-assistant/docs/TAR_SPARSE_FREEZE_1.5.13.md)。图标和原截图保留；后续 ZIP64 大边界与过程 I/O 顺延 v1.5.15、v1.5.16，目标不删减。
+**v1.5.14 已本地封板，正在发布核对**。统一交付 GNU/PAX 稀疏 TAR 真实内容、稀疏计量和失败原因，并修正真实 ZIP/TAR 被误后缀带偏的浏览、预览、检查及提取路由。二十原件独立回解、203 Rust、170 前端、36 桌面记录、18 张实看页面及普通生产通过。见[审计](long-compress-assistant/docs/TAR_ROUTING_1.5.14.md)、[封板](long-compress-assistant/docs/TAR_ROUTING_FREEZE_1.5.14.md)和[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.14.md)。正式安装包/四资产尚待核对；v1.5.13 已撤回未发布、原标签不移动。图标与原截图保留，Windows 为普通填零输出；下一轮 ZIP64 和过程 I/O 为 v1.5.15、v1.5.16，目标不删减。
 
 **v1.5.12 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.12)。修复 ALZ Deflate 在声明压缩范围尚有尾部数据时误报完整成功；加密条目全部内容大小/CRC 匹配后明确报尾部损坏并停止试密，未匹配仍保留不确定类别。八组原厂普通/中文密码、单包/原生卷独立回解通过，八派生故障不再错误成功；105 Rust、170 前端、二十二桌面记录、十四张实看页面及普通生产通过。正式四资产、中文说明、包内引擎二十组原件/八故障/124 份许可已核对。见[审计](long-compress-assistant/docs/ALZ_STREAM_INTEGRITY_1.5.12.md)、[封板记录](long-compress-assistant/docs/ALZ_STREAM_INTEGRITY_FREEZE_1.5.12.md)和[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.12.md)。原计划 Obfuscated Deflate（方法 3）未取得原厂正面包，仍不支持且保留未完成；不冒称新增该方法。图标和原截图保留，下一版 v1.5.13 补 TAR 特殊布局；按调整范围已交付七版、余三版。
 
