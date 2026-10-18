@@ -233,7 +233,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.3 功能已封板，正在构建发布候选，尚未正式发布。** 新增 EGG 基础只读、传统密码、UTF-8 名称与原生分卷，贯通浏览、所选/整包解压、检查、转换及失败接续。76 项定向 Rust、140 项前端、26 个真实桌面场景及 26 张实看页面通过，见[审计](long-compress-assistant/docs/EGG_BASIC_1.5.3.md)、[封板记录](long-compress-assistant/docs/EGG_BASIC_FREEZE_1.5.3.md)与[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.3.md)。不提供 EGG 创建、AZO/固实/AES/LEA 或修复。现有正式版仍为 [v1.5.2](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.2)，软件图标和既有截图保留。
+**v1.5.3 功能已封板，正在构建发布候选，尚未正式发布。** 新增 EGG 基础只读、传统密码、UTF-8 名称与原生分卷，贯通浏览、所选/整包解压、检查、转换及失败接续。77 项定向 Rust、140 项前端、27 个真实桌面场景及 26 张页面确认通过，见[审计](long-compress-assistant/docs/EGG_BASIC_1.5.3.md)、[封板记录](long-compress-assistant/docs/EGG_BASIC_FREEZE_1.5.3.md)与[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.3.md)。不提供 EGG 创建、AZO/固实/AES/LEA 或修复。现有正式版仍为 [v1.5.2](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.2)，软件图标和既有截图保留。
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |

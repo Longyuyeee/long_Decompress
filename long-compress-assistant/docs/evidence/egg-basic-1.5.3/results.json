@@ -1,7 +1,7 @@
 {
-  "completedAt": "2026-10-18T03:00:58.341Z",
+  "completedAt": "2026-10-18T03:10:55.345Z",
   "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target-desktop-gate\\release\\Long解压.exe",
-  "binarySha256": "3e525d38a770961e2d3fe20bc094950736542619675e420721f164d46d99f607",
+  "binarySha256": "49241014031a085cac0692e799cc176daf05b7b8e119cb4853fa167300c562c0",
   "runtimeHelper": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target-desktop-gate\\release\\resources\\egg-engine\\long-egg.exe",
   "helperSha256": "533cd527d52e92ea896347d9c0ba662ee4107cc264a65628e76dd8d90ff7c6e4",
   "cases": [
@@ -127,6 +127,10 @@
     {
       "unsupportedComplexFeaturesReportedBeforePassword": true,
       "outputsNotPublished": true
+    },
+    {
+      "badMagicPasswordEntryKeepsNativeFinalCause": true,
+      "noSevenZipFallback": true
     },
     {
       "actualUnsupportedFinalCause": true,
