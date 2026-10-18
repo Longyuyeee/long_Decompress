@@ -1,0 +1,301 @@
+{
+  "completedAt": "2026-10-18T14:13:25.881Z",
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
+  "binarySha256": "3e9bb857af87ba27a2017a44e64d74f150c8c0bb91fc9a752720eff431556904",
+  "helperSha256": "48efbce527b1d3ae8b5e4c71b86a4b4a9ea1726c857aafb73adf9e0efd275fe4",
+  "cases": [
+    {
+      "original": "ordinary-zipcrypto-m1",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-zipcrypto-m1-volumes",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-zipcrypto-m3",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-zipcrypto-m3-volumes",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-aes128-m1",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-aes128-m1-volumes",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-aes128-m3",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-aes128-m3-volumes",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-aes256-m1",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-aes256-m1-volumes",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-aes256-m3",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-aes256-m3-volumes",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-lea128-m1",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-lea128-m1-volumes",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-lea128-m3",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-lea128-m3-volumes",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-lea256-m1",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-lea256-m1-volumes",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-lea256-m3",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "ordinary-lea256-m3-volumes",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selectedLast": true,
+      "payloadHashes": true
+    },
+    {
+      "actualLeaMiddleBrowseAndSelected": true
+    },
+    {
+      "actualDefaultEncodingFailure": true,
+      "actualEncodingGuidance": true,
+      "actualUnrepresentablePasswordCause": true,
+      "explicitCodepageCorrection": true,
+      "oldFailureRetained": true
+    },
+    {
+      "actualHistoryReexecution": true,
+      "codepageRestored": true,
+      "passwordNotSaved": true
+    },
+    {
+      "actualLeaMissingMiddle": true,
+      "allMembersOneTask": true,
+      "originalSupplementAndFreshTask": true
+    },
+    {
+      "actualLeaConversion": true,
+      "independentZipHashes": true
+    }
+  ],
+  "screenshots": [
+    "egg1511-middle-browser-1100x700.png",
+    "egg1511-middle-browser-760x520.png",
+    "egg1511-encoding-guidance-1100x700.png",
+    "egg1511-encoding-guidance-760x520.png",
+    "egg1511-encoding-help-1100x700.png",
+    "egg1511-encoding-help-760x520.png",
+    "egg1511-history-encoding-1100x700.png",
+    "egg1511-history-encoding-760x520.png",
+    "egg1511-missing-final-1100x700.png",
+    "egg1511-missing-final-760x520.png",
+    "egg1511-conversion-1100x700.png",
+    "egg1511-conversion-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "egg1511-middle-browser",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "egg1511-middle-browser",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "egg1511-encoding-guidance",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "egg1511-encoding-guidance",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "egg1511-encoding-help",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "egg1511-encoding-help",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "egg1511-history-encoding",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "egg1511-history-encoding",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "egg1511-missing-final",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "egg1511-missing-final",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "egg1511-conversion",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "egg1511-conversion",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "originalsUnchanged": true
+}
