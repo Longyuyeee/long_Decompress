@@ -17,6 +17,46 @@ vi.mock('@tauri-apps/api/event', () => ({
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 
 describe('task progress state machine', () => {
+  it('excludes multiple real pause intervals from history, including terminal while paused', async () => {
+    vi.useFakeTimers()
+    try {
+      const store = useTaskStore()
+      store.addTask({ id: 'timed', name: '资料.rar', type: 'decompression', sourceFiles: [], outputPath: '' })
+      store.updateTaskStatus('timed', 'extracting')
+      vi.advanceTimersByTime(500)
+      expect(await store.pauseTask('timed')).toBe(true)
+      vi.advanceTimersByTime(5000)
+      expect(await store.resumeTask('timed')).toBe(true)
+      vi.advanceTimersByTime(500)
+      expect(await store.pauseTask('timed')).toBe(true)
+      vi.advanceTimersByTime(3000)
+      store.updateTaskStatus('timed', 'completed')
+      await store.waitForHistoryPersistence('timed')
+      expect(mocks.invoke).toHaveBeenCalledWith('save_task_history', { record: expect.objectContaining({ durationMs: 1000 }) })
+      expect(store.tasks[0].pausedAt).toBeUndefined()
+    } finally { vi.useRealTimers() }
+  })
+
+  it('does not restore speed while paused or retain a cleared terminal sample', async () => {
+    const store = useTaskStore()
+    await store.initListeners()
+    store.addTask({ id: 'rate', name: 'large.rar', type: 'decompression', sourceFiles: [], outputPath: '' })
+    store.updateTaskStatus('rate', 'extracting')
+    const emit = (speed: string | null, eta_seconds: number | null) => mocks.listeners.get('task-progress')!({ payload: {
+      task_id: 'rate', progress: 0.5, processed_bytes: 50, total_bytes: 100, speed, eta_seconds,
+    } })
+    emit('10 MB/s', 3)
+    expect(store.tasks[0].speed).toBe('10 MB/s')
+    await store.pauseTask('rate')
+    emit('10 MB/s', 3)
+    expect(store.tasks[0].speed).toBeUndefined()
+    expect(store.tasks[0].etaSeconds).toBeUndefined()
+    await store.resumeTask('rate')
+    emit('10 MB/s', 3)
+    emit(null, null)
+    expect(store.tasks[0].speed).toBeUndefined()
+    expect(store.tasks[0].etaSeconds).toBeUndefined()
+  })
   it.each(['completed', 'failed', 'cancelled'] as const)('freezes %s progress against late engine events', async status => {
     const store = useTaskStore()
     await store.initListeners()

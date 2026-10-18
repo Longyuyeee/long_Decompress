@@ -89,7 +89,9 @@ export const createTaskHistoryRecord = (task: Task): TaskHistoryRecord => {
     format: task.format || task.compressionOptions?.format || null,
     startedAt: startedAt?.toISOString() || null,
     completedAt: completedAt.toISOString(),
-    durationMs: startedAt ? Math.max(0, completedAt.getTime() - startedAt.getTime()) : 0,
+    durationMs: startedAt ? Math.max(0, completedAt.getTime() - startedAt.getTime()
+      - (task.pausedDurationMs || 0)
+      - (task.pausedAt ? Math.max(0, completedAt.getTime() - task.pausedAt.getTime()) : 0)) : 0,
     processedBytes: Math.max(0, processedBytes),
     totalBytes: Math.max(0, totalBytes),
     errorMessage: task.error || null,
