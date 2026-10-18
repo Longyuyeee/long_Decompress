@@ -15,4 +15,6 @@
 3. 桌面使用真实文件和命令，不注入成功状态；常用/窄窗页面实看。生产构建与测试程序分离，不改变个人安装和数据。
 4. 审计推送、受保护合入后固定标签；更新 README、中文 Release/更新说明与安装器，回下载核对四资产，再回填发布收据。
 
-当前处于原包/红测阶段，未封板未发布。固定原包见 `tests/fixtures/archives/sevenz-157/manifest.json`。
+原包/范围提交 `600881c` 已推送。修改前相同测试真实失败，列出四方法十六组整包/过滤共 32 个 UnsupportedCompressionMethod；LZMA2、BCJ2 对照通过。补齐原生读取后 18 项 7Z Rust 定向测试通过（含 18 组原包各整包/过滤、错误分类、CRC、缺卷、盘满及取消），前端四文件 150 项通过；正在进行真实桌面与最终生产构建，尚未封板发布。
+
+PPMd 使用现有锁定 [ppmd-rust 1.4.0 Ppmd7Decoder](https://docs.rs/ppmd-rust/1.4.0/ppmd_rust/struct.Ppmd7Decoder.html)，对应 7z 的 PPMdH 范围编码。Deflate/Deflate64、Bzip2 也复用已有锁定依赖，不升级其他依赖或引擎。新增许可原文随包保留。

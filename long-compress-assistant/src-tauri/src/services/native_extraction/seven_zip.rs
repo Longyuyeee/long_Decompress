@@ -106,6 +106,10 @@ pub(crate) fn password_candidate_result(
 ) -> Result<bool> {
     match result {
         Ok(()) => Ok(tested_file),
+        Err(sevenz_rust::Error::UnsupportedCompressionMethod(method)) => anyhow::bail!(
+            "[archive-inspection:unsupported] 7Z 使用暂不支持的压缩方法 {method}，不能判定为密码错误"),
+        Err(sevenz_rust::Error::MaxMemLimited { max_kb, actaul_kb }) => anyhow::bail!(
+            "[archive-inspection:unsupported] 7Z 解码需要 {actaul_kb} KiB 内存，超过限制 {max_kb} KiB，不能判定为密码错误"),
         Err(sevenz_rust::Error::Io(error, context))
             if error.raw_os_error().is_some() || matches!(error.kind(),
                 std::io::ErrorKind::PermissionDenied | std::io::ErrorKind::NotFound
@@ -154,6 +158,13 @@ fn classify_error(
         }
     }
 
+    if !archive_encrypted && (is_data_corruption(&error) || matches!(
+        &error, sevenz_rust::Error::Io(io, _) if matches!(io.kind(),
+            std::io::ErrorKind::InvalidData | std::io::ErrorKind::UnexpectedEof)
+    )) {
+        return CompressionError::ExtractionFailed(format!(
+            "[archive-inspection:damaged] 7Z 数据损坏或不完整，未通过解码/完整性校验；请重新下载或补齐原始分卷，更换密码无法修复未加密的数据。详细原因：{error}"));
+    }
     CompressionError::ExtractionFailed(error.to_string())
 }
 
@@ -465,6 +476,40 @@ pub(crate) fn extract<R: ExtractionRuntime>(
 mod tests {
     use super::*;
     #[test]
+    fn unsupported_method_and_memory_limit_are_not_wrong_passwords() {
+        for error in [sevenz_rust::Error::UnsupportedCompressionMethod("future-codec".into()),
+            sevenz_rust::Error::MaxMemLimited { max_kb: 1, actaul_kb: 2 }] {
+            let message = password_candidate_result(Err(error), false).unwrap_err().to_string();
+            assert!(message.contains("[archive-inspection:unsupported]"));
+            assert!(message.contains("不能判定为密码错误"));
+        }
+    }
+    #[test]
+    fn original_157_method_matrix_decodes_and_filters() {
+        use sha2::{Digest, Sha256};
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/sevenz-157");
+        let manifest: serde_json::Value = serde_json::from_slice(&std::fs::read(root.join("manifest.json")).unwrap()).unwrap();
+        let mut failures = Vec::new();
+        for case in manifest["cases"].as_array().unwrap() {
+            let name = case["name"].as_str().unwrap();
+            let source = root.join(name).join(case["archive"].as_str().unwrap());
+            for filtered in [false, true] {
+                let output = tempfile::tempdir().unwrap();
+                let result = extract(&TestRuntime::default(), None, "methods-157", source.to_str().unwrap(), output.path().to_str().unwrap(), case["password"].as_str(), &DecompressOptions {
+                    preserve_paths: true, file_filter: filtered.then(|| "*.txt".to_string()), ..Default::default()
+                });
+                if let Err(error) = result { failures.push(format!("{name} filtered={filtered}: {error}")); continue; }
+                for expected in case["expected"].as_array().unwrap() {
+                    let relative = expected["path"].as_str().unwrap();
+                    if filtered && !relative.ends_with(".txt") { assert!(!output.path().join(relative).exists()); continue; }
+                    let bytes = std::fs::read(output.path().join(relative)).unwrap();
+                    assert_eq!(hex::encode(Sha256::digest(&bytes)), expected["sha256"].as_str().unwrap(), "{name}: {relative}");
+                }
+            }
+        }
+        assert!(failures.is_empty(), "{}", failures.join("\n"));
+    }
+    #[test]
     fn candidate_verification_preserves_operating_system_errors() {
         for kind in [std::io::ErrorKind::PermissionDenied, std::io::ErrorKind::NotFound,
             std::io::ErrorKind::StorageFull, std::io::ErrorKind::TimedOut] {
@@ -716,7 +761,7 @@ mod tests {
         for error in errors {
             assert!(matches!(
                 classify_error(error, false, false),
-                CompressionError::ExtractionFailed(_)
+                CompressionError::ExtractionFailed(message) if message.contains("[archive-inspection:damaged]")
             ));
         }
     }

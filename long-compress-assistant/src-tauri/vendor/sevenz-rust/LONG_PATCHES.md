@@ -1,6 +1,16 @@
 # Long-Decompress local patch
 
 Source: crates.io sevenz-rust 0.6.1 (Apache-2.0; LICENSE preserved).
+
+## v1.5.7 additional read codecs
+
+The opt-in `additional-codecs` feature registers 7z PPMdH and uses the existing
+locked ppmd-rust 1.4.0 Ppmd7Decoder, flate2 raw Deflate and deflate64 readers.
+PPMd properties are validated before creating its arena and respect the caller's
+memory limit. These readers stay inside the original bounded, CRC-checked solid
+stream stack; no external fallback or encoder/default change. The application
+also enables the existing bzip2 feature. Original 7-Zip 24.09 fixtures and an
+independent 26.04 readback cover contents/header encryption and numeric volumes.
 Registry package checksum: 26482cf1ecce4540dc782fc70019eba89ffc4d87b3717eb5ec524b5db6fdefef.
 Original manifest and upstream VCS metadata are included. The source, examples,
 manifest, README, changelog and license are copied from the registry package;
