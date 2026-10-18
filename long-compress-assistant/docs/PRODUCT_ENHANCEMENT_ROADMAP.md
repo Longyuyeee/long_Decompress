@@ -1,6 +1,10 @@
 # Long解压产品增强路线
 
-## 当前 v1.5.11 已发布，接续 ALZ 方法兼容
+## 当前 v1.5.12 已发布，接续 TAR 特殊布局
+
+[十版路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)按证据调整范围发布七版，余三版：TAR 特殊布局、ZIP64 大边界和过程 I/O 接续。原计划 ALZ 方法 3 仍未实现且不支持，EGG 加密固实亦未验证，不因版本数而冒称全部能力完成。准确状态见[交接](DEVELOPMENT_HANDOFF.md)与[v1.5.12 封板记录](ALZ_STREAM_INTEGRITY_FREEZE_1.5.12.md)。
+
+## 历史：v1.5.11 已发布，接续 ALZ 方法兼容
 
 [十版路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)已按证据范围正式交付六版，剩四版；下一版 v1.5.12 ALZ Obfuscated Deflate，随后 TAR 特殊布局、ZIP64 大边界和过程 I/O 接续，不重复扩张规划。准确状态见[开发交接](DEVELOPMENT_HANDOFF.md)和[v1.5.11 封板记录](EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md)。加密固实未获得真实正面原包，不承诺支持。
 
