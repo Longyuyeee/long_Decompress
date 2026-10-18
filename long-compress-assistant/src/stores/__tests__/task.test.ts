@@ -17,6 +17,19 @@ vi.mock('@tauri-apps/api/event', () => ({
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 
 describe('task progress state machine', () => {
+  it('cannot resurrect a task that settles while a pause request is in flight', async () => {
+    const store = useTaskStore()
+    store.addTask({ id: 'settling', name: 'small.rar', type: 'decompression', sourceFiles: [], outputPath: '' })
+    store.updateTaskStatus('settling', 'extracting')
+    let finish!: () => void
+    mocks.invoke.mockImplementationOnce(() => new Promise<void>(resolve => { finish = resolve }))
+    const pending = store.pauseTask('settling')
+    store.updateTaskStatus('settling', 'completed')
+    finish()
+    expect(await pending).toBe(false)
+    expect(store.tasks[0].status).toBe('completed')
+    expect(store.tasks[0].pausedAt).toBeUndefined()
+  })
   it('excludes multiple real pause intervals from history, including terminal while paused', async () => {
     vi.useFakeTimers()
     try {

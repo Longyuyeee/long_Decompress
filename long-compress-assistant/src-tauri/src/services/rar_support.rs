@@ -361,6 +361,11 @@ impl RarSupportService {
                     std::fs::create_dir_all(parent).ok();
                 }
                 open_archive = header.extract_to_with_progress(&target_path, &|| {
+                    if super::task_control::is_paused(&cancellation_flag) {
+                        // Flush the preceding decoded blocks before blocking,
+                        // even if the normal UI event interval has not elapsed.
+                        on_progress(processed.get(), current_file.clone());
+                    }
                     super::task_control::wait_if_paused(&cancellation_flag);
                     !cancellation_flag.load(Ordering::SeqCst)
                 }, &|bytes| {

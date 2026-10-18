@@ -452,6 +452,7 @@ export const useTaskStore = defineStore('task', () => {
     try {
       const paused = await invoke<boolean>('pause_archive_task', { taskId })
       if (paused === false) return false
+      if (['completed', 'failed', 'cancelled', 'cancelling'].includes(task.status)) return false
       task.pausedFromStatus = previousStatus
       task.status = 'paused'
       task.pausedAt = new Date()
@@ -470,6 +471,7 @@ export const useTaskStore = defineStore('task', () => {
     try {
       const resumed = await invoke<boolean>('resume_archive_task', { taskId })
       if (resumed === false) return false
+      if (task.status !== 'paused') return false
       const fallback: TaskStatus = task.type === 'compression' ? 'compressing' : 'extracting'
       const status = task.pausedFromStatus && task.pausedFromStatus !== 'paused'
         ? task.pausedFromStatus

@@ -383,6 +383,7 @@ impl CompressionService {
         final_output: &Path,
         options: &DecompressOptions,
         expected_expanded_bytes: Option<u64>,
+        published_bytes: u64,
     ) -> Result<String> {
         if options.delete_after {
             let source_path = source_archive.to_path_buf();
@@ -405,7 +406,9 @@ impl CompressionService {
                 ),
             }
         }
-        let final_expanded_bytes = Self::directory_payload_size(final_output);
+        // Only this transaction's published files, not existing target contents
+        // (including the source volumes in the user's "same directory" flow).
+        let final_expanded_bytes = published_bytes;
         let telemetry_total = expected_expanded_bytes
             .unwrap_or(final_expanded_bytes)
             .max(final_expanded_bytes);
@@ -496,6 +499,7 @@ impl CompressionService {
             }
             return Err(error);
         }
+        let published_bytes = commit_result?;
         if let Some(warning) = pending.staging.cleanup_after_commit() {
             self.emit_log(window, task_id, &warning, TaskLogSeverity::Warning);
         }
@@ -507,6 +511,7 @@ impl CompressionService {
         self.finish_committed_extraction(
             window, task_id, &pending.source_archive, &pending.final_output,
             &pending.options, pending.expected_expanded_bytes,
+            published_bytes,
         ).await
     }
 
@@ -734,6 +739,7 @@ impl CompressionService {
             .unwrap_or(false)
     }
 
+    #[cfg(test)]
     fn directory_payload_size(path: &Path) -> u64 {
         let Ok(entries) = std::fs::read_dir(path) else {
             return 0;
@@ -2420,12 +2426,13 @@ impl CompressionService {
                 let w = window.clone();
                 let id = task_id.clone();
                 let total = expected_expanded_bytes.unwrap_or(0);
-                let last = Mutex::new(None::<(Instant, String)>);
+                let last = Mutex::new(None::<(Instant, String, u64)>);
+                let progress_control = service.cancellation_flag.clone();
                 let on_bytes = Arc::new(move |processed: u64, current_file: String| {
                     // Limit UI events, not decoder callbacks or cancellation.
                     let mut last = last.lock().unwrap_or_else(|p| p.into_inner());
-                    if last.as_ref().is_some_and(|(at, file)| file == &current_file && at.elapsed().as_millis() < 100 && (total == 0 || processed < total)) { return; }
-                    *last = Some((Instant::now(), current_file.clone()));
+                    if !super::task_control::is_paused(&progress_control) && last.as_ref().is_some_and(|(at, file, bytes)| file == &current_file && *bytes > 0 && at.elapsed().as_millis() < 100 && (total == 0 || processed < total)) { return; }
+                    *last = Some((Instant::now(), current_file.clone(), processed));
                     let progress = Self::extraction_progress_from_output(processed, total).unwrap_or(0.0);
                     // Decoded bytes are not a promise of CRC/transaction success.
                     srv.emit_progress(&w, &id, progress, Some(current_file), processed, total);
@@ -2701,7 +2708,7 @@ impl CompressionService {
         let source_times = if effective_format == ArchiveFormat::SevenZip && options.conflict_policy == "ask" {
             Self::seven_zip_source_times(path, final_password.as_deref(), &final_out_dir, options.preserve_paths).unwrap_or_default()
         } else { HashMap::new() };
-        if let Err(error) = service.commit_staged_extraction_recording_with_times(
+        let commit_result = service.commit_staged_extraction_recording_with_times(
             Some(&window),
             &task_id,
             &file_path,
@@ -2710,7 +2717,8 @@ impl CompressionService {
             &options,
             &mut observed_conflicts,
             &source_times,
-        ) {
+        );
+        if let Err(error) = commit_result {
             if Self::is_conflict_resolution_required(&error) {
                 service.emit_log(
                     &window,
@@ -2737,6 +2745,7 @@ impl CompressionService {
             }
             return Err(error);
         }
+        let published_bytes = commit_result?;
         if let Some(warning) = staging.cleanup_after_commit() {
             service.emit_log(
                 &window,
@@ -2746,7 +2755,7 @@ impl CompressionService {
             );
         }
         service.finish_committed_extraction(
-            &window, &task_id, path, &final_out_dir, &options, expected_expanded_bytes,
+            &window, &task_id, path, &final_out_dir, &options, expected_expanded_bytes, published_bytes,
         ).await
     }
 
@@ -3896,7 +3905,7 @@ mod tests {
     }
 
     #[test]
-    fn rar_output_monitor_reports_real_bytes_without_finishing_early() {
+    fn rar_decoded_progress_does_not_finish_before_transaction_commit() {
         assert_eq!(CompressionService::extraction_progress_from_output(0, 100), None);
         assert_eq!(CompressionService::extraction_progress_from_output(50, 100), Some(0.5));
         assert_eq!(CompressionService::extraction_progress_from_output(100, 100), Some(0.99));
@@ -4533,7 +4542,7 @@ impl CompressionService {
         staging: &Path,
         output: &Path,
         options: &DecompressOptions,
-    ) -> Result<()> {
+    ) -> Result<u64> {
         self.commit_staged_extraction_recording(window, task_id, source_archive, staging, output, options, &mut HashMap::new())
     }
 }
@@ -4615,7 +4624,7 @@ impl CompressionService {
         &self, window: Option<&Window>, task_id: &str, source_archive: &str,
         staging: &Path, output: &Path, options: &DecompressOptions,
         observed: &mut HashMap<PathBuf, ConflictTargetSnapshot>,
-    ) -> Result<()> {
+    ) -> Result<u64> {
         self.commit_staged_extraction_recording_with_times(window, task_id, source_archive, staging, output, options, observed, &HashMap::new())
     }
 
@@ -4623,7 +4632,7 @@ impl CompressionService {
         &self, window: Option<&Window>, task_id: &str, source_archive: &str,
         staging: &Path, output: &Path, options: &DecompressOptions,
         observed: &mut HashMap<PathBuf, ConflictTargetSnapshot>, source_times: &HashMap<PathBuf, u64>,
-    ) -> Result<()> {
+    ) -> Result<u64> {
         extraction_transaction::commit_staged_extraction(
             source_archive,
             staging,
