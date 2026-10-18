@@ -1,0 +1,1673 @@
+{
+  "createdAt": "2026-10-18T13:58:03.179Z",
+  "producer": "Original ALZipCon 11.0.1.16 in official ALZip 12.37.0.4",
+  "producerSha256": "13c664d8b809348104999efb734587e2847aab04e5511af2e5345e13d2528433",
+  "independentTool": "E:/Bandzip/Bandizip/bz.exe",
+  "independentSha256": "d69bc4d2605f0ecac20e8cfae11e313fb011649ed7f182cfcb25d6be73dcf4e2",
+  "payloadLicense": "CC0-1.0 self-authored fixed SHAKE256 and text; producer archives unmodified",
+  "expected": [
+    {
+      "path": "01前段.bin",
+      "bytes": 262144,
+      "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+    },
+    {
+      "path": "文档/99最后.txt",
+      "bytes": 22500,
+      "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+    },
+    {
+      "path": "empty.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "cases": [
+    {
+      "name": "ordinary-zipcrypto-m1",
+      "archive": "originals/ordinary-zipcrypto-m1/ordinary-zipcrypto-m1.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "zipcrypto",
+        "method": 1,
+        "volumes": false
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "ZipCrypto"
+        ],
+        "methods": [
+          "Deflate"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-zipcrypto-m1/ordinary-zipcrypto-m1.egg",
+          "bytes": 262825,
+          "sha256": "bd43cee7df8fd50d187eb1fb53752c85c4201c6fbdbd92d260dc21600bf4139e"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-zipcrypto-m1-volumes",
+      "archive": "originals/ordinary-zipcrypto-m1-volumes/ordinary-zipcrypto-m1-volumes.vol1.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "zipcrypto",
+        "method": 1,
+        "volumes": true
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "ZipCrypto"
+        ],
+        "methods": [
+          "Deflate"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-zipcrypto-m1-volumes/ordinary-zipcrypto-m1-volumes.vol1.egg",
+          "bytes": 65536,
+          "sha256": "d31be62c49c462d5cca5fb671b97ee7c2844b32fb2b8b1fb2fbb2f480410c76a"
+        },
+        {
+          "name": "originals/ordinary-zipcrypto-m1-volumes/ordinary-zipcrypto-m1-volumes.vol2.egg",
+          "bytes": 65536,
+          "sha256": "c38cc88614e72b895d61dbc317c4cce2999410fdeddb8ff46df36e6f8369dc51"
+        },
+        {
+          "name": "originals/ordinary-zipcrypto-m1-volumes/ordinary-zipcrypto-m1-volumes.vol3.egg",
+          "bytes": 65536,
+          "sha256": "53874e55b98fbc3a6f9842272cd66c662fde51c5b12d379afb67118c910159ad"
+        },
+        {
+          "name": "originals/ordinary-zipcrypto-m1-volumes/ordinary-zipcrypto-m1-volumes.vol4.egg",
+          "bytes": 65536,
+          "sha256": "cd30469da41039ef8d00c87df3094478a8f264ccec6f23b4e26622b053fdff99"
+        },
+        {
+          "name": "originals/ordinary-zipcrypto-m1-volumes/ordinary-zipcrypto-m1-volumes.vol5.egg",
+          "bytes": 828,
+          "sha256": "5d7515f1c49318ee5bcda4aa785ee3e49171823abc6a86007d788eee431c71dd"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-zipcrypto-m3",
+      "archive": "originals/ordinary-zipcrypto-m3/ordinary-zipcrypto-m3.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "zipcrypto",
+        "method": 3,
+        "volumes": false
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "ZipCrypto"
+        ],
+        "methods": [
+          "LZMA"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-zipcrypto-m3/ordinary-zipcrypto-m3.egg",
+          "bytes": 266247,
+          "sha256": "5aefbaca5050d0d3857f2e14a151039ab65e32e7c4912aaacbcafe31f034b023"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-zipcrypto-m3-volumes",
+      "archive": "originals/ordinary-zipcrypto-m3-volumes/ordinary-zipcrypto-m3-volumes.vol1.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "zipcrypto",
+        "method": 3,
+        "volumes": true
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "ZipCrypto"
+        ],
+        "methods": [
+          "LZMA"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-zipcrypto-m3-volumes/ordinary-zipcrypto-m3-volumes.vol1.egg",
+          "bytes": 65536,
+          "sha256": "c0f09d741e829af6f7406008fb961c2d2a82d16de368ebc7434ac1dcebb096fd"
+        },
+        {
+          "name": "originals/ordinary-zipcrypto-m3-volumes/ordinary-zipcrypto-m3-volumes.vol2.egg",
+          "bytes": 65536,
+          "sha256": "9df9b62c6a51adbbbed22ec1ba2b359bdfe51d96c2ee1d410b6c9c2b025623f2"
+        },
+        {
+          "name": "originals/ordinary-zipcrypto-m3-volumes/ordinary-zipcrypto-m3-volumes.vol3.egg",
+          "bytes": 65536,
+          "sha256": "c667f5946f9f50930566eacff5cc76ae7c68c351cc94a263c5cc525876f14e09"
+        },
+        {
+          "name": "originals/ordinary-zipcrypto-m3-volumes/ordinary-zipcrypto-m3-volumes.vol4.egg",
+          "bytes": 65536,
+          "sha256": "e5a6fa26e27b3576d506af130dff73a00f2048d1b4d2f4e69c76c3b10609f257"
+        },
+        {
+          "name": "originals/ordinary-zipcrypto-m3-volumes/ordinary-zipcrypto-m3-volumes.vol5.egg",
+          "bytes": 4250,
+          "sha256": "ea8d7e7b228f9c16fc5b45f3edeb8772224d8ff0718541b6be1685e0a7ed3057"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-aes128-m1",
+      "archive": "originals/ordinary-aes128-m1/ordinary-aes128-m1.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "aes128",
+        "method": 1,
+        "volumes": false
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "AES-128"
+        ],
+        "methods": [
+          "Deflate"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-aes128-m1/ordinary-aes128-m1.egg",
+          "bytes": 262833,
+          "sha256": "be916ae7520bd7f0583d03f845924e0038bf01f3695b0af72d47462209f02b0d"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-aes128-m1-volumes",
+      "archive": "originals/ordinary-aes128-m1-volumes/ordinary-aes128-m1-volumes.vol1.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "aes128",
+        "method": 1,
+        "volumes": true
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "AES-128"
+        ],
+        "methods": [
+          "Deflate"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-aes128-m1-volumes/ordinary-aes128-m1-volumes.vol1.egg",
+          "bytes": 65536,
+          "sha256": "1cc8f0075ca9a6f7d773e334d6b96c8e89f6c7eb1cff66f97c2adec7d4d27525"
+        },
+        {
+          "name": "originals/ordinary-aes128-m1-volumes/ordinary-aes128-m1-volumes.vol2.egg",
+          "bytes": 65536,
+          "sha256": "b276f97b661306a815e04143f768bc132d44acc8a9f435c94f1eecdbb7a22dc0"
+        },
+        {
+          "name": "originals/ordinary-aes128-m1-volumes/ordinary-aes128-m1-volumes.vol3.egg",
+          "bytes": 65536,
+          "sha256": "774eed7283556ab0f6923297cf3d314822b86b38957084c2157bbb3808c2cacf"
+        },
+        {
+          "name": "originals/ordinary-aes128-m1-volumes/ordinary-aes128-m1-volumes.vol4.egg",
+          "bytes": 65536,
+          "sha256": "31e75580b3032176dc6feb28a9961059ca0b79b350af9ec4121e6fc27ddd625e"
+        },
+        {
+          "name": "originals/ordinary-aes128-m1-volumes/ordinary-aes128-m1-volumes.vol5.egg",
+          "bytes": 836,
+          "sha256": "99e4bfa52f51d22e6b10a471d9a0a52c55f7cf4bd197d6d3e3290cb85dcbbcf4"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-aes128-m3",
+      "archive": "originals/ordinary-aes128-m3/ordinary-aes128-m3.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "aes128",
+        "method": 3,
+        "volumes": false
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "AES-128"
+        ],
+        "methods": [
+          "LZMA"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-aes128-m3/ordinary-aes128-m3.egg",
+          "bytes": 266255,
+          "sha256": "7df08d584110032492c413943c446e041fa60028a8859becb470d5fd9b7328ae"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-aes128-m3-volumes",
+      "archive": "originals/ordinary-aes128-m3-volumes/ordinary-aes128-m3-volumes.vol1.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "aes128",
+        "method": 3,
+        "volumes": true
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "AES-128"
+        ],
+        "methods": [
+          "LZMA"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-aes128-m3-volumes/ordinary-aes128-m3-volumes.vol1.egg",
+          "bytes": 65536,
+          "sha256": "87aa30f29d94b6724159bc08a2857901e45e5eb11aa8ab3ea507dc7ce3e9b911"
+        },
+        {
+          "name": "originals/ordinary-aes128-m3-volumes/ordinary-aes128-m3-volumes.vol2.egg",
+          "bytes": 65536,
+          "sha256": "63cab4a18f6f347a5974a0d252b754ea5cd4bb7e8ca453905309c5e70e6b0574"
+        },
+        {
+          "name": "originals/ordinary-aes128-m3-volumes/ordinary-aes128-m3-volumes.vol3.egg",
+          "bytes": 65536,
+          "sha256": "9f39553747360d51e2feb3d534270e39daebedb4f4a54bc684b9008596895a6a"
+        },
+        {
+          "name": "originals/ordinary-aes128-m3-volumes/ordinary-aes128-m3-volumes.vol4.egg",
+          "bytes": 65536,
+          "sha256": "f1543a1be77f9558a668d5235d15ad5ff10a34c7042aaaeb5194a223462c4440"
+        },
+        {
+          "name": "originals/ordinary-aes128-m3-volumes/ordinary-aes128-m3-volumes.vol5.egg",
+          "bytes": 4258,
+          "sha256": "9ed04d12d2df774b64fc6d1f8463db46712288561ab38a8e97e005c852ea2902"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-aes256-m1",
+      "archive": "originals/ordinary-aes256-m1/ordinary-aes256-m1.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "aes256",
+        "method": 1,
+        "volumes": false
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "AES-256"
+        ],
+        "methods": [
+          "Deflate"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-aes256-m1/ordinary-aes256-m1.egg",
+          "bytes": 262849,
+          "sha256": "ad63504d200f523df1d3cb8bcb5ea0f503b5127d6e14742df2cae639c1012952"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-aes256-m1-volumes",
+      "archive": "originals/ordinary-aes256-m1-volumes/ordinary-aes256-m1-volumes.vol1.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "aes256",
+        "method": 1,
+        "volumes": true
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "AES-256"
+        ],
+        "methods": [
+          "Deflate"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-aes256-m1-volumes/ordinary-aes256-m1-volumes.vol1.egg",
+          "bytes": 65536,
+          "sha256": "0cb946bf76fc66e4d4067f0bf0b48d44192c5a53f945f4ad62661114b61c7fd7"
+        },
+        {
+          "name": "originals/ordinary-aes256-m1-volumes/ordinary-aes256-m1-volumes.vol2.egg",
+          "bytes": 65536,
+          "sha256": "c42452980d238d205c3f60bf554bfd608867f030d018ae623f5d6dc70d61f00c"
+        },
+        {
+          "name": "originals/ordinary-aes256-m1-volumes/ordinary-aes256-m1-volumes.vol3.egg",
+          "bytes": 65536,
+          "sha256": "1a7e26571e58b729981e1b267e620e858745aefbcf7fb4ed8684853a35c58423"
+        },
+        {
+          "name": "originals/ordinary-aes256-m1-volumes/ordinary-aes256-m1-volumes.vol4.egg",
+          "bytes": 65536,
+          "sha256": "9a421466e3dcccc7642db92b8db201b199a8e1bf9e14fdde8e9cad354608332b"
+        },
+        {
+          "name": "originals/ordinary-aes256-m1-volumes/ordinary-aes256-m1-volumes.vol5.egg",
+          "bytes": 852,
+          "sha256": "28fbf50673b6a2e97340b257136f206883dfe1ae0acce258bb76d3378654961c"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-aes256-m3",
+      "archive": "originals/ordinary-aes256-m3/ordinary-aes256-m3.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "aes256",
+        "method": 3,
+        "volumes": false
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "AES-256"
+        ],
+        "methods": [
+          "LZMA"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-aes256-m3/ordinary-aes256-m3.egg",
+          "bytes": 266271,
+          "sha256": "e011480db51d4cde1f7c715611c31cff2ccb17307e622adfd7c8090221fb0f5f"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-aes256-m3-volumes",
+      "archive": "originals/ordinary-aes256-m3-volumes/ordinary-aes256-m3-volumes.vol1.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "aes256",
+        "method": 3,
+        "volumes": true
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "AES-256"
+        ],
+        "methods": [
+          "LZMA"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-aes256-m3-volumes/ordinary-aes256-m3-volumes.vol1.egg",
+          "bytes": 65536,
+          "sha256": "38985b5c1d7eed4989b61d488bd35aa33eda9e212167c6c03bb9e7cf0a9b0e99"
+        },
+        {
+          "name": "originals/ordinary-aes256-m3-volumes/ordinary-aes256-m3-volumes.vol2.egg",
+          "bytes": 65536,
+          "sha256": "74bd1623df9897610c7d1b2a7c8bf768515d7959e70020cdb9f444a570fbeaf4"
+        },
+        {
+          "name": "originals/ordinary-aes256-m3-volumes/ordinary-aes256-m3-volumes.vol3.egg",
+          "bytes": 65536,
+          "sha256": "9fcc1f877d95c7ef11ddab7a39ddc23c648e0330ea15d148da2691c3e5f8c091"
+        },
+        {
+          "name": "originals/ordinary-aes256-m3-volumes/ordinary-aes256-m3-volumes.vol4.egg",
+          "bytes": 65536,
+          "sha256": "6c0f281e3be7896d2b4a36d3c336eade0e9d99344c638c8b95faa590fe770304"
+        },
+        {
+          "name": "originals/ordinary-aes256-m3-volumes/ordinary-aes256-m3-volumes.vol5.egg",
+          "bytes": 4274,
+          "sha256": "3dba6992df52bb6d0020fcbedd0a4ab82a37a0f0861c22f2369bcd62a0de95e1"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-lea128-m1",
+      "archive": "originals/ordinary-lea128-m1/ordinary-lea128-m1.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "lea128",
+        "method": 1,
+        "volumes": false
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "LEA-128"
+        ],
+        "methods": [
+          "Deflate"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-lea128-m1/ordinary-lea128-m1.egg",
+          "bytes": 262833,
+          "sha256": "f69cbeabc1a6831994353f257d1ceb7a8c6eca1a6cce664594032a45d0958311"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-lea128-m1-volumes",
+      "archive": "originals/ordinary-lea128-m1-volumes/ordinary-lea128-m1-volumes.vol1.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "lea128",
+        "method": 1,
+        "volumes": true
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "LEA-128"
+        ],
+        "methods": [
+          "Deflate"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-lea128-m1-volumes/ordinary-lea128-m1-volumes.vol1.egg",
+          "bytes": 65536,
+          "sha256": "836a635fba131909790c0f922ae2aed2dcfc16f242c9ca6bb9243db723684ac4"
+        },
+        {
+          "name": "originals/ordinary-lea128-m1-volumes/ordinary-lea128-m1-volumes.vol2.egg",
+          "bytes": 65536,
+          "sha256": "cab2cba5877f2efc9c008652c35b2d766d2c48a55f25e7792b3862777da1b538"
+        },
+        {
+          "name": "originals/ordinary-lea128-m1-volumes/ordinary-lea128-m1-volumes.vol3.egg",
+          "bytes": 65536,
+          "sha256": "60f1e718d08205d0dbf865bfc12fd18f92c3dc163a359327281f915df9f3795a"
+        },
+        {
+          "name": "originals/ordinary-lea128-m1-volumes/ordinary-lea128-m1-volumes.vol4.egg",
+          "bytes": 65536,
+          "sha256": "1f6f77d9e153c739923d9217ed8176aa2b43ca072a82b10c5b1889155824fedf"
+        },
+        {
+          "name": "originals/ordinary-lea128-m1-volumes/ordinary-lea128-m1-volumes.vol5.egg",
+          "bytes": 836,
+          "sha256": "c90ed159e5779d2caf1fa5406c43f618936c6e8729414391bd05e233c6183bd8"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-lea128-m3",
+      "archive": "originals/ordinary-lea128-m3/ordinary-lea128-m3.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "lea128",
+        "method": 3,
+        "volumes": false
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "LEA-128"
+        ],
+        "methods": [
+          "LZMA"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-lea128-m3/ordinary-lea128-m3.egg",
+          "bytes": 266255,
+          "sha256": "351127e80d7d13af6c94b0937b695f3d44ab5e2f597f409bab9852ab8d3a2038"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-lea128-m3-volumes",
+      "archive": "originals/ordinary-lea128-m3-volumes/ordinary-lea128-m3-volumes.vol1.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "lea128",
+        "method": 3,
+        "volumes": true
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "LEA-128"
+        ],
+        "methods": [
+          "LZMA"
+        ]
+      },
+      "verification": "Original ALZip extraction and known payload hashes; Bandizip 7.38 Beta CRC failure retained",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-lea128-m3-volumes/ordinary-lea128-m3-volumes.vol1.egg",
+          "bytes": 65536,
+          "sha256": "f1f4f56937890c2611b81d34b4c292fc97a91193255b1b01baddc4bc80537730"
+        },
+        {
+          "name": "originals/ordinary-lea128-m3-volumes/ordinary-lea128-m3-volumes.vol2.egg",
+          "bytes": 65536,
+          "sha256": "eb5a07916b78fdf2248c72ce6909f90ee39e95afebc7c21755d491e99da73528"
+        },
+        {
+          "name": "originals/ordinary-lea128-m3-volumes/ordinary-lea128-m3-volumes.vol3.egg",
+          "bytes": 65536,
+          "sha256": "aff156c8d88bcd2fe8ece0328cd2d22ef770f8bad4bf788684a40715b2cef88c"
+        },
+        {
+          "name": "originals/ordinary-lea128-m3-volumes/ordinary-lea128-m3-volumes.vol4.egg",
+          "bytes": 65536,
+          "sha256": "4c963b5fc1e64664c97c00d01669cc841c224532cca9659e3f1d47d5e96be343"
+        },
+        {
+          "name": "originals/ordinary-lea128-m3-volumes/ordinary-lea128-m3-volumes.vol5.egg",
+          "bytes": 4258,
+          "sha256": "0f6b9d11f6568c69cca35c8e16fb58c2fa02118ea34a1a805582ba3c9cec1dba"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-lea256-m1",
+      "archive": "originals/ordinary-lea256-m1/ordinary-lea256-m1.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "lea256",
+        "method": 1,
+        "volumes": false
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "LEA-256"
+        ],
+        "methods": [
+          "Deflate"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-lea256-m1/ordinary-lea256-m1.egg",
+          "bytes": 262849,
+          "sha256": "ec8fdd074a3ffa62ba292cbaa5046279969c32def42a9f0903e74cce3083ca48"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-lea256-m1-volumes",
+      "archive": "originals/ordinary-lea256-m1-volumes/ordinary-lea256-m1-volumes.vol1.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "lea256",
+        "method": 1,
+        "volumes": true
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "LEA-256"
+        ],
+        "methods": [
+          "Deflate"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-lea256-m1-volumes/ordinary-lea256-m1-volumes.vol1.egg",
+          "bytes": 65536,
+          "sha256": "d876634e4bb8259597cd8f3b776d2f50c15e89bcfbe60ea6221c92bad054e3f7"
+        },
+        {
+          "name": "originals/ordinary-lea256-m1-volumes/ordinary-lea256-m1-volumes.vol2.egg",
+          "bytes": 65536,
+          "sha256": "a79e54948ec0026e33536734157b8de2b42bab3357b3072993f4b1f8f63b5d91"
+        },
+        {
+          "name": "originals/ordinary-lea256-m1-volumes/ordinary-lea256-m1-volumes.vol3.egg",
+          "bytes": 65536,
+          "sha256": "f4a138957c0df4a0b65513c00054f545764b9a17136a913b15961a150800acb6"
+        },
+        {
+          "name": "originals/ordinary-lea256-m1-volumes/ordinary-lea256-m1-volumes.vol4.egg",
+          "bytes": 65536,
+          "sha256": "9e2e302dd0165403a2b77021337d9bd8f1b7d538f0e2b4e4955c7a82a72d2c18"
+        },
+        {
+          "name": "originals/ordinary-lea256-m1-volumes/ordinary-lea256-m1-volumes.vol5.egg",
+          "bytes": 852,
+          "sha256": "f04c9baac1c8c89101e8f57a21c4004aed2e811141ea644d3ad623fdb62d2738"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-lea256-m3",
+      "archive": "originals/ordinary-lea256-m3/ordinary-lea256-m3.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "lea256",
+        "method": 3,
+        "volumes": false
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "LEA-256"
+        ],
+        "methods": [
+          "LZMA"
+        ]
+      },
+      "verification": "Bandizip independent extraction",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-lea256-m3/ordinary-lea256-m3.egg",
+          "bytes": 266271,
+          "sha256": "9ab39c26e4699b78e9327ee6e5722cb4e7fc48b0130f95fedb6f06057a127508"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "name": "ordinary-lea256-m3-volumes",
+      "archive": "originals/ordinary-lea256-m3-volumes/ordinary-lea256-m3-volumes.vol1.egg",
+      "requested": {
+        "solid": false,
+        "cipher": "lea256",
+        "method": 3,
+        "volumes": true
+      },
+      "actual": {
+        "solid": false,
+        "encryption": [
+          "LEA-256"
+        ],
+        "methods": [
+          "LZMA"
+        ]
+      },
+      "verification": "Original ALZip extraction and known payload hashes; Bandizip 7.38 Beta CRC failure retained",
+      "password": "中文密码1511!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "originals/ordinary-lea256-m3-volumes/ordinary-lea256-m3-volumes.vol1.egg",
+          "bytes": 65536,
+          "sha256": "e07c994e6932509e82199d0c4d3acf71257f63a43e7ef837dfebde92777d336b"
+        },
+        {
+          "name": "originals/ordinary-lea256-m3-volumes/ordinary-lea256-m3-volumes.vol2.egg",
+          "bytes": 65536,
+          "sha256": "5f1cfee21a9126127fa34991e28c6fb25d94d7ce15ff529b299db17891202448"
+        },
+        {
+          "name": "originals/ordinary-lea256-m3-volumes/ordinary-lea256-m3-volumes.vol3.egg",
+          "bytes": 65536,
+          "sha256": "49c0fe8957b359214ab09c079b5c1f2338193e188836b36af6f0beda2bc19754"
+        },
+        {
+          "name": "originals/ordinary-lea256-m3-volumes/ordinary-lea256-m3-volumes.vol4.egg",
+          "bytes": 65536,
+          "sha256": "c4dd69e9256e90a57108ec98a085dd17a4a45d35c21bb7c4cc8cb0837e057064"
+        },
+        {
+          "name": "originals/ordinary-lea256-m3-volumes/ordinary-lea256-m3-volumes.vol5.egg",
+          "bytes": 4274,
+          "sha256": "9a6263f46d947e9489cea5fcc1beb24187ad3075678adedb37500720986e773a"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01前段.bin",
+          "bytes": 262144,
+          "sha256": "9f7fb445823f97a0d7782e4a2d19284a27901bec766f3d6e60b28b981c1a4448"
+        },
+        {
+          "path": "文档/99最后.txt",
+          "bytes": 22500,
+          "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    }
+  ],
+  "attempts": [
+    {
+      "name": "ordinary-zipcrypto-m1",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m1",
+        "-tp0",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-zipcrypto-m1-volumes",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m1",
+        "-tp0",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-zipcrypto-m3",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m3",
+        "-tp0",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-zipcrypto-m3-volumes",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m3",
+        "-tp0",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-aes128-m1",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m1",
+        "-tp1",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-aes128-m1-volumes",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m1",
+        "-tp1",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-aes128-m3",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m3",
+        "-tp1",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-aes128-m3-volumes",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m3",
+        "-tp1",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-aes256-m1",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m1",
+        "-tp2",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-aes256-m1-volumes",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m1",
+        "-tp2",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-aes256-m3",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m3",
+        "-tp2",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-aes256-m3-volumes",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m3",
+        "-tp2",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-lea128-m1",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m1",
+        "-tp3",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-lea128-m1-volumes",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m1",
+        "-tp3",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-lea128-m3",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m3",
+        "-tp3",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-lea128-m3-volumes",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m3",
+        "-tp3",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 2,
+      "produced": true,
+      "independentError": "bz 7.38(Beta,x64) - Bandizip console tool. Copyright (C) 2025 Bandisoft\r\nExtracting archive: E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\egg-1511\\originals\\ordinary-lea128-m3-volumes\\ordinary-lea128-m3-volumes.vol1.egg\r\n01前段.bin\r\nError - 01前段.bin (0xa0000018: CRC error) \r\nempty.txt\r\n文档\\99最后.txt\r\n空目录\r\n",
+      "originalProducerRoundtrip": true
+    },
+    {
+      "name": "ordinary-lea256-m1",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m1",
+        "-tp4",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-lea256-m1-volumes",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m1",
+        "-tp4",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-lea256-m3",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m3",
+        "-tp4",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "ordinary-lea256-m3-volumes",
+      "producerExitCode": null,
+      "args": [
+        "-a",
+        "-m3",
+        "-tp4",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "independentExitCode": 2,
+      "produced": true,
+      "independentError": "bz 7.38(Beta,x64) - Bandizip console tool. Copyright (C) 2025 Bandisoft\r\nExtracting archive: E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\egg-1511\\originals\\ordinary-lea256-m3-volumes\\ordinary-lea256-m3-volumes.vol1.egg\r\n01前段.bin\r\nError - 01前段.bin (0xa0000018: CRC error) \r\nempty.txt\r\n文档\\99最后.txt\r\n空目录\r\n",
+      "originalProducerRoundtrip": true
+    },
+    {
+      "name": "solid-zipcrypto-m1",
+      "args": [
+        "-a",
+        "-s",
+        "-m1",
+        "-tp0",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-zipcrypto-m1-volumes",
+      "args": [
+        "-a",
+        "-s",
+        "-m1",
+        "-tp0",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-zipcrypto-m3",
+      "args": [
+        "-a",
+        "-s",
+        "-m3",
+        "-tp0",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-zipcrypto-m3-volumes",
+      "args": [
+        "-a",
+        "-s",
+        "-m3",
+        "-tp0",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-aes128-m1",
+      "args": [
+        "-a",
+        "-s",
+        "-m1",
+        "-tp1",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-aes128-m1-volumes",
+      "args": [
+        "-a",
+        "-s",
+        "-m1",
+        "-tp1",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-aes128-m3",
+      "args": [
+        "-a",
+        "-s",
+        "-m3",
+        "-tp1",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-aes128-m3-volumes",
+      "args": [
+        "-a",
+        "-s",
+        "-m3",
+        "-tp1",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-aes256-m1",
+      "args": [
+        "-a",
+        "-s",
+        "-m1",
+        "-tp2",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-aes256-m1-volumes",
+      "args": [
+        "-a",
+        "-s",
+        "-m1",
+        "-tp2",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-aes256-m3",
+      "args": [
+        "-a",
+        "-s",
+        "-m3",
+        "-tp2",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-aes256-m3-volumes",
+      "args": [
+        "-a",
+        "-s",
+        "-m3",
+        "-tp2",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-lea128-m1",
+      "args": [
+        "-a",
+        "-s",
+        "-m1",
+        "-tp3",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-lea128-m1-volumes",
+      "args": [
+        "-a",
+        "-s",
+        "-m1",
+        "-tp3",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-lea128-m3",
+      "args": [
+        "-a",
+        "-s",
+        "-m3",
+        "-tp3",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-lea128-m3-volumes",
+      "args": [
+        "-a",
+        "-s",
+        "-m3",
+        "-tp3",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-lea256-m1",
+      "args": [
+        "-a",
+        "-s",
+        "-m1",
+        "-tp4",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-lea256-m1-volumes",
+      "args": [
+        "-a",
+        "-s",
+        "-m1",
+        "-tp4",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-lea256-m3",
+      "args": [
+        "-a",
+        "-s",
+        "-m3",
+        "-tp4",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    },
+    {
+      "name": "solid-lea256-m3-volumes",
+      "args": [
+        "-a",
+        "-s",
+        "-m3",
+        "-tp4",
+        "-v64KB",
+        "-p中文密码1511!"
+      ],
+      "producerExitCode": 1,
+      "produced": false
+    }
+  ]
+}

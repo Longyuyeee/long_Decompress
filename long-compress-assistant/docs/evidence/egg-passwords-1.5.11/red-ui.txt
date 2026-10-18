@@ -1,0 +1,34 @@
+
+ RUN  v4.1.10 E:/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant
+
+stderr | src/components/tasks/__tests__/FailedExtractionRetry.test.ts > failed extraction corrections > requires successful original-history preservation and does not silently lose the failed attempt
+Failed to persist task history: Error: database unavailable
+    at E:/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/src/components/tasks/__tests__/FailedExtractionRetry.test.ts:201:36
+    at file:///E:/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/node_modules/@vitest/runner/dist/chunk-artifact.js:1903:20
+
+x············
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/tasks/__tests__/FailedExtractionRetry.test.ts > failed extraction corrections > guides uncertain EGG password failures to the explicit encoding, without changing defaults or damage advice
+AssertionError: expected '处理这条任务修改需要调整的设置，检查后加入待处理队列；原配置和失败记录保留…' to contain '请核对密码及下方 EGG 密码编码'
+
+Expected: "请核对密码及下方 EGG 密码编码"
+Received: "处理这条任务修改需要调整的设置，检查后加入待处理队列；原配置和失败记录保留。原因尚未确定：保留详情再排查查看原始错误[archive-inspection:ambiguous-data] EGG 内容校验未通过检查并尝试救援请先核对上方最终原因和原始错误；现有记录不足以确定具体修复方法时，不推测文件损坏或密码错误。来源文件 重新选择来源本次输出目录 选择输出目录本次密码（留空时按当前密码设置尝试） EGG 密码编码?UTF-8（默认）解压到同名子目录检查并加入待处理队列"
+
+ ❯ src/components/tasks/__tests__/FailedExtractionRetry.test.ts:43:29
+     41|     wrapper.unmount();store.tasks[0].sourceFiles=['C:/朋友发来的.vol3.egg']…
+     42|     const reopened=mount(FailedExtractionRetry,{props:{taskIds:ids,inl…
+     43|     expect(reopened.text()).toContain('请核对密码及下方 EGG 密码编码')
+       |                             ^
+     44|     expect(store.tasks[0].zipPasswordEncoding).toBeUndefined()
+     45|     await reopened.get('[data-testid="retry-source"]').setValue('C:/ot…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 12 passed (13)
+   Start at  21:59:33
+   Duration  1.18s (transform 426ms, setup 73ms, import 459ms, tests 171ms, environment 359ms)
+

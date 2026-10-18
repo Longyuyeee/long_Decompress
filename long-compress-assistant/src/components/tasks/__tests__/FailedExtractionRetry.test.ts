@@ -36,6 +36,19 @@ beforeEach(() => {
 })
 
 describe('failed extraction corrections', () => {
+  it('guides uncertain EGG password failures to the explicit encoding, without changing defaults or damage advice', async () => {
+    const {wrapper,store,ids,pinia}=setup(['[archive-inspection:ambiguous-data] EGG 内容校验未通过'])
+    wrapper.unmount();store.tasks[0].sourceFiles=['C:/朋友发来的.vol3.egg'];store.tasks[0].format='egg'
+    const reopened=mount(FailedExtractionRetry,{props:{taskIds:ids,inline:true},global:{plugins:[pinia],stubs:{ExtractionOutputPreview:true,Teleport:true}}})
+    expect(reopened.text()).toContain('请核对密码及下方 EGG 密码编码')
+    expect(store.tasks[0].zipPasswordEncoding).toBeUndefined()
+    await reopened.get('[data-testid="retry-source"]').setValue('C:/other.zip')
+    expect(reopened.get('[data-testid="retry-guidance"]').text()).not.toContain('EGG 密码编码')
+    reopened.unmount();store.tasks[0].error='[archive-inspection:damaged] EGG CRC 失败'
+    const damaged=mount(FailedExtractionRetry,{props:{taskIds:ids},global:{plugins:[pinia],stubs:{ExtractionOutputPreview:true,Teleport:true}}})
+    expect(damaged.get('[data-testid="retry-guidance"]').text()).toContain('完整性')
+    expect(damaged.get('[data-testid="retry-guidance"]').text()).not.toContain('EGG 密码编码');damaged.unmount()
+  })
   it('inherits the failed input encoding and creates a new corrected task without rewriting the original', async () => {
     const { wrapper, store, ids, pinia } = setup(['[archive-inspection:password-encoding] 无法表示密码'])
     wrapper.unmount(); store.tasks[0].zipPasswordEncoding = 'cp932'
