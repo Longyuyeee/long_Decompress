@@ -62,6 +62,69 @@ pub(crate) fn is_executable_path(path: &Path) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn originals_158() -> (std::path::PathBuf, serde_json::Value) {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/sfx-158");
+        let manifest = serde_json::from_slice(&std::fs::read(root.join("manifest.json")).unwrap()).unwrap();
+        (root, manifest)
+    }
+    #[test]
+    fn original_158_gui_modules_are_exact_loaders() {
+        let (root, manifest) = originals_158();
+        let mut failures = Vec::new();
+        for c in manifest["cases"].as_array().unwrap().iter().filter(|c| c["kind"] == "7z" && c["layout"] == "external") {
+            let exe = root.join(c["name"].as_str().unwrap()).join(c["archive"].as_str().unwrap());
+            if super::super::sfx_volumes::seven_zip_loader_data(&exe).unwrap().is_none() { failures.push(c["name"].clone()); }
+        }
+        assert!(failures.is_empty(), "Original loaders not recognized: {failures:?}");
+    }
+    #[tokio::test]
+    async fn original_158_every_member_browses_and_keeps_sources() {
+        use sha2::{Digest, Sha256};
+        let (root, manifest) = originals_158();
+        for c in manifest["cases"].as_array().unwrap() {
+            let dir = root.join(c["name"].as_str().unwrap());
+            for member in c["members"].as_array().unwrap() {
+                let input = dir.join(member["name"].as_str().unwrap());
+                let browse = super::super::archive_browser::browse_archive(&input, c["password"].as_str()).await
+                    .unwrap_or_else(|e| panic!("{}: {e:#}", input.display()));
+                assert_eq!(browse.total_files, 3);
+                assert_eq!(browse.total_uncompressed_size, 275544);
+                assert_eq!(format!("{:x}", Sha256::digest(std::fs::read(&input).unwrap())), member["sha256"].as_str().unwrap());
+            }
+        }
+    }
+    #[tokio::test]
+    async fn original_158_missing_data_volumes_precede_password() {
+        let (root, manifest) = originals_158();
+        for c in manifest["cases"].as_array().unwrap().iter().filter(|c| c["layout"] == "external") {
+            let dir = root.join(c["name"].as_str().unwrap()); let tmp = tempfile::tempdir().unwrap();
+            for member in c["members"].as_array().unwrap() { let name = member["name"].as_str().unwrap(); std::fs::copy(dir.join(name), tmp.path().join(name)).unwrap(); }
+            let selected = tmp.path().join(c["archive"].as_str().unwrap());
+            let group = super::super::split_archive_detector::SplitArchiveDetector::detect_split_archive(&selected).unwrap().unwrap();
+            for index in [0, 2, group.parts.len()-1] {
+                let part = &group.parts[index]; let bytes = std::fs::read(part).unwrap(); std::fs::remove_file(part).unwrap();
+                let input = if index == 0 && c["kind"] == "rar" { &group.parts[1] } else { &selected };
+                if index != group.parts.len()-1 || c["mode"] != "headers" || c["kind"] == "7z" {
+                    for key in [None, Some("wrong-key"), c["password"].as_str()] {
+                        let e = super::super::archive_browser::browse_archive(input, key).await.unwrap_err();
+                        assert!(format!("{e:#}").contains("incomplete"), "{} index{index}: {e:#}", c["name"]);
+                    }
+                }
+                std::fs::write(part, bytes).unwrap();
+            }
+        }
+    }
+    #[test]
+    fn original_158_changed_loader_with_same_length_is_rejected() {
+        let (root, manifest) = originals_158();
+        for m in manifest["modules"].as_array().unwrap().iter().filter(|m| m["kind"] == "7z-gui") {
+            let tmp = tempfile::tempdir().unwrap(); let input = tmp.path().join("changed.exe");
+            let mut bytes = std::fs::read(root.join(m["module"].as_str().unwrap())).unwrap(); bytes[128] ^= 1; std::fs::write(&input, bytes).unwrap();
+            std::fs::write(tmp.path().join("changed.7z.001"), b"unrelated data").unwrap();
+            assert!(super::super::sfx_volumes::seven_zip_loader_data(&input).unwrap().is_none());
+            assert!(super::super::archive_browser::detect_format(&input).is_err());
+        }
+    }
     #[test]
     fn genuine_external_sfx_originals_group_every_member() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/sfx-155");

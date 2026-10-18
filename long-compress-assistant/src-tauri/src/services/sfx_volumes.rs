@@ -10,16 +10,28 @@ use std::{
     path::{Path, PathBuf},
 };
 
-/// Official 7-Zip 24.09 separate GUI loader. Do not trust arbitrary EXEs merely
-/// because there is a similarly named archive. New modules require originals.
+/// Original GUI loaders, verified against fixed original producer outputs.
+/// See tests/fixtures/archives/sfx-158/manifest.json for source and licensing.
+/// Size bounds the read; the entire module hash (not PE metadata or its name)
+/// selects separate-data semantics. Embedded archives use their own headers.
 pub(crate) fn seven_zip_loader_data(path: &Path) -> Result<Option<PathBuf>> {
-    if !super::sfx_archive::is_executable_path(path) || path.metadata()?.len() != 213504 {
+    if !super::sfx_archive::is_executable_path(path) {
         return Ok(None);
     }
+    let length = path.metadata()?.len();
+    let expected = match length {
+        205824 => "8d0fc5658a81aa86188c9f8a94ca6abbcdedee89d039274228e012bf1f3a9e41", // 19.00
+        214528 => "8661e029cac3fae0819423ac442b0baa109c863474b6be15e4d83d3a7ecfcb13", // 23.01
+        213504 => "97b304ccf831e83ca58b5c99a736f6525f81378125143e92b76baea0988ec5e2", // 24.09
+        215552 => "bdf3860863e383f2af8dda02026d81b4949a5a0956c160b5eef4ad2fc5a7560f", // 26.04
+        _ => return Ok(None),
+    };
     use sha2::{Digest, Sha256};
-    if format!("{:x}", Sha256::digest(fs::read(path)?))
-        != "97b304ccf831e83ca58b5c99a736f6525f81378125143e92b76baea0988ec5e2"
-    {
+    // Bound the read even if a download grows between metadata and open.
+    let mut bytes = Vec::with_capacity(length as usize + 1);
+    File::open(path)?.take(length + 1).read_to_end(&mut bytes)?;
+    if bytes.len() as u64 != length
+        || format!("{:x}", Sha256::digest(&bytes)) != expected {
         return Ok(None);
     }
     Ok(Some(path.with_file_name(format!(

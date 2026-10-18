@@ -1,0 +1,1660 @@
+{
+  "completedAt": "2026-10-18T10:12:12.576Z",
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
+  "binarySha256": "a5afa470ae34342e1c2ae566e1374875a06bdcc868224f669d6e779aa6676531",
+  "cases": [
+    {
+      "original": "7z-19.00-external-plain",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "faults": [
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "none",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275771 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "wrong",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275771 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "none",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275771 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "7z-19.00-external-contents",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": false,
+      "faults": [
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "none",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275827 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "wrong",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275827 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "correct",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275827 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "7z-19.00-external-headers",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": true,
+      "faults": [
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "none",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275856 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "wrong",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275856 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "correct",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275856 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "7z-19.00-embedded-plain",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "faults": [],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "7z-19.00-embedded-contents",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": false,
+      "faults": [],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "7z-19.00-embedded-headers",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": true,
+      "faults": [],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "7z-23.01-external-plain",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "faults": [
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "none",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275771 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "wrong",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275771 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "none",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275771 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "7z-23.01-external-contents",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": false,
+      "faults": [
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "none",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275827 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "wrong",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275827 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "correct",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275827 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "7z-23.01-external-headers",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": true,
+      "faults": [
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "none",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275856 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "wrong",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275856 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "correct",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275856 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "7z-23.01-embedded-plain",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "faults": [],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "7z-23.01-embedded-contents",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": false,
+      "faults": [],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "7z-23.01-embedded-headers",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": true,
+      "faults": [],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "7z-26.04-external-plain",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "faults": [
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "none",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275771 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "wrong",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275771 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "none",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275771 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "7z-26.04-external-contents",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": false,
+      "faults": [
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "none",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275827 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "wrong",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275827 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "correct",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275827 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "7z-26.04-external-headers",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": true,
+      "faults": [
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.001",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.001",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "wrong",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.003",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "none",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275856 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "wrong",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275856 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.7z.005",
+          "passwordState": "correct",
+          "error": "解压失败: 归档检测失败：[archive-inspection:incomplete] 7Z 文件或卷组不完整：归档声明至少 275856 字节，实际只有 262144 字节，可能缺少尾卷或文件被截断，请补齐分卷或重新下载",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "7z-26.04-embedded-plain",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "faults": [],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "7z-26.04-embedded-contents",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": false,
+      "faults": [],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "7z-26.04-embedded-headers",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": true,
+      "faults": [],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "rar624-Default-plain",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "faults": [
+        {
+          "missing": "收到的资料.exe",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.r01",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.r01",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.r04",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.r04",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "rar624-Default-contents",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": false,
+      "faults": [
+        {
+          "missing": "收到的资料.exe",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.r01",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.r01",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.r04",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.r04",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "rar624-Default-headers",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": true,
+      "faults": [
+        {
+          "missing": "收到的资料.exe",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.r01",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.r01",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.r04",
+          "passwordState": "correct",
+          "error": "文件损坏: RAR password verification failed: EOpen@Process (Could not open next volume)",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "rar624-Default64-plain",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "faults": [
+        {
+          "missing": "收到的资料.part1.exe",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.part1.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.part3.rar",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.part3.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.part6.rar",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.part6.rar",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "rar624-Default64-contents",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": false,
+      "faults": [
+        {
+          "missing": "收到的资料.part1.exe",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.part1.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.part3.rar",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.part3.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.part6.rar",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.part6.rar",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "rar624-Default64-headers",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": true,
+      "faults": [
+        {
+          "missing": "收到的资料.part1.exe",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.part1.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.part3.rar",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.part3.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.part6.rar",
+          "passwordState": "correct",
+          "error": "文件损坏: RAR password verification failed: EOpen@Process (Could not open next volume)",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "rar624-WinCon-plain",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "faults": [
+        {
+          "missing": "收到的资料.exe",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.r01",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.r01",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.r04",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.r04",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "rar624-WinCon-contents",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": false,
+      "faults": [
+        {
+          "missing": "收到的资料.exe",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.r01",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.r01",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.r04",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.r04",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "rar624-WinCon-headers",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": true,
+      "faults": [
+        {
+          "missing": "收到的资料.exe",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.r01",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.r01",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.r04",
+          "passwordState": "correct",
+          "error": "文件损坏: RAR password verification failed: EOpen@Process (Could not open next volume)",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "rar624-WinCon64-plain",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "faults": [
+        {
+          "missing": "收到的资料.part1.exe",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.part1.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.part3.rar",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.part3.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.part6.rar",
+          "passwordState": "none",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.part6.rar",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "rar624-WinCon64-contents",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": false,
+      "faults": [
+        {
+          "missing": "收到的资料.part1.exe",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.part1.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.part3.rar",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.part3.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.part6.rar",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.part6.rar",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "original": "rar624-WinCon64-headers",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": true,
+      "faults": [
+        {
+          "missing": "收到的资料.part1.exe",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.part1.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.part3.rar",
+          "passwordState": "correct",
+          "error": "[archive-inspection:incomplete] 缺少分卷：收到的资料.part3.rar",
+          "noOutput": true
+        },
+        {
+          "missing": "收到的资料.part6.rar",
+          "passwordState": "correct",
+          "error": "文件损坏: RAR password verification failed: EOpen@Process (Could not open next volume)",
+          "noOutput": true
+        }
+      ],
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ]
+    },
+    {
+      "actualAllMembersOneTask": true,
+      "actualMissingMiddleFinalCause": "[archive-inspection:incomplete] 缺少分卷：收到的资料.7z.003",
+      "supplementedOriginal": true,
+      "freshRetry": true,
+      "oldFailureRetained": true
+    },
+    {
+      "actualLoaderPasswordBrowse": true,
+      "actualSelectedExtraction": true
+    },
+    {
+      "actualLoaderConversion": true,
+      "independentZipHashes": true
+    }
+  ],
+  "screenshots": [
+    "sfx158-one-group-1100x700.png",
+    "sfx158-one-group-760x520.png",
+    "sfx158-missing-retry-1100x700.png",
+    "sfx158-missing-retry-760x520.png",
+    "sfx158-loader-browser-1100x700.png",
+    "sfx158-loader-browser-760x520.png",
+    "sfx158-real-history-1100x700.png",
+    "sfx158-real-history-760x520.png",
+    "sfx158-conversion-1100x700.png",
+    "sfx158-conversion-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "sfx158-one-group",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "sfx158-one-group",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "sfx158-missing-retry",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "sfx158-missing-retry",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "sfx158-loader-browser",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "sfx158-loader-browser",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "sfx158-real-history",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "sfx158-real-history",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "sfx158-conversion",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "sfx158-conversion",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "originalsUnchanged": true
+}

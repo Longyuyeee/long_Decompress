@@ -1,0 +1,2030 @@
+{
+  "createdAt": "2026-10-18T10:03:30.688Z",
+  "dataLicense": "CC0-1.0 self-authored payload; modules retain their original licenses",
+  "independentSha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53",
+  "modules": [
+    {
+      "version": "19.00",
+      "kind": "7z-gui",
+      "module": "modules/19.00/7z.sfx",
+      "bytes": 205824,
+      "sha256": "8d0fc5658a81aa86188c9f8a94ca6abbcdedee89d039274228e012bf1f3a9e41",
+      "license": "modules/19.00/License.txt",
+      "installerUrl": "https://www.7-zip.org/a/7z1900-x64.exe",
+      "installerSha256": "0f5d4dbbe5e55b7aa31b91e5925ed901fdf46a367491d81381846f05ad54c45e",
+      "producerSha256": "344f076bb1211cb02eca9e5ed2c0ce59bcf74ccbc749ec611538fa14ecb9aad2"
+    },
+    {
+      "version": "23.01",
+      "kind": "7z-gui",
+      "module": "modules/23.01/7z.sfx",
+      "bytes": 214528,
+      "sha256": "8661e029cac3fae0819423ac442b0baa109c863474b6be15e4d83d3a7ecfcb13",
+      "license": "modules/23.01/License.txt",
+      "installerUrl": "https://github.com/ip7z/7zip/releases/download/23.01/7z2301-x64.exe",
+      "installerSha256": "26cb6e9f56333682122fafe79dbcdfd51e9f47cc7217dccd29ac6fc33b5598cd",
+      "producerSha256": "8cebb25e240db3b6986fcaed6bc0b900fa09dad763a56fb71273529266c5c525"
+    },
+    {
+      "version": "26.04",
+      "kind": "7z-gui",
+      "module": "modules/26.04/7z.sfx",
+      "bytes": 215552,
+      "sha256": "bdf3860863e383f2af8dda02026d81b4949a5a0956c160b5eef4ad2fc5a7560f",
+      "license": "modules/26.04/License.txt",
+      "installerUrl": "https://github.com/ip7z/7zip/releases/download/26.04/7z2604-x64.exe",
+      "installerSha256": "d54bf805f9f3704d1e8db2fa3498ae7ef2df0312b40b558e7c71c734430a665d",
+      "producerSha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53"
+    },
+    {
+      "version": "6.24",
+      "kind": "rar",
+      "module": "Default.SFX",
+      "standaloneRedistributed": false,
+      "bytes": 334336,
+      "sha256": "e3ac1431cf3564c2f6fb48960ddaa70ad78225ea7758af2156df08cbe723db37",
+      "license": "modules/rar6.24/License.txt",
+      "installerUrl": "https://www.rarlab.com/rar/winrar-x64-624.exe",
+      "installerSha256": "794481dbbc9009a2565726fb5b4a4ab2fe216ff9edbb08951548ee765de9b4a6",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21"
+    },
+    {
+      "version": "6.24",
+      "kind": "rar",
+      "module": "Default64.SFX",
+      "standaloneRedistributed": false,
+      "bytes": 386048,
+      "sha256": "7082e3133a693b6a9a196ad742f6a12a71c472afbcc0922f1c6fca29576d889a",
+      "license": "modules/rar6.24/License.txt",
+      "installerUrl": "https://www.rarlab.com/rar/winrar-x64-624.exe",
+      "installerSha256": "794481dbbc9009a2565726fb5b4a4ab2fe216ff9edbb08951548ee765de9b4a6",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21"
+    },
+    {
+      "version": "6.24",
+      "kind": "rar",
+      "module": "WinCon.SFX",
+      "standaloneRedistributed": false,
+      "bytes": 301568,
+      "sha256": "36b6a07833fe16e701c68a6775b711707d962c9057646d7181e762633b07eb9c",
+      "license": "modules/rar6.24/License.txt",
+      "installerUrl": "https://www.rarlab.com/rar/winrar-x64-624.exe",
+      "installerSha256": "794481dbbc9009a2565726fb5b4a4ab2fe216ff9edbb08951548ee765de9b4a6",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21"
+    },
+    {
+      "version": "6.24",
+      "kind": "rar",
+      "module": "WinCon64.SFX",
+      "standaloneRedistributed": false,
+      "bytes": 354304,
+      "sha256": "3302373d25f68ece20a586e7345f07b02e97e707865eb9c7a582d9f58c5e5622",
+      "license": "modules/rar6.24/License.txt",
+      "installerUrl": "https://www.rarlab.com/rar/winrar-x64-624.exe",
+      "installerSha256": "794481dbbc9009a2565726fb5b4a4ab2fe216ff9edbb08951548ee765de9b4a6",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21"
+    }
+  ],
+  "cases": [
+    {
+      "name": "7z-19.00-external-plain",
+      "kind": "7z",
+      "version": "19.00",
+      "layout": "external",
+      "mode": "plain",
+      "password": null,
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.7z.001",
+          "bytes": 65536,
+          "sha256": "605606109eea6c7871d08d82d72437c159853cf161d03f567ccc563d83f8c6ce"
+        },
+        {
+          "name": "收到的资料.7z.002",
+          "bytes": 65536,
+          "sha256": "145bd6ddab9327fa4b011ddadf05f7fca503927eb872a19307bfd9bc1ab33c19"
+        },
+        {
+          "name": "收到的资料.7z.003",
+          "bytes": 65536,
+          "sha256": "b0f3effa743bbf3d4ec79ddcc0764e61dad98ebc7e461f754601e341f58d2bf1"
+        },
+        {
+          "name": "收到的资料.7z.004",
+          "bytes": 65536,
+          "sha256": "2f42d7283f8d711e3decc960c1f9e942384cc75ab75ac1702af4709aa374b3a7"
+        },
+        {
+          "name": "收到的资料.7z.005",
+          "bytes": 13627,
+          "sha256": "a473ae3f3bcf344ef0e34d14162653de9cd9a274bb78e4614fccf76cf6bd32cc"
+        },
+        {
+          "name": "收到的资料.exe",
+          "bytes": 205824,
+          "sha256": "8d0fc5658a81aa86188c9f8a94ca6abbcdedee89d039274228e012bf1f3a9e41"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\19.00\\7z.sfx",
+        "-v64k",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-19.00-external-plain\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "7z-19.00-external-contents",
+      "kind": "7z",
+      "version": "19.00",
+      "layout": "external",
+      "mode": "contents",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.7z.001",
+          "bytes": 65536,
+          "sha256": "ed42ff43307de5461e809b62f94ccbcd79d99dafbdc192ac1fc06ff571242a6c"
+        },
+        {
+          "name": "收到的资料.7z.002",
+          "bytes": 65536,
+          "sha256": "8032dbf644e9c05fe61913d8d14b40d9e54bc2e8e95bbda7ab62e45b4b284080"
+        },
+        {
+          "name": "收到的资料.7z.003",
+          "bytes": 65536,
+          "sha256": "6e118fc099ca1176b9d8d386df3c734a44f576cbc73595c21dedfc7a3aa829d2"
+        },
+        {
+          "name": "收到的资料.7z.004",
+          "bytes": 65536,
+          "sha256": "ba90cbe7553a825de29ba49883b5692adc25a72f7a0b6b11cc9fe5d13b72be8b"
+        },
+        {
+          "name": "收到的资料.7z.005",
+          "bytes": 13683,
+          "sha256": "87601832a52eaa4891ad4b8acb4ac3fd35c1d4b62f19510a14a351d52301eb54"
+        },
+        {
+          "name": "收到的资料.exe",
+          "bytes": 205824,
+          "sha256": "8d0fc5658a81aa86188c9f8a94ca6abbcdedee89d039274228e012bf1f3a9e41"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\19.00\\7z.sfx",
+        "-v64k",
+        "-pSfx158+中文123!",
+        "-mhe=off",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-19.00-external-contents\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "7z-19.00-external-headers",
+      "kind": "7z",
+      "version": "19.00",
+      "layout": "external",
+      "mode": "headers",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.7z.001",
+          "bytes": 65536,
+          "sha256": "d275e8a71b11344f052cd850711fd77abacb06de92632634132c502369ac657d"
+        },
+        {
+          "name": "收到的资料.7z.002",
+          "bytes": 65536,
+          "sha256": "28f4397d0172db1ba65785df9088c650344a1e1964abcaa1eecc611479825bbf"
+        },
+        {
+          "name": "收到的资料.7z.003",
+          "bytes": 65536,
+          "sha256": "7b7710405c66d2b6dcc1b0455c9297494a4d11e57ce3fb8a16813a52796f3955"
+        },
+        {
+          "name": "收到的资料.7z.004",
+          "bytes": 65536,
+          "sha256": "8031ca9abbac8a28a507c84195b93dba266d2b362f9e784ec3c58024622a9f22"
+        },
+        {
+          "name": "收到的资料.7z.005",
+          "bytes": 13712,
+          "sha256": "8e6a903c6c4a0d9ab6fcb8c2b7b1047d89bc601b534cf9cf38eedf785c9f6726"
+        },
+        {
+          "name": "收到的资料.exe",
+          "bytes": 205824,
+          "sha256": "8d0fc5658a81aa86188c9f8a94ca6abbcdedee89d039274228e012bf1f3a9e41"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\19.00\\7z.sfx",
+        "-v64k",
+        "-pSfx158+中文123!",
+        "-mhe=on",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-19.00-external-headers\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "7z-19.00-embedded-plain",
+      "kind": "7z",
+      "version": "19.00",
+      "layout": "embedded",
+      "mode": "plain",
+      "password": null,
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.exe",
+          "bytes": 481595,
+          "sha256": "d084bd07edf086d42c2ce40662ee4d5d4bf93f2e8fc4d62b49d6c3eaca2b0e33"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\19.00\\7z.sfx",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-19.00-embedded-plain\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "7z-19.00-embedded-contents",
+      "kind": "7z",
+      "version": "19.00",
+      "layout": "embedded",
+      "mode": "contents",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.exe",
+          "bytes": 481652,
+          "sha256": "3fdceee32ed0dd94eab18de3572ea29de0298cbfb19847b68395290a997cff6b"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\19.00\\7z.sfx",
+        "-pSfx158+中文123!",
+        "-mhe=off",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-19.00-embedded-contents\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "7z-19.00-embedded-headers",
+      "kind": "7z",
+      "version": "19.00",
+      "layout": "embedded",
+      "mode": "headers",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.exe",
+          "bytes": 481680,
+          "sha256": "c06e32d0969f276129e2fd557d89cf51bfa871a6a083a316da6e342c12a09c8f"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\19.00\\7z.sfx",
+        "-pSfx158+中文123!",
+        "-mhe=on",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-19.00-embedded-headers\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "7z-23.01-external-plain",
+      "kind": "7z",
+      "version": "23.01",
+      "layout": "external",
+      "mode": "plain",
+      "password": null,
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.7z.001",
+          "bytes": 65536,
+          "sha256": "605606109eea6c7871d08d82d72437c159853cf161d03f567ccc563d83f8c6ce"
+        },
+        {
+          "name": "收到的资料.7z.002",
+          "bytes": 65536,
+          "sha256": "145bd6ddab9327fa4b011ddadf05f7fca503927eb872a19307bfd9bc1ab33c19"
+        },
+        {
+          "name": "收到的资料.7z.003",
+          "bytes": 65536,
+          "sha256": "b0f3effa743bbf3d4ec79ddcc0764e61dad98ebc7e461f754601e341f58d2bf1"
+        },
+        {
+          "name": "收到的资料.7z.004",
+          "bytes": 65536,
+          "sha256": "2f42d7283f8d711e3decc960c1f9e942384cc75ab75ac1702af4709aa374b3a7"
+        },
+        {
+          "name": "收到的资料.7z.005",
+          "bytes": 13627,
+          "sha256": "a473ae3f3bcf344ef0e34d14162653de9cd9a274bb78e4614fccf76cf6bd32cc"
+        },
+        {
+          "name": "收到的资料.exe",
+          "bytes": 214528,
+          "sha256": "8661e029cac3fae0819423ac442b0baa109c863474b6be15e4d83d3a7ecfcb13"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\23.01\\7z.sfx",
+        "-v64k",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-23.01-external-plain\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "7z-23.01-external-contents",
+      "kind": "7z",
+      "version": "23.01",
+      "layout": "external",
+      "mode": "contents",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.7z.001",
+          "bytes": 65536,
+          "sha256": "0c66551efa06b81109ec755153c23ae9b77352b7938c6dcc3e5ee9e8914d500b"
+        },
+        {
+          "name": "收到的资料.7z.002",
+          "bytes": 65536,
+          "sha256": "42747bd92306c97fa680f67cc86cdce2be0aca429ca41c5562ff034792de86a2"
+        },
+        {
+          "name": "收到的资料.7z.003",
+          "bytes": 65536,
+          "sha256": "96895b03ad139797defe51ca1cce3ffb09bd2779652e7a05969a8e75d7dfed5b"
+        },
+        {
+          "name": "收到的资料.7z.004",
+          "bytes": 65536,
+          "sha256": "67a064e0c4be281b44d86081da5635cc304f188f52bc40e63f5fe56178202898"
+        },
+        {
+          "name": "收到的资料.7z.005",
+          "bytes": 13683,
+          "sha256": "4fecfa9766cfaf5ba819d66e45df2783e7ac18d78fc10e1a5d0d129f75581ae8"
+        },
+        {
+          "name": "收到的资料.exe",
+          "bytes": 214528,
+          "sha256": "8661e029cac3fae0819423ac442b0baa109c863474b6be15e4d83d3a7ecfcb13"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\23.01\\7z.sfx",
+        "-v64k",
+        "-pSfx158+中文123!",
+        "-mhe=off",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-23.01-external-contents\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "7z-23.01-external-headers",
+      "kind": "7z",
+      "version": "23.01",
+      "layout": "external",
+      "mode": "headers",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.7z.001",
+          "bytes": 65536,
+          "sha256": "dc8384778bf4b106b035c296a026f9131f584ede2985592f559c295ba4eceb4f"
+        },
+        {
+          "name": "收到的资料.7z.002",
+          "bytes": 65536,
+          "sha256": "87f790488076d1ad4a19e0b7a59735fae8ce84c402364a0d6a542a74196fb69e"
+        },
+        {
+          "name": "收到的资料.7z.003",
+          "bytes": 65536,
+          "sha256": "dbc0bfb2ca65a8d287dda5e75894da112c881cc6eed123685ab387509b9c985b"
+        },
+        {
+          "name": "收到的资料.7z.004",
+          "bytes": 65536,
+          "sha256": "e8c45481be07109e12a64c599cf172ec06a954242d8cf3c8c1cf32bceac11999"
+        },
+        {
+          "name": "收到的资料.7z.005",
+          "bytes": 13712,
+          "sha256": "3fdbeaf47b64e88d3daa64098359d5790d3643e481f45294556b2560cf9c2d3b"
+        },
+        {
+          "name": "收到的资料.exe",
+          "bytes": 214528,
+          "sha256": "8661e029cac3fae0819423ac442b0baa109c863474b6be15e4d83d3a7ecfcb13"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\23.01\\7z.sfx",
+        "-v64k",
+        "-pSfx158+中文123!",
+        "-mhe=on",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-23.01-external-headers\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "7z-23.01-embedded-plain",
+      "kind": "7z",
+      "version": "23.01",
+      "layout": "embedded",
+      "mode": "plain",
+      "password": null,
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.exe",
+          "bytes": 490299,
+          "sha256": "a12bb2ad773609eaf4d9fa72726190f82e317f9a68f600468a7c22cd7610a692"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\23.01\\7z.sfx",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-23.01-embedded-plain\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "7z-23.01-embedded-contents",
+      "kind": "7z",
+      "version": "23.01",
+      "layout": "embedded",
+      "mode": "contents",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.exe",
+          "bytes": 490355,
+          "sha256": "8fb77cd2ac770d1e4e201f9828f29d65f6657344f40eed16927ea3660a05f7cd"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\23.01\\7z.sfx",
+        "-pSfx158+中文123!",
+        "-mhe=off",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-23.01-embedded-contents\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "7z-23.01-embedded-headers",
+      "kind": "7z",
+      "version": "23.01",
+      "layout": "embedded",
+      "mode": "headers",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.exe",
+          "bytes": 490384,
+          "sha256": "2ecb4a1b6d5bc7285c7784c5d6b68c0c5c057bd6424dbfb4db9f7a69fee8b4f8"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\23.01\\7z.sfx",
+        "-pSfx158+中文123!",
+        "-mhe=on",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-23.01-embedded-headers\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "7z-26.04-external-plain",
+      "kind": "7z",
+      "version": "26.04",
+      "layout": "external",
+      "mode": "plain",
+      "password": null,
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.7z.001",
+          "bytes": 65536,
+          "sha256": "605606109eea6c7871d08d82d72437c159853cf161d03f567ccc563d83f8c6ce"
+        },
+        {
+          "name": "收到的资料.7z.002",
+          "bytes": 65536,
+          "sha256": "145bd6ddab9327fa4b011ddadf05f7fca503927eb872a19307bfd9bc1ab33c19"
+        },
+        {
+          "name": "收到的资料.7z.003",
+          "bytes": 65536,
+          "sha256": "b0f3effa743bbf3d4ec79ddcc0764e61dad98ebc7e461f754601e341f58d2bf1"
+        },
+        {
+          "name": "收到的资料.7z.004",
+          "bytes": 65536,
+          "sha256": "2f42d7283f8d711e3decc960c1f9e942384cc75ab75ac1702af4709aa374b3a7"
+        },
+        {
+          "name": "收到的资料.7z.005",
+          "bytes": 13627,
+          "sha256": "a473ae3f3bcf344ef0e34d14162653de9cd9a274bb78e4614fccf76cf6bd32cc"
+        },
+        {
+          "name": "收到的资料.exe",
+          "bytes": 215552,
+          "sha256": "bdf3860863e383f2af8dda02026d81b4949a5a0956c160b5eef4ad2fc5a7560f"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\26.04\\7z.sfx",
+        "-v64k",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-26.04-external-plain\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "7z-26.04-external-contents",
+      "kind": "7z",
+      "version": "26.04",
+      "layout": "external",
+      "mode": "contents",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.7z.001",
+          "bytes": 65536,
+          "sha256": "17e2fd8d19e3cca6564532f6a70408b467e5294254f00e9770748a57d67e6d5b"
+        },
+        {
+          "name": "收到的资料.7z.002",
+          "bytes": 65536,
+          "sha256": "235d5283330c104a77e6f85f219046d25bb37e1604b4f3be1ff09a4b52a2cbdf"
+        },
+        {
+          "name": "收到的资料.7z.003",
+          "bytes": 65536,
+          "sha256": "f74d0fbeb978ce617ac99f830f678db054a856f320a72679048f75420a784872"
+        },
+        {
+          "name": "收到的资料.7z.004",
+          "bytes": 65536,
+          "sha256": "f326e47ceaa158389c68a5effa4020dd7ee5199ce51a54465e11cef1bb4b8c26"
+        },
+        {
+          "name": "收到的资料.7z.005",
+          "bytes": 13683,
+          "sha256": "3dd07ccf2ad587041b63473f0948a4508c0f4fb64f9ae1d1ed1ad207ac8bb9bf"
+        },
+        {
+          "name": "收到的资料.exe",
+          "bytes": 215552,
+          "sha256": "bdf3860863e383f2af8dda02026d81b4949a5a0956c160b5eef4ad2fc5a7560f"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\26.04\\7z.sfx",
+        "-v64k",
+        "-pSfx158+中文123!",
+        "-mhe=off",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-26.04-external-contents\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "7z-26.04-external-headers",
+      "kind": "7z",
+      "version": "26.04",
+      "layout": "external",
+      "mode": "headers",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.7z.001",
+          "bytes": 65536,
+          "sha256": "416e784a548997444f1235fa8d55c818c89db3ebd552af822eeca56844f3a4aa"
+        },
+        {
+          "name": "收到的资料.7z.002",
+          "bytes": 65536,
+          "sha256": "fdf84ca073784a71c9feb023ed6c20b5846aefe82643dd0a5cb5b5f5c25df460"
+        },
+        {
+          "name": "收到的资料.7z.003",
+          "bytes": 65536,
+          "sha256": "19a43e26853eb2020e2481d461d5cdd5353aafc474c37e2b7f61ab168de38a02"
+        },
+        {
+          "name": "收到的资料.7z.004",
+          "bytes": 65536,
+          "sha256": "8f4b06d3df7f5dd0f59c9738acf7d1b8653f64e4b6a346d9f69c8df7ad4086f4"
+        },
+        {
+          "name": "收到的资料.7z.005",
+          "bytes": 13712,
+          "sha256": "b0f956ce41b7e1b1788e41fdb7a78494ca1655bc36c444aa4797e0bc8c8f6da6"
+        },
+        {
+          "name": "收到的资料.exe",
+          "bytes": 215552,
+          "sha256": "bdf3860863e383f2af8dda02026d81b4949a5a0956c160b5eef4ad2fc5a7560f"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\26.04\\7z.sfx",
+        "-v64k",
+        "-pSfx158+中文123!",
+        "-mhe=on",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-26.04-external-headers\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "7z-26.04-embedded-plain",
+      "kind": "7z",
+      "version": "26.04",
+      "layout": "embedded",
+      "mode": "plain",
+      "password": null,
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.exe",
+          "bytes": 491323,
+          "sha256": "ac04b8a33628feb62547bf08faa03bade751e5299230fcd909e6305927aec0fc"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\26.04\\7z.sfx",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-26.04-embedded-plain\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "7z-26.04-embedded-contents",
+      "kind": "7z",
+      "version": "26.04",
+      "layout": "embedded",
+      "mode": "contents",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.exe",
+          "bytes": 491379,
+          "sha256": "b8e131ca2c54ac2c5ea7a27abef3a8522511dc74586f3f64a337015d70baab29"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\26.04\\7z.sfx",
+        "-pSfx158+中文123!",
+        "-mhe=off",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-26.04-embedded-contents\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "7z-26.04-embedded-headers",
+      "kind": "7z",
+      "version": "26.04",
+      "layout": "embedded",
+      "mode": "headers",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.exe",
+          "bytes": 491408,
+          "sha256": "7308a793bd1586f47b0bfaf0d562cf29538c3f3073a3202efdfb5b8dc9e8b9ab"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sccUTF-8",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\sfx-158-tools\\26.04\\7z.sfx",
+        "-pSfx158+中文123!",
+        "-mhe=on",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\7z-26.04-embedded-headers\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "rar624-Default-plain",
+      "kind": "rar",
+      "version": "6.24",
+      "module": "Default.SFX",
+      "layout": "external",
+      "mode": "plain",
+      "password": null,
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.exe",
+          "bytes": 334888,
+          "sha256": "e230ba6459ccbe49b0782ee4bcc0449dc946cc75225f1cdab32caa9af672d395"
+        },
+        {
+          "name": "收到的资料.r00",
+          "bytes": 65536,
+          "sha256": "df4f7400a5663c08899f254bbf2a907c93f66aee54f1522bdd030df837aac80f"
+        },
+        {
+          "name": "收到的资料.r01",
+          "bytes": 65536,
+          "sha256": "926ad4cd29ea4f6466c7f8a3b8464fa97cdeb7767790245b3090354ed82ff045"
+        },
+        {
+          "name": "收到的资料.r02",
+          "bytes": 65536,
+          "sha256": "9db78493d0b7d155c664d40fcffba9ee0be719edabcd5a84952284df8846b8c2"
+        },
+        {
+          "name": "收到的资料.r03",
+          "bytes": 65536,
+          "sha256": "8d6313a0377246ce3d9491d7d0640925680be7e8e72e3ba829964481771a475e"
+        },
+        {
+          "name": "收到的资料.r04",
+          "bytes": 13625,
+          "sha256": "4d33e5b19cfad3e8d45b136e66c7f11c93237e553308dae3bf1a67e8ce484cbd"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Default.SFX",
+        "-ma4",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "-vn",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\rar624-Default-plain\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "rar624-Default-contents",
+      "kind": "rar",
+      "version": "6.24",
+      "module": "Default.SFX",
+      "layout": "external",
+      "mode": "contents",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.exe",
+          "bytes": 334888,
+          "sha256": "08cbff83afef8eb6f34330bbacd74be234ddf66bde56bc86edd01d53d8cad607"
+        },
+        {
+          "name": "收到的资料.r00",
+          "bytes": 65536,
+          "sha256": "e61647b923c65630ba1cb904c5005c889fa1534f6ef057261d7510c30353428b"
+        },
+        {
+          "name": "收到的资料.r01",
+          "bytes": 65536,
+          "sha256": "3d36196eedfce3ee0ba01a70cb1559aeb164dabcb56b114ca35ff98268205127"
+        },
+        {
+          "name": "收到的资料.r02",
+          "bytes": 65536,
+          "sha256": "ea400de4f0cf74991d35c0a1c1b741aaad21f219567069e9d73b15f170056d0b"
+        },
+        {
+          "name": "收到的资料.r03",
+          "bytes": 65536,
+          "sha256": "3f85931ec11b827f229493622fb50baf4c74ae462c0a2abf975363f1749698fd"
+        },
+        {
+          "name": "收到的资料.r04",
+          "bytes": 13641,
+          "sha256": "35a3930e6af92443cd3370514d8c7f93c1374cfcabcebdede7cbab3b90dfd91e"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Default.SFX",
+        "-ma4",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "-vn",
+        "-pSfx158+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\rar624-Default-contents\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "rar624-Default-headers",
+      "kind": "rar",
+      "version": "6.24",
+      "module": "Default.SFX",
+      "layout": "external",
+      "mode": "headers",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.exe",
+          "bytes": 334908,
+          "sha256": "f56da0a0800fad840f7ee90e1581342b24e15bb2c491b0de4aaffca68018c7fb"
+        },
+        {
+          "name": "收到的资料.r00",
+          "bytes": 65536,
+          "sha256": "df809c89ba9adb15fb0c4f2204133e0c81cc71ddcc23324608d60fbc1066c9ef"
+        },
+        {
+          "name": "收到的资料.r01",
+          "bytes": 65536,
+          "sha256": "2b887c028e028179de3760a5a394e7518e360eb9bf61182c1dfdfc9facdf7f78"
+        },
+        {
+          "name": "收到的资料.r02",
+          "bytes": 65536,
+          "sha256": "ae5de3528a11a12457ff99dba665db2730a140fc24bc48e71778c9c205924bf5"
+        },
+        {
+          "name": "收到的资料.r03",
+          "bytes": 65536,
+          "sha256": "549e5fc9dab6e6f37dbac9c75cd991c261dd92e2ca17c8aba03dfeca1a7cf374"
+        },
+        {
+          "name": "收到的资料.r04",
+          "bytes": 13932,
+          "sha256": "3cef5552365e827fbba6ab2dcd9875464b2c531b1ff8a756c69965c1034edf08"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Default.SFX",
+        "-ma4",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "-vn",
+        "-hpSfx158+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\rar624-Default-headers\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "rar624-Default64-plain",
+      "kind": "rar",
+      "version": "6.24",
+      "module": "Default64.SFX",
+      "layout": "external",
+      "mode": "plain",
+      "password": null,
+      "archive": "收到的资料.part1.exe",
+      "members": [
+        {
+          "name": "收到的资料.part1.exe",
+          "bytes": 386531,
+          "sha256": "c3275bdd08da064bb1ffd09f92cc9ac2c9479f6b31881adf0dac46540084040d"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "b13d337a2cb73bcbbcc00715dcb6c8848b17fa284a58d65e03aff8e4b2a1e689"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "8743a50eb8d8c11ce3744f25183abb334bd88fd24be045610825f235962dc0db"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 65536,
+          "sha256": "11c26a10b911898f28342161c94558b6c02a504c2b861adfdbb155f4ec266e15"
+        },
+        {
+          "name": "收到的资料.part5.rar",
+          "bytes": 65536,
+          "sha256": "4295ce40f57eb7b887fa2c2f4f6386e256852918203bfc991a7b06a641db9044"
+        },
+        {
+          "name": "收到的资料.part6.rar",
+          "bytes": 14000,
+          "sha256": "a5585f14a3be859f6b3eb178f611eed932e66b1f14a6df99b78b95e77cdb23cf"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Default64.SFX",
+        "-ma5",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\rar624-Default64-plain\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "rar624-Default64-contents",
+      "kind": "rar",
+      "version": "6.24",
+      "module": "Default64.SFX",
+      "layout": "external",
+      "mode": "contents",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.part1.exe",
+      "members": [
+        {
+          "name": "收到的资料.part1.exe",
+          "bytes": 386482,
+          "sha256": "e5615c288afea618e54d4827b745070a676d878f7acceeff865d6de41ade6029"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "52a3fe8081ddc2330cbeb8bdee26ab6db789f15b9bae8cf5e6c7fbca59187c5e"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "02b427cbc18b14476bae82adf145d32a0f332c10a23debbff1288edd50edfd2c"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 65536,
+          "sha256": "f1430c243eff68264c6e32cfb9412d984ae8e25c81e58831d7b46b920f1dc3b9"
+        },
+        {
+          "name": "收到的资料.part5.rar",
+          "bytes": 65536,
+          "sha256": "e621adb46adff8a4616e00efcfc626c11cbe014d062e11ae02b1e0132c8cd67f"
+        },
+        {
+          "name": "收到的资料.part6.rar",
+          "bytes": 14694,
+          "sha256": "41e8ca2a27757c64df1812a5d7596944764889f5649320da3b4697ff4b64d2ab"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Default64.SFX",
+        "-ma5",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "-pSfx158+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\rar624-Default64-contents\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "rar624-Default64-headers",
+      "kind": "rar",
+      "version": "6.24",
+      "module": "Default64.SFX",
+      "layout": "external",
+      "mode": "headers",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.part1.exe",
+      "members": [
+        {
+          "name": "收到的资料.part1.exe",
+          "bytes": 386558,
+          "sha256": "67d91d1e499b7d129cbc9830f030572714f5033bc319f032291d33682ced8ef0"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "3485b5b710d332d66018ab6917956d8db72b07b2124d2d6dad3bfb8618810c1c"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "5b077430e61cebc43c9ce7b388e5a63d5ed4584fe0472cf3a07a5b49a12e9c78"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 65536,
+          "sha256": "63501189d21c3145682c575862976678f82d2cf81cbdd3e60ac588f856c77971"
+        },
+        {
+          "name": "收到的资料.part5.rar",
+          "bytes": 65536,
+          "sha256": "3bfea3bb5a5263addcee7456f47e12a2c43c6c255e77bf3f309285073e4ad9d4"
+        },
+        {
+          "name": "收到的资料.part6.rar",
+          "bytes": 15902,
+          "sha256": "951f4def5779dec9c6fb7071cc7d13092533d0a94a65fe8b717ece1b7a6b7248"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Default64.SFX",
+        "-ma5",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "-hpSfx158+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\rar624-Default64-headers\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "rar624-WinCon-plain",
+      "kind": "rar",
+      "version": "6.24",
+      "module": "WinCon.SFX",
+      "layout": "external",
+      "mode": "plain",
+      "password": null,
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.exe",
+          "bytes": 302120,
+          "sha256": "b8a41909b5ec55244c4a3a657af47a79c3ee7848c6c956752e5786475eef95e3"
+        },
+        {
+          "name": "收到的资料.r00",
+          "bytes": 65536,
+          "sha256": "df4f7400a5663c08899f254bbf2a907c93f66aee54f1522bdd030df837aac80f"
+        },
+        {
+          "name": "收到的资料.r01",
+          "bytes": 65536,
+          "sha256": "926ad4cd29ea4f6466c7f8a3b8464fa97cdeb7767790245b3090354ed82ff045"
+        },
+        {
+          "name": "收到的资料.r02",
+          "bytes": 65536,
+          "sha256": "9db78493d0b7d155c664d40fcffba9ee0be719edabcd5a84952284df8846b8c2"
+        },
+        {
+          "name": "收到的资料.r03",
+          "bytes": 65536,
+          "sha256": "8d6313a0377246ce3d9491d7d0640925680be7e8e72e3ba829964481771a475e"
+        },
+        {
+          "name": "收到的资料.r04",
+          "bytes": 13625,
+          "sha256": "4d33e5b19cfad3e8d45b136e66c7f11c93237e553308dae3bf1a67e8ce484cbd"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\WinCon.SFX",
+        "-ma4",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "-vn",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\rar624-WinCon-plain\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "rar624-WinCon-contents",
+      "kind": "rar",
+      "version": "6.24",
+      "module": "WinCon.SFX",
+      "layout": "external",
+      "mode": "contents",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.exe",
+          "bytes": 302120,
+          "sha256": "881dc2335e9ed835009f15d16ea6f2317ed386f55f61e34779690859fb1577c2"
+        },
+        {
+          "name": "收到的资料.r00",
+          "bytes": 65536,
+          "sha256": "bc92b2e0738f16edd69e047850bc03aff4cdc4429d6489de390db76e4bed2248"
+        },
+        {
+          "name": "收到的资料.r01",
+          "bytes": 65536,
+          "sha256": "3af854bc400e47d0925f679c87acfc1d6c070009df41201ddffe580afe6c7270"
+        },
+        {
+          "name": "收到的资料.r02",
+          "bytes": 65536,
+          "sha256": "fff961f6dc92d990d9be83730c09505b48ec25712b6883585c471d7ba10e8a06"
+        },
+        {
+          "name": "收到的资料.r03",
+          "bytes": 65536,
+          "sha256": "350092fb5c914cc138f7d343e8a913b476573509f554c1996af80ebba1493aee"
+        },
+        {
+          "name": "收到的资料.r04",
+          "bytes": 13641,
+          "sha256": "e884094ebc14eb4271b575e82e435297efb140a9cafa338823731b8d1bf77c8e"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\WinCon.SFX",
+        "-ma4",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "-vn",
+        "-pSfx158+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\rar624-WinCon-contents\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "rar624-WinCon-headers",
+      "kind": "rar",
+      "version": "6.24",
+      "module": "WinCon.SFX",
+      "layout": "external",
+      "mode": "headers",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.exe",
+          "bytes": 302140,
+          "sha256": "96770e165f4fb73b3dec8dc14cc18275fd09647954e93e0bc5cd86b0fd2c5e56"
+        },
+        {
+          "name": "收到的资料.r00",
+          "bytes": 65536,
+          "sha256": "21a605d5b1b920f16ea620ba2e74983dce00a02cbdba81265edbb37a35744e93"
+        },
+        {
+          "name": "收到的资料.r01",
+          "bytes": 65536,
+          "sha256": "e0d9653f9c6a32ff56c29db87bf6b7742e7fe8d9f4b9534c247dd0b0c00a5871"
+        },
+        {
+          "name": "收到的资料.r02",
+          "bytes": 65536,
+          "sha256": "9dd0d60d95132a8dd71125c4eab2bebf87c748492707327a83fc5e3bbea25955"
+        },
+        {
+          "name": "收到的资料.r03",
+          "bytes": 65536,
+          "sha256": "aba0a016bd281bdff55b80be6ebcb918601b7f36489721348da8cbf25c110195"
+        },
+        {
+          "name": "收到的资料.r04",
+          "bytes": 13932,
+          "sha256": "94a0ba32514bb0f454d8dd1e7902f58d1d190e76cd4d77c135ae0cd19b8f9f65"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\WinCon.SFX",
+        "-ma4",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "-vn",
+        "-hpSfx158+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\rar624-WinCon-headers\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "rar624-WinCon64-plain",
+      "kind": "rar",
+      "version": "6.24",
+      "module": "WinCon64.SFX",
+      "layout": "external",
+      "mode": "plain",
+      "password": null,
+      "archive": "收到的资料.part1.exe",
+      "members": [
+        {
+          "name": "收到的资料.part1.exe",
+          "bytes": 354787,
+          "sha256": "6ddb78de9b256a8807ff1901d08d1d8148a590e99d0beee69f0568b69eda514c"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "b13d337a2cb73bcbbcc00715dcb6c8848b17fa284a58d65e03aff8e4b2a1e689"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "8743a50eb8d8c11ce3744f25183abb334bd88fd24be045610825f235962dc0db"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 65536,
+          "sha256": "11c26a10b911898f28342161c94558b6c02a504c2b861adfdbb155f4ec266e15"
+        },
+        {
+          "name": "收到的资料.part5.rar",
+          "bytes": 65536,
+          "sha256": "4295ce40f57eb7b887fa2c2f4f6386e256852918203bfc991a7b06a641db9044"
+        },
+        {
+          "name": "收到的资料.part6.rar",
+          "bytes": 14000,
+          "sha256": "a5585f14a3be859f6b3eb178f611eed932e66b1f14a6df99b78b95e77cdb23cf"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\WinCon64.SFX",
+        "-ma5",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\rar624-WinCon64-plain\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "rar624-WinCon64-contents",
+      "kind": "rar",
+      "version": "6.24",
+      "module": "WinCon64.SFX",
+      "layout": "external",
+      "mode": "contents",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.part1.exe",
+      "members": [
+        {
+          "name": "收到的资料.part1.exe",
+          "bytes": 354738,
+          "sha256": "f10176de0c495ce443f37056b0686deb9bc9b98a9838eca26dbcfa56906830b2"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "714032c9a6b6312c7907ba90a455117d6b57d2b56062b06acf913feedd13a5b7"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "cec5bbd6984a573dfe32934d69838160d961225ea5693cea643350f2b707af2b"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 65536,
+          "sha256": "642b53ae1313772fab82f5c9e40af590b3bbdca9694ece55a9858d7384d2edc6"
+        },
+        {
+          "name": "收到的资料.part5.rar",
+          "bytes": 65536,
+          "sha256": "c154126e2bbe82f3015e65f29866d6bb14b239e40abd902b9616af25b0de9588"
+        },
+        {
+          "name": "收到的资料.part6.rar",
+          "bytes": 14694,
+          "sha256": "5a495fec02a379cf15e35c588710f73de22aa162d0d73c8ddabacd9fe36fb7ef"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\WinCon64.SFX",
+        "-ma5",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "-pSfx158+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\rar624-WinCon64-contents\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "rar624-WinCon64-headers",
+      "kind": "rar",
+      "version": "6.24",
+      "module": "WinCon64.SFX",
+      "layout": "external",
+      "mode": "headers",
+      "password": "Sfx158+中文123!",
+      "archive": "收到的资料.part1.exe",
+      "members": [
+        {
+          "name": "收到的资料.part1.exe",
+          "bytes": 354814,
+          "sha256": "5bfb7cb961c3dfd6a33d853b90adf53614d3d721e60e0c19e26f0741b88e62a3"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "e100a387a623a8a1670cb97f05ea4499e0ab7c88505ad66621d6597028644755"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "72642a9bcd66c1561eed7c54984e21233bf1a5d7d465ba38fe59906a6e945064"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 65536,
+          "sha256": "616e8a1447946f6da69d7f342aa7bfa149bd2ebcb8bbc10ec71ec8c4efa2700c"
+        },
+        {
+          "name": "收到的资料.part5.rar",
+          "bytes": 65536,
+          "sha256": "4bd19eb4a1b5ca549cffdac71aa5fdd236295da72ca5b9997468ce28f7434e51"
+        },
+        {
+          "name": "收到的资料.part6.rar",
+          "bytes": 15902,
+          "sha256": "8cf4e6992b13b8718e48e40284a2fd96de086a8c323158bc40acfc8328040b07"
+        }
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录",
+      "producerArgs": [
+        "a",
+        "-sfxE:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\WinCon64.SFX",
+        "-ma5",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "-hpSfx158+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-158\\rar624-WinCon64-headers\\收到的资料.exe",
+        ".\\*"
+      ],
+      "independentReadback": true
+    }
+  ]
+}

@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "Long解压",
-    "version": "1.5.7"
+    "version": "1.5.8"
   },
   "tauri": {
     "systemTray": {
