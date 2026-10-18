@@ -16,6 +16,8 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 ## 功能概览
 
+**v1.5.8 已封板，正式安装包发布中**。新增原厂 7-Zip 19.00/23.01/26.04 GUI 独立加载器，保留 24.09，并补充 WinRAR 6.24 模块与内嵌 7Z 回归。30 组固定原包、67 项 Rust、150 项前端、33 桌面场景及十张实看页面通过；缺卷最终原因、补卷新任务、密码浏览、所选提取及转换 ZIP 独立回解已核对。见[审计](docs/SFX_MODULES_1.5.8.md)、[封板记录](docs/SFX_MODULES_FREEZE_1.5.8.md)与[更新说明](docs/RELEASE_NOTES_1.5.8.md)。只读且不执行输入 EXE，不外推所有历史模块；下一版细化加密 RAR 缺尾/混卷原因。图标和原截图保留。
+
 **v1.5.7 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.7)。补齐 7Z 中 PPMdH、Deflate、Deflate64、Bzip2 的原生读取，贯通密码、固实、数字分卷、所选提取及转换；改进损坏、方法不支持和输出错误的最终原因。61 项 Rust、150 项前端、25 个真实桌面场景与 8 张实看页面通过；正式四资产、中文说明及包内主程序/四份说明已回下载核对。见[审计](docs/SEVENZ_METHODS_1.5.7.md)、[封板记录](docs/SEVENZ_METHODS_FREEZE_1.5.7.md)和[更新说明](docs/RELEASE_NOTES_1.5.7.md)。不改变默认压缩算法，软件图标和原截图保留。十版路线已交付两版，下一版接续更多原厂 SFX 模块兼容。
 
 此前 **v1.5.6 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.6)。RAR 进度改用实际解码字节，修正跨卷总量、暂停计时、同目录产出统计和停止误报失败。49 项 Rust、133 项前端、12 个真实桌面场景与 8 张实看页面通过；正式四资产、中文说明及包内主程序已回下载核对。见[本版审计](docs/RAR_PROGRESS_1.5.6.md)、[封板发布记录](docs/RAR_PROGRESS_FREEZE_1.5.6.md)与[更新说明](docs/RELEASE_NOTES_1.5.6.md)。后续十版路线已交付一版，下一版补齐真实 7Z 方法兼容；原图标和截图保留。
