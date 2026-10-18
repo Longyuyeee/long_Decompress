@@ -116,6 +116,7 @@ fn map_error(error: AlzError, encrypted: bool) -> anyhow::Error {
             if e.kind() != io::ErrorKind::UnexpectedEof => anyhow::Error::new(e).context("[archive-inspection:io] [alz-io] ALZ 文件读写失败"),
         AlzError::PasswordNotSet => anyhow::anyhow!("[archive-inspection:password-required] ALZ 所选内容需要密码"),
         AlzError::InvalidPassword => anyhow::anyhow!("[alz-password] ALZ 密码短头不匹配，也可能加密头损坏；请核对密码和来源完整性"),
+        AlzError::UnknownCompressionMethod(3) => anyhow::anyhow!("[archive-inspection:unsupported] ALZ Obfuscated Deflate（方法 3）尚未通过原包验证，当前不支持；请向提供者索取 ZIP/7Z 版本，不应反复尝试密码"),
         AlzError::UnknownCompressionMethod(m) => anyhow::anyhow!("[archive-inspection:unsupported] ALZ 压缩方法 {m} 当前不受支持，不应反复尝试密码"),
         e => anyhow::anyhow!("{} ALZ 内容、大小或 CRC 校验失败：{e}",
             if encrypted { "[archive-inspection:ambiguous-data]" } else { "[archive-inspection:damaged]" }),
@@ -150,6 +151,13 @@ fn decode<W: Write>(archive: &mut AlzArchive, e: &AlzFileEntry, password: Option
         CompressionMethod::Bzip2 => bzip2::extract_bzip2(&mut input, &mut out, e.compressed_size, e.uncompressed_size, crypto.as_mut()),
         CompressionMethod::Unknown(m) => Err(AlzError::UnknownCompressionMethod(m)),
     };
+    if let Err(AlzError::TrailingCompressedData { remaining }) = &result {
+        // Only full decoded size AND CRC establish this is not another key
+        // candidate. A matching short encryption header is not sufficient.
+        if out.bytes == e.uncompressed_size && out.crc.clone().finalize() == e.file_crc {
+            anyhow::bail!("[archive-inspection:damaged] ALZ 条目「{}」内容已通过大小和 CRC 校验，但压缩流尾部仍有 {} 字节异常数据；归档已损坏，请重新获取完整原包，不必反复尝试密码", e.file_name, remaining);
+        }
+    }
     result.map_err(|err| map_error(err, e.is_encrypted()))?;
     ensure!(out.bytes == e.uncompressed_size && out.crc.finalize() == e.file_crc,
         "{} ALZ 条目「{}」大小或 CRC 校验失败，未将结果记为成功", if e.is_encrypted() { "[archive-inspection:ambiguous-data]" } else { "[archive-inspection:damaged]" }, e.file_name);

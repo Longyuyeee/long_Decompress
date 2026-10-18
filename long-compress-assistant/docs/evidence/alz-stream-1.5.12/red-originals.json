@@ -1,0 +1,45 @@
+{
+  "helperSha256": "484149b815a05358212be29203d7fe625e3f2c22dcdfe32edcefaeedff806c4d",
+  "faults": [
+    {
+      "name": "m1-plain-single-trailing",
+      "status": 0,
+      "response": "{\"result\":{\"verified\":true}}\n"
+    },
+    {
+      "name": "m1-plain-volumes-trailing",
+      "status": 0,
+      "response": "{\"result\":{\"verified\":true}}\n"
+    },
+    {
+      "name": "m1-key-single-trailing",
+      "status": 0,
+      "response": "{\"result\":{\"verified\":true}}\n"
+    },
+    {
+      "name": "m1-key-volumes-trailing",
+      "status": 0,
+      "response": "{\"result\":{\"verified\":true}}\n"
+    },
+    {
+      "name": "m2-plain-single-trailing",
+      "status": 0,
+      "response": "{\"result\":{\"verified\":true}}\n"
+    },
+    {
+      "name": "m2-plain-volumes-trailing",
+      "status": 0,
+      "response": "{\"result\":{\"verified\":true}}\n"
+    },
+    {
+      "name": "m2-key-single-trailing",
+      "status": 0,
+      "response": "{\"result\":{\"verified\":true}}\n"
+    },
+    {
+      "name": "m2-key-volumes-trailing",
+      "status": 0,
+      "response": "{\"result\":{\"verified\":true}}\n"
+    }
+  ]
+}

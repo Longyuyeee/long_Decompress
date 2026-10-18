@@ -17,6 +17,8 @@ pub enum AlzError {
     InvalidFilenameLength,
     /// DEFLATE decompression failed.
     InflateFailed(String),
+    /// A terminated Deflate stream did not consume its declared input range.
+    TrailingCompressedData { remaining: u64 },
     /// bzip2 decompression failed.
     Bzip2Failed(String),
     /// The decompressed data does not match the stored CRC32.
@@ -56,6 +58,7 @@ impl fmt::Display for AlzError {
             Self::CantOpenDestFile(e) => write!(f, "can't open dest file: {e}"),
             Self::InvalidFilenameLength => write!(f, "invalid filename length"),
             Self::InflateFailed(s) => write!(f, "inflate failed: {s}"),
+            Self::TrailingCompressedData { remaining } => write!(f, "Deflate stream has {remaining} trailing compressed bytes"),
             Self::Bzip2Failed(s) => write!(f, "bzip2 decompress failed: {s}"),
             Self::InvalidFileCrc { expected, got } => {
                 write!(

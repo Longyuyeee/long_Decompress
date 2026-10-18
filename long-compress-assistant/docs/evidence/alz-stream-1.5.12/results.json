@@ -1,0 +1,317 @@
+{
+  "completedAt": "2026-10-18T15:52:35.434Z",
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
+  "binarySha256": "317dba4840512b5071d096a79bee0d84f517ae92897f7d73d772c7ab7d3de1bc",
+  "helperSha256": "62b086190ddd9fa9f2b02b4a3b3860078632261588025da37e76fa0c01563f12",
+  "control": {
+    "producerSha256": "13c664d8b809348104999efb734587e2847aab04e5511af2e5345e13d2528433",
+    "method": 2,
+    "encrypted": true,
+    "archiveSha256": "b1d419f69f406c37186a3ef757ec50847f5922882cc8f8f529032d8d2c70332b",
+    "bytes": 268435456,
+    "sourceSha256": "1a04258f4db4d37deb6804f922cdb9740756353babd645b4c23ec77b7d058279",
+    "password": "PublicALZ+control!",
+    "source": "Existing self-authored random 256 MiB control.bin from v1.5.2; re-create with original ALZip -a -m2 -p, not a patched header"
+  },
+  "cases": [
+    {
+      "original": "m1-plain-single",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "m1-plain-volumes",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "m1-key-single",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "m1-key-volumes",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "m2-plain-single",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "m2-plain-volumes",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "m2-key-single",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "payloadHashes": true
+    },
+    {
+      "original": "m2-key-volumes",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "payloadHashes": true
+    },
+    {
+      "derivedFault": "m1-plain-single-trailing",
+      "extraBytes": 5,
+      "definitiveDamage": true,
+      "integrityRejected": true,
+      "diagnosis": true,
+      "extractionRejected": true,
+      "conversionRejected": true,
+      "noPartialOutput": true,
+      "originalNotDeleted": true
+    },
+    {
+      "derivedFault": "m1-plain-volumes-trailing",
+      "extraBytes": 5,
+      "definitiveDamage": true,
+      "integrityRejected": true,
+      "diagnosis": true,
+      "extractionRejected": true,
+      "conversionRejected": true,
+      "noPartialOutput": true,
+      "originalNotDeleted": true
+    },
+    {
+      "derivedFault": "m1-key-single-trailing",
+      "extraBytes": 65536,
+      "definitiveDamage": true,
+      "integrityRejected": true,
+      "diagnosis": true,
+      "extractionRejected": true,
+      "conversionRejected": true,
+      "noPartialOutput": true,
+      "originalNotDeleted": true
+    },
+    {
+      "derivedFault": "m1-key-volumes-trailing",
+      "extraBytes": 65536,
+      "definitiveDamage": true,
+      "integrityRejected": true,
+      "diagnosis": true,
+      "extractionRejected": true,
+      "conversionRejected": true,
+      "noPartialOutput": true,
+      "originalNotDeleted": true
+    },
+    {
+      "derivedFault": "m2-plain-single-trailing",
+      "extraBytes": 5,
+      "definitiveDamage": true,
+      "integrityRejected": true,
+      "diagnosis": true,
+      "extractionRejected": true,
+      "conversionRejected": true,
+      "noPartialOutput": true,
+      "originalNotDeleted": true
+    },
+    {
+      "derivedFault": "m2-plain-volumes-trailing",
+      "extraBytes": 5,
+      "definitiveDamage": true,
+      "integrityRejected": true,
+      "diagnosis": true,
+      "extractionRejected": true,
+      "conversionRejected": true,
+      "noPartialOutput": true,
+      "originalNotDeleted": true
+    },
+    {
+      "derivedFault": "m2-key-single-trailing",
+      "extraBytes": 65536,
+      "definitiveDamage": true,
+      "integrityRejected": true,
+      "diagnosis": true,
+      "extractionRejected": true,
+      "conversionRejected": true,
+      "noPartialOutput": true,
+      "originalNotDeleted": true
+    },
+    {
+      "derivedFault": "m2-key-volumes-trailing",
+      "extraBytes": 65536,
+      "definitiveDamage": true,
+      "integrityRejected": true,
+      "diagnosis": true,
+      "extractionRejected": true,
+      "conversionRejected": true,
+      "noPartialOutput": true,
+      "originalNotDeleted": true
+    },
+    {
+      "actualMiddleBrowseAndSelected": true
+    },
+    {
+      "actualPasswordTailDamage": true,
+      "actualHistoryFinalCause": "[archive-inspection:damaged] ALZ 条目「01payload.bin」内容已通过大小和 CRC 校验，但压缩流尾部仍有 65536 字节异常数据；归档已损坏，请重新获取完整原包，不必反复尝试密码",
+      "newOriginalCheckedBeforeRetry": true,
+      "oldFailureRetained": true,
+      "noPublishedPartial": true
+    },
+    {
+      "actualMissingMiddle": true,
+      "allMembersOneTask": true,
+      "originalSupplementAndFreshTask": true
+    },
+    {
+      "derivedUnsupportedMethodNotPositive": true,
+      "actualMethod3NotClaimed": true,
+      "unsupportedBeforePassword": true
+    },
+    {
+      "actualConversion": true,
+      "independentZipHashes": true
+    },
+    {
+      "actualDeflatePauseAfterWrittenBytes": 188915426,
+      "pauseStoppedWrites": true,
+      "resumeProducedMore": true,
+      "resumedOutputHashVerified": true,
+      "actualHistoryReexecutionForCancel": true,
+      "cancelTaskPausedAfterWrittenBytes": 149474784,
+      "actualCancelWhilePaused": true,
+      "queueAndHistoryCancelled": true,
+      "noStagedOrPublishedOutput": true
+    }
+  ],
+  "screenshots": [
+    "alz1512-middle-browser-1100x700.png",
+    "alz1512-middle-browser-760x520.png",
+    "alz1512-tail-final-1100x700.png",
+    "alz1512-tail-final-760x520.png",
+    "alz1512-history-final-1100x700.png",
+    "alz1512-history-final-760x520.png",
+    "alz1512-missing-final-1100x700.png",
+    "alz1512-missing-final-760x520.png",
+    "alz1512-unsupported-method-1100x700.png",
+    "alz1512-unsupported-method-760x520.png",
+    "alz1512-conversion-1100x700.png",
+    "alz1512-conversion-760x520.png",
+    "alz1512-paused-1100x700.png",
+    "alz1512-paused-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "alz1512-middle-browser",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "alz1512-middle-browser",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "alz1512-tail-final",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "alz1512-tail-final",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "alz1512-history-final",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "alz1512-history-final",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "alz1512-missing-final",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "alz1512-missing-final",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "alz1512-unsupported-method",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "alz1512-unsupported-method",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "alz1512-conversion",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "alz1512-conversion",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "alz1512-paused",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "alz1512-paused",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "originalsAndFaultsUnchanged": true,
+  "method3PositiveOriginalObtained": false
+}

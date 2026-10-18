@@ -1,0 +1,52 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling long-compress-assistant v1.5.11 (E:\ProjectSave\ClaudeProject\Long-Decompress\long-compress-assistant\src-tauri)
+warning: function `stats` is never used
+ --> src\services\rar_preflight.rs:7:15
+  |
+7 | pub(crate) fn stats(
+  |               ^^^^^
+  |
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `long-compress-assistant` (lib) generated 1 warning
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 04s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-bc709f74b1285f40.exe)
+
+running 1 test
+
+thread 'services::alz_engine::tests::alz_deflate_trailing_data_is_damage_after_full_crc_not_a_password_retry' (30328) panicked at src\services\alz_engine.rs:118:70:
+called `Result::unwrap_err()` on an `Ok` value: ()
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::alz_engine::tests::alz_deflate_trailing_data_is_damage_after_full_crc_not_a_password_retry ... FAILED
+
+failures:
+
+failures:
+    services::alz_engine::tests::alz_deflate_trailing_data_is_damage_after_full_crc_not_a_password_retry
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 695 filtered out; finished in 0.06s
+
+error: test failed, to rerun pass `--lib`
