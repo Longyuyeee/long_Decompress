@@ -995,6 +995,30 @@ impl Default for RarSupportService {
 mod tests {
     use super::{RarError, RarSupportService};
     use unrar::error::{Code, UnrarError, When};
+    use std::{path::Path, sync::{Arc, atomic::AtomicBool}};
+    #[tokio::test]
+    async fn original_159_missing_tail_retains_exact_native_name() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/rar-159");
+        let m: serde_json::Value = serde_json::from_slice(&std::fs::read(root.join("manifest.json")).unwrap()).unwrap();
+        let mut failures = Vec::new();
+        for c in m["cases"].as_array().unwrap().iter().filter(|c| c["variant"] == "original") {
+            let tmp = tempfile::tempdir().unwrap(); let dir = root.join(c["name"].as_str().unwrap());
+            for part in c["members"].as_array().unwrap() { let n = part["name"].as_str().unwrap(); std::fs::copy(dir.join(n), tmp.path().join(n)).unwrap(); }
+            let input = tmp.path().join(c["archive"].as_str().unwrap());
+            let group = super::super::split_archive_detector::SplitArchiveDetector::detect_split_archive(&input).unwrap().unwrap();
+            let tail = group.parts.last().unwrap(); let missing = tail.file_name().unwrap().to_string_lossy().to_string(); std::fs::remove_file(tail).unwrap();
+            let key = c["password"].as_str();
+            for (route, result) in [
+                ("browse", super::super::archive_browser::browse_archive(&input, key).await.map(|_| ())),
+                ("integrity", super::super::rar_recovery::verify_readonly(&input, key, Arc::new(AtomicBool::new(false))).await),
+                ("preflight", super::super::rar_preflight::stats(&input, key, || Ok(())).map(|_| ())),
+            ] {
+                let message = result.map(|_| "unexpected success".to_string()).unwrap_or_else(|e| format!("{e:#}"));
+                if !message.contains("[archive-inspection:missing-volume]") || !message.contains(&missing) { failures.push(format!("{} {route}: {message}", c["name"])); }
+            }
+        }
+        assert!(failures.is_empty(), "Native requested volume lost:\n{}", failures.join("\n"));
+    }
 
     #[tokio::test]
     async fn native_decoded_progress_matches_real_sfx_originals_and_selected_files() {
