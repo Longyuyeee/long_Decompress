@@ -1,0 +1,102 @@
+{
+  "verifiedAt": "2026-10-18T02:18:53.642Z",
+  "tag": "v1.5.2",
+  "tagCommit": "aee07e9f2e65495a9eceb8c1ce55ae310d9b4e4c",
+  "functionalFreeze": "ffa0f3f144b2bf2eb6c20f401a8b7a809b610234",
+  "candidateCommit": "b87da7cdc5fde852f823bb85444d224b17521379",
+  "candidateRun": 39088095487,
+  "releaseRun": 39088654460,
+  "url": "https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.2",
+  "publishedAt": "2026-10-18T02:17:29Z",
+  "installerProductVersion": "1.5.2",
+  "assets": [
+    {
+      "name": "Long-Decompress_1.5.2_x64-setup.exe",
+      "bytes": 20774311,
+      "sha256": "65e12bf0059e4746c90c6359d7ca559b8744efd6ccbaedeb37a482348f658a1b",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.2/Long-Decompress_1.5.2_x64-setup.exe"
+    },
+    {
+      "name": "Long-Decompress_1.5.2_x64-setup.nsis.zip",
+      "bytes": 20774469,
+      "sha256": "4b30a1ef0adba29d15fc9947bf8dd942be2f353ee13e8746036d3c040b5ae546",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.2/Long-Decompress_1.5.2_x64-setup.nsis.zip"
+    },
+    {
+      "name": "Long-Decompress_1.5.2_x64-setup.nsis.zip.sig",
+      "bytes": 428,
+      "sha256": "80a7a9187a69c7ed0247c3c9327eef3cc0d8aa81977299d77e61289e609823a7",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.2/Long-Decompress_1.5.2_x64-setup.nsis.zip.sig"
+    },
+    {
+      "name": "latest.json",
+      "bytes": 3516,
+      "sha256": "bc00499ff5f9e42d59bb1832d95d6eab805a575dca22fe7064b5d8d2a742a667",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.2/latest.json"
+    }
+  ],
+  "updaterExeMatchesInstaller": true,
+  "signatureMatchesManifest": true,
+  "chineseNotesMatch": true,
+  "onlyManifestNotesChanged": true,
+  "embeddedAlzEngine": {
+    "engineSha256": "484149b815a05358212be29203d7fe625e3f2c22dcdfe32edcefaeedff806c4d",
+    "engineBytes": 729600,
+    "noticesVerified": 124,
+    "cases": [
+      {
+        "name": "store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "normal",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "low",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "dir_tree",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_deflate",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "zip20",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "split",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "split_store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-cn-key-volumes.alz",
+        "chinesePasswordAndNames": true,
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-cn-key.alz",
+        "chinesePasswordAndNames": true,
+        "bundledEngineContentVerification": true
+      }
+    ],
+    "nativeMiddleMemberSelectedExtract": true,
+    "installationExecuted": false,
+    "engineExecutedFromExtractedInstaller": true
+  }
+}
