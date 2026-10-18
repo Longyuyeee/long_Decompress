@@ -1,0 +1,44 @@
+{
+  "checkedAt": "2026-10-18T00:28:02.904Z",
+  "functionalFreeze": "f6f2d9222dc754873d1a76954761d396fda2d78a",
+  "candidateCommit": "7324e1befaffe749c25a3b0b42a87fbd4ed3367a",
+  "candidateRun": 39082434311,
+  "candidateTree": "03ec5bf35d6c41331816ef29c93909249295b33b",
+  "installer": "Long解压_1.5.1_x64-setup.exe",
+  "installerBytes": 20536025,
+  "installerSha256": "f07bbd61ec61fd1a604130866dd7d81eeb9bcd92f529909841105cb0945ff651",
+  "installerProductVersion": "1.5.1",
+  "engineSha256": "5ad239810009dc499c79159c60f8cd2e61764b9bb88f43dc0eb6d242846c937b",
+  "licenseSha256": "927b5feda84f7a7f2063998b124829182967f54b954db2c3569e8bd07958bf07",
+  "engineBytes": 494592,
+  "cases": [
+    {
+      "name": "journal.zpaq",
+      "currentFiles": 3,
+      "readWithBundledEngine": true
+    },
+    {
+      "name": "journal-key.zpaq",
+      "currentFiles": 3,
+      "readWithBundledEngine": true
+    }
+  ],
+  "creationCases": [
+    {
+      "name": "plain",
+      "createdWithPackagedEngine": true,
+      "officialIndependentReadback": true,
+      "payloadSha256": "1b5618cdd8e1272824064569208801ffeb635fc9ad21065bb1052aa7756a5567"
+    },
+    {
+      "name": "native-key",
+      "createdWithPackagedEngine": true,
+      "officialIndependentReadback": true,
+      "payloadSha256": "1b5618cdd8e1272824064569208801ffeb635fc9ad21065bb1052aa7756a5567"
+    }
+  ],
+  "installationExecuted": false,
+  "engineExecutedFromExtractedInstaller": true,
+  "tagCommit": "3508c68b7cf943d60d1425235dbcabdabbf6a03c",
+  "candidateAndTagTree": "03ec5bf35d6c41331816ef29c93909249295b33b"
+}
