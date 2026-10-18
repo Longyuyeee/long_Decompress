@@ -47,7 +47,7 @@ fn classify_failure(record: &TaskHistoryRecord) -> Option<TaskFailureV1> {
         .and_then(|(_, tail)| tail.split_once(']').map(|(code, _)| code));
     let category = marker.filter(|code| matches!(*code,
         "damaged" | "missing-volume" | "incomplete" | "permission" | "timeout" |
-        "engine-unavailable" | "engine-start" | "io" | "ambiguous-data" | "password-encoding" | "unsupported"
+        "engine-unavailable" | "engine-start" | "io" | "ambiguous-data" | "rar-later-data" | "password-encoding" | "unsupported"
     )).unwrap_or("unknown");
     let observed = record.failure.as_ref().filter(|failure| failure.schema_version == 1)
         .map(|failure| failure.stage.as_str()).filter(|stage| matches!(*stage,
@@ -492,7 +492,7 @@ pub struct HistoryQuery {
 fn history_failure_category_sql() -> String {
     let categories = ["rollback-incomplete", "output-conflict", "publication-failed", "verification-failed",
         "source-changed", "source-missing", "source-unavailable", "source-invalid", "damaged",
-        "missing-volume", "incomplete", "permission", "timeout", "engine-unavailable", "engine-start", "io", "ambiguous-data", "password-encoding", "unsupported", "unknown"];
+        "missing-volume", "incomplete", "permission", "timeout", "engine-unavailable", "engine-start", "io", "ambiguous-data", "rar-later-data", "password-encoding", "unsupported", "unknown"];
     let accepted = categories.iter().map(|value| format!("'{value}'")).collect::<Vec<_>>().join(",");
     let mut expression = format!("CASE WHEN status != 'failed' THEN NULL WHEN json_valid(failure) THEN CASE WHEN json_extract(failure, '$.schemaVersion') = 1 AND json_extract(failure, '$.category') IN ({accepted}) THEN json_extract(failure, '$.category') END END");
     let mut fallback = String::from("CASE WHEN status != 'failed' THEN NULL ");

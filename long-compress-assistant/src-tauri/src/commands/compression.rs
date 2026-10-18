@@ -1379,9 +1379,16 @@ fn classify_archive_browse_error(error: &str) -> String {
     if error.contains("ARCHIVE_BROWSE_TIMEOUT") {
         return "ARCHIVE_BROWSE_TIMEOUT|读取压缩包内容超过 30 秒，已停止等待；归档可能损坏或所在设备响应过慢".to_string();
     }
-    if error.contains("[archive-inspection:incomplete]") {
-        let message = error.replace("[archive-inspection:incomplete]", "");
+    if error.contains("[archive-inspection:incomplete]") || error.contains("[archive-inspection:missing-volume]") {
+        let message = error.replace("[archive-inspection:incomplete]", "").replace("[archive-inspection:missing-volume]", "");
         return format!("ARCHIVE_BROWSE_INCOMPLETE|{}|{error}", message.trim().replace('|', " / "));
+    }
+    for category in ["io", "permission", "ambiguous-data", "rar-later-data"] {
+        let marker = format!("[archive-inspection:{category}]");
+        if error.contains(&marker) {
+            let message = error.replace(&marker, "");
+            return format!("ARCHIVE_BROWSE_FAILED|{}|{error}", message.trim().replace('|', " / "));
+        }
     }
     if error.contains("[archive-inspection:damaged]") {
         let message = error.replace("[archive-inspection:damaged]", "");
@@ -2342,6 +2349,17 @@ mod cancellation_tests {
         assert_eq!(classify_archive_browse_error(detail).split('|').nth(1), Some("7Z 归档头校验失败：文件已损坏；更换密码无法修复归档头"));
         assert!(classify_archive_browse_error(&format!("{detail}: encrypted header"))
             .starts_with("ARCHIVE_BROWSE_DAMAGED|7Z 归档头校验失败"));
+    }
+
+    #[test]
+    fn native_rar_volume_causes_precede_password_wording() {
+        for (marker, prefix) in [("missing-volume", "ARCHIVE_BROWSE_INCOMPLETE|"), ("io", "ARCHIVE_BROWSE_FAILED|"), ("permission", "ARCHIVE_BROWSE_FAILED|"), ("ambiguous-data", "ARCHIVE_BROWSE_FAILED|"), ("rar-later-data", "ARCHIVE_BROWSE_FAILED|")] {
+            let text = format!("[archive-inspection:{marker}] RAR 请求 password.part6.rar；前面的 encrypted 内容已通过密码校验");
+            let actual = classify_archive_browse_error(&text);
+            assert!(actual.starts_with(prefix), "{actual}");
+            assert!(actual.contains("password.part6.rar"));
+            assert!(!actual.starts_with("ARCHIVE_BROWSE_PASSWORD|"));
+        }
     }
 
     #[test]

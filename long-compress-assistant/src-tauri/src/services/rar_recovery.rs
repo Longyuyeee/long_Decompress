@@ -221,6 +221,8 @@ fn recovery_missing(group: &Group) -> Vec<String> {
 struct VerificationFailure {
     detail: String,
     encrypted: bool,
+    category: &'static str,
+    missing_volume: Option<String>,
 }
 
 #[derive(Default)]
@@ -238,20 +240,30 @@ fn verify(path: &Path, password: Option<&str>, flag: &AtomicBool) -> Result<Cont
         None => unrar::Archive::new(path),
     };
     let observed_encrypted = std::cell::Cell::new(false);
+    let password_proven = std::cell::Cell::new(false);
     let error = |e: unrar::error::UnrarError| {
         use unrar::error::Code;
         let encrypted =
             observed_encrypted.get() || matches!(e.code, Code::MissingPassword | Code::BadPassword);
-        let detail = match e.code {
+        let native = super::rar_support::RarSupportService::native_failure_message(&e, password_proven.get());
+        let requested = e.volume.as_ref().filter(|v| v.requested);
+        let missing = requested.filter(|v| v.unavailable_kind == Some(std::io::ErrorKind::NotFound));
+        let category = if missing.is_some() { "missing-volume" }
+            else if requested.is_some() { "io" }
+            else if native.is_some() { "rar-later-data" }
+            else { match e.code { Code::MissingPassword => "password_required", Code::BadPassword => "wrong_password", _ => "damaged" } };
+        let missing_volume = missing.map(|v| v.path.file_name().unwrap_or(v.path.as_os_str()).to_string_lossy().into_owned());
+        let detail = native.unwrap_or_else(|| match e.code {
             Code::MissingPassword => "需要填写正确的 RAR 密码".into(),
             Code::BadPassword => "RAR 密码错误，请修改后重新检查".into(),
             _ => format!("RAR 内容未通过完整校验：{e:?}"),
-        };
-        anyhow::Error::new(VerificationFailure { detail, encrypted })
+        });
+        anyhow::Error::new(VerificationFailure { detail, encrypted, category, missing_volume })
     };
     let mut archive = archive.open_for_processing().map_err(error)?;
     super::sfx_volumes::validate_native_volume(path, !matches!(archive.volume_info(), unrar::VolumeInfo::None))?;
     observed_encrypted.set(archive.has_encrypted_headers());
+    let encrypted_headers = archive.has_encrypted_headers();
     let mut contents = Contents {
         volume: !matches!(archive.volume_info(), unrar::VolumeInfo::None),
         encrypted: archive.has_encrypted_headers(),
@@ -262,18 +274,21 @@ fn verify(path: &Path, password: Option<&str>, flag: &AtomicBool) -> Result<Cont
         let Some(header) = archive.read_header().map_err(error)? else {
             break;
         };
+        password_proven.set(password_proven.get() || encrypted_headers);
         contents.encrypted |= header.entry().is_encrypted();
         observed_encrypted.set(contents.encrypted);
         if header.entry().is_directory() {
             contents.directories += 1;
             archive = header.skip().map_err(error)?;
         } else {
+            let proves_content = header.entry().is_encrypted() && header.entry().unpacked_size > 0;
             contents.files += 1;
             contents.size = contents.size.saturating_add(header.entry().unpacked_size);
             archive = header.test_with_cancel(flag).map_err(|failure| {
                 if flag.load(Ordering::SeqCst) { anyhow::anyhow!("RAR recovery cancelled") }
                 else { error(failure) }
             })?;
+            password_proven.set(password_proven.get() || proves_content);
         }
     }
     cancelled(flag)?;
@@ -394,21 +409,21 @@ pub async fn diagnose(
                 }
                 Err(e) => {
                     cancelled(&flag)?;
-                    report.encrypted = e
-                        .downcast_ref::<VerificationFailure>()
-                        .is_some_and(|e| e.encrypted);
+                    let failure = e.downcast_ref::<VerificationFailure>();
+                    report.encrypted = failure.is_some_and(|e| e.encrypted);
                     let detail = e.to_string();
-                    if detail.contains("密码") {
-                        report.encrypted = true;
-                        report.status = if password.as_deref().is_some_and(|p| !p.is_empty()) {
-                            "wrong_password"
-                        } else {
-                            "password_required"
-                        }
-                        .into();
+                    if let Some(failure) = failure {
+                        report.status = match failure.category {
+                            "missing-volume" => "missing_volume",
+                            "password_required" => "password_required",
+                            "wrong_password" => "wrong_password",
+                            _ => "damaged",
+                        }.into();
+                        if let Some(name) = &failure.missing_volume { report.missing_volumes.push(name.clone()); }
                     }
                     report.issues.push(DiagnosticIssue {
-                        code: report.status.clone(),
+                        code: if failure.is_some_and(|f| f.category == "rar-later-data") { "rar_later_data".into() }
+                            else if failure.is_some_and(|f| f.category == "io") { "rar_volume_unavailable".into() } else { report.status.clone() },
                         severity: "warning".into(),
                         title: "归档尚未完整可读".into(),
                         detail,
@@ -441,6 +456,7 @@ pub async fn diagnose(
         } else if first.is_some()
             && (!group.recovery.is_empty() || report.missing_volumes.is_empty())
             && !report.status.contains("password")
+            && !report.issues.iter().any(|issue| matches!(issue.code.as_str(), "rar_later_data" | "rar_volume_unavailable"))
         {
             report.can_repair = true;
             report.recoverability = if group.recovery.is_empty() {

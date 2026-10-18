@@ -58,7 +58,7 @@ pub struct OpenArchive<M: OpenMode, C: Cursor> {
     extra: C,
     marker: std::marker::PhantomData<M>,
 }
-type Userdata<'a, T> = (T, Option<widestring::WideCString>, Option<widestring::WideCString>, *const std::sync::atomic::AtomicBool, Option<&'a dyn Fn() -> bool>, Option<&'a dyn Fn(u64)>);
+type Userdata<'a, T> = (T, Option<VolumeContext>, Option<widestring::WideCString>, *const std::sync::atomic::AtomicBool, Option<&'a dyn Fn() -> bool>, Option<&'a dyn Fn(u64)>);
 
 mod private {
     use super::native;
@@ -250,6 +250,7 @@ impl<Mode: OpenMode> OpenArchive<Mode, CursorBeforeHeader> {
         data.user_data = &mut userdata as *mut _ as native::LPARAM;
         let handle =
             NonNull::new(unsafe { native::RAROpenArchiveEx(&mut data as *mut _) } as *mut _);
+        if let Some(handle) = handle { unsafe { native::RARSetCallback(handle.as_ptr(), None, 0); } }
 
         let arc = handle.and_then(|handle| {
             if let Some(pw) = password.filter(|_| unicode_password.is_none()) {
@@ -270,7 +271,7 @@ impl<Mode: OpenMode> OpenArchive<Mode, CursorBeforeHeader> {
             (Some(arc), Code::Success) => Ok(arc),
             (arc, _) => {
                 recover.and_then(|recover| arc.and_then(|arc| recover.replace(arc)));
-                Err(UnrarError::from(result, When::Open))
+                Err(UnrarError::from(result, When::Open).with_volume(userdata.1))
             }
         }
     }
@@ -493,10 +494,11 @@ fn read_header(handle: &Handle) -> UnrarResult<Option<FileHeader>> {
     let read_result =
         Code::from(unsafe { native::RARReadHeaderEx(handle.0.as_ptr(), &mut header as *mut _) })
             .unwrap();
+    unsafe { native::RARSetCallback(handle.0.as_ptr(), None, 0); }
     match read_result {
         Code::Success => Ok(Some(header.into())),
         Code::EndArchive => Ok(None),
-        _ => Err(UnrarError::from(read_result, When::Read)),
+        _ => Err(UnrarError::from(read_result, When::Read).with_volume(userdata.1)),
     }
 }
 
@@ -580,7 +582,11 @@ impl<M: ProcessMode> Internal<M> {
                 // UnRAR supplies a NUL-terminated name, not a guaranteed
                 // 2048-element allocation. Copy only the actual string.
                 let next = unsafe { widestring::WideCStr::from_ptr_str(p1 as *const _) }.to_ucstring();
-                user_data.1 = Some(next);
+                user_data.1 = Some(VolumeContext {
+                    path: PathBuf::from(next.to_os_string()),
+                    requested: p2 == native::RAR_VOL_ASK,
+                    unavailable_kind: None,
+                });
                 match p2 {
                     // Next volume not found. -1 means stop
                     native::RAR_VOL_ASK => -1,
@@ -629,7 +635,7 @@ impl<M: ProcessMode> Internal<M> {
         unsafe { native::RARSetCallback(handle.0.as_ptr(), None, 0); }
         match process_result {
             Code::Success => Ok(user_data.0),
-            _ => Err(UnrarError::from(process_result, When::Process)),
+            _ => Err(UnrarError::from(process_result, When::Process).with_volume(user_data.1)),
         }
     }
 }

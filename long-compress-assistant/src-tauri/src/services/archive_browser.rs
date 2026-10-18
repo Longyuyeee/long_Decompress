@@ -170,10 +170,16 @@ fn browse_rar(
     };
     let archive = archive.open_for_listing()?;
     super::sfx_volumes::validate_native_volume(path, !matches!(archive.volume_info(), unrar::VolumeInfo::None))?;
+    let encrypted_headers = archive.has_encrypted_headers();
+    let password_proven = std::cell::Cell::new(false);
     let entries = archive
         .map(|entry| -> Result<ArchiveEntryInfo> {
             ensure_not_cancelled(cancelled)?;
-            let entry = entry?;
+            let entry = entry.map_err(|error| {
+                if let Some(message) = super::rar_support::RarSupportService::native_failure_message(&error, password_proven.get()) { anyhow::anyhow!(message) }
+                else { anyhow::Error::new(error) }
+            })?;
+            password_proven.set(password_proven.get() || encrypted_headers);
             let path = entry.filename.to_string_lossy().replace('\\', "/");
             Ok(ArchiveEntryInfo { size_known: None,
                 name: entry_name(&path),

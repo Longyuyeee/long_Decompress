@@ -55,6 +55,15 @@ pub enum RarError {
 pub struct RarSupportService;
 
 impl RarSupportService {
+    /// Native volume requests and prior verified data precede password heuristics.
+    pub(crate) fn native_failure_message(error: &unrar::error::UnrarError, password_proven: bool) -> Option<String> {
+        if let Some(message) = error.volume_failure_message() { return Some(message); }
+        use unrar::error::Code;
+        if password_proven && matches!(error.code, Code::BadData | Code::BadPassword | Code::MissingPassword) {
+            return Some(format!("[archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：{error:?}"));
+        }
+        None
+    }
     /// Inspect RAR through native metadata, including encrypted SFX headers.
     /// CLI text such as "Headers Error ... Wrong password?" is ambiguous and
     /// must not reject a genuine encrypted RAR before its supplied key is tried.
@@ -85,6 +94,7 @@ impl RarSupportService {
         context: &str,
     ) -> RarError {
         use unrar::error::{Code, When};
+        if let Some(message) = Self::native_failure_message(&error, password_proven) { return RarError::ExtractionFailed(message); }
 
         let could_be_password_failure = matches!(error.code, Code::BadPassword | Code::MissingPassword)
             || (password_supplied
@@ -249,7 +259,7 @@ impl RarSupportService {
             Err(e) => {
                 log::warn!("原生库解压失败，尝试退避到外部命令: {:?}", e);
                 // 如果是密码错误，直接返回，不再尝试外部命令（避免重复提示）
-                if cancellation_flag.load(Ordering::SeqCst) || password.is_some() || matches!(e, RarError::PasswordError | RarError::InvalidRarFile(_)) {
+                if cancellation_flag.load(Ordering::SeqCst) || password.is_some() || e.to_string().contains("[archive-inspection:") || matches!(e, RarError::PasswordError | RarError::InvalidRarFile(_)) {
                     return Err(e);
                 }
             }
@@ -310,7 +320,8 @@ impl RarSupportService {
             ))?;
         super::sfx_volumes::validate_native_volume(rar_path, !matches!(open_archive.volume_info(), unrar::VolumeInfo::None))
             .map_err(|e| RarError::InvalidRarFile(e.to_string()))?;
-        let mut password_proven = password.is_some() && open_archive.has_encrypted_headers();
+        let encrypted_headers = open_archive.has_encrypted_headers();
+        let mut password_proven = false;
         let processed = std::cell::Cell::new(0u64);
 
         while let Some(header) = open_archive.read_header()
@@ -320,6 +331,9 @@ impl RarSupportService {
                 password_proven,
                 "读取 RAR 文件头失败",
             ))? {
+            // The flag alone is visible before a key is checked. A successful
+            // encrypted header read, not merely opening a handle, proves it.
+            password_proven |= password.is_some() && encrypted_headers;
             
             crate::services::task_control::wait_if_paused(&cancellation_flag);
             if cancellation_flag.load(Ordering::SeqCst) {
@@ -638,6 +652,7 @@ impl RarSupportService {
 
     fn classify_password_test_error(error: unrar::error::UnrarError) -> Result<bool, RarError> {
         use unrar::error::{Code, When};
+        if let Some(message) = error.volume_failure_message() { return Err(RarError::ExtractionFailed(message)); }
 
         match (error.code, error.when) {
             (Code::BadPassword | Code::MissingPassword, _) => Ok(false),
@@ -672,6 +687,7 @@ impl RarSupportService {
         super::sfx_volumes::validate_native_volume(rar_path, !matches!(open_archive.volume_info(), unrar::VolumeInfo::None))
             .map_err(|e| RarError::InvalidRarFile(e.to_string()))?;
         let has_encrypted_headers = open_archive.has_encrypted_headers();
+        let mut header_password_proven = false;
 
         loop {
             let header = match open_archive.read_header() {
@@ -679,15 +695,18 @@ impl RarSupportService {
                 Ok(None) => break,
                 Err(error) => {
                     log::debug!("RAR 密码验证无法读取文件头: {:?}", error);
+                    if let Some(message) = Self::native_failure_message(&error, header_password_proven) { return Err(RarError::ExtractionFailed(message)); }
                     return Self::classify_password_test_error(error);
                 }
             };
+            header_password_proven |= has_encrypted_headers;
 
             if header.entry().is_directory() || !header.entry().is_encrypted() || header.entry().unpacked_size == 0 {
                 open_archive = match header.skip() {
                     Ok(archive) => archive,
                     Err(error) => {
                         log::debug!("RAR 密码验证无法跳过目录: {:?}", error);
+                        if let Some(message) = Self::native_failure_message(&error, header_password_proven) { return Err(RarError::ExtractionFailed(message)); }
                         return Self::classify_password_test_error(error);
                     }
                 };
@@ -704,6 +723,7 @@ impl RarSupportService {
                 Ok(_) => Ok(true),
                 Err(error) => {
                     log::debug!("RAR 密码验证内容测试失败: {:?}", error);
+                    if let Some(message) = Self::native_failure_message(&error, header_password_proven) { return Err(RarError::ExtractionFailed(message)); }
                     Self::classify_password_test_error(error)
                 }
             };
@@ -1016,6 +1036,10 @@ mod tests {
                 let message = result.map(|_| "unexpected success".to_string()).unwrap_or_else(|e| format!("{e:#}"));
                 if !message.contains("[archive-inspection:missing-volume]") || !message.contains(&missing) { failures.push(format!("{} {route}: {message}", c["name"])); }
             }
+            let report = super::super::rar_recovery::diagnose(&input, key, Arc::new(AtomicBool::new(false))).await.unwrap();
+            assert_eq!(report.status, "missing_volume");
+            assert!(report.missing_volumes.contains(&missing));
+            assert!(!report.can_repair);
         }
         assert!(failures.is_empty(), "Native requested volume lost:\n{}", failures.join("\n"));
     }
@@ -1091,6 +1115,66 @@ mod tests {
             )),
             Err(RarError::FileCorrupted(_))
         ));
+    }
+
+    #[tokio::test]
+    async fn original_159_mixed_tail_keeps_proven_key_and_volume_context() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/rar-159");
+        let m: serde_json::Value = serde_json::from_slice(&std::fs::read(root.join("manifest.json")).unwrap()).unwrap();
+        for c in m["cases"].as_array().unwrap().iter().filter(|c| c["variant"] == "original") {
+            let tmp = tempfile::tempdir().unwrap(); let dir = root.join(c["name"].as_str().unwrap());
+            for p in c["members"].as_array().unwrap() { let name=p["name"].as_str().unwrap(); std::fs::copy(dir.join(name), tmp.path().join(name)).unwrap(); }
+            let input = tmp.path().join(c["archive"].as_str().unwrap());
+            let group = super::super::split_archive_detector::SplitArchiveDetector::detect_split_archive(&input).unwrap().unwrap();
+            let tail = group.parts.last().unwrap(); let name = tail.file_name().unwrap();
+            let other = root.join(format!("{}-other", c["family"].as_str().unwrap())).join(name);
+            std::fs::copy(other, tail).unwrap();
+            let key = c["password"].as_str().unwrap();
+            assert!(RarSupportService::test_rar_password_blocking(&input, key).unwrap(), "first original encrypted entry proves its key");
+            let output = tmp.path().join("raw-output"); std::fs::create_dir(&output).unwrap();
+            let e = RarSupportService::new().extract_with_native_library(&input, &output, Some(key), &Default::default(), Arc::new(AtomicBool::new(false)), Arc::new(|_, _| {})).await.unwrap_err().to_string();
+            assert!(e.contains("[archive-inspection:rar-later-data]") && e.contains("已用该密码成功读取"), "{}: {e}", c["name"]);
+            assert!(e.contains(&name.to_string_lossy().to_string()), "{e}");
+            let report = super::super::rar_recovery::diagnose(&input, Some(key), Arc::new(AtomicBool::new(false))).await.unwrap();
+            assert_eq!(report.status, "damaged", "{}: {:?}", c["name"], report.issues);
+            assert!(!report.can_repair, "uncertain mixed volumes must be checked against their originals first");
+            assert!(report.issues.iter().any(|i| i.detail.contains("[archive-inspection:rar-later-data]")));
+        }
+    }
+
+    #[test]
+    fn native_volume_request_snapshot_is_not_a_notification_or_wrong_key() {
+        use unrar::error::VolumeContext;
+        let tmp = tempfile::tempdir().unwrap(); let file=tmp.path().join("收到的资料.part6.rar");
+        let context = |requested| Some(VolumeContext { path:file.clone(), requested, unavailable_kind:None });
+        let notified = UnrarError::from(Code::BadData, When::Process).with_volume(context(false));
+        assert!(notified.volume_failure_message().is_none());
+        let missing = UnrarError::from(Code::EOpen, When::Process).with_volume(context(true));
+        std::fs::write(&file, b"restored later").unwrap();
+        assert!(missing.volume_failure_message().unwrap().contains("[archive-inspection:missing-volume]"));
+        let unavailable = UnrarError::from(Code::EOpen, When::Process).with_volume(context(true));
+        assert!(unavailable.volume_failure_message().unwrap().contains("[archive-inspection:io]"));
+        assert!(matches!(RarSupportService::classify_password_test_error(missing), Err(super::RarError::ExtractionFailed(_))));
+        assert!(RarSupportService::native_failure_message(&UnrarError::from(Code::BadPassword, When::Read), false).is_none());
+        assert!(RarSupportService::native_failure_message(&UnrarError::from(Code::BadPassword, When::Read), true).unwrap().contains("[archive-inspection:rar-later-data]"));
+    }
+
+    #[test]
+    fn original_159_large_first_entry_missing_tail_is_not_a_bad_password() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/sfx-158");
+        let m: serde_json::Value = serde_json::from_slice(&std::fs::read(root.join("manifest.json")).unwrap()).unwrap();
+        for c in m["cases"].as_array().unwrap().iter().filter(|c| c["kind"] == "rar" && c["mode"] == "headers") {
+            let tmp = tempfile::tempdir().unwrap(); let dir = root.join(c["name"].as_str().unwrap());
+            for p in c["members"].as_array().unwrap() { let n=p["name"].as_str().unwrap(); std::fs::copy(dir.join(n), tmp.path().join(n)).unwrap(); }
+            let input=tmp.path().join(c["archive"].as_str().unwrap());
+            let group=super::super::split_archive_detector::SplitArchiveDetector::detect_split_archive(&input).unwrap().unwrap();
+            let tail=group.parts.last().unwrap(); let bytes=std::fs::read(tail).unwrap(); std::fs::remove_file(tail).unwrap();
+            let key=c["password"].as_str().unwrap();
+            let e=RarSupportService::test_rar_password_blocking(&input,key).unwrap_err().to_string();
+            assert!(e.contains("[archive-inspection:missing-volume]") && e.contains(&tail.file_name().unwrap().to_string_lossy().to_string()),"{e}");
+            std::fs::write(tail, bytes).unwrap();
+            assert!(RarSupportService::test_rar_password_blocking(&input,key).unwrap());
+        }
     }
 
     #[test]

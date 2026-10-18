@@ -70,6 +70,16 @@ impl Code {
 pub struct UnrarError {
     pub code: Code,
     pub when: When,
+    /// Last native volume notification, or an actual failed open request.
+    pub volume: Option<VolumeContext>,
+}
+
+#[derive(Debug, PartialEq)]
+pub struct VolumeContext {
+    pub path: std::path::PathBuf,
+    pub requested: bool,
+    /// Snapshot at failure time; restoring a volume cannot rewrite history.
+    pub unavailable_kind: Option<std::io::ErrorKind>,
 }
 
 impl std::error::Error for UnrarError {}
@@ -85,6 +95,7 @@ impl fmt::Display for UnrarError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         use self::Code::*;
         use self::When::*;
+        if let Some(message) = self.volume_failure_message() { return write!(f, "{message}"); }
         match (self.code, self.when) {
             (BadData, Open) => write!(f, "Archive header damaged"),
             (BadData, Read) => write!(f, "File header damaged"),
@@ -106,13 +117,39 @@ impl fmt::Display for UnrarError {
             (Unknown, _) => write!(f, "Unknown error"),
             (EndArchive, _) => write!(f, "Archive end"),
             (Success, _) => write!(f, "Success"),
-        }
+        }?;
+        if let Some(volume) = &self.volume { write!(f, "; 分卷：{}", volume.path.display())?; }
+        Ok(())
     }
 }
 
 impl UnrarError {
     pub fn from(code: Code, when: When) -> Self {
-        UnrarError { code, when }
+        UnrarError { code, when, volume: None }
+    }
+
+    pub fn with_volume(mut self, mut volume: Option<VolumeContext>) -> Self {
+        if let Some(v) = volume.as_mut().filter(|v| v.requested) {
+            v.unavailable_kind = match std::fs::metadata(&v.path) {
+                Err(error) => Some(error.kind()),
+                Ok(metadata) if !metadata.is_file() => Some(std::io::ErrorKind::InvalidInput),
+                Ok(_) => None,
+            };
+        }
+        self.volume = volume;
+        self
+    }
+
+    pub fn volume_failure_message(&self) -> Option<String> {
+        let volume = self.volume.as_ref().filter(|v| v.requested)?;
+        if volume.unavailable_kind == Some(std::io::ErrorKind::NotFound) {
+            let name = volume.path.file_name().unwrap_or(volume.path.as_os_str()).to_string_lossy();
+            let parent = volume.path.parent().unwrap_or(std::path::Path::new("."));
+            Some(format!("[archive-inspection:missing-volume] 缺少 RAR 分卷：{name}。请补回同组原卷到 {}，保持原文件名，再创建新任务重试", parent.display()))
+        } else {
+            let category = if volume.unavailable_kind == Some(std::io::ErrorKind::PermissionDenied) { "permission" } else { "io" };
+            Some(format!("[archive-inspection:{category}] 无法打开 RAR 请求的分卷：{}；请检查文件是否可读、是否仍在下载及是否属于同一原始卷组（{:?}）", volume.path.display(), volume.unavailable_kind))
+        }
     }
 }
 

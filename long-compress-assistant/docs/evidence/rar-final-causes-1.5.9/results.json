@@ -1,0 +1,726 @@
+{
+  "completedAt": "2026-10-18T11:20:16.249Z",
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
+  "binarySha256": "24474c375d6a9f3b1fad6f6a66bb19599fb72e52d048abf3b2e2f04e015a608b",
+  "cases": [
+    {
+      "original": "rar4-old-native-original",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongKeyRejected": true,
+      "outputHashes": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "f1311cafb657eab7a2b019eb31d954c7a4f59d37f971a2566741034a6019c786"
+        }
+      ]
+    },
+    {
+      "fault": "missing",
+      "original": "rar4-old-native-original",
+      "tail": "收到的资料.r02",
+      "browseReadable": false,
+      "integrityError": "[archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.r02。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-old-native-original-missing，保持原文件名，再创建新任务重试",
+      "finalError": "解压失败: Unable to continue RAR metadata inspection: [archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.r02。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-old-native-original-missing，保持原文件名，再创建新任务重试",
+      "conversionError": "转换读取原包失败：解压失败: Unable to continue RAR metadata inspection: [archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.r02。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-old-native-original-missing，保持原文件名，再创建新任务重试",
+      "diagnosticStatus": "missing_volume",
+      "noPublishedOutput": true
+    },
+    {
+      "fault": "mixed",
+      "original": "rar4-old-native-original",
+      "tail": "收到的资料.r02",
+      "browseReadable": true,
+      "integrityError": "[archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-old-native-original-mixed\\收到的资料.r02)",
+      "finalError": "RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-old-native-original-mixed\\收到的资料.r02)",
+      "conversionError": "转换读取原包失败：RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-old-native-original-mixed\\收到的资料.r02)",
+      "diagnosticStatus": "damaged",
+      "noPublishedOutput": true
+    },
+    {
+      "fault": "truncated",
+      "original": "rar4-old-native-original",
+      "tail": "收到的资料.r02",
+      "browseReadable": true,
+      "integrityError": "[archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "finalError": "RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "conversionError": "转换读取原包失败：RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "diagnosticStatus": "damaged",
+      "noPublishedOutput": true
+    },
+    {
+      "original": "rar4-old-native-other",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongKeyRejected": true,
+      "outputHashes": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "e9295adb5f8a20ac85d4ac14afe3cfc8d000f6023feb7fc965c3923f216feebe"
+        }
+      ]
+    },
+    {
+      "original": "rar4-modern-native-original",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongKeyRejected": true,
+      "outputHashes": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "f1311cafb657eab7a2b019eb31d954c7a4f59d37f971a2566741034a6019c786"
+        }
+      ]
+    },
+    {
+      "fault": "missing",
+      "original": "rar4-modern-native-original",
+      "tail": "收到的资料.part4.rar",
+      "browseReadable": false,
+      "integrityError": "[archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.part4.rar。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-modern-native-original-missing，保持原文件名，再创建新任务重试",
+      "finalError": "解压失败: Unable to continue RAR metadata inspection: [archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.part4.rar。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-modern-native-original-missing，保持原文件名，再创建新任务重试",
+      "conversionError": "转换读取原包失败：解压失败: Unable to continue RAR metadata inspection: [archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.part4.rar。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-modern-native-original-missing，保持原文件名，再创建新任务重试",
+      "diagnosticStatus": "missing_volume",
+      "noPublishedOutput": true
+    },
+    {
+      "fault": "mixed",
+      "original": "rar4-modern-native-original",
+      "tail": "收到的资料.part4.rar",
+      "browseReadable": true,
+      "integrityError": "[archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-modern-native-original-mixed\\收到的资料.part4.rar)",
+      "finalError": "RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-modern-native-original-mixed\\收到的资料.part4.rar)",
+      "conversionError": "转换读取原包失败：RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-modern-native-original-mixed\\收到的资料.part4.rar)",
+      "diagnosticStatus": "damaged",
+      "noPublishedOutput": true
+    },
+    {
+      "fault": "truncated",
+      "original": "rar4-modern-native-original",
+      "tail": "收到的资料.part4.rar",
+      "browseReadable": true,
+      "integrityError": "[archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "finalError": "RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "conversionError": "转换读取原包失败：RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "diagnosticStatus": "damaged",
+      "noPublishedOutput": true
+    },
+    {
+      "original": "rar4-modern-native-other",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongKeyRejected": true,
+      "outputHashes": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "e9295adb5f8a20ac85d4ac14afe3cfc8d000f6023feb7fc965c3923f216feebe"
+        }
+      ]
+    },
+    {
+      "original": "rar4-old-sfx-original",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongKeyRejected": true,
+      "outputHashes": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "f1311cafb657eab7a2b019eb31d954c7a4f59d37f971a2566741034a6019c786"
+        }
+      ]
+    },
+    {
+      "fault": "missing",
+      "original": "rar4-old-sfx-original",
+      "tail": "收到的资料.r03",
+      "browseReadable": false,
+      "integrityError": "[archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.r03。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-old-sfx-original-missing，保持原文件名，再创建新任务重试",
+      "finalError": "解压失败: Unable to continue RAR metadata inspection: [archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.r03。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-old-sfx-original-missing，保持原文件名，再创建新任务重试",
+      "conversionError": "转换读取原包失败：解压失败: Unable to continue RAR metadata inspection: [archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.r03。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-old-sfx-original-missing，保持原文件名，再创建新任务重试",
+      "diagnosticStatus": "missing_volume",
+      "noPublishedOutput": true
+    },
+    {
+      "fault": "mixed",
+      "original": "rar4-old-sfx-original",
+      "tail": "收到的资料.r03",
+      "browseReadable": true,
+      "integrityError": "[archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-old-sfx-original-mixed\\收到的资料.r03)",
+      "finalError": "RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-old-sfx-original-mixed\\收到的资料.r03)",
+      "conversionError": "转换读取原包失败：RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-old-sfx-original-mixed\\收到的资料.r03)",
+      "diagnosticStatus": "damaged",
+      "noPublishedOutput": true
+    },
+    {
+      "fault": "truncated",
+      "original": "rar4-old-sfx-original",
+      "tail": "收到的资料.r03",
+      "browseReadable": true,
+      "integrityError": "[archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "finalError": "RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "conversionError": "转换读取原包失败：RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "diagnosticStatus": "damaged",
+      "noPublishedOutput": true
+    },
+    {
+      "original": "rar4-old-sfx-other",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongKeyRejected": true,
+      "outputHashes": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "e9295adb5f8a20ac85d4ac14afe3cfc8d000f6023feb7fc965c3923f216feebe"
+        }
+      ]
+    },
+    {
+      "original": "rar4-modern-sfx-original",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongKeyRejected": true,
+      "outputHashes": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "f1311cafb657eab7a2b019eb31d954c7a4f59d37f971a2566741034a6019c786"
+        }
+      ]
+    },
+    {
+      "fault": "missing",
+      "original": "rar4-modern-sfx-original",
+      "tail": "收到的资料.part5.rar",
+      "browseReadable": false,
+      "integrityError": "[archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.part5.rar。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-modern-sfx-original-missing，保持原文件名，再创建新任务重试",
+      "finalError": "解压失败: Unable to continue RAR metadata inspection: [archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.part5.rar。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-modern-sfx-original-missing，保持原文件名，再创建新任务重试",
+      "conversionError": "转换读取原包失败：解压失败: Unable to continue RAR metadata inspection: [archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.part5.rar。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-modern-sfx-original-missing，保持原文件名，再创建新任务重试",
+      "diagnosticStatus": "missing_volume",
+      "noPublishedOutput": true
+    },
+    {
+      "fault": "mixed",
+      "original": "rar4-modern-sfx-original",
+      "tail": "收到的资料.part5.rar",
+      "browseReadable": true,
+      "integrityError": "[archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-modern-sfx-original-mixed\\收到的资料.part5.rar)",
+      "finalError": "RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-modern-sfx-original-mixed\\收到的资料.part5.rar)",
+      "conversionError": "转换读取原包失败：RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar4-modern-sfx-original-mixed\\收到的资料.part5.rar)",
+      "diagnosticStatus": "damaged",
+      "noPublishedOutput": true
+    },
+    {
+      "fault": "truncated",
+      "original": "rar4-modern-sfx-original",
+      "tail": "收到的资料.part5.rar",
+      "browseReadable": true,
+      "integrityError": "[archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "finalError": "RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "conversionError": "转换读取原包失败：RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "diagnosticStatus": "damaged",
+      "noPublishedOutput": true
+    },
+    {
+      "original": "rar4-modern-sfx-other",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongKeyRejected": true,
+      "outputHashes": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "e9295adb5f8a20ac85d4ac14afe3cfc8d000f6023feb7fc965c3923f216feebe"
+        }
+      ]
+    },
+    {
+      "original": "rar5-native-original",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongKeyRejected": true,
+      "outputHashes": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "f1311cafb657eab7a2b019eb31d954c7a4f59d37f971a2566741034a6019c786"
+        }
+      ]
+    },
+    {
+      "fault": "missing",
+      "original": "rar5-native-original",
+      "tail": "收到的资料.part4.rar",
+      "browseReadable": false,
+      "integrityError": "[archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.part4.rar。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar5-native-original-missing，保持原文件名，再创建新任务重试",
+      "finalError": "解压失败: Unable to continue RAR metadata inspection: [archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.part4.rar。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar5-native-original-missing，保持原文件名，再创建新任务重试",
+      "conversionError": "转换读取原包失败：解压失败: Unable to continue RAR metadata inspection: [archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.part4.rar。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar5-native-original-missing，保持原文件名，再创建新任务重试",
+      "diagnosticStatus": "missing_volume",
+      "noPublishedOutput": true
+    },
+    {
+      "fault": "mixed",
+      "original": "rar5-native-original",
+      "tail": "收到的资料.part4.rar",
+      "browseReadable": true,
+      "integrityError": "[archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar5-native-original-mixed\\收到的资料.part4.rar)",
+      "finalError": "RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar5-native-original-mixed\\收到的资料.part4.rar)",
+      "conversionError": "转换读取原包失败：RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar5-native-original-mixed\\收到的资料.part4.rar)",
+      "diagnosticStatus": "damaged",
+      "noPublishedOutput": true
+    },
+    {
+      "fault": "truncated",
+      "original": "rar5-native-original",
+      "tail": "收到的资料.part4.rar",
+      "browseReadable": true,
+      "integrityError": "[archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "finalError": "RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "conversionError": "转换读取原包失败：RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "diagnosticStatus": "damaged",
+      "noPublishedOutput": true
+    },
+    {
+      "original": "rar5-native-other",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongKeyRejected": true,
+      "outputHashes": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "e9295adb5f8a20ac85d4ac14afe3cfc8d000f6023feb7fc965c3923f216feebe"
+        }
+      ]
+    },
+    {
+      "original": "rar5-sfx-original",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongKeyRejected": true,
+      "outputHashes": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "f1311cafb657eab7a2b019eb31d954c7a4f59d37f971a2566741034a6019c786"
+        }
+      ]
+    },
+    {
+      "fault": "missing",
+      "original": "rar5-sfx-original",
+      "tail": "收到的资料.part5.rar",
+      "browseReadable": false,
+      "integrityError": "[archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.part5.rar。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar5-sfx-original-missing，保持原文件名，再创建新任务重试",
+      "finalError": "解压失败: Unable to continue RAR metadata inspection: [archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.part5.rar。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar5-sfx-original-missing，保持原文件名，再创建新任务重试",
+      "conversionError": "转换读取原包失败：解压失败: Unable to continue RAR metadata inspection: [archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.part5.rar。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar5-sfx-original-missing，保持原文件名，再创建新任务重试",
+      "diagnosticStatus": "missing_volume",
+      "noPublishedOutput": true
+    },
+    {
+      "fault": "mixed",
+      "original": "rar5-sfx-original",
+      "tail": "收到的资料.part5.rar",
+      "browseReadable": true,
+      "integrityError": "[archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar5-sfx-original-mixed\\收到的资料.part5.rar)",
+      "finalError": "RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar5-sfx-original-mixed\\收到的资料.part5.rar)",
+      "conversionError": "转换读取原包失败：RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\rar5-sfx-original-mixed\\收到的资料.part5.rar)",
+      "diagnosticStatus": "damaged",
+      "noPublishedOutput": true
+    },
+    {
+      "fault": "truncated",
+      "original": "rar5-sfx-original",
+      "tail": "收到的资料.part5.rar",
+      "browseReadable": true,
+      "integrityError": "[archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "finalError": "RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "conversionError": "转换读取原包失败：RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error)",
+      "diagnosticStatus": "damaged",
+      "noPublishedOutput": true
+    },
+    {
+      "original": "rar5-sfx-other",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "whole": true,
+      "selected": true,
+      "wrongKeyRejected": true,
+      "outputHashes": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "e9295adb5f8a20ac85d4ac14afe3cfc8d000f6023feb7fc965c3923f216feebe"
+        }
+      ]
+    },
+    {
+      "largeFirstOriginal": "rar624-Default-headers",
+      "missingDuringPasswordVerification": "RAR解压失败: [archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.r04。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\大首条-rar624-Default-headers，保持原文件名，再创建新任务重试",
+      "restoredCorrectKey": true
+    },
+    {
+      "largeFirstOriginal": "rar624-Default64-headers",
+      "missingDuringPasswordVerification": "RAR解压失败: [archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.part6.rar。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\大首条-rar624-Default64-headers，保持原文件名，再创建新任务重试",
+      "restoredCorrectKey": true
+    },
+    {
+      "largeFirstOriginal": "rar624-WinCon-headers",
+      "missingDuringPasswordVerification": "RAR解压失败: [archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.r04。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\大首条-rar624-WinCon-headers，保持原文件名，再创建新任务重试",
+      "restoredCorrectKey": true
+    },
+    {
+      "largeFirstOriginal": "rar624-WinCon64-headers",
+      "missingDuringPasswordVerification": "RAR解压失败: [archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.part6.rar。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\大首条-rar624-WinCon64-headers，保持原文件名，再创建新任务重试",
+      "restoredCorrectKey": true
+    },
+    {
+      "actualAllMembersOneTask": true,
+      "actualMissingTailHistory": "解压失败: Unable to continue RAR metadata inspection: [archive-inspection:missing-volume] 缺少 RAR 分卷：收到的资料.part4.rar。请补回同组原卷到 C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\用户收到的分卷，保持原文件名，再创建新任务重试",
+      "restoredFreshRetry": true,
+      "oldFailureRetained": true
+    },
+    {
+      "actualMiddleImport": true,
+      "actualProvenKeyFailure": "RAR 解压失败: RAR解压失败: [archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：BadData@Process (File CRC error; 分卷：C:\\Users\\Administrator\\AppData\\Local\\Temp\\long-decompress-desktop-e2e-myqDeq\\RAR分卷实际使用\\用户收到的分卷\\收到的资料.part4.rar)",
+      "actualHistoryCategory": true,
+      "restoredOriginalGroup": true,
+      "oldMixedFailureRetained": true
+    },
+    {
+      "actualMissingBrowserCause": true,
+      "restoredBrowser": true,
+      "actualSelectedExtraction": true
+    },
+    {
+      "actualMissingDiagnosis": true,
+      "noMisleadingRepair": true
+    },
+    {
+      "actualRestoredConversion": true,
+      "independentZipHashes": true
+    }
+  ],
+  "screenshots": [
+    "rar159-missing-final-1100x700.png",
+    "rar159-missing-final-760x520.png",
+    "rar159-mixed-final-1100x700.png",
+    "rar159-mixed-final-760x520.png",
+    "rar159-proven-key-history-1100x700.png",
+    "rar159-proven-key-history-760x520.png",
+    "rar159-browser-missing-1100x700.png",
+    "rar159-browser-missing-760x520.png",
+    "rar159-browser-restored-1100x700.png",
+    "rar159-browser-restored-760x520.png",
+    "rar159-diagnostic-missing-1100x700.png",
+    "rar159-diagnostic-missing-760x520.png",
+    "rar159-conversion-1100x700.png",
+    "rar159-conversion-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "rar159-missing-final",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "rar159-missing-final",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "rar159-mixed-final",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "rar159-mixed-final",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "rar159-proven-key-history",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "rar159-proven-key-history",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "rar159-browser-missing",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "rar159-browser-missing",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "rar159-browser-restored",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "rar159-browser-restored",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "rar159-diagnostic-missing",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "rar159-diagnostic-missing",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "rar159-conversion",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "rar159-conversion",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "originalsUnchanged": true
+}
