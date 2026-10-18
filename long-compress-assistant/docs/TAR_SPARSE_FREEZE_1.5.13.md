@@ -21,3 +21,9 @@ Windows 写出普通填零文件，不承诺 NTFS 稀疏分配、Linux 权限/�
 ## 发布状态
 
 本地已封板，正在进行必需 Windows package 候选、安装器核对、受保护合入、候选同树固定标签及正式构建。正式四资产、中文 Release/updater 说明和回下载完成后，通过独立文档 PR 回填本节及 README/交接，不提前记为已发布、不移动标签。个人安装与数据不动。下一轮按既定 v1.5.14 ZIP64 大边界，再 v1.5.15 过程 I/O 接续；尚不扩张下一轮规划。
+
+## 候选与固定标签
+
+候选 `33083ee21f9fdd97c07bf052cb2ca81905053396` 的必需 Windows package `39152987157` 于 UTC `2026-10-18T18:18:51Z` 成功。[候选收据](evidence/tar-sparse-1.5.13/candidate.json)核对安装器 20989553 字节、SHA-256 `0b3b7aa718afac675b5f9a5e952622ee00515689e9c05295fd2335e34ca920c1`；包内主程序 1.5.13、33987584 字节、SHA-256 `d3775c103dc83f2de8c5981e7c74023b7dcf9802e27d71df509d3e8fc661a90c`，四份归档说明逐字节匹配。下载来自同一原始 CI artifact `12146131414`，分段传输后与 GitHub API digest 一致；不是替换构建，也未执行个人安装升级。
+
+[PR #207](https://github.com/Longyuyeee/long_Decompress/pull/207) 于 UTC `2026-10-18T18:20:20Z` 受保护合入，固定标签 `c601fe96d564d9be06e662ce94dfd65b886a26a5` 与候选同树 `b877d7134a4343a145525a11e9ad67ef4ad6c3b8`，不移动。主线及正式构建仍在进行，正式资产和中文说明未核对前不标发布完成。
