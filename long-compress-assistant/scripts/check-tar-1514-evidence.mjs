@@ -17,7 +17,7 @@ const filters=['tar_compatibility','extraction_transaction-tests','cancellation'
 const tests=new Set(),ignored=[]
 for(const name of filters){const log=read('test-results/tar1514-'+name+'.log');assert.match(log,/test result: ok\./);assert.doesNotMatch(log,/test result: FAILED\./);for(const m of log.matchAll(/^test ([^\r\n]+) \.\.\. ok\r?$/gm))tests.add(m[1]);for(const m of log.matchAll(/^test ([^\r\n]+) \.\.\. ignored[^\r\n]*$/gm))ignored.push(m[1])}
 const frontend=read('test-results/tar1514-frontend.log');assert.match(frontend,/Test Files\s+6 passed/);assert.match(frontend,/Tests\s+170 passed/)
-assert.match(read('test-results/tar1514-identity.log'),/Release identity verified: v1\.5\.13/)
+assert.match(read('test-results/tar1514-identity.log'),/Release identity verified: v1\.5\.14/)
 assert.match(read('test-results/tar1514-production-build.log'),/Finished `release` profile/)
 const main=path.resolve('src-tauri/target/release/Long解压.exe'),version=execFileSync('powershell.exe',['-NoProfile','-Command',`(Get-Item -LiteralPath '${main.replaceAll("'","''")}').VersionInfo.ProductVersion`],{encoding:'utf8'}).trim();assert.equal(version,'1.5.14')
 for(const file of['../README.md','README.md']){

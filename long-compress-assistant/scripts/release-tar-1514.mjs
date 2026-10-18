@@ -26,7 +26,7 @@ if(mode==='candidate'){
 const tagCommit=execFileSync('git',['rev-parse',tag+'^{commit}'],{encoding:'utf8'}).trim()
 const releaseRun=JSON.parse(gh(['run','list','--workflow','release.yml','--branch',tag,'--limit','5','--json','databaseId,headSha,conclusion,status'])).find(r=>r.headSha===tagCommit&&r.status==='completed'&&r.conclusion==='success')
 assert.ok(releaseRun,'Formal workflow must finish successfully before notes edits')
-const body=readFileSync('docs/RELEASE_NOTES_1.5.14.md','utf8').replace(/\]\((TAR_ROUTING(?:_FREEZE)?_1\.5\.13\.md)\)/g,'](https://github.com/Longyuyeee/long_Decompress/blob/master/long-compress-assistant/docs/$1)').trim()
+const body=readFileSync('docs/RELEASE_NOTES_1.5.14.md','utf8').replace(/\]\((TAR_ROUTING(?:_FREEZE)?_1\.5\.14\.md)\)/g,'](https://github.com/Longyuyeee/long_Decompress/blob/master/long-compress-assistant/docs/$1)').trim()
 const original=path.resolve('test-results/v1.5.14-release-original'),chinese=path.resolve('test-results/v1.5.14-release-chinese'),final=path.resolve('test-results/v1.5.14-release-final')
 if(mode==='notes'){
   assert.equal(api().draft,false);mkdirSync(original,{recursive:true});mkdirSync(chinese,{recursive:true});writeFileSync(path.join(chinese,'body.md'),body+'\n')

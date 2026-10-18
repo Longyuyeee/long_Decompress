@@ -2,6 +2,8 @@
 
 本文只记录当前仓库中实际可执行的测试入口。测试结论必须同时写明预期、实际结果和差异；模拟 DOM 测试不能替代真实 Windows/Tauri、真实压缩包与真实媒体文件验证。
 
+当前 TAR 收口使用 `node scripts/test-tauri-desktop.mjs --tar-1514-only`，在同一批固定 `tar-1513` 原件上增加 ZIP/TAR 误后缀实际场景。v1.5.13 已撤回未发布，不能按旧本地门禁直接发布；见[v1.5.14 审计](../docs/TAR_ROUTING_1.5.14.md)。
+
 v1.5.13 TAR 稀疏：固定原包在 `tests/fixtures/archives/tar-1513`，生成、独立回解和真实桌面复跑说明见[实施审计](../docs/TAR_SPARSE_1.5.13.md)。`cargo test --manifest-path src-tauri/Cargo.toml --lib tar_compatibility` 与桌面 `node scripts/test-tauri-desktop.mjs --tar-1513-only` 核对真实内容、失败与控制，不把改头派生件当正面原包。
 
 ## 测试分层
