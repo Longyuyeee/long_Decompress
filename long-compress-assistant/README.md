@@ -4,6 +4,8 @@
 
 # Long解压 · 开发说明
 
+**v1.5.11 功能封板，进入发布**：最终功能提交 `37ceb08c98ee561803c44c2491fd3bdb4cd3bf8d`。二十组普通中文密码 EGG 原包、101 Rust、170 前端、二十五桌面记录和十二张实看页面通过，编码失败指引已补齐；加密固实无真实正面原包，不承诺支持。见[封板记录](docs/EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md)。当前正式下载仍为下方 v1.5.10，候选与正式四资产待受保护流程完成。
+
 Vue 3 / TypeScript / Pinia / Tauri 1.5 / Rust / SQLite
 
 [软件介绍与界面](../README.md) · [下载安装](https://github.com/Longyuyeee/long_Decompress/releases/latest) · [开发路线](docs/PRODUCT_ENHANCEMENT_ROADMAP.md) · [开发交接](docs/DEVELOPMENT_HANDOFF.md)
