@@ -371,7 +371,7 @@ const browseRepair = () => {
 
 const statusLabel = (status: string) => ({
   healthy: '完整性正常', password_required: '需要密码', wrong_password: '密码错误',
-  password_encoding: '原包编码不兼容',
+  password_encoding: diagnosticReport.value?.actualFormat === 'ZIP' ? 'ZIP 密码编码不兼容' : '原包编码不兼容',
   directory_lost: '目录信息丢失，可尝试救援',
   partial_recovery: '缺少分卷，可尝试部分救援',
   missing_volume: '缺少分卷', crc_error: '内容校验失败', truncated: '归档被截断',
@@ -719,7 +719,7 @@ onUnmounted(() => {
               <span class="diagnostic-format">{{ diagnosticReport.actualFormat }}</span>
             </div>
 
-            <button v-if="isRar && diagnosticReport.status === 'healthy' && diagnosticReport.volumesFound > 1" class="archive-secondary mt-4" data-testid="open-create-recovery-volumes" @click="showRecoveryVolumes(archivePath, archivePassword)"><i class="pi pi-shield"></i>为这组分包创建恢复卷</button>
+            <button v-if="isRar && diagnosticReport.status === 'healthy' && diagnosticReport.volumesFound > 1 && diagnosticReport.recoverability !== 'sfx_readonly'" class="archive-secondary mt-4" data-testid="open-create-recovery-volumes" @click="showRecoveryVolumes(archivePath, archivePassword)"><i class="pi pi-shield"></i>为这组分包创建恢复卷</button>
             <div class="diagnostic-metrics mt-6">
               <div><span>归档大小</span><strong>{{ formatBytes(diagnosticReport.fileSize) }}</strong></div>
               <div><span>{{ diagnosticReport.recoverability === 'missing_volume_entries' ? '可尝试文件 / 目录' : diagnosticReport.recoverability === 'local_entries' ? '已找到文件 / 目录' : '文件 / 目录' }}</span><strong>{{ diagnosticReport.integrityTested || diagnosticReport.totalFiles || diagnosticReport.totalDirectories ? `${diagnosticReport.totalFiles} / ${diagnosticReport.totalDirectories}` : '未能确认' }}</strong></div>

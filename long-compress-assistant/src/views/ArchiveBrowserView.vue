@@ -192,6 +192,7 @@ const chooseArchive = async () => {
   await openArchivePath(picked[0].path)
 }
 
+let lastBrowseError = ''
 const loadArchive = async () => {
   if (!archivePath.value || loading.value) return
   const sequence = ++archiveLoadSequence
@@ -203,6 +204,8 @@ const loadArchive = async () => {
   try {
     const loaded = await browseRequest.run(archivePath.value, password.value, inputEncoding.value)
     if (sequence !== archiveLoadSequence) return
+    if (lastBrowseError && appStore.error === lastBrowseError) appStore.clearError()
+    lastBrowseError = ''
     result.value = loaded
     selected.value = new Set(loaded.entries.filter(entry => !entry.isDir).map(entry => entry.path))
     nestedLoadError.value = ''
@@ -214,7 +217,7 @@ const loadArchive = async () => {
       nestedLoadError.value = message
       nestedLoadRevision.value++
     }
-    else appStore.setError(message)
+    else { lastBrowseError = message; appStore.setError(message) }
   } finally {
     if (sequence === archiveLoadSequence) loading.value = false
   }

@@ -388,7 +388,8 @@ pub async fn diagnose(
                     report.total_uncompressed_size = c.size;
                     report.total_uncompressed_size_known = true;
                     report.encrypted = c.encrypted;
-                    report.recoverability = "not_needed".into();
+                    report.recoverability = if sfx { "sfx_readonly" } else { "not_needed" }.into();
+                    if sfx { report.evidence.push("自解压包仅做只读完整性检查，不提供自解压模块修复或恢复卷处理".into()); }
                     return Ok(report);
                 }
                 Err(e) => {
