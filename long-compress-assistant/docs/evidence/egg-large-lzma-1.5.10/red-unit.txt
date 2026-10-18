@@ -1,0 +1,32 @@
+   Compiling libazo v0.1.1 (E:\ProjectSave\ClaudeProject\Long-Decompress\long-compress-assistant\vendor\libazo)
+   Compiling unegg v0.2.1 (E:\ProjectSave\ClaudeProject\Long-Decompress\long-compress-assistant\vendor\unegg)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.65s
+     Running unittests src\lib.rs (vendor\unegg\target\debug\deps\unegg-493c5549bbd8cc43.exe)
+
+running 4 tests
+test decompress::lzma::tests::extra_input_and_real_truncation_are_not_success ... ok
+test decompress::lzma::tests::output_io_kind_is_preserved_for_final_classification ... FAILED
+test decompress::lzma::tests::output_starts_before_whole_compressed_input_is_read ... FAILED
+test decompress::lzma::tests::short_reads_and_zipcrypto_keep_cipher_state_across_header_and_chunks ... ok
+
+failures:
+
+---- decompress::lzma::tests::output_io_kind_is_preserved_for_final_classification stdout ----
+
+thread 'decompress::lzma::tests::output_io_kind_is_preserved_for_final_classification' (30008) panicked at src\decompress\lzma.rs:148:9:
+LzmaFailed("io error: permission denied")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- decompress::lzma::tests::output_starts_before_whole_compressed_input_is_read stdout ----
+
+thread 'decompress::lzma::tests::output_starts_before_whole_compressed_input_is_read' (16312) panicked at src\decompress\lzma.rs:128:9:
+first output consumed all 265851 input bytes
+
+
+failures:
+    decompress::lzma::tests::output_io_kind_is_preserved_for_final_classification
+    decompress::lzma::tests::output_starts_before_whole_compressed_input_is_read
+
+test result: FAILED. 2 passed; 2 failed; 0 ignored; 0 measured; 11 filtered out; finished in 0.42s
+
+error: test failed, to rerun pass `--lib`

@@ -1,0 +1,302 @@
+{
+  "checkedAt": "2026-10-18T12:30:29.296Z",
+  "helperSha256": "48efbce527b1d3ae8b5e4c71b86a4b4a9ea1726c857aafb73adf9e0efd275fe4",
+  "oldHelperSha256": "774133b57408c5a52e632f45f7d37f500ffcbc4e96c1a63d334e6145c0e47ea0",
+  "cases": [
+    {
+      "name": "single",
+      "oldPlanError": "[archive-inspection:unsupported] EGG LZMA 单块压缩输入超过 256 MiB",
+      "packedBytes": 318851300,
+      "solid": false,
+      "methods": [
+        [
+          "LZMA"
+        ]
+      ],
+      "verify": {
+        "code": 0,
+        "response": {
+          "result": {
+            "verified": true
+          }
+        },
+        "stderr": "",
+        "peakWorkingSetBytes": 21733376,
+        "lastObservedCpuSeconds": 1.5,
+        "temporaryDirectoryPeakBytes": 0,
+        "samples": 38
+      },
+      "extract": {
+        "code": 0,
+        "response": {
+          "result": {
+            "verified": true
+          }
+        },
+        "stderr": "",
+        "peakWorkingSetBytes": 21729280,
+        "lastObservedCpuSeconds": 1.75,
+        "temporaryDirectoryPeakBytes": 0,
+        "samples": 37
+      },
+      "outputHashes": [
+        {
+          "path": "大文件.bin",
+          "bytes": 335544320,
+          "sha256": "933a9792c09d02ce99b42ee13f644a3ed7ce54a64a15170ba4f6eb6a5099e698"
+        }
+      ]
+    },
+    {
+      "name": "solid",
+      "oldPlanError": "[archive-inspection:unsupported] EGG LZMA 单块压缩输入超过 256 MiB",
+      "packedBytes": 318851360,
+      "solid": true,
+      "methods": [
+        [],
+        [],
+        [],
+        [],
+        [
+          "LZMA"
+        ]
+      ],
+      "verify": {
+        "code": 0,
+        "response": {
+          "result": {
+            "verified": true
+          }
+        },
+        "stderr": "",
+        "peakWorkingSetBytes": 21790720,
+        "lastObservedCpuSeconds": 1.8125,
+        "temporaryDirectoryPeakBytes": 0,
+        "samples": 40
+      },
+      "extract": {
+        "code": 0,
+        "response": {
+          "result": {
+            "verified": true
+          }
+        },
+        "stderr": "",
+        "peakWorkingSetBytes": 21815296,
+        "lastObservedCpuSeconds": 1.4375,
+        "temporaryDirectoryPeakBytes": 0,
+        "samples": 41
+      },
+      "outputHashes": [
+        {
+          "path": "01前段.bin",
+          "bytes": 201326592,
+          "sha256": "d96ab24f388c23a246e3ac4b014c7f2743c713e64b235f39d1772aa2f9a0d298"
+        },
+        {
+          "path": "99最后.bin",
+          "bytes": 134217728,
+          "sha256": "6708c9c99edeada1629a98eea20a04526782fc21e75b7ee0d8c1a6d4a05e6741"
+        },
+        {
+          "path": "说明 文件.txt",
+          "bytes": 62,
+          "sha256": "dbed87cd090bdbcd94157b8c13f436369a5087eb60cd3f75e06c14cb277cbd0b"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "name": "password-volumes",
+      "oldPlanError": "[archive-inspection:unsupported] EGG LZMA 单块压缩输入超过 256 MiB",
+      "packedBytes": 318851300,
+      "solid": false,
+      "methods": [
+        [
+          "LZMA"
+        ]
+      ],
+      "verify": {
+        "code": 0,
+        "response": {
+          "result": {
+            "verified": true
+          }
+        },
+        "stderr": "",
+        "peakWorkingSetBytes": 21753856,
+        "lastObservedCpuSeconds": 3.140625,
+        "temporaryDirectoryPeakBytes": 0,
+        "samples": 45
+      },
+      "extract": {
+        "code": 0,
+        "response": {
+          "result": {
+            "verified": true
+          }
+        },
+        "stderr": "",
+        "peakWorkingSetBytes": 21782528,
+        "lastObservedCpuSeconds": 2.203125,
+        "temporaryDirectoryPeakBytes": 0,
+        "samples": 45
+      },
+      "outputHashes": [
+        {
+          "path": "大文件.bin",
+          "bytes": 335544320,
+          "sha256": "933a9792c09d02ce99b42ee13f644a3ed7ce54a64a15170ba4f6eb6a5099e698"
+        }
+      ]
+    },
+    {
+      "selectedLastSharedStream": true,
+      "result": {
+        "code": 0,
+        "response": {
+          "result": {
+            "verified": true
+          }
+        },
+        "stderr": "",
+        "peakWorkingSetBytes": 21811200,
+        "lastObservedCpuSeconds": 2.171875,
+        "temporaryDirectoryPeakBytes": 0,
+        "samples": 41
+      }
+    },
+    {
+      "wrongPasswordRejected": true,
+      "error": "[egg-password] EGG 密码短头不匹配，也可能是加密头损坏；请核对密码和原文件完整性"
+    },
+    {
+      "fault": "crc",
+      "error": "[archive-inspection:damaged] EGG 条目「大文件.bin」大小或 CRC 校验失败，未记为成功"
+    },
+    {
+      "fault": "actual-tail-truncation",
+      "error": "[archive-inspection:damaged] EGG 末卷缺少结束标记，文件可能下载不完整"
+    }
+  ],
+  "originalsUnchanged": true,
+  "memoryMeaning": "Kernel PeakWorkingSet64 high-water marks at observed process samples, not system-wide memory; configured child TEMP/TMP recursively sampled, no packed-input spool used",
+  "largeOriginals": {
+    "createdAt": "2026-10-18T12:24:58.383Z",
+    "producer": "ALZipCon 11.0.1.16 in official ALZip 12.37.0.4",
+    "producerSha256": "13c664d8b809348104999efb734587e2847aab04e5511af2e5345e13d2528433",
+    "independentTool": "E:/Bandzip/Bandizip/bz.exe",
+    "independentToolSha256": "d69bc4d2605f0ecac20e8cfae11e313fb011649ed7f182cfcb25d6be73dcf4e2",
+    "payloadLicense": "CC0-1.0 self-authored; SHAKE256(seed + global MiB index), first 64KiB of each MiB zeroed; fixed source mtime",
+    "seed": "Long public EGG 1.5.10 payload / ",
+    "largeOriginalsLocation": "test-results/egg-1510 (ignored); reproduce with this script and original producer, verify payloads; regenerated encryption metadata may have a new archive identity",
+    "cases": [
+      {
+        "name": "single",
+        "archive": "single.egg",
+        "producerArgs": [
+          "-m3"
+        ],
+        "password": null,
+        "expected": [
+          {
+            "path": "大文件.bin",
+            "bytes": 335544320,
+            "sha256": "933a9792c09d02ce99b42ee13f644a3ed7ce54a64a15170ba4f6eb6a5099e698"
+          }
+        ],
+        "emptyDirectory": null,
+        "members": [
+          {
+            "name": "single.egg",
+            "bytes": 318851400,
+            "sha256": "1887e9af4e9dd06f7162b008c64303077a56341e37bbe8c97b9d7ed83ec65315"
+          }
+        ]
+      },
+      {
+        "name": "solid",
+        "archive": "solid.egg",
+        "producerArgs": [
+          "-m3",
+          "-s"
+        ],
+        "password": null,
+        "expected": [
+          {
+            "path": "01前段.bin",
+            "bytes": 201326592,
+            "sha256": "d96ab24f388c23a246e3ac4b014c7f2743c713e64b235f39d1772aa2f9a0d298"
+          },
+          {
+            "path": "99最后.bin",
+            "bytes": 134217728,
+            "sha256": "6708c9c99edeada1629a98eea20a04526782fc21e75b7ee0d8c1a6d4a05e6741"
+          },
+          {
+            "path": "说明 文件.txt",
+            "bytes": 62,
+            "sha256": "dbed87cd090bdbcd94157b8c13f436369a5087eb60cd3f75e06c14cb277cbd0b"
+          },
+          {
+            "path": "empty.txt",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        ],
+        "emptyDirectory": "空目录",
+        "members": [
+          {
+            "name": "solid.egg",
+            "bytes": 318851685,
+            "sha256": "777f2f490cc7cfb1b5f66485d1efcf2607bb1fba3e509db255ffb9771eb038f6"
+          }
+        ]
+      },
+      {
+        "name": "password-volumes",
+        "archive": "password-volumes.vol1.egg",
+        "producerArgs": [
+          "-m3",
+          "-v96MB",
+          "-pPublicEGG1510+123!"
+        ],
+        "password": "PublicEGG1510+123!",
+        "expected": [
+          {
+            "path": "大文件.bin",
+            "bytes": 335544320,
+            "sha256": "933a9792c09d02ce99b42ee13f644a3ed7ce54a64a15170ba4f6eb6a5099e698"
+          }
+        ],
+        "emptyDirectory": null,
+        "members": [
+          {
+            "name": "password-volumes.vol1.egg",
+            "bytes": 100663296,
+            "sha256": "b5f783302b1bf964392f71654ce1ce6437ff5b6020997b8190ae508f6daa7d92"
+          },
+          {
+            "name": "password-volumes.vol2.egg",
+            "bytes": 100663296,
+            "sha256": "553640166fd4606451e9d80e636bb944c4ec91af2a70688bc186585cd07bb65b"
+          },
+          {
+            "name": "password-volumes.vol3.egg",
+            "bytes": 100663296,
+            "sha256": "7bf10343674e167250533b059a285b2e7bb661d73e12e4c01bbba70b69c826c6"
+          },
+          {
+            "name": "password-volumes.vol4.egg",
+            "bytes": 16861650,
+            "sha256": "a37b15488a79ace1bc71328fac4bef20e93e045effd2ff7776bf187a0615a277"
+          }
+        ]
+      }
+    ]
+  }
+}

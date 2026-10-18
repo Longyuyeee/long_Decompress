@@ -234,6 +234,8 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
+**v1.5.10 已完成本地功能封板，正在准备发布。** 大 EGG LZMA 改为有界流式读取，超过旧 256 MiB 压缩输入的普通、固实和传统密码原生四卷已验证；完整 CRC、缺卷最终原因和事务输出保持。99 项 Rust、152 项前端、三组大原包、七条桌面流程和十六张实看页面通过，普通生产构建通过；最终功能冻结 `1289677ea2fe781e372227f7277a9cec38da40c9`。见[审计](long-compress-assistant/docs/EGG_LARGE_LZMA_1.5.10.md)、[封板记录](long-compress-assistant/docs/EGG_LARGE_LZMA_FREEZE_1.5.10.md)和[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.10.md)。正式安装器和四资产尚待必需构建与受保护合入，不把本地 E2E 程序当发布包；EGG 不创建，LZMA 字典仍限 256 MiB。
+
 **v1.5.9 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.9)。加密 RAR 缺卷保留实际卷名和补回位置；前段密码通过后的后续数据异常不再一概当错密，诊断也不再给出不适用的修复工具提示。十二组真原包、96 项 Rust、152 项前端、39 桌面记录及十四张实看页面通过，补回原卷新任务、旧失败保留与转换独立回解已核对。见[审计](long-compress-assistant/docs/RAR_FINAL_CAUSES_1.5.9.md)、[封板记录](long-compress-assistant/docs/RAR_FINAL_CAUSES_FREEZE_1.5.9.md)与[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.9.md)。正式四资产、中文更新说明和包内主程序/四份说明已回下载核对。前段密码通过不等于整包完整；不新增 RAR 创建或修复，不执行输入 EXE。图标和原截图保留。十版路线已交付四版，剩六版，下一版为大 EGG LZMA。
 
 此前 **v1.5.7 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.7)。补齐 7Z 中 PPMdH、Deflate、Deflate64、Bzip2 的原生读取，贯通密码、固实、数字分卷、所选提取及转换；改进损坏、方法不支持和输出错误的最终原因。61 项 Rust、150 项前端、25 个真实桌面场景与 8 张实看页面通过；正式四资产、中文说明及包内主程序/四份说明已回下载核对。见[审计](long-compress-assistant/docs/SEVENZ_METHODS_1.5.7.md)、[封板记录](long-compress-assistant/docs/SEVENZ_METHODS_FREEZE_1.5.7.md)和[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.7.md)。不改变默认压缩算法，软件图标和原截图保留。
