@@ -10,6 +10,8 @@ pub(crate) mod seven_zip;
 pub(crate) mod tar;
 pub(crate) mod zip;
 mod zip_parallel;
+#[cfg(test)]
+mod tar_compatibility_tests;
 
 pub(crate) trait ExtractionRuntime {
     fn check_cancellation(&self) -> Result<()>;

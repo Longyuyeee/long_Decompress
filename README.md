@@ -234,6 +234,8 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
+**v1.5.13 已本地封板，正在发布核对**。补齐 GNU/PAX 0.0、0.1、1.0 稀疏 TAR 的真实名称与完整内容，统一浏览、所选、检查和转换；修正合法大稀疏包计量误拒，失败保留具体原因。二十原包独立回解、200 Rust、170 前端、30 桌面记录、14 张实看页面及普通生产通过。见[审计](long-compress-assistant/docs/TAR_SPARSE_1.5.13.md)、[封板](long-compress-assistant/docs/TAR_SPARSE_FREEZE_1.5.13.md)和[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.13.md)。正式安装包和四资产尚待核对；图标与原截图保留。Windows 为普通填零输出，不承诺稀疏分配或 Linux 元数据；ALZ 方法 3 与 EGG 加密固实的未完成状态保持，后续仍按 ZIP64 大边界和过程 I/O 顺序。
+
 **v1.5.12 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.12)。修复 ALZ Deflate 在声明压缩范围尚有尾部数据时误报完整成功；加密条目全部内容大小/CRC 匹配后明确报尾部损坏并停止试密，未匹配仍保留不确定类别。八组原厂普通/中文密码、单包/原生卷独立回解通过，八派生故障不再错误成功；105 Rust、170 前端、二十二桌面记录、十四张实看页面及普通生产通过。正式四资产、中文说明、包内引擎二十组原件/八故障/124 份许可已核对。见[审计](long-compress-assistant/docs/ALZ_STREAM_INTEGRITY_1.5.12.md)、[封板记录](long-compress-assistant/docs/ALZ_STREAM_INTEGRITY_FREEZE_1.5.12.md)和[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.12.md)。原计划 Obfuscated Deflate（方法 3）未取得原厂正面包，仍不支持且保留未完成；不冒称新增该方法。图标和原截图保留，下一版 v1.5.13 补 TAR 特殊布局；按调整范围已交付七版、余三版。
 
 此前 **v1.5.11 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.11)。补齐二十组原中文 ALZip 密码 EGG 的 ZipCrypto/AES/LEA、Deflate/LZMA、单包与原生卷验证，改善密码编码不匹配后的最终原因和重试指引；用户主动选择 CP936 后以新任务继续，旧失败保留。101 Rust、170 前端、二十五桌面记录和十二张实看页面通过；正式四资产、中文说明、包内引擎五十五组原包与 103 份许可已核对。见[审计](long-compress-assistant/docs/EGG_PASSWORD_COMBINATIONS_1.5.11.md)、[封板记录](long-compress-assistant/docs/EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md)和[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.11.md)。加密固实无真实正面原包，不承诺支持；两组 LEA/LZMA 原生卷由原厂回解核对，不承诺本机 Bandizip 互通。默认编码和 helper 不变，图标与原截图保留；十版路线已交付六版、剩四版，下一版 v1.5.12 补 ALZ 方法兼容。

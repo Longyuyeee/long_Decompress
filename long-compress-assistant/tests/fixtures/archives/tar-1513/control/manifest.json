@@ -1,0 +1,27 @@
+{
+  "producer": "tar (GNU tar) 1.35",
+  "arguments": [
+    "tar",
+    "--format=pax",
+    "--sparse",
+    "--sparse-version=1.0",
+    "--hole-detection=seek",
+    "--mtime=@1577934245",
+    "--owner=0",
+    "--group=0",
+    "--numeric-owner",
+    "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+    "-cf",
+    "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/test-results/tar-1513/control/control.tar",
+    "-C",
+    "/tmp/long-tar1513-control-ef7gswzy",
+    "control.bin"
+  ],
+  "layout": "GNU PAX sparse 1.0",
+  "logicalBytes": 2147483665,
+  "sourceSha256": "4cc2828b333d6cb0968859e5255f39c9fc74a530610d71b14659b8cc29128b93",
+  "archiveBytes": 20480,
+  "archiveSha256": "4da87524d0bd00366125e1139c6f953e885747c735f31a782bafaead7f102a47",
+  "producerRoundtripFullHash": true,
+  "description": "Self-authored fixed sparse file; four 4096-byte data extents, holes restored as zero content. No preallocated length accepted as processed bytes."
+}

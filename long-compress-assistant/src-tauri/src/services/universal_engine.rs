@@ -572,6 +572,14 @@ impl UniversalCliEngine {
     /// Passwords are deliberately not accepted here because 7z can only receive
     /// them through process arguments.
     pub async fn archive_uncompressed_stats(file_path: &Path) -> Result<(usize, u64)> {
+        let source=crate::services::split_archive_detector::SplitArchiveDetector::complete_source(file_path)?;
+        let file_path=source.as_path();
+        let format=super::archive_browser::detect_format(file_path)?;
+        if let Some(route)=super::tar_compatibility::integrity_route(file_path,&format) {
+            let path=file_path.to_path_buf();
+            let plan=tokio::task::spawn_blocking(move||super::tar_compatibility::plan(&path,route,&Default::default(),||Ok(()))).await??;
+            return Ok((plan.entries,plan.logical_bytes));
+        }
         let args = vec![
             "l".to_string(),
             "-slt".to_string(),
@@ -611,6 +619,10 @@ impl UniversalCliEngine {
         let source = crate::services::split_archive_detector::SplitArchiveDetector::complete_source(file_path)?;
         let file_path = source.as_path();
         let format = super::archive_browser::detect_format(file_path)?;
+        if let Some(route)=super::tar_compatibility::integrity_route(file_path,&format) {
+            let path=file_path.to_path_buf();
+            return tokio::task::spawn_blocking(move||super::compression_verification::verify_native(route,&path,None,||false).map(|_|())).await?;
+        }
         if format == super::archive_format::ArchiveFormat::Rar {
             return super::rar_recovery::verify_readonly(file_path, password, Arc::new(AtomicBool::new(false))).await;
         }

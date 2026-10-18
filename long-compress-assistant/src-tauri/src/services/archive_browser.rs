@@ -205,8 +205,9 @@ fn browse_tar_reader<R: Read>(
     let mut entries = Vec::new();
     for entry in archive.entries()? {
         ensure_not_cancelled(cancelled)?;
-        let entry = entry?;
-        let path = entry.path()?.to_string_lossy().replace('\\', "/");
+        let entry = super::tar_compatibility::LogicalEntry::new(entry?)?;
+        if entry.path().as_os_str().is_empty() && entry.header().entry_type().is_dir() { continue; }
+        let path = entry.path().to_string_lossy().replace('\\', "/");
         let header = entry.header();
         let is_dir = header.entry_type().is_dir();
         let modified = header.mtime().ok().and_then(|seconds| {
@@ -216,7 +217,7 @@ fn browse_tar_reader<R: Read>(
         entries.push(ArchiveEntryInfo { size_known: None,
             name: entry_name(&path),
             path,
-            size: if is_dir { 0 } else { header.size().unwrap_or(0) },
+            size: if is_dir { 0 } else { entry.size() },
             compressed_size: None,
             modified,
             crc: None,
@@ -338,7 +339,7 @@ pub async fn browse_archive_cancellable_with_encoding(
         if is_tar_family
             || matches!(
                 format,
-                ArchiveFormat::Zip | ArchiveFormat::SevenZip | ArchiveFormat::Rar | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip
+                ArchiveFormat::Zip | ArchiveFormat::SevenZip | ArchiveFormat::Rar | ArchiveFormat::Tar | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip
             )
         {
             let native_cancelled = operation_cancelled.clone();
@@ -347,6 +348,7 @@ pub async fn browse_archive_cancellable_with_encoding(
                     return Ok(result);
                 }
                 match format {
+                    ArchiveFormat::Tar => browse_tar_reader(super::numeric_volume_reader::ZipInputReader::open(&path)?, "TAR", &native_cancelled),
                     ArchiveFormat::Zip => browse_zip(&path, &native_cancelled)
                         .context("Unable to read ZIP metadata"),
                     ArchiveFormat::SevenZip => {

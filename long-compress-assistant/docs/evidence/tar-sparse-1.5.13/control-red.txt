@@ -1,0 +1,18 @@
+Actual desktop gate before validated sparse accounting, 2026-10-19 local.
+Log: test-results/tar1513-desktop-full.log (failed, not a passing receipt).
+Isolated application database: desktop-e2e-data-f39ec06776cd06c0e99bbf45/data.db.
+task_operation_history: control.tar failed before any staged write.
+Final cause: Archive expansion ratio exceeds the safety limit (10000:1).
+The driver then timed out waiting for actual written output before pause.
+
+GNU tar 1.35 PAX sparse 1.0 original stays byte-identical:
+archive: 20480 bytes
+SHA256: 4da87524d0bd00366125e1139c6f953e885747c735f31a782bafaead7f102a47
+logical output: 2147483665 bytes; validated data extents: 16384 bytes
+full source SHA256: 4cc2828b333d6cb0968859e5255f39c9fc74a530610d71b14659b8cc29128b93
+
+Correction: count validated sparse data (not holes) in the compression ratio,
+but retain full logical size for output/disk/progress bounds. Ordinary archive
+ratio, 512 GiB absolute size, 250000 entries and disk reserve remain unchanged.
+Post-extraction layout also checks actual output against the validated logical
+plan. Neither raising a global cap nor shrinking/changing this original is used.

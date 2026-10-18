@@ -192,11 +192,20 @@ pub(crate) fn validate_resource_limits(
     entry_count: usize,
     expanded_bytes: u64,
 ) -> Result<()> {
+    let compressed_bytes = compressed_archive_bytes(archive_path)?;
+    validate_resource_limits_for_size(compressed_bytes, entry_count, expanded_bytes)
+}
+
+fn compressed_archive_bytes(archive_path: &Path) -> Result<u64> {
     let compressed_bytes = if let Some(group) = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(archive_path)? {
         anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少分卷：{}", group.missing_part_names());
         group.total_size
     } else { std::fs::metadata(archive_path)?.len() }.max(1);
-    validate_resource_limits_for_size(compressed_bytes, entry_count, expanded_bytes)
+    Ok(compressed_bytes)
+}
+
+pub(crate) fn validate_sparse_resource_limits(archive_path: &Path, entry_count: usize, logical_bytes: u64, payload_bytes: u64) -> Result<()> {
+    validate_resource_limits_with_payload(compressed_archive_bytes(archive_path)?,entry_count,logical_bytes,payload_bytes)
 }
 
 // Recovery supplies only the sizes of physically present disks. The normal
@@ -206,6 +215,14 @@ pub(crate) fn validate_resource_limits_for_size(
     entry_count: usize,
     expanded_bytes: u64,
 ) -> Result<()> {
+    validate_resource_limits_with_payload(compressed_bytes,entry_count,expanded_bytes,expanded_bytes)
+}
+
+// Only a validated sparse layout can supply fewer decoded data bytes than its
+// logical output. Absolute output/entry bounds still apply to the full output;
+// disk capacity remains checked against that same logical size by the caller.
+pub(crate) fn validate_resource_limits_with_payload(compressed_bytes: u64, entry_count: usize, expanded_bytes: u64, payload_bytes: u64) -> Result<()> {
+    anyhow::ensure!(payload_bytes<=expanded_bytes,"Decoded data exceeds logical output size");
     if entry_count > MAX_EXTRACTED_ENTRIES {
         return Err(CompressionError::ExtractionFailed(format!(
             "Archive contains too many entries ({} > {})",
@@ -221,8 +238,8 @@ pub(crate) fn validate_resource_limits_for_size(
         .into());
     }
     let compressed_bytes = compressed_bytes.max(1);
-    if expanded_bytes >= 1024 * 1024 * 1024
-        && expanded_bytes / compressed_bytes > MAX_EXPANSION_RATIO
+    if payload_bytes >= 1024 * 1024 * 1024
+        && payload_bytes / compressed_bytes > MAX_EXPANSION_RATIO
     {
         return Err(CompressionError::ExtractionFailed(format!(
             "Archive expansion ratio exceeds the safety limit ({}:1)",
@@ -413,6 +430,15 @@ pub(crate) fn prepare_staging_layout(
     staging: &Path,
     options: &DecompressOptions,
 ) -> Result<()> {
+    prepare_staging_layout_with_tar_plan(archive_path, staging, options, None)
+}
+
+pub(crate) fn prepare_staging_layout_with_tar_plan(
+    archive_path: &Path,
+    staging: &Path,
+    options: &DecompressOptions,
+    tar_plan: Option<&super::tar_compatibility::Plan>,
+) -> Result<()> {
     let file_filter = compile_file_filter(options.file_filter.as_deref());
     let mut files = Vec::new();
     let mut directories = Vec::new();
@@ -514,7 +540,12 @@ pub(crate) fn prepare_staging_layout(
         )
         .into());
     }
-    validate_resource_limits(archive_path, entry_count, expanded_bytes)?;
+    if let Some(plan) = tar_plan {
+        anyhow::ensure!(expanded_bytes <= plan.logical_bytes, "TAR output exceeds its validated logical size");
+        validate_sparse_resource_limits(archive_path, entry_count, expanded_bytes, plan.payload_bytes.min(expanded_bytes))?;
+    } else {
+        validate_resource_limits(archive_path, entry_count, expanded_bytes)?;
+    }
     validate_staging_disk_reserve(staging)
 }
 
@@ -890,6 +921,30 @@ mod tests {
     }
 
     use super::*;
+
+    #[test]
+    fn sparse_accounting_changes_only_validated_holes_not_global_limits() {
+        let logical = 2 * 1024 * 1024 * 1024 + 17;
+        assert!(validate_resource_limits_for_size(20480, 1, logical).is_err());
+        validate_resource_limits_with_payload(20480, 1, logical, 16384).unwrap();
+        assert!(validate_resource_limits_with_payload(20480, 1, logical, logical).is_err());
+        assert!(validate_resource_limits_with_payload(20480, MAX_EXTRACTED_ENTRIES + 1, logical, 16384).is_err());
+        assert!(validate_resource_limits_with_payload(20480, 1, MAX_EXTRACTED_BYTES + 1, 16384).is_err());
+        assert!(validate_resource_limits_with_payload(20480, 1, 1, 16384).is_err());
+    }
+
+    #[test]
+    fn staged_sparse_accounting_still_rejects_output_beyond_validated_plan() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("source.tar");
+        std::fs::write(&archive, [0u8; 512]).unwrap();
+        let staging = temp.path().join("stage");
+        std::fs::create_dir(&staging).unwrap();
+        std::fs::write(staging.join("file"), b"1234").unwrap();
+        let plan = super::super::tar_compatibility::Plan { entries: 1, logical_bytes: 3, payload_bytes: 1 };
+        let error = prepare_staging_layout_with_tar_plan(&archive, &staging, &DecompressOptions::default(), Some(&plan)).unwrap_err();
+        assert!(error.to_string().contains("validated logical size"));
+    }
 
     #[test]
     fn staging_guard_removes_output_on_drop() {

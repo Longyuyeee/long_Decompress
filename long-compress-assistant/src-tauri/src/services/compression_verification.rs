@@ -159,13 +159,16 @@ fn drain_reader(mut reader: impl Read, is_cancelled: &impl Fn() -> bool) -> Resu
 }
 
 fn verify_tar_reader(reader: impl Read, is_cancelled: &impl Fn() -> bool) -> Result<()> {
+    let result=(|| -> Result<()> {
     let mut archive = tar::Archive::new(reader);
     for entry in archive.entries()? {
         check_cancelled(is_cancelled)?;
-        drain_reader(entry?, is_cancelled)?;
+        drain_reader(super::tar_compatibility::LogicalEntry::new(entry?)?, is_cancelled)?;
     }
     drain_reader(archive.into_inner(), is_cancelled)?;
     Ok(())
+    })();
+    result.map_err(super::tar_compatibility::inspection_error)
 }
 
 fn verify_wrapped_aes(
