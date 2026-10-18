@@ -25,7 +25,7 @@
 
 十三组上游原包和四组原版 ALZip 新包均有独立 Bandizip 载荷核对。真实原工具证明 EGG 的 UTF-8 文件名和密码字节不是同一回事：本机原工具使用 CP936 中文密码；新增 EGG 密码专用标签，默认 UTF-8，明确 CP936 可读原包，名字仍按原始标记读取。沿用已有可持久化来源编码字段，贯通任务、重试、历史、转换和诊断；密码本不保存到历史。不可表示字符及 CP932 别名拒绝有损替换。
 
-八项新后端集成、三项辅助进程边界测试及十个前端文件 138 项检查通过，类型/构建通过；真实桌面矩阵进行中，暂不记为封板。256 MiB 控制包由原 ALZip 生成，准确来源保留在忽略目录与后续桌面证据。首次桌面构建命令的 npm 参数转发失败，已改为直接调用 Tauri CLI；失败构建不算验证通过。
+实现初轮曾完成八项新后端集成、三项辅助进程边界测试及十个前端文件 138 项检查，当时真实桌面矩阵尚未完成，不计封板；最终范围和数量以下方为准。256 MiB 控制包由原 ALZip 生成，准确来源保留在忽略目录与桌面证据。首次桌面构建命令的 npm 参数转发失败，已改为直接调用 Tauri CLI；失败构建不算验证通过。
 
 末轮发现历史保存已知 `unsupported` 标记时仍归为 unknown，已贯通保存、筛选和重试指引，不将未知方法误说成密码错误或损坏。新增回归先复现分类筛选丢失，修正 SQL 和分类白名单后验证。Deflate 提前结束和 Deflate/Bzip2 尾部余量明确拒绝；LZMA 解码器对额外输入可能返回 Ok，但产生额外/变化内容，必须按产品实际完整大小和 CRC 条件拒绝，而不能把底层返回 Ok 当成通过。新回归直接使用相同输出上限和最终内容条件，不只判断底层返回码。CRC 不认证来源，也不提供损坏修复。
 
@@ -46,3 +46,16 @@
 复跑先执行 `scripts/build-egg-engine.ps1` 和固定原包库存脚本，再运行 `cargo test --lib egg_` 与上述定向回归、`cargo test --manifest-path tools/egg-engine/Cargo.toml`、前端十文件检查。桌面用 `VITE_DESKTOP_E2E=1` 构建前端，直接调用 `node node_modules/@tauri-apps/cli/tauri.js build --config src-tauri/tauri.e2e.conf.json --features desktop-e2e --bundles none`；指定实际 `Long解压.exe` 的 `TAURI_APP_BINARY` 后执行 `node scripts/test-tauri-desktop.mjs --egg-153-only`。`egg-engine.lock.json` 固定源码、引擎与全部随附许可，安装包内复验用 `scripts/inspect-egg-153-installer.mjs`。
 
 新机器的控制包可用同一原 ALZip 生成器与 `prepare-egg-153-control.mjs` 新建公开随机载荷，保留那次身份，不冒充本次完全相同原字节。本次控制包身份随桌面收据，原始商业工具不分发。发布后按已批准路线进入 v1.5.4 复杂 EGG，再做 v1.5.5 外置卷 SFX；尚有两个版本，不重复规划。
+
+## 正式发布
+
+功能冻结 `d3d0a09`，最终候选 `c5beb80` 的必需 CI `39092798929` 成功；PR #187 已受保护合入，`v1.5.3` 标签 `d31e16b658b11bd93376fba9e79466453478930c` 与候选同树。主线 CI `39093363899`、正式构建 `39093382228` 成功。[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.3) 于 UTC `2026-10-18T03:32:33Z` 发布；正式四资产、中文说明及包内引擎/十七组原包和中卷所选内容均已回下载核对，准确身份见[封板记录](EGG_BASIC_FREEZE_1.5.3.md)、[候选](evidence/egg-basic-1.5.3/candidate.json)及[正式收据](evidence/egg-basic-1.5.3/release.json)。未执行安装，个人数据未改。发布后仅文档回填，不改变固定标签或功能。
+
+## v1.5.4 接续预审（未实施）
+
+发布等待期间仅阅读上游保留但未编译的 `vendor/unegg/src/extract.rs`、`aes_ctr.rs`、`lea.rs` 和 `decompress/azo.rs`，没有启用新能力。下一版仍按已批准的 AZO、固实及 AES/LEA 顺序核实，不新增 EGG 创建。
+
+1. 固实上游实现把全部压缩输入收集到一个 `Vec`，输出才流式分配；接入前应改成有界输入或暂存，并区分文件跨度和块 CRC 跨度。不能直接去掉当前拒绝开关。
+2. AES/LEA 上游构造器使用 `password.as_bytes()`；必须接入已验证的显式密码字节转换，避免中文 CP936 及不可表示字符问题在新方法重现。认证尾部、大小/CRC、错密码与损坏区分按真实布局分别测试，不从传统 ZipCrypto 外推。
+3. AZO 的 `libazo` 尚未纳入本版锁定依赖及许可库存，须先核对具体源码、可分发许可、输入/输出结束和错误传播，再决定接入；本次网页读取未取得其完整源码，不把未审核依赖算已通过。
+4. 复用现有真实复杂原包，补原版工具生成的密码/固实/原生卷组合和独立载荷；保持所选提取、纠正密码、补卷新任务、实际暂停取消与页面实看。只有完成真实闭环的组合才从“不支持”提升为只读。

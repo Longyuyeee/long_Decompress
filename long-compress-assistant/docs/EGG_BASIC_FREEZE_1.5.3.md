@@ -12,8 +12,25 @@
 
 普通生产 `tauri build --bundles none` 成功，八处版本身份与所有随附资源库存检查通过。正常构建用 v1.5.3 Shell DLL 替换生成的旧版本资源，旧资源可从 Git 历史恢复。个人安装、设置和历史不改动，没有执行安装升级。
 
-## 待发布步骤
+## 最终候选与合入
 
-功能冻结，尚未正式发布。下一步只允许 README/发布说明、候选收据、受保护合入、固定标签、正式工作流及安装器/更新四资产回下载核对；通过后回填，不移动标签或混用候选与正式包。可从安装器单次提取全部 EGG 引擎/许可，并读取十七原包和中卷所选内容，使用 `scripts/inspect-egg-153-installer.mjs`，不执行安装器。
+最终候选 `c5beb80315d400e642cbc66593433e84125da3b6`，必需 Windows package `39092798929` 成功。安装器 ProductVersion 1.5.3，20854650 字节，SHA256 `915da8bb0aecf88a03ea25a7c87eded76da05b0c0f49fd5dac0a0596b993596e`。从安装器提取 EGG 引擎及 67 份许可，逐字节库存核对并实际读取十七组原包、中卷所选提取成功；未执行安装，见[候选收据](evidence/egg-basic-1.5.3/candidate.json)。
+
+[PR #187](https://github.com/Longyuyeee/long_Decompress/pull/187) 于 UTC `2026-10-18T03:21:59Z` 受保护合入。合入/标签 `d31e16b658b11bd93376fba9e79466453478930c` 与最终候选同树 `bf23aa49d7e258eed8967dfa196fbebc66967d34`，固定 `v1.5.3`，不移动标签。主线 CI `39093363899` 与正式工作流 `39093382228` 均成功。
+
+## 正式发布资产
+
+[v1.5.3 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.3) 于 UTC `2026-10-18T03:32:33Z`（北京时间 11:32:33）发布，非草稿、非预发布。等待正式任务整体成功后更新中文 Release 和 `latest.json.notes`，其余签名、下载地址及发布时间保持原值。
+
+UTC `2026-10-18T03:34:02.991Z` 四资产回下载核对通过，体积及 SHA256 与 GitHub 一致；安装器 ProductVersion 1.5.3，更新 ZIP 内安装器与正式 EXE 同字节，签名/地址/时间与清单一致，Release 和清单中文说明一致。包内 EGG helper 与 67 份许可按库存核对，实际读取十七组原包及中卷所选提取成功，未执行安装。见[正式收据](evidence/egg-basic-1.5.3/release.json)。
+
+| 正式资产 | 字节 | SHA256 |
+| --- | ---: | --- |
+| Long-Decompress_1.5.3_x64-setup.exe | 20855154 | `7877b8781e9abf969c243f1342e88233c2d3724ddda8ac4eae5715f0af53b58f` |
+| Long-Decompress_1.5.3_x64-setup.nsis.zip | 20855312 | `e2fe857f2a0515e6c9faa22e74fa02bd0ab342104b88073734c991b64c658e8f` |
+| Long-Decompress_1.5.3_x64-setup.nsis.zip.sig | 428 | `3a844c37a1c13974ccfbafb75555b346a4464d6ae16114d53000f2e725f39239` |
+| latest.json | 2899 | `669d53cd7579c246157af7030f1a676cc3afc0b8f1ad78fab0fabd21d3e15f72` |
+
+不混用正式包、候选安装器和 E2E 哈希。发布后只回填两份 README、审计/交接和收据，单独受保护合入，不改功能或移动标签。
 
 十二版路线在本版发布后为十版交付，接 v1.5.4 复杂 EGG 和 v1.5.5 外置卷 SFX；不是全部路线完成，不重复规划。
