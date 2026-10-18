@@ -1,0 +1,479 @@
+{
+  "completedAt": "2026-10-18T18:38:28.885Z",
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
+  "binarySha256": "2c2dc47d735d5bb2f7921bed734483cd3400c04b465574405faadc5584a00d8b",
+  "control": {
+    "producer": "tar (GNU tar) 1.35",
+    "arguments": [
+      "tar",
+      "--format=pax",
+      "--sparse",
+      "--sparse-version=1.0",
+      "--hole-detection=seek",
+      "--mtime=@1577934245",
+      "--owner=0",
+      "--group=0",
+      "--numeric-owner",
+      "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+      "-cf",
+      "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/test-results/tar-1513/control/control.tar",
+      "-C",
+      "/tmp/long-tar1513-control-ef7gswzy",
+      "control.bin"
+    ],
+    "layout": "GNU PAX sparse 1.0",
+    "logicalBytes": 2147483665,
+    "sourceSha256": "4cc2828b333d6cb0968859e5255f39c9fc74a530610d71b14659b8cc29128b93",
+    "archiveBytes": 20480,
+    "archiveSha256": "4da87524d0bd00366125e1139c6f953e885747c735f31a782bafaead7f102a47",
+    "producerRoundtripFullHash": true,
+    "description": "Self-authored fixed sparse file; four 4096-byte data extents, holes restored as zero content. No preallocated length accepted as processed bytes."
+  },
+  "cases": [
+    {
+      "original": "old-gnu.tar",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": true
+    },
+    {
+      "original": "old-gnu.tar.gz",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": false
+    },
+    {
+      "original": "old-gnu.tar.bz2",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": false
+    },
+    {
+      "original": "old-gnu.tar.xz",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": false
+    },
+    {
+      "original": "pax00.tar",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": true
+    },
+    {
+      "original": "pax00.tar.gz",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": false
+    },
+    {
+      "original": "pax00.tar.bz2",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": false
+    },
+    {
+      "original": "pax00.tar.xz",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": false
+    },
+    {
+      "original": "pax01.tar",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": true
+    },
+    {
+      "original": "pax01.tar.gz",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": false
+    },
+    {
+      "original": "pax01.tar.bz2",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": false
+    },
+    {
+      "original": "pax01.tar.xz",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": false
+    },
+    {
+      "original": "pax10.tar",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": true
+    },
+    {
+      "original": "pax10.tar.gz",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": false
+    },
+    {
+      "original": "pax10.tar.bz2",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": false
+    },
+    {
+      "original": "pax10.tar.xz",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": false
+    },
+    {
+      "original": "pax-ordinary.tar",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": true
+    },
+    {
+      "original": "pax-ordinary.tar.gz",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": false
+    },
+    {
+      "original": "pax-ordinary.tar.bz2",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": false
+    },
+    {
+      "original": "pax-ordinary.tar.xz",
+      "browse": true,
+      "logicalNamesAndSizes": true,
+      "integrity": true,
+      "diagnosis": true,
+      "wholeHashes": true,
+      "selectedHashes": true,
+      "conversionIndependentlyDecoded": false
+    },
+    {
+      "knownZipWithTarSuffix": "用户误写后缀.tar",
+      "browseAndPreview": true,
+      "integrityAndDiagnosis": true,
+      "extractionFullHashes": true,
+      "conversionIndependentlyDecoded": true,
+      "sourceBytesUnchanged": true
+    },
+    {
+      "knownZipWithTarSuffix": "用户误写后缀.tar.gz",
+      "browseAndPreview": true,
+      "integrityAndDiagnosis": true,
+      "extractionFullHashes": true,
+      "conversionIndependentlyDecoded": true,
+      "sourceBytesUnchanged": true
+    },
+    {
+      "knownZipWithTarSuffix": "用户误写后缀.tar.xz",
+      "browseAndPreview": true,
+      "integrityAndDiagnosis": true,
+      "extractionFullHashes": true,
+      "conversionIndependentlyDecoded": true,
+      "sourceBytesUnchanged": true
+    },
+    {
+      "knownRawTarWithWrongSuffix": "实际TAR.zip",
+      "browseAndPreview": true,
+      "integrity": true,
+      "extractionFullHashes": true,
+      "sourceBytesUnchanged": true
+    },
+    {
+      "knownRawTarWithWrongSuffix": "实际TAR.tar.gz",
+      "browseAndPreview": true,
+      "integrity": true,
+      "extractionFullHashes": true,
+      "sourceBytesUnchanged": true
+    },
+    {
+      "derivedFault": "derived-pax10-unknown.tar",
+      "category": "unsupported_feature",
+      "integrityRejected": true,
+      "extractionRejected": true,
+      "conversionRejected": true,
+      "noPartialOutput": true,
+      "originalNotDeleted": true
+    },
+    {
+      "derivedFault": "derived-pax10-size.tar",
+      "category": "damaged",
+      "integrityRejected": true,
+      "extractionRejected": true,
+      "conversionRejected": true,
+      "noPartialOutput": true,
+      "originalNotDeleted": true
+    },
+    {
+      "derivedFault": "derived-pax01-overlap.tar",
+      "category": "damaged",
+      "integrityRejected": true,
+      "extractionRejected": true,
+      "conversionRejected": true,
+      "noPartialOutput": true,
+      "originalNotDeleted": true
+    },
+    {
+      "derivedFault": "derived-pax10-footer.tar.gz",
+      "category": "damaged",
+      "integrityRejected": true,
+      "extractionRejected": true,
+      "conversionRejected": true,
+      "noPartialOutput": true,
+      "originalNotDeleted": true
+    },
+    {
+      "nonRegularNotSilent": true,
+      "regularCanBeSelected": true,
+      "noLinksOrDevicesCreated": true
+    },
+    {
+      "actualRootNamesAndSizes": true,
+      "actualReadOnlyTextPreview": true,
+      "actualLongNameSelected": true,
+      "actualSparseSelected": true
+    },
+    {
+      "actualMisnamedZipBrowser": true,
+      "actualMisnamedZipPreview": true,
+      "actualMisnamedZipSelectedHash": true
+    },
+    {
+      "actualFinalMappingCause": true,
+      "actualHistoryFinalCause": true,
+      "validOriginalCreatesFreshTask": true,
+      "oldFailureUnchanged": true
+    },
+    {
+      "actualNonRegularFinalCause": true,
+      "unsupportedNotPassword": true
+    },
+    {
+      "actualConversion": true,
+      "independentZipFullHashes": true
+    },
+    {
+      "actualSparsePauseAfterWrittenBytes": 168300544,
+      "pauseStable": true,
+      "resumeFullLogicalHash": true,
+      "actualHistoryReexecution": true,
+      "cancelPausedAfterWrittenBytes": 167776256,
+      "actualCancelWhilePaused": true,
+      "noStagedOrPublishedPartial": true,
+      "oldCompletedHistoryUnchanged": true
+    }
+  ],
+  "screenshots": [
+    "tar1514-root-browser-1100x700.png",
+    "tar1514-root-browser-760x520.png",
+    "tar1514-longname-preview-1100x700.png",
+    "tar1514-longname-preview-760x520.png",
+    "tar1514-misnamed-zip-browser-1100x700.png",
+    "tar1514-misnamed-zip-browser-760x520.png",
+    "tar1514-misnamed-zip-preview-1100x700.png",
+    "tar1514-misnamed-zip-preview-760x520.png",
+    "tar1514-map-final-1100x700.png",
+    "tar1514-map-final-760x520.png",
+    "tar1514-history-final-1100x700.png",
+    "tar1514-history-final-760x520.png",
+    "tar1514-nonregular-final-1100x700.png",
+    "tar1514-nonregular-final-760x520.png",
+    "tar1514-conversion-1100x700.png",
+    "tar1514-conversion-760x520.png",
+    "tar1514-paused-1100x700.png",
+    "tar1514-paused-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "tar1514-root-browser",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "tar1514-root-browser",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "tar1514-longname-preview",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "tar1514-longname-preview",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "tar1514-misnamed-zip-browser",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "tar1514-misnamed-zip-browser",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "tar1514-misnamed-zip-preview",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "tar1514-misnamed-zip-preview",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "tar1514-map-final",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "tar1514-map-final",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "tar1514-history-final",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "tar1514-history-final",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "tar1514-nonregular-final",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "tar1514-nonregular-final",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "tar1514-conversion",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "tar1514-conversion",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "tar1514-paused",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "tar1514-paused",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "originalsAndFaultsUnchanged": true
+}
