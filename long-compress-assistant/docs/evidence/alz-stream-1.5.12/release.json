@@ -1,0 +1,206 @@
+{
+  "verifiedAt": "2026-10-18T16:34:34.819Z",
+  "tag": "v1.5.12",
+  "tagCommit": "91cb40585422dab483664471185801f87221816a",
+  "functionalFreeze": "7244d04ae062f59657912f2775f97fd93d656ad3",
+  "candidateCommit": "c0b141a206e744e6b6bfea9660746295af33cd7c",
+  "candidateRun": 39142880443,
+  "releaseRun": 39144133623,
+  "url": "https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.12",
+  "publishedAt": "2026-10-18T16:29:50Z",
+  "installerProductVersion": "1.5.12",
+  "assets": [
+    {
+      "name": "Long-Decompress_1.5.12_x64-setup.exe",
+      "bytes": 20965845,
+      "sha256": "b19fecae4986d327c1a889dbbed7102c77daf62deaaa33c764d37ac05aa3a7c0",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.12/Long-Decompress_1.5.12_x64-setup.exe"
+    },
+    {
+      "name": "Long-Decompress_1.5.12_x64-setup.nsis.zip",
+      "bytes": 20966005,
+      "sha256": "531815e1976c82947afccb8b1a29f85f52d6e60e546b9c4ec627b8a115c86b8a",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.12/Long-Decompress_1.5.12_x64-setup.nsis.zip"
+    },
+    {
+      "name": "Long-Decompress_1.5.12_x64-setup.nsis.zip.sig",
+      "bytes": 428,
+      "sha256": "dc2bcdb60f14598a8275165dbf312ef4d70c4f5553679f2145fbfa87f7a0bd5c",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.12/Long-Decompress_1.5.12_x64-setup.nsis.zip.sig"
+    },
+    {
+      "name": "latest.json",
+      "bytes": 2110,
+      "sha256": "f4c76668a8370742c9ce25e720837f81e57300b8535d48dd7d580ee2a10d8a7d",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.12/latest.json"
+    }
+  ],
+  "updaterExeMatchesInstaller": true,
+  "signatureMatchesManifest": true,
+  "chineseNotesMatch": true,
+  "onlyManifestNotesChanged": true,
+  "packagedMain": {
+    "mainProductVersion": "1.5.12",
+    "mainBytes": 33912832,
+    "mainSha256": "193698fd9da90a63c544c101bff67778ad6df6ab2468e45bb26164afb12ca778",
+    "notices": [
+      {
+        "name": "archive-engine/licenses/UnRAR-License.txt",
+        "bytes": 1976,
+        "sha256": "6ecc1687808b7d66b24f874755abfed7464d9751ed0001cd4e8e5d9bf397ff8a"
+      },
+      {
+        "name": "archive-engine/SOURCE.md",
+        "bytes": 2722,
+        "sha256": "53830945c4473e5a10ea38b99505d396d450c6a059c123a5c580d779ed252529"
+      },
+      {
+        "name": "archive-engine/licenses/sevenz-rust-Apache-2.0.txt",
+        "bytes": 11556,
+        "sha256": "5ad8c213095c573921d7388edf93f6a9f54490b8ebf3b165ae8ef1947cf70846"
+      },
+      {
+        "name": "archive-engine/licenses/ppmd-rust-MIT-0.md",
+        "bytes": 916,
+        "sha256": "5574529c6fc6bb5f1dba17056a3ae5fb5cac51bc50ae4d7cd146e13b708fe0ff"
+      }
+    ],
+    "installationExecuted": false,
+    "productionSfxRuntimeExecuted": false,
+    "note": "Packaged main executable version/hash and four archive notices only; ALZ runtime is verified by the separately identified desktop binary and extracted helper."
+  },
+  "packagedAlz": {
+    "engineVersion": "0.2.0",
+    "engineSha256": "62b086190ddd9fa9f2b02b4a3b3860078632261588025da37e76fa0c01563f12",
+    "engineBytes": 732160,
+    "noticesVerified": 124,
+    "cases": [
+      {
+        "name": "store",
+        "completeContentVerified": true
+      },
+      {
+        "name": "normal",
+        "completeContentVerified": true
+      },
+      {
+        "name": "low",
+        "completeContentVerified": true
+      },
+      {
+        "name": "bzip2",
+        "completeContentVerified": true
+      },
+      {
+        "name": "dir_tree",
+        "completeContentVerified": true
+      },
+      {
+        "name": "enc_store",
+        "completeContentVerified": true
+      },
+      {
+        "name": "enc_deflate",
+        "completeContentVerified": true
+      },
+      {
+        "name": "zip20",
+        "completeContentVerified": true
+      },
+      {
+        "name": "split",
+        "completeContentVerified": true
+      },
+      {
+        "name": "split_store",
+        "completeContentVerified": true
+      },
+      {
+        "name": "native-cn-key-volumes.alz",
+        "completeContentVerified": true
+      },
+      {
+        "name": "native-cn-key.alz",
+        "completeContentVerified": true
+      },
+      {
+        "name": "m1-plain-single",
+        "completeContentVerified": true
+      },
+      {
+        "name": "m1-plain-volumes",
+        "completeContentVerified": true
+      },
+      {
+        "name": "m1-key-single",
+        "completeContentVerified": true
+      },
+      {
+        "name": "m1-key-volumes",
+        "completeContentVerified": true
+      },
+      {
+        "name": "m2-plain-single",
+        "completeContentVerified": true
+      },
+      {
+        "name": "m2-plain-volumes",
+        "completeContentVerified": true
+      },
+      {
+        "name": "m2-key-single",
+        "completeContentVerified": true
+      },
+      {
+        "name": "m2-key-volumes",
+        "completeContentVerified": true
+      }
+    ],
+    "derivedFaults": [
+      {
+        "name": "m1-plain-single-trailing",
+        "derivedNotOriginal": true,
+        "damaged": true
+      },
+      {
+        "name": "m1-plain-volumes-trailing",
+        "derivedNotOriginal": true,
+        "damaged": true
+      },
+      {
+        "name": "m1-key-single-trailing",
+        "derivedNotOriginal": true,
+        "damaged": true
+      },
+      {
+        "name": "m1-key-volumes-trailing",
+        "derivedNotOriginal": true,
+        "damaged": true
+      },
+      {
+        "name": "m2-plain-single-trailing",
+        "derivedNotOriginal": true,
+        "damaged": true
+      },
+      {
+        "name": "m2-plain-volumes-trailing",
+        "derivedNotOriginal": true,
+        "damaged": true
+      },
+      {
+        "name": "m2-key-single-trailing",
+        "derivedNotOriginal": true,
+        "damaged": true
+      },
+      {
+        "name": "m2-key-volumes-trailing",
+        "derivedNotOriginal": true,
+        "damaged": true
+      }
+    ],
+    "chineseNativeMiddleSelected": true,
+    "method3PositiveOriginalObtained": false,
+    "installationExecuted": false,
+    "engineExecutedFromExtractedInstaller": true
+  }
+}

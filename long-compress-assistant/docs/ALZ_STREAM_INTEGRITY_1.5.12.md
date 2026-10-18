@@ -35,3 +35,7 @@
 `scripts/prepare-alz-1512-control.mjs` 使用既有自有随机控制源和原 ALZip `-a -m2 -p` 创建真实大包，归档 SHA-256 `b1d419f69f406c37186a3ef757ec50847f5922882cc8f8f529032d8d2c70332b`，来源 SHA-256 `1a04258f4db4d37deb6804f922cdb9740756353babd645b4c23ec77b7d058279`；大原件留在忽略的 `test-results/alz-1512/control`，新电脑再生成须另记身份，不能冒称同一原件。
 
 带 desktop-e2e 的程序运行 `scripts/test-tauri-desktop.mjs --alz-1512-only`；`scripts/audit-alz-1512.mjs` 核对本轮证据，`scripts/release-alz-1512.mjs` 分 candidate/notes/verify 检查候选、中文说明和正式资产。包内 helper 核对二十组原件、八派生故障、中卷所选和 124 份许可；与真实桌面证据分别记录，不冒称安装器已执行。
+
+## 正式发布闭环
+
+本版已受保护合入并正式发布，标签 `91cb40585422dab483664471185801f87221816a` 与候选同树，主线和正式构建成功。正式四资产、中文说明及包内二十组原件/八故障/124 份许可已核对，见[封板发布记录](ALZ_STREAM_INTEGRITY_FREEZE_1.5.12.md)、[候选](evidence/alz-stream-1.5.12/candidate.json)与[正式收据](evidence/alz-stream-1.5.12/release.json)。发布后只回填文档；原定方法 3 仍未实现、不支持且保留未完成，不以本版完整性修复替代该能力的实际交付。

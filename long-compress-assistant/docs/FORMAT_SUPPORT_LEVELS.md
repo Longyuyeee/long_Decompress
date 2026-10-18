@@ -1,10 +1,10 @@
 # 归档格式支持等级（当前权威口径）
 
-更新时间：2026-10-18（当前正式版 v1.5.11）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级。下载见 [v1.5.11 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.11)，历次能力按对应实现和实际产物记录。
+更新时间：2026-10-19（当前正式版 v1.5.12）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级。下载见 [v1.5.12 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.12)，历次能力按对应实现和实际产物记录。
 
 ## 当前边界速查（覆盖下方历次演变描述）
 
-- v1.5.12 功能封板、尚未发布：修现有 ALZ Deflate 声明范围尾部残留被忽略的错误成功；完整大小/CRC 匹配后才明确报加密尾部损坏并停止试密。八组原件、八派生故障及真实桌面/控制通过。没有新增 Obfuscated Deflate（方法 3）支持，原计划能力保留未完成；见[封板](ALZ_STREAM_INTEGRITY_FREEZE_1.5.12.md)。当前正式版仍 v1.5.11。
+- v1.5.12 已正式发布：修复现有 ALZ Deflate 声明压缩范围残留被忽略的错误成功；全部内容大小/CRC 匹配后才明确报加密尾部损坏并停止试密，未匹配保持不确定。105 Rust、170 前端、八组独立回解原件/八派生故障、二十二桌面记录、十四张实看页面、正式四资产及包内二十组原件/八故障/124 份许可核对通过。没有新增 Obfuscated Deflate（方法 3）支持，原计划能力仍保留未完成；ALZ 只读及默认编码不变，见[封板](ALZ_STREAM_INTEGRITY_FREEZE_1.5.12.md)。
 
 - v1.5.11 已正式发布：二十组普通中文 ZipCrypto/AES/LEA 密码 EGG，覆盖 Deflate/LZMA、单包/原生卷，编码失败最终原因与接续指引明确。十八组独立 Bandizip 回解，两组 LEA/LZMA 原生卷由原 ALZip 回解核对，不承诺本机 Bandizip 互通；原厂未生成加密固实正面包，明确未验证。101 Rust、170 前端、二十五桌面记录、十二张实看页面、正式四资产和包内五十五组原包/103份许可核对完成。helper、默认编码及只读边界保持；见[封板](EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md)。
 
