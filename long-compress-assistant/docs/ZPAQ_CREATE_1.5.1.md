@@ -16,7 +16,7 @@ ZPAQ [作者文档](https://www.mattmahoney.net/dc/zpaqdoc.html)的多部分是�
 
 ## 当前验证
 
-20 项不同 Rust 用例通过：十项 ZPAQ/模板及 I/O 分类、九项格式路由、单独显式运行的一项真实写入故障事务测试。故障事务测试覆盖空间不足、实际部分写入后的短写和刷盘失败，暂存清除、已有目标及源文件不变。前端九个文件共 128 项通过，包含配置界面、配置组管理、草稿和历史快照；生产前端与真实桌面 E2E 构建通过。
+23 项不同 Rust 用例通过：十项 ZPAQ/模板及 I/O 分类、九项格式路由、单独显式运行的一项真实写入故障事务测试，以及三项子进程控制。故障事务测试覆盖空间不足、实际部分写入后的短写和刷盘失败，暂存清除、已有目标及源文件不变。前端九个文件共 128 项通过，包含配置界面、配置组管理、草稿和历史快照；生产前端与真实桌面 E2E 构建通过。
 
 初轮前端发现设置页重复显示 ZPAQ，已移除只读时代的额外拼接，按当前格式能力生成一次，并明确列出随附引擎的创建能力。
 
@@ -36,4 +36,12 @@ ZPAQ [作者文档](https://www.mattmahoney.net/dc/zpaqdoc.html)的多部分是�
 
 复跑：`scripts/build-zpaq-engine.ps1 -TestIO`、`node scripts/test-zpaq-io.mjs`、`cargo test --lib zpaq`、显式 `cargo test --lib zpaq_actual_write_fault -- --ignored`。真实桌面先以 `VITE_DESKTOP_E2E=1` 构建前端，再用 `tauri.e2e.conf.json` 和 `desktop-e2e` feature 构建，指定 `TAURI_APP_BINARY` 后运行 `node scripts/test-tauri-desktop.mjs --zpaq-151-only`。原版工具可用 `LONG_OFFICIAL_ZPAQ` 指向；脚本会核对工具身份。个人安装、设置和历史不改动。
 
-功能验证完成；版本统一、受保护 PR、必需候选构建和正式发布进展以[封板记录](ZPAQ_CREATE_FREEZE_1.5.1.md)为准。不能把 ProductVersion 1.5.0 的 E2E 程序当作 1.5.1 正式安装包。
+功能及发布状态以[封板记录](ZPAQ_CREATE_FREEZE_1.5.1.md)为准，不将 E2E 程序或旧候选当正式安装包。
+
+## 末检追加的暂停修正
+
+首轮冻结 `f0e5106` 后的审计发现，ZPAQ 异步引擎只接了取消通道，界面暂停会挡住后续提交，却不能停止正在编码的子进程。真实心跳子进程证明旧通道在暂停期间仍从 7 字节增长到 16 字节；原断言失败，故撤回首轮封板，未合入或发布候选 `235ea65`。其 Windows package `39081172773` 虽通过，也不能作为修正后的候选证据。
+
+新增归档专用异步通道，复用现有 Windows 子进程暂停/恢复机制；只将 ZPAQ 读取和创建接入该通道，其余媒体/RAR 提示输入保持原行为。相同心跳断言现在通过，恢复后继续写入，取消会结束并回收子进程；真实 ZPAQ 场景还覆盖编码中暂停、恢复和暂停中取消。没有删去失败用例或放宽断言。
+
+最终七组桌面流程 UTC `2026-10-18T00:16:14.227Z` 通过，E2E 程序 ProductVersion 1.5.1、33497600 字节、SHA256 `5fc167fbefd909a465fd25de07f135245ec1e0f94266862059ef77fb9717b0dc`。一次快速菜单脚本操作后实际目标仍为 ZIP，见[保留的失败页面](evidence/zpaq-create-1.5.1/selection-before-state-wait.png)；脚本现先等待菜单动画和实际选中值，再输入其他参数，没有改产品默认值或放松分卷禁用断言。后续相同用户流程完整通过。最终证据覆盖原 JSON 和固定创建产物，首轮未修暂停的安装包不能混用。

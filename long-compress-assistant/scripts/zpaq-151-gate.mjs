@@ -29,7 +29,7 @@ export async function runZpaq151Gate({ driver, bridge, waitForElement, fixtureDi
   }
   const click = async selector => { const el = typeof selector === 'string' ? await waitForElement(selector) : selector; await driver.executeScript(el => el.scrollIntoView({ block:'center', behavior:'instant' }),el); await driver.wait(() => driver.executeScript(el => { const r=el.getBoundingClientRect(),h=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2); return !el.disabled && (h===el || el.contains(h)) },el),10000); await el.click() }
   const fill = async (selector,value) => { const el=await waitForElement(selector); await driver.wait(()=>el.isEnabled(),10000); await driver.executeScript(el=>el.scrollIntoView({block:'center',behavior:'instant'}),el); await el.sendKeys(Key.chord(Key.CONTROL,'a'),Key.BACK_SPACE); if(value) await el.sendKeys(value) }
-  const select = async (selector,label) => { await click(selector); await waitForElement('[role="option"]'); for(const el of await driver.findElements(By.css('[role="option"]'))) if((await el.getAttribute('textContent')).trim()===label) { await click(el); return } assert.fail('Missing option '+label) }
+  const select = async (selector,label) => { await click(selector); await waitForElement('[role="option"]'); await driver.wait(()=>driver.executeScript(()=>document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).every(a=>a.playState!=='running')),10000); for(const el of await driver.findElements(By.css('[role="option"]'))) if((await el.getAttribute('textContent')).trim()===label) { await click(el); await driver.wait(async()=>(await (await waitForElement(selector)).getText()).trim()===label,10000,'Wait for the actual selected format before typing'); return } assert.fail('Missing option '+label) }
   const sizes = async (name,anchor) => {
     for(const [width,height] of [[1100,700],[760,520]]) {
       await driver.manage().window().setRect({width,height}); await driver.wait(()=>driver.executeScript(w=>Math.abs(innerWidth-w)<=2,width),10000)
@@ -70,17 +70,23 @@ export async function runZpaq151Gate({ driver, bridge, waitForElement, fixtureDi
   const cancelId='zpaq-cancel-'+Date.now(),cancelOutput=path.join(work,'取消不能发布.zpaq')
   await driver.executeScript(`const [taskId,file,outputPath,options]=arguments,ids=crypto.getRandomValues(new Uint32Array(2));window.__zpaqCancelResult=null;const clean=()=>ids.forEach(id=>Reflect.deleteProperty(window,'_'+id));window['_'+ids[0]]=()=>{clean();window.__zpaqCancelResult={ok:true}};window['_'+ids[1]]=error=>{clean();window.__zpaqCancelResult={ok:false,error:String(error)}};window.__TAURI_IPC__({cmd:'compress_files',taskId,files:[file],outputPath,options,callback:ids[0],error:ids[1]});`,cancelId,large,cancelOutput,{...options,level:9,delete_after:true})
   await driver.wait(()=>readdirSync(work).some(name=>name.includes('long-compress')&&name.endsWith('取消不能发布.zpaq')),15000)
+  await ipc('pause_archive_task',{taskId:cancelId}); await driver.sleep(150)
+  const stagedName=readdirSync(work).find(name=>name.includes('long-compress')&&name.endsWith('取消不能发布.zpaq'))
+  assert.ok(stagedName); const pausedBytes=readFileSync(path.join(work,stagedName)).length
+  await driver.sleep(300); assert.equal(readFileSync(path.join(work,stagedName)).length,pausedBytes); assert.ok(!existsSync(cancelOutput))
+  await ipc('resume_archive_task',{taskId:cancelId}); await driver.sleep(100)
+  await ipc('pause_archive_task',{taskId:cancelId}); await driver.sleep(150)
   await ipc('cancel_compression',{taskId:cancelId}); const cancelled=await driver.wait(()=>driver.executeScript(()=>window.__zpaqCancelResult),30000)
   assert.equal(cancelled.ok,false); assert.match(cancelled.error,/取消|cancel/i); assert.equal(sha(large),largeHash); assert.ok(!existsSync(cancelOutput))
-  assert.ok(!readdirSync(work).some(name=>name.includes('long-compress'))); cases.push({realEncoderCancellation:true,sourcePreservedWithDeleteAfter:true,noPublishedOrStagedOutput:true})
+  assert.ok(!readdirSync(work).some(name=>name.includes('long-compress'))); cases.push({realEncoderPauseResume:true,cancelWhilePaused:true,realEncoderCancellation:true,sourcePreservedWithDeleteAfter:true,noPublishedOrStagedOutput:true})
   // User: choose a file, set ZPAQ and a password, save this reusable profile.
   await bridge('clearTasks'); await bridge('clearCompressionWorkspace'); await click('[data-testid="nav-Compress"]')
   await bridge('queueDesktopDialogSelections',[[path.join(source,'说明.txt')]]); await click('[data-testid="compression-center"] [data-testid="dropzone-file"]')
   await waitForElement('[data-testid="compression-draft-row"]')
   if(!(await driver.findElements(By.css('[data-testid="compression-draft-details"]'))).length) await click('[data-testid="compression-draft-row"] [data-testid="compression-archive-name"]')
-  await select('[data-testid="compression-format-select"]','ZPAQ'); await fill('[data-testid="compression-password-input"]',password)
+  await select('[data-testid="compression-format-select"]','ZPAQ'); console.log('[zpaq-151] selected format',await (await waitForElement('[data-testid="compression-format-select"]')).getText()); await fill('[data-testid="compression-password-input"]',password)
   const uiName='发给同事的中文资料_这个名字足够长也不能遮挡格式后缀',uiDir=path.join(work,'用户创建'); mkdirSync(uiDir)
-  await fill('[data-testid="compression-filename-input"]',uiName); await fill('[data-testid="compression-output-path"]',uiDir)
+  await fill('[data-testid="compression-filename-input"]',uiName); console.log('[zpaq-151] after filename',await (await waitForElement('[data-testid="compression-format-select"]')).getText()); await fill('[data-testid="compression-output-path"]',uiDir); console.log('[zpaq-151] after output',await (await waitForElement('[data-testid="compression-format-select"]')).getText())
   assert.equal(await (await waitForElement('[data-testid="compression-split-toggle"]')).isEnabled(),false)
   assert.equal(await (await waitForElement('[data-testid="compression-filename-extension"]')).getText(),'.zpaq')
   assert.equal((await driver.findElements(By.css('[data-testid="encrypted-7z-conversion-hint"]'))).length,0)

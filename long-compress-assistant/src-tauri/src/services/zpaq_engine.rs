@@ -51,7 +51,7 @@ async fn run(path: &Path, password: Option<&str>, output: Option<&Path>, test: b
     if test { command.arg("-test"); }
     else if let Some(output) = output { command.arg("-to").arg(output); }
     else { command.arg("-long-json"); }
-    let result = crate::utils::process::cancellable_output_with_stdin(
+    let result = crate::utils::process::cancellable_archive_output_with_stdin(
         &mut command, &cancelled, Duration::from_secs(24 * 60 * 60), Some(input(if encrypted { password } else { None }, selected)?))
         .await.map_err(|e| anyhow::anyhow!("ZPAQ 读取取消或引擎运行失败：{e}"))?;
     if !result.status.success() {
@@ -113,7 +113,7 @@ pub async fn create(sources: &[String], output: &Path, options: &crate::models::
     let method = match options.level { 0 => "04", 1..=2 => "14", 3..=4 => "24", 5..=6 => "34", 7..=8 => "44", _ => "54" };
     let mut command = crate::utils::process::async_command(tool);
     command.arg("a").arg(output).args(["-long-stdin", "-long-create", "-method", method, "-threads", "2", "-noattributes"]);
-    let result = crate::utils::process::cancellable_output_with_stdin(&mut command, &cancelled, Duration::from_secs(24*60*60), Some(data)).await
+    let result = crate::utils::process::cancellable_archive_output_with_stdin(&mut command, &cancelled, Duration::from_secs(24*60*60), Some(data)).await
         .map_err(|e| anyhow::anyhow!("ZPAQ 创建取消或引擎运行失败：{e}"))?;
     if !result.status.success() {
         let detail = format!("{}\n{}", String::from_utf8_lossy(&result.stderr), String::from_utf8_lossy(&result.stdout));

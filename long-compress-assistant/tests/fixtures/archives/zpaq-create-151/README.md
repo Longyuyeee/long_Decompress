@@ -4,8 +4,8 @@
 
 | 产物 | SHA256 |
 | --- | --- |
-| plain.zpaq | `3762fbc3ffbe9601cb2e38b1f000d6c19fbac7be8dd63a11de33c2d173b646d8` |
-| native-key.zpaq | `def0c9735dd8c0c6d15d49df554be775d240e571f3556fc3ec29f84ea01daac4` |
+| plain.zpaq | `753192eb6c159a282278eff440bebed1de5a60023b840b21261364afb0c8d36b` |
+| native-key.zpaq | `234deb3de5db3072c1cd66d36f16b17cab0cc900e0212a22f6e6e7d5c488d512` |
 
 密码为公开测试值 `中文 密码!-钥匙`，不是用户数据。归档内为 `项目 空格/`，包含 `说明.txt`、`空文件.txt`、`子目录/数据.bin` 和 `子目录/空目录/`。
 

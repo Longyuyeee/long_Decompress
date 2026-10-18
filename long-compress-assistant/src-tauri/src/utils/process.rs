@@ -36,7 +36,19 @@ pub async fn cancellable_output_with_stdin(
     timeout: std::time::Duration,
     input: Option<Vec<u8>>,
 ) -> std::io::Result<std::process::Output> {
-    output_with_stdin_mode(command, cancelled, timeout, input, 0).await
+    output_with_stdin_mode(command, cancelled, timeout, input, 0, None).await
+}
+
+/// Archive children must stop actual work when their registered task is paused,
+/// not merely wait before publication. Other media/RAR callers retain their
+/// existing runner behavior unless they explicitly use this archive channel.
+pub async fn cancellable_archive_output_with_stdin(
+    command: &mut tokio::process::Command,
+    cancelled: &std::sync::Arc<std::sync::atomic::AtomicBool>,
+    timeout: std::time::Duration,
+    input: Option<Vec<u8>>,
+) -> std::io::Result<std::process::Output> {
+    output_with_stdin_mode(command, cancelled, timeout, input, 0, Some(cancelled.clone())).await
 }
 
 /// RAR4 rc opens each surviving volume with a separate password prompt.
@@ -50,7 +62,7 @@ pub async fn cancellable_output_with_rar_prompts(
     input: Option<Vec<u8>>,
     max_prompts: usize,
 ) -> std::io::Result<std::process::Output> {
-    output_with_stdin_mode(command, cancelled, timeout, input, max_prompts.clamp(1, 512)).await
+    output_with_stdin_mode(command, cancelled, timeout, input, max_prompts.clamp(1, 512), None).await
 }
 
 async fn output_with_stdin_mode(
@@ -59,6 +71,7 @@ async fn output_with_stdin_mode(
     timeout: std::time::Duration,
     mut input: Option<Vec<u8>>,
     max_prompts: usize,
+    pause_flag: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
 ) -> std::io::Result<std::process::Output> {
     use std::{io, process::Stdio, sync::atomic::Ordering};
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -128,6 +141,16 @@ async fn output_with_stdin_mode(
             tokio::time::sleep(std::time::Duration::from_millis(10)).await;
         }
     };
+    let process_id = child.id().expect("spawned child process");
+    let pause_monitor = async {
+        let Some(flag) = pause_flag else { return std::future::pending::<io::Result<()>>().await; };
+        let mut suspended = false;
+        loop {
+            crate::services::task_control::sync_child_pause(&flag, process_id, &mut suspended)
+                .map_err(io::Error::other)?;
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+    };
     let status = tokio::select! {
         status = child.wait() => status,
         _ = cancellation => {
@@ -137,6 +160,10 @@ async fn output_with_stdin_mode(
         _ = tokio::time::sleep(timeout) => {
             let result = child.kill().await;
             result.and(Err(io::Error::new(io::ErrorKind::TimedOut, "video probe timed out")))
+        },
+        failure = pause_monitor => {
+            let _ = child.kill().await;
+            Err(failure.unwrap_err())
         },
     };
     let stdout = stdout_reader.await.map_err(io::Error::other)??;
@@ -158,6 +185,40 @@ mod tests {
         },
         time::Duration,
     };
+
+    #[tokio::test]
+    async fn archive_child_pause_stops_work_and_can_resume_then_cancel() {
+        use crate::services::task_control;
+        let task_id = format!("archive-child-pause-{}", uuid::Uuid::new_v4());
+        struct Cleanup(String);
+        impl Drop for Cleanup { fn drop(&mut self) { task_control::cleanup(&self.0); } }
+        let flag = task_control::register(&task_id).unwrap();
+        let _cleanup = Cleanup(task_id.clone());
+        let directory = tempfile::tempdir().unwrap();
+        let marker = directory.path().join("heartbeat.txt");
+        let script = format!("for ($taskTick=0; $taskTick -lt 200; $taskTick++) {{ [IO.File]::AppendAllText('{}', '.'); Start-Sleep -Milliseconds 30 }}", marker.to_string_lossy().replace('\'', "''"));
+        let worker_flag = flag.clone();
+        let worker = tokio::spawn(async move {
+            let mut child = async_command("powershell.exe");
+            child.args(["-NoProfile", "-NonInteractive", "-Command", &script]);
+            cancellable_archive_output_with_stdin(&mut child, &worker_flag, Duration::from_secs(15), None).await
+        });
+        let size = || std::fs::metadata(&marker).map(|m| m.len()).unwrap_or(0);
+        tokio::time::timeout(Duration::from_secs(8), async {
+            while size() < 4 { tokio::time::sleep(Duration::from_millis(30)).await; }
+        }).await.unwrap();
+        assert!(task_control::pause(&task_id));
+        tokio::time::sleep(Duration::from_millis(150)).await;
+        let paused_size = size();
+        tokio::time::sleep(Duration::from_millis(300)).await;
+        assert_eq!(size(), paused_size, "paused archive child must stop actual work");
+        assert!(task_control::resume(&task_id));
+        tokio::time::timeout(Duration::from_secs(3), async {
+            while size() == paused_size { tokio::time::sleep(Duration::from_millis(30)).await; }
+        }).await.unwrap();
+        assert!(task_control::cancel(&task_id));
+        assert_eq!(worker.await.unwrap().unwrap_err().kind(), std::io::ErrorKind::Interrupted);
+    }
 
     #[tokio::test]
     async fn cancellation_releases_child_file_handle_before_returning() {
