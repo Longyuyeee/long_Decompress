@@ -1,6 +1,8 @@
 # 文档导航与维护规则
 
-- **当前正式版：[v1.4.16 旧密码编码](LEGACY_ZIP_PASSWORD_ENCODING_1.4.16.md)**已封板发布，[PR #171](https://github.com/Longyuyeee/long_Decompress/pull/171) 已合入，正式标签为 `5b4c317`。438 项相关回归和真实桌面链通过；安装器、签名更新 ZIP、签名及中文更新清单已回下载核对，见[封板记录](LEGACY_ZIP_PASSWORD_FREEZE_1.4.16.md)、[中文说明](RELEASE_NOTES_1.4.16.md)及[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.16)。下一版按路线推进 v1.4.17 特殊分卷兼容，准确接续见[开发交接](DEVELOPMENT_HANDOFF.md)。
+- **当前正式版：[v1.5.10 大 EGG LZMA](EGG_LARGE_LZMA_1.5.10.md)**已封板发布，PR #201 受保护合入，正式四资产、中文说明及包内引擎回归均核对完成。准确接续见[封板记录](EGG_LARGE_LZMA_FREEZE_1.5.10.md)、[开发交接](DEVELOPMENT_HANDOFF.md)与[十版路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)；[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.10)。下一版 v1.5.11 特殊 EGG 密码组合，剩五版按序。
+
+- **历史记录：[v1.4.16 旧密码编码](LEGACY_ZIP_PASSWORD_ENCODING_1.4.16.md)**已封板发布，[PR #171](https://github.com/Longyuyeee/long_Decompress/pull/171) 已合入，正式标签为 `5b4c317`。438 项相关回归和真实桌面链通过；安装器、签名更新 ZIP、签名及中文更新清单已回下载核对，见[封板记录](LEGACY_ZIP_PASSWORD_FREEZE_1.4.16.md)、[中文说明](RELEASE_NOTES_1.4.16.md)及[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.16)。旧版“下一版”不作为当前待办。
 
 - **前版记录：[v1.4.15 封板记录](ARCHIVE_PERFORMANCE_FREEZE_1.4.15.md)**、[实施审计](ARCHIVE_PERFORMANCE_1.4.15.md)、[中文更新说明](RELEASE_NOTES_1.4.15.md)、[十二版本路线](ARCHIVE_ROADMAP_1.4.15_TO_1.5.5.md)。PR #169 及所含 PR #168 已合入，两轮改进统一由 v1.4.15 交付，不单独发布 v1.4.14；历史安装器及更新附件见[v1.4.15 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.15)。
 
