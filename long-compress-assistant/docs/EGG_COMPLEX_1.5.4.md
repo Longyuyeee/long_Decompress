@@ -29,4 +29,20 @@ AES/LEA 使用显式无损密码字节，2 字节验证器匹配后仍检查认�
 
 实际使用审计补齐解压中心批量来源编码逻辑：旧界面包含 ALZ/EGG，处理分支却只有 ZIP/ZIPX；两项定向回归先复现未应用 CP936，再修正白名单，保留其他配置和 RAR 不变。桌面验证使用真正文件选择/队列/重试；旧测试桥强制任务为 7Z，不用于证明 EGG 缺卷重试。完整组选择后移走一卷、启动失败、补回原卷和新任务才是本次缺卷接续场景。
 
-实现步骤完成 119 项不同 Rust 检查：主程序 EGG/历史 16、诊断 32、ALZ 8、卷组 9、ZIP 密码 14，helper 5、上游解析/LEA 11、AZO 24。十一文件 212 项前端及类型/构建通过。版本身份统一至 v1.5.4；普通生产初构建通过，最后补批量逻辑后仍需最终生产构建和完整桌面重跑，不将中途截图当封板结果。新的 512 MiB 原版固实 Deflate 控制包用于真实暂停/取消，原字节和生成器记录在忽略的控制目录；不注入延迟或成功。
+实现步骤完成 119 项不同 Rust 检查：主程序 EGG/历史 16、诊断 32、ALZ 8、卷组 9、ZIP 密码 14，helper 5、上游解析/LEA 11、AZO 24。十一文件 212 项前端及类型/构建通过。版本身份统一至 v1.5.4；补齐批量编码后，最终普通生产 `tauri build --bundles none` 成功，不含桌面测试桥。生成的旧 Shell DLL 替换为 1.5.4，旧资源在 Git 历史可恢复。未执行安装升级，个人安装、设置和历史未改。
+
+## 最终桌面与边界
+
+UTC `2026-10-18T04:13:20.890Z` 最终原生桌面完成 45 个场景、24 张 1100×700/760×520 页面；页面已逐张查看，问号弹层与批量配置在窗口内，窄窗保留正常纵向滚动。35 组真实原包（新增 18、原有 17）均完成浏览、检查、诊断和提取，并按独立固定载荷 SHA256 核对。包含实际中卷双击、中文 AES 所选提取、固实所选提取、错误密码纠正、历史保留编码而不保存密码、缺中卷补回后新任务、固实转换与独立 ZIP 回解、LEA 诊断，以及批量 CP936 实际应用到任务，而非仅展示对话框。见[最终桌面收据](evidence/egg-complex-1.5.4/results.json)。
+
+512 MiB 原 ALZip 固实 Deflate 控制包不注入延迟或成功。初轮只暂停了刚启动的进程，不能证明实际解码控制，因此加强断言为 CPU 已至少消耗 0.1 秒再暂停；最终实测 0.234375 秒后暂停无 CPU 进展、恢复、暂停中取消，源包保留，结果和暂存均无残留。该单点工作集不作为全程峰值或总体提速比例。原包 SHA256 `5ae2b048ac67bfbed2e69e6f5fb40b0fa2932cf04ba5fe1426b35a2d64df948f`；生成器与两个文件的固定载荷在收据中。
+
+E2E 程序 ProductVersion 1.5.4，SHA256 `a25c1daa20fdcc5227216982419886339fb690e4a258b8e37fe20ad4df8f9dd6`，不是正式安装器。实际运行 helper 895488 字节，SHA256 `774133b57408c5a52e632f45f7d37f500ffcbc4e96c1a63d334e6145c0e47ea0`，与源码库存一致；51 项依赖清单（含 helper）及 103 份实际许可随包。正式候选及发布资产另记收据，不混用哈希。
+
+维持只读范围：EGG v256、最多 1000 原生卷、250000 条目、16 MiB 单元数据字段、512 GiB 声明展开总量；AZO 单个内部块的压缩/展开各 256 MiB，LZMA 单个压缩块及固实 LZMA 整段压缩流各 256 MiB。固实 LZMA 适配器仍收集压缩流，不宣称全部方法恒定内存；共享流内混合压缩方法明确拒绝。只有加密空文件无法以实际内容确认密码，继续拒绝。CRC 不认证来源。没有加密固实、LEA 中文密码或全部方法与卷型组合的正面证据，不外推这些组合。
+
+## 换机接续
+
+先读本审计、`tools/egg-engine/src/complex.rs`、原生卷解析及 `vendor/*/LONG_MODIFICATIONS.md`。运行 `node scripts/check-release-identity.mjs --expected 1.5.4`（包含引擎库存检查）；`lock-egg-engine.mjs` 是重新生成库存的写入脚本，不是检查命令。定向 Rust 入口为主程序 `egg_`、`archive_diagnostics::tests`、`alz_engine::tests`、`split_archive_detector::tests`、`zip_password::tests`，以及 helper、unegg、libazo 各自 Cargo 测试。原包清单与独立 SHA256 在 `tests/fixtures/archives/egg-154`，不要重新生成并覆盖固定期望以求通过。
+
+原工具 ALZipCon 11.0.1.16（官方 ALZip 12.37.0.4）和独立 Bandizip 不随产品分发；生成器 SHA256 `13c664d8b809348104999efb734587e2847aab04e5511af2e5345e13d2528433`。本机在 `test-results/alzip-152-portable/app/ALZipCon.exe`，独立工具 `E:/Bandzip/Bandizip/bz.exe`。新机需另取原厂工具并核对来源，先准备原有 153 控制载荷，再运行 `prepare-egg-154-control.mjs`；新随机字节必须记新身份，不能冒充本次控制包。桌面按 `tauri.e2e.conf.json` 和 `desktop-e2e` 构建，指向独立 `target-desktop-gate` 的最终程序/实际资源，运行 `test-tauri-desktop.mjs --egg-154-only`。普通生产构建不可携带测试桥。
