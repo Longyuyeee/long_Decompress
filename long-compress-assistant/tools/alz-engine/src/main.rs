@@ -39,6 +39,14 @@ fn codec(value: Option<&str>) -> Result<&'static encoding_rs::Encoding> {
     })
 }
 
+fn password_bytes(password: &str, codec: &'static encoding_rs::Encoding) -> Result<Vec<u8>> {
+    let (bytes, _, lossy) = codec.encode(password);
+    let (round_trip, invalid) = codec.decode_without_bom_handling(&bytes);
+    ensure!(!lossy && !invalid && round_trip == password,
+        "[archive-inspection:password-encoding] [alz-password-encoding] 此密码不能无损表示为 ALZ 所选代码页 {}；未替换字符或尝试其他密码", codec.name());
+    Ok(bytes.into_owned())
+}
+
 fn open(path: &Path, codec: &'static encoding_rs::Encoding) -> Result<AlzArchive> {
     let group = alz_volumes::complete(path)?;
     let reader = MultiVolumeReader::from_paths(&group.parts).map_err(|e| map_error(e, false))?;
@@ -125,8 +133,7 @@ impl<W: Write> Write for CheckedWriter<W> {
 fn decode<W: Write>(archive: &mut AlzArchive, e: &AlzFileEntry, password: Option<&str>, codec: &'static encoding_rs::Encoding, writer: W) -> Result<()> {
     let mut crypto = if e.is_encrypted() {
         let password = password.context("[archive-inspection:password-required] ALZ 所选内容需要密码")?;
-        let (bytes, _, lossy) = codec.encode(password);
-        ensure!(!lossy, "[archive-inspection:password-encoding] [alz-password-encoding] 此密码不能无损表示为 ALZ 所选代码页 {}；未替换字符或尝试其他密码", codec.name());
+        let bytes = password_bytes(password, codec)?;
         let mut cipher = ZipCrypto::new(&bytes);
         let header = e.enc_check.context("[archive-inspection:damaged] ALZ 加密头不完整")?;
         ensure!(cipher.check_header(&header, e.file_crc, e.file_time_date, e.has_data_descriptor()),
@@ -200,4 +207,25 @@ fn main() {
     };
     println!("{value}");
     std::process::exit(code);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn rejects_codepage_aliases_not_only_unrepresentable_characters() {
+        for text in ["¥", "‾"] {
+            // encoding_rs considers these encodable; the decoded Unicode text
+            // differs. A header mismatch here must not become a wrong-key claim.
+            assert!(!encoding_rs::SHIFT_JIS.encode(text).2);
+            assert!(password_bytes(text, encoding_rs::SHIFT_JIS).unwrap_err().to_string().contains("[alz-password-encoding]"));
+        }
+    }
+    #[test]
+    fn preserves_representable_original_passwords_and_rejects_loss() {
+        for (text, codec) in [("test1234",encoding_rs::EUC_KR),("中文密码123!",encoding_rs::GBK),("日本語123",encoding_rs::SHIFT_JIS),("繁體123",encoding_rs::BIG5),("🔑 中文",encoding_rs::UTF_8)] {
+            assert_eq!(codec.decode_without_bom_handling(&password_bytes(text,codec).unwrap()).0,text);
+        }
+        assert!(password_bytes("🔑",encoding_rs::GBK).is_err());
+    }
 }

@@ -58,6 +58,11 @@ export async function runAlz152Gate({driver,bridge,failure,waitForElement,fixtur
   // Real pause/resume/kill of the decoder, not an E2E simulated task.
   const controlDir=path.join(root,'test-results/alz-152-control'),control=JSON.parse(readFileSync(path.join(controlDir,'manifest.json'),'utf8')),large=path.join(controlDir,'control.alz')
   assert.equal(sha(large),control.archiveSha256)
+  for(const alias of ['¥','‾']) {
+    const r=await invoke('verify_archive_password',{taskId:'alz-alias-'+crypto.randomUUID(),filePath:large,password:alias,zipPasswordEncoding:'cp932'})
+    assert.equal(r.ok,false);assert.match(r.error,/\[alz-password-encoding\]/);assert.match(r.error,/无损/)
+  }
+  cases.push({actualCp932AliasesRejectedBeforePasswordClaim:true})
   const controlOut=path.join(work,'取消不能发布'),taskId='alz-control-'+Date.now()
   await driver.executeScript(`const [taskId,filePath,outputPath,password,options]=arguments,ids=crypto.getRandomValues(new Uint32Array(2));window.__alzControl=null;const clean=()=>ids.forEach(id=>Reflect.deleteProperty(window,'_'+id));window['_'+ids[0]]=()=>{clean();window.__alzControl={ok:true}};window['_'+ids[1]]=error=>{clean();window.__alzControl={ok:false,error:String(error)}};window.__TAURI_IPC__({cmd:'extract_file',taskId,filePath,outputPath,password,options,callback:ids[0],error:ids[1]});`,taskId,large,controlOut,control.password,{...options,delete_after:true})
   const children=()=>{const r=spawnSync('powershell.exe',['-NoProfile','-Command',"Get-Process -Name long-alz -ErrorAction SilentlyContinue | Select-Object Id,CPU | ConvertTo-Json -Compress"],{windowsHide:true,encoding:'utf8',timeout:10000});return r.stdout.trim()?JSON.parse(r.stdout):null}
