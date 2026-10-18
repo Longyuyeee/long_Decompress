@@ -3978,6 +3978,19 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn zip_signature_preflight_is_not_stolen_by_a_tar_suffix() {
+        let temp = tempfile::tempdir().unwrap();
+        let file = temp.path().join("实际ZIP.tar.gz");
+        let mut writer = zip_aes::ZipWriter::new(std::fs::File::create(&file).unwrap());
+        writer.start_file("实际资料.txt", zip_aes::write::SimpleFileOptions::default()).unwrap();
+        writer.write_all(b"real ZIP").unwrap();
+        writer.finish().unwrap();
+        let format = crate::services::archive_browser::detect_format(&file).unwrap();
+        assert_eq!(format, ArchiveFormat::Zip);
+        assert_eq!(CompressionService::for_testing().preflight_extraction(&file, &format, None, temp.path(), &DecompressOptions::default()).await.unwrap(), Some((1, 8)));
+    }
+
+    #[tokio::test]
     async fn tar_preflight_keeps_logical_size_payload_accounting_and_cancellation() {
         let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/tar-1513/control/control.tar");
         let temp = tempfile::tempdir().unwrap();

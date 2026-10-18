@@ -68,6 +68,7 @@ import { runEgg1510Gate } from './egg-1510-gate.mjs'
 import { runEgg1511Gate } from './egg-1511-gate.mjs'
 import { runAlz1512Gate } from './alz-1512-gate.mjs'
 import { runTar1513Gate } from './tar-1513-gate.mjs'
+import { runTar1514Gate } from './tar-1514-gate.mjs'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -4921,6 +4922,9 @@ try {
     await runPartialZip1413Gate({ driver, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, forwardContextAction })
   } else if (process.argv.includes('--lzip-only')) {
     await runLzip1412Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, root })
+    completedSuccessfully = true
+  } else if (process.argv.includes('--tar-1514-only')) {
+    await runTar1514Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, application, root, bundledSevenZip })
     completedSuccessfully = true
   } else if (process.argv.includes('--tar-1513-only')) {
     await runTar1513Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, application, root, bundledSevenZip })

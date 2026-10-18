@@ -311,19 +311,8 @@ pub async fn browse_archive_cancellable_with_encoding(
     }
     ensure_not_cancelled(&cancelled)?;
     let path = super::split_archive_detector::SplitArchiveDetector::complete_source(path)?;
-    let logical = if super::numeric_volume_reader::ZipInputReader::is_numeric_first(&path) { Path::new(path.file_stem().unwrap()) } else { &path };
-    let name = logical
-        .file_name()
-        .and_then(|value| value.to_str())
-        .unwrap_or("")
-        .to_ascii_lowercase();
-    let is_tar_family = [
-        ".tar", ".ova", ".tar.gz", ".tgz", ".tpz", ".tar.bz2", ".tbz", ".tbz2",
-        ".tar.xz", ".txz", ".tar.zst", ".tzst", ".tar.lz4", ".tar.br", ".tar.lz", ".tlz",
-    ]
-    .iter()
-    .any(|suffix| name.ends_with(suffix));
     let format = detect_format(&path)?;
+    let is_tar_family = super::tar_compatibility::integrity_route(&path, &format).is_some();
     let password = password.map(str::to_string);
     let operation_cancelled = cancelled.clone();
     let operation = async move {
@@ -344,8 +333,10 @@ pub async fn browse_archive_cancellable_with_encoding(
         {
             let native_cancelled = operation_cancelled.clone();
             return tauri::async_runtime::spawn_blocking(move || {
-                if let Some(result) = browse_tar_family(&path, &native_cancelled)? {
-                    return Ok(result);
+                if is_tar_family && format != ArchiveFormat::Tar {
+                    if let Some(result) = browse_tar_family(&path, &native_cancelled)? {
+                        return Ok(result);
+                    }
                 }
                 match format {
                     ArchiveFormat::Tar => browse_tar_reader(super::numeric_volume_reader::ZipInputReader::open(&path)?, "TAR", &native_cancelled),
