@@ -31,3 +31,15 @@ EGG helper 升至 0.3.0。LZMA 用独立十三字节标准头串接 Take 限长�
 测试搭建中的目录选择队列并不覆盖此处的原生选择器；最初未断言目录生效，造成历史查询不到预期目录。最终改用真实双栏文件浏览器输入路径，再从「常用目录」选择，并先断言任务输出路径；未给产品添加测试专用成功分支。帮助弹层按实际行为在窗口尺寸变化后重新点击打开；旧失败运行不计最终通过，不改产品关闭弹层的行为或降低断言。
 
 本版未修改产品 UI。窄窗保持现有纵向滚动和详情双栏，失败原因可读，没有横向页面溢出；不宣称所有页面无需滚动。EGG 单个大文件的细粒度实时百分比仍未补齐，实页暂停时可能显示 0%，因此控制证据采用实际输出写入，而不是把界面百分比作为已解码数据证明。此限制与本版解除整块输入缓冲不同，不冒称已交付 RAR 同级原生字节进度。
+
+## 换机复核顺序
+
+命令从 `long-compress-assistant` 执行，先保留已有原件，不要删除个人目录或修改旧证据来得到绿灯。原厂 ALZipCon 放于 `test-results/alzip-152-portable/app/ALZipCon.exe`，生成脚本会校验其 SHA-256；独立 Bandizip 命令位置在脚本中明确为 `E:/Bandzip/Bandizip/bz.exe`，新机器需按实际安装位置调整测试工具路径并记录工具身份。
+
+1. `node scripts/prepare-egg-1510.mjs`：存在清单时只核对原件不重建；新生成的原包另记身份，再独立回解核对固定载荷。
+2. `node scripts/verify-egg-1510.mjs`：需存在不可变 `v1.5.9` 标签，恢复旧 helper 作真实拒绝对比；每次输出到独立 runId 目录，不覆盖旧结果。生成 CRC/尾部故障副本，保留原件。
+3. `cargo test --manifest-path vendor/unegg/Cargo.toml --lib`，应用侧按 EGG、浏览、事务、压缩命令及历史实际测试模块执行；前端为 ArchiveBrowserView、DecompressView、taskFailure 与 useTauriCommands 四文件。测试数量是本轮快照，后续应按实际断言增减，不强行配数字。
+4. 设置 `VITE_DESKTOP_E2E=1`，执行 `node node_modules/@tauri-apps/cli/tauri.js build --features desktop-e2e --bundles none`，随后清除此环境变量。将 `TAURI_APP_BINARY` 指向 `src-tauri/target/release/Long解压.exe`，运行 `node scripts/test-tauri-desktop.mjs --egg-1510-only`，完成后清除变量。使用现有 tauri-driver/匹配的 EdgeDriver，全部操作与 SQL 数据位于隔离测试实例，不改个人数据。
+5. 桌面通过后逐张查看新截图，再以无 E2E 环境变量/特性的 `node node_modules/@tauri-apps/cli/tauri.js build --bundles none` 构建普通生产。证据按新时间与程序哈希另存，不能覆盖本次已发布证据或把新程序冒称同一身份。
+
+本次发行收据中的 E2E、本地生产、候选和正式主程序分别标识；包内 helper 字节一致才能复用本轮大原包证据。候选/正式包另外实际运行包内 helper 读取 35 组既有 EGG 原包。安装器内容检查不等于安装升级实跑，本轮未对个人安装做升级。
