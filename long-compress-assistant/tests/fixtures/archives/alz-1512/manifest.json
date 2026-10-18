@@ -1,0 +1,700 @@
+{
+  "createdAt": "2026-10-18T15:28:53.230Z",
+  "producer": {
+    "url": "https://advert.estsoft.com/?event=200803276378987",
+    "version": "ALZipCon 11.0.1.16 in ALZip 12.37.0.4",
+    "sha256": "13c664d8b809348104999efb734587e2847aab04e5511af2e5345e13d2528433"
+  },
+  "independent": {
+    "version": "Bandizip 7.38 Beta",
+    "sha256": "d69bc4d2605f0ecac20e8cfae11e313fb011649ed7f182cfcb25d6be73dcf4e2"
+  },
+  "data": "Self-authored public fixed payload; positive originals unchanged, derived fault groups explicitly separate",
+  "unsupportedMethod3": "No original method-3 positive archive obtained; current m3 requests exit 0 without producing an archive. Do not substitute altered method-2 data.",
+  "attempts": [
+    {
+      "name": "m1-plain-single",
+      "arguments": [
+        "-a",
+        "-m1"
+      ],
+      "producerExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "m1-plain-volumes",
+      "arguments": [
+        "-a",
+        "-m1",
+        "-v64KB"
+      ],
+      "producerExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "m1-key-single",
+      "arguments": [
+        "-a",
+        "-m1",
+        "-p中文密码1512!"
+      ],
+      "producerExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "m1-key-volumes",
+      "arguments": [
+        "-a",
+        "-m1",
+        "-v64KB",
+        "-p中文密码1512!"
+      ],
+      "producerExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "m2-plain-single",
+      "arguments": [
+        "-a",
+        "-m2"
+      ],
+      "producerExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "m2-plain-volumes",
+      "arguments": [
+        "-a",
+        "-m2",
+        "-v64KB"
+      ],
+      "producerExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "m2-key-single",
+      "arguments": [
+        "-a",
+        "-m2",
+        "-p中文密码1512!"
+      ],
+      "producerExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "m2-key-volumes",
+      "arguments": [
+        "-a",
+        "-m2",
+        "-v64KB",
+        "-p中文密码1512!"
+      ],
+      "producerExitCode": 0,
+      "produced": true
+    },
+    {
+      "name": "m3-plain-single",
+      "arguments": [
+        "-a",
+        "-m3"
+      ],
+      "producerExitCode": 0,
+      "produced": false
+    },
+    {
+      "name": "m3-plain-volumes",
+      "arguments": [
+        "-a",
+        "-m3",
+        "-v64KB"
+      ],
+      "producerExitCode": 0,
+      "produced": false
+    },
+    {
+      "name": "m3-key-single",
+      "arguments": [
+        "-a",
+        "-m3",
+        "-p中文密码1512!"
+      ],
+      "producerExitCode": 0,
+      "produced": false
+    },
+    {
+      "name": "m3-key-volumes",
+      "arguments": [
+        "-a",
+        "-m3",
+        "-v64KB",
+        "-p中文密码1512!"
+      ],
+      "producerExitCode": 0,
+      "produced": false
+    }
+  ],
+  "cases": [
+    {
+      "name": "m1-plain-single",
+      "method": 1,
+      "actualMethods": [
+        2,
+        0
+      ],
+      "password": null,
+      "encoding": "cp936",
+      "volumes": false,
+      "archive": "originals/m1-plain-single/m1-plain-single.alz",
+      "members": [
+        {
+          "name": "originals/m1-plain-single/m1-plain-single.alz",
+          "bytes": 262739,
+          "sha256": "2be9917f69f3fd2a28a58f249263f3e0edd8d7854c80af044bba817bca4853c6"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01payload.bin",
+          "bytes": 262144,
+          "sha256": "8ac63acaa46a52d1e0b973529018a14e1464b31e5674d64947855de4f0335f2d"
+        },
+        {
+          "path": "文档/99说明.txt",
+          "bytes": 38000,
+          "sha256": "e87fa364c3e341f4ba7fcddac368a91cc2f619263719ada337d67a63d2308106"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "name": "m1-plain-volumes",
+      "method": 1,
+      "actualMethods": [
+        2,
+        0
+      ],
+      "password": null,
+      "encoding": "cp936",
+      "volumes": true,
+      "archive": "originals/m1-plain-volumes/m1-plain-volumes.alz",
+      "members": [
+        {
+          "name": "originals/m1-plain-volumes/m1-plain-volumes.alz",
+          "bytes": 65536,
+          "sha256": "e9fdae869102e65332848c9ac96ad8a1f521e32544439d512b3ce1419d928db3"
+        },
+        {
+          "name": "originals/m1-plain-volumes/m1-plain-volumes.a00",
+          "bytes": 65536,
+          "sha256": "21043646b32d9238d64e4f19c1b23462a81b132c8b74f76189f2d4db2907b228"
+        },
+        {
+          "name": "originals/m1-plain-volumes/m1-plain-volumes.a01",
+          "bytes": 65536,
+          "sha256": "ea604d02a260bbcb38eeadd8d713e6eff0667bd037e7e9be803f6cdf43fa5112"
+        },
+        {
+          "name": "originals/m1-plain-volumes/m1-plain-volumes.a02",
+          "bytes": 65536,
+          "sha256": "0695a99a65fae4b7dbe6b17546146428c07326286b6db181458cecb91c828dc4"
+        },
+        {
+          "name": "originals/m1-plain-volumes/m1-plain-volumes.a03",
+          "bytes": 691,
+          "sha256": "406e20d2a2cd73e1b65f9575690d7aeaecccc64a72a1316cc4db42b5ac504626"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01payload.bin",
+          "bytes": 262144,
+          "sha256": "8ac63acaa46a52d1e0b973529018a14e1464b31e5674d64947855de4f0335f2d"
+        },
+        {
+          "path": "文档/99说明.txt",
+          "bytes": 38000,
+          "sha256": "e87fa364c3e341f4ba7fcddac368a91cc2f619263719ada337d67a63d2308106"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "name": "m1-key-single",
+      "method": 1,
+      "actualMethods": [
+        2,
+        0
+      ],
+      "password": "中文密码1512!",
+      "encoding": "cp936",
+      "volumes": false,
+      "archive": "originals/m1-key-single/m1-key-single.alz",
+      "members": [
+        {
+          "name": "originals/m1-key-single/m1-key-single.alz",
+          "bytes": 262763,
+          "sha256": "51a9b2980cdb7e6de175e96036198e8cfe446771ea4ae3b3911821377ccb020f"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01payload.bin",
+          "bytes": 262144,
+          "sha256": "8ac63acaa46a52d1e0b973529018a14e1464b31e5674d64947855de4f0335f2d"
+        },
+        {
+          "path": "文档/99说明.txt",
+          "bytes": 38000,
+          "sha256": "e87fa364c3e341f4ba7fcddac368a91cc2f619263719ada337d67a63d2308106"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "name": "m1-key-volumes",
+      "method": 1,
+      "actualMethods": [
+        2,
+        0
+      ],
+      "password": "中文密码1512!",
+      "encoding": "cp936",
+      "volumes": true,
+      "archive": "originals/m1-key-volumes/m1-key-volumes.alz",
+      "members": [
+        {
+          "name": "originals/m1-key-volumes/m1-key-volumes.alz",
+          "bytes": 65536,
+          "sha256": "580e7aabf75253fd117d4d89b7d9da960d75ba644e0609d5e00322ea059bad1d"
+        },
+        {
+          "name": "originals/m1-key-volumes/m1-key-volumes.a00",
+          "bytes": 65536,
+          "sha256": "6e5812e5492cd6704c3cac38ccd60b8fa4dfb11cf786a3c8ec00bd2faa878d5b"
+        },
+        {
+          "name": "originals/m1-key-volumes/m1-key-volumes.a01",
+          "bytes": 65536,
+          "sha256": "58c2d0ca5ec656c45501568ac1335a9c57833fda2f6332e490ad4dbd552c1a95"
+        },
+        {
+          "name": "originals/m1-key-volumes/m1-key-volumes.a02",
+          "bytes": 65536,
+          "sha256": "799adb369b07cbf49b61925d5b923c7a3f3b83bab455f736a537b91d4de8d5b0"
+        },
+        {
+          "name": "originals/m1-key-volumes/m1-key-volumes.a03",
+          "bytes": 715,
+          "sha256": "0d2a391558c80fedd81d711f9fc970dd318a8c19ca26f8c803be04f264963567"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01payload.bin",
+          "bytes": 262144,
+          "sha256": "8ac63acaa46a52d1e0b973529018a14e1464b31e5674d64947855de4f0335f2d"
+        },
+        {
+          "path": "文档/99说明.txt",
+          "bytes": 38000,
+          "sha256": "e87fa364c3e341f4ba7fcddac368a91cc2f619263719ada337d67a63d2308106"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "name": "m2-plain-single",
+      "method": 2,
+      "actualMethods": [
+        2,
+        0
+      ],
+      "password": null,
+      "encoding": "cp936",
+      "volumes": false,
+      "archive": "originals/m2-plain-single/m2-plain-single.alz",
+      "members": [
+        {
+          "name": "originals/m2-plain-single/m2-plain-single.alz",
+          "bytes": 262601,
+          "sha256": "78c3eafd2663ea34edaba56a437ced6d956a10ea1c82ad4a8d2cd63c2a3fcedd"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01payload.bin",
+          "bytes": 262144,
+          "sha256": "8ac63acaa46a52d1e0b973529018a14e1464b31e5674d64947855de4f0335f2d"
+        },
+        {
+          "path": "文档/99说明.txt",
+          "bytes": 38000,
+          "sha256": "e87fa364c3e341f4ba7fcddac368a91cc2f619263719ada337d67a63d2308106"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "name": "m2-plain-volumes",
+      "method": 2,
+      "actualMethods": [
+        2,
+        0
+      ],
+      "password": null,
+      "encoding": "cp936",
+      "volumes": true,
+      "archive": "originals/m2-plain-volumes/m2-plain-volumes.alz",
+      "members": [
+        {
+          "name": "originals/m2-plain-volumes/m2-plain-volumes.alz",
+          "bytes": 65536,
+          "sha256": "723268817e8c7fd80c8ac1b64d7293947326d67294f0cbeebdddf382a37fe6e1"
+        },
+        {
+          "name": "originals/m2-plain-volumes/m2-plain-volumes.a00",
+          "bytes": 65536,
+          "sha256": "5ad40bb48a07bae3579cf4282bb064e75c901a5b1c8b5ffb0241a1ab0b0e8075"
+        },
+        {
+          "name": "originals/m2-plain-volumes/m2-plain-volumes.a01",
+          "bytes": 65536,
+          "sha256": "b3b096481edd581f7fd5e1e8bb3bcbaa6a9d2399b81bd008ddb4f22f270ce15a"
+        },
+        {
+          "name": "originals/m2-plain-volumes/m2-plain-volumes.a02",
+          "bytes": 65536,
+          "sha256": "5b7287142c7e4b8ea8976aeafd334bf1c771fb2c789deff0ae7db0f01adf9f37"
+        },
+        {
+          "name": "originals/m2-plain-volumes/m2-plain-volumes.a03",
+          "bytes": 553,
+          "sha256": "f902ed9712506ad3e45ececf9d507206a766cf8e03ffda06e2a5d945b38b17e4"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01payload.bin",
+          "bytes": 262144,
+          "sha256": "8ac63acaa46a52d1e0b973529018a14e1464b31e5674d64947855de4f0335f2d"
+        },
+        {
+          "path": "文档/99说明.txt",
+          "bytes": 38000,
+          "sha256": "e87fa364c3e341f4ba7fcddac368a91cc2f619263719ada337d67a63d2308106"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "name": "m2-key-single",
+      "method": 2,
+      "actualMethods": [
+        2,
+        0
+      ],
+      "password": "中文密码1512!",
+      "encoding": "cp936",
+      "volumes": false,
+      "archive": "originals/m2-key-single/m2-key-single.alz",
+      "members": [
+        {
+          "name": "originals/m2-key-single/m2-key-single.alz",
+          "bytes": 262625,
+          "sha256": "5d5eb60a8b70b7aa650461935946d1d3109c970d52e39ccca0fa2035a3b268af"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01payload.bin",
+          "bytes": 262144,
+          "sha256": "8ac63acaa46a52d1e0b973529018a14e1464b31e5674d64947855de4f0335f2d"
+        },
+        {
+          "path": "文档/99说明.txt",
+          "bytes": 38000,
+          "sha256": "e87fa364c3e341f4ba7fcddac368a91cc2f619263719ada337d67a63d2308106"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "name": "m2-key-volumes",
+      "method": 2,
+      "actualMethods": [
+        2,
+        0
+      ],
+      "password": "中文密码1512!",
+      "encoding": "cp936",
+      "volumes": true,
+      "archive": "originals/m2-key-volumes/m2-key-volumes.alz",
+      "members": [
+        {
+          "name": "originals/m2-key-volumes/m2-key-volumes.alz",
+          "bytes": 65536,
+          "sha256": "4149a1a077b6828ea116b18aba66ec6f0604ec03f73156235243cfa4ac2abc77"
+        },
+        {
+          "name": "originals/m2-key-volumes/m2-key-volumes.a00",
+          "bytes": 65536,
+          "sha256": "e9da43ff8a7052ac9262cd9b21ffbeb100d89c7cdd2c687d290bb351491e6104"
+        },
+        {
+          "name": "originals/m2-key-volumes/m2-key-volumes.a01",
+          "bytes": 65536,
+          "sha256": "f67ea0b1e6331c4590232f64072597d89612cdadb06b587badca19669cba0c6d"
+        },
+        {
+          "name": "originals/m2-key-volumes/m2-key-volumes.a02",
+          "bytes": 65536,
+          "sha256": "deb49a6c831cc464b52af7543efe08d0de57c4ec25aac8acfdf91df786b60d40"
+        },
+        {
+          "name": "originals/m2-key-volumes/m2-key-volumes.a03",
+          "bytes": 577,
+          "sha256": "f0ef5a35d9485b5eb59589d44980afeb90ff1adbed9c1f0a8a57bb81ec788776"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01payload.bin",
+          "bytes": 262144,
+          "sha256": "8ac63acaa46a52d1e0b973529018a14e1464b31e5674d64947855de4f0335f2d"
+        },
+        {
+          "path": "文档/99说明.txt",
+          "bytes": 38000,
+          "sha256": "e87fa364c3e341f4ba7fcddac368a91cc2f619263719ada337d67a63d2308106"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ],
+  "faults": [
+    {
+      "name": "m1-plain-single-trailing",
+      "from": "m1-plain-single",
+      "derived": true,
+      "mutation": "Insert bytes after the Deflate end marker inside its declared compressed range; retain original payload CRC and size",
+      "extra": 5,
+      "archive": "faults/m1-plain-single-trailing/m1-plain-single.alz",
+      "password": null,
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "faults/m1-plain-single-trailing/m1-plain-single.alz",
+          "sha256": "43e49087e317d5463e9a1533e29b814a1080b125b6e938bf5ad7b5ad15d1b5d1"
+        }
+      ]
+    },
+    {
+      "name": "m1-plain-volumes-trailing",
+      "from": "m1-plain-volumes",
+      "derived": true,
+      "mutation": "Insert bytes after the Deflate end marker inside its declared compressed range; retain original payload CRC and size",
+      "extra": 5,
+      "archive": "faults/m1-plain-volumes-trailing/m1-plain-volumes.alz",
+      "password": null,
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "faults/m1-plain-volumes-trailing/m1-plain-volumes.alz",
+          "sha256": "e9fdae869102e65332848c9ac96ad8a1f521e32544439d512b3ce1419d928db3"
+        },
+        {
+          "name": "faults/m1-plain-volumes-trailing/m1-plain-volumes.a00",
+          "sha256": "21043646b32d9238d64e4f19c1b23462a81b132c8b74f76189f2d4db2907b228"
+        },
+        {
+          "name": "faults/m1-plain-volumes-trailing/m1-plain-volumes.a01",
+          "sha256": "ea604d02a260bbcb38eeadd8d713e6eff0667bd037e7e9be803f6cdf43fa5112"
+        },
+        {
+          "name": "faults/m1-plain-volumes-trailing/m1-plain-volumes.a02",
+          "sha256": "0695a99a65fae4b7dbe6b17546146428c07326286b6db181458cecb91c828dc4"
+        },
+        {
+          "name": "faults/m1-plain-volumes-trailing/m1-plain-volumes.a03",
+          "sha256": "1e2f6463ac843ad120604ac6e4ea04add53fd65581a8337aa32819419be1388a"
+        }
+      ]
+    },
+    {
+      "name": "m1-key-single-trailing",
+      "from": "m1-key-single",
+      "derived": true,
+      "mutation": "Insert bytes after the Deflate end marker inside its declared compressed range; retain original payload CRC and size",
+      "extra": 65536,
+      "archive": "faults/m1-key-single-trailing/m1-key-single.alz",
+      "password": "中文密码1512!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "faults/m1-key-single-trailing/m1-key-single.alz",
+          "sha256": "89cdd9a16826d51705d11b2920fbb405016ae925729f9a8de0b08dfb388263cb"
+        }
+      ]
+    },
+    {
+      "name": "m1-key-volumes-trailing",
+      "from": "m1-key-volumes",
+      "derived": true,
+      "mutation": "Insert bytes after the Deflate end marker inside its declared compressed range; retain original payload CRC and size",
+      "extra": 65536,
+      "archive": "faults/m1-key-volumes-trailing/m1-key-volumes.alz",
+      "password": "中文密码1512!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "faults/m1-key-volumes-trailing/m1-key-volumes.alz",
+          "sha256": "eb8954fed70607bdce8598d4444c41511b892ea365d4bf5c8d8196cd02b83385"
+        },
+        {
+          "name": "faults/m1-key-volumes-trailing/m1-key-volumes.a00",
+          "sha256": "6e5812e5492cd6704c3cac38ccd60b8fa4dfb11cf786a3c8ec00bd2faa878d5b"
+        },
+        {
+          "name": "faults/m1-key-volumes-trailing/m1-key-volumes.a01",
+          "sha256": "58c2d0ca5ec656c45501568ac1335a9c57833fda2f6332e490ad4dbd552c1a95"
+        },
+        {
+          "name": "faults/m1-key-volumes-trailing/m1-key-volumes.a02",
+          "sha256": "799adb369b07cbf49b61925d5b923c7a3f3b83bab455f736a537b91d4de8d5b0"
+        },
+        {
+          "name": "faults/m1-key-volumes-trailing/m1-key-volumes.a03",
+          "sha256": "c5ad01d2accaf66a44c1fab25920f6bd06492641bc00d1081e9d8ae4017a7605"
+        }
+      ]
+    },
+    {
+      "name": "m2-plain-single-trailing",
+      "from": "m2-plain-single",
+      "derived": true,
+      "mutation": "Insert bytes after the Deflate end marker inside its declared compressed range; retain original payload CRC and size",
+      "extra": 5,
+      "archive": "faults/m2-plain-single-trailing/m2-plain-single.alz",
+      "password": null,
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "faults/m2-plain-single-trailing/m2-plain-single.alz",
+          "sha256": "72a3d78e5e812daccfe430014ca4517f593b57a464ac20abaa6bc8c265b79699"
+        }
+      ]
+    },
+    {
+      "name": "m2-plain-volumes-trailing",
+      "from": "m2-plain-volumes",
+      "derived": true,
+      "mutation": "Insert bytes after the Deflate end marker inside its declared compressed range; retain original payload CRC and size",
+      "extra": 5,
+      "archive": "faults/m2-plain-volumes-trailing/m2-plain-volumes.alz",
+      "password": null,
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "faults/m2-plain-volumes-trailing/m2-plain-volumes.alz",
+          "sha256": "723268817e8c7fd80c8ac1b64d7293947326d67294f0cbeebdddf382a37fe6e1"
+        },
+        {
+          "name": "faults/m2-plain-volumes-trailing/m2-plain-volumes.a00",
+          "sha256": "5ad40bb48a07bae3579cf4282bb064e75c901a5b1c8b5ffb0241a1ab0b0e8075"
+        },
+        {
+          "name": "faults/m2-plain-volumes-trailing/m2-plain-volumes.a01",
+          "sha256": "b3b096481edd581f7fd5e1e8bb3bcbaa6a9d2399b81bd008ddb4f22f270ce15a"
+        },
+        {
+          "name": "faults/m2-plain-volumes-trailing/m2-plain-volumes.a02",
+          "sha256": "5b7287142c7e4b8ea8976aeafd334bf1c771fb2c789deff0ae7db0f01adf9f37"
+        },
+        {
+          "name": "faults/m2-plain-volumes-trailing/m2-plain-volumes.a03",
+          "sha256": "2ceb3fd0f23eaa4f49e17c6d155a7dee1590c139aeb906ee32c0a1f8e3f6580d"
+        }
+      ]
+    },
+    {
+      "name": "m2-key-single-trailing",
+      "from": "m2-key-single",
+      "derived": true,
+      "mutation": "Insert bytes after the Deflate end marker inside its declared compressed range; retain original payload CRC and size",
+      "extra": 65536,
+      "archive": "faults/m2-key-single-trailing/m2-key-single.alz",
+      "password": "中文密码1512!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "faults/m2-key-single-trailing/m2-key-single.alz",
+          "sha256": "b881cda2766ee508eca9273fd5cc04f947155702410756da02858a6d8987e8d9"
+        }
+      ]
+    },
+    {
+      "name": "m2-key-volumes-trailing",
+      "from": "m2-key-volumes",
+      "derived": true,
+      "mutation": "Insert bytes after the Deflate end marker inside its declared compressed range; retain original payload CRC and size",
+      "extra": 65536,
+      "archive": "faults/m2-key-volumes-trailing/m2-key-volumes.alz",
+      "password": "中文密码1512!",
+      "encoding": "cp936",
+      "members": [
+        {
+          "name": "faults/m2-key-volumes-trailing/m2-key-volumes.alz",
+          "sha256": "a73f6a7b5efb02c15427311dfd16c1fbd92861351f25ff9543863d2877666a99"
+        },
+        {
+          "name": "faults/m2-key-volumes-trailing/m2-key-volumes.a00",
+          "sha256": "e9da43ff8a7052ac9262cd9b21ffbeb100d89c7cdd2c687d290bb351491e6104"
+        },
+        {
+          "name": "faults/m2-key-volumes-trailing/m2-key-volumes.a01",
+          "sha256": "f67ea0b1e6331c4590232f64072597d89612cdadb06b587badca19669cba0c6d"
+        },
+        {
+          "name": "faults/m2-key-volumes-trailing/m2-key-volumes.a02",
+          "sha256": "deb49a6c831cc464b52af7543efe08d0de57c4ec25aac8acfdf91df786b60d40"
+        },
+        {
+          "name": "faults/m2-key-volumes-trailing/m2-key-volumes.a03",
+          "sha256": "beaa07cf20988196dcb6f5b43aa02d7566a502d821feb456e07e58e7d4108342"
+        }
+      ]
+    }
+  ]
+}

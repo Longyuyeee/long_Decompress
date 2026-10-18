@@ -98,6 +98,27 @@ mod tests {
     use sha2::Digest;
     fn root() -> PathBuf { PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/alz-152") }
     fn flag() -> Arc<AtomicBool> { Arc::new(AtomicBool::new(false)) }
+    fn stream_root() -> PathBuf { root().parent().unwrap().join("alz-1512") }
+    #[tokio::test]
+    async fn alz_original_deflate_stream_matrix_and_selected_payloads() {
+        let m:serde_json::Value=serde_json::from_slice(&std::fs::read(stream_root().join("manifest.json")).unwrap()).unwrap();
+        assert_eq!(m["cases"].as_array().unwrap().len(),8);
+        for c in m["cases"].as_array().unwrap() {
+            let source=stream_root().join(c["archive"].as_str().unwrap());let password=c["password"].as_str();
+            let options=DecompressOptions{zip_password_encoding:Some(ZipPasswordEncoding::Cp936),..Default::default()};
+            verify(&source,password,&options,flag()).await.unwrap();let out=tempfile::tempdir().unwrap();extract(&source,out.path(),password,&options,flag()).await.unwrap();
+            for e in c["expected"].as_array().unwrap(){let b=std::fs::read(out.path().join(e["path"].as_str().unwrap())).unwrap();assert_eq!(hex::encode(sha2::Sha256::digest(&b)),e["sha256"].as_str().unwrap());}
+            assert!(out.path().join("空目录").is_dir());let selected=DecompressOptions{selected_entries:vec!["文档/99说明.txt".into()],..options};let out=tempfile::tempdir().unwrap();extract(&source,out.path(),password,&selected,flag()).await.unwrap();assert!(out.path().join("文档/99说明.txt").is_file());assert!(!out.path().join("01payload.bin").exists());
+        }
+    }
+    #[tokio::test]
+    async fn alz_deflate_trailing_data_is_damage_after_full_crc_not_a_password_retry() {
+        let m:serde_json::Value=serde_json::from_slice(&std::fs::read(stream_root().join("manifest.json")).unwrap()).unwrap();assert_eq!(m["faults"].as_array().unwrap().len(),8);
+        for c in m["faults"].as_array().unwrap(){let source=stream_root().join(c["archive"].as_str().unwrap());let options=DecompressOptions{zip_password_encoding:Some(ZipPasswordEncoding::Cp936),..Default::default()};let password=c["password"].as_str();
+            let error=verify(&source,password,&options,flag()).await.unwrap_err().to_string();assert!(error.contains("[archive-inspection:damaged]")&&error.contains("尾部")&&error.contains("CRC"),"{error}");
+            if let Some(password)=password {let error=try_password(&source,password,&options,flag()).await.unwrap_err().to_string();assert!(error.contains("[archive-inspection:damaged]"),"{error}");assert!(!try_password(&source,"wrong",&options,flag()).await.unwrap());}
+        }
+    }
     fn copied_split(dir: &Path) -> Vec<PathBuf> {
         ["split_store.alz", "split_store.a00", "split_store.a01"].into_iter().map(|n| {
             let p = dir.join(n); std::fs::copy(root().join(n), &p).unwrap(); p
