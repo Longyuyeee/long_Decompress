@@ -35,6 +35,8 @@
 
 ## 换机复跑与接续
 
+首候选 Windows package 成功，但包检查脚本按 UTF-8 读取了 7-Zip 默认控制台编码的中文主程序名，未找到成员，检查失败。明确 `-sccUTF-8` 后按真实中文名称核对，不改产品文件名、不忽略主程序检查；候选重新构建和收据以最终记录为准，功能冻结不变。
+
 十五组固定原包、清单、独立载荷和许可均在 `tests/fixtures/archives/sfx-155`，包含原 EXE 字节。测试只读取 EXE。核对原包可运行 `node scripts/create-sfx-155-fixtures.mjs`，但需要清单中的 RAR 6.24、RAR 7.23、7-Zip 24.09 原生产工具和随附独立 7-Zip；该脚本保留已有原包，不能在没有工具时用改名或新文件替代旧证据。常规内容/归组回归见 `sfx_archive::tests`，不依赖执行生产工具。
 
 大控制包未入 Git，准确九卷、源载荷哈希和生产器身份已在桌面收据 `control` 字段保留。本机 `test-results/sfx-155-control/manifest.json` 对应 256 MiB 源载荷 `1a04258f4db4d37deb6804f922cdb9740756353babd645b4c23ec77b7d058279`。新机先按 EGG 控制包准备脚本生成自己的载荷，再运行 `node scripts/prepare-sfx-155-control.mjs`；重生成须使用新身份，不冒称本轮相同字节。原源载荷/原卷如需完全复跑，应按收据传递并逐项核对。

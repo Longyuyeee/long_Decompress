@@ -7,7 +7,7 @@ import path from 'node:path'
 export function inspectSfxInstaller(installer,destination){
   mkdirSync(destination,{recursive:true})
   const seven=path.resolve('src-tauri/resources/archive-engine/7z.exe'),sha=b=>createHash('sha256').update(b).digest('hex')
-  const listing=execFileSync(seven,['l','-slt',installer],{encoding:'utf8',maxBuffer:8*1024*1024})
+  const listing=execFileSync(seven,['l','-slt','-sccUTF-8',installer],{encoding:'utf8',maxBuffer:8*1024*1024})
   const paths=[...listing.matchAll(/^Path = (.+)\r?$/gm)].map(m=>m[1].trim()),wanted=['archive-engine/licenses/UnRAR-License.txt','archive-engine/SOURCE.md'],members=new Map()
   for(const name of wanted){const matches=paths.filter(p=>p.replaceAll('\\','/').endsWith(name));assert.equal(matches.length,1,name);members.set(name,matches[0])}
   const mains=paths.filter(p=>p.replaceAll('\\','/').split('/').pop()==='Long解压.exe');assert.equal(mains.length,1)
