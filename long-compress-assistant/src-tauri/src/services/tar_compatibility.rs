@@ -423,6 +423,15 @@ pub(crate) fn plan(
 mod tests {
     use super::*;
     use std::io::Cursor;
+    #[test]
+    fn tar_suffix_must_not_override_a_known_non_tar_signature() {
+        use super::super::archive_format::ArchiveFormat as F;
+        for name in ["用户下载.tar", "用户下载.tar.gz", "用户下载.tar.xz"] {
+            for format in [F::Zip, F::SevenZip, F::Rar, F::AesEncrypted] {
+                assert!(integrity_route(Path::new(name), &format).is_none(), "{name}: {format:?}");
+            }
+        }
+    }
     fn decode(pax: &[(&str, &[u8])], payload: &[u8]) -> io::Result<Vec<u8>> {
         let mut writer = tar::Builder::new(Vec::new());
         writer.append_pax_extensions(pax.iter().copied())?;

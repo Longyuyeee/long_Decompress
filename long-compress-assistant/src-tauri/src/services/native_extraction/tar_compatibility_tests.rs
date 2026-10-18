@@ -65,6 +65,21 @@ fn fixture() -> (PathBuf, serde_json::Value) {
     (p, m)
 }
 
+#[tokio::test]
+async fn original_zip_with_mistaken_tar_suffix_keeps_its_real_integrity_route() {
+    let temp = tempfile::tempdir().unwrap();
+    let mut writer = zip_aes::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+    writer.start_file("实际资料.txt", zip_aes::write::SimpleFileOptions::default()).unwrap();
+    writer.write_all("文件内容必须按真实 ZIP 读取".as_bytes()).unwrap();
+    let original = writer.finish().unwrap().into_inner();
+    for name in ["用户误命名.tar", "用户误命名.tar.gz", "用户误命名.tar.xz"] {
+        let file = temp.path().join(name);
+        std::fs::write(&file, &original).unwrap();
+        assert_eq!(crate::services::archive_browser::detect_format(&file).unwrap(), crate::services::archive_format::ArchiveFormat::Zip);
+        crate::services::universal_engine::UniversalCliEngine::test_integrity(&file, None).await.unwrap();
+    }
+}
+
 #[test]
 fn logical_plan_counts_validated_sparse_payload_without_reading_holes() {
     let (base, m) = fixture();
