@@ -1,0 +1,31 @@
+{
+  "checkedAt": "2026-10-18T07:54:26.579Z",
+  "functionalFreeze": "aed3eca1983c1a4cb52ff5a32d64cd80a0011cd9",
+  "candidateCommit": "7f86d2a331cd1e2cc97d9268d35a51256713ffb5",
+  "candidateRun": 39108553925,
+  "candidateTree": "45e4e18c28da3cbf865809a1d60a5e1f66944283",
+  "installer": "Long解压_1.5.6_x64-setup.exe",
+  "installerBytes": 20924958,
+  "installerSha256": "139e398d782d96e956dc98dd34777e0e589bd80e9fa544cac7ee706bae7a9693",
+  "installerProductVersion": "1.5.6",
+  "packagedMain": {
+    "mainProductVersion": "1.5.6",
+    "mainBytes": 33821696,
+    "mainSha256": "394e6d51207fed5fa1dc25ffd27008081a4c01b0920ee42296a88ee2db2b174c",
+    "notices": [
+      {
+        "name": "archive-engine/licenses/UnRAR-License.txt",
+        "bytes": 1976,
+        "sha256": "6ecc1687808b7d66b24f874755abfed7464d9751ed0001cd4e8e5d9bf397ff8a"
+      },
+      {
+        "name": "archive-engine/SOURCE.md",
+        "bytes": 1874,
+        "sha256": "bd73f593a116af37f1a9b4ffda1df2d98b1d3cf6a91f8ec05a7e1d5108b5df95"
+      }
+    ],
+    "installationExecuted": false,
+    "productionSfxRuntimeExecuted": false,
+    "note": "Native SFX functionality is verified by the separately identified desktop E2E binary; this receipt checks the ordinary packaged main executable and exact UnRAR notice/source disclosure."
+  }
+}

@@ -1,6 +1,14 @@
 # 开发交接
 
-## 最新：v1.5.6 功能封板，进入发布（2026-10-18）
+## 最新：v1.5.6 已正式发布，接续 7Z 方法兼容（2026-10-18）
+
+功能冻结 `aed3eca1983c1a4cb52ff5a32d64cd80a0011cd9`，最终候选 `7f86d2a331cd1e2cc97d9268d35a51256713ffb5`。RAR 实际解码字节替代预分配估算，原生卷续块不重复计总量；速度/剩余时间/新历史耗时扣除暂停，事务只统计本次产出，修复解压中心将正常取消改写为失败。49 项不同 Rust、133 项前端、类型检查、12 个真实桌面场景和 8 张常用/窄窗页面通过。256 MiB 控制包原生累计 `192476802`、比例约 71.70%，暂停 2288 ms 全扣，历史实际 337 ms；停止后队列和历史均 cancelled，原卷保留、无暂存或半成品。见[实施审计](RAR_PROGRESS_1.5.6.md)、[封板记录](RAR_PROGRESS_FREEZE_1.5.6.md)及[桌面证据](evidence/rar-progress-1.5.6/results.json)。
+
+[PR #193](https://github.com/Longyuyeee/long_Decompress/pull/193) 已受保护合入。标签 `0fe351edb3a06a2da0abc4d7266b3cb7037baf0d` 与候选同树 `45e4e18c28da3cbf865809a1d60a5e1f66944283`，不移动标签。必需候选 CI `39108553925`、主线 CI `39109385376`、正式构建 `39109391315` 均成功。[v1.5.6](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.6) 于 UTC `2026-10-18T08:09:41Z`（北京时间 16:09:41）发布；四资产、中文说明、更新 ZIP 内安装器、签名/地址/时间及包内主程序/引擎说明已回下载核对，见[候选](evidence/rar-progress-1.5.6/candidate.json)与[正式收据](evidence/rar-progress-1.5.6/release.json)。未执行安装升级，个人安装、设置和历史不修改。E2E、普通本地程序、候选与正式包身份各记，不混用。
+
+十版路线已交付一版，剩九版；下一轮按[路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)推进 v1.5.7，不另起重复规划。先读 `vendor/sevenz-rust/src/decoders.rs`、`reader.rs`、主应用 Cargo 特性和 `native_extraction/seven_zip.rs`、浏览/检查/转换路径：当前仅显式 aes256，Bzip2/Zstd 分支受未启用可选特性控制，PPMd/Deflate 缺解码分支；已有 BCJ2 不重复算新增。先取原版 7-Zip 固定载荷和普通/密码/固实/数字卷原包，确认具体失败，再补实现或只针对明确不支持方法回退，不用错密/损坏盲目重试。UI 仍必须实看常用/窄窗，每轮推至封板发布。智能目录/ZIP 并行默认关闭，不恢复快速打包，Windows N 暂不保证支持。
+
+## 历史：v1.5.6 功能封板，进入发布（2026-10-18）
 
 从 `5dc0211` 接续，实现 `4defc88`、同目录与取消纠偏 `564c7a9`，最终功能与测试冻结 `aed3eca`。RAR 原生实际解码字节、续块不重复计总量、暂停刷新与扣时、事务实际发布量，以及停止竞态均已完成。49 项不同 Rust、133 项前端、类型检查、12 个真实桌面场景及 8 张常用/窄窗实看页面通过。详见[实施审计](RAR_PROGRESS_1.5.6.md)、[封板记录](RAR_PROGRESS_FREEZE_1.5.6.md)与[机器证据](evidence/rar-progress-1.5.6/results.json)。
 
