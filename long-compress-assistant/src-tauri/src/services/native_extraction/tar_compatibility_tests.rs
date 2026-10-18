@@ -65,6 +65,71 @@ fn fixture() -> (PathBuf, serde_json::Value) {
     (p, m)
 }
 
+#[tokio::test]
+async fn original_zip_with_mistaken_tar_suffix_keeps_its_real_integrity_route() {
+    let temp = tempfile::tempdir().unwrap();
+    let mut writer = zip_aes::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+    writer
+        .start_file("实际资料.txt", zip_aes::write::SimpleFileOptions::default())
+        .unwrap();
+    writer
+        .write_all("文件内容必须按真实 ZIP 读取".as_bytes())
+        .unwrap();
+    let original = writer.finish().unwrap().into_inner();
+    for name in ["用户误命名.tar", "用户误命名.tar.gz", "用户误命名.tar.xz"] {
+        let file = temp.path().join(name);
+        std::fs::write(&file, &original).unwrap();
+        assert_eq!(
+            crate::services::archive_browser::detect_format(&file).unwrap(),
+            crate::services::archive_format::ArchiveFormat::Zip
+        );
+        crate::services::universal_engine::UniversalCliEngine::test_integrity(&file, None)
+            .await
+            .unwrap();
+        let browse = crate::services::archive_browser::browse_archive(&file, None)
+            .await
+            .unwrap();
+        assert_eq!(browse.format, "ZIP");
+        assert_eq!(browse.total_files, 1);
+        let preview =
+            crate::services::archive_preview::preview_archive_text(&file, "实际资料.txt", None)
+                .await
+                .unwrap();
+        assert_eq!(preview.content, "文件内容必须按真实 ZIP 读取");
+        assert_eq!(std::fs::read(&file).unwrap(), original);
+    }
+}
+
+#[tokio::test]
+async fn real_tar_signature_with_mistaken_wrapped_or_zip_suffix_stays_raw_tar() {
+    let (base, m) = fixture();
+    let temp = tempfile::tempdir().unwrap();
+    for name in ["实际TAR.zip", "实际TAR.tar.gz", "实际TAR.bin"] {
+        let file = temp.path().join(name);
+        std::fs::copy(base.join("pax10.tar"), &file).unwrap();
+        let browse = crate::services::archive_browser::browse_archive(&file, None)
+            .await
+            .unwrap();
+        assert_eq!(browse.format, "TAR");
+        assert_eq!(browse.total_files, 5);
+        assert_eq!(browse.total_uncompressed_size, 8521131);
+        crate::services::universal_engine::UniversalCliEngine::test_integrity(&file, None)
+            .await
+            .unwrap();
+        let preview = crate::services::archive_preview::preview_archive_text(
+            &file,
+            m["longName"].as_str().unwrap(),
+            None,
+        )
+        .await
+        .unwrap();
+        assert_eq!(
+            preview.content,
+            "用户只要这份长路径说明。\nPAX / GNU long name.\n"
+        );
+    }
+}
+
 #[test]
 fn logical_plan_counts_validated_sparse_payload_without_reading_holes() {
     let (base, m) = fixture();

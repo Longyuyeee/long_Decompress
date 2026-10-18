@@ -23,16 +23,18 @@ pub(crate) fn integrity_route(
         path
     };
     let route = compression_route(&infer_compression_format(&logical.to_string_lossy(), None))?;
+    // A suffix describes the inner container, never overrides known magic.
+    // Raw TAR was handled above, including a TAR with a misleading suffix.
+    use super::archive_format::ArchiveFormat as F;
     matches!(
-        route,
-        Route::Tar
-            | Route::TarGzip
-            | Route::TarBzip2
-            | Route::TarXz
-            | Route::TarZstd
-            | Route::TarLz4
-            | Route::TarBrotli
-            | Route::TarLzip
+        (route, format),
+        (Route::TarGzip, F::Gzip)
+            | (Route::TarBzip2, F::Bzip2)
+            | (Route::TarXz, F::Xz)
+            | (Route::TarZstd, F::Zstd)
+            | (Route::TarLz4, F::Lz4)
+            | (Route::TarBrotli, F::Brotli)
+            | (Route::TarLzip, F::Lzip)
     )
     .then_some(route)
 }
@@ -423,6 +425,18 @@ pub(crate) fn plan(
 mod tests {
     use super::*;
     use std::io::Cursor;
+    #[test]
+    fn tar_suffix_must_not_override_a_known_non_tar_signature() {
+        use super::super::archive_format::ArchiveFormat as F;
+        for name in ["用户下载.tar", "用户下载.tar.gz", "用户下载.tar.xz"] {
+            for format in [F::Zip, F::SevenZip, F::Rar, F::AesEncrypted] {
+                assert!(
+                    integrity_route(Path::new(name), &format).is_none(),
+                    "{name}: {format:?}"
+                );
+            }
+        }
+    }
     fn decode(pax: &[(&str, &[u8])], payload: &[u8]) -> io::Result<Vec<u8>> {
         let mut writer = tar::Builder::new(Vec::new());
         writer.append_pax_extensions(pax.iter().copied())?;

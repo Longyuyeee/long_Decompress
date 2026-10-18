@@ -194,49 +194,20 @@ fn read_tar_text_entry<R: Read>(reader: R, entry_path: &str) -> Result<TextBytes
 }
 
 fn preview_format(path: &Path) -> Result<&'static str> {
-    if super::sfx_archive::is_executable_path(path)
-        && super::archive_browser::detect_format(path)? == ArchiveFormat::Zip {
-        return Ok("ZIP");
+    use super::compression_format::CompressionRoute as Route;
+    let format = super::archive_browser::detect_format(path)?;
+    if format == ArchiveFormat::Zip { return Ok("ZIP"); }
+    match super::tar_compatibility::integrity_route(path, &format) {
+        Some(Route::Tar) => Ok("TAR"),
+        Some(Route::TarGzip) => Ok("TAR.GZ"),
+        Some(Route::TarBzip2) => Ok("TAR.BZ2"),
+        Some(Route::TarXz) => Ok("TAR.XZ"),
+        Some(Route::TarZstd) => Ok("TAR.ZST"),
+        Some(Route::TarLz4) => Ok("TAR.LZ4"),
+        Some(Route::TarBrotli) => Ok("TAR.BR"),
+        Some(Route::TarLzip) => Ok("TAR.LZIP"),
+        _ => anyhow::bail!("Safe bounded preview is currently available for ZIP and TAR-family archives only"),
     }
-    let logical = if super::numeric_volume_reader::ZipInputReader::is_numeric_first(path) { Path::new(path.file_stem().unwrap()) } else { path };
-    let name = logical
-        .file_name()
-        .and_then(|value| value.to_str())
-        .unwrap_or("")
-        .to_ascii_lowercase();
-    if name.ends_with(".tar") || name.ends_with(".ova") {
-        return Ok("TAR");
-    }
-    if name.ends_with(".tar.gz") || name.ends_with(".tgz") || name.ends_with(".tpz") {
-        return Ok("TAR.GZ");
-    }
-    if name.ends_with(".tar.bz2") || name.ends_with(".tbz") || name.ends_with(".tbz2") {
-        return Ok("TAR.BZ2");
-    }
-    if name.ends_with(".tar.xz") || name.ends_with(".txz") {
-        return Ok("TAR.XZ");
-    }
-    if name.ends_with(".tar.zst") || name.ends_with(".tzst") {
-        return Ok("TAR.ZST");
-    }
-
-    if name.ends_with(".tar.lz4") { return Ok("TAR.LZ4"); }
-    if name.ends_with(".tar.br") { return Ok("TAR.BR"); }
-    if name.ends_with(".tar.lz") || name.ends_with(".tlz") { return Ok("TAR.LZIP"); }
-    let mut header = [0u8; 560];
-    let file = super::numeric_volume_reader::ZipInputReader::open(path)?;
-    if matches!(&file, super::numeric_volume_reader::ZipInputReader::StandardZip(_)) {
-        return Ok("ZIP");
-    }
-    let mut bytes = Vec::with_capacity(header.len());
-    file.take(header.len() as u64).read_to_end(&mut bytes)?;
-    let read = bytes.len(); header[..read].copy_from_slice(&bytes);
-    if ArchiveFormat::from_magic(&header[..read]) == ArchiveFormat::Zip {
-        return Ok("ZIP");
-    }
-    anyhow::bail!(
-        "Safe bounded preview is currently available for ZIP and TAR-family archives only"
-    )
 }
 
 fn read_tar_family(path: &Path, format: &str, entry_path: &str) -> Result<Vec<u8>> {
