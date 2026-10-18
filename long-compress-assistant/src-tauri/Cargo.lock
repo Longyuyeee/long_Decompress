@@ -3323,7 +3323,7 @@ checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
 
 [[package]]
 name = "long-compress-assistant"
-version = "1.5.6"
+version = "1.5.7"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -5418,12 +5418,16 @@ dependencies = [
  "aes 0.8.4",
  "bit-set 0.6.0",
  "byteorder",
+ "bzip2 0.4.4",
  "cbc",
  "crc",
+ "deflate64",
  "filetime_creation",
+ "flate2",
  "js-sys",
  "lzma-rust",
  "nt-time",
+ "ppmd-rust",
  "rand 0.8.5",
  "sha2",
  "wasm-bindgen",

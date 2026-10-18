@@ -207,6 +207,7 @@ impl SevenZMethod {
     pub const ID_ZSTD: &'static [u8] = &[4, 247, 17, 1];
     pub const ID_DEFLATE: &'static [u8] = &[0x04, 0x01, 0x08];
     pub const ID_DEFLATE64: &'static [u8] = &[0x04, 0x01, 0x09];
+    pub const ID_PPMD: &'static [u8] = &[0x03, 0x04, 0x01];
 
     pub const ID_BCJ_X86: &'static [u8] = &[0x03, 0x03, 0x01, 0x03];
     pub const ID_BCJ_PPC: &'static [u8] = &[0x03, 0x03, 0x02, 0x05];
@@ -227,6 +228,7 @@ impl SevenZMethod {
 
     pub const DEFLATE: Self = Self("DEFLATE", Self::ID_DEFLATE);
     pub const DEFLATE64: Self = Self("DEFLATE64", Self::ID_DEFLATE64);
+    pub const PPMD: Self = Self("PPMD", Self::ID_PPMD);
 
     pub const BZIP2: Self = Self("BZIP2", Self::ID_BZIP2);
     pub const AES256SHA256: Self = Self("AES256SHA256", Self::ID_AES256SHA256);
@@ -247,6 +249,7 @@ impl SevenZMethod {
         &Self::LZMA2,
         &Self::DEFLATE,
         &Self::DEFLATE64,
+        &Self::PPMD,
         &Self::BZIP2,
         &Self::AES256SHA256,
         &Self::BCJ_X86_FILTER,

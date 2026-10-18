@@ -61,6 +61,7 @@ import { runEgg153Gate } from './egg-153-gate.mjs'
 import { runEgg154Gate } from './egg-154-gate.mjs'
 import { runSfx155Gate } from './sfx-155-gate.mjs'
 import { runRar156Gate } from './rar-156-gate.mjs'
+import { runSevenz157Gate } from './sevenz-157-gate.mjs'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -4914,6 +4915,9 @@ try {
     await runPartialZip1413Gate({ driver, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, forwardContextAction })
   } else if (process.argv.includes('--lzip-only')) {
     await runLzip1412Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, root })
+    completedSuccessfully = true
+  } else if (process.argv.includes('--sevenz-157-only')) {
+    await runSevenz157Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, application, root, bundledSevenZip })
     completedSuccessfully = true
   } else if (process.argv.includes('--rar-156-only')) {
     await runRar156Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, application, root })

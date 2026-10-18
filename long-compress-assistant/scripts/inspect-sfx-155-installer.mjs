@@ -4,11 +4,11 @@ import {execFileSync} from 'node:child_process'
 import {readFileSync,mkdirSync} from 'node:fs'
 import {createHash} from 'node:crypto'
 import path from 'node:path'
-export function inspectSfxInstaller(installer,destination,expectedVersion='1.5.5'){
+export function inspectSfxInstaller(installer,destination,expectedVersion='1.5.5',additionalNotices=[]){
   mkdirSync(destination,{recursive:true})
   const seven=path.resolve('src-tauri/resources/archive-engine/7z.exe'),sha=b=>createHash('sha256').update(b).digest('hex')
   const listing=execFileSync(seven,['l','-slt','-sccUTF-8',installer],{encoding:'utf8',maxBuffer:8*1024*1024})
-  const paths=[...listing.matchAll(/^Path = (.+)\r?$/gm)].map(m=>m[1].trim()),wanted=['archive-engine/licenses/UnRAR-License.txt','archive-engine/SOURCE.md'],members=new Map()
+  const paths=[...listing.matchAll(/^Path = (.+)\r?$/gm)].map(m=>m[1].trim()),wanted=['archive-engine/licenses/UnRAR-License.txt','archive-engine/SOURCE.md',...additionalNotices],members=new Map()
   for(const name of wanted){const matches=paths.filter(p=>p.replaceAll('\\','/').endsWith(name));assert.equal(matches.length,1,name);members.set(name,matches[0])}
   const mains=paths.filter(p=>p.replaceAll('\\','/').split('/').pop()==='Long解压.exe');assert.equal(mains.length,1)
   execFileSync(seven,['x','-y','-o'+destination,installer,...members.values(),mains[0]],{maxBuffer:4*1024*1024})

@@ -21,6 +21,12 @@ pub enum Decoder<R: Read> {
     LZMA2(LZMA2Reader<R>),
     BCJ(SimpleReader<R>),
     Delta(DeltaReader<R>),
+    #[cfg(feature = "additional-codecs")]
+    Deflate(flate2::read::DeflateDecoder<R>),
+    #[cfg(feature = "additional-codecs")]
+    Deflate64(deflate64::Deflate64Decoder<std::io::BufReader<R>>),
+    #[cfg(feature = "additional-codecs")]
+    Ppmd(ppmd_rust::Ppmd7Decoder<R>),
     #[cfg(feature = "zstd")]
     ZSTD(zstd::Decoder<'static, std::io::BufReader<R>>),
     #[cfg(feature = "bzip2")]
@@ -48,6 +54,12 @@ impl<R: Read> Read for Decoder<R> {
             Decoder::LZMA2(r) => r.read(buf),
             Decoder::BCJ(r) => r.read(buf),
             Decoder::Delta(r) => r.read(buf),
+            #[cfg(feature = "additional-codecs")]
+            Decoder::Deflate(r) => r.read(buf),
+            #[cfg(feature = "additional-codecs")]
+            Decoder::Deflate64(r) => r.read(buf),
+            #[cfg(feature = "additional-codecs")]
+            Decoder::Ppmd(r) => r.read(buf),
             #[cfg(feature = "bzip2")]
             Decoder::BZip2(r) => r.read(buf),
             #[cfg(feature = "aes256")]
@@ -74,6 +86,27 @@ pub fn add_decoder<I: Read>(
     };
     match method.id() {
         SevenZMethod::ID_COPY => Ok(Decoder::COPY(input)),
+        #[cfg(feature = "additional-codecs")]
+        SevenZMethod::ID_DEFLATE => Ok(Decoder::Deflate(flate2::read::DeflateDecoder::new(input))),
+        #[cfg(feature = "additional-codecs")]
+        SevenZMethod::ID_DEFLATE64 => Ok(Decoder::Deflate64(deflate64::Deflate64Decoder::new(input))),
+        #[cfg(feature = "additional-codecs")]
+        SevenZMethod::ID_PPMD => {
+            // 7z PPMdH properties: one order byte and a LE u32 arena size.
+            // Keep the caller's memory limit and reject properties before allocation.
+            if coder.properties.len() != 5 {
+                return Err(Error::other("Invalid PPMd properties length"));
+            }
+            let order = coder.properties[0] as u32;
+            let memory = u32::from_le_bytes(coder.properties[1..5].try_into().unwrap());
+            let memory_kb = (memory as usize).div_ceil(1024);
+            if memory_kb > max_mem_limit_kb {
+                return Err(Error::MaxMemLimited { max_kb: max_mem_limit_kb, actaul_kb: memory_kb });
+            }
+            let decoder = ppmd_rust::Ppmd7Decoder::new(input, order, memory)
+                .map_err(|error| Error::other(format!("PPMd decoder: {error}")))?;
+            Ok(Decoder::Ppmd(decoder))
+        }
         #[cfg(feature = "zstd")]
         SevenZMethod::ID_ZSTD => {
             let zs = zstd::Decoder::new(input).unwrap();
@@ -173,4 +206,38 @@ fn get_lzma2_dic_size(coder: &Coder) -> Result<u32, Error> {
 fn get_lzma_dic_size(coder: &Coder) -> Result<u32, Error> {
     let mut props = &coder.properties[1..5];
     props.read_u32::<LittleEndian>().map_err(Error::io)
+}
+
+#[cfg(all(test, feature = "additional-codecs"))]
+mod additional_codec_tests {
+    use super::*;
+
+    fn ppmd(properties: Vec<u8>) -> Coder {
+        let mut coder = Coder::default();
+        coder.id_size = 3;
+        coder.properties = properties;
+        coder.decompression_method_id_mut().copy_from_slice(SevenZMethod::ID_PPMD);
+        coder
+    }
+
+    #[test]
+    fn ppmd_bad_property_lengths_do_not_panic_or_allocate() {
+        for size in [0, 1, 4, 6] {
+            assert!(matches!(add_decoder(&b""[..], 10, &ppmd(vec![0; size]), &[], 1024), Err(Error::Other(_))));
+        }
+    }
+
+    #[test]
+    fn ppmd_memory_limit_is_checked_before_decoder_initialization() {
+        let coder = ppmd(vec![6, 0, 0, 32, 0]);
+        assert!(matches!(add_decoder(&b""[..], 10, &coder, &[], 1024),
+            Err(Error::MaxMemLimited { max_kb: 1024, actaul_kb: 2048 })));
+    }
+
+    #[test]
+    fn ppmd_invalid_order_and_arena_are_errors() {
+        for props in [vec![0, 0, 0, 16, 0], vec![6, 0, 0, 0, 0]] {
+            assert!(matches!(add_decoder(&b""[..], 10, &ppmd(props), &[], 32768), Err(Error::Other(_))));
+        }
+    }
 }

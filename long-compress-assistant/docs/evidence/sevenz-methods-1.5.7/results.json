@@ -1,0 +1,588 @@
+{
+  "completedAt": "2026-10-18T09:04:19.250Z",
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
+  "binarySha256": "7643d4aecfe610ee7e5eb3cf6b7d2cc12308aa70bbdda5503c6d0d8982407b19",
+  "cases": [
+    {
+      "original": "ppmd-plain",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "missingTailBeforePassword": false,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "original": "ppmd-plain-solid",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "missingTailBeforePassword": false,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "original": "ppmd-contents-solid",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": false,
+      "missingTailBeforePassword": false,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "original": "ppmd-headers-volumes",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": true,
+      "missingTailBeforePassword": true,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "original": "deflate-plain",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "missingTailBeforePassword": false,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "original": "deflate-plain-solid",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "missingTailBeforePassword": false,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "original": "deflate-contents-solid",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": false,
+      "missingTailBeforePassword": false,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "original": "deflate-headers-volumes",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": true,
+      "missingTailBeforePassword": true,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "original": "deflate64-plain",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "missingTailBeforePassword": false,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "original": "deflate64-plain-solid",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "missingTailBeforePassword": false,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "original": "deflate64-contents-solid",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": false,
+      "missingTailBeforePassword": false,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "original": "deflate64-headers-volumes",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": true,
+      "missingTailBeforePassword": true,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "original": "bzip2-plain",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "missingTailBeforePassword": false,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "original": "bzip2-plain-solid",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "missingTailBeforePassword": false,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "original": "bzip2-contents-solid",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": false,
+      "missingTailBeforePassword": false,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "original": "bzip2-headers-volumes",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": true,
+      "conversionIndependentReadback": true,
+      "missingTailBeforePassword": true,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "original": "lzma2-plain-solid",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "missingTailBeforePassword": false,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "original": "bcj2-plain-solid",
+      "browse": true,
+      "integrity": true,
+      "whole": true,
+      "solidSelected": true,
+      "wrongPasswordRejected": null,
+      "conversionIndependentReadback": false,
+      "missingTailBeforePassword": false,
+      "outputHashes": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        }
+      ]
+    },
+    {
+      "corruptMethod": "ppmd",
+      "finalError": "解压失败: [archive-inspection:damaged] 7Z 数据损坏或不完整，未通过解码/完整性校验；请重新下载或补齐原始分卷，更换密码无法修复未加密的数据。详细原因：Io(Custom { kind: UnexpectedEof, error: \"ChecksumVerificationFailed\" }, \"ChecksumVerificationFailed\")",
+      "noPublishedOutput": true
+    },
+    {
+      "corruptMethod": "deflate",
+      "finalError": "解压失败: [archive-inspection:damaged] 7Z 数据损坏或不完整，未通过解码/完整性校验；请重新下载或补齐原始分卷，更换密码无法修复未加密的数据。详细原因：Io(Custom { kind: Other, error: \"ChecksumVerificationFailed\" }, \"ChecksumVerificationFailed\")",
+      "noPublishedOutput": true
+    },
+    {
+      "corruptMethod": "deflate64",
+      "finalError": "解压失败: [archive-inspection:damaged] 7Z 数据损坏或不完整，未通过解码/完整性校验；请重新下载或补齐原始分卷，更换密码无法修复未加密的数据。详细原因：Io(Custom { kind: Other, error: \"ChecksumVerificationFailed\" }, \"ChecksumVerificationFailed\")",
+      "noPublishedOutput": true
+    },
+    {
+      "corruptMethod": "bzip2",
+      "finalError": "解压失败: [archive-inspection:damaged] 7Z 数据损坏或不完整，未通过解码/完整性校验；请重新下载或补齐原始分卷，更换密码无法修复未加密的数据。详细原因：Io(Custom { kind: InvalidInput, error: \"bzip2: invalid data\" }, \"bzip2: invalid data\")",
+      "noPublishedOutput": true
+    },
+    {
+      "actualMiddleVolumeQueue": true,
+      "actualPasswordCorrection": true,
+      "oldFailureRetained": true
+    },
+    {
+      "actualPasswordBrowser": true,
+      "actualSelectedExtraction": true,
+      "actualHistoryPage": true
+    },
+    {
+      "actualEncryptedPpmdConversion": true,
+      "independentZipHashes": true
+    }
+  ],
+  "screenshots": [
+    "sevenz157-password-correction-1100x700.png",
+    "sevenz157-password-correction-760x520.png",
+    "sevenz157-browser-1100x700.png",
+    "sevenz157-browser-760x520.png",
+    "sevenz157-real-history-1100x700.png",
+    "sevenz157-real-history-760x520.png",
+    "sevenz157-conversion-1100x700.png",
+    "sevenz157-conversion-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "sevenz157-password-correction",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "sevenz157-password-correction",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "sevenz157-browser",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "sevenz157-browser",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "sevenz157-real-history",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "sevenz157-real-history",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "sevenz157-conversion",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "sevenz157-conversion",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "originalsUnchanged": true
+}
