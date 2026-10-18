@@ -1,10 +1,10 @@
 # 归档格式支持等级（当前权威口径）
 
-更新时间：2026-10-18（当前正式版 v1.5.6）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级。下载见 [v1.5.6 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.6)，历次能力按对应实现和实际产物记录。
+更新时间：2026-10-18（当前正式版 v1.5.7）。此文档定义 README、设置中心和发布说明使用“支持”一词时的证据等级。下载见 [v1.5.7 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.7)，历次能力按对应实现和实际产物记录。
 
 ## 当前边界速查（覆盖下方历次演变描述）
 
-- v1.5.7 功能已封板、正在发布：7Z 的 PPMdH、Deflate、Deflate64、Bzip2 原生读取，含本轮原包验证的密码/固实/数字卷组合。61 项 Rust、150 项前端、25 场景及 8 张实看页面通过；既有 LZMA2/BCJ2 仅回归，不宣称支持 7Z Zstd、新过滤器或所有方法组合。见[审计](SEVENZ_METHODS_1.5.7.md)及[封板记录](SEVENZ_METHODS_FREEZE_1.5.7.md)。
+- v1.5.7 已正式发布：7Z 的 PPMdH、Deflate、Deflate64、Bzip2 原生读取，含本轮原包验证的密码/固实/数字卷组合。61 项 Rust、150 项前端、25 场景及 8 张实看页面通过，正式四资产/中文说明已回下载核对；既有 LZMA2/BCJ2 仅回归，不宣称支持 7Z Zstd、新过滤器或所有方法组合。见[审计](SEVENZ_METHODS_1.5.7.md)及[封板记录](SEVENZ_METHODS_FREEZE_1.5.7.md)。
 
 - v1.5.6 已正式交付既有 RAR 读取流程修正：原生解码字节、原生卷逻辑总量、暂停扣时、同目录本次实际产出及正常取消状态。49 项 Rust、133 项前端、12 个真实桌面场景、8 张实看页面和正式四资产核对通过；不新增 RAR 格式、模块或编码器，字节读满不等于 CRC/事务成功。见[本版审计](RAR_PROGRESS_1.5.6.md)和[封板记录](RAR_PROGRESS_FREEZE_1.5.6.md)。
 

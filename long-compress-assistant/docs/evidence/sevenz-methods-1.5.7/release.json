@@ -1,0 +1,72 @@
+{
+  "verifiedAt": "2026-10-18T09:44:46.581Z",
+  "tag": "v1.5.7",
+  "tagCommit": "ebbc85ee2a433fe353149a0e1b35d9bf8062b850",
+  "functionalFreeze": "933af4e242e8cc51da3f8ef7a198c9b90be30680",
+  "candidateCommit": "08e0261c7af3d3de45029a479a04cafc18487c0f",
+  "candidateRun": 39114168020,
+  "releaseRun": 39115375061,
+  "url": "https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.7",
+  "publishedAt": "2026-10-18T09:41:56Z",
+  "installerProductVersion": "1.5.7",
+  "assets": [
+    {
+      "name": "Long-Decompress_1.5.7_x64-setup.exe",
+      "bytes": 20938420,
+      "sha256": "a111cdfc8e2a400196dab5d6bf5db4659a6a74b82dba2e27bb8980bad1ec72d6",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.7/Long-Decompress_1.5.7_x64-setup.exe"
+    },
+    {
+      "name": "Long-Decompress_1.5.7_x64-setup.nsis.zip",
+      "bytes": 20938578,
+      "sha256": "bfc0d5db1d7d6063222c28a445467f8d242c67303c81dd1f9f2f8757481222ca",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.7/Long-Decompress_1.5.7_x64-setup.nsis.zip"
+    },
+    {
+      "name": "Long-Decompress_1.5.7_x64-setup.nsis.zip.sig",
+      "bytes": 428,
+      "sha256": "194f91444103bd42bdb6332d67f77d26fad0d241316bede69af7f27ca9f805ed",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.7/Long-Decompress_1.5.7_x64-setup.nsis.zip.sig"
+    },
+    {
+      "name": "latest.json",
+      "bytes": 2083,
+      "sha256": "9aa68772897285c9d3247268b9bee62476c0cd2270a936c7c1df29e568bf6aa8",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.7/latest.json"
+    }
+  ],
+  "updaterExeMatchesInstaller": true,
+  "signatureMatchesManifest": true,
+  "chineseNotesMatch": true,
+  "onlyManifestNotesChanged": true,
+  "packagedMain": {
+    "mainProductVersion": "1.5.7",
+    "mainBytes": 33859584,
+    "mainSha256": "f8186e138eb23b77baf7c047b313c886d5b40fad2391d5d869c403335174d66f",
+    "notices": [
+      {
+        "name": "archive-engine/licenses/UnRAR-License.txt",
+        "bytes": 1976,
+        "sha256": "6ecc1687808b7d66b24f874755abfed7464d9751ed0001cd4e8e5d9bf397ff8a"
+      },
+      {
+        "name": "archive-engine/SOURCE.md",
+        "bytes": 2390,
+        "sha256": "e60e4d5cbd60b255a80dc078fbfd318561354a489ce93cb3d14496ce37d858cf"
+      },
+      {
+        "name": "archive-engine/licenses/sevenz-rust-Apache-2.0.txt",
+        "bytes": 11556,
+        "sha256": "5ad8c213095c573921d7388edf93f6a9f54490b8ebf3b165ae8ef1947cf70846"
+      },
+      {
+        "name": "archive-engine/licenses/ppmd-rust-MIT-0.md",
+        "bytes": 916,
+        "sha256": "5574529c6fc6bb5f1dba17056a3ae5fb5cac51bc50ae4d7cd146e13b708fe0ff"
+      }
+    ],
+    "installationExecuted": false,
+    "productionSfxRuntimeExecuted": false,
+    "note": "This receipt checks the ordinary packaged main executable and four exact source/license notices only. Native 7Z functionality is verified by the separately identified desktop E2E results, not by executing this installer. The legacy productionSfxRuntimeExecuted field remains false; no SFX runtime claim is made here."
+  }
+}

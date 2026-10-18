@@ -1,12 +1,14 @@
 # 开发交接
 
-## 最新：v1.5.7 功能封板，进入发布（2026-10-18）
+## 最新：v1.5.7 已正式发布，接续更多 SFX 模块（2026-10-18）
 
 从 `b9b5292` 接续，原包/范围 `600881c`，实现 `9d588f3`，最终功能与测试冻结 `933af4e242e8cc51da3f8ef7a198c9b90be30680`。补齐 7Z 中 PPMdH、Deflate、Deflate64 并启用 Bzip2 的原生流式读取；18 组原版 7-Zip 固定原包覆盖普通/固实/内容密码/文件名密码数字卷，整包/过滤/所选、浏览、检查与转换按真实内容核对。方法不支持与输出 I/O 不误作错密，未加密损坏保留明确最终原因。61 项不同 Rust、150 项前端、类型检查、25 场景及 8 张常用/窄窗实看页面通过，普通生产构建通过，个人安装和数据不动。见[审计](SEVENZ_METHODS_1.5.7.md)、[封板](SEVENZ_METHODS_FREEZE_1.5.7.md)、[最终桌面证据](evidence/sevenz-methods-1.5.7/results.json)和[构建检查](evidence/sevenz-methods-1.5.7/checks.json)。
 
-当前接续必需 CI、候选包核对、受保护合入、不可变标签、正式安装器及四资产回下载，再回填中文 Release/更新说明和发布身份；尚未正式发布，不把 E2E 或普通本地程序当最终安装包。下一轮按[既定十版路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)进入 v1.5.8 的更多原厂 SFX 模块，剩八版目标，不另起重复规划；先读 `sfx_archive.rs` 模块身份与 `numeric_volume_reader.rs`，取得原厂模块及原卷证据，不执行输入 EXE。智能目录/ZIP 并行默认关闭，不恢复快速打包，Windows N 暂不保证支持。
+[PR #195](https://github.com/Longyuyeee/long_Decompress/pull/195) 受保护合入；标签 `ebbc85ee2a433fe353149a0e1b35d9bf8062b850` 与最终候选 `08e0261c7af3d3de45029a479a04cafc18487c0f` 同树 `89fd84375f64fb1033571a340affba67b43df8b7`。候选 CI `39114168020`、主线 CI `39115346235`、正式构建 `39115375061` 全部成功。[v1.5.7](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.7) 于 UTC `2026-10-18T09:41:56Z`（北京时间 17:41:56）正式发布；安装器、更新 ZIP/签名、latest.json、中文说明和包内主程序/四份说明已回下载核对，见[候选](evidence/sevenz-methods-1.5.7/candidate.json)与[正式收据](evidence/sevenz-methods-1.5.7/release.json)。E2E、本地生产、候选和正式包身份分开，不把包内检查当运行证明；个人安装、设置和历史不动，不移动标签。
 
-## 最新：v1.5.6 已正式发布，接续 7Z 方法兼容（2026-10-18）
+十版路线已正式交付两版，剩八版。下一轮按[既定路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)进入 v1.5.8，不重复规划：先读 `sfx_volumes.rs::seven_zip_loader_data`（当前仅固定 24.09 GUI 模块，213504 字节、SHA-256 `97b304ccf831e83ca58b5c99a736f6525f81378125143e92b76baea0988ec5e2`）、`sfx_archive.rs` 的内嵌头校验、数字卷读取和分卷归组。取得更多原厂模块的来源/许可/哈希与原卷，先复现不支持，再贯通任意成员、缺首中尾卷、密码、浏览/所选/检查/转换和失败接续；不执行输入 EXE，不凭同名伴随文件信任任意 EXE。UI 必须实看，每轮至封板发布。智能目录/ZIP 并行默认关闭，不恢复快速打包，Windows N 暂不保证支持。
+
+## 历史：v1.5.6 已正式发布，接续 7Z 方法兼容（2026-10-18）
 
 功能冻结 `aed3eca1983c1a4cb52ff5a32d64cd80a0011cd9`，最终候选 `7f86d2a331cd1e2cc97d9268d35a51256713ffb5`。RAR 实际解码字节替代预分配估算，原生卷续块不重复计总量；速度/剩余时间/新历史耗时扣除暂停，事务只统计本次产出，修复解压中心将正常取消改写为失败。49 项不同 Rust、133 项前端、类型检查、12 个真实桌面场景和 8 张常用/窄窗页面通过。256 MiB 控制包原生累计 `192476802`、比例约 71.70%，暂停 2288 ms 全扣，历史实际 337 ms；停止后队列和历史均 cancelled，原卷保留、无暂存或半成品。见[实施审计](RAR_PROGRESS_1.5.6.md)、[封板记录](RAR_PROGRESS_FREEZE_1.5.6.md)及[桌面证据](evidence/rar-progress-1.5.6/results.json)。
 

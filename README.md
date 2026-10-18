@@ -234,7 +234,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.7 功能已封板，正在发布**。补齐 7Z 中 PPMdH、Deflate、Deflate64、Bzip2 的原生读取，贯通密码、固实、数字分卷、所选提取及转换；改进损坏、方法不支持和输出错误的最终原因。61 项 Rust、150 项前端、25 个真实桌面场景与 8 张实看页面通过。见[审计](long-compress-assistant/docs/SEVENZ_METHODS_1.5.7.md)、[封板记录](long-compress-assistant/docs/SEVENZ_METHODS_FREEZE_1.5.7.md)和[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.7.md)。不改变默认压缩算法，软件图标和原截图保留。
+**v1.5.7 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.7)。补齐 7Z 中 PPMdH、Deflate、Deflate64、Bzip2 的原生读取，贯通密码、固实、数字分卷、所选提取及转换；改进损坏、方法不支持和输出错误的最终原因。61 项 Rust、150 项前端、25 个真实桌面场景与 8 张实看页面通过；正式四资产、中文说明及包内主程序/四份说明已回下载核对。见[审计](long-compress-assistant/docs/SEVENZ_METHODS_1.5.7.md)、[封板记录](long-compress-assistant/docs/SEVENZ_METHODS_FREEZE_1.5.7.md)和[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.7.md)。不改变默认压缩算法，软件图标和原截图保留。十版路线已交付两版，下一版接续更多原厂 SFX 模块兼容。
 
 此前 **v1.5.6 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.6)。RAR 进度改用实际解码字节，修正跨卷总量、暂停计时、同目录产出统计和停止误报失败。49 项 Rust、133 项前端、12 个真实桌面场景与 8 张实看页面通过；正式四资产、中文说明及包内主程序已回下载核对。见[本版审计](long-compress-assistant/docs/RAR_PROGRESS_1.5.6.md)、[封板发布记录](long-compress-assistant/docs/RAR_PROGRESS_FREEZE_1.5.6.md)与[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.6.md)。后续十版路线已交付一版，下一版补齐真实 7Z 方法兼容；原图标和截图保留。
 
@@ -244,8 +244,8 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
+| **v1.5.7** | 7Z PPMdH、Deflate/64、Bzip2 原生读取；密码固实分卷与最终错误原因 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.7.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.7) |
 | **v1.5.6** | RAR 实际解码进度、续卷逻辑总量、暂停扣时、同目录实际产出与停止状态修正 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.6.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.6) |
-| **v1.5.7（发布中）** | 7Z PPMdH、Deflate/64、Bzip2 原生读取；密码固实分卷与最终错误原因 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.7.md) |
 | **v1.5.5** | 真实外置卷 SFX/旧 RAR4 只读、密码与缺卷接续、原生 RAR 暂停取消与文件锁修复、中卷入口及页面提示纠偏 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.5.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.5) |
 | **v1.5.4** | EGG AZO、AES/LEA、固实只读与所选提取，中文 AES 原生卷接续，批量来源编码修复 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.4.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.4) |
 | **v1.5.3** | EGG 基础只读、传统密码、原生分卷、明确密码编码、浏览/检查/转换及失败接续 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.3.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.3) |
