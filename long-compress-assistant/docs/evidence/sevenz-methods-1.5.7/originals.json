@@ -1,0 +1,1047 @@
+{
+  "createdAt": "2026-10-18T08:33:38.539Z",
+  "producer": "E:/7z/7-Zip/7z.exe",
+  "producerSha256": "e2ca3ec168ae9c0b4115cd4fe220145ea9b2dc4b6fc79d765e91f415b34d00de",
+  "independent": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\resources\\archive-engine\\7z.exe",
+  "independentSha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53",
+  "cases": [
+    {
+      "name": "ppmd-plain",
+      "method": "PPMd",
+      "mode": "plain",
+      "password": null,
+      "archive": "收到的资料.7z",
+      "members": [
+        {
+          "name": "收到的资料.7z",
+          "bytes": 269945,
+          "sha256": "34118283066a519cdf01059ba8e2f6a83e61bb92f35d18abd791e89761c41da7"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=PPMd",
+        "-ms=off",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\ppmd-plain\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = PPMD",
+        "Solid = -",
+        "Blocks = 2",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = PPMD:o6:mem22",
+        "Method = PPMD:o6:mem22"
+      ]
+    },
+    {
+      "name": "ppmd-plain-solid",
+      "method": "PPMd",
+      "mode": "plain-solid",
+      "password": null,
+      "archive": "收到的资料.7z",
+      "members": [
+        {
+          "name": "收到的资料.7z",
+          "bytes": 270733,
+          "sha256": "909c096c2520d3c6dac7b225d074decf28dc3baca072164daad6eb81455c3e1f"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=PPMd",
+        "-ms=on",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\ppmd-plain-solid\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = PPMD",
+        "Solid = +",
+        "Blocks = 1",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = PPMD:o6:mem23",
+        "Method = PPMD:o6:mem23"
+      ]
+    },
+    {
+      "name": "ppmd-contents-solid",
+      "method": "PPMd",
+      "mode": "contents-solid",
+      "password": "Seven157+中文123!",
+      "archive": "收到的资料.7z",
+      "members": [
+        {
+          "name": "收到的资料.7z",
+          "bytes": 270773,
+          "sha256": "cf32c81f24efa0dd322da45a65402118367d42d9e395cfe59221da285f55974d"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=PPMd",
+        "-ms=on",
+        "-pSeven157+中文123!",
+        "-mhe=off",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\ppmd-contents-solid\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = PPMD 7zAES",
+        "Solid = +",
+        "Blocks = 1",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19"
+      ]
+    },
+    {
+      "name": "ppmd-headers-volumes",
+      "method": "PPMd",
+      "mode": "headers-volumes",
+      "password": "Seven157+中文123!",
+      "archive": "收到的资料.7z.001",
+      "members": [
+        {
+          "name": "收到的资料.7z.001",
+          "bytes": 131072,
+          "sha256": "1da75781dcaf4190492d9333fe45dbd5b32bd60df7aaea947ce5879773518cee"
+        },
+        {
+          "name": "收到的资料.7z.002",
+          "bytes": 131072,
+          "sha256": "36c37b03559ec61844063724406f8c35a5a0dce8e8cf06603359ebfd3b28a0e9"
+        },
+        {
+          "name": "收到的资料.7z.003",
+          "bytes": 8656,
+          "sha256": "446ee02a225153fe111df936771d5045946ae5965f60511b644d02c86318ca83"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=PPMd",
+        "-ms=on",
+        "-pSeven157+中文123!",
+        "-mhe=on",
+        "-v128k",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\ppmd-headers-volumes\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = PPMD 7zAES",
+        "Solid = +",
+        "Blocks = 1",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19"
+      ]
+    },
+    {
+      "name": "deflate-plain",
+      "method": "Deflate",
+      "mode": "plain",
+      "password": null,
+      "archive": "收到的资料.7z",
+      "members": [
+        {
+          "name": "收到的资料.7z",
+          "bytes": 262667,
+          "sha256": "e64f6aef98758506e52a0e8d05f288ead9e4a769f18f5586f9f8775a7540c88d"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=Deflate",
+        "-ms=off",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\deflate-plain\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = Deflate",
+        "Solid = -",
+        "Blocks = 2",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = Deflate",
+        "Method = Deflate"
+      ]
+    },
+    {
+      "name": "deflate-plain-solid",
+      "method": "Deflate",
+      "mode": "plain-solid",
+      "password": null,
+      "archive": "收到的资料.7z",
+      "members": [
+        {
+          "name": "收到的资料.7z",
+          "bytes": 262762,
+          "sha256": "383edf29201f61e647138dbdef17d56ce05031c3ff3cd958e2d92fcbf3d902c4"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=Deflate",
+        "-ms=on",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\deflate-plain-solid\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = Deflate",
+        "Solid = +",
+        "Blocks = 1",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = Deflate",
+        "Method = Deflate"
+      ]
+    },
+    {
+      "name": "deflate-contents-solid",
+      "method": "Deflate",
+      "mode": "contents-solid",
+      "password": "Seven157+中文123!",
+      "archive": "收到的资料.7z",
+      "members": [
+        {
+          "name": "收到的资料.7z",
+          "bytes": 262800,
+          "sha256": "043bbb9de17eb8b24a8bfdf317da19dc6644f38c034b5fdaf44001047b0b9ef1"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=Deflate",
+        "-ms=on",
+        "-pSeven157+中文123!",
+        "-mhe=off",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\deflate-contents-solid\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = Deflate 7zAES",
+        "Solid = +",
+        "Blocks = 1",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19"
+      ]
+    },
+    {
+      "name": "deflate-headers-volumes",
+      "method": "Deflate",
+      "mode": "headers-volumes",
+      "password": "Seven157+中文123!",
+      "archive": "收到的资料.7z.001",
+      "members": [
+        {
+          "name": "收到的资料.7z.001",
+          "bytes": 131072,
+          "sha256": "748f4b36df6c6b3e6fd27d19c29f3a86a1be450358a3f4474ff3dce6f9b5326c"
+        },
+        {
+          "name": "收到的资料.7z.002",
+          "bytes": 131072,
+          "sha256": "38279172fd79a10b3968f2493dbabff50933d6e2070a636dcd64826527731f00"
+        },
+        {
+          "name": "收到的资料.7z.003",
+          "bytes": 688,
+          "sha256": "649a18d114d0d568063fb1c7e4f2396077ec47a595ed5d09077bb5ae0a1aa2a9"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=Deflate",
+        "-ms=on",
+        "-pSeven157+中文123!",
+        "-mhe=on",
+        "-v128k",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\deflate-headers-volumes\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = Deflate 7zAES",
+        "Solid = +",
+        "Blocks = 1",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19"
+      ]
+    },
+    {
+      "name": "deflate64-plain",
+      "method": "Deflate64",
+      "mode": "plain",
+      "password": null,
+      "archive": "收到的资料.7z",
+      "members": [
+        {
+          "name": "收到的资料.7z",
+          "bytes": 262743,
+          "sha256": "3585edfdf5d5eca189dcf5878d16c8a949a7e4a2976e367bd9c63464f3d835dc"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=Deflate64",
+        "-ms=off",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\deflate64-plain\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = Deflate64",
+        "Solid = -",
+        "Blocks = 2",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = Deflate64",
+        "Method = Deflate64"
+      ]
+    },
+    {
+      "name": "deflate64-plain-solid",
+      "method": "Deflate64",
+      "mode": "plain-solid",
+      "password": null,
+      "archive": "收到的资料.7z",
+      "members": [
+        {
+          "name": "收到的资料.7z",
+          "bytes": 262839,
+          "sha256": "1f56e0274ec482e346273e8ff3b4ffc75783538f08f83f3f7d007ffd6ffba78b"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=Deflate64",
+        "-ms=on",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\deflate64-plain-solid\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = Deflate64",
+        "Solid = +",
+        "Blocks = 1",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = Deflate64",
+        "Method = Deflate64"
+      ]
+    },
+    {
+      "name": "deflate64-contents-solid",
+      "method": "Deflate64",
+      "mode": "contents-solid",
+      "password": "Seven157+中文123!",
+      "archive": "收到的资料.7z",
+      "members": [
+        {
+          "name": "收到的资料.7z",
+          "bytes": 262880,
+          "sha256": "b4ad443bb6a30ba3af5b6f7dcd50dcfbd330297fce8e0884017f80aadbabafc2"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=Deflate64",
+        "-ms=on",
+        "-pSeven157+中文123!",
+        "-mhe=off",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\deflate64-contents-solid\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = Deflate64 7zAES",
+        "Solid = +",
+        "Blocks = 1",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = Deflate64 7zAES:19",
+        "Method = Deflate64 7zAES:19"
+      ]
+    },
+    {
+      "name": "deflate64-headers-volumes",
+      "method": "Deflate64",
+      "mode": "headers-volumes",
+      "password": "Seven157+中文123!",
+      "archive": "收到的资料.7z.001",
+      "members": [
+        {
+          "name": "收到的资料.7z.001",
+          "bytes": 131072,
+          "sha256": "1154758b4f1c7f73a6366414fd46fa41ef1d999262a5ecb44758c3cf5ced65e1"
+        },
+        {
+          "name": "收到的资料.7z.002",
+          "bytes": 131072,
+          "sha256": "4095761b077773b9e8b166217572bdf2bfdadccd38bf4333cd1700479918986a"
+        },
+        {
+          "name": "收到的资料.7z.003",
+          "bytes": 768,
+          "sha256": "c183447022931ff67baf12c02648353839b33cbd36151b544945062d2cecefec"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=Deflate64",
+        "-ms=on",
+        "-pSeven157+中文123!",
+        "-mhe=on",
+        "-v128k",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\deflate64-headers-volumes\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = Deflate64 7zAES",
+        "Solid = +",
+        "Blocks = 1",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = Deflate64 7zAES:19",
+        "Method = Deflate64 7zAES:19"
+      ]
+    },
+    {
+      "name": "bzip2-plain",
+      "method": "BZip2",
+      "mode": "plain",
+      "password": null,
+      "archive": "收到的资料.7z",
+      "members": [
+        {
+          "name": "收到的资料.7z",
+          "bytes": 264109,
+          "sha256": "6eb361ef3d0bbe4eae73a4dc934d78f4e76aa9ba5b252f6099728477ff74eb6d"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=BZip2",
+        "-ms=off",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\bzip2-plain\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = BZip2",
+        "Solid = -",
+        "Blocks = 2",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = BZip2",
+        "Method = BZip2"
+      ]
+    },
+    {
+      "name": "bzip2-plain-solid",
+      "method": "BZip2",
+      "mode": "plain-solid",
+      "password": null,
+      "archive": "收到的资料.7z",
+      "members": [
+        {
+          "name": "收到的资料.7z",
+          "bytes": 264383,
+          "sha256": "d009e1c441ea4234f9e61ac3add8a64396f6085ffa41064f9bc3bfd1d537fff3"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=BZip2",
+        "-ms=on",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\bzip2-plain-solid\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = BZip2",
+        "Solid = +",
+        "Blocks = 1",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = BZip2",
+        "Method = BZip2"
+      ]
+    },
+    {
+      "name": "bzip2-contents-solid",
+      "method": "BZip2",
+      "mode": "contents-solid",
+      "password": "Seven157+中文123!",
+      "archive": "收到的资料.7z",
+      "members": [
+        {
+          "name": "收到的资料.7z",
+          "bytes": 264416,
+          "sha256": "29914a2e25a048b4127c2dd150d7498ebea4a0b8e5ff8b63d5703555b607c03e"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=BZip2",
+        "-ms=on",
+        "-pSeven157+中文123!",
+        "-mhe=off",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\bzip2-contents-solid\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = BZip2 7zAES",
+        "Solid = +",
+        "Blocks = 1",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = BZip2 7zAES:19",
+        "Method = BZip2 7zAES:19"
+      ]
+    },
+    {
+      "name": "bzip2-headers-volumes",
+      "method": "BZip2",
+      "mode": "headers-volumes",
+      "password": "Seven157+中文123!",
+      "archive": "收到的资料.7z.001",
+      "members": [
+        {
+          "name": "收到的资料.7z.001",
+          "bytes": 131072,
+          "sha256": "42278b8f97d5f6ca088a9560015b4b42517ae7366c50489c28fa73eb90318105"
+        },
+        {
+          "name": "收到的资料.7z.002",
+          "bytes": 131072,
+          "sha256": "7cc32a149d05933742b86b4b9306541b10be9fc5c340259e3a65a1e29f23fc65"
+        },
+        {
+          "name": "收到的资料.7z.003",
+          "bytes": 2304,
+          "sha256": "710d646958b79982390ea7789ea256ada84ba16f3083a24c1aea0501f9c1ecbe"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=BZip2",
+        "-ms=on",
+        "-pSeven157+中文123!",
+        "-mhe=on",
+        "-v128k",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\bzip2-headers-volumes\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = BZip2 7zAES",
+        "Solid = +",
+        "Blocks = 1",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = BZip2 7zAES:19",
+        "Method = BZip2 7zAES:19"
+      ]
+    },
+    {
+      "name": "lzma2-plain-solid",
+      "method": "LZMA2",
+      "mode": "plain-solid",
+      "password": null,
+      "archive": "收到的资料.7z",
+      "members": [
+        {
+          "name": "收到的资料.7z",
+          "bytes": 262777,
+          "sha256": "0d27ef5162f7249e2cbbeed4172624817a8b47e1a4642a9da47c72ee9d5eee6e"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=LZMA2",
+        "-ms=on",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\lzma2-plain-solid\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = LZMA2:384k",
+        "Solid = +",
+        "Blocks = 1",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = LZMA2:384k",
+        "Method = LZMA2:384k"
+      ]
+    },
+    {
+      "name": "bcj2-plain-solid",
+      "method": "BCJ2",
+      "mode": "plain-solid",
+      "password": null,
+      "archive": "收到的资料.7z",
+      "members": [
+        {
+          "name": "收到的资料.7z",
+          "bytes": 262935,
+          "sha256": "5cb145537eeda0def8c8835378a588c4aab9ff7571a9c8db11ea096561721e50"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "bff88bf959af004bcd8dbafbb15715d4fa2739e57e67ab56f7b2cf0f47c7b9df"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 31000,
+          "sha256": "dcb70561cc216b541411b4e5636a3f500f251853541d6a485600df302f4f0e35"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=BCJ2",
+        "-m1=LZMA2",
+        "-m2=LZMA2",
+        "-m3=LZMA2",
+        "-mb0:1",
+        "-mb0s1:2",
+        "-mb0s2:3",
+        "-ms=on",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-157\\bcj2-plain-solid\\收到的资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methodListing": [
+        "Method = LZMA2:384k BCJ2",
+        "Solid = +",
+        "Blocks = 1",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = BCJ2 LZMA2:384k LZMA2:384k LZMA2:384k",
+        "Method = BCJ2 LZMA2:384k LZMA2:384k LZMA2:384k"
+      ]
+    }
+  ]
+}

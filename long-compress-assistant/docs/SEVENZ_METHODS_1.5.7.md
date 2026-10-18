@@ -20,3 +20,5 @@
 未加密包的 CRC、解码损坏和提前 EOF 明确提示“7Z 数据损坏或不完整”，保存底层详情；加密包仍可能无法区分错密与损坏，不断言一定是密码错误。输出路径、权限、设备等操作系统错误保持原始错误码及上下文，不归入损坏或试密。默认编码、智能目录和 ZIP 并行设置不变。
 
 PPMd 使用现有锁定 [ppmd-rust 1.4.0 Ppmd7Decoder](https://docs.rs/ppmd-rust/1.4.0/ppmd_rust/struct.Ppmd7Decoder.html)，对应 7z 的 PPMdH 范围编码。Deflate/Deflate64、Bzip2 也复用已有锁定依赖，不升级其他依赖或引擎。新增许可原文随包保留。
+
+最终功能与测试冻结 `933af4e`；25 个真实桌面场景和 8 张页面通过并逐张实看。最终身份、原包、结果、生产构建及发布接续见[封板记录](SEVENZ_METHODS_FREEZE_1.5.7.md)。
