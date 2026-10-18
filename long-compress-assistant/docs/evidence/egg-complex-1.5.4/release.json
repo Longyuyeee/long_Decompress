@@ -1,0 +1,194 @@
+{
+  "verifiedAt": "2026-10-18T04:44:08.508Z",
+  "tag": "v1.5.4",
+  "tagCommit": "5f8fbc3e9031047e981b905f7394950c4c914920",
+  "functionalFreeze": "bc03903a9d266f8a12cfc286c0f6c61756ad3e88",
+  "candidateCommit": "ac77fff4fe11bc896a446a4566f9e8c482caf364",
+  "candidateRun": 39096646301,
+  "releaseRun": 39097158515,
+  "url": "https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.4",
+  "publishedAt": "2026-10-18T04:42:28Z",
+  "installerProductVersion": "1.5.4",
+  "assets": [
+    {
+      "name": "Long-Decompress_1.5.4_x64-setup.exe",
+      "bytes": 20902174,
+      "sha256": "816663a1d886db8b2b5b0aac36d8ecc2327ba5bc83775fa43ef6472d5a8ac857",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.4/Long-Decompress_1.5.4_x64-setup.exe"
+    },
+    {
+      "name": "Long-Decompress_1.5.4_x64-setup.nsis.zip",
+      "bytes": 20902332,
+      "sha256": "c0777cfeb9264760c522b5b8c799d55a553398dd5b9276748fcc1b9a98fcbcf0",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.4/Long-Decompress_1.5.4_x64-setup.nsis.zip"
+    },
+    {
+      "name": "Long-Decompress_1.5.4_x64-setup.nsis.zip.sig",
+      "bytes": 428,
+      "sha256": "2e86903caf882c2aa7a4a204972d7c0c5199334dc20584aa4a3ed8488ffb5e90",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.4/Long-Decompress_1.5.4_x64-setup.nsis.zip.sig"
+    },
+    {
+      "name": "latest.json",
+      "bytes": 3239,
+      "sha256": "6b7c36d30ee6cbe99e27af923f69ce627e33ffb2e3e770364541b8450a23c861",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.4/latest.json"
+    }
+  ],
+  "updaterExeMatchesInstaller": true,
+  "signatureMatchesManifest": true,
+  "chineseNotesMatch": true,
+  "onlyManifestNotesChanged": true,
+  "embeddedEggEngine": {
+    "engineSha256": "774133b57408c5a52e632f45f7d37f500ffcbc4e96c1a63d334e6145c0e47ea0",
+    "engineBytes": 895488,
+    "noticesVerified": 103,
+    "cases": [
+      {
+        "name": "store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "low",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "normal",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "store5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "deflate5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "lzma5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "bzip2_big",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "mixed_store_deflate5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "zip20",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_zip20",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_zip20_bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "split",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "split_store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-plain",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-key",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-key-volumes",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-cn-key",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "azo",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "azo_pe",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "solid",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes128",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes256",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "lea128",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "lea256",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_aes128",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_aes256",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_aes256_bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_lea_bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "optimal5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes128-cn",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes256-cn",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes128-volumes",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes256-volumes",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "solid-deflate",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "solid-high",
+        "bundledEngineContentVerification": true
+      }
+    ],
+    "nativeMiddleMemberSelectedExtract": true,
+    "chineseAesMiddleSelectedExtract": true,
+    "solidSelectedExtract": true,
+    "installationExecuted": false,
+    "engineExecutedFromExtractedInstaller": true
+  }
+}

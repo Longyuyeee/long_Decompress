@@ -15,7 +15,7 @@
 3. 真实桌面验证错密码纠正、中文编码、所选提取、缺卷补回、检查/转换和实际暂停取消；有变化的常用/窄窗页面必须查看。
 4. 完成定向审计后封板、统一版本、受保护合入、正式发布及四资产回下载核对，再回填两份 README、收据和交接。未完成验证前不写成已发布。
 
-十二版路线当前交付十版，本版与 v1.5.5 外置卷 SFX 尚待完成，不追加重复规划。
+范围冻结时十二版路线已交付十版；本版发布后为十一版，接续 v1.5.5 外置卷 SFX，不追加重复规划。正式发布身份、资产及核对收据以[封板记录](EGG_COMPLEX_FREEZE_1.5.4.md)为准。
 
 ## 实施审计
 
@@ -46,3 +46,5 @@ E2E 程序 ProductVersion 1.5.4，SHA256 `a25c1daa20fdcc5227216982419886339fb690
 先读本审计、`tools/egg-engine/src/complex.rs`、原生卷解析及 `vendor/*/LONG_MODIFICATIONS.md`。运行 `node scripts/check-release-identity.mjs --expected 1.5.4`（包含引擎库存检查）；`lock-egg-engine.mjs` 是重新生成库存的写入脚本，不是检查命令。定向 Rust 入口为主程序 `egg_`、`archive_diagnostics::tests`、`alz_engine::tests`、`split_archive_detector::tests`、`zip_password::tests`，以及 helper、unegg、libazo 各自 Cargo 测试。原包清单与独立 SHA256 在 `tests/fixtures/archives/egg-154`，不要重新生成并覆盖固定期望以求通过。
 
 原工具 ALZipCon 11.0.1.16（官方 ALZip 12.37.0.4）和独立 Bandizip 不随产品分发；生成器 SHA256 `13c664d8b809348104999efb734587e2847aab04e5511af2e5345e13d2528433`。本机在 `test-results/alzip-152-portable/app/ALZipCon.exe`，独立工具 `E:/Bandzip/Bandizip/bz.exe`。新机需另取原厂工具并核对来源，先准备原有 153 控制载荷，再运行 `prepare-egg-154-control.mjs`；新随机字节必须记新身份，不能冒充本次控制包。桌面按 `tauri.e2e.conf.json` 和 `desktop-e2e` 构建，指向独立 `target-desktop-gate` 的最终程序/实际资源，运行 `test-tauri-desktop.mjs --egg-154-only`。普通生产构建不可携带测试桥。
+
+下一版仍按批准顺序做 v1.5.5，不重复规划：先串读 `sfx_archive.rs`、`split_archive_detector.rs`、相对偏移读取和解压/浏览入口。当前 SFX 检测会在 MZ 的前 16 MiB 内核对真实 7Z/RAR 头，或读取 ZIP 目录；不能仅见 EXE 后缀就认为归档，更不能把普通分卷改名当作外置卷 SFX。先取得原工具真正生成的 EXE 首卷加外置数据卷与旧 RAR4 SFX，固定独立已知载荷，再决定归组及缺卷处理。保留不执行输入 EXE、只读、明确密码/缺卷原因、转换与真实页面验证的原定范围。
