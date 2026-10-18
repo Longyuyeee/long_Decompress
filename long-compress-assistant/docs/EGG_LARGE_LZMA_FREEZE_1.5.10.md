@@ -16,6 +16,8 @@
 
 普通生产 `node node_modules/@tauri-apps/cli/tauri.js build --bundles none` 已通过，含类型检查、前端及 shell 构建。主程序版本 1.5.10，SHA-256 `6fd568ad29719b36a5600cd2cf26989a10960418cfef6c769114f5057190e9ef`；与桌面 E2E `a4d82055a683af8ff5ff2379ef869689630c48bde3b052c47ae6627874b4f2de` 分开。新 helper 909312 字节、SHA-256 `48efbce527b1d3ae8b5e4c71b86a4b4a9ea1726c857aafb73adf9e0efd275fe4`，本地源码、资源锁及桌面部署一致。
 
-接续必需 Windows package、受保护合入与不可变标签，再核对候选/正式安装器中的新 helper、35 组既有原包、103 份许可及主程序版本。README 图标和既有截图保持。正式工作流成功后更新中文 Release 与 updater notes，仅改 manifest 的 notes，并回下载核对四资产；完成前不记正式发布。
+最终候选 `fc592fdb3177a41c613d661abab2632e9e258342` 的必需 Windows package `39130418040` 于 UTC `2026-10-18T13:18:02Z` 成功。见[候选收据](evidence/egg-large-lzma-1.5.10/candidate.json)：安装器 20962671 字节、SHA-256 `49f3a944de82afa474fd957ba5cea2dc18df35c406bd6694037c345adcf4f4c0`；包内主程序 1.5.10、33911296 字节、SHA-256 `c2d288a7aec8ba7b1b057c3840327020d2a017abefa082c55260ea45a2f15b14`。新 helper 与本地大包、桌面证据同字节，实际运行包内引擎核对 35 组既有原包、中文 AES 中卷及固实所选；103 份 EGG 许可和主程序四份归档说明逐字节核对。未执行安装器。
+
+[PR #201](https://github.com/Longyuyeee/long_Decompress/pull/201) 于 UTC `2026-10-18T13:20:10Z` 受保护合入，标签提交 `d21b566c154d0c68105bf31f1d8b4da28dec446d` 与候选同树 `6781dc29ffd2571ea5692a0f593af9521812a2dd`，标签固定不移动。主线 CI `39131089958`、正式构建 `39131121975` 接续运行；此时尚未完成正式发布和四资产核对。README 图标和既有截图保持。正式工作流成功后更新中文 Release 与 updater notes，仅改 manifest 的 notes，并回下载核对四资产；完成前不记正式发布。
 
 本版发布后按既定十版路线进入 v1.5.11 EGG 特殊密码组合，尚有五版，不追加重复规划。先核实实际加密固实分段密码、认证尾部和密码编码，再用原工具包逐组合确认；默认设置及 Windows N 边界不变。

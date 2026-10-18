@@ -1,0 +1,193 @@
+{
+  "checkedAt": "2026-10-18T13:19:53.505Z",
+  "functionalFreeze": "1289677ea2fe781e372227f7277a9cec38da40c9",
+  "candidateCommit": "fc592fdb3177a41c613d661abab2632e9e258342",
+  "candidateRun": 39130418040,
+  "candidateTree": "6781dc29ffd2571ea5692a0f593af9521812a2dd",
+  "installer": "Long解压_1.5.10_x64-setup.exe",
+  "installerBytes": 20962671,
+  "installerSha256": "49f3a944de82afa474fd957ba5cea2dc18df35c406bd6694037c345adcf4f4c0",
+  "installerProductVersion": "1.5.10",
+  "packagedMain": {
+    "mainProductVersion": "1.5.10",
+    "mainBytes": 33911296,
+    "mainSha256": "c2d288a7aec8ba7b1b057c3840327020d2a017abefa082c55260ea45a2f15b14",
+    "notices": [
+      {
+        "name": "archive-engine/licenses/UnRAR-License.txt",
+        "bytes": 1976,
+        "sha256": "6ecc1687808b7d66b24f874755abfed7464d9751ed0001cd4e8e5d9bf397ff8a"
+      },
+      {
+        "name": "archive-engine/SOURCE.md",
+        "bytes": 2722,
+        "sha256": "53830945c4473e5a10ea38b99505d396d450c6a059c123a5c580d779ed252529"
+      },
+      {
+        "name": "archive-engine/licenses/sevenz-rust-Apache-2.0.txt",
+        "bytes": 11556,
+        "sha256": "5ad8c213095c573921d7388edf93f6a9f54490b8ebf3b165ae8ef1947cf70846"
+      },
+      {
+        "name": "archive-engine/licenses/ppmd-rust-MIT-0.md",
+        "bytes": 916,
+        "sha256": "5574529c6fc6bb5f1dba17056a3ae5fb5cac51bc50ae4d7cd146e13b708fe0ff"
+      }
+    ],
+    "installationExecuted": false,
+    "productionSfxRuntimeExecuted": false,
+    "note": "Native SFX functionality is verified by the separately identified desktop E2E binary; this receipt checks the ordinary packaged main executable and exact UnRAR notice/source disclosure."
+  },
+  "packagedEgg": {
+    "engineSha256": "48efbce527b1d3ae8b5e4c71b86a4b4a9ea1726c857aafb73adf9e0efd275fe4",
+    "engineBytes": 909312,
+    "noticesVerified": 103,
+    "cases": [
+      {
+        "name": "store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "low",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "normal",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "store5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "deflate5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "lzma5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "bzip2_big",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "mixed_store_deflate5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "zip20",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_zip20",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_zip20_bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "split",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "split_store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-plain",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-key",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-key-volumes",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-cn-key",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "azo",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "azo_pe",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "solid",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes128",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes256",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "lea128",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "lea256",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_aes128",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_aes256",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_aes256_bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_lea_bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "optimal5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes128-cn",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes256-cn",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes128-volumes",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes256-volumes",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "solid-deflate",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "solid-high",
+        "bundledEngineContentVerification": true
+      }
+    ],
+    "nativeMiddleMemberSelectedExtract": true,
+    "chineseAesMiddleSelectedExtract": true,
+    "solidSelectedExtract": true,
+    "installationExecuted": false,
+    "engineExecutedFromExtractedInstaller": true
+  }
+}
