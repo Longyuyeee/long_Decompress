@@ -37,3 +37,7 @@
 `scripts/egg-1511-gate.mjs` 由 `scripts/test-tauri-desktop.mjs --egg-1511-only` 调用，使用独立数据目录及带 desktop-e2e 的程序；截图与 JSON 随仓库保存。`node scripts/audit-egg-1511.mjs` 核对本版证据；`scripts/release-egg-1511.mjs` 分 candidate/notes/verify 核对候选、中文说明和四资产。安装包内容检查运行其包内 helper，覆盖既有三十五组加新二十组，不执行个人安装器。
 
 本版完成后接既定 v1.5.12：先读 `tools/alz-engine/src/main.rs` 对方法分派及错误分类，核实 Obfuscated Deflate 的真实原包、解码来源和可分发条件，不用改名普通 Deflate 代替。十版路线仍有后续四版，不重复扩张规划；本版加密固实未得到真实正面原包，不伪记为完成。
+
+## 发布闭环
+
+本版已按受保护流程合入并正式发布，固定标签 `f69b663210580d34b66e006aae22b5920ea06441` 与候选同树；主线和正式构建成功，四资产、中文说明及包内五十五组原包核对完成。见[封板发布记录](EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md)、[候选收据](evidence/egg-passwords-1.5.11/candidate.json)与[正式收据](evidence/egg-passwords-1.5.11/release.json)。发布后仅回填文档，原厂未产出的加密固实组合仍未验证，不因发布而扩大承诺。
