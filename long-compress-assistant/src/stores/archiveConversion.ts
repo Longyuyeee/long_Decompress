@@ -197,8 +197,8 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       if (!Object.keys(filtered).length) continue
       updateItem(item.id, filtered); applied++
     }
-    if (skippedSource || skippedTarget) batchNotice.value = `${skippedSource ? `${skippedSource} 项原包非 ZIP 或格式未确认，未修改读取编码。` : ''}${skippedTarget ? `${skippedTarget} 项目标非 ZIP/ZIPX，未修改新包编码。` : ''}`
-    if (!applied && (sourceEncodingChanged || patch.zipPasswordEncoding !== undefined)) return '所选任务没有适用的 ZIP/ZIPX 密码编码设置。' + batchNotice.value
+    if (skippedSource || skippedTarget) batchNotice.value = `${skippedSource ? `${skippedSource} 项原包不适用读取编码或格式未确认，未修改。` : ''}${skippedTarget ? `${skippedTarget} 项目标非 ZIP/ZIPX，未修改新包编码。` : ''}`
+    if (!applied && (sourceEncodingChanged || patch.zipPasswordEncoding !== undefined)) return '所选任务没有适用的原包读取或新包 ZIP 密码编码设置。' + batchNotice.value
     return ''
   }
   function updateDefaults(patch: ConversionPatch) {

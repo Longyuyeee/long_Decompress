@@ -66,7 +66,7 @@ export async function validateExtractionRetry(
     check()
     if (report.status !== 'healthy' || !report.integrityTested) {
       throw new Error(report.status === 'password_encoding'
-        ? '密码无法按所选 ZIP 编码表示，请确认密码和编码后重新检查；这不代表文件损坏。'
+        ? '原包文件名或密码无法按所选编码表示，请确认原工具代码页后重新检查；这不代表文件损坏。'
         : report.status === 'password_required' || report.status === 'wrong_password'
         ? '检查完整性需要正确密码，请填写后重新检查。'
         : '来源尚未通过完整性检查，请重新获取完整文件，或先到文件完整性页面诊断。')

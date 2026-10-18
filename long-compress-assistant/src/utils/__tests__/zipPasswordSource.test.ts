@@ -14,4 +14,9 @@ describe('ZIP password input scope', () => {
     expect(supportsZipPasswordEncoding('unknown')).toBe(true)
     expect(zipPasswordEncodingForSource('a.zip')).toBeUndefined()
   })
+  it.each(['native.alz', 'native.a00', 'native.a03', 'native.b01'])('keeps the ALZ source codepage across restored %s', path => {
+    expect(zipPasswordEncodingForSource(path, 'cp936')).toBe('cp936')
+    expect(zipPasswordEncodingForSource(path)).toBeUndefined()
+    expect(zipPasswordEncodingForSource(path, 'cp936', '7Z')).toBeUndefined()
+  })
 })

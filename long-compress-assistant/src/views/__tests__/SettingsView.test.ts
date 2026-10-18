@@ -10,6 +10,18 @@ vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 describe('SettingsView archive engine diagnostics', () => {
   let autoStartEnabled = false
 
+  it('advertises ALZ only as a present read engine and never as a creation format', async () => {
+    const fallback=mocks.invoke.getMockImplementation()!
+    mocks.invoke.mockImplementation((command: string, payload?: {enable?:boolean}) => command === 'get_archive_engine_capabilities'
+      ? Promise.resolve({available:true,fullEngine:true,version:'26.04',message:'Ready',formats:[{name:'ALZ',extensions:['alz'],canCreate:false}]})
+      : fallback(command,payload))
+    const wrapper=mount(SettingsView,{global:{plugins:[createPinia()]}});await flushPromises()
+    expect(wrapper.get('[data-testid="settings-alz-read"]').text()).toContain('ALZ 随附只读引擎')
+    expect(wrapper.get('[data-testid="settings-password-extraction-formats"]').text()).toContain('ALZ（只读）')
+    expect(wrapper.get('[data-testid="settings-alz-read"]').text()).not.toContain('创建')
+    wrapper.unmount()
+  })
+
   beforeEach(() => {
     localStorage.clear()
     setActivePinia(createPinia())

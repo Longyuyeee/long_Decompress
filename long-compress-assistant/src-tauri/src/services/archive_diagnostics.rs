@@ -164,6 +164,10 @@ fn classify_failure(
     // words such as "encrypted" or "wrong password?" in an engine's message.
     if lower.contains("[archive-inspection:incomplete]") || lower.contains("missing disk") {
         ("missing_volume", "缺少分卷", "卷组不完整；请补齐分卷后重新检查，不必反复尝试密码")
+    } else if lower.contains("[archive-inspection:damaged]") {
+        // A path can contain incidental words such as "eof". Explicit format
+        // evidence must outrank those free-text heuristics.
+        ("damaged", "归档损坏", "归档结构已确认损坏或不完整；请重新获取完整文件，反复尝试密码不能修复损坏")
     } else if lower.contains("[alz-io]") {
         ("io_error", "ALZ 文件读写失败", "请按原始原因检查空间、设备连接或访问权限，不应继续尝试密码")
     } else if lower.contains("[alz-encoding]") || lower.contains("[alz-password-encoding]") {
@@ -187,8 +191,6 @@ fn classify_failure(
         || lower.contains("数据提前结束")
     {
         ("truncated", "归档被截断", "归档结构或数据不完整；请确认下载、复制已完成，必要时重新获取文件")
-    } else if lower.contains("[archive-inspection:damaged]") {
-        ("damaged", "归档损坏", "归档结构已确认损坏或不完整；请重新获取完整文件，反复尝试密码不能修复损坏")
     } else if lower.contains("unsupported") || lower.contains("not supported") {
         ("unsupported_feature", "暂不支持此归档特性", "当前引擎无法读取此算法或归档特性；这不等于文件损坏或密码错误")
     } else if lower.contains("passwordrequired") || lower.contains("password required")
@@ -1683,6 +1685,7 @@ mod tests {
             ("[archive-inspection:incomplete] missing ZIP disks; wrong password?", "missing_volume"),
             ("Unexpected end of archive; wrong password?", "truncated"),
             ("[archive-inspection:damaged] broken ZIP structure; wrong password?", "damaged"),
+            ("[archive-inspection:damaged] ALZ 卷号错误 C:/tmp/eof-sample/卷.a00", "damaged"),
             ("Unsupported compression method for encrypted entry", "unsupported_feature"),
             ("Permission denied reading encrypted archive", "permission_error"),
             ("[archive-inspection:ambiguous-data] invalid password or damaged content", "ambiguous_data"),

@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const state = vi.hoisted(() => ({
   capabilities: {
     value: {
-      browseExtensions: ['zip', '7z', 'zst', 'qcow2'],
+      browseExtensions: ['zip', '7z', 'zst', 'qcow2', 'alz'],
       nestedExtensions: ['zip', '7z', 'zst'],
       boundedPreviewFormats: ['ZIP', 'TAR'],
       imagePreviewExtensions: ['png', 'jpg'],
@@ -32,6 +32,9 @@ describe('useArchiveBrowserCapabilities', () => {
     expect(capabilities.isNestedArchiveName('report.docx')).toBe(false)
     expect(capabilities.entryCategory('disk.qcow2')).toBe('archive')
     expect(capabilities.isNestedArchiveName('disk.qcow2')).toBe(false)
+    expect(capabilities.entryCategory('native.a01')).toBe('archive')
+    expect(capabilities.entryCategory('native.b00')).toBe('archive')
+    expect(capabilities.isNestedArchiveName('native.a01')).toBe(false)
     expect(capabilities.previewKind('cover.png')).toBe('image')
     expect(capabilities.previewKind('readme.md')).toBe('text')
     expect(capabilities.supportsBoundedPreview('TAR.ZST')).toBe(true)

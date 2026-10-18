@@ -38,6 +38,15 @@ describe('useTauriCommands', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined)
     vi.spyOn(window, 'prompt').mockReturnValue(null)
   })
+  it('retains ALZ source format and reusable codepage after selected extraction, without passwords or selection replay', async () => {
+    await useTauriCommands().decompressFile('C:/原卷.a01',{...decompressionOptions,sourceFormat:'ALZ',zipPasswordEncoding:'cp936',password:'private-key',selectedEntries:['说明.txt']})
+    const task=useTaskStore().tasks[0]
+    expect(task.format).toBe('ALZ')
+    expect(task.executionConfig).toEqual({schemaVersion:1,kind:'archive-extraction',outputDirectory:'C:/output',extractToSubfolder:false,zipPasswordEncoding:'cp936'})
+    expect(task.selectedEntries).toEqual(['说明.txt'])
+    expect(JSON.stringify(task.executionConfig)).not.toContain('private-key')
+    expect(JSON.stringify(task.executionConfig)).not.toContain('selectedEntries')
+  })
 
   it.each([false, true])('passes the explicit parallel ZIP setting when a new extraction starts: %s', async enabled => {
     useAppStore().settings.parallelZipExtraction = enabled

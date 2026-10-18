@@ -505,7 +505,7 @@ async (tasks, _, onCleanup) => {
                         :shared-count="sharedDestinations.get(task.id) || 0" @change-output="handleSelectOutputDir(task)" />
                       <CompletedExtractionOutput v-if="task.status === 'completed' && (!task.workloadKind || task.workloadKind === 'archive')" :path="task.outputPath" />
                       <ZipPasswordEncodingField v-if="task.status === 'pending' && (supportsZipPasswordEncoding(task.sourceFiles[0] || '', task.format) || (!task.format && task.zipPasswordEncoding !== undefined))"
-                        v-model="task.zipPasswordEncoding" test-id="task-zip-password-encoding" />
+                        v-model="task.zipPasswordEncoding" :source-path="task.sourceFiles[0]" :source-format="task.format" test-id="task-zip-password-encoding" />
                       <ResourcePreflightCard :report="task.resourcePreflight" compact />
                       <FailedExtractionRetry v-if="task.status === 'failed' && (!task.workloadKind || task.workloadKind === 'archive')" :task-ids="[task.id]" inline @created="emit('retry-created', $event)" />
 

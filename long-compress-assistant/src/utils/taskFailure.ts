@@ -18,7 +18,7 @@ export const failureCategories = {
   'engine-start': '引擎启动失败',
   io: '检测读取失败',
   'ambiguous-data': '加密数据异常（原因未确定）',
-  'password-encoding': 'ZIP 密码编码不兼容',
+  'password-encoding': '原包编码不兼容',
   unknown: '未分类',
 } as const
 
@@ -27,7 +27,7 @@ export type FailureCategory = keyof typeof failureCategories
 // Classification markers remain in task/history evidence for recovery routing.
 // Only the ordinary toast/log presentation removes them; never mutate records.
 export function archiveInspectionMessageForDisplay(message: string): string {
-  const readable = message.replace(/\[archive-inspection:[^\]]+\]\s*/g, '').trim()
+  const readable = message.replace(/\[(?:archive-inspection:[^\]]+|alz-(?:encoding|password-encoding|io|password))\]\s*/g, '').trim()
   return readable || (message ? '归档检测未通过，未提供具体原因。' : '')
 }
 
@@ -80,8 +80,8 @@ export function getTaskRecoveryGuidance(record: Pick<TaskHistoryRecord, 'status'
   const report = '可通过下方“导出诊断报告”保留本任务的最终原因、原始错误和路径；旧记录不会因查看指引而改变。'
   switch (failure.category) {
     case 'password-encoding':
-      return { title: 'ZIP 密码编码不兼容：确认编码后重试', steps: [
-        '确认密码文本及原包使用的密码编码，在下方选择自动兼容或提供者指定的代码页；当前编码无法无损表示此密码，不代表文件损坏。',
+      return { title: '原包编码不兼容：确认编码后重试', steps: [
+        '确认原包使用的代码页及密码文本，在下方选择格式默认值或提供者指定的代码页；ALZ 同时按此编码读取文件名。编码不兼容不代表文件损坏。',
         '明确选择的编码不会自动改用其他编码。修改后创建新任务，原失败记录保留。', report,
       ] }
     case 'damaged':

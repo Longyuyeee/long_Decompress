@@ -23,6 +23,15 @@ const setup = async () => {
   return { wrapper, store: useTaskStore() }
 }
 describe('history extraction draft', () => {
+  it('describes ALZ filename and password codepage in a restored native-member task', () => {
+    const pinia=createPinia();setActivePinia(pinia)
+    const saved: TaskHistoryRecord={...record,sourcePaths:['C:/原卷.a01'],format:'ALZ',executionConfig:{schemaVersion:1,kind:'archive-extraction',outputDirectory:'D:/out',extractToSubfolder:false,zipPasswordEncoding:'cp936'}}
+    const wrapper=mount(HistoryExtractionDraft,{props:{record:saved},global:{plugins:[pinia],stubs:{ExtractionOutputPreview:true}}})
+    expect(wrapper.text()).toContain('ALZ 文件名与密码编码')
+    expect(wrapper.get('[data-testid="history-draft-zip-password-encoding"]').text()).toContain('简体中文（CP936）')
+    expect(wrapper.get('[data-testid="history-draft-password"]').element.value).toBe('')
+    wrapper.unmount()
+  })
   it('restores the ZIP encoding into a pending draft, then clears it when opening an old history entry', async () => {
     const pinia = createPinia(); setActivePinia(pinia)
     const saved: TaskHistoryRecord = { ...record, sourcePaths: ['C:/old.zip'], format: 'ZIP', executionConfig: { schemaVersion: 1, kind: 'archive-extraction', outputDirectory: 'D:/output', extractToSubfolder: false, zipPasswordEncoding: 'cp950' } }

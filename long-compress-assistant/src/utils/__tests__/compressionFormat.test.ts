@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+
 import {
   COMPRESSIBLE_FORMATS,
   DECOMPRESS_ARCHIVE_ACCEPT,
@@ -14,6 +15,11 @@ import {
 } from '../compressionFormat'
 
 describe('compression format helpers', () => {
+  it('imports ALZ native member candidates without offering ALZ creation', () => {
+    for (const suffix of ['alz','a00','a03','b01']) expect(isDecompressArchivePath('资料.'+suffix)).toBe(true)
+    expect(isPotentialSplitArchivePath('资料.a03')).toBe(true)
+    expect(COMPRESSIBLE_FORMATS.some(format=>String(format.value)==='alz')).toBe(false)
+  })
   it('creates native password ZPAQ without claiming fixed-size volumes', () => {
     expect(isDecompressArchivePath('C:/下载/资料.ZPAQ')).toBe(true)
     expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.zpaq')

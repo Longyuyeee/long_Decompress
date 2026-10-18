@@ -103,8 +103,8 @@ function apply() {
           <ThemedSelect v-model="subfolder" :options="subfolders" aria-label="批量解压子文件夹" test-id="batch-subfolder" floating />
         </label>
       </div>
-      <div v-if="mode === 'decompression'" class="min-w-0 space-y-1.5 text-xs text-muted">ZIP 密码编码
-        <HelpHint label="批量 ZIP 密码编码说明">仅修改所选任务中已检测为 ZIP/ZIPX 的来源，其他格式保持原值。不修改输出默认值或密码。</HelpHint>
+      <div v-if="mode === 'decompression'" class="min-w-0 space-y-1.5 text-xs text-muted">原包读取编码
+        <HelpHint label="批量 ZIP 密码编码说明">仅修改已检测为 ZIP/ZIPX 或 ALZ 的来源。ZIP 只影响密码；ALZ 同时影响文件名和密码，清除选择时回到 CP949。其他格式保持原值。</HelpHint>
         <ThemedSelect v-model="zipPasswordEncoding" :disabled="applying" :options="[keep, {value:'auto',label:'自动兼容（默认）'}, ...ZIP_PASSWORD_ENCODING_OPTIONS]" aria-label="批量 ZIP 密码编码" test-id="batch-zip-password-encoding" floating />
       </div>
       <div v-if="mode === 'compression'" class="min-w-0 space-y-1.5 text-xs text-muted">新包 ZIP 密码编码
