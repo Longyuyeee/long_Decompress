@@ -1,0 +1,75 @@
+{
+  "verifiedAt": "2026-10-18T00:41:15.698Z",
+  "tag": "v1.5.1",
+  "tagCommit": "3508c68b7cf943d60d1425235dbcabdabbf6a03c",
+  "functionalFreeze": "f6f2d9222dc754873d1a76954761d396fda2d78a",
+  "candidateCommit": "7324e1befaffe749c25a3b0b42a87fbd4ed3367a",
+  "candidateRun": 39082434311,
+  "releaseRun": 39082879858,
+  "url": "https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.1",
+  "publishedAt": "2026-10-18T00:40:07Z",
+  "installerProductVersion": "1.5.1",
+  "assets": [
+    {
+      "name": "Long-Decompress_1.5.1_x64-setup.exe",
+      "bytes": 20541813,
+      "sha256": "2f66634cc8a1e8c2b2bee0557c84516f0cc49eafd469645d23a70e1c57db00c0",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.1/Long-Decompress_1.5.1_x64-setup.exe"
+    },
+    {
+      "name": "Long-Decompress_1.5.1_x64-setup.nsis.zip",
+      "bytes": 20541971,
+      "sha256": "6a184e25cf36d69111372809ceb8266f395f0d34da6d586934a68aab30a65150",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.1/Long-Decompress_1.5.1_x64-setup.nsis.zip"
+    },
+    {
+      "name": "Long-Decompress_1.5.1_x64-setup.nsis.zip.sig",
+      "bytes": 428,
+      "sha256": "f9d1988d1665fc7a14842911354061fe4fb3d0cd99d95d559540f57dfcb564aa",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.1/Long-Decompress_1.5.1_x64-setup.nsis.zip.sig"
+    },
+    {
+      "name": "latest.json",
+      "bytes": 3113,
+      "sha256": "bb154a8c8f5e7b7d13f625e4c81867d57c5959db725328c368aeb16e33ffa6a2",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.1/latest.json"
+    }
+  ],
+  "updaterExeMatchesInstaller": true,
+  "signatureMatchesManifest": true,
+  "chineseNotesMatch": true,
+  "onlyManifestNotesChanged": true,
+  "embeddedZpaqEngine": {
+    "engineSha256": "5ad239810009dc499c79159c60f8cd2e61764b9bb88f43dc0eb6d242846c937b",
+    "licenseSha256": "927b5feda84f7a7f2063998b124829182967f54b954db2c3569e8bd07958bf07",
+    "engineBytes": 494592,
+    "cases": [
+      {
+        "name": "journal.zpaq",
+        "currentFiles": 3,
+        "readWithBundledEngine": true
+      },
+      {
+        "name": "journal-key.zpaq",
+        "currentFiles": 3,
+        "readWithBundledEngine": true
+      }
+    ],
+    "creationCases": [
+      {
+        "name": "plain",
+        "createdWithPackagedEngine": true,
+        "officialIndependentReadback": true,
+        "payloadSha256": "1b5618cdd8e1272824064569208801ffeb635fc9ad21065bb1052aa7756a5567"
+      },
+      {
+        "name": "native-key",
+        "createdWithPackagedEngine": true,
+        "officialIndependentReadback": true,
+        "payloadSha256": "1b5618cdd8e1272824064569208801ffeb635fc9ad21065bb1052aa7756a5567"
+      }
+    ],
+    "installationExecuted": false,
+    "engineExecutedFromExtractedInstaller": true
+  }
+}

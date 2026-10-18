@@ -45,3 +45,9 @@ ZPAQ [作者文档](https://www.mattmahoney.net/dc/zpaqdoc.html)的多部分是�
 新增归档专用异步通道，复用现有 Windows 子进程暂停/恢复机制；只将 ZPAQ 读取和创建接入该通道，其余媒体/RAR 提示输入保持原行为。相同心跳断言现在通过，恢复后继续写入，取消会结束并回收子进程；真实 ZPAQ 场景还覆盖编码中暂停、恢复和暂停中取消。没有删去失败用例或放宽断言。
 
 最终七组桌面流程 UTC `2026-10-18T00:16:14.227Z` 通过，E2E 程序 ProductVersion 1.5.1、33497600 字节、SHA256 `5fc167fbefd909a465fd25de07f135245ec1e0f94266862059ef77fb9717b0dc`。一次快速菜单脚本操作后实际目标仍为 ZIP，见[保留的失败页面](evidence/zpaq-create-1.5.1/selection-before-state-wait.png)；脚本现先等待菜单动画和实际选中值，再输入其他参数，没有改产品默认值或放松分卷禁用断言。后续相同用户流程完整通过。最终证据覆盖原 JSON 和固定创建产物，首轮未修暂停的安装包不能混用。
+
+## 正式发布完成
+
+最终功能冻结 `f6f2d92`，候选 `7324e1b`；必需 Windows package `39082434311` 成功，PR #183 受保护合入，标签固定于 `3508c68b7cf943d60d1425235dbcabdabbf6a03c`，与候选同树。正式发布构建 `39082879858` 成功，UTC `2026-10-18T00:40:07Z` 发布 [v1.5.1](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.1)。两份 README 保留图标，发布记录与后续接续独立文档 PR 回填，不改功能或标签。
+
+候选和正式安装器均已实际回下载、提取包内引擎及许可证核对；包内引擎读取普通/中文密码原包，并创建普通及原生密码归档后由作者原版工具独立回解。正式四资产与 GitHub digest/大小一致，ProductVersion 1.5.1，更新 ZIP 内安装器、清单签名/地址/时间及中文说明一致；仅改清单 notes，未执行安装升级或改个人数据。准确身份见[候选收据](evidence/zpaq-create-1.5.1/candidate.json)、[正式收据](evidence/zpaq-create-1.5.1/release.json)和[封板记录](ZPAQ_CREATE_FREEZE_1.5.1.md)。下一版按原路线进入 ALZ，只读预审不算已经实施；十二版尚余四版，不重起重复规划。
