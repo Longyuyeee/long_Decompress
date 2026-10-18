@@ -1,0 +1,36 @@
+{
+  "checkedAt": "2026-10-18T02:43:31.736Z",
+  "toolSha256": "d69bc4d2605f0ecac20e8cfae11e313fb011649ed7f182cfcb25d6be73dcf4e2",
+  "toolVersion": "Bandizip 7.38 Beta",
+  "helperSha256": "a7293df80a56b68879fe4f45419648868026f03819aba75413f1bf33964aa18b",
+  "cases": [
+    {
+      "archive": "native-plain.egg",
+      "encoding": "cp936",
+      "originalUnicodeNames": true,
+      "independentPayloadHashes": true,
+      "emptyDirectory": true
+    },
+    {
+      "archive": "native-key.egg",
+      "encoding": "cp936",
+      "originalUnicodeNames": true,
+      "independentPayloadHashes": true,
+      "emptyDirectory": true
+    },
+    {
+      "archive": "native-key-volumes.vol1.egg",
+      "encoding": "cp936",
+      "originalUnicodeNames": true,
+      "independentPayloadHashes": true,
+      "emptyDirectory": true
+    },
+    {
+      "archive": "native-cn-key.egg",
+      "encoding": "cp936",
+      "originalUnicodeNames": true,
+      "independentPayloadHashes": true,
+      "emptyDirectory": true
+    }
+  ]
+}

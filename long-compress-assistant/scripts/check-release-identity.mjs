@@ -145,6 +145,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
     await import('./check-media-dependencies.mjs')
     await import('./check-zpaq-engine.mjs')
     await import('./check-alz-engine.mjs')
+    await import('./check-egg-engine.mjs')
     const { checkMediaMetrics } = await import('./check-media-metrics.mjs')
     await checkMediaMetrics()
     const { checkMediaReleaseGates } = await import('./check-media-release-gates.mjs')

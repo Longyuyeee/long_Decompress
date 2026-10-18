@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "Long解压",
-    "version": "1.5.2"
+    "version": "1.5.3"
   },
   "tauri": {
     "systemTray": {
@@ -58,6 +58,8 @@
       ],
       "resources": [
         "resources/alz-engine/*",
+        "resources/egg-engine/*",
+        "resources/egg-engine/licenses/*",
         "resources/alz-engine/licenses/*",
         "resources/zpaq-engine/*",
         "resources/long_compress_shell_extension_*.dll",

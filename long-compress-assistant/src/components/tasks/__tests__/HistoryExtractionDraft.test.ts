@@ -23,6 +23,15 @@ const setup = async () => {
   return { wrapper, store: useTaskStore() }
 }
 describe('history extraction draft', () => {
+  it('restores EGG key encoding without retaining the password', () => {
+    const pinia=createPinia();setActivePinia(pinia)
+    const saved:TaskHistoryRecord={...record,sourcePaths:['C:/原卷.vol3.egg'],format:'EGG',executionConfig:{schemaVersion:1,kind:'archive-extraction',outputDirectory:'D:/out',extractToSubfolder:false,zipPasswordEncoding:'cp936'}}
+    const wrapper=mount(HistoryExtractionDraft,{props:{record:saved},global:{plugins:[pinia],stubs:{ExtractionOutputPreview:true}}})
+    expect(wrapper.text()).toContain('EGG 密码编码')
+    expect(wrapper.get('[data-testid="history-draft-zip-password-encoding"]').text()).toContain('CP936')
+    expect(wrapper.get('[data-testid="history-draft-password"]').element.value).toBe('')
+    wrapper.unmount()
+  })
   it('describes ALZ filename and password codepage in a restored native-member task', () => {
     const pinia=createPinia();setActivePinia(pinia)
     const saved: TaskHistoryRecord={...record,sourcePaths:['C:/原卷.a01'],format:'ALZ',executionConfig:{schemaVersion:1,kind:'archive-extraction',outputDirectory:'D:/out',extractToSubfolder:false,zipPasswordEncoding:'cp936'}}

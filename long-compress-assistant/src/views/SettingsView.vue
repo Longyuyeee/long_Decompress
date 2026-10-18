@@ -27,6 +27,7 @@ const passwordExtractionFormats = computed(() => FORMAT_CAPABILITIES
   .filter(format => format.supportsPasswordExtract && (format.format !== 'zpaq' || archiveEngine.value?.formats.some(item => item.name === 'ZPAQ')))
   .map(format => format.displayName)
   .concat(archiveEngine.value?.formats.some(item => item.name === 'ALZ') ? ['ALZ（只读）'] : [])
+  .concat(archiveEngine.value?.formats.some(item => item.name === 'EGG') ? ['EGG（基础只读）'] : [])
   .join(' · '))
 
 const refreshEngineDiagnostics = async () => {
@@ -636,6 +637,10 @@ const removeWordlist = (index: number) => {
                     <div class="text-xs text-content leading-relaxed font-mono">
                       AR · A · LZH · LHA · ARJ · CHM · SQUASHFS · SFS · XAR · CPIO · UDF · FAT · NTFS · HFS · APFS · EXT2 · EXT3 · EXT4 · GPT · MBR · CRAMFS · ARC
                     </div>
+                  </div>
+                  <div v-if="archiveEngine?.formats.some(format => format.name === 'EGG')" data-testid="settings-egg-read">
+                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">EGG 随附基础只读引擎<HelpHint label="EGG 支持范围">已验证存储、Deflate、Bzip2、LZMA、ZipCrypto、UTF-8 文件名和原生 .volN.egg 分卷。AZO、固实、AES/LEA 及文件名加密尚不在本版读取范围。不提供创建或损坏修复，缺卷必须补齐。</HelpHint></div>
+                    <div class="text-xs text-content leading-relaxed">EGG · 基础密码解压 · 原生分卷 · 检查与转换</div>
                   </div>
                   <div v-if="archiveEngine?.formats.some(format => format.name === 'ALZ')" data-testid="settings-alz-read">
                     <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">ALZ 随附只读引擎<HelpHint label="ALZ 支持范围">已验证存储、Deflate、ALZ 变体 Bzip2、ZipCrypto 和原生 .alz/.aNN 卷组。文件名与密码默认按 CP949，可明确选择原工具代码页；缺卷必须补齐，不提供创建或损坏修复。</HelpHint></div>

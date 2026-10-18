@@ -2,6 +2,16 @@ import { describe, expect, it } from 'vitest'
 import { archiveGroupKey, archiveSourceFormat, archiveSourceStem } from '../archiveSource'
 import { isPotentialSplitArchivePath } from '../compressionFormat'
 
+describe('EGG native member names', () => {
+  it.each(['资料.vol1.egg','资料.vol2.egg','资料.VOL103.EGG'])('shares a distinct native group for %s', name => {
+    expect(archiveGroupKey(`F:/下载/${name}`)).toBe('f:/下载/资料.vol1.egg')
+    expect(archiveSourceFormat(name)).toBe('egg')
+    expect(archiveSourceStem(name)).toBe('资料')
+    expect(isPotentialSplitArchivePath(name)).toBe(true)
+    expect(archiveGroupKey(name)).not.toBe(archiveGroupKey('资料.egg'))
+  })
+})
+
 describe('ALZ native member names', () => {
   it.each(['资料.alz', '资料.a00', '资料.A01', '资料.b00'])('shares the original group and clean output name for %s', name => {
     expect(archiveGroupKey(`F:/下载/${name}`)).toBe('f:/下载/资料.alz')

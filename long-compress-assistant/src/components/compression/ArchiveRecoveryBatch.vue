@@ -131,7 +131,7 @@ function updatePassword(row:ArchiveRecoveryRow, event:Event) { batch.update(row,
     <fieldset :disabled="applying" class="space-y-4 min-w-0" data-testid="archive-batch-config-dialog">
       <p class="text-xs leading-relaxed text-muted">只修改指定项目；其他设置保留各自原值。修改密码后需要重新检查。同名归档统一解压时，会自动分开到子目录。</p>
       <label class="block text-sm"><span class="flex items-center gap-2"><input v-model="changePassword" type="checkbox" />填写共用原包密码</span><input v-if="changePassword" v-model="sharedPassword" type="password" autocomplete="off" placeholder="留空则清除原包密码" class="batch-input mt-2" data-testid="archive-batch-shared-password" /></label>
-      <div class="min-w-0 space-y-2 text-xs text-muted">原包读取编码 <HelpHint label="批量检查密码编码说明">仅应用到检测确认的 ZIP/ZIPX 或 ALZ。ALZ 默认 CP949，同时影响文件名和密码。修改编码后须重新检查；已恢复结果保留生成时的编码。</HelpHint>
+      <div class="min-w-0 space-y-2 text-xs text-muted">原包读取编码 <HelpHint label="批量检查密码编码说明">仅应用到检测确认的 ZIP/ZIPX、ALZ 或 EGG。EGG 默认 UTF-8，只影响密码；ALZ 默认 CP949，同时影响文件名和密码。修改后须重新检查，已恢复结果保留生成时的编码。</HelpHint>
         <ThemedSelect v-model="sharedEncoding" :disabled="applying" :options="[{value:'keep',label:'保持各自设置'},{value:'auto',label:'使用原包格式默认值'},...ZIP_PASSWORD_ENCODING_OPTIONS]" aria-label="批量检查原包读取编码" test-id="recovery-batch-zip-password-encoding" floating />
       </div>
       <label class="block space-y-2 text-xs text-muted">恢复文件保存目录<div class="flex min-w-0 gap-2"><input v-model="repairDirectory" placeholder="留空则保持各自目录" class="batch-input" data-testid="archive-batch-output" /><button class="batch-action shrink-0 border border-subtle" @click="chooseDirectory().then(value => {if(value) repairDirectory = value})">选择</button></div></label>

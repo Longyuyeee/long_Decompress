@@ -729,6 +729,7 @@ const extractSelected = async () => {
         <span><b>{{ result.format }}</b> 格式</span>
         <span v-if="result.format === 'ZPAQ'" data-testid="zpaq-current-view">当前文件<HelpHint label="ZPAQ 当前文件视图">只显示最新有效文件，已删除文件和历史修订不会混入。支持流式、日志式及原生密码读取；压缩中心可创建新的日志式 ZPAQ，不提供固定大小分卷、增量更新或历史恢复。文件检查不能检测所有未认证头部信息的变化。</HelpHint></span>
           <span v-if="result.format === 'ALZ'" data-testid="alz-read-view">只读<HelpHint label="ALZ 读取范围">支持已验证的存储、Deflate、ALZ 变体 Bzip2、ZipCrypto 及原生 .alz/.aNN 卷组。文件名与密码默认按 CP949，可明确选择原工具代码页，不能无损转换时会说明原因。需补齐原卷后解压；不提供 ALZ 创建或损坏修复。</HelpHint></span>
+          <span v-if="result.format === 'EGG'" data-testid="egg-read-view">基础只读<HelpHint label="EGG 读取范围">支持已验证的存储、Deflate、Bzip2、LZMA、ZipCrypto、UTF-8 文件名及原生 .volN.egg 分卷。需补齐原卷后解压；AZO、固实、AES/LEA 和文件名加密尚不在本版读取范围。不提供 EGG 创建或损坏修复。</HelpHint></span>
           <span><b>{{ result.totalFiles }}</b> 个文件</span>
         <span>展开后 <b>{{ result.entries.some(entry => entry.sizeKnown === false && !entry.isDir) ? '大小未知' : formatBytes(result.totalUncompressedSize) }}</b></span>
         <span><i :class="result.encrypted ? 'pi pi-lock' : 'pi pi-lock-open'"></i> {{ result.encrypted ? '已加密' : '未加密' }}</span>

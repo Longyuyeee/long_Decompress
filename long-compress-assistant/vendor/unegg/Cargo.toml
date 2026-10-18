@@ -1,0 +1,25 @@
+[package]
+name = "unegg"
+version = "0.2.1"
+edition = "2024"
+rust-version = "1.88"
+description = "EGG archive extractor"
+readme = "README.md"
+repository = "https://github.com/alkegi/unegg"
+documentation = "https://docs.rs/unegg"
+license = "MIT"
+keywords = ["egg", "archive", "extraction", "decompression"]
+categories = ["compression", "command-line-utilities"]
+exclude = ["/tests/*", ".*"]
+autobins = false
+
+[lib]
+name = "unegg"
+path = "src/lib.rs"
+
+[dependencies]
+flate2 = "1"
+bzip2 = "0.6"
+lzma-rs = "0.3"
+crc32fast = "1"
+encoding_rs = "0.8"

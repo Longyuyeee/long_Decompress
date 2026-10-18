@@ -47,7 +47,7 @@ fn classify_failure(record: &TaskHistoryRecord) -> Option<TaskFailureV1> {
         .and_then(|(_, tail)| tail.split_once(']').map(|(code, _)| code));
     let category = marker.filter(|code| matches!(*code,
         "damaged" | "missing-volume" | "incomplete" | "permission" | "timeout" |
-        "engine-unavailable" | "engine-start" | "io" | "ambiguous-data" | "password-encoding"
+        "engine-unavailable" | "engine-start" | "io" | "ambiguous-data" | "password-encoding" | "unsupported"
     )).unwrap_or("unknown");
     let observed = record.failure.as_ref().filter(|failure| failure.schema_version == 1)
         .map(|failure| failure.stage.as_str()).filter(|stage| matches!(*stage,
@@ -492,7 +492,7 @@ pub struct HistoryQuery {
 fn history_failure_category_sql() -> String {
     let categories = ["rollback-incomplete", "output-conflict", "publication-failed", "verification-failed",
         "source-changed", "source-missing", "source-unavailable", "source-invalid", "damaged",
-        "missing-volume", "incomplete", "permission", "timeout", "engine-unavailable", "engine-start", "io", "ambiguous-data", "password-encoding", "unknown"];
+        "missing-volume", "incomplete", "permission", "timeout", "engine-unavailable", "engine-start", "io", "ambiguous-data", "password-encoding", "unsupported", "unknown"];
     let accepted = categories.iter().map(|value| format!("'{value}'")).collect::<Vec<_>>().join(",");
     let mut expression = format!("CASE WHEN status != 'failed' THEN NULL WHEN json_valid(failure) THEN CASE WHEN json_extract(failure, '$.schemaVersion') = 1 AND json_extract(failure, '$.category') IN ({accepted}) THEN json_extract(failure, '$.category') END END");
     let mut fallback = String::from("CASE WHEN status != 'failed' THEN NULL ");
@@ -669,6 +669,17 @@ pub async fn clear_task_history() -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn unsupported_egg_feature_keeps_final_cause_in_history_queries() {
+        let dir=tempfile::tempdir().unwrap();
+        let db=crate::database::connection::DatabaseConnection::new(&dir.path().join("egg-history.db"),None).await.unwrap();
+        let message="[archive-inspection:unsupported] EGG AZO 尚不在本版读取范围，不应反复尝试密码";
+        let record=serde_json::from_value(serde_json::json!({"id":"egg-method","name":"azo.egg","taskType":"decompression","workloadKind":"archive","status":"failed","sourcePaths":["D:/azo.egg"],"outputPath":"D:/out","completedAt":"2026-10-18T00:00:00Z","durationMs":1,"processedBytes":0,"totalBytes":0,"logs":[],"errorMessage":message})).unwrap();
+        save_task_history_to_pool(db.pool(),record).await.unwrap();
+        let page=history_query_from_pool(db.pool(),100,None,HistoryQuery{failure_category:Some("unsupported".into()),..Default::default()}).await.unwrap();
+        assert_eq!(page.records.len(),1);assert_eq!(page.records[0].failure.as_ref().unwrap().category,"unsupported");assert_eq!(page.records[0].error_message.as_deref(),Some(message));
+    }
 
     #[tokio::test]
     async fn password_encoding_failure_keeps_its_category_in_history_queries() {

@@ -15,6 +15,10 @@ import {
 } from '../compressionFormat'
 
 describe('compression format helpers', () => {
+  it('imports EGG and native members without offering EGG creation', () => {
+    for (const suffix of ['egg','vol1.egg','vol2.egg']) expect(isDecompressArchivePath('资料.'+suffix)).toBe(true)
+    expect(COMPRESSIBLE_FORMATS.some(format=>String(format.value)==='egg')).toBe(false)
+  })
   it('imports ALZ native member candidates without offering ALZ creation', () => {
     for (const suffix of ['alz','a00','a03','b01']) expect(isDecompressArchivePath('资料.'+suffix)).toBe(true)
     expect(isPotentialSplitArchivePath('资料.a03')).toBe(true)

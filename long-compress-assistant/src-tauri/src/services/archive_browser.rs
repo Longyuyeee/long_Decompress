@@ -45,6 +45,7 @@ fn summarize(format: &str, entries: Vec<ArchiveEntryInfo>) -> ArchiveBrowseResul
 }
 
 pub(crate) fn detect_format(path: &Path) -> Result<ArchiveFormat> {
+    if super::egg_volumes::is_candidate(path) { super::egg_volumes::complete(path)?; return Ok(ArchiveFormat::Egg); }
     if super::alz_volumes::is_candidate(path) { super::alz_volumes::complete(path)?; return Ok(ArchiveFormat::Alz); }
     if super::sfx_archive::is_executable_path(path) {
         if let Some((format, _)) = super::sfx_archive::detect(path)? { return Ok(format); }
@@ -318,6 +319,9 @@ pub async fn browse_archive_cancellable_with_encoding(
     let operation = async move {
         if format == ArchiveFormat::Alz {
             return super::alz_engine::browse_with_encoding(&path, encoding, operation_cancelled).await;
+        }
+        if format == ArchiveFormat::Egg {
+            return super::egg_engine::browse(&path, operation_cancelled).await;
         }
         if format == ArchiveFormat::Zpaq {
             return super::zpaq_engine::browse(&path, password.as_deref(), operation_cancelled).await;

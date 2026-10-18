@@ -19,6 +19,7 @@ export const failureCategories = {
   io: '检测读取失败',
   'ambiguous-data': '加密数据异常（原因未确定）',
   'password-encoding': '原包编码不兼容',
+  unsupported: '暂不支持的归档特性',
   unknown: '未分类',
 } as const
 
@@ -27,7 +28,7 @@ export type FailureCategory = keyof typeof failureCategories
 // Classification markers remain in task/history evidence for recovery routing.
 // Only the ordinary toast/log presentation removes them; never mutate records.
 export function archiveInspectionMessageForDisplay(message: string): string {
-  const readable = message.replace(/\[(?:archive-inspection:[^\]]+|alz-(?:encoding|password-encoding|io|password))\]\s*/g, '').trim()
+  const readable = message.replace(/\[(?:archive-inspection:[^\]]+|alz-(?:encoding|password-encoding|io|password)|egg-(?:password-encoding|io|password))\]\s*/g, '').trim()
   return readable || (message ? '归档检测未通过，未提供具体原因。' : '')
 }
 
@@ -79,6 +80,11 @@ export function getTaskRecoveryGuidance(record: Pick<TaskHistoryRecord, 'status'
   }
   const report = '可通过下方“导出诊断报告”保留本任务的最终原因、原始错误和路径；旧记录不会因查看指引而改变。'
   switch (failure.category) {
+    case 'unsupported':
+      return { title: '暂不支持此特性：先确认格式与方法', steps: [
+        '按最终原因核对压缩方法、加密方式或固实模式；不支持某个组合不代表文件损坏，反复尝试密码不能解决。',
+        '请提供者转换为当前支持的 ZIP/7Z 等格式，或使用已确认支持该特性的工具读取。更换来源后可创建新任务，原失败记录保留。', report,
+      ] }
     case 'password-encoding':
       return { title: '原包编码不兼容：确认编码后重试', steps: [
         '确认原包使用的代码页及密码文本，在下方选择格式默认值或提供者指定的代码页；ALZ 同时按此编码读取文件名。编码不兼容不代表文件损坏。',

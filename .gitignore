@@ -52,3 +52,7 @@ long-compress-assistant/design/brand/*-source.png
 
 # Local updater signing backups (private, never commit)
 long-compress-assistant/.local-secrets/
+# Isolated EGG helper build artifacts
+long-compress-assistant/tools/egg-engine/target/
+# Local Rust build cache (never a release artifact)
+long-compress-assistant/target-desktop-gate/
