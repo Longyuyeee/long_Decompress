@@ -130,7 +130,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | 能力 | 主要格式与说明 |
 | --- | --- |
 | 创建归档 | ZIP（Deflate / Zstandard）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式与原生密码）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM |
-| 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式/日志式当前文件）、ALZ、EGG（基础方法、传统密码与原生分卷）、自解压 SFX、TAR 系列、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
+| 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式/日志式当前文件）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
 | 密码与分卷 | ZIP 支持密码数字切卷与标准 `.z01/.zip` 分卷；7Z 支持密码数字卷；RAR 支持原生密码分卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合和既有 AES 包装）、WIM、ZPAQ（含输出与改密）；密码和分卷随目标格式提供，ZPAQ 不提供固定大小分卷 |
 | 图片压缩 | JPEG、PNG、WebP；质量、尺寸与格式按对应编码能力调整 |
@@ -149,7 +149,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 - 可直接浏览、解压和转换 ZIP/7Z/RAR 自解压 EXE；好压论坛 ZIP 分卷按整组读取，支持已核对的明文与 ZipCrypto 密码样本。收到多个分卷时，把整组放在同一目录即可。具体格式范围见[支持说明](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)。
 - LZIP（单文件）与 TAR.LZIP（目录/多文件）支持创建、浏览、解压、检查和转换，兼容 `.lz`、`.tar.lz`、`.tlz`；支持连续多成员 LZIP，不提供这两种格式的密码或分卷创建。
 - ZIP 默认 AES-256，可主动选择 ZipCrypto；与 Windows 7-Zip 交换非 ASCII 密码的归档时，可显式选择匹配的 Windows 密码编码。
-- EGG 基础只读支持已验证的 Store、Deflate、Bzip2、LZMA、传统 ZipCrypto 与 `.volN.egg` 原生卷；可浏览、提取、检查并作为转换输入。旧中文 ALZip 密码可明确选 CP936，文件名按自身标记读取。不创建 EGG，AZO、固实、AES/LEA 和修复不在本版范围。
+- EGG 只读支持已验证的 Store、Deflate、Bzip2、LZMA、AZO、固实 Deflate/LZMA、ZipCrypto、AES/LEA 与 `.volN.egg` 原生卷；可浏览、所选/整包提取、检查并作为转换输入。原中文 ALZip AES 密码可明确选 CP936，文件名按自身标记读取。不创建 EGG，不提供全局/文件名加密或损坏修复，未经验证的组合不外推；具体边界见[本版说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.4.md)。
 - 密码 ZIP 可尝试救回完整文件：目录可读或丢目录后仍能确定本地文件边界时，提供密码救回通过校验的文件；新包沿用填写的密码，统一使用 AES-256 / UTF-8，并显示部分恢复及未恢复原因。
 - DOCX、XLSX、PPTX、ODT、ODS、EPUB 属于文档容器，不作为普通压缩包导入。
 - 预览、嵌套浏览及压缩参数随格式而异。体积优化效果取决于文件内容，已充分压缩的文件可能没有明显收益。
@@ -230,16 +230,15 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 <a id="updates"></a>
 
-v1.5.4 功能已封板，尚待正式发布：EGG AZO、AES/LEA 和固实只读，以及批量 ALZ/EGG 密码编码修复。验证与范围见[本版审计](long-compress-assistant/docs/EGG_COMPLEX_1.5.4.md)和[封板记录](long-compress-assistant/docs/EGG_COMPLEX_FREEZE_1.5.4.md)。下方已发布范围以 v1.5.3 为基线，软件图标和既有截图保留。
-
 ## 📝 更新记录
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.3 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.3)。新增 EGG 基础只读、传统密码、UTF-8 名称与原生分卷，贯通浏览、所选/整包解压、检查、转换及失败接续。77 项不同 Rust、140 项前端、27 个真实桌面场景及 26 张页面确认通过；正式安装器、签名更新包、中文说明及包内引擎已回下载核对，见[审计](long-compress-assistant/docs/EGG_BASIC_1.5.3.md)、[封板记录](long-compress-assistant/docs/EGG_BASIC_FREEZE_1.5.3.md)与[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.3.md)。不提供 EGG 创建、AZO/固实/AES/LEA 或修复，复杂组合接续下一版。软件图标和既有截图保留。
+**v1.5.4 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.4)。新增 EGG AZO、AES/LEA 和固实只读，保留基础方法、传统密码和原生分卷；修复批量 ALZ/EGG 密码编码未应用。119 项不同 Rust、212 项前端、35 组真实原包、45 个桌面场景及 24 张实看页面通过；正式四资产、中文说明及包内引擎已回下载核对。见[审计](long-compress-assistant/docs/EGG_COMPLEX_1.5.4.md)、[封板记录](long-compress-assistant/docs/EGG_COMPLEX_FREEZE_1.5.4.md)与[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.4.md)。EGG 不提供创建、文件名/全局加密或修复，不外推未验证组合。软件图标和既有截图保留，下一版接续外置卷 SFX。
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
+| **v1.5.4** | EGG AZO、AES/LEA、固实只读与所选提取，中文 AES 原生卷接续，批量来源编码修复 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.4.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.4) |
 | **v1.5.3** | EGG 基础只读、传统密码、原生分卷、明确密码编码、浏览/检查/转换及失败接续 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.3.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.3) |
 | **v1.5.2** | ALZ 只读、传统密码与原生分卷，编码选择、浏览/检查/转换及失败接续 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.2.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.2) |
 | **v1.5.1** | ZPAQ 创建、原生密码、配置与历史重做、转换输出；I/O 失败原因、实际暂停及窄窗弹窗修正 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.1.md) · [下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.1) |

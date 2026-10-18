@@ -10,8 +10,25 @@
 
 E2E ProductVersion 1.5.4，SHA256 `a25c1daa20fdcc5227216982419886339fb690e4a258b8e37fe20ad4df8f9dd6`，不是正式安装器。最终 helper 895488 字节、SHA256 `774133b57408c5a52e632f45f7d37f500ffcbc4e96c1a63d334e6145c0e47ea0`；51 项依赖清单（含 helper）、103 份实际许可随包。候选与正式安装器另记收据，不混用哈希。
 
-## 候选与发布状态
+## 最终候选与合入
 
-功能已封板，准备受保护 PR 和必需 Windows package 检查。正式标签、安装器和 Release 尚未创建；待候选包内 helper/许可、35 原包及中文 AES 中卷/固实所选提取核对后合入，固定标签并正式构建。随后核对四资产、更新 ZIP 内安装器、签名清单及中文 Release/更新说明，再回填实际身份。不给尚未完成的步骤记通过。
+最终候选 `ac77fff4fe11bc896a446a4566f9e8c482caf364`，必需 Windows package `39096646301` 成功。安装器 ProductVersion 1.5.4，20896686 字节，SHA256 `21890f0ff92d987f032aa3da3fe9d1c8e23f38ff2563601d8e762b8ff44aaeb0`。包内 helper、依赖清单与 103 份实际许可按库存逐字节核对；实际验证 35 组原包，中文 AES 中卷与固实所选提取核对成功。未执行安装，见[候选收据](evidence/egg-complex-1.5.4/candidate.json)。
 
-本版发布后十二版路线为十一版交付，仅剩 v1.5.5 外置卷 SFX；未全部完成，不追加重复规划。新机入口和读取边界见实施审计。固实 LZMA 整段压缩输入仍受 256 MiB 限制；未验证的加密固实、LEA 中文密码和原生卷组合不宣称兼容。
+[PR #189](https://github.com/Longyuyeee/long_Decompress/pull/189) 于 UTC `2026-10-18T04:27:15Z` 受保护合入，标签 `v1.5.4` 固定在 `5f8fbc3e9031047e981b905f7394950c4c914920`，与候选同树 `b42409bce13d80d4b6e503e01865e1f1ee0f4fc4`，不移动标签。主线 CI `39097145587` 与正式工作流 `39097158515` 均成功。
+
+## 正式发布资产
+
+[v1.5.4 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.4) 于 UTC `2026-10-18T04:42:28Z`（北京时间 12:42:28）发布，非草稿、非预发布。正式工作流整体成功后更新中文 Release 与 `latest.json.notes`，其余签名、下载地址和发布时间保持原值。
+
+UTC `2026-10-18T04:44:08.508Z` 四资产回下载核对通过，体积及 SHA256 与 GitHub 一致；安装器 ProductVersion 1.5.4，更新 ZIP 内安装器与正式 EXE 同字节，签名/下载地址/时间与清单一致，Release 与更新清单中文说明一致。正式包内 helper、依赖库存及 103 份实际许可按字节核对，35 组原包和中文 AES 中卷/固实所选提取均成功。未执行安装，见[正式收据](evidence/egg-complex-1.5.4/release.json)。
+
+| 正式资产 | 字节 | SHA256 |
+| --- | ---: | --- |
+| Long-Decompress_1.5.4_x64-setup.exe | 20902174 | `816663a1d886db8b2b5b0aac36d8ecc2327ba5bc83775fa43ef6472d5a8ac857` |
+| Long-Decompress_1.5.4_x64-setup.nsis.zip | 20902332 | `c0777cfeb9264760c522b5b8c799d55a553398dd5b9276748fcc1b9a98fcbcf0` |
+| Long-Decompress_1.5.4_x64-setup.nsis.zip.sig | 428 | `2e86903caf882c2aa7a4a204972d7c0c5199334dc20584aa4a3ed8488ffb5e90` |
+| latest.json | 3239 | `6b7c36d30ee6cbe99e27af923f69ce627e33ffb2e3e770364541b8450a23c861` |
+
+不混用 E2E 程序、候选和正式安装器哈希。发布后仅回填两份 README、审计/交接和收据，单独受保护合入，不改功能或移动标签。
+
+十二版路线在本版发布后为十一版交付，仅剩 v1.5.5 外置卷 SFX；未全部完成，不追加重复规划。新机入口和读取边界见实施审计。固实 LZMA 整段压缩输入仍受 256 MiB 限制；未验证的加密固实、LEA 中文密码和原生卷组合不宣称兼容。

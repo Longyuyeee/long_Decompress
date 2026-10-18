@@ -16,9 +16,9 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 ## 功能概览
 
-**v1.5.4 功能已封板，待正式发布**：新增 EGG AZO、AES/LEA 和固实只读，修复批量 ALZ/EGG 密码编码未应用；119 项 Rust、212 项前端、35 组原包、45 场景和 24 张实看页面通过。见[本版审计](docs/EGG_COMPLEX_1.5.4.md)、[封板记录](docs/EGG_COMPLEX_FREEZE_1.5.4.md)与[更新说明](docs/RELEASE_NOTES_1.5.4.md)。下方 v1.5.3 为已发布基线，不能代表本候选的复杂 EGG 能力。
+**v1.5.4 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.4)。新增 EGG AZO、AES/LEA 和固实只读，修复批量 ALZ/EGG 密码编码未应用；119 项不同 Rust、212 项前端、35 组真实原包、45 个桌面场景和 24 张实看页面通过。PR #189 已受保护合入，正式四资产、中文说明和包内引擎已回下载核对，见[审计](docs/EGG_COMPLEX_1.5.4.md)、[封板记录](docs/EGG_COMPLEX_FREEZE_1.5.4.md)与[更新说明](docs/RELEASE_NOTES_1.5.4.md)。不提供 EGG 创建、全局/文件名加密或修复，未验证组合不外推。十二版路线已交付十一版，接续 v1.5.5 外置卷 SFX。软件图标和既有截图保留。
 
-**v1.5.3 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.3)。新增 EGG 基础只读、ZipCrypto、原生分卷、UTF-8 名称与明确密码编码，贯通浏览/提取/检查/转换及失败重试。77 项不同 Rust、140 项前端、27 个真实桌面场景和 26 张页面确认通过；PR #187 已受保护合入，正式四资产、中文说明及包内引擎已回下载核对，见[审计](docs/EGG_BASIC_1.5.3.md)、[封板记录](docs/EGG_BASIC_FREEZE_1.5.3.md)及[更新说明](docs/RELEASE_NOTES_1.5.3.md)。不提供 EGG 创建、AZO/固实/AES/LEA 或修复，接续 v1.5.4 复杂 EGG 与 v1.5.5 外置卷 SFX。软件图标和既有截图保留。
+此前 **v1.5.3** 完成 EGG 基础方法、传统 ZipCrypto、原生卷与明确密码编码的只读闭环，见[当时审计](docs/EGG_BASIC_1.5.3.md)与[更新说明](docs/RELEASE_NOTES_1.5.3.md)；其复杂方法限制是当时状态，现以 v1.5.4 的实际组合和资源边界为准。
 
 此前 **v1.5.2** 新增 ALZ 只读引擎，贯通普通/传统密码/原生分卷的浏览、所选与整包提取、检查、转换及失败接续。默认 CP949，可明确选择原工具代码页；历史与重试保留编码，不保存密码或局部选择。73 项不同 Rust、235 项前端、真实桌面与独立载荷核对通过，22 张页面已查看；正式四资产、中文说明及包内引擎已核对。见[实施审计](docs/ALZ_READ_1.5.2.md)、[封板记录](docs/ALZ_READ_FREEZE_1.5.2.md)及[更新说明](docs/RELEASE_NOTES_1.5.2.md)。ALZ 不提供创建、损坏修复或缺卷部分救援。
 
@@ -98,7 +98,7 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 许可证与第三方组件
 
-项目代码使用 [MIT License](../LICENSE)。随包 7-Zip、ZPAQ、ALZ、EGG、视频与 PDF 引擎分别遵循各自许可；ALZ/EGG 的源码、构建与完整依赖许可位于 `vendor/unalz/`、`vendor/unegg/`、`tools/alz-engine/`、`tools/egg-engine/` 和对应 resources 目录。WinRAR 编码器不随项目分发。
+项目代码使用 [MIT License](../LICENSE)。随包 7-Zip、ZPAQ、ALZ、EGG、视频与 PDF 引擎分别遵循各自许可；ALZ/EGG 的源码、构建与完整依赖许可位于 `vendor/unalz/`、`vendor/unegg/`、`vendor/libazo/`、`tools/alz-engine/`、`tools/egg-engine/` 和对应 resources 目录。WinRAR 编码器不随项目分发。
 
 ## 更新记录
 
