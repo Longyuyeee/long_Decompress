@@ -4,6 +4,16 @@ import ZipPasswordEncodingField from '../ZipPasswordEncodingField.vue'
 import ThemedSelect from '../ThemedSelect.vue'
 
 describe('ZIP input encoding field', () => {
+  it('labels the ALZ default accurately and keeps the explicit producer codepage', () => {
+    const wrapper=mount(ZipPasswordEncodingField,{props:{sourcePath:'native.a01',modelValue:'cp936'}})
+    const select=wrapper.getComponent(ThemedSelect)
+    expect(select.props('ariaLabel')).toBe('ALZ 文件名与密码编码')
+    expect(select.props('modelValue')).toBe('cp936')
+    expect(select.props('options')[0]).toEqual({value:'auto',label:'韩文（CP949，默认）'})
+    select.vm.$emit('update:modelValue','auto')
+    expect(wrapper.emitted('update:modelValue')).toEqual([[undefined]])
+    wrapper.unmount()
+  })
   it('offers only explicit output encodings with UTF-8 default and a separate target label', () => {
     const wrapper=mount(ZipPasswordEncodingField,{props:{mode:'output',label:'新包 ZIP 密码编码'}})
     const select=wrapper.getComponent(ThemedSelect)

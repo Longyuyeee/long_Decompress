@@ -159,8 +159,8 @@ pub struct CompressionOptions {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecompressOptions {
-    /// None retains automatic UTF-8/current-Windows password compatibility.
-    /// A chosen codepage applies only to this ZIP task, never to filenames.
+    /// ZIP: None retains automatic password compatibility, filenames unchanged.
+    /// ALZ: None means CP949; an explicit source codepage reads names and key.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zip_password_encoding: Option<crate::services::zip_password::ZipPasswordEncoding>,
     #[serde(default)]

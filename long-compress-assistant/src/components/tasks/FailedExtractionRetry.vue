@@ -190,7 +190,7 @@ function close() {
             <label class="block text-xs">本次密码（留空时按当前密码设置尝试）
               <input v-model="row.password" type="password" autocomplete="off" data-testid="retry-password" class="retry-input" />
             </label>
-            <ZipPasswordEncodingField v-if="supportsZipPasswordEncoding(row.source, row.source === row.originalSource ? row.sourceFormat : undefined)" v-model="row.zipPasswordEncoding" :disabled="busy || pickerBusy || !row.selected" test-id="retry-zip-password-encoding" />
+            <ZipPasswordEncodingField v-if="supportsZipPasswordEncoding(row.source, row.source === row.originalSource ? row.sourceFormat : undefined)" v-model="row.zipPasswordEncoding" :source-path="row.source" :source-format="row.source === row.originalSource ? row.sourceFormat : undefined" :disabled="busy || pickerBusy || !row.selected" test-id="retry-zip-password-encoding" />
             <label class="flex items-center gap-2 text-xs"><input v-model="row.extractToSubfolder" data-testid="retry-subfolder" type="checkbox" />解压到同名子目录</label>
             <ExtractionOutputPreview class="sm:col-span-2" :source="row.source.trim()" :output="row.output.trim()" :subfolder="row.extractToSubfolder" @change-output="choosePath(true, row)" />
           </fieldset>

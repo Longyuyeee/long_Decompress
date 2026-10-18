@@ -127,7 +127,7 @@ async function createDraft() {
       <label class="block text-sm">本次密码（可留空）
         <input v-model="password" data-testid="history-draft-password" type="password" autocomplete="off" class="history-control w-full mt-1" />
       </label>
-      <ZipPasswordEncodingField v-if="supportsZipPasswordEncoding(source, sourceFormat)" v-model="zipPasswordEncoding" :disabled="busy || created" test-id="history-draft-zip-password-encoding" />
+      <ZipPasswordEncodingField v-if="supportsZipPasswordEncoding(source, sourceFormat)" v-model="zipPasswordEncoding" :source-path="source" :source-format="sourceFormat" :disabled="busy || created" test-id="history-draft-zip-password-encoding" />
       <ExtractionOutputPreview :source="source.trim()" :output="destination.trim()" :subfolder="extractToSubfolder" @change-output="selectPath(true)" />
       <button data-testid="history-draft-create" class="history-control w-full" @click="createDraft">{{ busy ? '正在检查来源…' : '创建待执行任务' }}</button>
     </fieldset>

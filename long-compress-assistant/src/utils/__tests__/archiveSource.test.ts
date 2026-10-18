@@ -2,6 +2,15 @@ import { describe, expect, it } from 'vitest'
 import { archiveGroupKey, archiveSourceFormat, archiveSourceStem } from '../archiveSource'
 import { isPotentialSplitArchivePath } from '../compressionFormat'
 
+describe('ALZ native member names', () => {
+  it.each(['资料.alz', '资料.a00', '资料.A01', '资料.b00'])('shares the original group and clean output name for %s', name => {
+    expect(archiveGroupKey(`F:/下载/${name}`)).toBe('f:/下载/资料.alz')
+    expect(archiveSourceFormat(name)).toBe('alz')
+    expect(archiveSourceStem(name)).toBe('资料')
+    if (!name.endsWith('.alz')) expect(isPotentialSplitArchivePath(name)).toBe(true)
+  })
+})
+
 describe('standard ZIPX sources', () => {
   it.each(['资料.zx01', '资料.ZX02', '资料.zx100', '资料.zipx'])('uses a clean name and distinct group for %s', name => {
     expect(archiveGroupKey(`F:/下载/${name}`)).toBe('f:/下载/资料.zipx')

@@ -1254,7 +1254,7 @@ pub async fn browse_archive(
     let resolved_password = match password.filter(|value| !value.is_empty()) {
         Some(password) => Some(password),
         None if crate::services::archive_browser::detect_format(std::path::Path::new(&file_path))
-            .is_ok_and(|format| format == crate::services::archive_format::ArchiveFormat::Zip) => None,
+            .is_ok_and(|format| matches!(format, crate::services::archive_format::ArchiveFormat::Zip | crate::services::archive_format::ArchiveFormat::Alz)) => None,
         None => {
             let service = CompressionService::new_with_defaults().await;
             service
@@ -1277,10 +1277,11 @@ pub async fn browse_archive(
         }
     }
     let _guard = ArchiveBrowseGuard { browse_id };
-    crate::services::archive_browser::browse_archive_cancellable(
+    crate::services::archive_browser::browse_archive_cancellable_with_encoding(
         std::path::Path::new(&file_path),
         resolved_password.as_deref(),
         cancelled,
+        zip_password_encoding,
     )
     .await
     // anyhow's Display only contains the outer context. Keep the native cause
@@ -1350,6 +1351,9 @@ impl Drop for ArchiveBrowseGuard {
 
 fn classify_archive_browse_error(error: &str) -> String {
     let lower = error.to_ascii_lowercase();
+    if error.contains("[alz-encoding]") {
+        return format!("ARCHIVE_BROWSE_UNSUPPORTED|ALZ 文件名编码不兼容，请选择原工具代码页后重新读取|{error}");
+    }
     if error.contains("ZPAQ") {
         if error.contains("[zpaq-io]") {
             return format!("ARCHIVE_BROWSE_FAILED|ZPAQ 文件读写失败，请按原始错误检查磁盘连接和文件访问权限|{error}");
@@ -1465,7 +1469,7 @@ pub async fn materialize_nested_archive(
         }
     };
     let metadata =
-        crate::services::archive_browser::browse_archive(&archive, resolved_password.as_deref())
+        crate::services::archive_browser::browse_archive_with_encoding(&archive, resolved_password.as_deref(), zip_password_encoding)
             .await
             .map_err(|error| error.to_string())?;
     let selected = metadata
@@ -1584,7 +1588,7 @@ pub async fn open_archive_entry(
         }
     };
     let metadata =
-        crate::services::archive_browser::browse_archive(archive, resolved_password.as_deref())
+        crate::services::archive_browser::browse_archive_with_encoding(archive, resolved_password.as_deref(), zip_password_encoding)
             .await
             .map_err(|error| error.to_string())?;
     let selected = metadata
@@ -1649,7 +1653,7 @@ pub async fn open_archive_entry(
     })
 }
 
-/// 检测归档文件完整性（通过 7z CLI 的 t 命令）
+/// 使用实际格式对应的读取引擎检查完整性。
 #[command]
 pub async fn test_archive_integrity(
     file_path: String,
@@ -1659,6 +1663,12 @@ pub async fn test_archive_integrity(
     use crate::services::universal_engine::UniversalCliEngine;
 
     let path = std::path::Path::new(&file_path);
+    if crate::services::archive_browser::detect_format(path).map_err(|e| format!("{e:#}"))?
+        == crate::services::archive_format::ArchiveFormat::Alz {
+        return crate::services::alz_engine::verify(path, password.as_deref(),
+            &DecompressOptions { zip_password_encoding, ..Default::default() }, Arc::new(AtomicBool::new(false)))
+            .await.map(|_| "Archive integrity verified".to_string()).map_err(|e| format!("{e:#}"));
+    }
     UniversalCliEngine::test_integrity_with_zip_encoding(path, password.as_deref(), zip_password_encoding)
         .await
         .map(|_| "Archive integrity verified".to_string())

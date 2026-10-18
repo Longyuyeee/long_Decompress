@@ -94,8 +94,8 @@ async function applySelectedConfiguration(patch: BatchConfigPatch, complete?: (e
       updated++
     }
   }
-  if (updated) appStore.setSuccess(`已更新 ${updated} 项配置，其他设置保持不变。${skipped ? ` ${skipped} 项非 ZIP 或格式未确认，未修改密码编码。` : ''}`)
-  if (!updated && skipped) { complete?.('未找到已确认的 ZIP/ZIPX 来源，未修改密码编码。'); return }
+  if (updated) appStore.setSuccess(`已更新 ${updated} 项配置，其他设置保持不变。${skipped ? ` ${skipped} 项不适用原包读取编码或格式未确认，未修改。` : ''}`)
+  if (!updated && skipped) { complete?.('未找到已确认的 ZIP/ZIPX 或 ALZ 来源，未修改读取编码。'); return }
   complete?.()
 }
 

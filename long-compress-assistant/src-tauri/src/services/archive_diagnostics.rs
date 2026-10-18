@@ -131,6 +131,7 @@ fn copy_cancellable_bounded(
 fn format_label(path: &Path, header: &[u8]) -> String {
     let magic = ArchiveFormat::from_magic(header);
     if magic == ArchiveFormat::Unknown && path.extension().is_some_and(|e| e.eq_ignore_ascii_case("zpaq")) { return "ZPAQ".into(); }
+    if magic == ArchiveFormat::Unknown && path.extension().is_some_and(|e| e.eq_ignore_ascii_case("alz")) { return "ALZ".into(); }
     match magic {
         ArchiveFormat::Zip => "ZIP".to_string(),
         ArchiveFormat::SevenZip => "7Z".to_string(),
@@ -163,6 +164,16 @@ fn classify_failure(
     // words such as "encrypted" or "wrong password?" in an engine's message.
     if lower.contains("[archive-inspection:incomplete]") || lower.contains("missing disk") {
         ("missing_volume", "缺少分卷", "卷组不完整；请补齐分卷后重新检查，不必反复尝试密码")
+    } else if lower.contains("[archive-inspection:damaged]") {
+        // A path can contain incidental words such as "eof". Explicit format
+        // evidence must outrank those free-text heuristics.
+        ("damaged", "归档损坏", "归档结构已确认损坏或不完整；请重新获取完整文件，反复尝试密码不能修复损坏")
+    } else if lower.contains("[alz-io]") {
+        ("io_error", "ALZ 文件读写失败", "请按原始原因检查空间、设备连接或访问权限，不应继续尝试密码")
+    } else if lower.contains("[alz-encoding]") || lower.contains("[alz-password-encoding]") {
+        ("password_encoding", "ALZ 编码不兼容", "请明确选择原工具使用的 ALZ 编码；不会用替换字符继续尝试密码")
+    } else if lower.contains("[alz-password]") {
+        ("ambiguous_data", "ALZ 密码或加密头异常", "密码短头不匹配，也可能加密头损坏；请核对密码和文件来源")
     } else if lower.contains("[zpaq-io]") {
         ("io_error", "ZPAQ 文件读写失败", "文件系统操作失败；请按原始错误检查空间、设备连接和访问权限，不应继续尝试密码")
     } else if lower.contains("permission denied") || lower.contains("[archive-inspection:permission]") {
@@ -180,8 +191,6 @@ fn classify_failure(
         || lower.contains("数据提前结束")
     {
         ("truncated", "归档被截断", "归档结构或数据不完整；请确认下载、复制已完成，必要时重新获取文件")
-    } else if lower.contains("[archive-inspection:damaged]") {
-        ("damaged", "归档损坏", "归档结构已确认损坏或不完整；请重新获取完整文件，反复尝试密码不能修复损坏")
     } else if lower.contains("unsupported") || lower.contains("not supported") {
         ("unsupported_feature", "暂不支持此归档特性", "当前引擎无法读取此算法或归档特性；这不等于文件损坏或密码错误")
     } else if lower.contains("passwordrequired") || lower.contains("password required")
@@ -294,7 +303,11 @@ pub async fn diagnose_archive_with_encoding(
             return super::rar_recovery::diagnose(path, password, cancelled).await;
         }
     }
-    let group = SplitArchiveDetector::detect_split_archive(path)?;
+    let (group, alz_structure_error) = match SplitArchiveDetector::detect_split_archive(path) {
+        Ok(group) => (group, None),
+        Err(error) if super::alz_volumes::is_candidate(path) => (None, Some(error)),
+        Err(error) => return Err(error),
+    };
     let source = group.as_ref().map(|group| group.first_part.as_path()).unwrap_or(path);
     let logical = if group.as_ref().is_some_and(|group|
         matches!(group.format, SplitFormat::SevenZipSplit | SplitFormat::GenericNumeric)) {
@@ -325,6 +338,11 @@ pub async fn diagnose_archive_with_encoding(
     report
         .evidence
         .push(format!("Archive size: {} bytes", report.file_size));
+    if let Some(error) = alz_structure_error {
+        report.actual_format = "ALZ".into();
+        record_failure(&mut report, &error, password.is_some(), false, path);
+        return Ok(report);
+    }
     if !report.missing_volumes.is_empty() {
         report.status = "missing_volume".to_string();
         report.recoverability = "diagnostic_only".to_string();
@@ -412,7 +430,7 @@ pub async fn diagnose_archive_with_encoding(
         _ => infer_compression_format(logical.to_string_lossy().as_ref(), None),
     };
 
-    let metadata = archive_browser::browse_archive(source, password).await;
+    let metadata = archive_browser::browse_archive_with_encoding(source, password, zip_password_encoding).await;
     if let Ok(metadata) = &metadata {
         if metadata.format != report.actual_format {
             report
@@ -484,6 +502,13 @@ pub async fn diagnose_archive_with_encoding(
         }
     } else if actual_format == "7Z" {
         report.encrypted = seven_zip::requires_password(source).unwrap_or(report.encrypted);
+    } else if actual_format == "ALZ" {
+        // Reject unsupported methods/structure before asking for a password.
+        let options = crate::models::compression::DecompressOptions { zip_password_encoding, ..Default::default() };
+        match super::alz_engine::requires_password(source, &options, cancelled.clone()).await {
+            Ok(encrypted) => report.encrypted = encrypted,
+            Err(error) => { record_failure(&mut report, &error, password.is_some(), false, source); return Ok(report); }
+        }
     } else if actual_format == "ZPAQ" {
         match super::zpaq_engine::requires_password(source) {
             Ok(encrypted) => report.encrypted = encrypted,
@@ -507,6 +532,10 @@ pub async fn diagnose_archive_with_encoding(
     let verify_password = password.map(str::to_string);
     let verify_cancelled = cancelled.clone();
     let verification = match route {
+        _ if actual_format == "ALZ" => {
+            report.integrity_tested = true;
+            super::alz_engine::verify(source, password, &crate::models::compression::DecompressOptions { zip_password_encoding, ..Default::default() }, cancelled.clone()).await
+        }
         _ if actual_format == "ZPAQ" => {
             report.integrity_tested = true;
             report.evidence.push("ZPAQ current-file view; format checksums do not authenticate all header attributes".into());
@@ -1656,6 +1685,7 @@ mod tests {
             ("[archive-inspection:incomplete] missing ZIP disks; wrong password?", "missing_volume"),
             ("Unexpected end of archive; wrong password?", "truncated"),
             ("[archive-inspection:damaged] broken ZIP structure; wrong password?", "damaged"),
+            ("[archive-inspection:damaged] ALZ 卷号错误 C:/tmp/eof-sample/卷.a00", "damaged"),
             ("Unsupported compression method for encrypted entry", "unsupported_feature"),
             ("Permission denied reading encrypted archive", "permission_error"),
             ("[archive-inspection:ambiguous-data] invalid password or damaged content", "ambiguous_data"),

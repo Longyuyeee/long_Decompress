@@ -8,6 +8,7 @@ pub struct SplitArchiveDetector;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum SplitFormat {
+    AlzSplit,
     ZipSplit,
     RarSplit,
     SevenZipSplit,
@@ -59,6 +60,13 @@ impl SplitArchiveDetector {
     }
 
     pub fn detect_split_archive(path: &Path) -> Result<Option<SplitArchiveInfo>> {
+        if let Some(group) = super::alz_volumes::inspect(path)? {
+            return Ok((group.parts.len() > 1 || !group.missing.is_empty()).then(|| SplitArchiveInfo {
+                format: SplitFormat::AlzSplit, base_name: group.stem, parts: group.parts,
+                first_part: group.first, total_parts: group.total, total_size: group.bytes,
+                is_complete: group.missing.is_empty(), missing_parts: group.missing,
+            }));
+        }
         if !Self::is_split_archive(path) {
             return Ok(None);
         }

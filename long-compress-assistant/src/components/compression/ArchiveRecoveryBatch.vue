@@ -30,7 +30,7 @@ watch(() => busy.value || preparing.value, value => emit('busy', value), {immedi
 onUnmounted(() => { disposed = true; emit('busy', false); sharedPassword.value = '' })
 const labels: Record<string,string> = {partial_recovery:'缺卷，可部分救援',healthy:'正常',missing_volume:'缺少分卷',password_required:'需要密码',wrong_password:'请核对密码',ambiguous_data:'密码或内容异常',directory_lost:'目录丢失，可救援',crc_error:'内容校验失败',damaged:'归档损坏',truncated:'归档被截断',unsupported_feature:'暂不支持此特性',structure_only:'仅检查结构'}
 const status = (row:ArchiveRecoveryRow) => row.queuedId ? '已加入解压队列' : row.state === 'checking' ? '检查中…' : row.state === 'repairing' ? '修复中…' : row.state === 'cancelled' ? '已停止，可重试' : row.error ? '处理未完成' : row.result ? row.result.partial ? '已部分恢复' : '已修复' : row.needsRecheck ? '已恢复配置，请重新检查' : labels[row.report?.status || ''] || (row.report ? '请查看详情' : '待检查')
-labels.password_encoding = 'ZIP 密码编码不兼容'
+labels.password_encoding = '原包编码不兼容'
 function toggleAll() { const value = !allSelected.value; rows.value.forEach(row => { row.selected = value }) }
 async function locate(path:string) { try { await invoke('open_in_explorer',{path}) } catch { ui.showToast('error','无法定位结果，请确认文件仍在原位置') } }
 async function chooseDirectory() {
@@ -70,7 +70,7 @@ async function apply() {
       batch.update(row, {...patch,...(supports && (encoding === 'auto' || isZipPasswordEncoding(encoding)) ? {zipPasswordEncoding:encoding === 'auto' ? undefined : encoding} : {})})
     }
     configuring.value = false; sharedPassword.value = ''
-    if (skipped) ui.showToast('info',`${skipped} 项非 ZIP 或格式未确认，未修改密码编码`)
+    if (skipped) ui.showToast('info',`${skipped} 项不适用或格式未确认，未修改原包编码`)
   } finally { applying.value = false }
 }
 function browseResult(row:ArchiveRecoveryRow) {
@@ -117,7 +117,7 @@ function updatePassword(row:ArchiveRecoveryRow, event:Event) { batch.update(row,
           <ul v-if="row.report?.issues.length" class="space-y-2 text-xs leading-relaxed text-muted"><li v-for="(issue,index) in row.report.issues" :key="index"><strong class="text-content">{{ issue.title }}</strong>：{{ issue.detail }}</li></ul>
           <div class="grid min-w-0 gap-3 sm:grid-cols-2">
             <label class="min-w-0 space-y-1 text-xs text-muted">原包密码<input :value="row.password" type="password" autocomplete="off" :disabled="busy" placeholder="修改后重新检查" class="batch-input" data-testid="archive-batch-password" @input="updatePassword(row, $event)" /></label>
-            <ZipPasswordEncodingField v-if="supportsZipPasswordEncoding(row.path, row.sourceFormat) || (!row.sourceFormat && row.zipPasswordEncoding !== undefined)" :model-value="row.zipPasswordEncoding" :disabled="busy" test-id="recovery-row-zip-password-encoding" @update:model-value="batch.update(row, {zipPasswordEncoding:$event})" />
+            <ZipPasswordEncodingField v-if="supportsZipPasswordEncoding(row.path, row.sourceFormat) || (!row.sourceFormat && row.zipPasswordEncoding !== undefined)" :model-value="row.zipPasswordEncoding" :source-path="row.path" :source-format="row.sourceFormat" :disabled="busy" test-id="recovery-row-zip-password-encoding" @update:model-value="batch.update(row, {zipPasswordEncoding:$event})" />
             <label class="min-w-0 space-y-1 text-xs text-muted">恢复文件保存目录<input v-model="row.outputDirectory" :disabled="busy" placeholder="修复时可统一选择" class="batch-input" /></label>
           </div>
           <div v-if="row.result" class="space-y-2 rounded-xl p-3 text-xs leading-relaxed" :class="row.result.partial ? 'bg-amber-500/5' : 'bg-green-500/5'" data-testid="archive-batch-result"><p class="font-bold" :class="row.result.partial ? 'text-amber-600' : 'text-green-600'">已恢复 {{ row.result.recoveredFiles }} 个文件{{ row.result.partial ? ' · 部分恢复，请核对内容' : '' }}</p><p class="mt-1 break-all text-muted">{{ row.result.outputPath }}</p><label v-if="row.resultPasswordRequired && !row.queuedId" class="block text-muted">恢复结果密码<input v-model="row.resultPassword" type="password" autocomplete="off" placeholder="重启后需重新填写，不保存密码" :disabled="busy" class="batch-input mt-1" data-testid="archive-batch-result-password" /></label><ArchiveRecoveryDetails :recovered-entries="row.result.recoveredEntries" :skipped-entries="row.result.skippedEntries" :entry-results="row.result.entryResults" /><div class="flex flex-wrap gap-3"><button class="font-semibold text-primary" @click="locate(row.result.outputPath)">定位恢复结果</button><button v-if="!row.queuedId" class="text-muted" :disabled="busy" @click="batch.forgetResult(row)">重新修复原包</button></div></div>
@@ -131,8 +131,8 @@ function updatePassword(row:ArchiveRecoveryRow, event:Event) { batch.update(row,
     <fieldset :disabled="applying" class="space-y-4 min-w-0" data-testid="archive-batch-config-dialog">
       <p class="text-xs leading-relaxed text-muted">只修改指定项目；其他设置保留各自原值。修改密码后需要重新检查。同名归档统一解压时，会自动分开到子目录。</p>
       <label class="block text-sm"><span class="flex items-center gap-2"><input v-model="changePassword" type="checkbox" />填写共用原包密码</span><input v-if="changePassword" v-model="sharedPassword" type="password" autocomplete="off" placeholder="留空则清除原包密码" class="batch-input mt-2" data-testid="archive-batch-shared-password" /></label>
-      <div class="min-w-0 space-y-2 text-xs text-muted">ZIP 密码编码 <HelpHint label="批量检查密码编码说明">仅应用到检测确认的 ZIP/ZIPX。修改编码后须重新检查；已恢复结果保留生成时的编码。</HelpHint>
-        <ThemedSelect v-model="sharedEncoding" :disabled="applying" :options="[{value:'keep',label:'保持各自设置'},{value:'auto',label:'自动兼容（默认）'},...ZIP_PASSWORD_ENCODING_OPTIONS]" aria-label="批量检查 ZIP 密码编码" test-id="recovery-batch-zip-password-encoding" floating />
+      <div class="min-w-0 space-y-2 text-xs text-muted">原包读取编码 <HelpHint label="批量检查密码编码说明">仅应用到检测确认的 ZIP/ZIPX 或 ALZ。ALZ 默认 CP949，同时影响文件名和密码。修改编码后须重新检查；已恢复结果保留生成时的编码。</HelpHint>
+        <ThemedSelect v-model="sharedEncoding" :disabled="applying" :options="[{value:'keep',label:'保持各自设置'},{value:'auto',label:'使用原包格式默认值'},...ZIP_PASSWORD_ENCODING_OPTIONS]" aria-label="批量检查原包读取编码" test-id="recovery-batch-zip-password-encoding" floating />
       </div>
       <label class="block space-y-2 text-xs text-muted">恢复文件保存目录<div class="flex min-w-0 gap-2"><input v-model="repairDirectory" placeholder="留空则保持各自目录" class="batch-input" data-testid="archive-batch-output" /><button class="batch-action shrink-0 border border-subtle" @click="chooseDirectory().then(value => {if(value) repairDirectory = value})">选择</button></div></label>
       <label class="block text-sm"><span class="flex items-center gap-2"><input v-model="changeExtract" type="checkbox" />修改再次解压的输出目录</span><input v-if="changeExtract" v-model="extractDirectory" placeholder="留空则使用各自原包目录" class="batch-input mt-2" /></label>

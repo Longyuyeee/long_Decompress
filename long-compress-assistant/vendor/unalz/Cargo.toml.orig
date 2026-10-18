@@ -1,0 +1,29 @@
+[package]
+name = "unalz"
+version = "0.2.1"
+edition = "2024"
+rust-version = "1.88"
+description = "ALZ archive extractor"
+readme = "README.md"
+repository = "https://github.com/alkegi/unalz"
+documentation = "https://docs.rs/unalz"
+license = "MIT"
+keywords = ["alz", "archive", "extraction", "decompression"]
+categories = ["compression", "command-line-utilities"]
+exclude = ["/tests/*", ".*"]
+
+[lib]
+name = "unalz"
+path = "src/lib.rs"
+
+[[bin]]
+name = "unalz"
+path = "src/main.rs"
+
+[dependencies]
+bzip2 = "0.6"
+flate2 = "1"
+crc32fast = "1"
+encoding_rs = "0.8"
+rpassword = "7"
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }

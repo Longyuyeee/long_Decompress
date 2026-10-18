@@ -22,7 +22,7 @@ export const useArchiveBrowserCapabilities = () => {
     const extension = normalizedExtension(name)
     if (imageCategoryExtensions.has(extension)) return 'image'
     if (documentCategoryExtensions.has(extension)) return 'document'
-    if (browseExtensions.value.has(extension)) return 'archive'
+    if (browseExtensions.value.has(extension) || (browseExtensions.value.has('alz') && /^[a-j]\d{2}$/.test(extension))) return 'archive'
     return 'other'
   }
 

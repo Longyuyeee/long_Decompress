@@ -6,6 +6,7 @@ import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useArchiveEngine } from '@/composables/useArchiveEngine'
 import { FORMAT_CAPABILITIES } from '@/utils/compressionFormat'
 import AccessibilitySettings from '@/components/settings/AccessibilitySettings.vue'
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { useUpdateStore } from '@/stores/update'
 
 const appStore = useAppStore()
@@ -25,6 +26,7 @@ const passwordCompressionFormats = computed(() => FORMAT_CAPABILITIES
 const passwordExtractionFormats = computed(() => FORMAT_CAPABILITIES
   .filter(format => format.supportsPasswordExtract && (format.format !== 'zpaq' || archiveEngine.value?.formats.some(item => item.name === 'ZPAQ')))
   .map(format => format.displayName)
+  .concat(archiveEngine.value?.formats.some(item => item.name === 'ALZ') ? ['ALZ（只读）'] : [])
   .join(' · '))
 
 const refreshEngineDiagnostics = async () => {
@@ -632,8 +634,12 @@ const removeWordlist = (index: number) => {
                   <div>
                     <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.legacy') }}</div>
                     <div class="text-xs text-content leading-relaxed font-mono">
-                      AR · A · LZH · LHA · ARJ · CHM · SQUASHFS · SFS · XAR · CPIO · UDF · FAT · NTFS · HFS · APFS · EXT2 · EXT3 · EXT4 · GPT · MBR · CRAMFS · ALZ · ARC
+                      AR · A · LZH · LHA · ARJ · CHM · SQUASHFS · SFS · XAR · CPIO · UDF · FAT · NTFS · HFS · APFS · EXT2 · EXT3 · EXT4 · GPT · MBR · CRAMFS · ARC
                     </div>
+                  </div>
+                  <div v-if="archiveEngine?.formats.some(format => format.name === 'ALZ')" data-testid="settings-alz-read">
+                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">ALZ 随附只读引擎<HelpHint label="ALZ 支持范围">已验证存储、Deflate、ALZ 变体 Bzip2、ZipCrypto 和原生 .alz/.aNN 卷组。文件名与密码默认按 CP949，可明确选择原工具代码页；缺卷必须补齐，不提供创建或损坏修复。</HelpHint></div>
+                    <div class="text-xs text-content leading-relaxed">ALZ · 密码解压 · 原生分卷 · 检查与转换</div>
                   </div>
                 </div>
               </div>
@@ -641,7 +647,7 @@ const removeWordlist = (index: number) => {
               <!-- 压缩格式详细列表 -->
               <div class="space-y-3">
                 <h3 class="text-xs font-black text-primary uppercase tracking-[0.2em] ml-1">{{ appStore.t('settings.formats.compress_list') }}</h3>
-                <div class="p-5 rounded-xl bg-input/30 border border-subtle space-y-3">
+                  <div class="p-5 rounded-xl bg-input/30 border border-subtle space-y-3">
                   <div v-if="archiveEngine?.formats.some(format => format.name === 'ZPAQ' && format.canCreate)" data-testid="settings-zpaq-creation">
                     <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">ZPAQ 随附引擎</div>
                     <div class="text-xs text-content leading-relaxed">日志式创建与原生密码；不提供固定大小分卷或增量备份。</div>

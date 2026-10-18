@@ -6,6 +6,7 @@ import { useAppStore } from '@/stores/app'
 import { useTaskStore } from '@/stores/task'
 import { extractErrorMessage } from '@/utils'
 import { DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS } from '@/utils/compressionFormat'
+import { archiveSourceFormat } from '@/utils/archiveSource'
 import type { ResourcePreflightReport, ResourcePreflightRequest } from '@/types/resourcePreflight'
 import type {
   PublishedVideoOutput,
@@ -32,7 +33,9 @@ import type {
 const zipPasswordArguments = (encoding?: ZipPasswordEncoding) => encoding === undefined ? {} : { zipPasswordEncoding: encoding }
 
 export interface DecompressOptions {
-  /** Omitted means the existing automatic UTF-8/current-Windows input mode. */
+  /** Actual browse format for task/history presentation, not a backend override. */
+  sourceFormat?: string
+  /** ZIP automatic compatibility; ALZ CP949 default for names and password. */
   zipPasswordEncoding?: ZipPasswordEncoding
   outputPath: string
   password?: string
@@ -312,18 +315,20 @@ export const useTauriCommands = () => {
       type: 'decompression',
       sourceFiles: [filePath],
       outputPath: options.outputPath,
-      format: filePath.split('.').pop() || 'zip'
+      format: options.sourceFormat || archiveSourceFormat(filePath) || filePath.split('.').pop() || 'zip'
     })
     const trackedTask = taskStore.tasks.find(item => item.id === taskId)
     if (trackedTask) {
       trackedTask.selectedEntries = options.selectedEntries ? [...options.selectedEntries] : undefined
       trackedTask.zipPasswordEncoding = options.zipPasswordEncoding
-      // Capture the submitted directory, before execution can report a final output path.
-      trackedTask.executionConfig = !options.fileFilter && !options.selectedEntries?.length ? {
+      // Keep reusable directory/codepage even for a selection: history explicitly
+      // creates a whole-archive draft and never restores the original selection.
+      // Dropping the codepage makes legacy ALZ names/password unreadable on rerun.
+      trackedTask.executionConfig = {
         schemaVersion: 1, kind: 'archive-extraction', outputDirectory: options.outputPath,
         extractToSubfolder: options.createSubdirectory ?? false,
         ...(options.zipPasswordEncoding ? { zipPasswordEncoding: options.zipPasswordEncoding } : {}),
-      } : undefined
+      }
     }
 
     try {

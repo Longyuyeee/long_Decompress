@@ -1,0 +1,72 @@
+{
+  "createdAt": "2026-10-18T01:16:16.647Z",
+  "officialDownload": "https://advert.estsoft.com/?event=200803276378987",
+  "installerSha256": "7b7b0dbebc380a5ee65cd52528faa8a234130599a3888a64577815392fff0b70",
+  "generatorSha256": "13c664d8b809348104999efb734587e2847aab04e5511af2e5345e13d2528433",
+  "generatorVersion": "11.0.1.16 (inside ALZip 12.37.0.4 official installer)",
+  "data": "Separate self-authored CP936-representable source set",
+  "sourceFiles": [
+    {
+      "path": "empty.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "payload.bin",
+      "bytes": 262144,
+      "sha256": "e79a1af387191583d7179a01d44a7590da91ca00760d929b936559447dffad41"
+    },
+    {
+      "path": "说明 文件.txt",
+      "bytes": 51,
+      "sha256": "8036588c22ff43bc7025779d0e82430091dfddfb13155c6a0658f5cdffa7310a"
+    }
+  ],
+  "emptyDirectory": "空目录",
+  "cases": [
+    {
+      "archive": "native-cn-key-volumes.alz",
+      "password": "中文密码123!",
+      "split": true
+    },
+    {
+      "archive": "native-cn-key.alz",
+      "password": "中文密码123!",
+      "split": false
+    }
+  ],
+  "members": [
+    {
+      "name": "native-cn-key-volumes.a00",
+      "bytes": 65536,
+      "sha256": "bbc256254edce43b35e591dbacc36a239ac794d4332e3c98d6580e2f7aadf289"
+    },
+    {
+      "name": "native-cn-key-volumes.a01",
+      "bytes": 65536,
+      "sha256": "a84f8ffe8f70b532c624acd09723efe081b3bacc3536b33dddc831d4d2f0aa75"
+    },
+    {
+      "name": "native-cn-key-volumes.a02",
+      "bytes": 65536,
+      "sha256": "8e7411cc0cf40adce5e4d46c9c18ff23aad60f9c5a49c39578bca5fab10417ff"
+    },
+    {
+      "name": "native-cn-key-volumes.a03",
+      "bytes": 310,
+      "sha256": "dce6f74723269c0b2fd3ace16c67ae7ee616c1f97804603686b54919e3e445d3"
+    },
+    {
+      "name": "native-cn-key-volumes.alz",
+      "bytes": 65536,
+      "sha256": "3513e546aa08a4879a6e5393c515da45548f140373ac74a06de87ba6bcb5164c"
+    },
+    {
+      "name": "native-cn-key.alz",
+      "bytes": 262358,
+      "sha256": "78523ed27e4c9ce92123f1842817d1b29d9977e892d6432ea628d4629857e407"
+    }
+  ],
+  "encoding": "cp936",
+  "negativeOriginals": "Earlier originals retain literal question marks introduced by ALZip on this CP936 system; no filename repair is claimed"
+}

@@ -18,3 +18,10 @@ long-compress-assistant/src-tauri/resources/zpaq-engine/** -text
 long-compress-assistant/src-tauri/resources/zpaq-engine/COPYING -whitespace
 long-compress-assistant/src-tauri/tests/fixtures/zpaq/*.zpaq binary
 long-compress-assistant/tests/fixtures/archives/zpaq-create-151/*.zpaq binary
+long-compress-assistant/vendor/unalz/** -text -whitespace
+long-compress-assistant/tools/alz-engine/** -text
+long-compress-assistant/src-tauri/src/services/alz_volumes.rs -text
+long-compress-assistant/src-tauri/resources/alz-engine/** -text
+long-compress-assistant/src-tauri/resources/alz-engine/licenses/* -whitespace
+long-compress-assistant/tests/fixtures/archives/alz-152/**/*.alz binary
+long-compress-assistant/tests/fixtures/archives/alz-152/**/*.a?? binary

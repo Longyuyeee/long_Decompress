@@ -17,6 +17,7 @@ export const detectArchiveGroup = (path: string) => invoke<ArchiveVolumeGroup>('
 
 export function archiveGroupKey(path: string): string {
   return path.replace(/\\/g, '/').toLowerCase()
+    .replace(/\.[a-j]\d{2}$/, '.alz')
     .replace(/(^|[/.])haozip\d{2,5}\.(zip|7z)$/, '$1haozip01.$2')
     .replace(/\.part\d+\.rar$/, '.rar')
     .replace(/\.r\d{2,3}$/, '.rar')
@@ -28,6 +29,7 @@ export function archiveGroupKey(path: string): string {
 
 export function archiveSourceFormat(path: string): string | undefined {
   const name = path.toLowerCase().replace(/\.\d{3,}$|\.part\d+$/, '')
+  if (/\.[a-j]\d{2}$/.test(name)) return 'alz'
   if (/\.zx\d{2,5}$/.test(name)) return 'zipx'
   if (/\.z\d{2,5}$/.test(name)) return 'zip'
   if (/\.r\d{2,3}$|\.part\d+\.rar$/.test(name)) return 'rar'
@@ -39,6 +41,7 @@ export function archiveSourceFormat(path: string): string | undefined {
 
 export function archiveSourceStem(path: string): string {
   let name = path.split(/[\\/]/).pop() || 'archive'
+  name = name.replace(/\.[a-j]\d{2}$/i, '.alz')
   name = name.replace(/^(.*\.)?haozip\d{2,5}\.(zip|7z)$/i,
     (_, prefix, extension) => (prefix || 'archive.') + extension)
   name = name.replace(/\.part\d+\.rar$/i, '.rar').replace(/\.r\d{2,3}$/i, '.rar').replace(/\.zx\d{2,5}$/i, '.zipx').replace(/\.z\d{2,5}$/i, '.zip')

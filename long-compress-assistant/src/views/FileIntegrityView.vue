@@ -371,7 +371,7 @@ const browseRepair = () => {
 
 const statusLabel = (status: string) => ({
   healthy: '完整性正常', password_required: '需要密码', wrong_password: '密码错误',
-  password_encoding: 'ZIP 密码编码不兼容',
+  password_encoding: '原包编码不兼容',
   directory_lost: '目录信息丢失，可尝试救援',
   partial_recovery: '缺少分卷，可尝试部分救援',
   missing_volume: '缺少分卷', crc_error: '内容校验失败', truncated: '归档被截断',
@@ -693,7 +693,7 @@ onUnmounted(() => {
                 :disabled="isDiagnosing || isRepairing"
               />
             </div>
-            <ZipPasswordEncodingField v-if="archivePath && (supportsZipPasswordEncoding(archivePath, sourceFormat) || (!sourceFormat && archiveZipPasswordEncoding !== undefined))" v-model="archiveZipPasswordEncoding" :disabled="isDiagnosing || isRepairing" class="mt-3 max-w-sm" test-id="diagnosis-zip-password-encoding" />
+            <ZipPasswordEncodingField v-if="archivePath && (supportsZipPasswordEncoding(archivePath, sourceFormat) || (!sourceFormat && archiveZipPasswordEncoding !== undefined))" v-model="archiveZipPasswordEncoding" :source-path="archivePath" :source-format="sourceFormat" :disabled="isDiagnosing || isRepairing" class="mt-3 max-w-sm" test-id="diagnosis-zip-password-encoding" />
             <p v-if="archivePath" class="mt-3 text-xs text-muted break-all">{{ archivePath }}</p>
             <div class="mt-5 flex flex-wrap gap-3">
               <button v-if="!isDiagnosing" data-testid="start-archive-diagnosis" type="button" class="archive-primary" :disabled="!archivePath || isRepairing" @click="diagnoseArchive">
