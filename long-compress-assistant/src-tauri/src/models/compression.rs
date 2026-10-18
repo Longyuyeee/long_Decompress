@@ -161,6 +161,7 @@ pub struct CompressionOptions {
 pub struct DecompressOptions {
     /// ZIP: None retains automatic password compatibility, filenames unchanged.
     /// ALZ: None means CP949; an explicit source codepage reads names and key.
+      /// EGG: None means UTF-8 password; names use their own format marker.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zip_password_encoding: Option<crate::services::zip_password::ZipPasswordEncoding>,
     #[serde(default)]

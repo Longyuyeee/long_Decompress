@@ -1,4 +1,11 @@
 import { describe, expect, it } from 'vitest'
+
+it('keeps unsupported EGG methods explicit without guessing damage or passwords',()=>{
+  const record={status:'failed' as const,errorMessage:'[archive-inspection:unsupported] EGG AZO 尚不在本版读取范围'}
+  expect(describeTaskFailure(record)?.category).toBe('unsupported')
+  expect(getTaskRecoveryGuidance(record)?.title).toContain('暂不支持')
+  expect(archiveInspectionMessageForDisplay(record.errorMessage)).toBe('EGG AZO 尚不在本版读取范围')
+})
 import { archiveInspectionMessageForDisplay, createTaskDiagnosticReport, describeTaskFailure, getTaskRecoveryGuidance } from '../taskFailure'
 import type { TaskHistoryRecord } from '@/types/taskHistory'
 

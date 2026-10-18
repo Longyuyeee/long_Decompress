@@ -135,4 +135,18 @@ fn main(){let (value,code)=match run(){Ok(v)=>(json!({"result":v}),0),Err(e)=>(j
         for s in ["¥","‾","🔑"]{assert!(password_bytes(s,Some("cp932")).is_err());}
         assert_eq!(password_bytes("中文密码123!",Some("cp936")).unwrap(),encoding_rs::GBK.encode("中文密码123!").0.as_ref());
     }
+    #[test]fn altered_bzip2_lzma_streams_cannot_pass_complete_content_checks(){
+        let root=PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/archives/egg-153/upstream");
+        for (file,method) in [("bzip2_big.egg",CompressionMethod::Bzip2),("lzma5.egg",CompressionMethod::Lzma)] {
+            let mut a=EggArchive::open(File::open(root.join(file)).unwrap()).unwrap();
+            let b=a.entries.iter().flat_map(|e|&e.blocks).find(|b|b.compression_method==method).unwrap().clone();
+            a.reader.seek(SeekFrom::Start(b.data_pos)).unwrap();let mut data=vec![0;b.compressed_size as usize];a.reader.read_exact(&mut data).unwrap();data.push(0);
+            let n=data.len() as u64;let mut r=&data[..];let mut output=CheckedWriter{inner:io::sink(),bytes:0,limit:b.uncompressed_size as u64};
+            let result=if method==CompressionMethod::Bzip2 {decompress::bzip2::extract_bzip2(&mut r,&mut output,n,None)}else{decompress::lzma::extract_lzma(&mut r,&mut output,n,b.uncompressed_size as u64,None)};
+            // Decoder Ok alone is NOT the app's acceptance condition. In the
+            // LZMA case extra input may produce extra/altered output; the same
+            // bounded length + CRC condition used by decode must reject it.
+            assert!(!matches!(result,Ok(crc) if crc==b.crc32 && output.bytes==b.uncompressed_size as u64),"{file} passed full content checks");
+        }
+    }
 }

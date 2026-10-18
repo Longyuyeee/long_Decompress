@@ -35,6 +35,9 @@ pub fn extract_bzip2<R: Read, W: Write>(
         writer.write_all(&buf[..n])?;
     }
 
+    if decoder.total_in() != compressed_size {
+        return Err(EggError::Bzip2Failed("trailing data after Bzip2 end".into()));
+    }
     Ok(hasher.finalize())
 }
 

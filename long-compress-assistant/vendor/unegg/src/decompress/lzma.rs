@@ -69,6 +69,9 @@ pub fn extract_lzma<R: Read, W: Write>(
             .map_err(|e| EggError::LzmaFailed(e.to_string()))?;
     }
 
+    if cursor.position() != cursor.get_ref().len() as u64 {
+        return Err(EggError::LzmaFailed("trailing data after LZMA end".into()));
+    }
     Ok(hasher.finalize())
 }
 
