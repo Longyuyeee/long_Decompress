@@ -1,0 +1,214 @@
+{
+  "verifiedAt": "2026-10-18T06:49:38.680Z",
+  "tag": "v1.5.5",
+  "tagCommit": "739e5e59f6d02ebe0fbf5f61eaa0ac85c2fd6905",
+  "functionalFreeze": "f5e7050c0d970ce3f9f8ff3b9179081590c17eb4",
+  "candidateCommit": "b0918a090f424ca3299d7e68040e99f9cb74c2bd",
+  "candidateRun": 39103656875,
+  "releaseRun": 39104426802,
+  "url": "https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.5",
+  "publishedAt": "2026-10-18T06:47:55Z",
+  "installerProductVersion": "1.5.5",
+  "assets": [
+    {
+      "name": "Long-Decompress_1.5.5_x64-setup.exe",
+      "bytes": 20941840,
+      "sha256": "6ac04c3f9bf561eacf5ddae0f40b571d897e398d19ee07863af695980c3bebe0",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.5/Long-Decompress_1.5.5_x64-setup.exe"
+    },
+    {
+      "name": "Long-Decompress_1.5.5_x64-setup.nsis.zip",
+      "bytes": 20941998,
+      "sha256": "1ad5513e9ba161c5114697253a77f024ecf58045271669f90fd91d3c9d8c298b",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.5/Long-Decompress_1.5.5_x64-setup.nsis.zip"
+    },
+    {
+      "name": "Long-Decompress_1.5.5_x64-setup.nsis.zip.sig",
+      "bytes": 428,
+      "sha256": "ac420fe27d636556ff64aee58f60ab8c80d8080b9e2f0002a7449c0944eebab8",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.5/Long-Decompress_1.5.5_x64-setup.nsis.zip.sig"
+    },
+    {
+      "name": "latest.json",
+      "bytes": 3181,
+      "sha256": "da152ccbd6d23ee155cc175a0975d99e3528b314552abdc1e8ac7b1adc036f39",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.5/latest.json"
+    }
+  ],
+  "updaterExeMatchesInstaller": true,
+  "signatureMatchesManifest": true,
+  "chineseNotesMatch": true,
+  "onlyManifestNotesChanged": true,
+  "packagedSfxEngine": {
+    "mainProductVersion": "1.5.5",
+    "mainBytes": 33881088,
+    "mainSha256": "f86c110c14c6daf77563df09954e7f36f5dd33ab470874b8ccf25904b8e4cd47",
+    "notices": [
+      {
+        "name": "archive-engine/licenses/UnRAR-License.txt",
+        "bytes": 1976,
+        "sha256": "6ecc1687808b7d66b24f874755abfed7464d9751ed0001cd4e8e5d9bf397ff8a"
+      },
+      {
+        "name": "archive-engine/SOURCE.md",
+        "bytes": 1759,
+        "sha256": "98ebb892c586f172df170d6dde587a2464b186d1066fe6c497f240d07a78b8f9"
+      }
+    ],
+    "installationExecuted": false,
+    "productionSfxRuntimeExecuted": false,
+    "note": "Native SFX functionality is verified by the separately identified desktop E2E binary; this receipt checks the ordinary packaged main executable and exact UnRAR notice/source disclosure."
+  },
+  "embeddedEggEngine": {
+    "engineSha256": "774133b57408c5a52e632f45f7d37f500ffcbc4e96c1a63d334e6145c0e47ea0",
+    "engineBytes": 895488,
+    "noticesVerified": 103,
+    "cases": [
+      {
+        "name": "store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "low",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "normal",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "store5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "deflate5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "lzma5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "bzip2_big",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "mixed_store_deflate5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "zip20",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_zip20",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_zip20_bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "split",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "split_store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-plain",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-key",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-key-volumes",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-cn-key",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "azo",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "azo_pe",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "solid",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes128",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes256",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "lea128",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "lea256",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_aes128",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_aes256",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_aes256_bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_lea_bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "optimal5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes128-cn",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes256-cn",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes128-volumes",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes256-volumes",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "solid-deflate",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "solid-high",
+        "bundledEngineContentVerification": true
+      }
+    ],
+    "nativeMiddleMemberSelectedExtract": true,
+    "chineseAesMiddleSelectedExtract": true,
+    "solidSelectedExtract": true,
+    "installationExecuted": false,
+    "engineExecutedFromExtractedInstaller": true
+  }
+}

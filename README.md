@@ -234,12 +234,13 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.5 功能已封板，待正式发布**。补齐真实 RAR4/5 外置卷 SFX 与固定 7-Zip 24.09 GUI 加载器读取，修复 RAR 空文件密码误判、块内控制和取消后的文件锁，并接通文件管理器中卷入口。94 项 Rust、214 项前端、十五组原包、24 个桌面场景和 18 张实看页面通过；当前正式下载仍为 v1.5.4。见[实施审计](long-compress-assistant/docs/SFX_VOLUMES_1.5.5.md)、[封板记录](long-compress-assistant/docs/SFX_VOLUMES_FREEZE_1.5.5.md)与[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.5.md)。SFX 只读、不执行输入 EXE，不创建/修复或处理恢复卷，不承诺所有模块。后续按[十版路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)继续补格式、密码分卷和流程容错。
+**v1.5.5 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.5)。补齐真实 RAR4/5 外置卷 SFX 与固定 7-Zip 24.09 GUI 加载器读取，修复 RAR 空文件密码误判、块内控制和取消后的文件锁，并接通文件管理器中卷入口。94 项 Rust、214 项前端、十五组原包、24 个桌面场景和 18 张实看页面通过；正式四资产、中文说明及包内资源已回下载核对。见[实施审计](long-compress-assistant/docs/SFX_VOLUMES_1.5.5.md)、[封板记录](long-compress-assistant/docs/SFX_VOLUMES_FREEZE_1.5.5.md)与[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.5.md)。SFX 只读、不执行输入 EXE，不创建/修复或处理恢复卷，不承诺所有模块。后续按[十版路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)继续补格式、密码分卷和流程容错。
 
 此前 **v1.5.4** 新增 EGG AZO、AES/LEA 和固实只读，保留基础方法、传统密码和原生分卷，修复批量 ALZ/EGG 密码编码未应用，见[审计](long-compress-assistant/docs/EGG_COMPLEX_1.5.4.md)与[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.4.md)。EGG 不提供创建、文件名/全局加密或修复，未验证组合不外推。软件图标和既有截图保留。
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
+| **v1.5.5** | 真实外置卷 SFX/旧 RAR4 只读、密码与缺卷接续、原生 RAR 暂停取消与文件锁修复、中卷入口及页面提示纠偏 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.5.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.5) |
 | **v1.5.4** | EGG AZO、AES/LEA、固实只读与所选提取，中文 AES 原生卷接续，批量来源编码修复 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.4.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.4) |
 | **v1.5.3** | EGG 基础只读、传统密码、原生分卷、明确密码编码、浏览/检查/转换及失败接续 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.3.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.3) |
 | **v1.5.2** | ALZ 只读、传统密码与原生分卷，编码选择、浏览/检查/转换及失败接续 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.2.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.2) |

@@ -35,6 +35,8 @@
 
 ## 换机复跑与接续
 
+v1.5.5 已于 UTC `2026-10-18T06:47:55Z` [正式发布](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.5)。PR #191 受保护合入，标签 `739e5e5` 与最终候选 `b0918a0` 同树；候选 `39103656875`、主线 `39104385580`、正式构建 `39104426802` 均成功，四资产/中文说明和包内主程序/引擎核对完成。准确体积、哈希及检查边界见[封板记录](SFX_VOLUMES_FREEZE_1.5.5.md)、[候选](evidence/sfx-volumes-1.5.5/candidate.json)与[正式收据](evidence/sfx-volumes-1.5.5/release.json)。原十二版已全部交付，下一轮按后续十版路线先修 RAR 实际字节进度。
+
 首候选 Windows package 成功，但包检查脚本按 UTF-8 读取了 7-Zip 默认控制台编码的中文主程序名，未找到成员，检查失败。明确 `-sccUTF-8` 后按真实中文名称核对，不改产品文件名、不忽略主程序检查；候选重新构建和收据以最终记录为准，功能冻结不变。
 
 十五组固定原包、清单、独立载荷和许可均在 `tests/fixtures/archives/sfx-155`，包含原 EXE 字节。测试只读取 EXE。核对原包可运行 `node scripts/create-sfx-155-fixtures.mjs`，但需要清单中的 RAR 6.24、RAR 7.23、7-Zip 24.09 原生产工具和随附独立 7-Zip；该脚本保留已有原包，不能在没有工具时用改名或新文件替代旧证据。常规内容/归组回归见 `sfx_archive::tests`，不依赖执行生产工具。

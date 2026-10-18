@@ -1,0 +1,183 @@
+{
+  "checkedAt": "2026-10-18T06:29:58.976Z",
+  "functionalFreeze": "f5e7050c0d970ce3f9f8ff3b9179081590c17eb4",
+  "candidateCommit": "b0918a090f424ca3299d7e68040e99f9cb74c2bd",
+  "candidateRun": 39103656875,
+  "candidateTree": "a7a00d9f7db5346f3fa87773db6e605fcda35c31",
+  "installer": "Long解压_1.5.5_x64-setup.exe",
+  "installerBytes": 20933324,
+  "installerSha256": "f18928f41813d4b1faa9ad6b85f60d5a757c78ea1c0d052ed234e6e646e5a79a",
+  "installerProductVersion": "1.5.5",
+  "packagedSfxEngine": {
+    "mainProductVersion": "1.5.5",
+    "mainBytes": 33879552,
+    "mainSha256": "bdbd2f7c603f51b1f4caa351bb6f2681b24a331bc5110c76d076130ba9fe4a0e",
+    "notices": [
+      {
+        "name": "archive-engine/licenses/UnRAR-License.txt",
+        "bytes": 1976,
+        "sha256": "6ecc1687808b7d66b24f874755abfed7464d9751ed0001cd4e8e5d9bf397ff8a"
+      },
+      {
+        "name": "archive-engine/SOURCE.md",
+        "bytes": 1759,
+        "sha256": "98ebb892c586f172df170d6dde587a2464b186d1066fe6c497f240d07a78b8f9"
+      }
+    ],
+    "installationExecuted": false,
+    "productionSfxRuntimeExecuted": false,
+    "note": "Native SFX functionality is verified by the separately identified desktop E2E binary; this receipt checks the ordinary packaged main executable and exact UnRAR notice/source disclosure."
+  },
+  "embeddedEggEngine": {
+    "engineSha256": "774133b57408c5a52e632f45f7d37f500ffcbc4e96c1a63d334e6145c0e47ea0",
+    "engineBytes": 895488,
+    "noticesVerified": 103,
+    "cases": [
+      {
+        "name": "store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "low",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "normal",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "store5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "deflate5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "lzma5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "bzip2_big",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "mixed_store_deflate5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "zip20",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_zip20",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_zip20_bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "split",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "split_store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-plain",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-key",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-key-volumes",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-cn-key",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "azo",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "azo_pe",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "solid",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes128",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes256",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "lea128",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "lea256",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_aes128",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_aes256",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_aes256_bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_lea_bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "optimal5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes128-cn",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes256-cn",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes128-volumes",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes256-volumes",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "solid-deflate",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "solid-high",
+        "bundledEngineContentVerification": true
+      }
+    ],
+    "nativeMiddleMemberSelectedExtract": true,
+    "chineseAesMiddleSelectedExtract": true,
+    "solidSelectedExtract": true,
+    "installationExecuted": false,
+    "engineExecutedFromExtractedInstaller": true
+  }
+}
