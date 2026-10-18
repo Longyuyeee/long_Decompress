@@ -250,6 +250,7 @@ fn verify(path: &Path, password: Option<&str>, flag: &AtomicBool) -> Result<Cont
         anyhow::Error::new(VerificationFailure { detail, encrypted })
     };
     let mut archive = archive.open_for_processing().map_err(error)?;
+    super::sfx_volumes::validate_native_volume(path, !matches!(archive.volume_info(), unrar::VolumeInfo::None))?;
     observed_encrypted.set(archive.has_encrypted_headers());
     let mut contents = Contents {
         volume: !matches!(archive.volume_info(), unrar::VolumeInfo::None),
@@ -279,6 +280,12 @@ fn verify(path: &Path, password: Option<&str>, flag: &AtomicBool) -> Result<Cont
     Ok(contents)
 }
 
+pub(crate) async fn verify_readonly(path: &Path, password: Option<&str>, cancelled: Arc<AtomicBool>) -> Result<()> {
+    let source = SplitArchiveDetector::complete_source(path)?;
+    let password = password.map(str::to_owned);
+    tokio::task::spawn_blocking(move || verify(&source, password.as_deref(), &cancelled).map(|_| ())).await?
+}
+
 pub async fn diagnose(
     path: &Path,
     password: Option<&str>,
@@ -287,11 +294,16 @@ pub async fn diagnose(
     let path = fs::canonicalize(path)?;
     let password = password.map(str::to_owned);
     tauri::async_runtime::spawn_blocking(move || {
-        let sfx = super::sfx_archive::is_executable_path(&path);
+        let sfx_group = SplitArchiveDetector::detect_split_archive(&path)?
+            .filter(|g| g.format == super::split_archive_detector::SplitFormat::RarSplit
+                && super::sfx_archive::is_executable_path(&g.first_part));
+        let sfx = super::sfx_archive::is_executable_path(&path) || sfx_group.is_some();
         let mut group = if sfx {
-            ensure!(super::sfx_archive::detect(&path)?.is_some_and(|(format, _)|
+            let source = sfx_group.as_ref().map(|g| g.first_part.as_path()).unwrap_or(&path);
+            ensure!(super::sfx_archive::detect(source)?.is_some_and(|(format, _)|
                 format == super::archive_format::ArchiveFormat::Rar), "不是可读取的 RAR 自解压归档");
-            Group { files: vec![path.clone()], data: vec![path.clone()], recovery: vec![], rar4: false, recovery_data_count: None, rejected_recovery: vec![] }
+            let data = sfx_group.as_ref().map(|g| g.parts.clone()).unwrap_or_else(|| vec![path.clone()]);
+            Group { files: data.clone(), data, recovery: vec![], rar4: false, recovery_data_count: None, rejected_recovery: vec![] }
         } else { collect(&path)? };
         check_rar4_recovery(&mut group, &flag)?;
         let tool = CompressionService::find_rar_encoder().is_some();

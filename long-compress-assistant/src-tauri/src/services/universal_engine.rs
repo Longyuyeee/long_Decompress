@@ -608,6 +608,17 @@ impl UniversalCliEngine {
     }
 
     pub async fn test_integrity_with_zip_encoding(file_path: &Path, password: Option<&str>, encoding: Option<super::zip_password::ZipPasswordEncoding>) -> Result<()> {
+        let source = crate::services::split_archive_detector::SplitArchiveDetector::complete_source(file_path)?;
+        let file_path = source.as_path();
+        let format = super::archive_browser::detect_format(file_path)?;
+        if format == super::archive_format::ArchiveFormat::Rar {
+            return super::rar_recovery::verify_readonly(file_path, password, Arc::new(AtomicBool::new(false))).await;
+        }
+        if format == super::archive_format::ArchiveFormat::SevenZip {
+            let path = file_path.to_path_buf(); let password = password.map(str::to_owned);
+            return tokio::task::spawn_blocking(move || super::compression_verification::verify_native(
+                super::compression_format::CompressionRoute::SevenZip, &path, password.as_deref(), || false).map(|_| ())).await?;
+        }
         if super::archive_browser::detect_format(file_path)? == super::archive_format::ArchiveFormat::Zpaq {
             return super::zpaq_engine::verify(file_path, password, Arc::new(AtomicBool::new(false))).await;
         }

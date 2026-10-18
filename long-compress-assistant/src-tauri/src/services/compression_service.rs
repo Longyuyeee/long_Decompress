@@ -1935,9 +1935,10 @@ impl CompressionService {
             ArchiveFormat::SevenZip => {
                 native_extraction::seven_zip::requires_password(Path::new(file_path))
             }
-            // RAR 读取 CLI 目录元数据；7Z 可以直接读取 coder 元数据。
             ArchiveFormat::Rar => {
-                self.universal_engine.requires_password(Path::new(file_path)).await
+                let path = PathBuf::from(file_path);
+                let flag = self.cancellation_flag.clone();
+                tokio::task::spawn_blocking(move || RarSupportService::requires_password(&path, &flag)).await?
             }
             ArchiveFormat::AesEncrypted => {
                 let path = Path::new(file_path);
@@ -1954,7 +1955,8 @@ impl CompressionService {
     }
 
     fn detect_password_format(file_path: &str) -> Result<ArchiveFormat> {
-        let path = Path::new(file_path);
+        let source = SplitArchiveDetector::complete_source(Path::new(file_path))?;
+        let path = source.as_path();
         if crate::services::sfx_archive::is_executable_path(path) {
             return crate::services::archive_browser::detect_format(path);
         }
@@ -1979,6 +1981,8 @@ impl CompressionService {
 
     pub async fn verify_archive_password_candidate_with_encoding(&self, file_path: &str, password: &str, encoding: Option<ZipPasswordEncoding>) -> Result<bool> {
         self.check_cancellation()?;
+        let source = SplitArchiveDetector::complete_source(Path::new(file_path))?;
+        let file_path = source.to_str().ok_or_else(|| anyhow::anyhow!("无效归档路径"))?;
         if Self::detect_password_format(file_path)? == ArchiveFormat::Egg {
             return crate::services::egg_engine::try_password(Path::new(file_path), password, &DecompressOptions { zip_password_encoding: encoding, ..Default::default() }, self.cancellation_flag.clone()).await;
         }
@@ -2408,7 +2412,9 @@ impl CompressionService {
             ArchiveFormat::Rar => {
                 // The native UnRAR wrapper does not expose byte callbacks. Poll
                 // the transactional staging tree so RAR progress reflects bytes
-                // actually materialized on disk, never password candidate count.
+                // from the logical output size, never password candidate count.
+                // UnRAR can preallocate files; this remains an output estimate,
+                // not proof that every allocated byte has already been decoded.
                 let monitor_done = Arc::new(AtomicBool::new(false));
                 let monitor_done_task = monitor_done.clone();
                 let monitor_output = out_dir.clone();
@@ -3564,6 +3570,8 @@ impl CompressionService {
     }
 
     pub async fn test_archive_password(&self, file_path: &str, password: &str) -> Result<bool> {
+        let source = SplitArchiveDetector::complete_source(Path::new(file_path))?;
+        let file_path = source.to_str().ok_or_else(|| anyhow::anyhow!("无效归档路径"))?;
         self.check_cancellation()?;
         if Self::detect_password_format(file_path)? == ArchiveFormat::Egg {
             return crate::services::egg_engine::try_password(Path::new(file_path), password, &Default::default(), self.cancellation_flag.clone()).await;

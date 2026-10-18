@@ -39,6 +39,14 @@ impl SplitArchiveInfo {
 }
 
 impl SplitArchiveDetector {
+    /// Every native consumer uses the same complete group, including SFX.
+    pub(crate) fn complete_source(path: &Path) -> Result<PathBuf> {
+        if let Some(group) = Self::detect_split_archive(path)? {
+            anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少分卷：{}{}", group.missing_part_names(),
+                if group.format == SplitFormat::RarSplit { "。RAR 首卷也可能是同名 .exe 自解压卷，请补回原文件，不要改名其他分卷" } else { "" });
+            Ok(group.first_part)
+        } else { Ok(path.to_path_buf()) }
+    }
     fn file_name(path: &Path) -> Result<&str> {
         path.file_name()
             .and_then(|name| name.to_str())
@@ -61,6 +69,7 @@ impl SplitArchiveDetector {
     }
 
     pub fn detect_split_archive(path: &Path) -> Result<Option<SplitArchiveInfo>> {
+        if path.is_file() { if let Some(group) = super::sfx_volumes::inspect(path)? { return Ok(Some(group)); } }
         if let Some(group) = super::egg_volumes::inspect(path)? {
             return Ok((group.parts.len() > 1 || !group.missing.is_empty()).then(|| SplitArchiveInfo {
                 format: SplitFormat::EggSplit, base_name: group.stem, parts: group.parts,

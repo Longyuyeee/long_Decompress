@@ -1,0 +1,999 @@
+{
+  "createdAt": "2026-10-18T05:00:08.247Z",
+  "dataLicense": "CC0-1.0 self authored",
+  "independentTool": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\resources\\archive-engine\\7z.exe",
+  "independentSha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53",
+  "cases": [
+    {
+      "name": "rar4-single-plain",
+      "kind": "rar4-single",
+      "mode": "plain",
+      "password": null,
+      "archive": "rar4-single-plain/用户资料.exe",
+      "members": [
+        {
+          "name": "用户资料.exe",
+          "bytes": 610186,
+          "sha256": "be94e1a04bb5d06d24599bf27715f7c793a6ad6e3805e54341ee3b5296dba3cd"
+        }
+      ],
+      "producer": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+      "args": [
+        "a",
+        "-sfx",
+        "-ma4",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-155\\rar4-single-plain\\用户资料.exe",
+        ".\\*"
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录"
+    },
+    {
+      "name": "rar4-single-contents",
+      "kind": "rar4-single",
+      "mode": "contents",
+      "password": "Sfx155+123!",
+      "archive": "rar4-single-contents/用户资料.exe",
+      "members": [
+        {
+          "name": "用户资料.exe",
+          "bytes": 610218,
+          "sha256": "c58efd5315fd329db3b1b525adb89998364e97f79673bcb766aae01a0bb3f77c"
+        }
+      ],
+      "producer": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+      "args": [
+        "a",
+        "-sfx",
+        "-ma4",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-pSfx155+123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-155\\rar4-single-contents\\用户资料.exe",
+        ".\\*"
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录"
+    },
+    {
+      "name": "rar4-single-headers",
+      "kind": "rar4-single",
+      "mode": "headers",
+      "password": "Sfx155+123!",
+      "archive": "rar4-single-headers/用户资料.exe",
+      "members": [
+        {
+          "name": "用户资料.exe",
+          "bytes": 610308,
+          "sha256": "2984c36c29d16cb4289b6370483fc367c85ce6ea4ace72920248b84d50b7c06b"
+        }
+      ],
+      "producer": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+      "args": [
+        "a",
+        "-sfx",
+        "-ma4",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-hpSfx155+123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-155\\rar4-single-headers\\用户资料.exe",
+        ".\\*"
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录"
+    },
+    {
+      "name": "rar4-old-plain",
+      "kind": "rar4-old",
+      "mode": "plain",
+      "password": null,
+      "archive": "rar4-old-plain/用户资料.exe",
+      "members": [
+        {
+          "name": "用户资料.exe",
+          "bytes": 334888,
+          "sha256": "389211b60519220759cf74fe6da72e0cda2717c7cdf52e40f885db7009161b16"
+        },
+        {
+          "name": "用户资料.r00",
+          "bytes": 65536,
+          "sha256": "864abbf2511f585fe0e392dc23ceb64735d02c64336755815fcde773bb3843ce"
+        },
+        {
+          "name": "用户资料.r01",
+          "bytes": 65536,
+          "sha256": "3449a2bc53e643c9b89494572cceeab83458d1613d14e7f149a8505410adb915"
+        },
+        {
+          "name": "用户资料.r02",
+          "bytes": 65536,
+          "sha256": "917de6985632eeae30127c94cc5ba979aa3eceb907d6d39531d50dd47e626463"
+        },
+        {
+          "name": "用户资料.r03",
+          "bytes": 65536,
+          "sha256": "8cf671c337e4144087a13397769e4a5aece816603440e60e3eb82a2447396be7"
+        },
+        {
+          "name": "用户资料.r04",
+          "bytes": 13625,
+          "sha256": "455202b3d21815bcd27bc683dfd326a159a83cb45613cec352f8f72377644508"
+        }
+      ],
+      "producer": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+      "args": [
+        "a",
+        "-sfx",
+        "-ma4",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "-vn",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-155\\rar4-old-plain\\用户资料.exe",
+        ".\\*"
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录"
+    },
+    {
+      "name": "rar4-old-contents",
+      "kind": "rar4-old",
+      "mode": "contents",
+      "password": "Sfx155+123!",
+      "archive": "rar4-old-contents/用户资料.exe",
+      "members": [
+        {
+          "name": "用户资料.exe",
+          "bytes": 334888,
+          "sha256": "f74a687f1c23a6ba5500a7c74d06dd5f3636cfd4279630d8af1002e4b795117b"
+        },
+        {
+          "name": "用户资料.r00",
+          "bytes": 65536,
+          "sha256": "db1e78fec068ef7b1f035649e61d668683cae910abd1a60ec99b44a71cf9a9d2"
+        },
+        {
+          "name": "用户资料.r01",
+          "bytes": 65536,
+          "sha256": "3d9d1c83ff8b1a057b4cb7f8f81a407918486cf97fc155e4c21423f7117a2391"
+        },
+        {
+          "name": "用户资料.r02",
+          "bytes": 65536,
+          "sha256": "35ccbb3fd53bb9892318af7729696f73334f8f5361a898edd120617e5952d3e8"
+        },
+        {
+          "name": "用户资料.r03",
+          "bytes": 65536,
+          "sha256": "190d0f71beba97feeaf87b19499754b55cf6dbfd42f6dc5b64fdcf9c05cfb1e5"
+        },
+        {
+          "name": "用户资料.r04",
+          "bytes": 13641,
+          "sha256": "18b1e3431e633cf35f61eee5717cbdc36bcc7a7dede53985f2bebadde8294e01"
+        }
+      ],
+      "producer": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+      "args": [
+        "a",
+        "-sfx",
+        "-ma4",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "-vn",
+        "-pSfx155+123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-155\\rar4-old-contents\\用户资料.exe",
+        ".\\*"
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录"
+    },
+    {
+      "name": "rar4-old-headers",
+      "kind": "rar4-old",
+      "mode": "headers",
+      "password": "Sfx155+123!",
+      "archive": "rar4-old-headers/用户资料.exe",
+      "members": [
+        {
+          "name": "用户资料.exe",
+          "bytes": 334908,
+          "sha256": "3cc6f8e4787fb4a2be744b502846ca7b950007333983e9cc7d60e8945aeaaf7a"
+        },
+        {
+          "name": "用户资料.r00",
+          "bytes": 65536,
+          "sha256": "3c6e1ad4af9a2fd21b44e21f70132116e1d63eea6293bb97498820224953837c"
+        },
+        {
+          "name": "用户资料.r01",
+          "bytes": 65536,
+          "sha256": "3ba8f5040619bfece9395faa5d9e370c3399bddd919f8f5af01ffa75bf5f5c12"
+        },
+        {
+          "name": "用户资料.r02",
+          "bytes": 65536,
+          "sha256": "3a894fc69546a7a985bbb6d633f2233c9c6637f0d87325002c61e433977f6e66"
+        },
+        {
+          "name": "用户资料.r03",
+          "bytes": 65536,
+          "sha256": "3684dfb310a7b582220fdac745457ee2f0640ba82a925a7451be8260818e821e"
+        },
+        {
+          "name": "用户资料.r04",
+          "bytes": 13932,
+          "sha256": "78d9761e0caf92e768322882c598d6964b28051f6f533ea8b8dcfb03ec3a1a94"
+        }
+      ],
+      "producer": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+      "args": [
+        "a",
+        "-sfx",
+        "-ma4",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "-vn",
+        "-hpSfx155+123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-155\\rar4-old-headers\\用户资料.exe",
+        ".\\*"
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录"
+    },
+    {
+      "name": "rar4-modern-plain",
+      "kind": "rar4-modern",
+      "mode": "plain",
+      "password": null,
+      "archive": "rar4-modern-plain/用户资料.part1.exe",
+      "members": [
+        {
+          "name": "用户资料.part1.exe",
+          "bytes": 334888,
+          "sha256": "e2fc7252a376652e2631c2439fa080efb3a95fcd90c51f8b11074c1eaebfb57d"
+        },
+        {
+          "name": "用户资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "cfa7f4046e397c5db955bf3ff24f0a3bb9bd26791976b03d99d1b3ad8bc353ab"
+        },
+        {
+          "name": "用户资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "670cec6a933bb26de0970d10f23bd5065f8fa3980f96f4fc10be6e6ed4a59eaf"
+        },
+        {
+          "name": "用户资料.part4.rar",
+          "bytes": 65536,
+          "sha256": "8b3a2c841fdc76841d42772b84468ea19ca62e857227db191ca2c70d8527781e"
+        },
+        {
+          "name": "用户资料.part5.rar",
+          "bytes": 65536,
+          "sha256": "be3ac20d74135a4e34e35ab9983192c59dd06043641b17785d523dad2db24804"
+        },
+        {
+          "name": "用户资料.part6.rar",
+          "bytes": 13625,
+          "sha256": "50dd2f18f3620d75ef432d92c2a4dd241ff56e213d063233881b407b9e0150bf"
+        }
+      ],
+      "producer": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+      "args": [
+        "a",
+        "-sfx",
+        "-ma4",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-155\\rar4-modern-plain\\用户资料.exe",
+        ".\\*"
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录"
+    },
+    {
+      "name": "rar4-modern-contents",
+      "kind": "rar4-modern",
+      "mode": "contents",
+      "password": "Sfx155+123!",
+      "archive": "rar4-modern-contents/用户资料.part1.exe",
+      "members": [
+        {
+          "name": "用户资料.part1.exe",
+          "bytes": 334888,
+          "sha256": "88bfd7d1e0583c60175f64cb17fe7e8e1e609140cd997436566a5d49c303ff81"
+        },
+        {
+          "name": "用户资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "13e457f840fd6fcfd1a38725d49599a588983bf7189bea51cb303ac06d3afc22"
+        },
+        {
+          "name": "用户资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "e547b18956a606c2e29dc032d0b57ecf82bb24aafbf4666ab3cecf302fdfbb3f"
+        },
+        {
+          "name": "用户资料.part4.rar",
+          "bytes": 65536,
+          "sha256": "71623a034a53a239b2a1e645ada0facfe37427de1c5952d8c02882673c6f1ecd"
+        },
+        {
+          "name": "用户资料.part5.rar",
+          "bytes": 65536,
+          "sha256": "43d03efffb58ed11a031a9039d5eee29c5e7d06578ebfc418ecf48752e0c4cf4"
+        },
+        {
+          "name": "用户资料.part6.rar",
+          "bytes": 13641,
+          "sha256": "85c6b65861412fd0884988adc51852a13ce71b99aef8858b1cacfb778237fdea"
+        }
+      ],
+      "producer": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+      "args": [
+        "a",
+        "-sfx",
+        "-ma4",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "-pSfx155+123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-155\\rar4-modern-contents\\用户资料.exe",
+        ".\\*"
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录"
+    },
+    {
+      "name": "rar4-modern-headers",
+      "kind": "rar4-modern",
+      "mode": "headers",
+      "password": "Sfx155+123!",
+      "archive": "rar4-modern-headers/用户资料.part1.exe",
+      "members": [
+        {
+          "name": "用户资料.part1.exe",
+          "bytes": 334908,
+          "sha256": "b68f73b85ac810ba69fa32718832f2fc116544e7bd11d369de4835c9b0f054e2"
+        },
+        {
+          "name": "用户资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "71e50b947da836271372b52e81ef21698b672581c40db15da7256e35b44e3b27"
+        },
+        {
+          "name": "用户资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "26be4c8c29efc524091c6decf206133c9e7de864443309d849cfff2a4221d5c0"
+        },
+        {
+          "name": "用户资料.part4.rar",
+          "bytes": 65536,
+          "sha256": "efe322f1fd3c466f2afbe479fe2a3f48aa87dd708b6021bacbac236f339f3530"
+        },
+        {
+          "name": "用户资料.part5.rar",
+          "bytes": 65536,
+          "sha256": "9a8fdaa7667f06ccc03fa11da8c5b6820b3fc2882ac67305b22a9df3397c3ca7"
+        },
+        {
+          "name": "用户资料.part6.rar",
+          "bytes": 13932,
+          "sha256": "62ce01478a3848bf9c2de5caea17929fab8ce72a5c89eb4b4272eaeecebc1f68"
+        }
+      ],
+      "producer": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+      "args": [
+        "a",
+        "-sfx",
+        "-ma4",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "-hpSfx155+123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-155\\rar4-modern-headers\\用户资料.exe",
+        ".\\*"
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录"
+    },
+    {
+      "name": "rar5-modern-plain",
+      "kind": "rar5-modern",
+      "mode": "plain",
+      "password": null,
+      "archive": "rar5-modern-plain/用户资料.part1.exe",
+      "members": [
+        {
+          "name": "用户资料.part1.exe",
+          "bytes": 460771,
+          "sha256": "f26c72d757be03868cad440e26829f196912f3b098faa87729235aea3be2ab27"
+        },
+        {
+          "name": "用户资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "e67cc4ddd6b9092a462040516012e303d97cd8c00a8b619c786359fe21ba9b65"
+        },
+        {
+          "name": "用户资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "4a394f9b1fb5815bb6bcda7fa9c0d1dd72ea687e5f3040ee32932c6a849d8526"
+        },
+        {
+          "name": "用户资料.part4.rar",
+          "bytes": 65536,
+          "sha256": "fbb1c307cd3600099ce9369c990a0fd49a7075ef4cfff9009b0aa78f4ba9d11b"
+        },
+        {
+          "name": "用户资料.part5.rar",
+          "bytes": 65536,
+          "sha256": "62cc358a31a5fab4cd924f1a248856cb317d24e53c5d43a9033536ea200c173e"
+        },
+        {
+          "name": "用户资料.part6.rar",
+          "bytes": 13992,
+          "sha256": "f514c4bd69bd89150d75e09d0944a5b8b47d476e0c93a2983514f4c94f37a75e"
+        }
+      ],
+      "producer": "E:/Winrar/Rar.exe",
+      "producerSha256": "08ce9c66600fd07580304cbaff9241c1b9fda33eb70cc3d28c16a1084d3bc3ca",
+      "args": [
+        "a",
+        "-sfx",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-155\\rar5-modern-plain\\用户资料.exe",
+        ".\\*"
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录"
+    },
+    {
+      "name": "rar5-modern-contents",
+      "kind": "rar5-modern",
+      "mode": "contents",
+      "password": "Sfx155+123!",
+      "archive": "rar5-modern-contents/用户资料.part1.exe",
+      "members": [
+        {
+          "name": "用户资料.part1.exe",
+          "bytes": 460722,
+          "sha256": "97ac1bbedffb62f602536f568a31c9435f1d7695de252d06f67f2870e063dd10"
+        },
+        {
+          "name": "用户资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "f9ffb8cd806d5633a1491e736569315479749a81e1d0d8b72d0442e46514e49f"
+        },
+        {
+          "name": "用户资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "927f27d8762de97eb15b0f07e91b24618a751b199d5432117374655fcd50dbe9"
+        },
+        {
+          "name": "用户资料.part4.rar",
+          "bytes": 65536,
+          "sha256": "1dc3bf9335f70c452ef8c74bc5cc217d4c220f2f9bcfb6b7ed7824350e02f809"
+        },
+        {
+          "name": "用户资料.part5.rar",
+          "bytes": 65536,
+          "sha256": "e9478f079741c3d99b18644813c64dae6c8985b58a4b2bbc50203ec1c2311a7d"
+        },
+        {
+          "name": "用户资料.part6.rar",
+          "bytes": 14686,
+          "sha256": "cefb019f655795430e4b5739ab72801a338f3bf428662960829c858ff7615d5d"
+        }
+      ],
+      "producer": "E:/Winrar/Rar.exe",
+      "producerSha256": "08ce9c66600fd07580304cbaff9241c1b9fda33eb70cc3d28c16a1084d3bc3ca",
+      "args": [
+        "a",
+        "-sfx",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "-pSfx155+123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-155\\rar5-modern-contents\\用户资料.exe",
+        ".\\*"
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录"
+    },
+    {
+      "name": "rar5-modern-headers",
+      "kind": "rar5-modern",
+      "mode": "headers",
+      "password": "Sfx155+123!",
+      "archive": "rar5-modern-headers/用户资料.part1.exe",
+      "members": [
+        {
+          "name": "用户资料.part1.exe",
+          "bytes": 460798,
+          "sha256": "6ed0ef671020dd7ddd6a13d96db5a00e482a2aa54a92e729f045e61727a67818"
+        },
+        {
+          "name": "用户资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "80b628921194c2cc3a939a9c720a1c85e56917a308433c62728ea7a2e9df039a"
+        },
+        {
+          "name": "用户资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "b7d77516db4ecaf865cc8aefe4e67ce5954d53a90f25e6dbb9ab5aafbcf460c9"
+        },
+        {
+          "name": "用户资料.part4.rar",
+          "bytes": 65536,
+          "sha256": "031180ebae0835ddef34709799c7ae4fcadc97a562641b0fd3e9f86bfe72c26c"
+        },
+        {
+          "name": "用户资料.part5.rar",
+          "bytes": 65536,
+          "sha256": "6eb5d526141a13b425c3cad067d9c87fe8bb0ee2b4ee504ae3a3d41e57971680"
+        },
+        {
+          "name": "用户资料.part6.rar",
+          "bytes": 15902,
+          "sha256": "2464dfb0ddc8788042545552ac2e4df41820933fda577efea0ee63b891f679e2"
+        }
+      ],
+      "producer": "E:/Winrar/Rar.exe",
+      "producerSha256": "08ce9c66600fd07580304cbaff9241c1b9fda33eb70cc3d28c16a1084d3bc3ca",
+      "args": [
+        "a",
+        "-sfx",
+        "-m0",
+        "-r",
+        "-idq",
+        "-cfg-",
+        "-v64k",
+        "-hpSfx155+123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-155\\rar5-modern-headers\\用户资料.exe",
+        ".\\*"
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录"
+    },
+    {
+      "name": "7z-volumes-plain",
+      "kind": "7z-volumes",
+      "mode": "plain",
+      "password": null,
+      "archive": "7z-volumes-plain/用户资料.exe",
+      "members": [
+        {
+          "name": "用户资料.7z.001",
+          "bytes": 65536,
+          "sha256": "70691a5fc9c6413798b27d6ed49843f8353f3ed7531534d9bb09255aad35e3b7"
+        },
+        {
+          "name": "用户资料.7z.002",
+          "bytes": 65536,
+          "sha256": "145bd6ddab9327fa4b011ddadf05f7fca503927eb872a19307bfd9bc1ab33c19"
+        },
+        {
+          "name": "用户资料.7z.003",
+          "bytes": 65536,
+          "sha256": "b0f3effa743bbf3d4ec79ddcc0764e61dad98ebc7e461f754601e341f58d2bf1"
+        },
+        {
+          "name": "用户资料.7z.004",
+          "bytes": 65536,
+          "sha256": "2f42d7283f8d711e3decc960c1f9e942384cc75ab75ac1702af4709aa374b3a7"
+        },
+        {
+          "name": "用户资料.7z.005",
+          "bytes": 13619,
+          "sha256": "c7510f029d148268cfa4605d22989fbf446af1432c86aa8ba3c4f2123fb333ae"
+        },
+        {
+          "name": "用户资料.exe",
+          "bytes": 213504,
+          "sha256": "97b304ccf831e83ca58b5c99a736f6525f81378125143e92b76baea0988ec5e2"
+        }
+      ],
+      "producer": "E:/7z/7-Zip/7z.exe",
+      "producerSha256": "e2ca3ec168ae9c0b4115cd4fe220145ea9b2dc4b6fc79d765e91f415b34d00de",
+      "args": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sfxE:/7z/7-Zip/7z.sfx",
+        "-v64k",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-155\\7z-volumes-plain\\用户资料.exe",
+        ".\\*"
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录"
+    },
+    {
+      "name": "7z-volumes-contents",
+      "kind": "7z-volumes",
+      "mode": "contents",
+      "password": "Sfx155+123!",
+      "archive": "7z-volumes-contents/用户资料.exe",
+      "members": [
+        {
+          "name": "用户资料.7z.001",
+          "bytes": 65536,
+          "sha256": "cd146a38b704e3ab4e1e0f5434b5e3a81b505c3c1e1e54f89a11838904198eb3"
+        },
+        {
+          "name": "用户资料.7z.002",
+          "bytes": 65536,
+          "sha256": "e775747927a31960ebb0f371889329d792569b6ee502932b0f8e450564ab4c21"
+        },
+        {
+          "name": "用户资料.7z.003",
+          "bytes": 65536,
+          "sha256": "e6aa0b78d93a820e4253d104b31d096ac887c1bc05ee4dcf5deeba95917ff751"
+        },
+        {
+          "name": "用户资料.7z.004",
+          "bytes": 65536,
+          "sha256": "c73d2fcf47e61830b282bc4e5fb3fb677a85fa30592854a3aadcc749ac751c7b"
+        },
+        {
+          "name": "用户资料.7z.005",
+          "bytes": 13680,
+          "sha256": "5531d81e7ca8e447d4baa78c193374a3a2bf9cf6a2ed7e0a993d935d47b5dd41"
+        },
+        {
+          "name": "用户资料.exe",
+          "bytes": 213504,
+          "sha256": "97b304ccf831e83ca58b5c99a736f6525f81378125143e92b76baea0988ec5e2"
+        }
+      ],
+      "producer": "E:/7z/7-Zip/7z.exe",
+      "producerSha256": "e2ca3ec168ae9c0b4115cd4fe220145ea9b2dc4b6fc79d765e91f415b34d00de",
+      "args": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sfxE:/7z/7-Zip/7z.sfx",
+        "-v64k",
+        "-pSfx155+123!",
+        "-mhe=off",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-155\\7z-volumes-contents\\用户资料.exe",
+        ".\\*"
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录"
+    },
+    {
+      "name": "7z-volumes-headers",
+      "kind": "7z-volumes",
+      "mode": "headers",
+      "password": "Sfx155+123!",
+      "archive": "7z-volumes-headers/用户资料.exe",
+      "members": [
+        {
+          "name": "用户资料.7z.001",
+          "bytes": 65536,
+          "sha256": "4d79b42655d9d74a22b28711fce823930deafff679fa40287de9f60c19586b91"
+        },
+        {
+          "name": "用户资料.7z.002",
+          "bytes": 65536,
+          "sha256": "367886d2194fc54863250569df2417507e2c4bf1364de717f129f09f43c87165"
+        },
+        {
+          "name": "用户资料.7z.003",
+          "bytes": 65536,
+          "sha256": "c006cff6d35855540de0ec9b7f75b57ce12fcfc7cb177c6928dabc7aca3509d8"
+        },
+        {
+          "name": "用户资料.7z.004",
+          "bytes": 65536,
+          "sha256": "758f11061b90ac0a159018c2d6d028ecd4b2e8ca7b2e5abfe958de65b56b8ccb"
+        },
+        {
+          "name": "用户资料.7z.005",
+          "bytes": 13712,
+          "sha256": "b86818c5be08244b275213f58af651446b42fda3a3000ab9befd99ddb4ebab66"
+        },
+        {
+          "name": "用户资料.exe",
+          "bytes": 213504,
+          "sha256": "97b304ccf831e83ca58b5c99a736f6525f81378125143e92b76baea0988ec5e2"
+        }
+      ],
+      "producer": "E:/7z/7-Zip/7z.exe",
+      "producerSha256": "e2ca3ec168ae9c0b4115cd4fe220145ea9b2dc4b6fc79d765e91f415b34d00de",
+      "args": [
+        "a",
+        "-t7z",
+        "-mx=0",
+        "-sfxE:/7z/7-Zip/7z.sfx",
+        "-v64k",
+        "-pSfx155+123!",
+        "-mhe=on",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sfx-155\\7z-volumes-headers\\用户资料.exe",
+        ".\\*"
+      ],
+      "expected": [
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 13400,
+          "sha256": "4b84a72fd367b56980b387274f9403e2a2bce09897cf786e4f55a0d8e48355f2"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "5f53073433e873372cad43f6b57ce25791934a980a1591f4c1b8665f3a6680de"
+        }
+      ],
+      "emptyDirectory": "文档/空目录"
+    }
+  ],
+  "rejected": []
+}

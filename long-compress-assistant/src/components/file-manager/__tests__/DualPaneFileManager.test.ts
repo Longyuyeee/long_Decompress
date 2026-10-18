@@ -17,7 +17,7 @@ const rightEntries = [
 ]
 
 describe('DualPaneFileManager', () => {
-  it.each(['ARJ', 'Z', 'UDF', 'ZX02', 'ZX100'])('opens %s by double click and exposes cross-pane extraction', async extension => {
+  it.each(['ARJ', 'Z', 'UDF', 'ZX02', 'ZX100', 'R02', '001'])('opens %s by double click and exposes cross-pane extraction', async extension => {
     const original = invoke.getMockImplementation()!
     const path = 'C:\\left\\资料.' + extension
     invoke.mockImplementation((command, payload) => command === 'list_files' && payload.path === 'C:\\left'
