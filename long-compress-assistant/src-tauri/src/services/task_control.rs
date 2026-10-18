@@ -3,11 +3,31 @@ use dashmap::DashMap;
 use once_cell::sync::Lazy;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Condvar, Mutex};
+use std::time::{Duration, Instant};
+
+#[derive(Default)]
+struct PauseTiming {
+    since: Option<Instant>,
+    accumulated: Duration,
+}
+
+impl PauseTiming {
+    fn total(&self) -> Duration {
+        self.accumulated + self.since.map(|at| at.elapsed()).unwrap_or_default()
+    }
+    fn set(&mut self, paused: bool) {
+        if paused {
+            self.since.get_or_insert_with(Instant::now);
+        } else if let Some(at) = self.since.take() {
+            self.accumulated += at.elapsed();
+        }
+    }
+}
 
 struct TaskControl {
     cancelled: Arc<AtomicBool>,
     paused: AtomicBool,
-    gate: Mutex<()>,
+    gate: Mutex<PauseTiming>,
     wake: Condvar,
 }
 
@@ -16,12 +36,16 @@ impl TaskControl {
         Self {
             cancelled: Arc::new(AtomicBool::new(false)),
             paused: AtomicBool::new(false),
-            gate: Mutex::new(()),
+            gate: Mutex::new(PauseTiming::default()),
             wake: Condvar::new(),
         }
     }
 
     fn set_paused(&self, paused: bool) {
+        // Serialize the predicate with the condvar gate to avoid lost wakeups.
+        let mut timing = self.gate.lock().unwrap_or_else(|p| p.into_inner());
+        let paused = paused && !self.cancelled.load(Ordering::SeqCst);
+        timing.set(paused);
         self.paused.store(paused, Ordering::SeqCst);
         if !paused {
             self.wake.notify_all();
@@ -30,8 +54,7 @@ impl TaskControl {
 
     fn cancel(&self) {
         self.cancelled.store(true, Ordering::SeqCst);
-        self.paused.store(false, Ordering::SeqCst);
-        self.wake.notify_all();
+        self.set_paused(false);
     }
 }
 
@@ -96,6 +119,12 @@ pub(crate) fn resume(task_id: &str) -> bool {
 
 pub(crate) fn is_paused(flag: &Arc<AtomicBool>) -> bool {
     control_for_flag(flag).is_some_and(|control| control.paused.load(Ordering::SeqCst))
+}
+
+pub(crate) fn paused_duration(task_id: &str) -> Duration {
+    CONTROLS.get(task_id).map(|control| {
+        control.gate.lock().unwrap_or_else(|p| p.into_inner()).total()
+    }).unwrap_or_default()
 }
 
 /// Blocks native archive work at its existing cancellation checkpoints. A
@@ -178,6 +207,27 @@ pub(crate) fn sync_child_pause(
 mod tests {
     use super::*;
     use std::time::Duration;
+
+    #[test]
+    fn pause_timing_is_idempotent_and_cancel_settles_it() {
+        let id = format!("pause-time-{}", uuid::Uuid::new_v4());
+        let _flag = register(&id).unwrap();
+        assert!(pause(&id));
+        std::thread::sleep(Duration::from_millis(40));
+        assert!(pause(&id));
+        std::thread::sleep(Duration::from_millis(40));
+        assert!(paused_duration(&id) >= Duration::from_millis(80));
+        assert!(resume(&id));
+        let settled = paused_duration(&id);
+        std::thread::sleep(Duration::from_millis(20));
+        assert_eq!(paused_duration(&id), settled);
+        assert!(pause(&id));
+        std::thread::sleep(Duration::from_millis(20));
+        assert!(cancel(&id));
+        assert!(paused_duration(&id) >= settled + Duration::from_millis(20));
+        assert!(!pause(&id));
+        cleanup(&id);
+    }
 
     #[test]
     fn native_pause_blocks_until_resume_and_cancel_wakes_it() {

@@ -1,0 +1,1789 @@
+{
+  "completedAt": "2026-10-18T07:36:49.717Z",
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
+  "binarySha256": "1911b0667ba40c6abb5889773e18223e6e50177da6d234a2ff9b38eecdf3b877",
+  "originals": {
+    "createdAt": "2026-10-18T07:09:28.347Z",
+    "producer": "E:/Winrar/Rar.exe",
+    "producerSha256": "08ce9c66600fd07580304cbaff9241c1b9fda33eb70cc3d28c16a1084d3bc3ca",
+    "independent": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\resources\\archive-engine\\7z.exe",
+    "independentSha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53",
+    "cases": [
+      {
+        "name": "single-plain",
+        "layout": "single",
+        "protection": "plain",
+        "password": null,
+        "archive": "收到的资料.rar",
+        "members": [
+          {
+            "name": "收到的资料.rar",
+            "bytes": 16777384,
+            "sha256": "0f3054ae9a39f5c35a6158e50374d2b6eada0fea6fef134ec64e3f26aa642854"
+          }
+        ],
+        "expected": {
+          "path": "payload.bin",
+          "bytes": 16777216,
+          "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+        },
+        "independentReadback": true
+      },
+      {
+        "name": "single-contents",
+        "layout": "single",
+        "protection": "contents",
+        "password": "Rar156+中文123!",
+        "archive": "收到的资料.rar",
+        "members": [
+          {
+            "name": "收到的资料.rar",
+            "bytes": 16777482,
+            "sha256": "8547794f97965677a5a439941ca2abbd3768c2d2404a8da338b6699aeba4638b"
+          }
+        ],
+        "expected": {
+          "path": "payload.bin",
+          "bytes": 16777216,
+          "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+        },
+        "independentReadback": true
+      },
+      {
+        "name": "single-headers",
+        "layout": "single",
+        "protection": "headers",
+        "password": "Rar156+中文123!",
+        "archive": "收到的资料.rar",
+        "members": [
+          {
+            "name": "收到的资料.rar",
+            "bytes": 16777710,
+            "sha256": "53ebd82757e9513809c12d2a3291e4f41902b05983dc0c1f54c49444f6c824e3"
+          }
+        ],
+        "expected": {
+          "path": "payload.bin",
+          "bytes": 16777216,
+          "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+        },
+        "independentReadback": true
+      },
+      {
+        "name": "volumes-plain",
+        "layout": "volumes",
+        "protection": "plain",
+        "password": null,
+        "archive": "收到的资料.part1.rar",
+        "members": [
+          {
+            "name": "收到的资料.part1.rar",
+            "bytes": 4194304,
+            "sha256": "cae2f3f67ae7ad9298e48170093ed74c900e0f419d61007a40365378b6f10b42"
+          },
+          {
+            "name": "收到的资料.part2.rar",
+            "bytes": 4194304,
+            "sha256": "1a627dac8e034c0224739f75461b4cfb0f2cdf3e7aad680a25ac0233f7da7389"
+          },
+          {
+            "name": "收到的资料.part3.rar",
+            "bytes": 4194304,
+            "sha256": "bb2c03d3973ec0808161159f3f3e94f0e485ba92a3125960cb8344fd51ea5fb5"
+          },
+          {
+            "name": "收到的资料.part4.rar",
+            "bytes": 4194304,
+            "sha256": "b59ca93aa6f2739e3fbd2256376532d000b1322d28604e30c2f039b80427b613"
+          },
+          {
+            "name": "收到的资料.part5.rar",
+            "bytes": 790,
+            "sha256": "ab97a2fb264348685de029cea27dc6dfcdd92011ab070cc451b307bcbd848643"
+          }
+        ],
+        "expected": {
+          "path": "payload.bin",
+          "bytes": 16777216,
+          "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+        },
+        "independentReadback": true
+      },
+      {
+        "name": "volumes-contents",
+        "layout": "volumes",
+        "protection": "contents",
+        "password": "Rar156+中文123!",
+        "archive": "收到的资料.part1.rar",
+        "members": [
+          {
+            "name": "收到的资料.part1.rar",
+            "bytes": 4194304,
+            "sha256": "f8c29aa64d44285a0d2134f01c989dc5183e89e692210c14f3ded4b47f60cad6"
+          },
+          {
+            "name": "收到的资料.part2.rar",
+            "bytes": 4194304,
+            "sha256": "401725e820368ac9eade4df60ad2bba1332002e89d30c873318c393c8a13191f"
+          },
+          {
+            "name": "收到的资料.part3.rar",
+            "bytes": 4194304,
+            "sha256": "a72e1d7dedc1e27ffbe92a892d65fac68ccdfa4bc818e2b0a114e4f5040c15c1"
+          },
+          {
+            "name": "收到的资料.part4.rar",
+            "bytes": 4194304,
+            "sha256": "2066a6b96402d31a04780985b852baeb3ada7699f8233b6749be5c093ad750d9"
+          },
+          {
+            "name": "收到的资料.part5.rar",
+            "bytes": 1231,
+            "sha256": "6ede5dd4a6c4bca496654b7871bbe052b4e61912a2be63172f5ebd3ed4557b9c"
+          }
+        ],
+        "expected": {
+          "path": "payload.bin",
+          "bytes": 16777216,
+          "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+        },
+        "independentReadback": true
+      },
+      {
+        "name": "volumes-headers",
+        "layout": "volumes",
+        "protection": "headers",
+        "password": "Rar156+中文123!",
+        "archive": "收到的资料.part1.rar",
+        "members": [
+          {
+            "name": "收到的资料.part1.rar",
+            "bytes": 4194304,
+            "sha256": "0f0dabb2aef847954112dbb73e441c8331b772b13ee7cc3964efbf92a088f02c"
+          },
+          {
+            "name": "收到的资料.part2.rar",
+            "bytes": 4194304,
+            "sha256": "cffbd84f9c7cf140cb8f81b71e739d875d3909839a1f167813b54bf85857b416"
+          },
+          {
+            "name": "收到的资料.part3.rar",
+            "bytes": 4194304,
+            "sha256": "5b5a9650acb51b730455eee65b5b0f9e9775341acbbd6bcc0349fd5b65696240"
+          },
+          {
+            "name": "收到的资料.part4.rar",
+            "bytes": 4194304,
+            "sha256": "c8c045c1224256fd3e5b82a9bdf1a690fd830206bf25cd922a8b821e1c882878"
+          },
+          {
+            "name": "收到的资料.part5.rar",
+            "bytes": 2302,
+            "sha256": "7208ec47555346068a6fcce39740de54ee782abd213aa9e07b6aeb1e48bc4e23"
+          }
+        ],
+        "expected": {
+          "path": "payload.bin",
+          "bytes": 16777216,
+          "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+        },
+        "independentReadback": true
+      },
+      {
+        "name": "sfx-plain",
+        "layout": "sfx",
+        "protection": "plain",
+        "password": null,
+        "archive": "收到的资料.part1.exe",
+        "members": [
+          {
+            "name": "收到的资料.part1.exe",
+            "bytes": 4194304,
+            "sha256": "21a132c5761f1f174197f98cbd71468cad050ee142de5e52ea2eea12132e7e0f"
+          },
+          {
+            "name": "收到的资料.part2.rar",
+            "bytes": 4194304,
+            "sha256": "b19c585d116ecb9dcbfd840e7dc27e4e0a1cd7ede151378c2748bca9cc2727ac"
+          },
+          {
+            "name": "收到的资料.part3.rar",
+            "bytes": 4194304,
+            "sha256": "2dcd4cde2f922fe5a45cd19138ab8cf90ddbedf232f479b13fdf44742c4d8205"
+          },
+          {
+            "name": "收到的资料.part4.rar",
+            "bytes": 4194304,
+            "sha256": "abc156321a598c2bfe51a6fced5be36a884f5c9263ad947e17fe6ca50ba7a820"
+          },
+          {
+            "name": "收到的资料.part5.rar",
+            "bytes": 461159,
+            "sha256": "78c265db25de525da1d5c76dbaabe52e68326d5c35dd691ef27f18e0981a179a"
+          }
+        ],
+        "expected": {
+          "path": "payload.bin",
+          "bytes": 16777216,
+          "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+        },
+        "independentReadback": true
+      },
+      {
+        "name": "sfx-contents",
+        "layout": "sfx",
+        "protection": "contents",
+        "password": "Rar156+中文123!",
+        "archive": "收到的资料.part1.exe",
+        "members": [
+          {
+            "name": "收到的资料.part1.exe",
+            "bytes": 4194304,
+            "sha256": "ec245abbdcae89788ca0424001b7db41e043db14a620bb7908888344d83439c2"
+          },
+          {
+            "name": "收到的资料.part2.rar",
+            "bytes": 4194304,
+            "sha256": "4cd01802201bb89c737411c02b2340aedfd7a807f47f5ff99cc6e1f8149f0a64"
+          },
+          {
+            "name": "收到的资料.part3.rar",
+            "bytes": 4194304,
+            "sha256": "3ca6d9109380503cbd72a7f4a9a3884ce61c82290447aae9e7eccb981a59865d"
+          },
+          {
+            "name": "收到的资料.part4.rar",
+            "bytes": 4194304,
+            "sha256": "6d2483e30fdf12c1e0c29c150405e1c30e684f415e234915bcf0747c1be80240"
+          },
+          {
+            "name": "收到的资料.part5.rar",
+            "bytes": 461649,
+            "sha256": "deb3226def5730280454689dd98933f78e2e60049e14aea564b071f39e06007a"
+          }
+        ],
+        "expected": {
+          "path": "payload.bin",
+          "bytes": 16777216,
+          "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+        },
+        "independentReadback": true
+      },
+      {
+        "name": "sfx-headers",
+        "layout": "sfx",
+        "protection": "headers",
+        "password": "Rar156+中文123!",
+        "archive": "收到的资料.part1.exe",
+        "members": [
+          {
+            "name": "收到的资料.part1.exe",
+            "bytes": 4194304,
+            "sha256": "285d9d0ce52b1bff2229a7eb08fff8213d83ef5f76b6eb08d81c55dc653651bb"
+          },
+          {
+            "name": "收到的资料.part2.rar",
+            "bytes": 4194304,
+            "sha256": "945920afdd787fcbae524a1cbd12eaaa0b268cfea42c602908b7b6f304142381"
+          },
+          {
+            "name": "收到的资料.part3.rar",
+            "bytes": 4194304,
+            "sha256": "19a564685fdb72ef3fcae6ba1bc40d1383923e2ba20321e7a53ae5e411cc80b2"
+          },
+          {
+            "name": "收到的资料.part4.rar",
+            "bytes": 4194304,
+            "sha256": "b44744e83673eef07d582ddb63883ba999f208484edba7382ee85fa964484f34"
+          },
+          {
+            "name": "收到的资料.part5.rar",
+            "bytes": 462830,
+            "sha256": "f91301fec7403a2702228c7eafb843c13b93245ee8fc21636c0612d90ab589fa"
+          }
+        ],
+        "expected": {
+          "path": "payload.bin",
+          "bytes": 16777216,
+          "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+        },
+        "independentReadback": true
+      }
+    ]
+  },
+  "control": {
+    "createdAt": "2026-10-18T05:15:13.149Z",
+    "producer": "E:/Winrar/Rar.exe",
+    "producerSha256": "08ce9c66600fd07580304cbaff9241c1b9fda33eb70cc3d28c16a1084d3bc3ca",
+    "archive": "控制原包.part01.exe",
+    "members": [
+      {
+        "name": "控制原包.part01.exe",
+        "bytes": 33554432,
+        "sha256": "0f056febdfd1cb109c3ee8bb4487bd775c2a86418d52b29610e53468514302e4"
+      },
+      {
+        "name": "控制原包.part02.rar",
+        "bytes": 33554432,
+        "sha256": "4e6ecc121d9bfdca262fa9e49979fdd74ddbba0790819bd4f20a37cfab557e53"
+      },
+      {
+        "name": "控制原包.part03.rar",
+        "bytes": 33554432,
+        "sha256": "b52b95dcf22e58d3a50bfe0b73c5575a8ccf942361faf9f8210f3bf7652b6a9b"
+      },
+      {
+        "name": "控制原包.part04.rar",
+        "bytes": 33554432,
+        "sha256": "903bf8fece7cd155222982767bb427007beb6759d29cf721981efbf81a09b8aa"
+      },
+      {
+        "name": "控制原包.part05.rar",
+        "bytes": 33554432,
+        "sha256": "2ea26a160f7a381ff4c5761c737b62645353b7dc60595aca749c0566175558d3"
+      },
+      {
+        "name": "控制原包.part06.rar",
+        "bytes": 33554432,
+        "sha256": "68c29cadc8b84b819efd52f5fbaa169f76a098ed09333c884be68b1110d8755c"
+      },
+      {
+        "name": "控制原包.part07.rar",
+        "bytes": 33554432,
+        "sha256": "f1ff1e4ec1d930bc635b90430178b8e54127ad904f1053795d7422383f886f1d"
+      },
+      {
+        "name": "控制原包.part08.rar",
+        "bytes": 33554432,
+        "sha256": "306be4531f30ebe333650d062e5dc411c00ea557eab305ac32280c9da2d55d0b"
+      },
+      {
+        "name": "控制原包.part09.rar",
+        "bytes": 461890,
+        "sha256": "f327ae93c623ced845de88f5353897aa94147ea657db0c71d4137a8905bf0e95"
+      }
+    ],
+    "expected": [
+      {
+        "path": "payload.bin",
+        "bytes": 268435456,
+        "sha256": "1a04258f4db4d37deb6804f922cdb9740756353babd645b4c23ec77b7d058279"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "original": "single-plain",
+      "sourceMembers": [
+        {
+          "name": "收到的资料.rar",
+          "bytes": 16777384,
+          "sha256": "0f3054ae9a39f5c35a6158e50374d2b6eada0fea6fef134ec64e3f26aa642854"
+        }
+      ],
+      "expected": {
+        "path": "payload.bin",
+        "bytes": 16777216,
+        "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+      },
+      "actualBytes": [
+        4194304,
+        16777216,
+        16777216
+      ],
+      "progress": [
+        0.25,
+        0.99,
+        1
+      ],
+      "noOutputLengthEstimate": true,
+      "outputSha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+    },
+    {
+      "original": "single-contents",
+      "sourceMembers": [
+        {
+          "name": "收到的资料.rar",
+          "bytes": 16777482,
+          "sha256": "8547794f97965677a5a439941ca2abbd3768c2d2404a8da338b6699aeba4638b"
+        }
+      ],
+      "expected": {
+        "path": "payload.bin",
+        "bytes": 16777216,
+        "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+      },
+      "actualBytes": [
+        4194304,
+        16777216,
+        16777216
+      ],
+      "progress": [
+        0.25,
+        0.99,
+        1
+      ],
+      "noOutputLengthEstimate": true,
+      "outputSha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+    },
+    {
+      "original": "single-headers",
+      "sourceMembers": [
+        {
+          "name": "收到的资料.rar",
+          "bytes": 16777710,
+          "sha256": "53ebd82757e9513809c12d2a3291e4f41902b05983dc0c1f54c49444f6c824e3"
+        }
+      ],
+      "expected": {
+        "path": "payload.bin",
+        "bytes": 16777216,
+        "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+      },
+      "actualBytes": [
+        4194304,
+        16777216,
+        16777216
+      ],
+      "progress": [
+        0.25,
+        0.99,
+        1
+      ],
+      "noOutputLengthEstimate": true,
+      "outputSha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+    },
+    {
+      "original": "volumes-plain",
+      "sourceMembers": [
+        {
+          "name": "收到的资料.part1.rar",
+          "bytes": 4194304,
+          "sha256": "cae2f3f67ae7ad9298e48170093ed74c900e0f419d61007a40365378b6f10b42"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 4194304,
+          "sha256": "1a627dac8e034c0224739f75461b4cfb0f2cdf3e7aad680a25ac0233f7da7389"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 4194304,
+          "sha256": "bb2c03d3973ec0808161159f3f3e94f0e485ba92a3125960cb8344fd51ea5fb5"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 4194304,
+          "sha256": "b59ca93aa6f2739e3fbd2256376532d000b1322d28604e30c2f039b80427b613"
+        },
+        {
+          "name": "收到的资料.part5.rar",
+          "bytes": 790,
+          "sha256": "ab97a2fb264348685de029cea27dc6dfcdd92011ab070cc451b307bcbd848643"
+        }
+      ],
+      "expected": {
+        "path": "payload.bin",
+        "bytes": 16777216,
+        "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+      },
+      "actualBytes": [
+        4194129,
+        16777216,
+        16777216
+      ],
+      "progress": [
+        0.24998957,
+        0.99,
+        1
+      ],
+      "noOutputLengthEstimate": true,
+      "outputSha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+    },
+    {
+      "original": "volumes-contents",
+      "sourceMembers": [
+        {
+          "name": "收到的资料.part1.rar",
+          "bytes": 4194304,
+          "sha256": "f8c29aa64d44285a0d2134f01c989dc5183e89e692210c14f3ded4b47f60cad6"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 4194304,
+          "sha256": "401725e820368ac9eade4df60ad2bba1332002e89d30c873318c393c8a13191f"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 4194304,
+          "sha256": "a72e1d7dedc1e27ffbe92a892d65fac68ccdfa4bc818e2b0a114e4f5040c15c1"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 4194304,
+          "sha256": "2066a6b96402d31a04780985b852baeb3ada7699f8233b6749be5c093ad750d9"
+        },
+        {
+          "name": "收到的资料.part5.rar",
+          "bytes": 1231,
+          "sha256": "6ede5dd4a6c4bca496654b7871bbe052b4e61912a2be63172f5ebd3ed4557b9c"
+        }
+      ],
+      "expected": {
+        "path": "payload.bin",
+        "bytes": 16777216,
+        "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+      },
+      "actualBytes": [
+        4194016,
+        16777216,
+        16777216
+      ],
+      "progress": [
+        0.24998283,
+        0.99,
+        1
+      ],
+      "noOutputLengthEstimate": true,
+      "outputSha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+    },
+    {
+      "original": "volumes-headers",
+      "sourceMembers": [
+        {
+          "name": "收到的资料.part1.rar",
+          "bytes": 4194304,
+          "sha256": "0f0dabb2aef847954112dbb73e441c8331b772b13ee7cc3964efbf92a088f02c"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 4194304,
+          "sha256": "cffbd84f9c7cf140cb8f81b71e739d875d3909839a1f167813b54bf85857b416"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 4194304,
+          "sha256": "5b5a9650acb51b730455eee65b5b0f9e9775341acbbd6bcc0349fd5b65696240"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 4194304,
+          "sha256": "c8c045c1224256fd3e5b82a9bdf1a690fd830206bf25cd922a8b821e1c882878"
+        },
+        {
+          "name": "收到的资料.part5.rar",
+          "bytes": 2302,
+          "sha256": "7208ec47555346068a6fcce39740de54ee782abd213aa9e07b6aeb1e48bc4e23"
+        }
+      ],
+      "expected": {
+        "path": "payload.bin",
+        "bytes": 16777216,
+        "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+      },
+      "actualBytes": [
+        4193792,
+        16777216,
+        16777216
+      ],
+      "progress": [
+        0.24996948,
+        0.99,
+        1
+      ],
+      "noOutputLengthEstimate": true,
+      "outputSha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+    },
+    {
+      "original": "sfx-plain",
+      "sourceMembers": [
+        {
+          "name": "收到的资料.part1.exe",
+          "bytes": 4194304,
+          "sha256": "21a132c5761f1f174197f98cbd71468cad050ee142de5e52ea2eea12132e7e0f"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 4194304,
+          "sha256": "b19c585d116ecb9dcbfd840e7dc27e4e0a1cd7ede151378c2748bca9cc2727ac"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 4194304,
+          "sha256": "2dcd4cde2f922fe5a45cd19138ab8cf90ddbedf232f479b13fdf44742c4d8205"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 4194304,
+          "sha256": "abc156321a598c2bfe51a6fced5be36a884f5c9263ad947e17fe6ca50ba7a820"
+        },
+        {
+          "name": "收到的资料.part5.rar",
+          "bytes": 461159,
+          "sha256": "78c265db25de525da1d5c76dbaabe52e68326d5c35dd691ef27f18e0981a179a"
+        }
+      ],
+      "expected": {
+        "path": "payload.bin",
+        "bytes": 16777216,
+        "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+      },
+      "actualBytes": [
+        3733841,
+        16777216,
+        16777216
+      ],
+      "progress": [
+        0.22255427,
+        0.99,
+        1
+      ],
+      "noOutputLengthEstimate": true,
+      "outputSha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+    },
+    {
+      "original": "sfx-contents",
+      "sourceMembers": [
+        {
+          "name": "收到的资料.part1.exe",
+          "bytes": 4194304,
+          "sha256": "ec245abbdcae89788ca0424001b7db41e043db14a620bb7908888344d83439c2"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 4194304,
+          "sha256": "4cd01802201bb89c737411c02b2340aedfd7a807f47f5ff99cc6e1f8149f0a64"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 4194304,
+          "sha256": "3ca6d9109380503cbd72a7f4a9a3884ce61c82290447aae9e7eccb981a59865d"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 4194304,
+          "sha256": "6d2483e30fdf12c1e0c29c150405e1c30e684f415e234915bcf0747c1be80240"
+        },
+        {
+          "name": "收到的资料.part5.rar",
+          "bytes": 461649,
+          "sha256": "deb3226def5730280454689dd98933f78e2e60049e14aea564b071f39e06007a"
+        }
+      ],
+      "expected": {
+        "path": "payload.bin",
+        "bytes": 16777216,
+        "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+      },
+      "actualBytes": [
+        3733728,
+        16777216,
+        16777216
+      ],
+      "progress": [
+        0.22254753,
+        0.99,
+        1
+      ],
+      "noOutputLengthEstimate": true,
+      "outputSha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+    },
+    {
+      "original": "sfx-headers",
+      "sourceMembers": [
+        {
+          "name": "收到的资料.part1.exe",
+          "bytes": 4194304,
+          "sha256": "285d9d0ce52b1bff2229a7eb08fff8213d83ef5f76b6eb08d81c55dc653651bb"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 4194304,
+          "sha256": "945920afdd787fcbae524a1cbd12eaaa0b268cfea42c602908b7b6f304142381"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 4194304,
+          "sha256": "19a564685fdb72ef3fcae6ba1bc40d1383923e2ba20321e7a53ae5e411cc80b2"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 4194304,
+          "sha256": "b44744e83673eef07d582ddb63883ba999f208484edba7382ee85fa964484f34"
+        },
+        {
+          "name": "收到的资料.part5.rar",
+          "bytes": 462830,
+          "sha256": "f91301fec7403a2702228c7eafb843c13b93245ee8fc21636c0612d90ab589fa"
+        }
+      ],
+      "expected": {
+        "path": "payload.bin",
+        "bytes": 16777216,
+        "sha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+      },
+      "actualBytes": [
+        3733504,
+        16777216,
+        16777216
+      ],
+      "progress": [
+        0.22253418,
+        0.99,
+        1
+      ],
+      "noOutputLengthEstimate": true,
+      "outputSha256": "2c34c5ec7504282078b4b4ff2c0094dcb50cd54e61a9d267313f12404309be0d"
+    },
+    {
+      "lateCrcFailure": true,
+      "finalError": "RAR 解压失败: RAR解压失败: 7z解压失败: ERROR: CRC Failed : payload.bin\r\n",
+      "noFalseCompletion": true,
+      "noPublishedOrStagedOutput": true
+    },
+    {
+      "actualQueuePauseResumeComplete": true,
+      "actualKnownBytesBeforePause": 192413696,
+      "logicalBytes": 268435456,
+      "reportedBytes": 192476802,
+      "reportedProgress": 0.71703196,
+      "pauseStopsWriting": true,
+      "pausedMs": 2288,
+      "wallMs": 2625,
+      "historyDurationMs": 337,
+      "excludedMs": 2288,
+      "outputSha256": "1a04258f4db4d37deb6804f922cdb9740756353babd645b4c23ec77b7d058279"
+    },
+    {
+      "actualQueueCancel": true,
+      "actualKnownBytesBeforePause": 146276352,
+      "logicalBytes": 268435456,
+      "reportedBytes": 146339637,
+      "pauseStopsWriting": true,
+      "cancelWhilePaused": true,
+      "noStagedOrPublishedOutput": true
+    }
+  ],
+  "screenshots": [
+    "rar156-paused-actual-progress-1100x700.png",
+    "rar156-paused-actual-progress-760x520.png",
+    "rar156-completed-output-1100x700.png",
+    "rar156-completed-output-760x520.png",
+    "rar156-real-history-1100x700.png",
+    "rar156-real-history-760x520.png",
+    "rar156-cancelled-not-failed-1100x700.png",
+    "rar156-cancelled-not-failed-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "rar156-paused-actual-progress",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "rar156-paused-actual-progress",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "rar156-completed-output",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "rar156-completed-output",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "rar156-real-history",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "rar156-real-history",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "rar156-cancelled-not-failed",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "rar156-cancelled-not-failed",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "events": [
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998158,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-b181b3b5-7ffa-401d-980c-7d35fe52ff89",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998158,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-b181b3b5-7ffa-401d-980c-7d35fe52ff89",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998160,
+      "output_bytes": 4194304,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 4194304,
+      "progress": 0.25,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-b181b3b5-7ffa-401d-980c-7d35fe52ff89",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998165,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 0.99,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-b181b3b5-7ffa-401d-980c-7d35fe52ff89",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998174,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 1,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-b181b3b5-7ffa-401d-980c-7d35fe52ff89",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998263,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-703bca65-8437-4224-a8da-a1f7fca5bb3b",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998263,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-703bca65-8437-4224-a8da-a1f7fca5bb3b",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998276,
+      "output_bytes": 4194304,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 4194304,
+      "progress": 0.25,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-703bca65-8437-4224-a8da-a1f7fca5bb3b",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998284,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 0.99,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-703bca65-8437-4224-a8da-a1f7fca5bb3b",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998293,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 1,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-703bca65-8437-4224-a8da-a1f7fca5bb3b",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998425,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-7a1a7670-a4d1-4676-a1ea-33f7342b58ab",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998446,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-7a1a7670-a4d1-4676-a1ea-33f7342b58ab",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998458,
+      "output_bytes": 4194304,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 4194304,
+      "progress": 0.25,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-7a1a7670-a4d1-4676-a1ea-33f7342b58ab",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998466,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 0.99,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-7a1a7670-a4d1-4676-a1ea-33f7342b58ab",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998473,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 1,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-7a1a7670-a4d1-4676-a1ea-33f7342b58ab",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998513,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-2cd20960-7a07-44d5-a52c-7cdc153daf86",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998513,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-2cd20960-7a07-44d5-a52c-7cdc153daf86",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998515,
+      "output_bytes": 4194129,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 4194129,
+      "progress": 0.24998957,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-2cd20960-7a07-44d5-a52c-7cdc153daf86",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998521,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 0.99,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-2cd20960-7a07-44d5-a52c-7cdc153daf86",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998528,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 1,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-2cd20960-7a07-44d5-a52c-7cdc153daf86",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998609,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-ace978c1-6f0a-4234-aa18-94f82160d275",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998609,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-ace978c1-6f0a-4234-aa18-94f82160d275",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998623,
+      "output_bytes": 4194016,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 4194016,
+      "progress": 0.24998283,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-ace978c1-6f0a-4234-aa18-94f82160d275",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998632,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 0.99,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-ace978c1-6f0a-4234-aa18-94f82160d275",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998639,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 1,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-ace978c1-6f0a-4234-aa18-94f82160d275",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998765,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-3cd63331-c0bc-4fe6-85c4-1e207da5afdd",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998787,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-3cd63331-c0bc-4fe6-85c4-1e207da5afdd",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998799,
+      "output_bytes": 4193792,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 4193792,
+      "progress": 0.24996948,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-3cd63331-c0bc-4fe6-85c4-1e207da5afdd",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998809,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 0.99,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-3cd63331-c0bc-4fe6-85c4-1e207da5afdd",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998815,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 1,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-3cd63331-c0bc-4fe6-85c4-1e207da5afdd",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998888,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-0ad78c3a-7ee2-4c8f-a605-094310bc84d2",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998892,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-0ad78c3a-7ee2-4c8f-a605-094310bc84d2",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998893,
+      "output_bytes": 3733841,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 3733841,
+      "progress": 0.22255427,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-0ad78c3a-7ee2-4c8f-a605-094310bc84d2",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998900,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 0.99,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-0ad78c3a-7ee2-4c8f-a605-094310bc84d2",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308998910,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 1,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-0ad78c3a-7ee2-4c8f-a605-094310bc84d2",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308999134,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-53611608-e216-4605-9786-f70e0c7e7b6f",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308999139,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-53611608-e216-4605-9786-f70e0c7e7b6f",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308999154,
+      "output_bytes": 3733728,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 3733728,
+      "progress": 0.22254753,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-53611608-e216-4605-9786-f70e0c7e7b6f",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308999163,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 0.99,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-53611608-e216-4605-9786-f70e0c7e7b6f",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308999176,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 1,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-53611608-e216-4605-9786-f70e0c7e7b6f",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308999467,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-eb4457d8-c951-4fe5-8d45-919007cbfa98",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308999493,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-eb4457d8-c951-4fe5-8d45-919007cbfa98",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308999507,
+      "output_bytes": 3733504,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 3733504,
+      "progress": 0.22253418,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-eb4457d8-c951-4fe5-8d45-919007cbfa98",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308999518,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 0.99,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-eb4457d8-c951-4fe5-8d45-919007cbfa98",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308999531,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 1,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-eb4457d8-c951-4fe5-8d45-919007cbfa98",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308999580,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-crc-bd4edbd3-58cc-4f1f-a6f4-7b6d71a002f1",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308999581,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-crc-bd4edbd3-58cc-4f1f-a6f4-7b6d71a002f1",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308999582,
+      "output_bytes": 4194304,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 4194304,
+      "progress": 0.25,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-crc-bd4edbd3-58cc-4f1f-a6f4-7b6d71a002f1",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792308999586,
+      "output_bytes": 16777216,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 16777216,
+      "progress": 0.99,
+      "speed": null,
+      "stage": null,
+      "task_id": "rar156-crc-bd4edbd3-58cc-4f1f-a6f4-7b6d71a002f1",
+      "total_bytes": 16777216
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792309000714,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "5f4ru9tkymvdii3ew",
+      "total_bytes": 268435456
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792309000724,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "5f4ru9tkymvdii3ew",
+      "total_bytes": 268435456
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792309000727,
+      "output_bytes": 4194304,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 4194304,
+      "progress": 0.015625,
+      "speed": null,
+      "stage": null,
+      "task_id": "5f4ru9tkymvdii3ew",
+      "total_bytes": 268435456
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792309000817,
+      "output_bytes": 192476802,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 192476802,
+      "progress": 0.71703196,
+      "speed": null,
+      "stage": null,
+      "task_id": "5f4ru9tkymvdii3ew",
+      "total_bytes": 268435456
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792309003101,
+      "output_bytes": 196671106,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 196671106,
+      "progress": 0.73265696,
+      "speed": null,
+      "stage": null,
+      "task_id": "5f4ru9tkymvdii3ew",
+      "total_bytes": 268435456
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792309003132,
+      "output_bytes": 268435456,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 268435456,
+      "progress": 0.99,
+      "speed": null,
+      "stage": null,
+      "task_id": "5f4ru9tkymvdii3ew",
+      "total_bytes": 268435456
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792309003157,
+      "output_bytes": 268435456,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 268435456,
+      "progress": 1,
+      "speed": null,
+      "stage": null,
+      "task_id": "5f4ru9tkymvdii3ew",
+      "total_bytes": 268435456
+    },
+    {
+      "current_file": null,
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792309006772,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "chhrwlvbtmvdii861",
+      "total_bytes": 268435456
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792309006792,
+      "output_bytes": 0,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 0,
+      "progress": 0,
+      "speed": null,
+      "stage": null,
+      "task_id": "chhrwlvbtmvdii861",
+      "total_bytes": 268435456
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792309006794,
+      "output_bytes": 4194304,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 4194304,
+      "progress": 0.015625,
+      "speed": null,
+      "stage": null,
+      "task_id": "chhrwlvbtmvdii861",
+      "total_bytes": 268435456
+    },
+    {
+      "current_file": "payload.bin",
+      "current_password": null,
+      "eta_seconds": null,
+      "observedAt": 1792309006863,
+      "output_bytes": 146339637,
+      "output_bytes_estimated": false,
+      "password_attempt_current": null,
+      "password_attempt_total": null,
+      "processed_bytes": 146339637,
+      "progress": 0.5451576,
+      "speed": null,
+      "stage": null,
+      "task_id": "chhrwlvbtmvdii861",
+      "total_bytes": 268435456
+    }
+  ]
+}

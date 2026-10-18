@@ -7,6 +7,15 @@ use std::path::Path;
 pub(crate) fn stats(
     path: &Path,
     password: Option<&str>,
+    check_control: impl FnMut() -> Result<()>,
+) -> Result<(usize, u64)> {
+    stats_with_options(path, password, &crate::models::compression::DecompressOptions::default(), check_control)
+}
+
+pub(crate) fn stats_with_options(
+    path: &Path,
+    password: Option<&str>,
+    options: &crate::models::compression::DecompressOptions,
     mut check_control: impl FnMut() -> Result<()>,
 ) -> Result<(usize, u64)> {
     check_control()?;
@@ -37,12 +46,21 @@ pub(crate) fn stats(
                 "Unable to inspect RAR entry metadata: {:?}", error
             ))
         })? else { break };
-        entries = entries.saturating_add(1);
-        expanded = expanded.checked_add(header.entry().unpacked_size).ok_or_else(|| {
-            CompressionError::ExtractionFailed(
-                "RAR expanded size overflowed the supported range".to_string(),
-            )
-        })?;
+        let entry = header.entry();
+        // RAR_SKIP exposes each physical continuation header in processing
+        // mode. Its unpacked_size repeats the entire logical file size. Do not
+        // deduplicate by name: separate logical entries may share a name.
+        let included = !entry.is_split_before()
+            && super::rar_support::RarSupportService::normalized_archive_path(&entry.filename, options.preserve_paths)
+                .is_some_and(|path| super::rar_support::RarSupportService::matches_file_filter(&path, options.file_filter.as_deref()));
+        if included {
+            entries = entries.saturating_add(1);
+            expanded = expanded.checked_add(entry.unpacked_size).ok_or_else(|| {
+                CompressionError::ExtractionFailed(
+                    "RAR expanded size overflowed the supported range".to_string(),
+                )
+            })?;
+        }
         check_control()?;
         let skipped = header.skip();
         check_control()?;
@@ -58,6 +76,18 @@ pub(crate) fn stats(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn genuine_rar4_rar5_volume_continuations_are_not_duplicate_files() {
+        let base=Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/sfx-155");
+        let manifest:serde_json::Value=serde_json::from_slice(&std::fs::read(base.join("manifest.json")).unwrap()).unwrap();
+        for c in manifest["cases"].as_array().unwrap().iter().filter(|c|c["kind"].as_str().unwrap().starts_with("rar")) {
+            let actual=stats(&base.join(c["archive"].as_str().unwrap()),c["password"].as_str(),||Ok(())).unwrap();
+            assert_eq!(actual,(5,275544),"{}",c["name"]);
+            let options=crate::models::compression::DecompressOptions { preserve_paths:true,file_filter:Some("*.txt".into()),..Default::default() };
+            assert_eq!(stats_with_options(&base.join(c["archive"].as_str().unwrap()),c["password"].as_str(),&options,||Ok(())).unwrap(),(2,13400));
+        }
+    }
 
     fn fixture() -> std::path::PathBuf {
         Path::new(env!("CARGO_MANIFEST_DIR"))

@@ -632,7 +632,7 @@ pub(crate) fn commit_staged_extraction(
     output: &Path,
     options: &DecompressOptions,
     on_conflict: impl FnMut(FileConflict),
-) -> Result<()> {
+) -> Result<u64> {
     commit_staged_extraction_with_resolutions(
         source_archive,
         staging,
@@ -652,7 +652,7 @@ pub(crate) fn commit_staged_extraction_with_resolutions(
     resolutions: &HashMap<String, String>,
     fallback_action: Option<&str>,
     mut on_conflict: impl FnMut(FileConflict),
-) -> Result<()> {
+) -> Result<u64> {
     ensure_no_link_ancestors(output)?;
     let mut directories = Vec::new();
     let mut files = Vec::new();
@@ -735,6 +735,7 @@ pub(crate) fn commit_staged_extraction_with_resolutions(
     let mut created_dirs = Vec::new();
     let mut backups = Vec::new();
     let mut moved_files = Vec::new();
+    let mut published_bytes = 0u64;
     let commit_result = (|| -> Result<()> {
         if !output.exists() {
             std::fs::create_dir_all(output)?;
@@ -805,7 +806,9 @@ pub(crate) fn commit_staged_extraction_with_resolutions(
             } else {
                 created_files.push(destination.clone());
             }
+            let file_bytes = std::fs::metadata(&source)?.len();
             std::fs::rename(&source, &destination)?;
+            published_bytes = published_bytes.saturating_add(file_bytes);
             moved_files.push((source, destination));
         }
         Ok(())
@@ -827,11 +830,47 @@ pub(crate) fn commit_staged_extraction_with_resolutions(
         return Err(error);
     }
     let _ = std::fs::remove_dir_all(&rollback_root);
-    Ok(())
+    Ok(published_bytes)
 }
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn published_bytes_exclude_existing_contents_skips_and_backups() {
+        for policy in ["skip", "rename", "overwrite"] {
+            let temp = tempfile::tempdir().unwrap();
+            let staging = temp.path().join("stage");
+            let output = temp.path().join("received");
+            std::fs::create_dir_all(&staging).unwrap();
+            std::fs::create_dir_all(&output).unwrap();
+            std::fs::write(output.join("source.part1.rar"), [1; 1000]).unwrap();
+            std::fs::write(output.join("existing.txt"), [2; 100]).unwrap();
+            std::fs::write(staging.join("existing.txt"), [3; 7]).unwrap();
+            std::fs::write(staging.join("new.txt"), [4; 11]).unwrap();
+            let options = DecompressOptions { conflict_policy: policy.into(), ..Default::default() };
+            let bytes = commit_staged_extraction("source.rar", &staging, &output, &options, |_| {}).unwrap();
+            assert_eq!(bytes, if policy == "skip" { 11 } else { 18 });
+            assert_eq!(std::fs::metadata(output.join("source.part1.rar")).unwrap().len(), 1000);
+        }
+    }
+
+    #[test]
+    fn confirmed_conflicts_return_only_current_published_bytes() {
+        let temp = tempfile::tempdir().unwrap();
+        let staging = temp.path().join("stage");
+        let output = temp.path().join("output");
+        std::fs::create_dir_all(&staging).unwrap();
+        std::fs::create_dir_all(&output).unwrap();
+        std::fs::write(staging.join("new.txt"), [1; 7]).unwrap();
+        std::fs::write(output.join("new.txt"), [2; 900]).unwrap();
+        std::fs::write(output.join("unrelated.txt"), [3; 1000]).unwrap();
+        let options = DecompressOptions { conflict_policy: "ask".into(), ..Default::default() };
+        assert!(commit_staged_extraction("source.rar", &staging, &output, &options, |_| {}).is_err());
+        let bytes = commit_staged_extraction_with_resolutions("source.rar", &staging, &output, &options,
+            &HashMap::new(), Some("rename"), |_| {}).unwrap();
+        assert_eq!(bytes, 7);
+    }
+
     #[test]
     fn numeric_volume_expansion_ratio_uses_the_whole_archive() {
         let temp = tempfile::tempdir().unwrap();

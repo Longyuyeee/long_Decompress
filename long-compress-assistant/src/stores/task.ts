@@ -50,6 +50,8 @@ export interface Task {
   progress: number
   startTime?: Date
   endTime?: Date
+  pausedAt?: Date
+  pausedDurationMs?: number
   error?: string
   logs: TaskLog[]
   sourceFiles: string[]
@@ -180,10 +182,10 @@ export const useTaskStore = defineStore('task', () => {
       stage?: string,
       current_file?: string,
       current_password?: string,
-      speed?: string,
+      speed?: string | null,
       processed_bytes?: number,
       total_bytes?: number,
-      eta_seconds?: number,
+      eta_seconds?: number | null,
       output_bytes?: number,
       output_bytes_estimated?: boolean,
       password_attempt_current?: number,
@@ -240,7 +242,7 @@ export const useTaskStore = defineStore('task', () => {
           task.processedBytes = 0
           task.totalBytes = 0
         }
-        if (speed !== undefined) task.speed = speed
+        if (speed !== undefined) task.speed = task.status === 'paused' ? undefined : speed ?? undefined
         // Stage-only completion events use zero byte fields. Do not let those
         // erase real transfer totals already emitted by the archive engine.
         if (processed_bytes !== undefined && (processed_bytes > 0 || !task.processedBytes)) {
@@ -255,7 +257,7 @@ export const useTaskStore = defineStore('task', () => {
         if (output_bytes_estimated !== undefined) {
           task.outputBytesEstimated = output_bytes_estimated
         }
-        if (eta_seconds !== undefined) task.etaSeconds = eta_seconds
+        if (eta_seconds !== undefined) task.etaSeconds = task.status === 'paused' ? undefined : eta_seconds ?? undefined
         if (current_time_ms !== undefined) task.currentTimeMs = current_time_ms
         if (speed_multiple !== undefined) task.speedMultiple = speed_multiple
         if (output_to_input_ratio !== undefined) task.outputToInputRatio = output_to_input_ratio
@@ -356,6 +358,10 @@ export const useTaskStore = defineStore('task', () => {
       if (task.status === status
         || (terminalStatuses.includes(task.status) && terminalStatuses.includes(status))) return
       if (status === 'failed') setFinalFailureReason(task, task.error)
+      if (task.pausedAt && status !== 'paused') {
+        task.pausedDurationMs = (task.pausedDurationMs || 0) + Math.max(0, Date.now() - task.pausedAt.getTime())
+        task.pausedAt = undefined
+      }
       task.status = status
       if (status === 'completed') task.progress = 100
       if (['preparing', 'running', 'compressing', 'extracting', 'finalizing'].includes(status) && !task.startTime) {
@@ -446,8 +452,10 @@ export const useTaskStore = defineStore('task', () => {
     try {
       const paused = await invoke<boolean>('pause_archive_task', { taskId })
       if (paused === false) return false
+      if (['completed', 'failed', 'cancelled', 'cancelling'].includes(task.status)) return false
       task.pausedFromStatus = previousStatus
       task.status = 'paused'
+      task.pausedAt = new Date()
       task.speed = undefined
       task.etaSeconds = undefined
       return true
@@ -463,10 +471,12 @@ export const useTaskStore = defineStore('task', () => {
     try {
       const resumed = await invoke<boolean>('resume_archive_task', { taskId })
       if (resumed === false) return false
+      if (task.status !== 'paused') return false
       const fallback: TaskStatus = task.type === 'compression' ? 'compressing' : 'extracting'
-      task.status = task.pausedFromStatus && task.pausedFromStatus !== 'paused'
+      const status = task.pausedFromStatus && task.pausedFromStatus !== 'paused'
         ? task.pausedFromStatus
         : fallback
+      updateTaskStatus(taskId, status)
       task.pausedFromStatus = undefined
       return true
     } catch (error) {

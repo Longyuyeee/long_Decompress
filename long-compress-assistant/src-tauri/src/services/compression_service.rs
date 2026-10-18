@@ -202,6 +202,7 @@ pub struct FileConflictResolution {
 struct ProgressMetric {
     started_at: Instant,
     last_bytes: u64,
+    paused_at_start: std::time::Duration,
 }
 
 struct ProgressBytes {
@@ -382,6 +383,7 @@ impl CompressionService {
         final_output: &Path,
         options: &DecompressOptions,
         expected_expanded_bytes: Option<u64>,
+        published_bytes: u64,
     ) -> Result<String> {
         if options.delete_after {
             let source_path = source_archive.to_path_buf();
@@ -404,7 +406,9 @@ impl CompressionService {
                 ),
             }
         }
-        let final_expanded_bytes = Self::directory_payload_size(final_output);
+        // Only this transaction's published files, not existing target contents
+        // (including the source volumes in the user's "same directory" flow).
+        let final_expanded_bytes = published_bytes;
         let telemetry_total = expected_expanded_bytes
             .unwrap_or(final_expanded_bytes)
             .max(final_expanded_bytes);
@@ -495,6 +499,7 @@ impl CompressionService {
             }
             return Err(error);
         }
+        let published_bytes = commit_result?;
         if let Some(warning) = pending.staging.cleanup_after_commit() {
             self.emit_log(window, task_id, &warning, TaskLogSeverity::Warning);
         }
@@ -506,6 +511,7 @@ impl CompressionService {
         self.finish_committed_extraction(
             window, task_id, &pending.source_archive, &pending.final_output,
             &pending.options, pending.expected_expanded_bytes,
+            published_bytes,
         ).await
     }
 
@@ -643,13 +649,16 @@ impl CompressionService {
         let metric = metrics.entry(task_id.to_string()).or_insert_with(|| ProgressMetric {
             started_at: Instant::now(),
             last_bytes: 0,
+            paused_at_start: super::task_control::paused_duration(task_id),
         });
         if processed_bytes < metric.last_bytes {
             metric.started_at = Instant::now();
+            metric.paused_at_start = super::task_control::paused_duration(task_id);
         }
         metric.last_bytes = processed_bytes;
 
-        let elapsed = metric.started_at.elapsed().as_secs_f64();
+        let paused = super::task_control::paused_duration(task_id).saturating_sub(metric.paused_at_start);
+        let elapsed = metric.started_at.elapsed().saturating_sub(paused).as_secs_f64();
         // The first/final callback can arrive within a few milliseconds for
         // cached or tiny work. Reporting a quotient for that interval creates
         // physically impossible multi-billion MB/s values. Wait for a real
@@ -685,6 +694,7 @@ impl CompressionService {
             metrics.insert(task_id.to_string(), ProgressMetric {
                 started_at: Instant::now(),
                 last_bytes: 0,
+                paused_at_start: super::task_control::paused_duration(task_id),
             });
         }
     }
@@ -729,6 +739,7 @@ impl CompressionService {
             .unwrap_or(false)
     }
 
+    #[cfg(test)]
     fn directory_payload_size(path: &Path) -> u64 {
         let Ok(entries) = std::fs::read_dir(path) else {
             return 0;
@@ -2383,6 +2394,7 @@ impl CompressionService {
         // Explicitly leave preflight/password verification before the first
         // engine-specific callback. This is the exact point extraction begins.
         service.emit_progress(&window, &task_id, 0.0, None, 0, expected_expanded_bytes.unwrap_or(0));
+        service.begin_progress_telemetry(&task_id);
 
         // ZIP, encrypted ZIP and both volume layouts share one selected-entry
         // reader. Routing encrypted ZIP through the option-less CLI interface
@@ -2410,53 +2422,31 @@ impl CompressionService {
                 }).await?
             },
             ArchiveFormat::Rar => {
-                // The native UnRAR wrapper does not expose byte callbacks. Poll
-                // the transactional staging tree so RAR progress reflects bytes
-                // from the logical output size, never password candidate count.
-                // UnRAR can preallocate files; this remains an output estimate,
-                // not proof that every allocated byte has already been decoded.
-                let monitor_done = Arc::new(AtomicBool::new(false));
-                let monitor_done_task = monitor_done.clone();
-                let monitor_output = out_dir.clone();
-                let monitor_total = expected_expanded_bytes.unwrap_or(0);
-                let monitor_progress = on_progress.clone();
-                let monitor = tokio::spawn(async move {
-                    let mut last_progress = 0.0f32;
-                    while !monitor_done_task.load(Ordering::Acquire) {
-                        tokio::time::sleep(std::time::Duration::from_millis(500)).await;
-                        if monitor_done_task.load(Ordering::Acquire) {
-                            break;
-                        }
-                        let output = monitor_output.clone();
-                        let processed = tokio::task::spawn_blocking(move || {
-                            CompressionService::directory_payload_size(&output)
-                        })
-                        .await
-                        .unwrap_or(0);
-                        if let Some(progress) = CompressionService::extraction_progress_from_output(
-                            processed,
-                            monitor_total,
-                        ) {
-                            if progress > last_progress {
-                                last_progress = progress;
-                                monitor_progress(progress);
-                            }
-                        }
-                    }
+                let srv = service.clone();
+                let w = window.clone();
+                let id = task_id.clone();
+                let total = expected_expanded_bytes.unwrap_or(0);
+                let last = Mutex::new(None::<(Instant, String, u64)>);
+                let progress_control = service.cancellation_flag.clone();
+                let on_bytes = Arc::new(move |processed: u64, current_file: String| {
+                    // Limit UI events, not decoder callbacks or cancellation.
+                    let mut last = last.lock().unwrap_or_else(|p| p.into_inner());
+                    if !super::task_control::is_paused(&progress_control) && last.as_ref().is_some_and(|(at, file, bytes)| file == &current_file && *bytes > 0 && at.elapsed().as_millis() < 100 && (total == 0 || processed < total)) { return; }
+                    *last = Some((Instant::now(), current_file.clone(), processed));
+                    let progress = Self::extraction_progress_from_output(processed, total).unwrap_or(0.0);
+                    // Decoded bytes are not a promise of CRC/transaction success.
+                    srv.emit_progress(&w, &id, progress, Some(current_file), processed, total);
                 });
-                let extraction_result = service.rar_service.extract_rar(
-                    Path::new(&file_path),
-                    &out_dir,
-                    final_password.as_deref(),
-                    &options,
-                    service.cancellation_flag.clone()
-                ).await.map_err(|e| anyhow::anyhow!("RAR 解压失败: {}", e));
-                monitor_done.store(true, Ordering::Release);
-                let _ = monitor.await;
-                if extraction_result.is_ok() {
-                    on_progress(1.0);
-                }
-                extraction_result
+                let rar = service.rar_service.clone();
+                let flag = service.cancellation_flag.clone();
+                let runtime = tokio::runtime::Handle::current();
+                let f_path = file_path.clone();
+                let o_dir = out_dir.clone();
+                let pwd = final_password.clone();
+                let opts = options.clone();
+                tokio::task::spawn_blocking(move || runtime.block_on(rar.extract_rar_with_progress(
+                    Path::new(&f_path), &o_dir, pwd.as_deref(), &opts, flag, on_bytes,
+                ))).await?.map_err(|e| anyhow::anyhow!("RAR 解压失败: {}", e))
             },
             ArchiveFormat::SevenZip => {
                 let srv = service.clone();
@@ -2718,7 +2708,7 @@ impl CompressionService {
         let source_times = if effective_format == ArchiveFormat::SevenZip && options.conflict_policy == "ask" {
             Self::seven_zip_source_times(path, final_password.as_deref(), &final_out_dir, options.preserve_paths).unwrap_or_default()
         } else { HashMap::new() };
-        if let Err(error) = service.commit_staged_extraction_recording_with_times(
+        let commit_result = service.commit_staged_extraction_recording_with_times(
             Some(&window),
             &task_id,
             &file_path,
@@ -2727,7 +2717,8 @@ impl CompressionService {
             &options,
             &mut observed_conflicts,
             &source_times,
-        ) {
+        );
+        if let Err(error) = commit_result {
             if Self::is_conflict_resolution_required(&error) {
                 service.emit_log(
                     &window,
@@ -2754,6 +2745,7 @@ impl CompressionService {
             }
             return Err(error);
         }
+        let published_bytes = commit_result?;
         if let Some(warning) = staging.cleanup_after_commit() {
             service.emit_log(
                 &window,
@@ -2763,7 +2755,7 @@ impl CompressionService {
             );
         }
         service.finish_committed_extraction(
-            &window, &task_id, path, &final_out_dir, &options, expected_expanded_bytes,
+            &window, &task_id, path, &final_out_dir, &options, expected_expanded_bytes, published_bytes,
         ).await
     }
 
@@ -2865,10 +2857,11 @@ impl CompressionService {
                 let service = self.clone();
                 let path = archive_path.to_path_buf();
                 let password = password.map(str::to_owned);
+                let options = options.clone();
                 // Header walking and pause gates must not occupy an async
                 // runtime worker. Keep full stats and the resource checks below.
                 Some(tokio::task::spawn_blocking(move || {
-                    crate::services::rar_preflight::stats(&path, password.as_deref(), || service.check_cancellation())
+                    crate::services::rar_preflight::stats_with_options(&path, password.as_deref(), &options, || service.check_cancellation())
                 }).await.map_err(|error| CompressionError::ExtractionFailed(
                     format!("RAR 预检查线程异常退出: {error}")
                 ))??)
@@ -3913,7 +3906,7 @@ mod tests {
     }
 
     #[test]
-    fn rar_output_monitor_reports_real_bytes_without_finishing_early() {
+    fn rar_decoded_progress_does_not_finish_before_transaction_commit() {
         assert_eq!(CompressionService::extraction_progress_from_output(0, 100), None);
         assert_eq!(CompressionService::extraction_progress_from_output(50, 100), Some(0.5));
         assert_eq!(CompressionService::extraction_progress_from_output(100, 100), Some(0.99));
@@ -4550,7 +4543,7 @@ impl CompressionService {
         staging: &Path,
         output: &Path,
         options: &DecompressOptions,
-    ) -> Result<()> {
+    ) -> Result<u64> {
         self.commit_staged_extraction_recording(window, task_id, source_archive, staging, output, options, &mut HashMap::new())
     }
 }
@@ -4632,7 +4625,7 @@ impl CompressionService {
         &self, window: Option<&Window>, task_id: &str, source_archive: &str,
         staging: &Path, output: &Path, options: &DecompressOptions,
         observed: &mut HashMap<PathBuf, ConflictTargetSnapshot>,
-    ) -> Result<()> {
+    ) -> Result<u64> {
         self.commit_staged_extraction_recording_with_times(window, task_id, source_archive, staging, output, options, observed, &HashMap::new())
     }
 
@@ -4640,7 +4633,7 @@ impl CompressionService {
         &self, window: Option<&Window>, task_id: &str, source_archive: &str,
         staging: &Path, output: &Path, options: &DecompressOptions,
         observed: &mut HashMap<PathBuf, ConflictTargetSnapshot>, source_times: &HashMap<PathBuf, u64>,
-    ) -> Result<()> {
+    ) -> Result<u64> {
         extraction_transaction::commit_staged_extraction(
             source_archive,
             staging,
@@ -4765,6 +4758,7 @@ mod tests_continued {
             ProgressMetric {
                 started_at: Instant::now() - std::time::Duration::from_secs(2),
                 last_bytes: 0,
+                paused_at_start: std::time::Duration::ZERO,
             },
         );
 
@@ -4794,6 +4788,27 @@ mod tests_continued {
 
         assert_eq!(speed, None);
         assert_eq!(eta, None);
+    }
+
+    #[tokio::test]
+    async fn progress_telemetry_excludes_pause_time_and_preflight_baseline() {
+        let id = format!("rate-paused-{}", uuid::Uuid::new_v4());
+        let _flag = super::super::task_control::register(&id).unwrap();
+        let service = CompressionService::for_testing();
+        service.begin_progress_telemetry(&id);
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        let before = service.progress_telemetry(&id, 0.5, 1024 * 1024, 2 * 1024 * 1024);
+        assert!(super::super::task_control::pause(&id));
+        std::thread::sleep(std::time::Duration::from_millis(350));
+        assert!(super::super::task_control::resume(&id));
+        let after = service.progress_telemetry(&id, 0.5, 1024 * 1024, 2 * 1024 * 1024);
+        let rate = |s: Option<String>| s.unwrap().split(' ').next().unwrap().parse::<f64>().unwrap();
+        assert!((rate(before.0) - rate(after.0)).abs() <= 0.1);
+        // Earlier paused preflight must not subtract from a fresh engine clock.
+        service.begin_progress_telemetry(&id);
+        std::thread::sleep(std::time::Duration::from_millis(300));
+        assert!(service.progress_telemetry(&id, 0.5, 1024, 2048).0.is_some());
+        super::super::task_control::cleanup(&id);
     }
 
     #[test]

@@ -53,6 +53,19 @@ const mountView = (pinia = createPinia()) => mount(DecompressView, {
 })
 
 describe('DecompressView', () => {
+  it.each(['cancelling', 'cancelled'] as const)('does not rewrite %s as a failure when native cancellation rejects extraction', async status => {
+    const wrapper=mountView(),store=useTaskStore()
+    store.addTask({id:'native-cancel',name:'资料.rar',type:'decompression',sourceFiles:['C:/资料.rar'],outputPath:'D:/out',configurationMode:'individual'})
+    mocks.decompressFile.mockImplementationOnce(async()=>{
+      store.updateTaskStatus('native-cancel',status)
+      throw new Error('RAR 解压失败: RAR extraction cancelled')
+    })
+    await nextTick();await wrapper.get('[data-testid="start-decompression-queue"]').trigger('click');await flushPromises()
+    expect(store.tasks[0].status).toBe(status)
+    expect(store.tasks[0].error).toBeUndefined()
+    expect(useAppStore().error).toBeFalsy()
+    wrapper.unmount()
+  })
   it('executes restored ZIP input encoding without changing ordinary automatic requests', async () => {
     const wrapper = mountView()
     const store = useTaskStore()

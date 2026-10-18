@@ -469,6 +469,9 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
       task.password = undefined
       task.currentPassword = undefined
     } catch (error) {
+      // The command owner is waiting for native cancellation/cleanup. Its
+      // rejected extraction promise is not a new failure or password prompt.
+      if (['cancelled', 'cancelling'].includes(task.status)) return
       // 只在后端明确返回密码相关错误时才尝试密码破解
       const errorMsg = extractErrorMessage(error) || String(error)
       const isPasswordError = isPasswordRelatedError(error)

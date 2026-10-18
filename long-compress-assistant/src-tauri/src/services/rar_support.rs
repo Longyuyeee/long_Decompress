@@ -207,6 +207,19 @@ impl RarSupportService {
         options: &DecompressOptions,
         cancellation_flag: Arc<AtomicBool>,
     ) -> Result<(), RarError> {
+        self.extract_rar_with_progress(rar_path, output_dir, password, options, cancellation_flag, Arc::new(|_, _| {})).await
+    }
+
+    /// Actual decoded bytes from UnRAR, independent of preallocated file size.
+    pub async fn extract_rar_with_progress(
+        &self,
+        rar_path: &Path,
+        output_dir: &Path,
+        password: Option<&str>,
+        options: &DecompressOptions,
+        cancellation_flag: Arc<AtomicBool>,
+        on_progress: Arc<dyn Fn(u64, String) + Send + Sync>,
+    ) -> Result<(), RarError> {
         log::info!("开始解压RAR文件: {:?} -> {:?}", rar_path, output_dir);
 
         // 验证文件存在
@@ -228,7 +241,7 @@ impl RarSupportService {
             .map_err(|e| RarError::ExtractionFailed(format!("创建输出目录失败: {}", e)))?;
 
         // 策略 1: 尝试使用原生 unrar 库
-        match self.extract_with_native_library(rar_path, output_dir, password, options, cancellation_flag.clone()).await {
+        match self.extract_with_native_library(rar_path, output_dir, password, options, cancellation_flag.clone(), on_progress).await {
             Ok(_) => {
                 log::info!("使用原生库解压成功");
                 return Ok(());
@@ -276,6 +289,7 @@ impl RarSupportService {
         password: Option<&str>,
         options: &DecompressOptions,
         cancellation_flag: Arc<AtomicBool>,
+        on_progress: Arc<dyn Fn(u64, String) + Send + Sync>,
     ) -> Result<(), RarError> {
         use unrar::Archive;
         
@@ -297,6 +311,7 @@ impl RarSupportService {
         super::sfx_volumes::validate_native_volume(rar_path, !matches!(open_archive.volume_info(), unrar::VolumeInfo::None))
             .map_err(|e| RarError::InvalidRarFile(e.to_string()))?;
         let mut password_proven = password.is_some() && open_archive.has_encrypted_headers();
+        let processed = std::cell::Cell::new(0u64);
 
         while let Some(header) = open_archive.read_header()
             .map_err(|error| Self::map_unrar_extraction_error(
@@ -337,15 +352,25 @@ impl RarSupportService {
                 open_archive = header.skip()
                     .map_err(|e| RarError::ExtractionFailed(format!("跳过目录失败: {:?}", e)))?;
             } else {
+                let current_file = entry.filename.to_string_lossy().to_string();
+                on_progress(processed.get(), current_file.clone());
                 let encrypted_entry = entry.is_encrypted();
                 let nonempty_entry = entry.unpacked_size > 0;
                 let target_path = Self::resolve_extract_path(&target_path, options)?;
                 if let Some(parent) = target_path.parent() {
                     std::fs::create_dir_all(parent).ok();
                 }
-                open_archive = header.extract_to_with_control(&target_path, &|| {
+                open_archive = header.extract_to_with_progress(&target_path, &|| {
+                    if super::task_control::is_paused(&cancellation_flag) {
+                        // Flush the preceding decoded blocks before blocking,
+                        // even if the normal UI event interval has not elapsed.
+                        on_progress(processed.get(), current_file.clone());
+                    }
                     super::task_control::wait_if_paused(&cancellation_flag);
                     !cancellation_flag.load(Ordering::SeqCst)
+                }, &|bytes| {
+                    processed.set(processed.get().saturating_add(bytes));
+                    on_progress(processed.get(), current_file.clone());
                 })
                     .map_err(|error| if cancellation_flag.load(Ordering::SeqCst) {
                         RarError::CommandFailed("RAR extraction cancelled".into())
@@ -365,7 +390,7 @@ impl RarSupportService {
     }
 
     /// 尝试使用unrar解压
-    fn normalized_archive_path(path: &Path, preserve_paths: bool) -> Option<PathBuf> {
+    pub(crate) fn normalized_archive_path(path: &Path, preserve_paths: bool) -> Option<PathBuf> {
         let source = if preserve_paths {
             path.to_path_buf()
         } else {
@@ -386,7 +411,7 @@ impl RarSupportService {
         }
     }
 
-    fn matches_file_filter(path: &Path, filter: Option<&str>) -> bool {
+    pub(crate) fn matches_file_filter(path: &Path, filter: Option<&str>) -> bool {
         let Some(filter) = filter.map(str::trim).filter(|value| !value.is_empty()) else {
             return true;
         };
@@ -970,6 +995,54 @@ impl Default for RarSupportService {
 mod tests {
     use super::{RarError, RarSupportService};
     use unrar::error::{Code, UnrarError, When};
+
+    #[tokio::test]
+    async fn native_decoded_progress_matches_real_sfx_originals_and_selected_files() {
+        use std::sync::{Arc, Mutex, atomic::AtomicBool};
+        use crate::models::compression::DecompressOptions;
+        let base = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/sfx-155");
+        let manifest: serde_json::Value = serde_json::from_slice(&std::fs::read(base.join("manifest.json")).unwrap()).unwrap();
+        for case in manifest["cases"].as_array().unwrap().iter().filter(|c| c["kind"].as_str().unwrap().starts_with("rar")) {
+            for selected in [false, true] {
+                let temp = tempfile::tempdir().unwrap();
+                let events = Arc::new(Mutex::new(Vec::new()));
+                let captured = events.clone();
+                let options = DecompressOptions { preserve_paths: true,
+                    file_filter: selected.then(|| "*.txt".to_string()), ..Default::default() };
+                RarSupportService::new().extract_rar_with_progress(
+                    &base.join(case["archive"].as_str().unwrap()), temp.path(), case["password"].as_str(),
+                    &options, Arc::new(AtomicBool::new(false)),
+                    Arc::new(move |bytes, file| captured.lock().unwrap().push((bytes, file))),
+                ).await.unwrap();
+                let expected = case["expected"].as_array().unwrap().iter()
+                    .filter(|e| !selected || e["path"].as_str().unwrap().ends_with(".txt"))
+                    .map(|e| e["bytes"].as_u64().unwrap()).sum::<u64>();
+                let events = events.lock().unwrap();
+                assert_eq!(events.last().unwrap().0, expected, "{} selected={selected}", case["name"]);
+                assert!(events.windows(2).all(|p| p[0].0 <= p[1].0));
+                assert_eq!(events[0].0, 0);
+                // A 13 KiB selected text file legitimately fits in one callback;
+                // the full multi-entry payload must show intermediate work.
+                if !selected { assert!(events.iter().any(|e| e.0 > 0 && e.0 < expected)); }
+            }
+        }
+    }
+
+    #[test]
+    fn native_progress_hook_panic_aborts_without_retaining_output_handle() {
+        let base = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/sfx-155/rar5-modern-plain/用户资料.part1.exe");
+        let temp = tempfile::tempdir().unwrap();
+        let mut archive = unrar::Archive::new(&base).open_for_processing().unwrap();
+        let mut aborted = false;
+        while let Some(header) = archive.read_header().unwrap() {
+            if header.entry().unpacked_size == 0 { archive = header.skip().unwrap(); continue; }
+            assert!(header.extract_to_with_progress(temp.path().join("partial.bin"), &|| true, &|_| panic!("test callback panic")).is_err());
+            aborted = true;
+            break;
+        }
+        assert!(aborted);
+        temp.close().unwrap();
+    }
 
     #[test]
     fn rar_password_error_classification_preserves_engine_failures() {
