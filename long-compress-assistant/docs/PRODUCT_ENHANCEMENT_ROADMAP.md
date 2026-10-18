@@ -1,6 +1,10 @@
 # Long解压产品增强路线
 
-## 当前 v1.5.5 已发布并接续十版规划
+## 当前 v1.5.11 已发布，接续 ALZ 方法兼容
+
+[十版路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)已按证据范围正式交付六版，剩四版；下一版 v1.5.12 ALZ Obfuscated Deflate，随后 TAR 特殊布局、ZIP64 大边界和过程 I/O 接续，不重复扩张规划。准确状态见[开发交接](DEVELOPMENT_HANDOFF.md)和[v1.5.11 封板记录](EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md)。加密固实未获得真实正面原包，不承诺支持。
+
+## 历史：v1.5.5 已发布并接续十版规划
 
 外置卷 SFX 已[正式发布](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.5)，[原十二版路线](ARCHIVE_ROADMAP_1.4.15_TO_1.5.5.md)全部交付。最终冻结 `f5e7050`、候选 `b0918a0`，PR #191 受保护合入，标签 `739e5e5` 与候选同树；94 项不同 Rust、214 项前端、十五组原包、24 桌面场景及 18 张实看页面通过。普通生产、必需候选、主线与正式构建成功，四资产、中文说明及包内资源核对完成。准确状态见[交接](DEVELOPMENT_HANDOFF.md)与[封板记录](SFX_VOLUMES_FREEZE_1.5.5.md)。
 

@@ -1,10 +1,12 @@
 # 开发交接
 
-## 最新：v1.5.11 功能封板，进入发布（2026-10-18）
+## 最新：v1.5.11 已正式发布，接续 ALZ 方法兼容（2026-10-18）
 
-最终功能与桌面冻结 `37ceb08c98ee561803c44c2491fd3bdb4cd3bf8d`，原包/红灯 `58edde0`，编码失败指引 `cac8dc9`。二十组普通中文密码 EGG 原包、101 Rust、170 前端、二十五桌面记录与十二张实看页面及普通生产通过。十八组 Bandizip 独立回解，两组 LEA/LZMA 原生卷由原 ALZip 回解核对载荷，不冒称 Bandizip 互通。二十次原厂加密固实请求均拒绝，按路线证据规则收窄本版，不记其已支持。见[审计](EGG_PASSWORD_COMBINATIONS_1.5.11.md)、[封板](EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md)和[检查](evidence/egg-passwords-1.5.11/checks.json)。
+最终功能与桌面冻结 `37ceb08c98ee561803c44c2491fd3bdb4cd3bf8d`，原包/红灯 `58edde0`，编码失败指引 `cac8dc9`。二十组原厂普通中文密码 EGG、101 Rust、170 前端、二十五桌面记录、十二张实看页面及普通生产通过；十八组独立 Bandizip 回解，两组 LEA/LZMA 原生卷由原 ALZip 回解核对，不承诺本机 Bandizip 互通。二十次原厂加密固实请求均拒绝，本版明确未验证该组合，不伪记完成。见[审计](EGG_PASSWORD_COMBINATIONS_1.5.11.md)、[封板](EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md)和[检查](evidence/egg-passwords-1.5.11/checks.json)。helper/控制和默认编码不改，暂停/恢复/取消复用前版实际大包证据，不冒称新 LEA 控制测试。
 
-八处版本 1.5.11，helper 保持 0.3.0 及同一哈希，不改默认编码或算法。中文密码编码纠正、新任务保留旧失败、缺卷补回、所选、转换和历史重做已实跑；控制路径未改，复用前版真实大包暂停/恢复/取消，不冒称新 LEA 控制测试。当前正式版仍 v1.5.10，接续必需候选 CI、包内五十五组原包核对、受保护合入、固定同树标签、正式构建及中文说明/四资产回下载。个人安装与数据不动。下一版 v1.5.12 ALZ 方法兼容，路线未用完，不重复规划。
+候选 `d5a16c1a817921d5bc088ff3d5e85bf9e8974a0c` 的必需 CI `39135729619`、主线 CI `39137256743` 与正式构建 `39137282214` 均成功；[PR #203](https://github.com/Longyuyeee/long_Decompress/pull/203) 受保护合入。标签 `f69b663210580d34b66e006aae22b5920ea06441` 与候选同树 `4f9309706a8dd6b61e9efcbb7e6616f5a9ae02ee`，不移动标签。[v1.5.11](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.11) 于 UTC `2026-10-18T14:58:46Z` 正式发布；四资产和中文说明于 UTC `2026-10-18T15:04:19.936Z` 回下载核对，更新 ZIP 内安装器相同、签名/地址/时间匹配。候选下载过慢时从同一原始 artifact 分段续传并核对 API digest，未替换构建。候选和正式包运行同字节 helper 核对五十五组原包及 103 份许可，见[候选](evidence/egg-passwords-1.5.11/candidate.json)与[正式收据](evidence/egg-passwords-1.5.11/release.json)。程序身份各自记录，未执行个人安装升级；个人数据不动，发布后仅回填文档。
+
+十版路线按证据范围已正式交付六版，剩四版。下一轮 v1.5.12 先读 `tools/alz-engine/src/main.rs` 的方法分派、`UnknownCompressionMethod` 和密码/原生卷路径，核实 Obfuscated Deflate 的真实原包、可分发解码来源及内容，不用改名普通 Deflate 代替。再贯通浏览、所选/整包、检查/转换和失败接续；仍不创建 ALZ。UI 常用/窄窗必须实看，默认设置与 Windows N 边界不变，不重复扩张路线。
 
 ## 历史：v1.5.10 已正式发布，接续 EGG 特殊密码组合（2026-10-18）
 

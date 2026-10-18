@@ -1,0 +1,309 @@
+{
+  "verifiedAt": "2026-10-18T15:04:19.936Z",
+  "tag": "v1.5.11",
+  "tagCommit": "f69b663210580d34b66e006aae22b5920ea06441",
+  "functionalFreeze": "37ceb08c98ee561803c44c2491fd3bdb4cd3bf8d",
+  "candidateCommit": "d5a16c1a817921d5bc088ff3d5e85bf9e8974a0c",
+  "candidateRun": 39135729619,
+  "releaseRun": 39137282214,
+  "url": "https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.11",
+  "publishedAt": "2026-10-18T14:58:46Z",
+  "installerProductVersion": "1.5.11",
+  "assets": [
+    {
+      "name": "Long-Decompress_1.5.11_x64-setup.exe",
+      "bytes": 20962955,
+      "sha256": "2ba1d9eb9b3d8a3fe1d43b62d4496cd469586c757a8e0c79da32e90ec3d80476",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.11/Long-Decompress_1.5.11_x64-setup.exe"
+    },
+    {
+      "name": "Long-Decompress_1.5.11_x64-setup.nsis.zip",
+      "bytes": 20963115,
+      "sha256": "95715379f3d3a2c5abfcb9dea352485d55aa43f18f11b3ef866bc1f7e6b026af",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.11/Long-Decompress_1.5.11_x64-setup.nsis.zip"
+    },
+    {
+      "name": "Long-Decompress_1.5.11_x64-setup.nsis.zip.sig",
+      "bytes": 428,
+      "sha256": "83f6b9ac780fe6d24098c9ff559a47fa2a311670e636189a1983b7e27c4df59f",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.11/Long-Decompress_1.5.11_x64-setup.nsis.zip.sig"
+    },
+    {
+      "name": "latest.json",
+      "bytes": 2146,
+      "sha256": "202b18476e652513ec64b4ee516288f3ad7782633bf56a2bc8a914332d0d8e83",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.11/latest.json"
+    }
+  ],
+  "updaterExeMatchesInstaller": true,
+  "signatureMatchesManifest": true,
+  "chineseNotesMatch": true,
+  "onlyManifestNotesChanged": true,
+  "packagedMain": {
+    "mainProductVersion": "1.5.11",
+    "mainBytes": 33913856,
+    "mainSha256": "a677c4eb03d905c227ff1ec36ec64a607738c5af214e470e85765e2222ecc82b",
+    "notices": [
+      {
+        "name": "archive-engine/licenses/UnRAR-License.txt",
+        "bytes": 1976,
+        "sha256": "6ecc1687808b7d66b24f874755abfed7464d9751ed0001cd4e8e5d9bf397ff8a"
+      },
+      {
+        "name": "archive-engine/SOURCE.md",
+        "bytes": 2722,
+        "sha256": "53830945c4473e5a10ea38b99505d396d450c6a059c123a5c580d779ed252529"
+      },
+      {
+        "name": "archive-engine/licenses/sevenz-rust-Apache-2.0.txt",
+        "bytes": 11556,
+        "sha256": "5ad8c213095c573921d7388edf93f6a9f54490b8ebf3b165ae8ef1947cf70846"
+      },
+      {
+        "name": "archive-engine/licenses/ppmd-rust-MIT-0.md",
+        "bytes": 916,
+        "sha256": "5574529c6fc6bb5f1dba17056a3ae5fb5cac51bc50ae4d7cd146e13b708fe0ff"
+      }
+    ],
+    "installationExecuted": false,
+    "productionSfxRuntimeExecuted": false,
+    "note": "Native SFX functionality is verified by the separately identified desktop E2E binary; this receipt checks the ordinary packaged main executable and exact UnRAR notice/source disclosure."
+  },
+  "packagedEgg": {
+    "engineSha256": "48efbce527b1d3ae8b5e4c71b86a4b4a9ea1726c857aafb73adf9e0efd275fe4",
+    "engineBytes": 909312,
+    "noticesVerified": 103,
+    "cases": [
+      {
+        "name": "store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "low",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "normal",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "store5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "deflate5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "lzma5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "bzip2_big",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "mixed_store_deflate5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "zip20",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_zip20",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_zip20_bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "split",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "split_store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-plain",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-key",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-key-volumes",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-cn-key",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "azo",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "azo_pe",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "solid",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes128",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes256",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "lea128",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "lea256",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_aes128",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_aes256",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_aes256_bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_lea_bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "optimal5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes128-cn",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes256-cn",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes128-volumes",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "aes256-volumes",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "solid-deflate",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "solid-high",
+        "bundledEngineContentVerification": true
+      }
+    ],
+    "nativeMiddleMemberSelectedExtract": true,
+    "chineseAesMiddleSelectedExtract": true,
+    "solidSelectedExtract": true,
+    "installationExecuted": false,
+    "engineExecutedFromExtractedInstaller": true,
+    "chinesePasswordCases": [
+      {
+        "name": "ordinary-zipcrypto-m1",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-zipcrypto-m1-volumes",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-zipcrypto-m3",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-zipcrypto-m3-volumes",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-aes128-m1",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-aes128-m1-volumes",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-aes128-m3",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-aes128-m3-volumes",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-aes256-m1",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-aes256-m1-volumes",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-aes256-m3",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-aes256-m3-volumes",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-lea128-m1",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-lea128-m1-volumes",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-lea128-m3",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-lea128-m3-volumes",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-lea256-m1",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-lea256-m1-volumes",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-lea256-m3",
+        "bundledEngineCompleteVerification": true
+      },
+      {
+        "name": "ordinary-lea256-m3-volumes",
+        "bundledEngineCompleteVerification": true
+      }
+    ],
+    "chinesePasswordGroupCount": 20,
+    "totalOriginalGroups": 55,
+    "chineseLeaLzmaMiddleSelected": true
+  }
+}

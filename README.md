@@ -149,7 +149,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 - 可直接浏览、解压和转换 ZIP/7Z/RAR 自解压 EXE；好压论坛 ZIP 分卷按整组读取，支持已核对的明文与 ZipCrypto 密码样本。收到多个分卷时，把整组放在同一目录即可。具体格式范围见[支持说明](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)。
 - LZIP（单文件）与 TAR.LZIP（目录/多文件）支持创建、浏览、解压、检查和转换，兼容 `.lz`、`.tar.lz`、`.tlz`；支持连续多成员 LZIP，不提供这两种格式的密码或分卷创建。
 - ZIP 默认 AES-256，可主动选择 ZipCrypto；与 Windows 7-Zip 交换非 ASCII 密码的归档时，可显式选择匹配的 Windows 密码编码。
-- EGG 只读支持已验证的 Store、Deflate、Bzip2、LZMA、AZO、固实 Deflate/LZMA、ZipCrypto、AES/LEA 与 `.volN.egg` 原生卷；可浏览、所选/整包提取、检查并作为转换输入。原中文 ALZip AES 密码可明确选 CP936，文件名按自身标记读取。v1.5.10 补大 LZMA 流式输入，字典仍限 256 MiB。不创建 EGG，不提供全局/文件名加密或损坏修复，未经验证的组合不外推；具体边界见[本版说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.10.md)。
+- EGG 只读支持已验证的 Store、Deflate、Bzip2、LZMA、AZO、固实 Deflate/LZMA、ZipCrypto、AES/LEA 与原生卷，可浏览、所选/整包提取、检查和转换。大 LZMA 已流式读取，字典仍限 256 MiB；v1.5.11 验证二十组普通中文密码组合并补编码失败指引。加密固实、全局/文件名加密、创建和修复不承诺，工具互通边界见[本版说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.11.md)。
 - 密码 ZIP 可尝试救回完整文件：目录可读或丢目录后仍能确定本地文件边界时，提供密码救回通过校验的文件；新包沿用填写的密码，统一使用 AES-256 / UTF-8，并显示部分恢复及未恢复原因。
 - DOCX、XLSX、PPTX、ODT、ODS、EPUB 属于文档容器，不作为普通压缩包导入。
 - 预览、嵌套浏览及压缩参数随格式而异。体积优化效果取决于文件内容，已充分压缩的文件可能没有明显收益。
@@ -234,9 +234,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.11 功能封板，进入发布**：最终功能提交 `37ceb08c98ee561803c44c2491fd3bdb4cd3bf8d`。二十组普通中文密码 EGG 原包、101 Rust、170 前端、二十五桌面记录和十二张实看页面通过，编码失败指引已补齐；加密固实无真实正面原包，不承诺支持。见[封板记录](long-compress-assistant/docs/EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md)。当前正式下载仍为下方 v1.5.10，候选与正式四资产待受保护流程完成。
+**v1.5.11 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.11)。补齐二十组原中文 ALZip 密码 EGG 的 ZipCrypto/AES/LEA、Deflate/LZMA、单包与原生卷验证，改善密码编码不匹配后的最终原因和重试指引；用户主动选择 CP936 后以新任务继续，旧失败保留。101 Rust、170 前端、二十五桌面记录和十二张实看页面通过；正式四资产、中文说明、包内引擎五十五组原包与 103 份许可已核对。见[审计](long-compress-assistant/docs/EGG_PASSWORD_COMBINATIONS_1.5.11.md)、[封板记录](long-compress-assistant/docs/EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md)和[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.11.md)。加密固实无真实正面原包，不承诺支持；两组 LEA/LZMA 原生卷由原厂回解核对，不承诺本机 Bandizip 互通。默认编码和 helper 不变，图标与原截图保留；十版路线已交付六版、剩四版，下一版 v1.5.12 补 ALZ 方法兼容。
 
-**v1.5.10 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.10)。大 EGG LZMA 改为有界流式读取，超过旧 256 MiB 压缩输入的普通、固实和传统密码原生四卷已验证；完整 CRC、缺卷最终原因和事务输出保持。99 项 Rust、152 项前端、三组大原包、七条桌面流程和十六张实看页面通过，实际写出后暂停/恢复/取消及历史最终原因已核对。见[审计](long-compress-assistant/docs/EGG_LARGE_LZMA_1.5.10.md)、[封板记录](long-compress-assistant/docs/EGG_LARGE_LZMA_FREEZE_1.5.10.md)和[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.10.md)。正式四资产、中文说明、包内引擎的 35 组原包和 103 份许可已核对。EGG 不创建，LZMA 字典仍限 256 MiB，未验证密码组合不外推。图标和原截图保留；十版路线已交付五版、剩五版，下一版 v1.5.11 补特殊 EGG 密码组合。
+此前 **v1.5.10 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.10)。大 EGG LZMA 改为有界流式读取，超过旧 256 MiB 压缩输入的普通、固实和传统密码原生四卷已验证；完整 CRC、缺卷最终原因和事务输出保持。99 项 Rust、152 项前端、三组大原包、七条桌面流程和十六张实看页面通过，实际写出后暂停/恢复/取消及历史最终原因已核对。见[审计](long-compress-assistant/docs/EGG_LARGE_LZMA_1.5.10.md)、[封板记录](long-compress-assistant/docs/EGG_LARGE_LZMA_FREEZE_1.5.10.md)和[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.10.md)。正式四资产、中文说明、包内引擎的 35 组原包和 103 份许可已核对。EGG 不创建，LZMA 字典仍限 256 MiB，未验证密码组合不外推。图标和原截图保留；十版路线已交付五版、剩五版，下一版 v1.5.11 补特殊 EGG 密码组合。
 
 此前 **v1.5.9 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.9)。加密 RAR 缺卷保留实际卷名和补回位置；前段密码通过后的后续数据异常不再一概当错密，诊断也不再给出不适用的修复工具提示。十二组真原包、96 项 Rust、152 项前端、39 桌面记录及十四张实看页面通过，补回原卷新任务、旧失败保留与转换独立回解已核对。见[审计](long-compress-assistant/docs/RAR_FINAL_CAUSES_1.5.9.md)、[封板记录](long-compress-assistant/docs/RAR_FINAL_CAUSES_FREEZE_1.5.9.md)与[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.9.md)。正式四资产、中文更新说明和包内主程序/四份说明已回下载核对。前段密码通过不等于整包完整；不新增 RAR 创建或修复，不执行输入 EXE。图标和原截图保留。
 
@@ -250,6 +250,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
+| **v1.5.11** | 中文密码 EGG 组合验证、编码失败接续与历史重做 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.11.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.11) |
 | **v1.5.10** | 大 EGG LZMA 流式读取、原生密码卷与固实末条提取；完整校验和失败接续 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.10.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.10) |
 | **v1.5.9** | 加密 RAR 缺卷具体名称、前段密码已通过与后续数据异常明确分开；真实补卷接续和最终历史 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.9.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.9) |
 | **v1.5.8** | 原厂 7-Zip 更多 GUI 独立加载器；密码分卷、缺卷接续及 RAR 6.24 模块回归 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.8.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.8) |

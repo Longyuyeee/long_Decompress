@@ -1,8 +1,8 @@
 # 文档导航与维护规则
 
-- **待发布：[v1.5.11 EGG 中文密码组合](EGG_PASSWORD_COMBINATIONS_1.5.11.md)**功能冻结 `37ceb08c98ee561803c44c2491fd3bdb4cd3bf8d`，进入受保护候选/正式流程，见[封板记录](EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md)。加密固实未有真实正面原包，不承诺支持；正式下载暂仍为下方 v1.5.10。
+- **当前正式版：[v1.5.11 EGG 中文密码组合](EGG_PASSWORD_COMBINATIONS_1.5.11.md)**已封板发布，PR #203 受保护合入，正式四资产、中文说明及包内五十五组原包回归已核对。见[封板](EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md)、[交接](DEVELOPMENT_HANDOFF.md)与[路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)；[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.11)。加密固实未验证不承诺，下一版 v1.5.12 ALZ 方法兼容，余四版按序。
 
-- **当前正式版：[v1.5.10 大 EGG LZMA](EGG_LARGE_LZMA_1.5.10.md)**已封板发布，PR #201 受保护合入，正式四资产、中文说明及包内引擎回归均核对完成。准确接续见[封板记录](EGG_LARGE_LZMA_FREEZE_1.5.10.md)、[开发交接](DEVELOPMENT_HANDOFF.md)与[十版路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)；[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.10)。下一版 v1.5.11 特殊 EGG 密码组合，剩五版按序。
+- **历史记录：[v1.5.10 大 EGG LZMA](EGG_LARGE_LZMA_1.5.10.md)**已封板发布，PR #201 受保护合入，正式四资产、中文说明及包内引擎回归均核对完成。准确接续见[封板记录](EGG_LARGE_LZMA_FREEZE_1.5.10.md)、[开发交接](DEVELOPMENT_HANDOFF.md)与[十版路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)；[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.10)。此为前版快照，当前接续以上方和开发交接为准。
 
 - **历史记录：[v1.4.16 旧密码编码](LEGACY_ZIP_PASSWORD_ENCODING_1.4.16.md)**已封板发布，[PR #171](https://github.com/Longyuyeee/long_Decompress/pull/171) 已合入，正式标签为 `5b4c317`。438 项相关回归和真实桌面链通过；安装器、签名更新 ZIP、签名及中文更新清单已回下载核对，见[封板记录](LEGACY_ZIP_PASSWORD_FREEZE_1.4.16.md)、[中文说明](RELEASE_NOTES_1.4.16.md)及[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.16)。旧版“下一版”不作为当前待办。
 

@@ -4,8 +4,6 @@
 
 # Long解压 · 开发说明
 
-**v1.5.11 功能封板，进入发布**：最终功能提交 `37ceb08c98ee561803c44c2491fd3bdb4cd3bf8d`。二十组普通中文密码 EGG 原包、101 Rust、170 前端、二十五桌面记录和十二张实看页面通过，编码失败指引已补齐；加密固实无真实正面原包，不承诺支持。见[封板记录](docs/EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md)。当前正式下载仍为下方 v1.5.10，候选与正式四资产待受保护流程完成。
-
 Vue 3 / TypeScript / Pinia / Tauri 1.5 / Rust / SQLite
 
 [软件介绍与界面](../README.md) · [下载安装](https://github.com/Longyuyeee/long_Decompress/releases/latest) · [开发路线](docs/PRODUCT_ENHANCEMENT_ROADMAP.md) · [开发交接](docs/DEVELOPMENT_HANDOFF.md)
@@ -18,7 +16,9 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 ## 功能概览
 
-**v1.5.10 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.10)。大 EGG LZMA 改为有界流式读取，超过旧 256 MiB 压缩输入的普通、固实和传统密码原生四卷已验证；完整 CRC、缺卷最终原因和事务输出保持。99 项 Rust、152 项前端、三组大原包、七条桌面流程和十六张实看页面通过，实际写出后暂停/恢复/取消及历史最终原因已核对。见[审计](docs/EGG_LARGE_LZMA_1.5.10.md)、[封板记录](docs/EGG_LARGE_LZMA_FREEZE_1.5.10.md)和[更新说明](docs/RELEASE_NOTES_1.5.10.md)。正式四资产、中文说明、包内引擎的 35 组原包和 103 份许可已核对。EGG 不创建，LZMA 字典仍限 256 MiB，未验证密码组合不外推。图标和原截图保留；十版路线已交付五版、剩五版，下一版 v1.5.11 补特殊 EGG 密码组合。
+**v1.5.11 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.11)。补齐二十组原中文 ALZip 密码 EGG 的 ZipCrypto/AES/LEA、Deflate/LZMA、单包与原生卷验证，改善密码编码不匹配后的最终原因和重试指引；用户主动选择 CP936 后以新任务继续，旧失败保留。101 Rust、170 前端、二十五桌面记录和十二张实看页面通过；正式四资产、中文说明、包内引擎五十五组原包与 103 份许可已核对。见[审计](docs/EGG_PASSWORD_COMBINATIONS_1.5.11.md)、[封板记录](docs/EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md)和[更新说明](docs/RELEASE_NOTES_1.5.11.md)。加密固实无真实正面原包，不承诺支持；两组 LEA/LZMA 原生卷由原厂回解核对，不承诺本机 Bandizip 互通。默认编码和 helper 不变，图标与原截图保留；十版路线已交付六版、剩四版，下一版 v1.5.12 补 ALZ 方法兼容。
+
+此前 **v1.5.10 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.10)。大 EGG LZMA 改为有界流式读取，超过旧 256 MiB 压缩输入的普通、固实和传统密码原生四卷已验证；完整 CRC、缺卷最终原因和事务输出保持。99 项 Rust、152 项前端、三组大原包、七条桌面流程和十六张实看页面通过，实际写出后暂停/恢复/取消及历史最终原因已核对。见[审计](docs/EGG_LARGE_LZMA_1.5.10.md)、[封板记录](docs/EGG_LARGE_LZMA_FREEZE_1.5.10.md)和[更新说明](docs/RELEASE_NOTES_1.5.10.md)。正式四资产、中文说明、包内引擎的 35 组原包和 103 份许可已核对。EGG 不创建，LZMA 字典仍限 256 MiB，未验证密码组合不外推。图标和原截图保留；十版路线已交付五版、剩五版，下一版 v1.5.11 补特殊 EGG 密码组合。
 
 此前 **v1.5.9 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.9)。加密 RAR 缺卷保留实际卷名和补回位置；前段密码通过后的后续数据异常不再一概当错密，诊断也不再给出不适用的修复工具提示。十二组真原包、96 项 Rust、152 项前端、39 桌面记录及十四张实看页面通过，补回原卷新任务、旧失败保留与转换独立回解已核对。见[审计](docs/RAR_FINAL_CAUSES_1.5.9.md)、[封板记录](docs/RAR_FINAL_CAUSES_FREEZE_1.5.9.md)与[更新说明](docs/RELEASE_NOTES_1.5.9.md)。正式四资产、中文更新说明和包内主程序/四份说明已回下载核对。前段密码通过不等于整包完整；不新增 RAR 创建或修复，不执行输入 EXE。图标和原截图保留。
 
