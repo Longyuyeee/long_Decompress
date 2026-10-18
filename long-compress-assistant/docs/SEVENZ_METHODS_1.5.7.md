@@ -4,7 +4,7 @@
 
 ## 实际缺口与范围
 
-`sevenz-rust 0.6.1` 目前启用 aes256；PPMd 没有方法登记/解码器，Deflate 和 Deflate64 只有名称，Bzip2 解码分支因特性未启用而不可达。LZMA/LZMA2、Copy、AES、Delta、常见 BCJ 与 BCJ2 已有实现，不计新增。Zstd 及其他新过滤器未取得本轮原版生成证据，不承诺支持。
+v1.5.6 基线的 `sevenz-rust 0.6.1` 只启用 aes256；PPMd 当时没有方法登记/解码器，Deflate 和 Deflate64 只有名称，Bzip2 解码分支因特性未启用而不可达。这四处缺口已在 v1.5.7 补齐。LZMA/LZMA2、Copy、AES、Delta、常见 BCJ 与 BCJ2 为已有实现，不计新增。Zstd 及其他新过滤器未取得本轮原版生成证据，不承诺支持。
 
 本版在现有原生流式读取中接入 PPMd7、Deflate、Deflate64 并启用 Bzip2，复用已有依赖版本、CRC、固实顺序、数字卷拼接、路径过滤及事务。无需外部进程回退，错密或损坏不重试另一引擎。明确不支持方法/内存限制不应吞为密码不匹配。
 
@@ -22,3 +22,5 @@
 PPMd 使用现有锁定 [ppmd-rust 1.4.0 Ppmd7Decoder](https://docs.rs/ppmd-rust/1.4.0/ppmd_rust/struct.Ppmd7Decoder.html)，对应 7z 的 PPMdH 范围编码。Deflate/Deflate64、Bzip2 也复用已有锁定依赖，不升级其他依赖或引擎。新增许可原文随包保留。
 
 最终功能与测试冻结 `933af4e`；25 个真实桌面场景和 8 张页面通过并逐张实看。最终身份、原包、结果、生产构建及发布接续见[封板记录](SEVENZ_METHODS_FREEZE_1.5.7.md)。
+
+[PR #195](https://github.com/Longyuyeee/long_Decompress/pull/195) 已受保护合入，候选 CI、主线 CI 与正式构建均成功；v1.5.7 已于 2026-10-18 正式发布，四资产及中文更新说明已回下载核对。见[候选收据](evidence/sevenz-methods-1.5.7/candidate.json)和[正式收据](evidence/sevenz-methods-1.5.7/release.json)。下一轮接续 v1.5.8 的原厂 SFX 模块兼容，剩八版按原路线推进。

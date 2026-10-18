@@ -19,8 +19,16 @@
 
 普通生产构建与测试程序身份分开记录，见[检查收据](evidence/sevenz-methods-1.5.7/checks.json)。个人安装、设置和历史不修改，未执行安装升级。包内检查只证明版本、主程序和原始说明字节，不代替真实运行证据。
 
-## 发布接续
+## 正式发布
 
-功能已封板，等待必需 Windows package、候选安装器核对、受保护合入和不可变标签；随后发布中文 Release/更新说明及四资产，回下载后补入候选和正式收据，不提前称正式资产已验证，不移动标签。
+候选提交 `08e0261c7af3d3de45029a479a04cafc18487c0f` 的必需 CI `39114168020` 成功，用时 8 分 10 秒。[候选收据](evidence/sevenz-methods-1.5.7/candidate.json)于 UTC `2026-10-18T09:22:31.307Z` 完成：安装器 20949336 字节，SHA-256 `8a3e1d763831ea3bf31396157619cc45e684e7a6717f9c86455be725cff35888`；包内主程序 1.5.7、33859584 字节，SHA-256 `c20af033a788046d57614a6efde45ded28a752cd6c950175dd766f953ffae436`。UnRAR 原文、当前 SOURCE、sevenz-rust Apache 和 ppmd-rust MIT-0 四份说明均逐字节核对。复用检查器的旧 SFX 描述在文档收据中改为实际“包体检查”范围，不改数值、哈希或检查结论，不据此声称本轮运行了 SFX。
+
+[PR #195](https://github.com/Longyuyeee/long_Decompress/pull/195) 于 UTC `2026-10-18T09:26:33Z` 受保护合入，标签提交 `ebbc85ee2a433fe353149a0e1b35d9bf8062b850` 与候选同树 `89fd84375f64fb1033571a340affba67b43df8b7`。标签固定不移动。主线 CI `39115346235` 和正式构建 `39115375061` 均成功。
+
+首次 GitHub artifact 下载耗时较长，原调用实际完成后停止了冗余重试；替代下载的原始 ZIP 20935438 字节、SHA-256 `e2a11b7b7be0a78f97557f6b9fe8c7afc7860b06fb91c33604ca058e360bcbf7` 与 GitHub artifact `12131453994` digest 一致，内含安装器与候选同哈希。没有重复修改功能或放宽内容断言。
+
+[v1.5.7 正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.7) 于 UTC `2026-10-18T09:41:56Z`（北京时间 17:41:56）发布，非草稿、非预发布。四资产于 UTC `2026-10-18T09:44:46.581Z` 回下载核对，见[正式收据](evidence/sevenz-methods-1.5.7/release.json)：安装器 20938420 字节，SHA-256 `a111cdfc8e2a400196dab5d6bf5db4659a6a74b82dba2e27bb8980bad1ec72d6`；更新 ZIP 内安装器逐字节一致，签名文本/下载地址/发布时间保持，中文 Release 与更新说明一致，仅修改 manifest 的 notes。四资产分别与 GitHub digest 相符。
+
+正式包内主程序 1.5.7、33859584 字节，SHA-256 `f8186e138eb23b77baf7c047b313c886d5b40fad2391d5d869c403335174d66f`，四份说明与候选同字节。E2E、普通本地程序、候选和正式包身份分别保存，不混用；未执行个人安装升级。发布后仅回填文档，不修改已发布标签或运行时代码。
 
 按[十版路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)下一版进入 v1.5.8 的更多原厂 SFX 模块，余下八版继续按序，不重复规划已交付方法。不承诺 7Z Zstd、新过滤器或所有历史模块；智能目录/ZIP 并行默认关闭，不恢复快速打包，Windows N 暂不保证支持。

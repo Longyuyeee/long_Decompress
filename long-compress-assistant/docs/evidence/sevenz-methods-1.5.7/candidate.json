@@ -1,0 +1,41 @@
+{
+  "checkedAt": "2026-10-18T09:22:31.307Z",
+  "functionalFreeze": "933af4e242e8cc51da3f8ef7a198c9b90be30680",
+  "candidateCommit": "08e0261c7af3d3de45029a479a04cafc18487c0f",
+  "candidateRun": 39114168020,
+  "candidateTree": "89fd84375f64fb1033571a340affba67b43df8b7",
+  "installer": "Long解压_1.5.7_x64-setup.exe",
+  "installerBytes": 20949336,
+  "installerSha256": "8a3e1d763831ea3bf31396157619cc45e684e7a6717f9c86455be725cff35888",
+  "installerProductVersion": "1.5.7",
+  "packagedMain": {
+    "mainProductVersion": "1.5.7",
+    "mainBytes": 33859584,
+    "mainSha256": "c20af033a788046d57614a6efde45ded28a752cd6c950175dd766f953ffae436",
+    "notices": [
+      {
+        "name": "archive-engine/licenses/UnRAR-License.txt",
+        "bytes": 1976,
+        "sha256": "6ecc1687808b7d66b24f874755abfed7464d9751ed0001cd4e8e5d9bf397ff8a"
+      },
+      {
+        "name": "archive-engine/SOURCE.md",
+        "bytes": 2390,
+        "sha256": "e60e4d5cbd60b255a80dc078fbfd318561354a489ce93cb3d14496ce37d858cf"
+      },
+      {
+        "name": "archive-engine/licenses/sevenz-rust-Apache-2.0.txt",
+        "bytes": 11556,
+        "sha256": "5ad8c213095c573921d7388edf93f6a9f54490b8ebf3b165ae8ef1947cf70846"
+      },
+      {
+        "name": "archive-engine/licenses/ppmd-rust-MIT-0.md",
+        "bytes": 916,
+        "sha256": "5574529c6fc6bb5f1dba17056a3ae5fb5cac51bc50ae4d7cd146e13b708fe0ff"
+      }
+    ],
+    "installationExecuted": false,
+    "productionSfxRuntimeExecuted": false,
+    "note": "This receipt checks the ordinary packaged main executable and four exact source/license notices only. Native 7Z functionality is verified by the separately identified desktop E2E results, not by executing this installer. The legacy productionSfxRuntimeExecuted field remains false; no SFX runtime claim is made here."
+  }
+}
