@@ -36,6 +36,8 @@ long-compress-assistant/src-tauri/resources/archive-engine/licenses/UnRAR-Licens
 long-compress-assistant/src-tauri/vendor/unrar-sys/** -text -whitespace
 long-compress-assistant/tests/fixtures/archives/sevenz-157/** -text
 long-compress-assistant/tests/fixtures/archives/sfx-158/** -text
+long-compress-assistant/tests/fixtures/archives/rar-159/** -text
+long-compress-assistant/tests/fixtures/archives/rar-159/source/** -whitespace
 long-compress-assistant/tests/fixtures/archives/sfx-158/**/License.txt -whitespace
 long-compress-assistant/tests/fixtures/archives/sevenz-157/source/** -whitespace
 long-compress-assistant/src-tauri/resources/archive-engine/licenses/sevenz-rust-Apache-2.0.txt -text -whitespace

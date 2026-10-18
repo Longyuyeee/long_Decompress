@@ -18,6 +18,7 @@ export const failureCategories = {
   'engine-start': '引擎启动失败',
   io: '检测读取失败',
   'ambiguous-data': '加密数据异常（原因未确定）',
+  'rar-later-data': 'RAR 后续数据异常（前段密码已通过）',
   'password-encoding': '原包编码不兼容',
   unsupported: '暂不支持的归档特性',
   unknown: '未分类',
@@ -80,6 +81,12 @@ export function getTaskRecoveryGuidance(record: Pick<TaskHistoryRecord, 'status'
   }
   const report = '可通过下方“导出诊断报告”保留本任务的最终原因、原始错误和路径；旧记录不会因查看指引而改变。'
   switch (failure.category) {
+    case 'rar-later-data':
+      return { title: 'RAR 后续数据异常：核对原始卷组', steps: [
+        '当前密码已成功读取前面的加密头或内容；这不代表全包完整，也不能证明后续条目使用相同密码。不要把此结果当作整个压缩包密码错误。',
+        '按原始错误中的卷名向提供者核对同组文件及校验值，重新获取混用、截断或损坏的原卷，不要通过改名把其他压缩包的卷拼入。',
+        '补回原卷或确认后续条目的密码后创建新任务；原失败记录保留，不会被重试覆盖。', report,
+      ] }
     case 'unsupported':
       return { title: '暂不支持此特性：先确认格式与方法', steps: [
         '按最终原因核对压缩方法、加密方式或固实模式；不支持某个组合不代表文件损坏，反复尝试密码不能解决。',

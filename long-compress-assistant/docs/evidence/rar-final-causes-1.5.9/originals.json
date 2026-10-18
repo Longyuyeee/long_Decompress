@@ -1,0 +1,1015 @@
+{
+  "createdAt": "2026-10-18T10:55:31.127Z",
+  "dataLicense": "CC0-1.0 self-authored; original SFX modules retain sfx-155 notices",
+  "independentSha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53",
+  "cases": [
+    {
+      "name": "rar4-old-native-original",
+      "family": "rar4-old-native",
+      "variant": "original",
+      "password": "Rar159+中文123!",
+      "archive": "收到的资料.rar",
+      "members": [
+        {
+          "name": "收到的资料.r00",
+          "bytes": 65536,
+          "sha256": "0a3d79723568d49ed9bc7b8fd01fb5b88cc9575d1c8540d06a7e28488002874f"
+        },
+        {
+          "name": "收到的资料.r01",
+          "bytes": 65536,
+          "sha256": "52c6e0a9308c5d67d23249350485c13629f51735af552bd007cf8c9e850e37a5"
+        },
+        {
+          "name": "收到的资料.r02",
+          "bytes": 5608,
+          "sha256": "d46d980120408fcd7edf2f45233332d2afec04ec4451dfe96216f8d7c53f96d3"
+        },
+        {
+          "name": "收到的资料.rar",
+          "bytes": 65536,
+          "sha256": "27e8b8c620f5420ef6e9919f839672a47a89928f9f35f7e30cd99eb67a9a8c1d"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "f1311cafb657eab7a2b019eb31d954c7a4f59d37f971a2566741034a6019c786"
+        }
+      ],
+      "source": "source/original",
+      "emptyDirectory": "文档/空目录",
+      "producer": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+      "producerArgs": [
+        "a",
+        "-idq",
+        "-cfg-",
+        "-m0",
+        "-r",
+        "-ds",
+        "-ma4",
+        "-vn",
+        "-v64k",
+        "-hpRar159+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar4-old-native-original\\收到的资料.rar",
+        "01已验证.txt",
+        "payload.bin",
+        "文档",
+        "empty.txt"
+      ],
+      "independentReadback": true,
+      "entryOrder": [
+        "Path = E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar4-old-native-original\\收到的资料.rar",
+        "Path = 01已验证.txt",
+        "Path = payload.bin",
+        "Path = 文档\\说明 文件.txt",
+        "Path = empty.txt",
+        "Path = 文档\\空目录",
+        "Path = 文档"
+      ]
+    },
+    {
+      "name": "rar4-old-native-other",
+      "family": "rar4-old-native",
+      "variant": "other",
+      "password": "Rar159+中文123!",
+      "archive": "收到的资料.rar",
+      "members": [
+        {
+          "name": "收到的资料.r00",
+          "bytes": 65536,
+          "sha256": "2cd7bb247b2347d1fcc549c5f1f76133f72f1b4e64b1acc98a5d2792afda4560"
+        },
+        {
+          "name": "收到的资料.r01",
+          "bytes": 65536,
+          "sha256": "d0666923281cf0b307f115e44857c5f34046fb4a533ca154677346dbacba7307"
+        },
+        {
+          "name": "收到的资料.r02",
+          "bytes": 5608,
+          "sha256": "1d82a855668aba357537e027448315e30282d71c27d4d7d92164dfb25633963f"
+        },
+        {
+          "name": "收到的资料.rar",
+          "bytes": 65536,
+          "sha256": "9fde6b35ff9adc486daf058ccd308695b264897127d0250b3786a1b016434b1f"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "e9295adb5f8a20ac85d4ac14afe3cfc8d000f6023feb7fc965c3923f216feebe"
+        }
+      ],
+      "source": "source/other",
+      "emptyDirectory": "文档/空目录",
+      "producer": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+      "producerArgs": [
+        "a",
+        "-idq",
+        "-cfg-",
+        "-m0",
+        "-r",
+        "-ds",
+        "-ma4",
+        "-vn",
+        "-v64k",
+        "-hpRar159+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar4-old-native-other\\收到的资料.rar",
+        "01已验证.txt",
+        "payload.bin",
+        "文档",
+        "empty.txt"
+      ],
+      "independentReadback": true,
+      "entryOrder": [
+        "Path = E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar4-old-native-other\\收到的资料.rar",
+        "Path = 01已验证.txt",
+        "Path = payload.bin",
+        "Path = 文档\\说明 文件.txt",
+        "Path = empty.txt",
+        "Path = 文档\\空目录",
+        "Path = 文档"
+      ]
+    },
+    {
+      "name": "rar4-modern-native-original",
+      "family": "rar4-modern-native",
+      "variant": "original",
+      "password": "Rar159+中文123!",
+      "archive": "收到的资料.part1.rar",
+      "members": [
+        {
+          "name": "收到的资料.part1.rar",
+          "bytes": 65536,
+          "sha256": "d7ce9fa59482dd043cefa415a142f1e2592026911c7361262ea8c8c0da44a00a"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "5ab12c09440918062e1adf16ba8bb616e5504fd46e5b462919b7a017626798aa"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "855370f4982e4a9b25a980965811eb50086cdb61ff489c955f5b5b587f62511b"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 5608,
+          "sha256": "1e82f35d0e8c543829cf930d32f0c6671ac31964588cc411b3cd0b1e55d031b8"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "f1311cafb657eab7a2b019eb31d954c7a4f59d37f971a2566741034a6019c786"
+        }
+      ],
+      "source": "source/original",
+      "emptyDirectory": "文档/空目录",
+      "producer": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+      "producerArgs": [
+        "a",
+        "-idq",
+        "-cfg-",
+        "-m0",
+        "-r",
+        "-ds",
+        "-ma4",
+        "-v64k",
+        "-hpRar159+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar4-modern-native-original\\收到的资料.rar",
+        "01已验证.txt",
+        "payload.bin",
+        "文档",
+        "empty.txt"
+      ],
+      "independentReadback": true,
+      "entryOrder": [
+        "Path = E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar4-modern-native-original\\收到的资料.part1.rar",
+        "Path = 01已验证.txt",
+        "Path = payload.bin",
+        "Path = 文档\\说明 文件.txt",
+        "Path = empty.txt",
+        "Path = 文档\\空目录",
+        "Path = 文档"
+      ]
+    },
+    {
+      "name": "rar4-modern-native-other",
+      "family": "rar4-modern-native",
+      "variant": "other",
+      "password": "Rar159+中文123!",
+      "archive": "收到的资料.part1.rar",
+      "members": [
+        {
+          "name": "收到的资料.part1.rar",
+          "bytes": 65536,
+          "sha256": "6fd8f8f79a8f414c3209dda662686907fe6721f1d4dd0b7ccef2619768e331d4"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "58bce5a12a4c56fda4925b568249f89b6f1db5e69cb87a59b90bf7bc59d3859b"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "033cae953fe399302fc2114b62b71df77087b16f59449fb3f81e0bd5c6f273b5"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 5608,
+          "sha256": "431990a415fe142439dce0a15b0c3bb69995e13a17ed555f31e70d0a3ba4bab4"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "e9295adb5f8a20ac85d4ac14afe3cfc8d000f6023feb7fc965c3923f216feebe"
+        }
+      ],
+      "source": "source/other",
+      "emptyDirectory": "文档/空目录",
+      "producer": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+      "producerArgs": [
+        "a",
+        "-idq",
+        "-cfg-",
+        "-m0",
+        "-r",
+        "-ds",
+        "-ma4",
+        "-v64k",
+        "-hpRar159+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar4-modern-native-other\\收到的资料.rar",
+        "01已验证.txt",
+        "payload.bin",
+        "文档",
+        "empty.txt"
+      ],
+      "independentReadback": true,
+      "entryOrder": [
+        "Path = E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar4-modern-native-other\\收到的资料.part1.rar",
+        "Path = 01已验证.txt",
+        "Path = payload.bin",
+        "Path = 文档\\说明 文件.txt",
+        "Path = empty.txt",
+        "Path = 文档\\空目录",
+        "Path = 文档"
+      ]
+    },
+    {
+      "name": "rar4-old-sfx-original",
+      "family": "rar4-old-sfx",
+      "variant": "original",
+      "password": "Rar159+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.exe",
+          "bytes": 334908,
+          "sha256": "8521feb3b19cadadf5ac195af3d1ce5eae2750a34ba2e1ab4b8337882aa6ba69"
+        },
+        {
+          "name": "收到的资料.r00",
+          "bytes": 65536,
+          "sha256": "67ff39fe3aec4b1ad5b13fd0165d0cb5b0643a3d1b00ea27d92ff1b1aaaf725a"
+        },
+        {
+          "name": "收到的资料.r01",
+          "bytes": 65536,
+          "sha256": "7018213fc92f9079f57a68811be955d64a72b387613fa97f492f9fbe73ba53df"
+        },
+        {
+          "name": "收到的资料.r02",
+          "bytes": 65536,
+          "sha256": "b81b510bb55e84a02b5fedac5791c48d35e0876ff41d5f71bae2e6304988c1b7"
+        },
+        {
+          "name": "收到的资料.r03",
+          "bytes": 5184,
+          "sha256": "645ee193e80f55cfae4b2d33ed663f3f5ed0a65eecfe7035315b70dd9efee14b"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "f1311cafb657eab7a2b019eb31d954c7a4f59d37f971a2566741034a6019c786"
+        }
+      ],
+      "source": "source/original",
+      "emptyDirectory": "文档/空目录",
+      "producer": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+      "producerArgs": [
+        "a",
+        "-idq",
+        "-cfg-",
+        "-m0",
+        "-r",
+        "-ds",
+        "-ma4",
+        "-vn",
+        "-sfx",
+        "-v64k",
+        "-hpRar159+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar4-old-sfx-original\\收到的资料.exe",
+        "01已验证.txt",
+        "payload.bin",
+        "文档",
+        "empty.txt"
+      ],
+      "independentReadback": true,
+      "entryOrder": [
+        "Path = E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar4-old-sfx-original\\收到的资料.exe",
+        "Path = 01已验证.txt",
+        "Path = payload.bin",
+        "Path = 文档\\说明 文件.txt",
+        "Path = empty.txt",
+        "Path = 文档\\空目录",
+        "Path = 文档"
+      ]
+    },
+    {
+      "name": "rar4-old-sfx-other",
+      "family": "rar4-old-sfx",
+      "variant": "other",
+      "password": "Rar159+中文123!",
+      "archive": "收到的资料.exe",
+      "members": [
+        {
+          "name": "收到的资料.exe",
+          "bytes": 334908,
+          "sha256": "3ee2e6e54c1eb0e8a339471b8213feb25e2396641699cb40f877f6f8b70f47fb"
+        },
+        {
+          "name": "收到的资料.r00",
+          "bytes": 65536,
+          "sha256": "48db0ea3277b6749944209194576dd6f40aa18eb3a3474113ea89d0ba7e89775"
+        },
+        {
+          "name": "收到的资料.r01",
+          "bytes": 65536,
+          "sha256": "260d3f993bae34437d4533f0249bec28e24b0a4639a0af23749b8ae17cbc7ff6"
+        },
+        {
+          "name": "收到的资料.r02",
+          "bytes": 65536,
+          "sha256": "8257e1c01d44351db24edd67054c8c1ce980e63ddf251ed07f39496ca012370e"
+        },
+        {
+          "name": "收到的资料.r03",
+          "bytes": 5184,
+          "sha256": "53fd5164a85235dce06e522722755e4f71a56b6616ccdd2c6124800e12492e9c"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "e9295adb5f8a20ac85d4ac14afe3cfc8d000f6023feb7fc965c3923f216feebe"
+        }
+      ],
+      "source": "source/other",
+      "emptyDirectory": "文档/空目录",
+      "producer": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+      "producerArgs": [
+        "a",
+        "-idq",
+        "-cfg-",
+        "-m0",
+        "-r",
+        "-ds",
+        "-ma4",
+        "-vn",
+        "-sfx",
+        "-v64k",
+        "-hpRar159+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar4-old-sfx-other\\收到的资料.exe",
+        "01已验证.txt",
+        "payload.bin",
+        "文档",
+        "empty.txt"
+      ],
+      "independentReadback": true,
+      "entryOrder": [
+        "Path = E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar4-old-sfx-other\\收到的资料.exe",
+        "Path = 01已验证.txt",
+        "Path = payload.bin",
+        "Path = 文档\\说明 文件.txt",
+        "Path = empty.txt",
+        "Path = 文档\\空目录",
+        "Path = 文档"
+      ]
+    },
+    {
+      "name": "rar4-modern-sfx-original",
+      "family": "rar4-modern-sfx",
+      "variant": "original",
+      "password": "Rar159+中文123!",
+      "archive": "收到的资料.part1.exe",
+      "members": [
+        {
+          "name": "收到的资料.part1.exe",
+          "bytes": 334908,
+          "sha256": "08c2c0712a31cb319651762f2474e3e889011f1236a118228a9417f46bcf2592"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "4d5183a2f16b169a4c920042a65b7c4c2f23af60923c8a359a54ccbe521004ca"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "1761c778aa1c677c8be9ddd52ae5282bea8ac8c854d831a95f5c2e39019f9269"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 65536,
+          "sha256": "7b8bca06ec5310ae6f294268809d68c21e0ff29c05551370fe9bc770c1805a3f"
+        },
+        {
+          "name": "收到的资料.part5.rar",
+          "bytes": 5184,
+          "sha256": "a760bbac0988f11f7603f49224cd7e19a8f34f5acedeb9d9650b268a4c374dcb"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "f1311cafb657eab7a2b019eb31d954c7a4f59d37f971a2566741034a6019c786"
+        }
+      ],
+      "source": "source/original",
+      "emptyDirectory": "文档/空目录",
+      "producer": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+      "producerArgs": [
+        "a",
+        "-idq",
+        "-cfg-",
+        "-m0",
+        "-r",
+        "-ds",
+        "-ma4",
+        "-sfx",
+        "-v64k",
+        "-hpRar159+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar4-modern-sfx-original\\收到的资料.exe",
+        "01已验证.txt",
+        "payload.bin",
+        "文档",
+        "empty.txt"
+      ],
+      "independentReadback": true,
+      "entryOrder": [
+        "Path = E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar4-modern-sfx-original\\收到的资料.part1.exe",
+        "Path = 01已验证.txt",
+        "Path = payload.bin",
+        "Path = 文档\\说明 文件.txt",
+        "Path = empty.txt",
+        "Path = 文档\\空目录",
+        "Path = 文档"
+      ]
+    },
+    {
+      "name": "rar4-modern-sfx-other",
+      "family": "rar4-modern-sfx",
+      "variant": "other",
+      "password": "Rar159+中文123!",
+      "archive": "收到的资料.part1.exe",
+      "members": [
+        {
+          "name": "收到的资料.part1.exe",
+          "bytes": 334908,
+          "sha256": "158e2748603895f30906bb79fefd7375f19fd921f0e0d5062965c243612274bd"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "bc48c3087f19562a9abd08bf37e44d47a25b147d3b65378e8db48b5ca4413b7a"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "9009782dba84cb0feb1a3bda9ee4fa788f8fe6795dc52842b26bb82c020c4e28"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 65536,
+          "sha256": "0900e8b7026c0abf3bf383d82d0980682048fd7f4719d2395ca4e3c85e9e9956"
+        },
+        {
+          "name": "收到的资料.part5.rar",
+          "bytes": 5184,
+          "sha256": "892cd3092c9a4facb24df7d0c56982d9ecb4ad7c56a987d173ae0a0d3c58520c"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "e9295adb5f8a20ac85d4ac14afe3cfc8d000f6023feb7fc965c3923f216feebe"
+        }
+      ],
+      "source": "source/other",
+      "emptyDirectory": "文档/空目录",
+      "producer": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\test-results\\rar4-1419-tools\\rar624\\Rar.exe",
+      "producerSha256": "a9cec009503d067f241b5eddaea4e42c38edcb0b57c1b46e946c5281b7f1ea21",
+      "producerArgs": [
+        "a",
+        "-idq",
+        "-cfg-",
+        "-m0",
+        "-r",
+        "-ds",
+        "-ma4",
+        "-sfx",
+        "-v64k",
+        "-hpRar159+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar4-modern-sfx-other\\收到的资料.exe",
+        "01已验证.txt",
+        "payload.bin",
+        "文档",
+        "empty.txt"
+      ],
+      "independentReadback": true,
+      "entryOrder": [
+        "Path = E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar4-modern-sfx-other\\收到的资料.part1.exe",
+        "Path = 01已验证.txt",
+        "Path = payload.bin",
+        "Path = 文档\\说明 文件.txt",
+        "Path = empty.txt",
+        "Path = 文档\\空目录",
+        "Path = 文档"
+      ]
+    },
+    {
+      "name": "rar5-native-original",
+      "family": "rar5-native",
+      "variant": "original",
+      "password": "Rar159+中文123!",
+      "archive": "收到的资料.part1.rar",
+      "members": [
+        {
+          "name": "收到的资料.part1.rar",
+          "bytes": 65536,
+          "sha256": "ab3b62faa5da639a007b86464dd40fa6f5ac5c4a80a95682790a827a49f67d75"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "2d95544f5969ce019f0e3dbed117a946612e8968db0da0272db3340cd84598d7"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "9ecc470350ee8cd2f047b8bb1dab4d342114e7ed9db08a61e2c99238e623a5f6"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 7102,
+          "sha256": "e2659fabb56862caccdb8022372d931e0b9a17b15345a543ef6fdfec388b1e46"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "f1311cafb657eab7a2b019eb31d954c7a4f59d37f971a2566741034a6019c786"
+        }
+      ],
+      "source": "source/original",
+      "emptyDirectory": "文档/空目录",
+      "producer": "E:/Winrar/Rar.exe",
+      "producerSha256": "08ce9c66600fd07580304cbaff9241c1b9fda33eb70cc3d28c16a1084d3bc3ca",
+      "producerArgs": [
+        "a",
+        "-idq",
+        "-cfg-",
+        "-m0",
+        "-r",
+        "-ds",
+        "-v64k",
+        "-hpRar159+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar5-native-original\\收到的资料.rar",
+        "01已验证.txt",
+        "payload.bin",
+        "文档",
+        "empty.txt"
+      ],
+      "independentReadback": true,
+      "entryOrder": [
+        "Path = E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar5-native-original\\收到的资料.part1.rar",
+        "Path = 01已验证.txt",
+        "Path = payload.bin",
+        "Path = 文档\\说明 文件.txt",
+        "Path = empty.txt",
+        "Path = 文档\\空目录",
+        "Path = 文档"
+      ]
+    },
+    {
+      "name": "rar5-native-other",
+      "family": "rar5-native",
+      "variant": "other",
+      "password": "Rar159+中文123!",
+      "archive": "收到的资料.part1.rar",
+      "members": [
+        {
+          "name": "收到的资料.part1.rar",
+          "bytes": 65536,
+          "sha256": "fbe8e0bc565ecb12e8f249de8d994d6df10d546a10729746f69d3cc527752492"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "6b8e9c18acc88260e9a8825fead7de672c794856568e964d21c9edcdf886ef66"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "7ad792288d546bb4a5131bbf10f7c3668d45efc3ce28ff3f6e2766958ebfcf75"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 7102,
+          "sha256": "79403d89112b6e8fd7427aad5be30a9bc8078481b7d4999286ac37cbbffe27be"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "e9295adb5f8a20ac85d4ac14afe3cfc8d000f6023feb7fc965c3923f216feebe"
+        }
+      ],
+      "source": "source/other",
+      "emptyDirectory": "文档/空目录",
+      "producer": "E:/Winrar/Rar.exe",
+      "producerSha256": "08ce9c66600fd07580304cbaff9241c1b9fda33eb70cc3d28c16a1084d3bc3ca",
+      "producerArgs": [
+        "a",
+        "-idq",
+        "-cfg-",
+        "-m0",
+        "-r",
+        "-ds",
+        "-v64k",
+        "-hpRar159+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar5-native-other\\收到的资料.rar",
+        "01已验证.txt",
+        "payload.bin",
+        "文档",
+        "empty.txt"
+      ],
+      "independentReadback": true,
+      "entryOrder": [
+        "Path = E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar5-native-other\\收到的资料.part1.rar",
+        "Path = 01已验证.txt",
+        "Path = payload.bin",
+        "Path = 文档\\说明 文件.txt",
+        "Path = empty.txt",
+        "Path = 文档\\空目录",
+        "Path = 文档"
+      ]
+    },
+    {
+      "name": "rar5-sfx-original",
+      "family": "rar5-sfx",
+      "variant": "original",
+      "password": "Rar159+中文123!",
+      "archive": "收到的资料.part1.exe",
+      "members": [
+        {
+          "name": "收到的资料.part1.exe",
+          "bytes": 460782,
+          "sha256": "f563e995c19f126fe84de4596f78ffa4ead3d0bd1c678e21dcacc56e4febfc33"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "7f813278db35f683443953e9e9d9c899a4f3cb61c243a34b78d10536e3e7b6cb"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "cc552a702a1f46d8613ff707ee53444777a15eef245851c82182719483e94a99"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 65536,
+          "sha256": "30f01bd3389124eb407ed1d6e0dfc9b13ab78c5617793921ecb0165794d73bc7"
+        },
+        {
+          "name": "收到的资料.part5.rar",
+          "bytes": 6862,
+          "sha256": "c071ecd14f0eb4fb0b0d37df9bfa934352222ad6403612daf7dea45a857881d6"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "f1311cafb657eab7a2b019eb31d954c7a4f59d37f971a2566741034a6019c786"
+        }
+      ],
+      "source": "source/original",
+      "emptyDirectory": "文档/空目录",
+      "producer": "E:/Winrar/Rar.exe",
+      "producerSha256": "08ce9c66600fd07580304cbaff9241c1b9fda33eb70cc3d28c16a1084d3bc3ca",
+      "producerArgs": [
+        "a",
+        "-idq",
+        "-cfg-",
+        "-m0",
+        "-r",
+        "-ds",
+        "-sfx",
+        "-v64k",
+        "-hpRar159+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar5-sfx-original\\收到的资料.exe",
+        "01已验证.txt",
+        "payload.bin",
+        "文档",
+        "empty.txt"
+      ],
+      "independentReadback": true,
+      "entryOrder": [
+        "Path = E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar5-sfx-original\\收到的资料.part1.exe",
+        "Path = 01已验证.txt",
+        "Path = payload.bin",
+        "Path = 文档\\说明 文件.txt",
+        "Path = empty.txt",
+        "Path = 文档\\空目录",
+        "Path = 文档"
+      ]
+    },
+    {
+      "name": "rar5-sfx-other",
+      "family": "rar5-sfx",
+      "variant": "other",
+      "password": "Rar159+中文123!",
+      "archive": "收到的资料.part1.exe",
+      "members": [
+        {
+          "name": "收到的资料.part1.exe",
+          "bytes": 460782,
+          "sha256": "16e062fcf3e5058b757ad1a4c85e771a2be46dc11bc6e0461dc78d18f32f0c7e"
+        },
+        {
+          "name": "收到的资料.part2.rar",
+          "bytes": 65536,
+          "sha256": "8316cb13ad4b7af29aa9f5e8549b234e1ff73437260d53b9b433a83a01f3c536"
+        },
+        {
+          "name": "收到的资料.part3.rar",
+          "bytes": 65536,
+          "sha256": "eb2f5ffdc74e6f4f000f9c217ab257a5d545330aa8ee21aa5a351ae4c5d352c4"
+        },
+        {
+          "name": "收到的资料.part4.rar",
+          "bytes": 65536,
+          "sha256": "3315741ebb48ef266081565b8680756a2f41e91e64b7acadae21224ac11989b1"
+        },
+        {
+          "name": "收到的资料.part5.rar",
+          "bytes": 6862,
+          "sha256": "10e5a920217e5fbcd03b9c3e9a8f0a3036644e80f08450608d29008fb0b30883"
+        }
+      ],
+      "expected": [
+        {
+          "path": "01已验证.txt",
+          "bytes": 576,
+          "sha256": "4ac0861d0dbebe50febe93c40028f25fb6e698caaa8a45eda82556092a877528"
+        },
+        {
+          "path": "文档/说明 文件.txt",
+          "bytes": 4100,
+          "sha256": "c733897e22153424755b6b4b20fa0ee74588233b354f9195664dc76ff2a95406"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 196608,
+          "sha256": "e9295adb5f8a20ac85d4ac14afe3cfc8d000f6023feb7fc965c3923f216feebe"
+        }
+      ],
+      "source": "source/other",
+      "emptyDirectory": "文档/空目录",
+      "producer": "E:/Winrar/Rar.exe",
+      "producerSha256": "08ce9c66600fd07580304cbaff9241c1b9fda33eb70cc3d28c16a1084d3bc3ca",
+      "producerArgs": [
+        "a",
+        "-idq",
+        "-cfg-",
+        "-m0",
+        "-r",
+        "-ds",
+        "-sfx",
+        "-v64k",
+        "-hpRar159+中文123!",
+        "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar5-sfx-other\\收到的资料.exe",
+        "01已验证.txt",
+        "payload.bin",
+        "文档",
+        "empty.txt"
+      ],
+      "independentReadback": true,
+      "entryOrder": [
+        "Path = E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\rar-159\\rar5-sfx-other\\收到的资料.part1.exe",
+        "Path = 01已验证.txt",
+        "Path = payload.bin",
+        "Path = 文档\\说明 文件.txt",
+        "Path = empty.txt",
+        "Path = 文档\\空目录",
+        "Path = 文档"
+      ]
+    }
+  ]
+}

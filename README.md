@@ -246,6 +246,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
+| **v1.5.9（本地封板）** | 加密 RAR 缺卷具体名称、前段密码已通过与后续数据异常明确分开；真实补卷接续和最终历史 | [封板记录](long-compress-assistant/docs/RAR_FINAL_CAUSES_FREEZE_1.5.9.md) |
 | **v1.5.8** | 原厂 7-Zip 更多 GUI 独立加载器；密码分卷、缺卷接续及 RAR 6.24 模块回归 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.8.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.8) |
 | **v1.5.7** | 7Z PPMdH、Deflate/64、Bzip2 原生读取；密码固实分卷与最终错误原因 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.7.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.7) |
 | **v1.5.6** | RAR 实际解码进度、续卷逻辑总量、暂停扣时、同目录实际产出与停止状态修正 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.6.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.6) |

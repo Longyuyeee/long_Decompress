@@ -36,16 +36,19 @@ pub(crate) fn stats_with_options(
     })?;
     let mut entries = 0usize;
     let mut expanded = 0u64;
+    let encrypted_headers = archive.has_encrypted_headers();
+    let mut password_proven = false;
     loop {
         check_control()?;
         let header = archive.read_header();
         // Prefer a requested cancellation to a coincident SDK failure.
         check_control()?;
         let Some(header) = header.map_err(|error| {
-            CompressionError::ExtractionFailed(format!(
-                "Unable to inspect RAR entry metadata: {:?}", error
-            ))
+            let detail = super::rar_support::RarSupportService::native_failure_message(&error, password_proven)
+                .unwrap_or_else(|| format!("{error:?}"));
+            CompressionError::ExtractionFailed(format!("Unable to inspect RAR entry metadata: {detail}"))
         })? else { break };
+        password_proven |= encrypted_headers;
         let entry = header.entry();
         // RAR_SKIP exposes each physical continuation header in processing
         // mode. Its unpacked_size repeats the entire logical file size. Do not
@@ -65,9 +68,9 @@ pub(crate) fn stats_with_options(
         let skipped = header.skip();
         check_control()?;
         archive = skipped.map_err(|error| {
-            CompressionError::ExtractionFailed(format!(
-                "Unable to continue RAR metadata inspection: {:?}", error
-            ))
+            let detail = super::rar_support::RarSupportService::native_failure_message(&error, password_proven)
+                .unwrap_or_else(|| format!("{error:?}"));
+            CompressionError::ExtractionFailed(format!("Unable to continue RAR metadata inspection: {detail}"))
         })?;
     }
     Ok((entries, expanded))

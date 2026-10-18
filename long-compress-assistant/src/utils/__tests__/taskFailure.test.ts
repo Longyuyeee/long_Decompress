@@ -10,6 +10,19 @@ import { archiveInspectionMessageForDisplay, createTaskDiagnosticReport, describ
 import type { TaskHistoryRecord } from '@/types/taskHistory'
 
 describe('task failure evidence', () => {
+  it('keeps an exact native missing RAR name in the recovery evidence', () => {
+    const record = { status: 'failed' as const, errorMessage: '[archive-inspection:missing-volume] 缺少 RAR 分卷：password.part6.rar。请补回同组原卷' }
+    expect(describeTaskFailure(record)?.category).toBe('missing-volume')
+    expect(describeTaskFailure(record)?.message).toContain('password.part6.rar')
+    expect(getTaskRecoveryGuidance(record)?.title).toContain('缺失分卷')
+  })
+  it('does not route proven-key later RAR data failures back to password guessing', () => {
+    const record = { status: 'failed' as const, errorMessage: '[archive-inspection:rar-later-data] RAR 前段已通过密码校验，分卷：资料.part6.rar' }
+    expect(describeTaskFailure(record)?.category).toBe('rar-later-data')
+    expect(getTaskRecoveryGuidance(record)?.title).toContain('核对原始卷组')
+    expect(getTaskRecoveryGuidance(record)?.steps.join(' ')).toContain('不能证明后续条目使用相同密码')
+    expect(archiveInspectionMessageForDisplay(record.errorMessage)).not.toContain('[archive-inspection:')
+  })
   it('keeps password encoding failures distinct from damage and password guessing', () => {
     const record = { status: 'failed' as const, errorMessage: '[archive-inspection:password-encoding] 无法无损编码' }
     expect(describeTaskFailure(record)?.category).toBe('password-encoding')

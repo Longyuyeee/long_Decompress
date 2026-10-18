@@ -18,6 +18,8 @@ v1.5.7 在本地 `vendor/sevenz-rust 0.6.1`（Apache-2.0）接入 PPMdH、Deflat
 
 ## 原生 RAR 读取说明
 
+v1.5.9 在 Rust 包装中保留原生 Unicode 换卷请求/通知及失败时状态，区分缺卷、不可读和前段密码已通过后的后续数据异常；打开、读头和处理均在同步返回前清除栈回调。未改 UnRAR 解码算法或重命名输入卷，修改原文见 `vendor/unrar/LONG_MODIFICATIONS.md`。
+
 `unrar 0.5.8` Rust 包装与 `unrar_sys 0.5.8` 原生源码静态链接于主程序，源码分别固定在 `src-tauri/vendor/unrar` 和 `src-tauri/vendor/unrar-sys`。v1.5.5 增加同步数据检查点以及 MSVC `/EHsc`，支持实际块内暂停/取消并释放取消异常中的文件句柄；v1.5.6 增加同步解码块字节进度，取代预分配长度估算，不复制块内容或重复读取输出，未修改 RAR 解码算法。完整修改说明在各自 `LONG_MODIFICATIONS.md`；包装许可见 `licenses/unrar-rs-*`，UnRAR 原文见 `licenses/UnRAR-License.txt`。仅解码，不得用这些源码重建 RAR 兼容压缩算法，不随包分发 Rar.exe 编码器。
 
 ## LZIP 原生编解码

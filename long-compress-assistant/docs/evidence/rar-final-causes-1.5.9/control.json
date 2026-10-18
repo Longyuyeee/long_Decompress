@@ -1,0 +1,110 @@
+{
+  "binarySha256": "475416fb1d8d7fa59b4c6cbce173e67a546eacbbf5cb64a5ac4adc98b8bddaca",
+  "command": "node scripts/test-tauri-desktop.mjs --sfx-155-only --sfx-control-only",
+  "control": {
+    "createdAt": "2026-10-18T05:15:13.149Z",
+    "producer": "E:/Winrar/Rar.exe",
+    "producerSha256": "08ce9c66600fd07580304cbaff9241c1b9fda33eb70cc3d28c16a1084d3bc3ca",
+    "archive": "控制原包.part01.exe",
+    "members": [
+      {
+        "name": "控制原包.part01.exe",
+        "bytes": 33554432,
+        "sha256": "0f056febdfd1cb109c3ee8bb4487bd775c2a86418d52b29610e53468514302e4"
+      },
+      {
+        "name": "控制原包.part02.rar",
+        "bytes": 33554432,
+        "sha256": "4e6ecc121d9bfdca262fa9e49979fdd74ddbba0790819bd4f20a37cfab557e53"
+      },
+      {
+        "name": "控制原包.part03.rar",
+        "bytes": 33554432,
+        "sha256": "b52b95dcf22e58d3a50bfe0b73c5575a8ccf942361faf9f8210f3bf7652b6a9b"
+      },
+      {
+        "name": "控制原包.part04.rar",
+        "bytes": 33554432,
+        "sha256": "903bf8fece7cd155222982767bb427007beb6759d29cf721981efbf81a09b8aa"
+      },
+      {
+        "name": "控制原包.part05.rar",
+        "bytes": 33554432,
+        "sha256": "2ea26a160f7a381ff4c5761c737b62645353b7dc60595aca749c0566175558d3"
+      },
+      {
+        "name": "控制原包.part06.rar",
+        "bytes": 33554432,
+        "sha256": "68c29cadc8b84b819efd52f5fbaa169f76a098ed09333c884be68b1110d8755c"
+      },
+      {
+        "name": "控制原包.part07.rar",
+        "bytes": 33554432,
+        "sha256": "f1ff1e4ec1d930bc635b90430178b8e54127ad904f1053795d7422383f886f1d"
+      },
+      {
+        "name": "控制原包.part08.rar",
+        "bytes": 33554432,
+        "sha256": "306be4531f30ebe333650d062e5dc411c00ea557eab305ac32280c9da2d55d0b"
+      },
+      {
+        "name": "控制原包.part09.rar",
+        "bytes": 461890,
+        "sha256": "f327ae93c623ced845de88f5353897aa94147ea657db0c71d4137a8905bf0e95"
+      }
+    ],
+    "expected": [
+      {
+        "path": "payload.bin",
+        "bytes": 268435456,
+        "sha256": "1a04258f4db4d37deb6804f922cdb9740756353babd645b4c23ec77b7d058279"
+      }
+    ]
+  },
+  "actualKnownPayloadBeforePause": 83361792,
+  "logicalFileBytesWhenPaused": 268435456,
+  "pauseStopsContentWrites": true,
+  "resumeWrites": true,
+  "cancelWhilePaused": true,
+  "sourceRetained": true,
+  "noPublishedOrStagedOutput": true,
+  "native": {
+    "control": {
+      "error": "RAR 解压失败: 系统命令执行失败: RAR extraction cancelled",
+      "ok": false
+    },
+    "logs": [
+      {
+        "message": "确定解压格式: Rar (后缀: exe)",
+        "severity": "Info",
+        "task_id": "sfx155-control-1792323240133",
+        "timestamp": "2026-10-18T11:34:00.295256500Z"
+      },
+      {
+        "message": "正在检测归档加密状态...",
+        "severity": "Info",
+        "task_id": "sfx155-control-1792323240133",
+        "timestamp": "2026-10-18T11:34:00.295839Z"
+      },
+      {
+        "message": "加密状态检测完成：本次解压内容无需密码，正在准备解压...",
+        "severity": "Success",
+        "task_id": "sfx155-control-1792323240133",
+        "timestamp": "2026-10-18T11:34:00.312733600Z"
+      },
+      {
+        "message": "开始解压：控制原包.part01.exe",
+        "severity": "Info",
+        "task_id": "sfx155-control-1792323240133",
+        "timestamp": "2026-10-18T11:34:00.330693500Z"
+      },
+      {
+        "message": "最终失败原因：RAR 解压失败: 系统命令执行失败: RAR extraction cancelled",
+        "severity": "Error",
+        "task_id": "sfx155-control-1792323240133",
+        "timestamp": "2026-10-18T11:34:00.916789700Z"
+      }
+    ]
+  },
+  "rawIpcNotFrontendTask": true
+}
