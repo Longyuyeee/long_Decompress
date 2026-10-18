@@ -45,6 +45,7 @@ fn summarize(format: &str, entries: Vec<ArchiveEntryInfo>) -> ArchiveBrowseResul
 }
 
 pub(crate) fn detect_format(path: &Path) -> Result<ArchiveFormat> {
+    if super::alz_volumes::is_candidate(path) { super::alz_volumes::complete(path)?; return Ok(ArchiveFormat::Alz); }
     if super::sfx_archive::is_executable_path(path) {
         if let Some((format, _)) = super::sfx_archive::detect(path)? { return Ok(format); }
         anyhow::bail!("[archive-inspection:unsupported] 不是可读取的 ZIP、7Z 或 RAR 自解压归档，或归档头已损坏；不会执行此程序");
@@ -284,6 +285,13 @@ pub async fn browse_archive_cancellable(
     password: Option<&str>,
     cancelled: Arc<AtomicBool>,
 ) -> Result<ArchiveBrowseResult> {
+    browse_archive_cancellable_with_encoding(path, password, cancelled, None).await
+}
+
+pub async fn browse_archive_cancellable_with_encoding(
+    path: &Path, password: Option<&str>, cancelled: Arc<AtomicBool>,
+    encoding: Option<super::zip_password::ZipPasswordEncoding>,
+) -> Result<ArchiveBrowseResult> {
     if !path.is_file() {
         anyhow::bail!(
             "Archive does not exist or is not a file: {}",
@@ -308,6 +316,9 @@ pub async fn browse_archive_cancellable(
     let password = password.map(str::to_string);
     let operation_cancelled = cancelled.clone();
     let operation = async move {
+        if format == ArchiveFormat::Alz {
+            return super::alz_engine::browse_with_encoding(&path, encoding, operation_cancelled).await;
+        }
         if format == ArchiveFormat::Zpaq {
             return super::zpaq_engine::browse(&path, password.as_deref(), operation_cancelled).await;
         }
@@ -379,6 +390,10 @@ pub async fn browse_archive_cancellable(
 
 pub async fn browse_archive(path: &Path, password: Option<&str>) -> Result<ArchiveBrowseResult> {
     browse_archive_cancellable(path, password, Arc::new(AtomicBool::new(false))).await
+}
+
+pub async fn browse_archive_with_encoding(path: &Path, password: Option<&str>, encoding: Option<super::zip_password::ZipPasswordEncoding>) -> Result<ArchiveBrowseResult> {
+    browse_archive_cancellable_with_encoding(path, password, Arc::new(AtomicBool::new(false)), encoding).await
 }
 
 #[cfg(test)]

@@ -1,0 +1,75 @@
+.TH UNALZ 1 "2026-07-29" "unalz 0.2.1" "User Commands"
+.SH NAME
+unalz \- extract files from an ALZ archive
+.SH SYNOPSIS
+.B unalz
+[\fIOPTION\fR]... \fIARCHIVE\fR [\fIFILE\fR]...
+.br
+.B unalz
+[\fIOPTION\fR]... \fB\-\fR [\fIFILE\fR]...
+.SH DESCRIPTION
+.B unalz
+extracts files from an ALZ archive, or lists its contents. With no \fIFILE\fR
+operand every file is extracted; otherwise only the named \fIFILE\fRs are. A
+single
+.B \-
+in place of \fIARCHIVE\fR reads the archive from standard input.
+.SH OPTIONS
+.TP
+.BR \-l ", " \-\-list
+List the archive contents; do not extract.
+.TP
+.BR \-d ", " \-\-output\-dir=\fIDIR\fR
+Extract into \fIDIR\fR instead of the current directory.
+.TP
+.BR \-p ", " \-\-pipe
+Write extracted files to standard output.
+.TP
+.BR \-P ", " \-\-password=\fIPW\fR
+Decrypt the archive with password \fIPW\fR. When omitted, an encrypted archive
+prompts on the terminal.
+.TP
+.BR \-q ", " \-\-quiet
+Suppress informational messages.
+.TP
+.BR \-h ", " \-\-help
+Display a help summary and exit.
+.TP
+.BR \-V ", " \-\-version
+Display version information and exit.
+.PP
+Short options may be bundled, for example
+.BR \-lq .
+An option that takes an argument accepts it joined or separate, and long options
+accept it with
+.RB ` = '
+or as the next argument, so
+.BR \-d DIR ", " "\-d " DIR ", " \-\-output\-dir=DIR ", and " "\-\-output\-dir " DIR
+are equivalent.
+.SH "EXIT STATUS"
+.TP
+.B 0
+Everything was extracted.
+.TP
+.B 1
+Every complete file was extracted, but the archive was truncated (a missing
+volume or an interrupted download).
+.TP
+.B 2
+A fatal error occurred.
+.SH EXAMPLES
+.TP
+.B unalz archive.alz
+Extract every file into the current directory.
+.TP
+.B unalz \-d out/ \-P secret archive.alz
+Extract an encrypted archive into \fBout/\fR.
+.TP
+.B unalz \-l archive.alz
+List the archive contents.
+.SH "REPORTING BUGS"
+Report bugs at <https://github.com/alkegi/unalz/issues>.
+.SH "SEE ALSO"
+.BR unegg (1)
+.SH AUTHORS
+Part of the alkegi (알깨기) project <https://github.com/alkegi>.

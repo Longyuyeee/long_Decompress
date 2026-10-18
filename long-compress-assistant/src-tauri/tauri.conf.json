@@ -57,6 +57,8 @@
         "icons/icon.ico"
       ],
       "resources": [
+        "resources/alz-engine/*",
+        "resources/alz-engine/licenses/*",
         "resources/zpaq-engine/*",
         "resources/long_compress_shell_extension_*.dll",
         "resources/long_compress_context_menu*",

@@ -1,0 +1,75 @@
+{
+  "createdAt": "2026-10-18T01:16:16.647Z",
+  "officialDownload": "https://advert.estsoft.com/?event=200803276378987",
+  "installerSha256": "7b7b0dbebc380a5ee65cd52528faa8a234130599a3888a64577815392fff0b70",
+  "generatorSha256": "13c664d8b809348104999efb734587e2847aab04e5511af2e5345e13d2528433",
+  "generatorVersion": "11.0.1.16 (inside ALZip 12.37.0.4 official installer)",
+  "data": "Self-authored public fixtures",
+  "sourceFiles": [
+    {
+      "path": "empty.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "payload.bin",
+      "bytes": 262144,
+      "sha256": "e79a1af387191583d7179a01d44a7590da91ca00760d929b936559447dffad41"
+    },
+    {
+      "path": "说明 文件.txt",
+      "bytes": 51,
+      "sha256": "8036588c22ff43bc7025779d0e82430091dfddfb13155c6a0658f5cdffa7310a"
+    },
+    {
+      "path": "한글 파일.txt",
+      "bytes": 32,
+      "sha256": "a0a363d4d6ff1e0786d06361d11c4e15934bdc6165f6dad84db8064b25dfd947"
+    }
+  ],
+  "emptyDirectory": "空目录",
+  "cases": [
+    {
+      "archive": "native-key-volumes.alz",
+      "password": "LongALZ+password!",
+      "split": true
+    },
+    {
+      "archive": "native-korean-key.alz",
+      "password": "한글암호",
+      "split": false
+    }
+  ],
+  "members": [
+    {
+      "name": "native-key-volumes.a00",
+      "bytes": 65536,
+      "sha256": "3cc84dcddf4a73c469f9051976efce873dc3529801676f8eb7f7ccba2e5ec3f9"
+    },
+    {
+      "name": "native-key-volumes.a01",
+      "bytes": 65536,
+      "sha256": "e6d8e4e71927ca295165cbf2a6144ddc1d43936ea2719371f2e33e74c1ccaa9d"
+    },
+    {
+      "name": "native-key-volumes.a02",
+      "bytes": 65536,
+      "sha256": "74f942bd2f3ae8d9d791a61e38ac905009cb24764a04e6956721b671836ad38a"
+    },
+    {
+      "name": "native-key-volumes.a03",
+      "bytes": 386,
+      "sha256": "69e6c286c2ed45ff3258a55aa6768d726c892766b7311d02b86bd203102154d3"
+    },
+    {
+      "name": "native-key-volumes.alz",
+      "bytes": 65536,
+      "sha256": "b80e7d525dcbb4cbb2857fc1d88c5462e94991e25d46e8f8be9850183dc43b07"
+    },
+    {
+      "name": "native-korean-key.alz",
+      "bytes": 262434,
+      "sha256": "2309fe2c3b4ee823ff7005e06d35bb122709191afec0ac891bffe624db6c2f92"
+    }
+  ]
+}
