@@ -54,6 +54,26 @@ pub async fn extract(path:&Path,output:&Path,pwd:Option<&str>,options:&Decompres
     use super::*;use sha2::Digest;
     fn root()->PathBuf{PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/egg-153")}
     fn flag()->Arc<AtomicBool>{Arc::new(AtomicBool::new(false))}
+    fn combinations_root()->PathBuf{root().parent().unwrap().join("egg-1511")}
+    #[tokio::test]async fn egg_chinese_password_cipher_method_and_native_volume_matrix(){
+        let m:serde_json::Value=serde_json::from_slice(&std::fs::read(combinations_root().join("manifest.json")).unwrap()).unwrap();
+        assert_eq!(m["cases"].as_array().unwrap().len(),20);
+        for c in m["cases"].as_array().unwrap(){let p=combinations_root().join(c["archive"].as_str().unwrap());let opts=DecompressOptions{zip_password_encoding:Some(ZipPasswordEncoding::Cp936),..Default::default()};let pwd=c["password"].as_str().unwrap();
+            assert!(browse(&p,flag()).await.unwrap().encrypted);assert!(try_password(&p,pwd,&opts,flag()).await.unwrap());assert!(!try_password(&p,pwd,&Default::default(),flag()).await.unwrap());assert!(!try_password(&p,"wrong",&opts,flag()).await.unwrap());
+            let out=tempfile::tempdir().unwrap();extract(&p,out.path(),Some(pwd),&opts,flag()).await.unwrap();
+            for e in c["expected"].as_array().unwrap(){assert_eq!(sha(&out.path().join(e["path"].as_str().unwrap())),e["sha256"].as_str().unwrap(),"{}",c["name"]);}assert!(out.path().join("空目录").is_dir());
+            let selected=DecompressOptions{selected_entries:vec!["文档/99最后.txt".into()],..opts};let out=tempfile::tempdir().unwrap();extract(&p,out.path(),Some(pwd),&selected,flag()).await.unwrap();assert!(out.path().join("文档/99最后.txt").is_file());assert!(!out.path().join("01前段.bin").exists());
+        }
+    }
+    #[tokio::test]async fn egg_lea_codepage_and_missing_volume_errors_precede_password_retry(){
+        let m:serde_json::Value=serde_json::from_slice(&std::fs::read(combinations_root().join("manifest.json")).unwrap()).unwrap();
+        for c in m["cases"].as_array().unwrap().iter().filter(|c|c["requested"]["cipher"].as_str().unwrap().starts_with("lea")&&c["requested"]["volumes"]==true){
+            let opts=DecompressOptions{zip_password_encoding:Some(ZipPasswordEncoding::Cp936),..Default::default()};let p=combinations_root().join(c["archive"].as_str().unwrap());assert!(try_password(&p,"🔑",&opts,flag()).await.unwrap_err().to_string().contains("[egg-password-encoding]"));
+            let out=tempfile::tempdir().unwrap();let members=c["members"].as_array().unwrap();for f in members{let original=combinations_root().join(f["name"].as_str().unwrap());std::fs::copy(&original,out.path().join(original.file_name().unwrap())).unwrap();}
+            let absent=combinations_root().join(members.iter().find(|e|e["name"].as_str().unwrap().contains(".vol2.egg")).unwrap()["name"].as_str().unwrap());let removed=out.path().join(absent.file_name().unwrap());std::fs::remove_file(&removed).unwrap();let source=out.path().join(p.file_name().unwrap());
+            assert!(try_password(&source,"wrong",&opts,flag()).await.unwrap_err().to_string().contains("[archive-inspection:incomplete]"));std::fs::copy(&absent,&removed).unwrap();verify(&source,c["password"].as_str(),&opts,flag()).await.unwrap();
+        }
+    }
     #[test]fn egg_password_extension_keeps_native_damage_route(){
         assert_eq!(super::super::archive_format::ArchiveFormat::from_password_extension("egg"),super::super::archive_format::ArchiveFormat::Egg);
     }

@@ -2215,7 +2215,7 @@ impl CompressionService {
                     } else if format == ArchiveFormat::Alz {
                         "未取得能完整验证此 ALZ 归档的密码；请核对密码、原包编码和文件完整性"
                     } else if format == ArchiveFormat::Egg {
-                        "未取得能完整验证此 EGG 归档的密码；请核对密码和文件完整性"
+                        "未取得能完整验证此 EGG 归档的密码；请核对密码、原包密码编码和文件完整性"
                     } else if format == ArchiveFormat::Rar {
                         "未取得能完整验证此 RAR 归档的密码；请核对密码，或检查归档及分卷是否损坏"
                     } else {
@@ -2264,7 +2264,7 @@ impl CompressionService {
                     return Err(CompressionError::ExtractionFailed("[archive-inspection:ambiguous-data] ALZ 密码未能通过完整内容校验，请核对密码，并检查加密头或内容是否损坏。".into()).into());
                 }
                 if format == ArchiveFormat::Egg {
-                    return Err(CompressionError::ExtractionFailed("[archive-inspection:ambiguous-data] EGG 密码未能通过完整内容校验，请核对密码，并检查加密头或内容是否损坏。".into()).into());
+                    return Err(CompressionError::ExtractionFailed("[archive-inspection:ambiguous-data] EGG 密码未能通过完整内容校验，请核对密码及原包密码编码（原中文 ALZip 可使用 CP936），并检查加密头或内容是否损坏。".into()).into());
                 }
                 if format == ArchiveFormat::Zpaq {
                     return Err(CompressionError::ExtractionFailed("[archive-inspection:ambiguous-data] ZPAQ 密码不匹配或文件已损坏，请核对密码和源文件。".into()).into());

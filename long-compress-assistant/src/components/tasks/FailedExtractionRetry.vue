@@ -11,6 +11,7 @@ import { useAppStore } from '@/stores/app'
 import { parentDirectory } from '@/utils/resultLocation'
 import ZipPasswordEncodingField from '@/components/ui/ZipPasswordEncodingField.vue'
 import { supportsZipPasswordEncoding } from '@/utils/zipPasswordSource'
+import { archiveSourceFormat } from '@/utils/archiveSource'
 
 const props = defineProps<{ taskIds: string[]; suppliedPassword?: string; inline?: boolean }>()
 const emit = defineEmits<{ close: []; created: [ids: string[]] }>()
@@ -44,6 +45,10 @@ const newIds = ref<string[]>([])
 let disposed = false
 let activeDiagnosticId: string | null = null
 const selectedCount = computed(() => rows.value.filter(row => row.selected && !row.policy.blocked && !row.createdId).length)
+const recoveryStep = (row: typeof rows.value[number]) => row.policy.category === 'ambiguous-data'
+  && (row.source === row.originalSource ? row.sourceFormat || archiveSourceFormat(row.source) : archiveSourceFormat(row.source))?.toLowerCase() === 'egg'
+  ? '请核对密码及下方 EGG 密码编码后创建新任务；原失败记录保留。'
+  : row.nextStep
 const cancelChecks = () => {
   stopped.value = true
   if (activeDiagnosticId) void invoke('cancel_archive_diagnosis', { diagnosticId: activeDiagnosticId }).catch(() => {})
@@ -172,8 +177,8 @@ function close() {
             <button class="retry-button" :disabled="busy || pickerBusy" @click="openSourceFolder(row)"><i class="pi pi-folder-open mr-1"></i>打开分卷目录</button>
           </div>
           <button v-if="['damaged', 'ambiguous-data', 'unknown', 'missing-volume', 'incomplete'].includes(row.policy.category || '')" data-testid="retry-rescue" class="retry-button text-primary" :disabled="busy || pickerBusy" @click="rescueSource(row)"><i class="pi pi-wrench mr-1"></i>检查并尝试救援</button>
-          <p v-if="row.policy.requireIntegrity" class="text-xs text-muted">请重新选择下载完整的文件。添加前会检查完整性，大文件可能需要一些时间。</p>
-          <p v-else-if="row.nextStep" class="text-xs text-muted">{{ row.nextStep }}</p>
+          <p v-if="row.policy.requireIntegrity" data-testid="retry-guidance" class="text-xs text-muted">请重新选择下载完整的文件。添加前会检查完整性，大文件可能需要一些时间。</p>
+          <p v-else-if="recoveryStep(row)" data-testid="retry-guidance" class="text-xs text-muted">{{ recoveryStep(row) }}</p>
           <fieldset :disabled="busy || pickerBusy || !row.selected" class="retry-fields grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
             <div class="min-w-0 space-y-2">
               <label class="block text-xs">来源文件
