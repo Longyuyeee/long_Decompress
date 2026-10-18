@@ -12,10 +12,33 @@ E2E ProductVersion 1.5.6，SHA256 `1911b0667ba40c6abb5889773e18223e6e50177da6d23
 
 ## 发布状态
 
-八处身份统一 1.5.6，最终普通生产构建、资源身份检查、必需 Windows package、受保护合入、不可变标签和正式四资产按后续收据记录。当前是功能封板候选，尚未正式发布；公开版仍为 v1.5.5。发布后仅回填文档，不移动标签。个人安装、设置和历史不修改，不执行安装升级。
+八处身份统一 1.5.6，最终普通生产构建与资源身份检查通过，见[普通生产身份](evidence/rar-progress-1.5.6/production.json)。本地普通 EXE 33884160 字节，SHA256 `cd1eac4a20213e49102a33ff71d7aade12bb60e4e62561a97cc85f285fe5be7e`；不带 E2E 功能。
+
+最终候选 `7f86d2a331cd1e2cc97d9268d35a51256713ffb5` 的必需 Windows package `39108553925` 成功。候选安装器 ProductVersion 1.5.6，20924958 字节，SHA256 `139e398d782d96e956dc98dd34777e0e589bd80e9fa544cac7ee706bae7a9693`；中文主程序、UnRAR 原许可及更新后的来源说明按字节核对，见[候选收据](evidence/rar-progress-1.5.6/candidate.json)。CI 原始产物 ZIP 同时核对 GitHub artifact `12129114454` 的 20911045 字节及摘要，见[定向检查收据](evidence/rar-progress-1.5.6/checks.json)。下载慢时并行推进受保护合入与正式构建，候选核对 UTC `2026-10-18T07:54:26.579Z` 完成，没有将未下载的包记作通过。
+
+[PR #193](https://github.com/Longyuyeee/long_Decompress/pull/193) 于 UTC `2026-10-18T07:53:54Z` 受保护合入。标签 `v1.5.6` 固定在 `0fe351edb3a06a2da0abc4d7266b3cb7037baf0d`，与候选同树 `45e4e18c28da3cbf865809a1d60a5e1f66944283`。正式工作流 `39109391315` 已成功，正式资产见下节。发布后仅回填文档，不移动标签。个人安装、设置和历史不修改，不执行安装升级。
+
+合入后的主线 CI `39109385376` 已成功。候选安装器、E2E、本地普通程序和正式安装器各自独立记录，不混用版本身份或哈希。
+
+## 正式发布资产
+
+[v1.5.6 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.6) 于 UTC `2026-10-18T08:09:41Z`（北京时间 16:09:41）正式发布，非草稿、非预发布。主线 CI和正式工作流均成功后，更新中文 Release 与 latest.json.notes，签名、地址、发布时间及其他清单字段保持原值。
+
+UTC `2026-10-18T08:11:36.120Z` 四资产回下载核对通过：安装器 ProductVersion 1.5.6，更新 ZIP 内安装器与正式 EXE 相同，签名/地址/时间与清单一致，Release 与更新清单中文说明一致。包内主程序 1.5.6、33821696 字节，SHA256 `61aa53b2590de87649c514d0e08c3bf20178f5e612f1f73188ec2604e3648f39`；UnRAR 原始许可和本版来源说明与仓库按字节一致。见[正式收据](evidence/rar-progress-1.5.6/release.json)。
+
+| 正式资产 | 字节 | SHA256 |
+| --- | ---: | --- |
+| Long-Decompress_1.5.6_x64-setup.exe | 20937330 | `599e5eff5295f0d8ef983dbf40ae8a806854ed9992f39c3b90f4641bfe3cf6bd` |
+| Long-Decompress_1.5.6_x64-setup.nsis.zip | 20937488 | `5fc0cab3e2f205af324be5864eaa3d12c8a1c57b208120f25172306bb91275fc` |
+| Long-Decompress_1.5.6_x64-setup.nsis.zip.sig | 428 | `f4d03e3ef6970b6cf112e3aacdefdf43acc43f697dafb3f56cbc5d139a9bf85a` |
+| latest.json | 2577 | `c899dfe3ce4835ab0dc0e58598842b7ea1a3439ff40ec18f3cc3e9c36978f682` |
+
+真实 RAR 运行证据来自前述明确身份的 E2E 程序；包检查不是正式主程序运行或安装升级。未执行安装升级，个人数据不修改。发布后独立文档 PR 只回填记录和收据，不改功能、不移动标签。
 
 ## 范围与下一版
 
 只改善既有 RAR 读取及任务流程，不增加格式/模块或编码器。解码块在写入/CRC 前回调，不能等同落盘、校验或事务成功；最终状态仍取真实提交结果。旧历史不追改，原开始/结束时间保持，新增任务耗时扣除本次会话暂停。
 
 下一版按[既定路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)推进 v1.5.7：先核实现有 7Z 方法/过滤链，针对确实缺失的 PPMd/Deflate 等方法取得原版样本，补浏览、所选、密码卷、检查与转换；已有 BCJ2 不重复宣传。后续九版仍未实施，不重复规划。智能目录/ZIP 并行默认关闭，不恢复快速打包，Windows N 暂不保证支持。
+
+发布等待期间只读核对了下一版的真实代码：主应用 `sevenz-rust` 仅显式启用 `aes256`，其默认特性为 compress；Bzip2/Zstd 解码分支受可选特性控制，当前未启用，PPMd/Deflate 在 `decoders.rs` 没有实现分支。v1.5.7 应先用原版 7-Zip 样本区分“已有但未编译”和“解码实现缺失”，再选择原生接入或明确不支持回退；本轮不改 7Z 代码，也不把源码预审当作格式已经支持。
