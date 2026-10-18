@@ -3,7 +3,7 @@ import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import { open } from '@tauri-apps/api/dialog'
 import { useSavedLocations } from '@/composables/useSavedLocations'
-import { DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS, isDecompressArchivePath, isPotentialSfxPath } from '@/utils/compressionFormat'
+import { DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS, isDecompressArchivePath, isPotentialSfxPath, isPotentialSplitArchivePath } from '@/utils/compressionFormat'
 
 export interface LocalFileEntry {
   path: string
@@ -49,7 +49,7 @@ const createPane = (id: 'left' | 'right'): PaneState => reactive({ id, path: '',
 const left = createPane('left')
 const right = createPane('right')
 const otherPane = (pane: PaneState) => pane.id === 'left' ? right : left
-const isArchive = (entry: LocalFileEntry) => !entry.isDir && (isDecompressArchivePath(entry.path) || isPotentialSfxPath(entry.path))
+const isArchive = (entry: LocalFileEntry) => !entry.isDir && (isDecompressArchivePath(entry.path) || isPotentialSfxPath(entry.path) || isPotentialSplitArchivePath(entry.path))
 const selectedEntries = (pane: PaneState) => pane.entries.filter(entry => pane.selected.has(entry.path))
 const operationEntries = (pane: PaneState, entry?: LocalFileEntry | null) => {
   const selected = selectedEntries(pane)

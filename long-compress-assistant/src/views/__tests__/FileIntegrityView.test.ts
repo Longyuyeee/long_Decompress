@@ -38,6 +38,16 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('FileIntegrityView', () => {
+  it('does not offer recovery-volume creation for a read-only SFX group opened from a middle member', async () => {
+    const pinia=createPinia();setActivePinia(pinia)
+    mocks.diagnoseArchive.mockResolvedValue({filePath:'C:/parts.r02',actualFormat:'RAR',status:'healthy',splitArchive:true,volumesFound:6,missingVolumes:[],totalFiles:3,totalDirectories:1,totalUncompressedSize:100,integrityTested:true,canRepair:false,recoverability:'sfx_readonly',issues:[],evidence:['自解压包仅做只读完整性检查']})
+    useAppStore().openArchiveForDiagnosis({path:'C:/parts.r02'})
+    const wrapper=mount(FileIntegrityView,{global:{plugins:[pinia]}});await flushPromises()
+    expect(wrapper.get('[data-testid="diagnostic-report"]').text()).toContain('完整性正常')
+    expect(wrapper.find('[data-testid="open-create-recovery-volumes"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="start-archive-repair"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
   it('restores a single repaired result without secrets, preserves its own encoding and requires re-entering its password', async () => {
     const pinia=createPinia(); setActivePinia(pinia)
     mocks.diagnoseArchive.mockResolvedValue({filePath:'C:/old.zip',actualFormat:'ZIP',status:'directory_lost',encrypted:true,issues:[],evidence:[],missingVolumes:[],totalFiles:1,totalDirectories:0,canRepair:true})

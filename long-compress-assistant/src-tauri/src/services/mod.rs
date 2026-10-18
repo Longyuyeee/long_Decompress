@@ -56,6 +56,7 @@ pub mod zip_password;
 pub mod zip_method;
 pub(crate) mod zip_selection;
 pub(crate) mod sfx_archive;
+pub(crate) mod sfx_volumes;
 pub mod split_archive_detector;
 pub(crate) mod archive_volumes;
 pub(crate) mod codec_stream;

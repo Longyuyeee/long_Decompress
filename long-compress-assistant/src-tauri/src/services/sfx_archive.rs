@@ -63,6 +63,95 @@ pub(crate) fn is_executable_path(path: &Path) -> bool {
 mod tests {
     use super::*;
     #[test]
+    fn genuine_external_sfx_originals_group_every_member() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/sfx-155");
+        let manifest: serde_json::Value = serde_json::from_slice(&std::fs::read(root.join("manifest.json")).unwrap()).unwrap();
+        for case in manifest["cases"].as_array().unwrap() {
+            if case["kind"] == "rar4-single" { continue; }
+            let archive = root.join(case["archive"].as_str().unwrap());
+            let dir = archive.parent().unwrap();
+            let seven = case["kind"] == "7z-volumes";
+            let first = if seven { dir.join("用户资料.7z.001") } else { archive.clone() };
+            for member in case["members"].as_array().unwrap() {
+                let member = dir.join(member["name"].as_str().unwrap());
+                let group = super::super::split_archive_detector::SplitArchiveDetector::detect_split_archive(&member).unwrap().unwrap_or_else(|| panic!("SFX group missing: {}", member.display()));
+                assert_eq!(group.first_part, first);
+                assert!(group.is_complete);
+                assert_eq!(group.parts.len(), if seven {5} else {6});
+            }
+        }
+    }
+    #[tokio::test]
+    async fn genuine_external_sfx_browse_and_password_candidates_every_member() {
+        use super::super::{archive_browser, compression_service::CompressionService};
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/sfx-155");
+        let m: serde_json::Value = serde_json::from_slice(&std::fs::read(root.join("manifest.json")).unwrap()).unwrap();
+        let scratch = tempfile::tempdir().unwrap();
+        let service = CompressionService::new(Default::default(), std::sync::Arc::new(super::super::io_buffer_pool::IOBufferPool::default()), std::sync::Arc::new(super::super::rar_support::RarSupportService::new()), std::sync::Arc::new(super::super::universal_engine::UniversalCliEngine::new()), std::sync::Arc::new(super::super::encrypted_password_service::EncryptedPasswordService::new(scratch.path())));
+        for c in m["cases"].as_array().unwrap() {
+            let source = root.join(c["archive"].as_str().unwrap());
+            for member in c["members"].as_array().unwrap() {
+                let member = source.parent().unwrap().join(member["name"].as_str().unwrap());
+                let b = archive_browser::browse_archive(&member, c["password"].as_str()).await.unwrap_or_else(|e| panic!("{}: {e:#}", member.display()));
+                assert_eq!(b.total_files, 3, "{}", member.display());
+                assert_eq!(b.total_uncompressed_size, 275544);
+                if c["password"].is_string() && member == source {
+                    assert!(service.verify_archive_password_candidate(member.to_str().unwrap(), c["password"].as_str().unwrap()).await.unwrap());
+                    assert!(!service.verify_archive_password_candidate(member.to_str().unwrap(), "wrong-sfx-password").await.unwrap_or(false), "wrong key accepted: {}", member.display());
+                }
+            }
+        }
+    }
+    #[tokio::test]
+    async fn genuine_external_sfx_missing_and_damaged_volumes_precede_keys() {
+        use super::super::{archive_browser, split_archive_detector::SplitArchiveDetector};
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/sfx-155");
+        let m: serde_json::Value = serde_json::from_slice(&std::fs::read(root.join("manifest.json")).unwrap()).unwrap();
+        for c in m["cases"].as_array().unwrap().iter().filter(|c| c["kind"] != "rar4-single") {
+            let source = root.join(c["archive"].as_str().unwrap()); let tmp = tempfile::tempdir().unwrap();
+            for member in c["members"].as_array().unwrap() { let name = member["name"].as_str().unwrap(); std::fs::copy(source.parent().unwrap().join(name), tmp.path().join(name)).unwrap(); }
+            let selected = tmp.path().join(source.file_name().unwrap());
+            let group = SplitArchiveDetector::detect_split_archive(&selected).unwrap().unwrap();
+            for index in [0, 2, group.parts.len()-1] {
+                let part = &group.parts[index]; let bytes = std::fs::read(part).unwrap(); std::fs::remove_file(part).unwrap();
+                let input = if index == 0 { &group.parts[1] } else { &selected };
+                // Encrypted RAR headers conceal the last index. In that case
+                // final completeness is established only during keyed decode.
+                if index != group.parts.len()-1 || c["mode"] != "headers" || c["kind"] == "7z-volumes" {
+                    let error = archive_browser::browse_archive(input, Some("wrong-key")).await.unwrap_err();
+                    assert!(format!("{error:#}").contains("[archive-inspection:incomplete]"), "{} index{index}: {error:#}", c["name"]);
+                }
+                std::fs::write(part, bytes).unwrap();
+            }
+            if c["kind"] != "7z-volumes" {
+                let part = &group.parts[1]; let mut bytes = std::fs::read(part).unwrap(); bytes[8] ^= 1; std::fs::write(part, bytes).unwrap();
+                let error = SplitArchiveDetector::detect_split_archive(&selected).unwrap_err().to_string(); assert!(error.contains("[archive-inspection:damaged]"), "{error}");
+            }
+        }
+    }
+    #[test]
+    fn unknown_exe_is_not_a_loader_just_because_matching_data_exists() {
+        let tmp = tempfile::tempdir().unwrap(); let exe = tmp.path().join("ordinary.exe");
+        std::fs::write(&exe, b"MZ this program is not an archive").unwrap(); std::fs::write(tmp.path().join("ordinary.7z.001"), b"not data").unwrap();
+        assert!(super::super::sfx_volumes::seven_zip_loader_data(&exe).unwrap().is_none());
+        assert!(super::super::archive_browser::detect_format(&exe).is_err());
+    }
+    #[test]
+    fn native_sfx_cancel_unwinds_and_releases_partial_output_handle() {
+        let source = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/sfx-155/rar5-modern-plain/用户资料.part1.exe");
+        let tmp = tempfile::tempdir().unwrap(); let output = tmp.path().join("private-output"); std::fs::create_dir(&output).unwrap();
+        let mut archive = unrar::Archive::new(&source).open_for_processing().unwrap();
+        loop {
+            let header = archive.read_header().unwrap().unwrap();
+            if header.entry().unpacked_size == 0 { archive = header.skip().unwrap(); continue; }
+            let file = output.join("partial.bin");
+            assert!(header.extract_to_with_control(&file, &|| false).is_err());
+            // This failed with MSVC's original missing /EHsc: the local C++
+            // output File destructor was skipped by the cancellation throw.
+            std::fs::remove_dir_all(&output).unwrap(); assert!(!output.exists()); break;
+        }
+    }
+    #[test]
     fn ordinary_executable_and_fake_signature_are_not_archives() {
         let dir = tempfile::tempdir().unwrap();
         let path = dir.path().join("program.exe");

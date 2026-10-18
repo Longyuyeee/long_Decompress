@@ -22,6 +22,11 @@ impl ZipInputReader {
     }
 
     pub(crate) fn open_seven_zip(path: &Path) -> anyhow::Result<Self> {
+        if let Some(data) = super::sfx_volumes::seven_zip_loader_data(path)? {
+            let source = super::split_archive_detector::SplitArchiveDetector::complete_source(&data)?;
+            anyhow::ensure!(source.is_file(), "[archive-inspection:incomplete] 缺少 7Z 外置数据首卷：{}", source.display());
+            return Self::open_seven_zip(&source);
+        }
         if super::sfx_archive::is_executable_path(path) {
             if let Some((super::archive_format::ArchiveFormat::SevenZip, start)) = super::sfx_archive::detect(path)? {
                 let mut file = File::open(path)?;

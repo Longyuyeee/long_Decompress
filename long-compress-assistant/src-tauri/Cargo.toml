@@ -1,6 +1,6 @@
 [package]
 name = "long-compress-assistant"
-version = "1.5.4"
+version = "1.5.5"
 description = "智能压缩解压助手"
 authors = ["Longyuyeee"]
 license = "MIT"
@@ -124,3 +124,4 @@ desktop-e2e = []
 zip = { path = "vendor/zip" }
 sevenz-rust = { path = "vendor/sevenz-rust" }
 unrar = { path = "vendor/unrar" }
+unrar_sys = { path = "vendor/unrar-sys" }

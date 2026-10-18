@@ -186,6 +186,27 @@ describe('DecompressView', () => {
     wrapper.unmount()
   })
 
+  it('deduplicates original EXE first and external RAR members after native canonicalization', async () => {
+    const wrapper = mountView(), parts = ['C:/资料.part1.exe', 'C:/资料.part2.rar']
+    mocks.invoke.mockImplementation(async (cmd: string) => cmd === 'detect_split_archive' ? { is_split: true, format: 'RarSplit', archive_format: 'rar', base_name: '资料', first_part: parts[0], parts, total_parts: 2, is_complete: true, missing_parts: [] } : [])
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [parts[1], parts[0]].map(path => ({ name: path.split('/').pop(), path })))
+    await flushPromises()
+    expect(useTaskStore().tasks).toHaveLength(1)
+    expect(useTaskStore().tasks[0]).toMatchObject({ sourceFiles: [parts[0]], format: 'rar' })
+    wrapper.unmount()
+  })
+
+  it('explains the original EXE alternative when the RAR first member is absent', async () => {
+    const wrapper = mountView(), first = 'C:/资料.part1.rar'
+    mocks.invoke.mockImplementation(async (cmd: string) => cmd === 'detect_split_archive' ? { is_split: true, format: 'RarSplit', first_part: first, parts: ['C:/资料.part2.rar'], is_complete: false, missing_parts: [first] } : [])
+    wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [{ name: '资料.part2.rar', path: 'C:/资料.part2.rar' }])
+    await flushPromises()
+    expect(useTaskStore().tasks).toHaveLength(0)
+    expect(useAppStore().error).toContain('EXE')
+    expect(useAppStore().error).toContain('不要改名')
+    wrapper.unmount()
+  })
+
   it('changes selected pending configuration without rewriting passwords, defaults or running tasks', async () => {
     const wrapper = mountView()
     const store = useTaskStore()

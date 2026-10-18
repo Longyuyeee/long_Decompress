@@ -12,6 +12,10 @@
 
 分发许可见同目录 `7-Zip-License.txt`。原生 ZIP/7Z/TAR/LZ4/Brotli 路径独立于该外部兼容引擎。
 
+## 原生 RAR 读取
+
+`unrar 0.5.8` Rust 包装与 `unrar_sys 0.5.8` 原生源码静态链接于主程序，源码分别固定在 `src-tauri/vendor/unrar` 和 `src-tauri/vendor/unrar-sys`。v1.5.5 增加同步数据检查点以及 MSVC `/EHsc`，支持实际块内暂停/取消并释放取消异常中的文件句柄，未修改 RAR 解码算法。完整修改说明在各自 `LONG_MODIFICATIONS.md`；包装许可见 `licenses/unrar-rs-*`，UnRAR 原文见 `licenses/UnRAR-License.txt`。仅解码，不得用这些源码重建 RAR 兼容压缩算法，不随包分发 Rar.exe 编码器。
+
 ## LZIP 原生编解码
 
 v1.4.12 开发接入 [lzma-rust2 0.22.0](https://github.com/hasenbanck/lzma-rust2/)，使用 `std`、`encoder`、`optimization` 和 `lzip` 特性，固定版本并静态链接，不调用外部 LZIP 程序。Apache-2.0 原文随包保存在 `licenses/lzma-rust2-Apache-2.0.txt`。独立 GNU lzip 仅生成测试样本和回解，不随软件分发。

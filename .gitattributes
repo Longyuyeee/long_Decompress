@@ -30,3 +30,7 @@ long-compress-assistant/vendor/libazo/** -text -whitespace
 long-compress-assistant/tools/egg-engine/** -text
 long-compress-assistant/src-tauri/resources/egg-engine/** -text
 long-compress-assistant/src-tauri/src/services/egg_volumes.rs -text
+long-compress-assistant/tests/fixtures/archives/sfx-155/** -text
+long-compress-assistant/tests/fixtures/archives/sfx-155/*License.txt -whitespace
+long-compress-assistant/src-tauri/resources/archive-engine/licenses/UnRAR-License.txt -text -whitespace
+long-compress-assistant/src-tauri/vendor/unrar-sys/** -text -whitespace

@@ -253,7 +253,8 @@ const onFilesSelected = async (files: any[]) => {
           const missingNames = missingParts.slice(0, 5).map((part: string) => part.split(/[\\/]/).pop()).join('、')
           errors.push(appStore.t('decompress.split.incomplete')
             .replace('{0}', file.name || sourcePath)
-            .replace('{1}', missingNames || appStore.t('decompress.split.required_part')))
+            .replace('{1}', missingNames || appStore.t('decompress.split.required_part'))
+            + (splitInfo.format === 'RarSplit' && missingParts.includes(firstPart) ? appStore.t('decompress.split.rar_first_alternative') : ''))
           continue
         }
         const normalizedFirst = normalizePath(firstPart)

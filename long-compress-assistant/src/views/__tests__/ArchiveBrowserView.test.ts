@@ -14,11 +14,13 @@ const mocks = vi.hoisted(() => ({
   decompressFile: vi.fn(),
   clipboardWrite: vi.fn(),
   setError: vi.fn(),
+  clearError: vi.fn(),
+  currentError: null as string | null,
   setSuccess: vi.fn(),
 }))
 
 vi.mock('@/stores/app', () => ({
-  useAppStore: () => ({ setError: mocks.setError, setSuccess: mocks.setSuccess })
+  useAppStore: () => ({ setError: mocks.setError, clearError: mocks.clearError, get error() { return mocks.currentError }, setSuccess: mocks.setSuccess })
 }))
 
 vi.mock('@/composables/useArchiveEngine', () => ({
@@ -54,6 +56,19 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('ArchiveBrowserView', () => {
+  it.each([false,true])('clears only its own failed-browse message after successful password correction; unrelated=%s', async unrelated => {
+    const wrapper=mount(ArchiveBrowserView)
+    mocks.browseArchive.mockRejectedValueOnce(new Error('ARCHIVE_BROWSE_PASSWORD|密码不正确，请修改密码'))
+    await wrapper.get('header .browser-primary').trigger('click');await flushPromises()
+    expect(mocks.setError).toHaveBeenLastCalledWith('密码不正确，请修改密码')
+    if(unrelated)mocks.currentError='另一项任务输出失败'
+    await wrapper.get('input[type="password"]').setValue('corrected password')
+    await wrapper.get('button[title="重新读取"]').trigger('click');await flushPromises()
+    expect(wrapper.find('[data-entry-path="image.png"]').exists()).toBe(true)
+    expect(mocks.clearError).toHaveBeenCalledTimes(unrelated?0:1)
+    if(unrelated)expect(mocks.currentError).toBe('另一项任务输出失败')
+    wrapper.unmount()
+  })
   it.each(['cp932','cp936','cp950'] as const)('uses %s for preview, refresh, open and selected extraction without changing the source password', async encoding => {
     const wrapper=mount(ArchiveBrowserView,{global:{stubs:{Teleport:true}}})
     await wrapper.get('header .browser-primary').trigger('click'); await flushPromises()
@@ -110,6 +125,9 @@ describe('ArchiveBrowserView', () => {
   })
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.currentError=null
+    mocks.setError.mockImplementation(message=>{mocks.currentError=message})
+    mocks.clearError.mockImplementation(()=>{mocks.currentError=null})
     Object.defineProperty(navigator, 'clipboard', {
       configurable: true,
       value: { writeText: mocks.clipboardWrite },

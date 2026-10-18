@@ -58,7 +58,7 @@ pub struct OpenArchive<M: OpenMode, C: Cursor> {
     extra: C,
     marker: std::marker::PhantomData<M>,
 }
-type Userdata<T> = (T, Option<widestring::WideCString>, Option<widestring::WideCString>, *const std::sync::atomic::AtomicBool);
+type Userdata<'a, T> = (T, Option<widestring::WideCString>, Option<widestring::WideCString>, *const std::sync::atomic::AtomicBool, Option<&'a dyn Fn() -> bool>);
 
 mod private {
     use super::native;
@@ -242,7 +242,7 @@ impl<Mode: OpenMode> OpenArchive<Mode, CursorBeforeHeader> {
         let unicode_password = password.and_then(|bytes| std::str::from_utf8(bytes).ok())
             .map(widestring::WideCString::from_str).transpose()
             .map_err(|_| UnrarError::from(Code::BadPassword, When::Open))?;
-        let mut userdata: Userdata<()> = ((), None, unicode_password.clone(), std::ptr::null());
+        let mut userdata: Userdata<()> = ((), None, unicode_password.clone(), std::ptr::null(), None);
 
         let mut data =
             native::OpenArchiveDataEx::new(filename.as_ptr() as *const _, Mode::VALUE as u32);
@@ -310,7 +310,7 @@ impl Iterator for OpenArchive<List, CursorBeforeHeader> {
         }
         match read_header(&self.handle) {
             Ok(Some(header)) => {
-                match Internal::<Skip>::process_file_raw(&self.handle, None, None, None) {
+                match Internal::<Skip>::process_file_raw(&self.handle, None, None, None, None) {
                     Ok(_) => Some(Ok(header)),
                     Err(s) => {
                         self.damaged = true;
@@ -336,7 +336,7 @@ impl Iterator for OpenArchive<ListSplit, CursorBeforeHeader> {
         }
         match read_header(&self.handle) {
             Ok(Some(header)) => {
-                match Internal::<Skip>::process_file_raw(&self.handle, None, None, None) {
+                match Internal::<Skip>::process_file_raw(&self.handle, None, None, None, None) {
                     Ok(_) => Some(Ok(header)),
                     Err(s) => {
                         self.damaged = true;
@@ -377,7 +377,7 @@ impl<M: OpenMode> OpenArchive<M, CursorBeforeFile> {
         path: Option<&pathed::RarStr>,
         file: Option<&pathed::RarStr>,
     ) -> UnrarResult<(PM::Output, OpenArchive<M, CursorBeforeHeader>)> {
-        self.process_file_cancellable::<PM>(path, file, None)
+        self.process_file_cancellable::<PM>(path, file, None, None)
     }
 
     fn process_file_cancellable<PM: ProcessMode>(
@@ -385,9 +385,10 @@ impl<M: OpenMode> OpenArchive<M, CursorBeforeFile> {
         path: Option<&pathed::RarStr>,
         file: Option<&pathed::RarStr>,
         cancelled: Option<&std::sync::atomic::AtomicBool>,
+        checkpoint: Option<&dyn Fn() -> bool>,
     ) -> UnrarResult<(PM::Output, OpenArchive<M, CursorBeforeHeader>)> {
         let result = Ok((
-            Internal::<PM>::process_file_raw(&self.handle, path, file, cancelled)?,
+            Internal::<PM>::process_file_raw(&self.handle, path, file, cancelled, checkpoint)?,
             OpenArchive {
                 extra: CursorBeforeHeader,
                 damaged: self.damaged,
@@ -415,7 +416,7 @@ impl OpenArchive<Process, CursorBeforeFile> {
     /// Test an entry, checking cancellation at UnRAR's data/volume callbacks.
     /// The flag is borrowed only for this synchronous call and is never retained.
     pub fn test_with_cancel(self, cancelled: &std::sync::atomic::AtomicBool) -> UnrarResult<OpenArchive<Process, CursorBeforeHeader>> {
-        Ok(self.process_file_cancellable::<Test>(None, None, Some(cancelled))?.1)
+        Ok(self.process_file_cancellable::<Test>(None, None, Some(cancelled), None)?.1)
     }
 
     /// Extracts the file into the current working directory
@@ -451,6 +452,14 @@ impl OpenArchive<Process, CursorBeforeFile> {
         self.process_file::<Extract>(None, Some(&dest))
     }
 
+    /// Synchronous per-data/volume control hook. It is borrowed only during this
+    /// call, must return false to abort, and is never retained by native code.
+    /// Panics are caught at the callback boundary and treated as cancellation.
+    pub fn extract_to_with_control<P: AsRef<Path>>(self, file: P, checkpoint: &dyn Fn() -> bool) -> UnrarResult<OpenArchive<Process, CursorBeforeHeader>> {
+        let dest = pathed::construct(file.as_ref());
+        Ok(self.process_file_cancellable::<Extract>(None, Some(&dest), None, Some(checkpoint))?.1)
+    }
+
     /// extracting into a directory if the filename has unicode characters
     /// does not work on Linux, so we must specify the full path for Linux
     fn dir_extract(
@@ -463,7 +472,7 @@ impl OpenArchive<Process, CursorBeforeFile> {
 }
 
 fn read_header(handle: &Handle) -> UnrarResult<Option<FileHeader>> {
-    let mut userdata: Userdata<<Skip as ProcessMode>::Output> = (Default::default(), None, handle.1.clone(), std::ptr::null());
+    let mut userdata: Userdata<<Skip as ProcessMode>::Output> = (Default::default(), None, handle.1.clone(), std::ptr::null(), None);
     unsafe {
         native::RARSetCallback(
             handle.0.as_ptr(),
@@ -544,6 +553,9 @@ impl<M: ProcessMode> Internal<M> {
         if !user_data.3.is_null() && unsafe { &*user_data.3 }.load(std::sync::atomic::Ordering::SeqCst) {
             return -1;
         }
+        if let Some(checkpoint) = user_data.4 {
+            if !std::panic::catch_unwind(std::panic::AssertUnwindSafe(checkpoint)).unwrap_or(false) { return -1; }
+        }
         match msg {
             native::UCM_NEEDPASSWORDW => {
                 let Some(password) = user_data.2.as_ref() else { return -1 };
@@ -581,8 +593,9 @@ impl<M: ProcessMode> Internal<M> {
         path: Option<&pathed::RarStr>,
         file: Option<&pathed::RarStr>,
         cancelled: Option<&std::sync::atomic::AtomicBool>,
+        checkpoint: Option<&dyn Fn() -> bool>,
     ) -> UnrarResult<M::Output> {
-        let mut user_data: Userdata<M::Output> = (Default::default(), None, handle.1.clone(), cancelled.map_or(std::ptr::null(), |flag| flag as *const _));
+        let mut user_data: Userdata<M::Output> = (Default::default(), None, handle.1.clone(), cancelled.map_or(std::ptr::null(), |flag| flag as *const _), checkpoint);
         unsafe {
             native::RARSetCallback(
                 handle.0.as_ptr(),

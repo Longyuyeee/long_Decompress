@@ -45,6 +45,8 @@ fn summarize(format: &str, entries: Vec<ArchiveEntryInfo>) -> ArchiveBrowseResul
 }
 
 pub(crate) fn detect_format(path: &Path) -> Result<ArchiveFormat> {
+    let source = super::split_archive_detector::SplitArchiveDetector::complete_source(path)?;
+    if source != path { return detect_format(&source); }
     if super::egg_volumes::is_candidate(path) { super::egg_volumes::complete(path)?; return Ok(ArchiveFormat::Egg); }
     if super::alz_volumes::is_candidate(path) { super::alz_volumes::complete(path)?; return Ok(ArchiveFormat::Alz); }
     if super::sfx_archive::is_executable_path(path) {
@@ -166,8 +168,9 @@ fn browse_rar(
         Some(password) => unrar::Archive::with_password(path, password),
         None => unrar::Archive::new(path),
     };
+    let archive = archive.open_for_listing()?;
+    super::sfx_volumes::validate_native_volume(path, !matches!(archive.volume_info(), unrar::VolumeInfo::None))?;
     let entries = archive
-        .open_for_listing()?
         .map(|entry| -> Result<ArchiveEntryInfo> {
             ensure_not_cancelled(cancelled)?;
             let entry = entry?;
@@ -300,7 +303,7 @@ pub async fn browse_archive_cancellable_with_encoding(
         );
     }
     ensure_not_cancelled(&cancelled)?;
-    let path = path.to_path_buf();
+    let path = super::split_archive_detector::SplitArchiveDetector::complete_source(path)?;
     let logical = if super::numeric_volume_reader::ZipInputReader::is_numeric_first(&path) { Path::new(path.file_stem().unwrap()) } else { &path };
     let name = logical
         .file_name()

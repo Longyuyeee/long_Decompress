@@ -55,6 +55,29 @@ pub enum RarError {
 pub struct RarSupportService;
 
 impl RarSupportService {
+    /// Inspect RAR through native metadata, including encrypted SFX headers.
+    /// CLI text such as "Headers Error ... Wrong password?" is ambiguous and
+    /// must not reject a genuine encrypted RAR before its supplied key is tried.
+    pub(crate) fn requires_password(path: &Path, flag: &Arc<AtomicBool>) -> anyhow::Result<bool> {
+        let source = super::split_archive_detector::SplitArchiveDetector::complete_source(path)?;
+        let mut archive = match unrar::Archive::new(&source).open_for_listing() {
+            Ok(archive) => archive,
+            Err(e) if matches!(e.code, unrar::error::Code::MissingPassword | unrar::error::Code::BadPassword) => return Ok(true),
+            Err(e) => anyhow::bail!("无法读取 RAR 目录：{e:?}"),
+        };
+        super::sfx_volumes::validate_native_volume(&source, !matches!(archive.volume_info(), unrar::VolumeInfo::None))?;
+        let mut encrypted = archive.has_encrypted_headers();
+        loop {
+            super::task_control::wait_if_paused(flag);
+            anyhow::ensure!(!flag.load(Ordering::SeqCst), "RAR password inspection cancelled");
+            match archive.next() {
+                Some(Ok(entry)) => encrypted |= entry.is_encrypted(),
+                Some(Err(e)) if matches!(e.code, unrar::error::Code::MissingPassword | unrar::error::Code::BadPassword) => return Ok(true),
+                Some(Err(e)) => anyhow::bail!("无法读取完整 RAR 目录：{e:?}"),
+                None => return Ok(encrypted),
+            }
+        }
+    }
     fn map_unrar_extraction_error(
         error: unrar::error::UnrarError,
         password_supplied: bool,
@@ -213,7 +236,7 @@ impl RarSupportService {
             Err(e) => {
                 log::warn!("原生库解压失败，尝试退避到外部命令: {:?}", e);
                 // 如果是密码错误，直接返回，不再尝试外部命令（避免重复提示）
-                if password.is_some() || matches!(e, RarError::PasswordError) {
+                if cancellation_flag.load(Ordering::SeqCst) || password.is_some() || matches!(e, RarError::PasswordError | RarError::InvalidRarFile(_)) {
                     return Err(e);
                 }
             }
@@ -271,6 +294,8 @@ impl RarSupportService {
                 false,
                 "打开 RAR 归档失败",
             ))?;
+        super::sfx_volumes::validate_native_volume(rar_path, !matches!(open_archive.volume_info(), unrar::VolumeInfo::None))
+            .map_err(|e| RarError::InvalidRarFile(e.to_string()))?;
         let mut password_proven = password.is_some() && open_archive.has_encrypted_headers();
 
         while let Some(header) = open_archive.read_header()
@@ -313,18 +338,24 @@ impl RarSupportService {
                     .map_err(|e| RarError::ExtractionFailed(format!("跳过目录失败: {:?}", e)))?;
             } else {
                 let encrypted_entry = entry.is_encrypted();
+                let nonempty_entry = entry.unpacked_size > 0;
                 let target_path = Self::resolve_extract_path(&target_path, options)?;
                 if let Some(parent) = target_path.parent() {
                     std::fs::create_dir_all(parent).ok();
                 }
-                open_archive = header.extract_to(&target_path)
-                    .map_err(|error| Self::map_unrar_extraction_error(
+                open_archive = header.extract_to_with_control(&target_path, &|| {
+                    super::task_control::wait_if_paused(&cancellation_flag);
+                    !cancellation_flag.load(Ordering::SeqCst)
+                })
+                    .map_err(|error| if cancellation_flag.load(Ordering::SeqCst) {
+                        RarError::CommandFailed("RAR extraction cancelled".into())
+                    } else { Self::map_unrar_extraction_error(
                         error,
                         password.is_some(),
                         password_proven,
                         "提取 RAR 文件失败",
-                    ))?;
-                if encrypted_entry && password.is_some() {
+                    ) })?;
+                if encrypted_entry && nonempty_entry && password.is_some() {
                     password_proven = true;
                 }
             }
@@ -613,6 +644,8 @@ impl RarSupportService {
                 return Self::classify_password_test_error(error);
             }
         };
+        super::sfx_volumes::validate_native_volume(rar_path, !matches!(open_archive.volume_info(), unrar::VolumeInfo::None))
+            .map_err(|e| RarError::InvalidRarFile(e.to_string()))?;
         let has_encrypted_headers = open_archive.has_encrypted_headers();
 
         loop {
@@ -625,7 +658,7 @@ impl RarSupportService {
                 }
             };
 
-            if header.entry().is_directory() || !header.entry().is_encrypted() {
+            if header.entry().is_directory() || !header.entry().is_encrypted() || header.entry().unpacked_size == 0 {
                 open_archive = match header.skip() {
                     Ok(archive) => archive,
                     Err(error) => {
@@ -636,7 +669,9 @@ impl RarSupportService {
                 continue;
             }
 
-            // Only an encrypted entry can prove a candidate password. Some RAR
+            // Only nonempty encrypted content can prove a candidate password.
+            // An encrypted empty file can pass its empty CRC with any key.
+            // Some RAR
             // archives mix plain and encrypted files; accepting the first plain
             // entry made every candidate appear valid before extraction later
             // failed on the first encrypted payload.
