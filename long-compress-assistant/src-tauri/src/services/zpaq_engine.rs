@@ -1,4 +1,4 @@
-//! ZPAQ 7.15 read adapter. Native key material travels only through binary stdin.
+//! ZPAQ 7.15 adapter. Native key material travels only through binary stdin.
 use anyhow::{Context, Result};
 use serde::Deserialize;
 use std::{io::Read, path::{Path, PathBuf}, sync::{Arc, atomic::AtomicBool}, time::Duration};
@@ -51,11 +51,12 @@ async fn run(path: &Path, password: Option<&str>, output: Option<&Path>, test: b
     if test { command.arg("-test"); }
     else if let Some(output) = output { command.arg("-to").arg(output); }
     else { command.arg("-long-json"); }
-    let result = crate::utils::process::cancellable_output_with_stdin(
+    let result = crate::utils::process::cancellable_archive_output_with_stdin(
         &mut command, &cancelled, Duration::from_secs(24 * 60 * 60), Some(input(if encrypted { password } else { None }, selected)?))
         .await.map_err(|e| anyhow::anyhow!("ZPAQ 读取取消或引擎运行失败：{e}"))?;
     if !result.status.success() {
         let detail = format!("{}\n{}", String::from_utf8_lossy(&result.stderr), String::from_utf8_lossy(&result.stdout));
+        if let Some(error) = io_failure(&detail) { return Err(error); }
         if detail.contains("password incorrect") {
             anyhow::bail!("[archive-inspection:ambiguous-data] ZPAQ 密码不匹配或文件头已损坏，无法仅凭解密头确定原因");
         }
@@ -63,6 +64,64 @@ async fn run(path: &Path, password: Option<&str>, output: Option<&Path>, test: b
         anyhow::bail!("[archive-inspection:damaged] ZPAQ 结构或内容校验失败（可能损坏或事务未完成）：{detail}");
     }
     Ok(result.stdout)
+}
+
+fn io_failure(detail: &str) -> Option<anyhow::Error> {
+    let line = detail.lines().find_map(|line| line.strip_prefix("LONG_ZPAQ_IO:"))?;
+    let (operation, code) = line.split_once(':')?;
+    let code = code.trim().parse::<i32>().ok()?;
+    let cause = std::io::Error::from_raw_os_error(code);
+    let message = format!("[zpaq-io] ZPAQ 文件读写失败（{operation}）：{cause}；请检查目标空间、磁盘连接和文件访问权限，不要反复试密码。");
+    Some(anyhow::Error::new(cause).context(message))
+}
+
+pub async fn create(sources: &[String], output: &Path, options: &crate::models::compression::CompressionOptions, cancelled: Arc<AtomicBool>) -> Result<()> {
+    anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Acquire), "ZPAQ 创建已取消");
+    let tool = command_path().context("缺少随附的 ZPAQ 引擎，请修复安装")?;
+    anyhow::ensure!(!output.exists(), "ZPAQ 暂存目标已存在，不能追加或覆盖");
+    let preserve = options.preserve_paths.unwrap_or(true);
+    let mut entries = super::compression_entries::collect(sources, preserve, preserve)?;
+    // The shared collector omits a selected root itself. Preserve an empty
+    // selected folder too, rather than producing no archive or losing it.
+    if preserve {
+        for source in sources {
+            let path = Path::new(source);
+            if path.is_dir() && std::fs::read_dir(path)?.next().is_none() {
+                entries.push(super::compression_entries::CompressionEntry {
+                    path: path.to_path_buf(), archive_name: path.file_name().context("目录名称无效")?.to_string_lossy().into_owned(), is_dir: true,
+                });
+            }
+        }
+    }
+    anyhow::ensure!(!entries.is_empty() && entries.len() <= 100000, "ZPAQ 没有可压缩文件，或条目数超过 100000");
+    let mut data = input(options.password.as_deref().filter(|p| !p.is_empty()), &[])?;
+    data.extend_from_slice(&(entries.len() as u32).to_le_bytes());
+    let mut names = std::collections::HashSet::new();
+    for entry in entries {
+        let mut name = super::archive_entry_open::normalize_safe_entry_path(&entry.archive_name)?;
+        anyhow::ensure!(names.insert(name.to_lowercase()), "ZPAQ 内部路径存在 Windows 同名冲突：{name}");
+        let mut source = entry.path.to_string_lossy().replace('\\', "/");
+        if entry.is_dir { source.push('/'); name.push('/'); }
+        for text in [source, name] {
+            anyhow::ensure!(text.len() <= 65536 && !text.contains('\0'), "ZPAQ 路径过长或含无效字符");
+            data.extend_from_slice(&(text.len() as u32).to_le_bytes());
+            data.extend_from_slice(text.as_bytes());
+        }
+    }
+    // Bounded 16 MiB blocks and two workers; the nine UI steps map to the
+    // upstream's six actual methods, never invented native volume options.
+    let method = match options.level { 0 => "04", 1..=2 => "14", 3..=4 => "24", 5..=6 => "34", 7..=8 => "44", _ => "54" };
+    let mut command = crate::utils::process::async_command(tool);
+    command.arg("a").arg(output).args(["-long-stdin", "-long-create", "-method", method, "-threads", "2", "-noattributes"]);
+    let result = crate::utils::process::cancellable_archive_output_with_stdin(&mut command, &cancelled, Duration::from_secs(24*60*60), Some(data)).await
+        .map_err(|e| anyhow::anyhow!("ZPAQ 创建取消或引擎运行失败：{e}"))?;
+    if !result.status.success() {
+        let detail = format!("{}\n{}", String::from_utf8_lossy(&result.stderr), String::from_utf8_lossy(&result.stdout));
+        if let Some(error) = io_failure(&detail) { return Err(error); }
+        anyhow::bail!("ZPAQ 创建失败：{}", detail.chars().take(4000).collect::<String>());
+    }
+    anyhow::ensure!(output.is_file(), "ZPAQ 引擎没有生成压缩包");
+    Ok(())
 }
 
 #[derive(Deserialize)]
@@ -136,6 +195,60 @@ mod tests {
     use super::*;
     fn fixture(name: &str) -> PathBuf { PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/zpaq").join(name) }
     fn flag() -> Arc<AtomicBool> { Arc::new(AtomicBool::new(false)) }
+    #[tokio::test]
+    async fn create_preserves_names_contents_empty_folders_native_key_and_flattening() {
+        use crate::models::compression::CompressionOptions;
+        let temp = tempfile::tempdir().unwrap();
+        let root = temp.path().join("项目 空格");
+        std::fs::create_dir_all(root.join("子目录/空目录")).unwrap();
+        std::fs::write(root.join("说明.txt"), "中文载荷\r\n").unwrap();
+        std::fs::write(root.join("子目录/说明.txt"), "同名不同内容").unwrap();
+        std::fs::write(root.join("空文件"), []).unwrap();
+        for (level, password) in [(0,None), (6,Some("中文 密码!-钥匙")), (9,Some(" "))] {
+            let archive = temp.path().join(format!("created-{level}.zpaq"));
+            let options = CompressionOptions { level, password: password.map(str::to_owned), preserve_paths: Some(true), ..Default::default() };
+            create(&[root.to_string_lossy().into_owned()], &archive, &options, flag()).await.unwrap();
+            verify(&archive, password, flag()).await.unwrap();
+            let directory = browse(&archive, password, flag()).await.unwrap();
+            assert_eq!(directory.total_files, 3);
+            assert!(directory.entries.iter().any(|e| e.is_dir && e.path == "项目 空格/子目录/空目录"));
+            let output = tempfile::tempdir().unwrap();
+            extract(&archive, output.path(), password, &[], flag()).await.unwrap();
+            assert_eq!(std::fs::read_to_string(output.path().join("项目 空格/说明.txt")).unwrap(), "中文载荷\r\n");
+            assert_eq!(std::fs::read_to_string(output.path().join("项目 空格/子目录/说明.txt")).unwrap(), "同名不同内容");
+            assert!(create(&[root.to_string_lossy().into_owned()], &archive, &options, flag()).await.unwrap_err().to_string().contains("不能追加或覆盖"));
+            if password.is_some() { assert!(!try_password(&archive, "wrong", flag()).await.unwrap()); }
+        }
+        let flat = temp.path().join("flat.zpaq");
+        create(&[root.to_string_lossy().into_owned()], &flat, &CompressionOptions { preserve_paths: Some(false), ..Default::default() }, flag()).await.unwrap();
+        let directory = browse(&flat, None, flag()).await.unwrap();
+        assert_eq!(directory.total_files, 3);
+        assert!(directory.entries.iter().all(|e| !e.path.contains('/')));
+        assert!(directory.entries.iter().any(|e| e.path == "说明 (1).txt"));
+        let empty = temp.path().join("独立空目录"); std::fs::create_dir(&empty).unwrap();
+        let archive = temp.path().join("empty.zpaq");
+        create(&[empty.to_string_lossy().into_owned()], &archive, &CompressionOptions::default(), flag()).await.unwrap();
+        let directory = browse(&archive, None, flag()).await.unwrap();
+        assert_eq!(directory.total_directories, 1);
+        assert_eq!(directory.total_files, 0);
+    }
+    #[tokio::test]
+    async fn create_cancel_and_source_or_destination_failure_are_not_success() {
+        let temp = tempfile::tempdir().unwrap();
+        let output = temp.path().join("not-created.zpaq");
+        let cancelled = flag(); cancelled.store(true, std::sync::atomic::Ordering::SeqCst);
+        assert!(create(&[], &output, &Default::default(), cancelled).await.is_err());
+        assert!(!output.exists());
+        assert!(create(&[temp.path().join("missing").to_string_lossy().into_owned()], &output, &Default::default(), flag()).await.is_err());
+        assert!(!output.exists());
+        let source = temp.path().join("source"); std::fs::write(&source, b"payload").unwrap();
+        let missing_parent = temp.path().join("missing-parent/output.zpaq");
+        assert!(create(&[source.to_string_lossy().into_owned()], &missing_parent, &Default::default(), flag()).await.is_err());
+        assert_eq!(std::fs::read(source).unwrap(), b"payload");
+        let error = io_failure("LONG_ZPAQ_IO:write:112\n").unwrap().to_string();
+        assert!(error.contains("文件读写失败") && error.contains("不要反复试密码"));
+        assert!(!error.contains("[archive-inspection:damaged]"));
+    }
     #[tokio::test]
     async fn official_streaming_and_journaling_current_view_extract_and_test() {
         for name in ["journal.zpaq", "journal-key.zpaq", "stream.zpaq", "stream-key.zpaq"] {

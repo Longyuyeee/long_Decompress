@@ -163,6 +163,8 @@ fn classify_failure(
     // words such as "encrypted" or "wrong password?" in an engine's message.
     if lower.contains("[archive-inspection:incomplete]") || lower.contains("missing disk") {
         ("missing_volume", "缺少分卷", "卷组不完整；请补齐分卷后重新检查，不必反复尝试密码")
+    } else if lower.contains("[zpaq-io]") {
+        ("io_error", "ZPAQ 文件读写失败", "文件系统操作失败；请按原始错误检查空间、设备连接和访问权限，不应继续尝试密码")
     } else if lower.contains("permission denied") || lower.contains("[archive-inspection:permission]") {
         ("permission_error", "无法读取归档", "请确认文件访问权限或占用情况，处理后重新检查")
     } else if lower.contains("[archive-inspection:engine-unavailable]")
@@ -1618,6 +1620,17 @@ mod tests {
         .unwrap();
         assert_eq!(wrong.status, "ambiguous_data", "7Z decoder failure cannot prove a wrong password: {wrong:?}");
         assert!(!serde_json::to_string(&wrong).unwrap().contains("wrong-7z"));
+    }
+
+    #[test]
+    fn zpaq_io_fault_never_becomes_an_encrypted_data_diagnosis() {
+        for encrypted in [false, true] {
+            for supplied in [false, true] {
+                let (code, _, detail) = classify_failure("[zpaq-io] ZPAQ 文件读写失败：Windows error 30", encrypted, supplied);
+                assert_eq!(code, "io_error");
+                assert!(detail.contains("不应继续尝试密码"));
+            }
+        }
     }
 
     #[test]

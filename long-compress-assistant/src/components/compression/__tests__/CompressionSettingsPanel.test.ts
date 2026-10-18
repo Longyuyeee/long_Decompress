@@ -51,6 +51,12 @@ const mountPanel = (modelValue: CompressionOptions, allowSplitArchive = true) =>
 })
 
 describe('CompressionSettingsPanel split archive settings', () => {
+  it('keeps a native ZPAQ password while clearing unsupported inherited options', async () => {
+    const wrapper = mountPanel(settings({ format: 'zpaq', password: '中文 密码', splitArchive: true, createSolidArchive: true, encryptFilenames: true }))
+    await flushPromises()
+    expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({ format: 'zpaq', password: '中文 密码', splitArchive: false, createSolidArchive: false, encryptFilenames: false })
+    expect(wrapper.get('[data-testid="compression-filename-extension"]').text()).toBe('.zpaq')
+  })
   it.each(['cp932','cp936','cp950'] as const)('keeps %s through the real output encoding select without resetting password or split settings', async encoding => {
     const wrapper=mountPanel(settings({password:'test password',splitArchive:true}));await flushPromises()
     await wrapper.get('[data-testid="zip-password-encoding"]').trigger('click')

@@ -17,3 +17,4 @@ long-compress-assistant/vendor/zpaq/** -text -whitespace
 long-compress-assistant/src-tauri/resources/zpaq-engine/** -text
 long-compress-assistant/src-tauri/resources/zpaq-engine/COPYING -whitespace
 long-compress-assistant/src-tauri/tests/fixtures/zpaq/*.zpaq binary
+long-compress-assistant/tests/fixtures/archives/zpaq-create-151/*.zpaq binary

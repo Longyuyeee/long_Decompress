@@ -1351,6 +1351,9 @@ impl Drop for ArchiveBrowseGuard {
 fn classify_archive_browse_error(error: &str) -> String {
     let lower = error.to_ascii_lowercase();
     if error.contains("ZPAQ") {
+        if error.contains("[zpaq-io]") {
+            return format!("ARCHIVE_BROWSE_FAILED|ZPAQ 文件读写失败，请按原始错误检查磁盘连接和文件访问权限|{error}");
+        }
         if error.contains("[archive-inspection:ambiguous-data]") || error.contains("[archive-inspection:password-required]") {
             return format!("ARCHIVE_BROWSE_PASSWORD|ZPAQ 需要有效密码；密码不匹配或文件头损坏时均可能无法读取，请同时核对源文件|{error}");
         }
@@ -2324,6 +2327,13 @@ mod cancellation_tests {
         assert_eq!(classify_archive_browse_error(detail).split('|').nth(1), Some("7Z 归档头校验失败：文件已损坏；更换密码无法修复归档头"));
         assert!(classify_archive_browse_error(&format!("{detail}: encrypted header"))
             .starts_with("ARCHIVE_BROWSE_DAMAGED|7Z 归档头校验失败"));
+    }
+
+    #[test]
+    fn zpaq_io_browse_failure_is_not_a_password_request() {
+        let error = classify_archive_browse_error("[zpaq-io] ZPAQ 文件读写失败（read）：read fault; encrypted password");
+        assert!(error.starts_with("ARCHIVE_BROWSE_FAILED|ZPAQ 文件读写失败"));
+        assert!(!error.starts_with("ARCHIVE_BROWSE_PASSWORD"));
     }
 
     #[test]

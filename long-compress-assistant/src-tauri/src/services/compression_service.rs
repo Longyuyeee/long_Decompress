@@ -1118,6 +1118,12 @@ impl CompressionService {
         zip_password_encoding: Option<ZipPasswordEncoding>,
         split_requested: bool,
     ) -> Result<()> {
+        if route == CompressionRoute::Zpaq {
+            self.check_cancellation()?;
+            let result = tauri::async_runtime::block_on(crate::services::zpaq_engine::verify(output, password, self.cancellation_flag.clone()));
+            self.check_cancellation()?;
+            return result;
+        }
         if split_requested && route == CompressionRoute::Zip {
             return compression_verification::verify_numeric_zip_with_encoding(
                 output, password, zip_password_encoding, || self.check_cancellation().is_err());
@@ -1255,6 +1261,11 @@ impl CompressionService {
             let mut options = options;
             if generic_split { options.split_size = None; }
             let res = match route {
+                CompressionRoute::Zpaq => {
+                    service.check_cancellation()?;
+                    let result = tauri::async_runtime::block_on(crate::services::zpaq_engine::create(&source_files, &working_output, &options, service.cancellation_flag.clone()));
+                    service.check_cancellation().and(result)
+                },
                 CompressionRoute::TarAes => service.do_compress_tar_aes(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::TarGzipAes => service.do_compress_tar_gz_aes(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::TarBzip2Aes => service.do_compress_tar_bz2_aes(&window, &task_id, &source_files, &working_output_string, options),
@@ -3881,6 +3892,33 @@ mod tests {
         service.reset_cancellation();
         assert_eq!(service.preflight_extraction(&source, &ArchiveFormat::Rar, None, temp.path(), &DecompressOptions::default()).await.unwrap(), Some((1, 29)));
         assert!(!temp.path().join("helloworld.txt").exists(), "preflight must not extract any content");
+    }
+
+    #[test]
+    #[ignore = "requires scripts/build-zpaq-engine.ps1 -TestIO"]
+    fn zpaq_actual_write_fault_cleans_staging_and_preserves_existing_destination() {
+        let tool = Path::new(env!("CARGO_MANIFEST_DIR")).join("../test-results/zpaq-io-test/long-zpaq.exe");
+        assert!(tool.is_file(), "build the isolated fault executable first");
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("source.txt");
+        std::fs::write(&source, b"original source payload").unwrap();
+        for fault in ["write", "shortwrite", "flush"] {
+            let destination = temp.path().join(format!("{fault}.zpaq"));
+            std::fs::write(&destination, b"pre-existing destination").unwrap();
+            let staged = CompressionService::temporary_compression_output(&destination).unwrap();
+            let output = crate::utils::process::command(&tool).args(["a"])
+                .arg(&staged).arg(&source).args(["-method", "1", "-threads", "2"])
+                .env("LONG_ZPAQ_TEST_IO", fault).output().unwrap();
+            assert!(!output.status.success());
+            let detail = String::from_utf8_lossy(&output.stderr);
+            assert!(detail.contains("LONG_ZPAQ_IO:"), "{detail}");
+            let failure = Err(anyhow::anyhow!("ZPAQ 文件读写失败：{detail}"));
+            let result = CompressionService::finalize_compression_output(failure, &staged, &destination, false, false);
+            assert!(result.unwrap_err().to_string().contains("文件读写失败"));
+            assert!(!staged.exists());
+            assert_eq!(std::fs::read(&destination).unwrap(), b"pre-existing destination");
+            assert_eq!(std::fs::read(&source).unwrap(), b"original source payload");
+        }
     }
 
     // The single-thread async test can still run its timer while the real RAR

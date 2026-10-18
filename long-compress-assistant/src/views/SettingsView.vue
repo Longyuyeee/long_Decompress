@@ -23,9 +23,8 @@ const passwordCompressionFormats = computed(() => FORMAT_CAPABILITIES
   .map(format => format.displayName)
   .join(' · '))
 const passwordExtractionFormats = computed(() => FORMAT_CAPABILITIES
-  .filter(format => format.supportsPasswordExtract)
+  .filter(format => format.supportsPasswordExtract && (format.format !== 'zpaq' || archiveEngine.value?.formats.some(item => item.name === 'ZPAQ')))
   .map(format => format.displayName)
-  .concat(archiveEngine.value?.formats.some(format => format.name === 'ZPAQ') ? ['ZPAQ（只读）'] : [])
   .join(' · '))
 
 const refreshEngineDiagnostics = async () => {
@@ -609,7 +608,7 @@ const removeWordlist = (index: number) => {
                   <div>
                     <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.archives') }}</div>
                     <div class="text-xs text-content leading-relaxed font-mono">
-                      ZIP · ZIPX · 7Z · RAR · TAR · TAR.GZ · TGZ · TAR.BZ2 · TBZ · TAR.XZ · TXZ · TAR.ZST · TZST · GZ · GZIP · BZ2 · BZIP2 · XZ · ZST · ZSTD · LZMA · LZ4 · Brotli · TAR.LZ4 · TAR.BR · LZIP · TAR.LZIP · TLZ · OVA
+                      ZIP · ZIPX · 7Z · RAR · ZPAQ · TAR · TAR.GZ · TGZ · TAR.BZ2 · TBZ · TAR.XZ · TXZ · TAR.ZST · TZST · GZ · GZIP · BZ2 · BZIP2 · XZ · ZST · ZSTD · LZMA · LZ4 · Brotli · TAR.LZ4 · TAR.BR · LZIP · TAR.LZIP · TLZ · OVA
                     </div>
                   </div>
                   <div>
@@ -643,6 +642,10 @@ const removeWordlist = (index: number) => {
               <div class="space-y-3">
                 <h3 class="text-xs font-black text-primary uppercase tracking-[0.2em] ml-1">{{ appStore.t('settings.formats.compress_list') }}</h3>
                 <div class="p-5 rounded-xl bg-input/30 border border-subtle space-y-3">
+                  <div v-if="archiveEngine?.formats.some(format => format.name === 'ZPAQ' && format.canCreate)" data-testid="settings-zpaq-creation">
+                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">ZPAQ 随附引擎</div>
+                    <div class="text-xs text-content leading-relaxed">日志式创建与原生密码；不提供固定大小分卷或增量备份。</div>
+                  </div>
                   <div>
                     <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.native_rust') }}</div>
                     <div class="text-xs text-content leading-relaxed font-mono">

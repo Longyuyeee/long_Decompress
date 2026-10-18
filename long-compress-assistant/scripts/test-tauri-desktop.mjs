@@ -55,6 +55,7 @@ import { runStandardZipx1418Gate } from './standard-zipx-1418-gate.mjs'
 import { runRar41419Gate } from './rar4-1419-gate.mjs'
 import { runZipPartial1420Gate } from './zip-partial-1420-gate.mjs'
 import { runZpaq150Gate } from './zpaq-150-gate.mjs'
+import { runZpaq151Gate } from './zpaq-151-gate.mjs'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -4908,6 +4909,9 @@ try {
     await runPartialZip1413Gate({ driver, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, forwardContextAction })
   } else if (process.argv.includes('--lzip-only')) {
     await runLzip1412Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, root })
+    completedSuccessfully = true
+  } else if (process.argv.includes('--zpaq-151-only')) {
+    await runZpaq151Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, application, root })
     completedSuccessfully = true
   } else if (process.argv.includes('--zpaq-150-only')) {
     await runZpaq150Gate({ driver, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, waitForElement, fixtureDirectory, artifactDirectory, application, root, bundledSevenZip })

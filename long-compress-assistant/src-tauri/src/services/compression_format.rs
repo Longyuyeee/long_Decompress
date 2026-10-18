@@ -21,6 +21,7 @@ pub struct CompressionFormatCapability {
 }
 
 pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
+    CompressionFormatCapability { format: "zpaq", extensions: &["zpaq"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability {
         format: "tar.aes",
         extensions: &["tar.aes"],
@@ -312,6 +313,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum CompressionRoute {
+    Zpaq,
     TarAes,
     TarGzipAes,
     TarBzip2Aes,
@@ -396,6 +398,7 @@ pub fn has_native_password_container(format: &str) -> bool {
     matches!(
         normalize_compression_format(format).as_str(),
         "zip"
+            | "zpaq"
             | "zipx"
             | "7z"
             | "rar"
@@ -476,6 +479,7 @@ pub fn validate_compression_request(
 
 pub(crate) fn compression_route(format: &str) -> Option<CompressionRoute> {
     match normalize_compression_format(format).as_str() {
+        "zpaq" => Some(CompressionRoute::Zpaq),
         "tar.aes" => Some(CompressionRoute::TarAes),
         "tar.gz.aes" => Some(CompressionRoute::TarGzipAes),
         "tar.bz2.aes" => Some(CompressionRoute::TarBzip2Aes),

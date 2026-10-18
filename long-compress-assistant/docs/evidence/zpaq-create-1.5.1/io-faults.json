@@ -1,0 +1,113 @@
+{
+  "results": [
+    {
+      "operation": "create",
+      "fault": "write",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:write:112"
+    },
+    {
+      "operation": "create",
+      "fault": "shortwrite",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:write:29"
+    },
+    {
+      "operation": "create",
+      "fault": "read",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:read:30"
+    },
+    {
+      "operation": "create",
+      "fault": "seek",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:seek:25"
+    },
+    {
+      "operation": "create",
+      "fault": "close",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:close:6"
+    },
+    {
+      "operation": "create",
+      "fault": "flush",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:flush:29"
+    },
+    {
+      "operation": "extract-journal",
+      "fault": "write",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:write:112"
+    },
+    {
+      "operation": "extract-journal",
+      "fault": "shortwrite",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:write:29"
+    },
+    {
+      "operation": "extract-journal",
+      "fault": "read",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:read:30"
+    },
+    {
+      "operation": "extract-journal",
+      "fault": "seek",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:seek:25"
+    },
+    {
+      "operation": "extract-journal",
+      "fault": "close",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:close:6"
+    },
+    {
+      "operation": "extract-journal",
+      "fault": "flush",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:flush:29"
+    },
+    {
+      "operation": "extract-stream",
+      "fault": "write",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:write:112"
+    },
+    {
+      "operation": "extract-stream",
+      "fault": "shortwrite",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:write:29"
+    },
+    {
+      "operation": "extract-stream",
+      "fault": "read",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:read:30"
+    },
+    {
+      "operation": "extract-stream",
+      "fault": "seek",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:seek:25"
+    },
+    {
+      "operation": "extract-stream",
+      "fault": "close",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:close:6"
+    },
+    {
+      "operation": "extract-stream",
+      "fault": "flush",
+      "exitCode": 2,
+      "detail": "LONG_ZPAQ_IO:flush:29"
+    }
+  ],
+  "productionFaultHookAbsent": true
+}
