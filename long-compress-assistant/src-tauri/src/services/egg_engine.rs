@@ -54,6 +54,9 @@ pub async fn extract(path:&Path,output:&Path,pwd:Option<&str>,options:&Decompres
     use super::*;use sha2::Digest;
     fn root()->PathBuf{PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/egg-153")}
     fn flag()->Arc<AtomicBool>{Arc::new(AtomicBool::new(false))}
+    #[test]fn egg_password_extension_keeps_native_damage_route(){
+        assert_eq!(super::super::archive_format::ArchiveFormat::from_password_extension("egg"),super::super::archive_format::ArchiveFormat::Egg);
+    }
     fn sha(p:&Path)->String{format!("{:x}",sha2::Sha256::digest(std::fs::read(p).unwrap()))}
     #[tokio::test]async fn egg_genuine_matrix_matches_independent_payloads(){
         let m:serde_json::Value=serde_json::from_slice(&std::fs::read(root().join("manifest.json")).unwrap()).unwrap();

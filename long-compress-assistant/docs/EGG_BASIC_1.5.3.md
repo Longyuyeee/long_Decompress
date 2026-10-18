@@ -39,6 +39,8 @@
 
 ## 明确边界和复跑
 
+候选复核补充：首个候选 `1be7878` 的 CI `39092376645` 已取消，不作为最终候选。发现损坏 EGG 魔数在独立密码验证入口会经扩展名退回通用引擎；修正 `from_password_extension` 保持 EGG 原生路由，新增真实密码验证/诊断均保留 damaged 最终原因的回归。普通解压路径此前已正确；本次统一入口，而不是减弱检测。
+
 不创建 EGG、不提供 AZO/固实/AES/LEA、全局/文件名加密、损坏修复或缺卷部分救援；仅支持版本 256，最多 1000 原生卷、250000 条目、16 MiB 单个元数据字段、512 GiB 声明展开总量、256 MiB 单个 LZMA 压缩输入。纯加密空文件没有完整密码载荷可确认，明确拒绝，不用短头伪证密码。CRC 不能认证来源或保证检测所有修改。
 
 复跑先执行 `scripts/build-egg-engine.ps1` 和固定原包库存脚本，再运行 `cargo test --lib egg_` 与上述定向回归、`cargo test --manifest-path tools/egg-engine/Cargo.toml`、前端十文件检查。桌面用 `VITE_DESKTOP_E2E=1` 构建前端，直接调用 `node node_modules/@tauri-apps/cli/tauri.js build --config src-tauri/tauri.e2e.conf.json --features desktop-e2e --bundles none`；指定实际 `Long解压.exe` 的 `TAURI_APP_BINARY` 后执行 `node scripts/test-tauri-desktop.mjs --egg-153-only`。`egg-engine.lock.json` 固定源码、引擎与全部随附许可，安装包内复验用 `scripts/inspect-egg-153-installer.mjs`。

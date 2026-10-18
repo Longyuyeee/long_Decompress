@@ -189,6 +189,7 @@ impl ArchiveFormat {
             Self::SevenZip => Self::SevenZip,
             Self::Rar => Self::Rar,
             Self::Zpaq => Self::Zpaq,
+            Self::Egg => Self::Egg,
             Self::AesEncrypted => Self::AesEncrypted,
             _ => Self::Universal,
         }
