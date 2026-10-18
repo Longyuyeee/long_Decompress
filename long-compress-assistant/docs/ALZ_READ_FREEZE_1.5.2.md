@@ -15,3 +15,9 @@
 功能已完成，八处身份统一至 v1.5.2。最终同版本真实桌面 UTC `2026-10-18T01:50:41.468Z` 完成，E2E EXE ProductVersion 1.5.2、33754112 字节、SHA256 `2b658e6a3cd5e3c465bc422d9ec662faa0664de46c65754be50a14e86728372b`；最终 ALZ helper SHA256 `484149b815a05358212be29203d7fe625e3f2c22dcdfe32edcefaeedff806c4d`。22 张图与[桌面收据](evidence/alz-read-1.5.2/results.json)入库。这是带测试桥的真实桌面程序，不是正式安装包。旧引擎和旧 E2E 哈希不覆盖最终别名修正。
 
 普通生产 `tauri build --bundles none` 成功，构建前按正常流程重建 v1.5.2 Shell DLL；八处身份与全部随附资源库存校验通过。必需候选安装包、受保护合入、固定标签及正式四资产仍须完成后回填；本节不是提前宣称正式发布。个人安装、设置和历史不改动，测试使用隔离工作区，不执行安装升级。
+
+## 最终候选与合入
+
+最终候选 `b87da7cdc5fde852f823bb85444d224b17521379`，必需 Windows package `39088095487` 成功。安装器 ProductVersion 1.5.2、20780058 字节、SHA256 `a48ef0eeaaf3bb16548ea59545c7051205e8856cc226611cd13eff7eb8c64c45`。从候选安装包提取引擎实际读取十二组原包、从中卷所选提取，并核对 124 份随附许可原字节；helper SHA 与最终库存一致。未执行安装，见[候选收据](evidence/alz-read-1.5.2/candidate.json)。
+
+[PR #185](https://github.com/Longyuyeee/long_Decompress/pull/185) 已于 UTC `2026-10-18T02:02:30Z` 受保护合入，合入/标签 `aee07e9f2e65495a9eceb8c1ce55ae310d9b4e4c` 与候选同树 `420ca8c8e281ab27c7b67c1db47bc21f96b8a46d`。正式构建 `39088654460` 已启动；仍须在其整体成功后更新中文 Release/更新清单说明并回下载四资产。本段尚不是正式资产验证完成，不移动标签。

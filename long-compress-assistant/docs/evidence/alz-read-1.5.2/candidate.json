@@ -1,0 +1,71 @@
+{
+  "checkedAt": "2026-10-18T02:01:26.682Z",
+  "functionalFreeze": "ffa0f3f144b2bf2eb6c20f401a8b7a809b610234",
+  "candidateCommit": "b87da7cdc5fde852f823bb85444d224b17521379",
+  "candidateRun": 39088095487,
+  "candidateTree": "420ca8c8e281ab27c7b67c1db47bc21f96b8a46d",
+  "installer": "Long解压_1.5.2_x64-setup.exe",
+  "installerBytes": 20780058,
+  "installerSha256": "a48ef0eeaaf3bb16548ea59545c7051205e8856cc226611cd13eff7eb8c64c45",
+  "installerProductVersion": "1.5.2",
+  "embeddedAlzEngine": {
+    "engineSha256": "484149b815a05358212be29203d7fe625e3f2c22dcdfe32edcefaeedff806c4d",
+    "engineBytes": 729600,
+    "noticesVerified": 124,
+    "cases": [
+      {
+        "name": "store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "normal",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "low",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "dir_tree",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_deflate",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "zip20",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "split",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "split_store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-cn-key-volumes.alz",
+        "chinesePasswordAndNames": true,
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-cn-key.alz",
+        "chinesePasswordAndNames": true,
+        "bundledEngineContentVerification": true
+      }
+    ],
+    "nativeMiddleMemberSelectedExtract": true,
+    "installationExecuted": false,
+    "engineExecutedFromExtractedInstaller": true
+  }
+}
