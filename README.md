@@ -233,7 +233,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.2 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.2)。本版补齐 ALZ 普通/传统密码包与原生分卷的浏览、解压、检查和转换，缺卷与已确认的损坏优先说明原因；可明确选择文件名/密码编码，历史和重试保留读取参数。73 项不同 Rust、235 项前端和真实桌面流程通过，22 张页面已查看，载荷及转换 ZIP 经独立工具核对。PR #185 已受保护合入，正式四资产、中文说明与包内引擎已回下载核对，见[实施审计](long-compress-assistant/docs/ALZ_READ_1.5.2.md)及[封板记录](long-compress-assistant/docs/ALZ_READ_FREEZE_1.5.2.md)。ALZ 只读，不提供创建、损坏修复或缺卷部分救援；后续推进 EGG 与外置卷 SFX。软件图标和既有截图保留。
+**v1.5.3 功能已封板，正在构建发布候选，尚未正式发布。** 新增 EGG 基础只读、传统密码、UTF-8 名称与原生分卷，贯通浏览、所选/整包解压、检查、转换及失败接续。76 项定向 Rust、140 项前端、26 个真实桌面场景及 26 张实看页面通过，见[审计](long-compress-assistant/docs/EGG_BASIC_1.5.3.md)、[封板记录](long-compress-assistant/docs/EGG_BASIC_FREEZE_1.5.3.md)与[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.3.md)。不提供 EGG 创建、AZO/固实/AES/LEA 或修复。现有正式版仍为 [v1.5.2](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.2)，软件图标和既有截图保留。
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
