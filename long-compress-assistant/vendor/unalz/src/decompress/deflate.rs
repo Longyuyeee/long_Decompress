@@ -68,6 +68,10 @@ pub fn extract_deflate<R: Read, W: Write>(
         }
 
         if status == Status::StreamEnd {
+            let trailing = remaining + in_avail as u64;
+            if trailing != 0 {
+                return Err(AlzError::TrailingCompressedData { remaining: trailing });
+            }
             break;
         }
 
@@ -78,4 +82,34 @@ pub fn extract_deflate<R: Read, W: Write>(
     }
 
     Ok(hasher.finalize())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::{self, Cursor};
+    fn packed(bytes:&[u8])->Vec<u8>{let mut e=flate2::write::DeflateEncoder::new(Vec::new(),flate2::Compression::best());e.write_all(bytes).unwrap();e.finish().unwrap()}
+    #[test]
+    fn exact_streams_include_empty_output_and_multiple_output_chunks(){
+        for bytes in [Vec::new(),b"Original ALZ stream. ".repeat(10000)] {let b=packed(&bytes);let mut out=Vec::new();assert_eq!(extract_deflate(&mut Cursor::new(&b),&mut out,b.len() as u64,bytes.len() as u64,None).unwrap(),crc32fast::hash(&bytes));assert_eq!(out,bytes);}
+    }
+    #[test]
+    fn rejects_buffered_and_not_yet_read_trailing_bytes(){
+        let bytes=b"Deflate end marker is not the declared input end. ".repeat(100);let b=packed(&bytes);
+        for tail in [1,5,65536] {let mut c=b.clone();c.resize(c.len()+tail,0xa5);let mut out=Vec::new();let e=extract_deflate(&mut Cursor::new(&c),&mut out,c.len() as u64,bytes.len() as u64,None).unwrap_err();assert!(matches!(e,AlzError::TrailingCompressedData{remaining} if remaining==tail as u64));assert_eq!(out,bytes);}
+    }
+    #[test]
+    fn rejects_declared_truncation_even_if_crc_might_match(){let bytes=b"Incomplete terminator. ".repeat(100);let mut b=packed(&bytes);b.pop();assert!(extract_deflate(&mut Cursor::new(&b),&mut Vec::new(),b.len() as u64,bytes.len() as u64,None).is_err());}
+    #[test]
+    fn does_not_read_past_declared_entry_into_the_next_header(){let bytes=b"Exact boundary.".repeat(100);let b=packed(&bytes);let mut input=Cursor::new([b.clone(),b"BLZ\x01next header".to_vec()].concat());extract_deflate(&mut input,&mut Vec::new(),b.len() as u64,bytes.len() as u64,None).unwrap();assert_eq!(input.position(),b.len() as u64);}
+    #[test]
+    fn output_size_limit_is_not_relaxed(){let bytes=b"Size limit.".repeat(500);let b=packed(&bytes);assert!(matches!(extract_deflate(&mut Cursor::new(&b),&mut Vec::new(),b.len() as u64,1,None),Err(AlzError::UncompressedSizeExceeded{..})));}
+    struct FailedRead;
+    impl Read for FailedRead{fn read(&mut self,_:&mut[u8])->io::Result<usize>{Err(io::Error::from(io::ErrorKind::PermissionDenied))}}
+    struct FailedWrite;
+    impl Write for FailedWrite{fn write(&mut self,_:&[u8])->io::Result<usize>{Err(io::Error::from(io::ErrorKind::BrokenPipe))}fn flush(&mut self)->io::Result<()>{Ok(())}}
+    #[test]
+    fn preserves_read_io_kind(){assert!(matches!(extract_deflate(&mut FailedRead,&mut Vec::new(),10,10,None),Err(AlzError::Io(e)) if e.kind()==io::ErrorKind::PermissionDenied));}
+    #[test]
+    fn preserves_output_broken_pipe(){let b=packed(b"Output error.");let e=extract_deflate(&mut Cursor::new(&b),&mut FailedWrite,b.len() as u64,100,None).unwrap_err();assert!(e.is_broken_pipe());}
 }

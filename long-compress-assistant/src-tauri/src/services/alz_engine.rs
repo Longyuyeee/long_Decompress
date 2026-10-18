@@ -119,6 +119,12 @@ mod tests {
             if let Some(password)=password {let error=try_password(&source,password,&options,flag()).await.unwrap_err().to_string();assert!(error.contains("[archive-inspection:damaged]"),"{error}");assert!(!try_password(&source,"wrong",&options,flag()).await.unwrap());}
         }
     }
+    #[tokio::test]
+    async fn alz_trailing_ciphertext_without_matching_crc_stays_uncertain() {
+        let m:serde_json::Value=serde_json::from_slice(&std::fs::read(stream_root().join("manifest.json")).unwrap()).unwrap();let c=m["faults"].as_array().unwrap().iter().find(|c|c["name"]=="m2-key-single-trailing").unwrap();
+        let mut bytes=std::fs::read(stream_root().join(c["archive"].as_str().unwrap())).unwrap();bytes[23]^=1;let dir=tempfile::tempdir().unwrap();let source=dir.path().join("crc-uncertain.alz");std::fs::write(&source,bytes).unwrap();let opts=DecompressOptions{zip_password_encoding:Some(ZipPasswordEncoding::Cp936),..Default::default()};
+        let error=verify(&source,c["password"].as_str(),&opts,flag()).await.unwrap_err().to_string();assert!(error.contains("[archive-inspection:ambiguous-data]"),"{error}");assert!(!try_password(&source,c["password"].as_str().unwrap(),&opts,flag()).await.unwrap());
+    }
     fn copied_split(dir: &Path) -> Vec<PathBuf> {
         ["split_store.alz", "split_store.a00", "split_store.a01"].into_iter().map(|n| {
             let p = dir.join(n); std::fs::copy(root().join(n), &p).unwrap(); p
