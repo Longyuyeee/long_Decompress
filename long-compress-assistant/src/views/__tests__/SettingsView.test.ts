@@ -10,14 +10,15 @@ vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 describe('SettingsView archive engine diagnostics', () => {
   let autoStartEnabled = false
 
-  it('advertises only the bundled EGG basic read scope, never creation', async () => {
+  it('advertises the bundled EGG read scope, never creation', async () => {
     const fallback=mocks.invoke.getMockImplementation()!
     mocks.invoke.mockImplementation((command: string, payload?: {enable?:boolean}) => command === 'get_archive_engine_capabilities'
       ? Promise.resolve({available:true,fullEngine:true,version:'26.04',message:'Ready',formats:[{name:'EGG',extensions:['egg'],canCreate:false}]})
       : fallback(command,payload))
     const wrapper=mount(SettingsView,{global:{plugins:[createPinia()]}});await flushPromises()
-    expect(wrapper.get('[data-testid="settings-egg-read"]').text()).toContain('基础只读引擎')
-    expect(wrapper.get('[data-testid="settings-password-extraction-formats"]').text()).toContain('EGG（基础只读）')
+    expect(wrapper.get('[data-testid="settings-egg-read"]').text()).toContain('EGG 随附只读引擎')
+    expect(wrapper.get('[data-testid="settings-password-extraction-formats"]').text()).toContain('EGG（只读）')
+    expect(wrapper.get('[data-testid="settings-egg-read"]').text()).toContain('密码与固实读取')
     expect(wrapper.get('[data-testid="settings-egg-read"]').text()).not.toContain('创建')
     wrapper.unmount()
   })

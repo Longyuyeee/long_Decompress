@@ -21,5 +21,5 @@ pub fn extract_azo<R: Read, W: Write>(
     // max_output lets azo reject an over-large declared block up front; the
     // LimitWriter only catches output once it has already been produced.
     libazo::extract_azo(reader, writer, compressed_size, Some(max_output), callback)
-        .map_err(|e| EggError::AzoFailed(e.to_string()))
+        .map_err(|e| match e {libazo::AzoError::Io(e)=>EggError::Io(e),other=>EggError::AzoFailed(other.to_string())})
 }

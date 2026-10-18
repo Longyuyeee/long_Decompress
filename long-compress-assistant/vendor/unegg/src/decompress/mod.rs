@@ -2,6 +2,7 @@ pub mod bzip2;
 pub mod deflate;
 pub mod lzma;
 pub mod store;
+pub mod azo;
 
 use std::io::{self, Write};
 

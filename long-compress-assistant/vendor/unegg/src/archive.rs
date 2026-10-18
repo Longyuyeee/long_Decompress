@@ -535,7 +535,9 @@ fn skip<R: Read + Seek>(reader: &mut R, n: u64) -> EggResult<()> {
 /// Read exactly `n` bytes, but grow the buffer from the data actually present
 /// rather than pre-allocating `n`. A crafted header declaring a huge size thus
 /// fails with a short read instead of triggering a multi-gigabyte allocation.
-fn read_exact_capped<R: Read>(reader: &mut R, n: usize) -> EggResult<Vec<u8>> {
+fn read_exact_capped<R: Read+Seek>(reader: &mut R, n: usize) -> EggResult<Vec<u8>> {
+    let start=reader.stream_position()?;let end=reader.seek(SeekFrom::End(0))?;reader.seek(SeekFrom::Start(start))?;
+    if n as u64>end.saturating_sub(start){return Err(EggError::CorruptedFile)}
     if n > 16 * 1024 * 1024 { return Err(EggError::UnsupportedFeature("metadata larger than 16 MiB".into())); }
     let mut buf = Vec::new();
     let read = (&mut *reader).take(n as u64).read_to_end(&mut buf)?;

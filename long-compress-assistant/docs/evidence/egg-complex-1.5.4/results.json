@@ -1,0 +1,639 @@
+{
+  "completedAt": "2026-10-18T04:13:20.890Z",
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target-desktop-gate\\release\\Long解压.exe",
+  "binarySha256": "a25c1daa20fdcc5227216982419886339fb690e4a258b8e37fe20ad4df8f9dd6",
+  "runtimeHelper": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target-desktop-gate\\release\\resources\\egg-engine\\long-egg.exe",
+  "helperSha256": "774133b57408c5a52e632f45f7d37f500ffcbc4e96c1a63d334e6145c0e47ea0",
+  "cases": [
+    {
+      "original": "azo",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\azo.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "azo_pe",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\azo_pe.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "solid",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\solid.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "aes128",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\aes128.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "aes256",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\aes256.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "lea128",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\lea128.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "lea256",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\lea256.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "enc_aes128",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\enc_aes128.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "enc_aes256",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\enc_aes256.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "enc_aes256_bzip2",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\enc_aes256_bzip2.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "enc_lea_bzip2",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\enc_lea_bzip2.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "optimal5",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\optimal5.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "aes128-cn",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-154\\original-alzip\\aes128-cn.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "aes256-cn",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-154\\original-alzip\\aes256-cn.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "aes128-volumes",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-154\\original-alzip\\aes128-volumes.vol1.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "aes256-volumes",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-154\\original-alzip\\aes256-volumes.vol1.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "solid-deflate",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-154\\original-alzip\\solid-deflate.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "solid-high",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-154\\original-alzip\\solid-high.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "store",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\store.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "low",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\low.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "normal",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\normal.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "store5",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\store5.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "deflate5",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\deflate5.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "lzma5",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\lzma5.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "bzip2_big",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\bzip2_big.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "mixed_store_deflate5",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\mixed_store_deflate5.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "zip20",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\zip20.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "enc_zip20",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\enc_zip20.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "enc_zip20_bzip2",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\enc_zip20_bzip2.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "split",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\split.vol1.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "split_store",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\upstream\\split_store.vol1.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "native-plain",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\original-alzip\\native-plain.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "native-key",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\original-alzip\\native-key.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "native-key-volumes",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\original-alzip\\native-key-volumes.vol1.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "original": "native-cn-key",
+      "source": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\egg-153\\original-alzip\\native-cn-key.egg",
+      "browse": true,
+      "integrity": true,
+      "diagnosis": true,
+      "independentPayloadHashes": true
+    },
+    {
+      "allFourNativeAesLeaWrongKeysRejected": true,
+      "noPublishedOutput": true
+    },
+    {
+      "unknownMethodBeforePassword": true,
+      "actualFinalCause": true
+    },
+    {
+      "control": {
+        "createdAt": "2026-10-18T03:56:32.614Z",
+        "generatorSha256": "13c664d8b809348104999efb734587e2847aab04e5511af2e5345e13d2528433",
+        "archiveSha256": "5ae2b048ac67bfbed2e69e6f5fb40b0fa2932cf04ba5fe1426b35a2d64df948f",
+        "bytes": 536870912,
+        "expected": [
+          {
+            "path": "first.bin",
+            "bytes": 268435456,
+            "sha256": "1a04258f4db4d37deb6804f922cdb9740756353babd645b4c23ec77b7d058279"
+          },
+          {
+            "path": "last.bin",
+            "bytes": 268435456,
+            "sha256": "1a04258f4db4d37deb6804f922cdb9740756353babd645b4c23ec77b7d058279"
+          }
+        ]
+      },
+      "pausedProcesses": {
+        "Id": 19800,
+        "CPU": 0.234375,
+        "WorkingSet64": 3883008
+      },
+      "actualPauseNoCpuProgress": true,
+      "resume": true,
+      "cancelWhilePaused": true,
+      "sourceRetained": true,
+      "noPublishedOrStagedOutput": true
+    },
+    {
+      "actualMiddleDoubleClick": true,
+      "explicitChineseAesCodepage": true,
+      "actualSelectedExtract": true
+    },
+    {
+      "actualSolidSelectedExtract": true,
+      "unselectedFilesNotPublished": true
+    },
+    {
+      "actualBatchEggCodepageApplied": true,
+      "notOnlyDialogRendered": true
+    },
+    {
+      "actualFailedPasswordCorrection": true,
+      "actualHistoryReexecution": true,
+      "codepagePreserved": true,
+      "passwordNotSaved": true,
+      "oldRecordsRetained": true
+    },
+    {
+      "actualAesMissingMiddleFinalCause": true,
+      "originalMemberSupplemented": true,
+      "actualFreshRetry": true,
+      "oldFailureRetained": true
+    },
+    {
+      "actualSolidConversion": true,
+      "independentZipReadback": true
+    },
+    {
+      "actualLeaDiagnosticControls": true,
+      "noFakeRepair": true
+    }
+  ],
+  "screenshots": [
+    "egg154-unknown-final-cause-1100x700.png",
+    "egg154-unknown-final-cause-760x520.png",
+    "egg154-aes-middle-browser-1100x700.png",
+    "egg154-aes-middle-browser-760x520.png",
+    "egg154-read-help-1100x700.png",
+    "egg154-read-help-760x520.png",
+    "egg154-solid-browser-1100x700.png",
+    "egg154-solid-browser-760x520.png",
+    "egg154-batch-codepage-1100x700.png",
+    "egg154-batch-codepage-760x520.png",
+    "egg154-aes-password-correction-1100x700.png",
+    "egg154-aes-password-correction-760x520.png",
+    "egg154-history-codepage-1100x700.png",
+    "egg154-history-codepage-760x520.png",
+    "egg154-missing-volume-retry-1100x700.png",
+    "egg154-missing-volume-retry-760x520.png",
+    "egg154-solid-conversion-1100x700.png",
+    "egg154-solid-conversion-760x520.png",
+    "egg154-lea-diagnosis-1100x700.png",
+    "egg154-lea-diagnosis-760x520.png",
+    "egg154-settings-readonly-1100x700.png",
+    "egg154-settings-readonly-760x520.png",
+    "egg154-settings-help-1100x700.png",
+    "egg154-settings-help-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "egg154-unknown-final-cause",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "egg154-unknown-final-cause",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "egg154-aes-middle-browser",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 216,
+          "overflow": 0,
+          "right": 1100
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "egg154-aes-middle-browser",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 76,
+          "overflow": 0,
+          "right": 760
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "egg154-read-help",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 216,
+          "overflow": 0,
+          "right": 1100
+        },
+        {
+          "left": 349.3500061035156,
+          "overflow": 0,
+          "right": 653.3500061035156
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "egg154-read-help",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 76,
+          "overflow": 0,
+          "right": 760
+        },
+        {
+          "left": 209.35000610351562,
+          "overflow": 0,
+          "right": 513.3500061035156
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "egg154-solid-browser",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 216,
+          "overflow": 0,
+          "right": 1100
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "egg154-solid-browser",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 76,
+          "overflow": 0,
+          "right": 760
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "egg154-batch-codepage",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 0,
+          "overflow": 0,
+          "right": 1100
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "egg154-batch-codepage",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 0,
+          "overflow": 0,
+          "right": 760
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "egg154-aes-password-correction",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "egg154-aes-password-correction",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "egg154-history-codepage",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "egg154-history-codepage",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "egg154-missing-volume-retry",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "egg154-missing-volume-retry",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "egg154-solid-conversion",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 0,
+          "overflow": 0,
+          "right": 1100
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "egg154-solid-conversion",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 0,
+          "overflow": 0,
+          "right": 760
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "egg154-lea-diagnosis",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "egg154-lea-diagnosis",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "egg154-settings-readonly",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "egg154-settings-readonly",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "egg154-settings-help",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 378.3999938964844,
+          "overflow": 0,
+          "right": 682.3999938964844
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "egg154-settings-help",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "left": 238.40000915527344,
+          "overflow": 0,
+          "right": 542.4000091552734
+        }
+      ],
+      "width": 760
+    }
+  ]
+}

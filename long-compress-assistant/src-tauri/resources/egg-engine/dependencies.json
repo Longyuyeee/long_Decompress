@@ -10,8 +10,26 @@
     ]
   },
   {
+    "name": "aes",
+    "version": "0.9.3",
+    "license": "MIT OR Apache-2.0",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ]
+  },
+  {
     "name": "anyhow",
     "version": "1.0.104",
+    "license": "MIT OR Apache-2.0",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ]
+  },
+  {
+    "name": "block-buffer",
+    "version": "0.12.1",
     "license": "MIT OR Apache-2.0",
     "notices": [
       "LICENSE-APACHE",
@@ -47,9 +65,54 @@
     ]
   },
   {
+    "name": "cipher",
+    "version": "0.5.2",
+    "license": "MIT OR Apache-2.0",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ]
+  },
+  {
+    "name": "cmov",
+    "version": "0.5.4",
+    "license": "Apache-2.0 OR MIT",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ]
+  },
+  {
+    "name": "const-oid",
+    "version": "0.10.2",
+    "license": "Apache-2.0 OR MIT",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ]
+  },
+  {
     "name": "core_detect",
     "version": "1.0.0",
     "license": "MIT/Apache-2.0",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ]
+  },
+  {
+    "name": "cpubits",
+    "version": "0.1.1",
+    "license": "MIT OR Apache-2.0",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ]
+  },
+  {
+    "name": "cpufeatures",
+    "version": "0.3.1",
+    "license": "MIT OR Apache-2.0",
     "notices": [
       "LICENSE-APACHE",
       "LICENSE-MIT"
@@ -83,6 +146,33 @@
     ]
   },
   {
+    "name": "crypto-common",
+    "version": "0.2.2",
+    "license": "MIT OR Apache-2.0",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ]
+  },
+  {
+    "name": "ctutils",
+    "version": "0.4.3",
+    "license": "Apache-2.0 OR MIT",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ]
+  },
+  {
+    "name": "digest",
+    "version": "0.11.3",
+    "license": "MIT OR Apache-2.0",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ]
+  },
+  {
     "name": "encoding_rs",
     "version": "0.8.42",
     "license": "(Apache-2.0 OR MIT) AND BSD-3-Clause",
@@ -103,12 +193,47 @@
     ]
   },
   {
+    "name": "hmac",
+    "version": "0.13.0",
+    "license": "MIT OR Apache-2.0",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ]
+  },
+  {
+    "name": "hybrid-array",
+    "version": "0.4.15",
+    "license": "MIT OR Apache-2.0",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ]
+  },
+  {
+    "name": "inout",
+    "version": "0.2.4",
+    "license": "MIT OR Apache-2.0",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ]
+  },
+  {
     "name": "itoa",
     "version": "1.0.18",
     "license": "MIT OR Apache-2.0",
     "notices": [
       "LICENSE-APACHE",
       "LICENSE-MIT"
+    ]
+  },
+  {
+    "name": "libazo",
+    "version": "0.1.1",
+    "license": "MIT",
+    "notices": [
+      "LICENSE"
     ]
   },
   {
@@ -120,8 +245,17 @@
     ]
   },
   {
+    "name": "libc",
+    "version": "0.2.191",
+    "license": "MIT OR Apache-2.0",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ]
+  },
+  {
     "name": "long-egg",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "license": "MIT",
     "notices": []
   },
@@ -160,6 +294,15 @@
     "license": "Apache-2.0 OR MIT",
     "notices": [
       "COPYRIGHT",
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ]
+  },
+  {
+    "name": "pbkdf2",
+    "version": "0.13.0",
+    "license": "MIT OR Apache-2.0",
+    "notices": [
       "LICENSE-APACHE",
       "LICENSE-MIT"
     ]
@@ -237,6 +380,15 @@
     ]
   },
   {
+    "name": "sha1",
+    "version": "0.11.0",
+    "license": "MIT OR Apache-2.0",
+    "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ]
+  },
+  {
     "name": "simd-adler32",
     "version": "0.3.10",
     "license": "MIT",
@@ -258,6 +410,16 @@
     "version": "3.0.9",
     "license": "MIT OR Apache-2.0",
     "notices": [
+      "LICENSE-APACHE",
+      "LICENSE-MIT"
+    ]
+  },
+  {
+    "name": "typenum",
+    "version": "1.20.1",
+    "license": "MIT OR Apache-2.0",
+    "notices": [
+      "LICENSE",
       "LICENSE-APACHE",
       "LICENSE-MIT"
     ]

@@ -90,6 +90,15 @@ describe('DecompressView', () => {
     expect(store.tasks[0].status).toBe('cancelled')
     wrapper.unmount()
   })
+  it.each(['EGG','ALZ'])('applies the detected %s batch source encoding and preserves unrelated settings', async format => {
+    const wrapper=mountView(),store=useTaskStore()
+    for(const id of ['legacy','rar'])store.addTask({id,name:id+'.data',type:'decompression',sourceFiles:['C:/'+id+'.data'],outputPath:'D:/out',password:'keep',configurationMode:'global'})
+    mocks.invoke.mockImplementation(async(cmd,args)=>cmd==='detect_split_archive'?{is_split:false,archive_format:args.path.includes('legacy')?format:'RAR'}:undefined)
+    await nextTick();const table=wrapper.findComponent({name:'AeroTable'});table.vm.$emit('toggle-task','legacy');table.vm.$emit('toggle-task','rar');await nextTick()
+    const bar=wrapper.findComponent({name:'BatchConfigBar'});bar.vm.$emit('apply',{zipPasswordEncoding:'cp936'});await flushPromises()
+    expect(store.tasks[0]).toMatchObject({format,zipPasswordEncoding:'cp936',configurationMode:'global',outputPath:'D:/out',password:'keep'})
+    expect(store.tasks[1].zipPasswordEncoding).toBeUndefined();bar.vm.$emit('apply',{zipPasswordEncoding:'auto'});await flushPromises();expect(store.tasks[0].zipPasswordEncoding).toBeUndefined();wrapper.unmount()
+  })
   it('batch encoding uses detected ZIP content without detaching global output or touching non-ZIP tasks', async () => {
     const wrapper = mountView()
     const store = useTaskStore()

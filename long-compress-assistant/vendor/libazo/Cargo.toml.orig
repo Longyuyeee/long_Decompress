@@ -1,0 +1,13 @@
+[package]
+name = "libazo"
+version = "0.1.1"
+edition = "2024"
+rust-version = "1.85"
+description = "Decompression library for the AZO format"
+readme = "README.md"
+repository = "https://github.com/alkegi/libazo"
+documentation = "https://docs.rs/libazo"
+license = "MIT"
+keywords = ["azo", "egg", "decompression", "compression"]
+categories = ["compression"]
+exclude = ["/tests/*", ".*"]

@@ -1,0 +1,394 @@
+{
+  "source": "unegg 0.2.1 original CC0 fixtures; original names retained, not inferred algorithms from names",
+  "tool": "E:/Bandzip/Bandizip/bz.exe",
+  "toolSha256": "d69bc4d2605f0ecac20e8cfae11e313fb011649ed7f182cfcb25d6be73dcf4e2",
+  "checkedAt": "2026-10-18T03:48:38.005Z",
+  "cases": [
+    {
+      "name": "azo",
+      "archive": "../egg-153/upstream/azo.egg",
+      "archiveSha256": "a8fc0e1e6db655d831862fc73c8fc9602a40ae6c84a230222dd5d8e068f948ba",
+      "password": null,
+      "expected": [
+        {
+          "path": "azo_fix.sys",
+          "bytes": 1602,
+          "sha256": "3a151d5e99db53bd84d824a55f0f998386bb2128a073f495a98695fd2aa3c610"
+        }
+      ]
+    },
+    {
+      "name": "azo_pe",
+      "archive": "../egg-153/upstream/azo_pe.egg",
+      "archiveSha256": "10f851b58819bb0154e571630ad1fe017f03cc2258a043382b67adb1169092a1",
+      "password": null,
+      "expected": [
+        {
+          "path": "hello.sys",
+          "bytes": 148781,
+          "sha256": "27c1011407da6a275d3d2d9dafc121f6dfcb5961fed9e8c588704de9ed3dfa36"
+        }
+      ]
+    },
+    {
+      "name": "solid",
+      "archive": "../egg-153/upstream/solid.egg",
+      "archiveSha256": "c6aaaa529a4adaea66d8b6f97529e95f1938d56f39b9e1c5fb04c3a22b0be053",
+      "password": null,
+      "expected": [
+        {
+          "path": "a",
+          "bytes": 1,
+          "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "hello.txt",
+          "bytes": 45,
+          "sha256": "b47cc0f104b62d4c7c30bcd68fd8e67613e287dc4ad8c310ef10cbadea9c4380"
+        },
+        {
+          "path": "lorem.txt",
+          "bytes": 2200,
+          "sha256": "a648617fed43e7754bfdccfe1c1efe5215f7ce803e86a68e637797511cc699d3"
+        },
+        {
+          "path": "random.bin",
+          "bytes": 4096,
+          "sha256": "b39e2a5f89ef0060a0340d92537a5513cacabdaca04060350e6c64c8914e2e0e"
+        }
+      ]
+    },
+    {
+      "name": "aes128",
+      "archive": "../egg-153/upstream/aes128.egg",
+      "archiveSha256": "a8eacf4331cc9da16c9a98cb7a3191a5d4bab59c32e71961a5044f66f9904659",
+      "password": "test1234",
+      "expected": [
+        {
+          "path": "binary.bin",
+          "bytes": 1024,
+          "sha256": "785b0751fc2c53dc14a4ce3d800e69ef9ce1009eb327ccf458afe09c242c26c9"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "euckr_content.txt",
+          "bytes": 71,
+          "sha256": "77bc237fbcc49c3138cc308632aa91e57efeffa535a988adbfac2f48bf0d9472"
+        },
+        {
+          "path": "hello.txt",
+          "bytes": 131,
+          "sha256": "d18ec9260c5c6902d8fc74c07cc092f45a2c4e6074e4a5b3cdeaf760eb96e7ce"
+        },
+        {
+          "path": "large.txt",
+          "bytes": 131364,
+          "sha256": "176933d71d6ef16903b2ee4f61947af12fa8c4c450d747e4569a9bcf9267da53"
+        },
+        {
+          "path": "repeated.txt",
+          "bytes": 720,
+          "sha256": "1cec0d613b135373d084c68685b7476fb7c0d7f5caa28f35946ea6d302ba9225"
+        },
+        {
+          "path": "subdir/inner.txt",
+          "bytes": 28,
+          "sha256": "347c0d7c9a1ff5d5e1710b05dc385dea8651892de493ae0f7eade2e93e8b0c0e"
+        },
+        {
+          "path": "subdir/nested/deep.txt",
+          "bytes": 20,
+          "sha256": "66c77c742ffe88ea0fa1e085e32b20de9f0cfd763ebdb08d27df20e6a4bb1090"
+        },
+        {
+          "path": "뷁테스트.txt",
+          "bytes": 72,
+          "sha256": "696f6644df6b920646bf3e92745923109d0cfc8ad470818dde56176179408090"
+        },
+        {
+          "path": "한글파일.txt",
+          "bytes": 56,
+          "sha256": "0442367f9479d95a35b91a6b80ac5f7ffc199aa91f29855b6a012070dc97af08"
+        }
+      ]
+    },
+    {
+      "name": "aes256",
+      "archive": "../egg-153/upstream/aes256.egg",
+      "archiveSha256": "a2424ec87aa019e509681fbdcb0ff54295cb1231b4d9bcaa82f981767140a463",
+      "password": "test1234",
+      "expected": [
+        {
+          "path": "binary.bin",
+          "bytes": 1024,
+          "sha256": "785b0751fc2c53dc14a4ce3d800e69ef9ce1009eb327ccf458afe09c242c26c9"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "euckr_content.txt",
+          "bytes": 71,
+          "sha256": "77bc237fbcc49c3138cc308632aa91e57efeffa535a988adbfac2f48bf0d9472"
+        },
+        {
+          "path": "hello.txt",
+          "bytes": 131,
+          "sha256": "d18ec9260c5c6902d8fc74c07cc092f45a2c4e6074e4a5b3cdeaf760eb96e7ce"
+        },
+        {
+          "path": "large.txt",
+          "bytes": 131364,
+          "sha256": "176933d71d6ef16903b2ee4f61947af12fa8c4c450d747e4569a9bcf9267da53"
+        },
+        {
+          "path": "repeated.txt",
+          "bytes": 720,
+          "sha256": "1cec0d613b135373d084c68685b7476fb7c0d7f5caa28f35946ea6d302ba9225"
+        },
+        {
+          "path": "subdir/inner.txt",
+          "bytes": 28,
+          "sha256": "347c0d7c9a1ff5d5e1710b05dc385dea8651892de493ae0f7eade2e93e8b0c0e"
+        },
+        {
+          "path": "subdir/nested/deep.txt",
+          "bytes": 20,
+          "sha256": "66c77c742ffe88ea0fa1e085e32b20de9f0cfd763ebdb08d27df20e6a4bb1090"
+        },
+        {
+          "path": "뷁테스트.txt",
+          "bytes": 72,
+          "sha256": "696f6644df6b920646bf3e92745923109d0cfc8ad470818dde56176179408090"
+        },
+        {
+          "path": "한글파일.txt",
+          "bytes": 56,
+          "sha256": "0442367f9479d95a35b91a6b80ac5f7ffc199aa91f29855b6a012070dc97af08"
+        }
+      ]
+    },
+    {
+      "name": "lea128",
+      "archive": "../egg-153/upstream/lea128.egg",
+      "archiveSha256": "0aebac96df81dc0a44c7dd4f62444c8c08cafd7ed47e75408b9a6d028304d410",
+      "password": "test1234",
+      "expected": [
+        {
+          "path": "binary.bin",
+          "bytes": 1024,
+          "sha256": "785b0751fc2c53dc14a4ce3d800e69ef9ce1009eb327ccf458afe09c242c26c9"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "euckr_content.txt",
+          "bytes": 71,
+          "sha256": "77bc237fbcc49c3138cc308632aa91e57efeffa535a988adbfac2f48bf0d9472"
+        },
+        {
+          "path": "hello.txt",
+          "bytes": 131,
+          "sha256": "d18ec9260c5c6902d8fc74c07cc092f45a2c4e6074e4a5b3cdeaf760eb96e7ce"
+        },
+        {
+          "path": "large.txt",
+          "bytes": 131364,
+          "sha256": "176933d71d6ef16903b2ee4f61947af12fa8c4c450d747e4569a9bcf9267da53"
+        },
+        {
+          "path": "repeated.txt",
+          "bytes": 720,
+          "sha256": "1cec0d613b135373d084c68685b7476fb7c0d7f5caa28f35946ea6d302ba9225"
+        },
+        {
+          "path": "subdir/inner.txt",
+          "bytes": 28,
+          "sha256": "347c0d7c9a1ff5d5e1710b05dc385dea8651892de493ae0f7eade2e93e8b0c0e"
+        },
+        {
+          "path": "subdir/nested/deep.txt",
+          "bytes": 20,
+          "sha256": "66c77c742ffe88ea0fa1e085e32b20de9f0cfd763ebdb08d27df20e6a4bb1090"
+        },
+        {
+          "path": "뷁테스트.txt",
+          "bytes": 72,
+          "sha256": "696f6644df6b920646bf3e92745923109d0cfc8ad470818dde56176179408090"
+        },
+        {
+          "path": "한글파일.txt",
+          "bytes": 56,
+          "sha256": "0442367f9479d95a35b91a6b80ac5f7ffc199aa91f29855b6a012070dc97af08"
+        }
+      ]
+    },
+    {
+      "name": "lea256",
+      "archive": "../egg-153/upstream/lea256.egg",
+      "archiveSha256": "9c9881ee49a0263d02aa60589b25bed302d944232b603302b8f56b37af598d69",
+      "password": "test1234",
+      "expected": [
+        {
+          "path": "binary.bin",
+          "bytes": 1024,
+          "sha256": "785b0751fc2c53dc14a4ce3d800e69ef9ce1009eb327ccf458afe09c242c26c9"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "euckr_content.txt",
+          "bytes": 71,
+          "sha256": "77bc237fbcc49c3138cc308632aa91e57efeffa535a988adbfac2f48bf0d9472"
+        },
+        {
+          "path": "hello.txt",
+          "bytes": 131,
+          "sha256": "d18ec9260c5c6902d8fc74c07cc092f45a2c4e6074e4a5b3cdeaf760eb96e7ce"
+        },
+        {
+          "path": "large.txt",
+          "bytes": 131364,
+          "sha256": "176933d71d6ef16903b2ee4f61947af12fa8c4c450d747e4569a9bcf9267da53"
+        },
+        {
+          "path": "repeated.txt",
+          "bytes": 720,
+          "sha256": "1cec0d613b135373d084c68685b7476fb7c0d7f5caa28f35946ea6d302ba9225"
+        },
+        {
+          "path": "subdir/inner.txt",
+          "bytes": 28,
+          "sha256": "347c0d7c9a1ff5d5e1710b05dc385dea8651892de493ae0f7eade2e93e8b0c0e"
+        },
+        {
+          "path": "subdir/nested/deep.txt",
+          "bytes": 20,
+          "sha256": "66c77c742ffe88ea0fa1e085e32b20de9f0cfd763ebdb08d27df20e6a4bb1090"
+        },
+        {
+          "path": "뷁테스트.txt",
+          "bytes": 72,
+          "sha256": "696f6644df6b920646bf3e92745923109d0cfc8ad470818dde56176179408090"
+        },
+        {
+          "path": "한글파일.txt",
+          "bytes": 56,
+          "sha256": "0442367f9479d95a35b91a6b80ac5f7ffc199aa91f29855b6a012070dc97af08"
+        }
+      ]
+    },
+    {
+      "name": "enc_aes128",
+      "archive": "../egg-153/upstream/enc_aes128.egg",
+      "archiveSha256": "2d0cbb771d5a5cc134fe1eb9e8529698d9cb12c608b4a1b224bf7644b75f5bbb",
+      "password": "test1234",
+      "expected": [
+        {
+          "path": "a.txt",
+          "bytes": 3150,
+          "sha256": "b2a9316bdcae0fd397a8430e94a6294a4ea720c4faf9e1f77d4e4e30787ba6ac"
+        },
+        {
+          "path": "b.bin",
+          "bytes": 512,
+          "sha256": "f97a9576c02fa95055ddca8bf384caf3fbcb229bb78d0d782a322a558712f2eb"
+        }
+      ]
+    },
+    {
+      "name": "enc_aes256",
+      "archive": "../egg-153/upstream/enc_aes256.egg",
+      "archiveSha256": "0a3b5f4b23308cc19089acfd9ae66dc8c365c825604281b4fc3300be3af3dcbc",
+      "password": "test1234",
+      "expected": [
+        {
+          "path": "a.txt",
+          "bytes": 3150,
+          "sha256": "b2a9316bdcae0fd397a8430e94a6294a4ea720c4faf9e1f77d4e4e30787ba6ac"
+        },
+        {
+          "path": "b.bin",
+          "bytes": 512,
+          "sha256": "f97a9576c02fa95055ddca8bf384caf3fbcb229bb78d0d782a322a558712f2eb"
+        }
+      ]
+    },
+    {
+      "name": "enc_aes256_bzip2",
+      "archive": "../egg-153/upstream/enc_aes256_bzip2.egg",
+      "archiveSha256": "018555cefe455cc2067481a582c07f6c8ea27b10f4186f8c6669b0a3da433a6c",
+      "password": "test1234",
+      "expected": [
+        {
+          "path": "text.txt",
+          "bytes": 9000,
+          "sha256": "2c44089c1478988b4f2d75dcce66a08008c0ab65e71877a8064ec93154e8b380"
+        }
+      ]
+    },
+    {
+      "name": "enc_lea_bzip2",
+      "archive": "../egg-153/upstream/enc_lea_bzip2.egg",
+      "archiveSha256": "9dd2441d93fcbd9ad7facf396fcede61b523c2b4d21d7c6bebb6c4faac3a9ee5",
+      "password": "test1234",
+      "expected": [
+        {
+          "path": "text.txt",
+          "bytes": 3600,
+          "sha256": "f347c6956986bb5e2616fd001f81f0fe7d4fcbf68456613b4ed6a2641d29b82a"
+        }
+      ]
+    },
+    {
+      "name": "optimal5",
+      "archive": "../egg-153/upstream/optimal5.egg",
+      "archiveSha256": "fdf273b17e36fa20bdfae40b71268d8d0f2eb5d9cec18e8ae5149d7a66c754b5",
+      "password": null,
+      "expected": [
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "precompressed.gz",
+          "bytes": 95,
+          "sha256": "07ec682eb8d41b54afe790caa15773059968ff0befb3b090ef96a57856980f98"
+        },
+        {
+          "path": "prog.sys",
+          "bytes": 2060,
+          "sha256": "a94e58afa385e60d53d5920852dff86ba296f34b25b12a7e9c8b3a6de4d71132"
+        },
+        {
+          "path": "random.bin",
+          "bytes": 4096,
+          "sha256": "c7caf0d1f590099d235bdd36c659a428e9f7780ccf4ee44128b1150884f45e33"
+        },
+        {
+          "path": "text.txt",
+          "bytes": 3150,
+          "sha256": "b2a9316bdcae0fd397a8430e94a6294a4ea720c4faf9e1f77d4e4e30787ba6ac"
+        }
+      ]
+    }
+  ]
+}

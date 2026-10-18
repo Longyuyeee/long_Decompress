@@ -230,6 +230,8 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 <a id="updates"></a>
 
+v1.5.4 功能已封板，尚待正式发布：EGG AZO、AES/LEA 和固实只读，以及批量 ALZ/EGG 密码编码修复。验证与范围见[本版审计](long-compress-assistant/docs/EGG_COMPLEX_1.5.4.md)和[封板记录](long-compress-assistant/docs/EGG_COMPLEX_FREEZE_1.5.4.md)。下方已发布范围以 v1.5.3 为基线，软件图标和既有截图保留。
+
 ## 📝 更新记录
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。

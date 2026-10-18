@@ -26,6 +26,7 @@ long-compress-assistant/src-tauri/resources/alz-engine/licenses/* -whitespace
 long-compress-assistant/tests/fixtures/archives/alz-152/**/*.alz binary
 long-compress-assistant/tests/fixtures/archives/alz-152/**/*.a?? binary
 long-compress-assistant/vendor/unegg/** -text -whitespace
+long-compress-assistant/vendor/libazo/** -text -whitespace
 long-compress-assistant/tools/egg-engine/** -text
 long-compress-assistant/src-tauri/resources/egg-engine/** -text
 long-compress-assistant/src-tauri/src/services/egg_volumes.rs -text
