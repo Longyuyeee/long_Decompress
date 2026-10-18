@@ -1,0 +1,160 @@
+{
+  "completedAt": "2026-10-18T13:06:21.221Z",
+  "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
+  "binarySha256": "a4d82055a683af8ff5ff2379ef869689630c48bde3b052c47ae6627874b4f2de",
+  "helperSha256": "48efbce527b1d3ae8b5e4c71b86a4b4a9ea1726c857aafb73adf9e0efd275fe4",
+  "cases": [
+    {
+      "actualLastSelectedFromLargeSolid": true,
+      "sharedStreamRead": true,
+      "onlySelectedOutput": true
+    },
+    {
+      "actualLargeSolidConversion": true,
+      "independentZipHashes": true
+    },
+    {
+      "actualLargeDiagnosisHealthy": true,
+      "noFakeRepair": true
+    },
+    {
+      "actualAllMembersOneTask": true,
+      "actualMissingMiddleCause": "[archive-inspection:incomplete] 缺少 EGG 原生分卷：password-volumes.vol2.egg；请补齐原卷后重试，不必反复尝试密码",
+      "restoredNewTask": true,
+      "oldFailureRetained": true
+    },
+    {
+      "actualLargeCrcFailure": true,
+      "actualHistoryFinalCause": "[archive-inspection:damaged] EGG 条目「大文件.bin」大小或 CRC 校验失败，未记为成功",
+      "noPublishedPartialOutput": true
+    },
+    {
+      "actualUiPauseAfterWrittenBytes": 33554432,
+      "pauseStoppedWrites": true,
+      "resumeProducedMore": true,
+      "actualCancelWhilePaused": true,
+      "queueAndHistoryCancelled": true,
+      "noStagedOrPublishedOutput": true
+    },
+    {
+      "actualSettingsReadOnlyHelp": true
+    }
+  ],
+  "screenshots": [
+    "egg1510-solid-browser-1100x700.png",
+    "egg1510-solid-browser-760x520.png",
+    "egg1510-selected-last-1100x700.png",
+    "egg1510-selected-last-760x520.png",
+    "egg1510-conversion-1100x700.png",
+    "egg1510-conversion-760x520.png",
+    "egg1510-missing-final-1100x700.png",
+    "egg1510-missing-final-760x520.png",
+    "egg1510-crc-final-1100x700.png",
+    "egg1510-crc-final-760x520.png",
+    "egg1510-history-final-1100x700.png",
+    "egg1510-history-final-760x520.png",
+    "egg1510-paused-1100x700.png",
+    "egg1510-paused-760x520.png",
+    "egg1510-settings-help-1100x700.png",
+    "egg1510-settings-help-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "egg1510-solid-browser",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "egg1510-solid-browser",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "egg1510-selected-last",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "egg1510-selected-last",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "egg1510-conversion",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "egg1510-conversion",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "egg1510-missing-final",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "egg1510-missing-final",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "egg1510-crc-final",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "egg1510-crc-final",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "egg1510-history-final",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "egg1510-history-final",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "egg1510-paused",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "egg1510-paused",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "egg1510-settings-help",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "egg1510-settings-help",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "originalsUnchanged": true
+}
