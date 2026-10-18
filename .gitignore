@@ -54,5 +54,10 @@ long-compress-assistant/design/brand/*-source.png
 long-compress-assistant/.local-secrets/
 # Isolated EGG helper build artifacts
 long-compress-assistant/tools/egg-engine/target/
+long-compress-assistant/vendor/libazo/target/
+long-compress-assistant/vendor/unegg/target/
+long-compress-assistant/vendor/unegg/Cargo.lock
+long-compress-assistant/vendor/libazo/Cargo.lock
+long-compress-assistant/vendor/libazo/.cargo-ok
 # Local Rust build cache (never a release artifact)
 long-compress-assistant/target-desktop-gate/

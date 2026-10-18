@@ -17,11 +17,11 @@ for(const p of metadata.packages) {
 }
 writeFileSync('src-tauri/resources/egg-engine/dependencies.json',JSON.stringify(packages,null,2)+'\n')
 const files={}
-for(const dir of ['vendor/unegg/src','tools/egg-engine/src','src-tauri/resources/egg-engine']) {
+for(const dir of ['vendor/unegg/src','vendor/libazo/src','tools/egg-engine/src','src-tauri/resources/egg-engine']) {
   for(const name of readdirSync(dir,{recursive:true,withFileTypes:true}).filter(x=>x.isFile()).map(x=>path.relative('.',path.join(x.parentPath,x.name)).replaceAll('\\','/')).sort())
     files[name]=createHash('sha256').update(readFileSync(name)).digest('hex')
 }
-for(const name of ['vendor/unegg/Cargo.toml','vendor/unegg/LICENSE','vendor/unegg/LONG_MODIFICATIONS.md','tools/egg-engine/Cargo.toml','tools/egg-engine/Cargo.lock','src-tauri/src/services/egg_volumes.rs'])
+for(const name of ['vendor/unegg/Cargo.toml','vendor/unegg/LICENSE','vendor/unegg/LONG_MODIFICATIONS.md','vendor/libazo/Cargo.toml','vendor/libazo/LICENSE','vendor/libazo/LONG_MODIFICATIONS.md','tools/egg-engine/Cargo.toml','tools/egg-engine/Cargo.lock','src-tauri/src/services/egg_volumes.rs'])
   files[name]=createHash('sha256').update(readFileSync(name)).digest('hex')
 writeFileSync('egg-engine.lock.json',JSON.stringify({upstream:'unegg 0.2.1 at 9929009ca4d010e8cd88bb796f7a1868162026d4',platform:'windows-x64',files},null,2)+'\n')
 console.log(`Locked EGG helper and ${packages.length} dependency notices`)

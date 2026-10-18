@@ -88,8 +88,49 @@ pub async fn extract(path:&Path,output:&Path,pwd:Option<&str>,options:&Decompres
     #[tokio::test]async fn egg_mixed_links_version_and_truncation_have_final_causes(){
         for change in [0,1,2,3]{let dir=tempfile::tempdir().unwrap();let p=copies(dir.path());let mut b=std::fs::read(&p[1]).unwrap();match change{0=>b[6]^=1,1=>b[21]^=1,2=>b[4]=17,_=>b.truncate(12)}std::fs::write(&p[1],b).unwrap();let r=super::super::archive_diagnostics::diagnose_archive(&p[0],Some("irrelevant"),flag()).await.unwrap();assert!(matches!(r.status.as_str(),"damaged"|"unsupported_feature"),"{r:?}");assert!(!r.integrity_tested);}
     }
-    #[tokio::test]async fn egg_unsupported_complex_features_never_request_password(){
-        for name in ["azo.egg","solid.egg","aes128.egg","aes256.egg","lea128.egg","lea256.egg"]{let p=root().join("upstream").join(name);let r=super::super::archive_diagnostics::diagnose_archive(&p,None,flag()).await.unwrap();assert_eq!(r.status,"unsupported_feature","{name}: {r:?}");assert!(!r.integrity_tested);assert!(try_password(&p,"test1234",&Default::default(),flag()).await.unwrap_err().to_string().contains("unsupported"));}
+    #[tokio::test]async fn egg_unknown_features_never_request_password(){
+        let dir=tempfile::tempdir().unwrap();let p=dir.path().join("unknown-method.egg");let mut bytes=std::fs::read(root().join("upstream/azo.egg")).unwrap();
+        let at=bytes.windows(4).position(|b|b==0x02B50C13u32.to_le_bytes()).unwrap()+4;bytes[at]=127;std::fs::write(&p,bytes).unwrap();
+        let r=super::super::archive_diagnostics::diagnose_archive(&p,None,flag()).await.unwrap();assert_eq!(r.status,"unsupported_feature","{r:?}");assert!(!r.integrity_tested);assert!(try_password(&p,"test1234",&Default::default(),flag()).await.unwrap_err().to_string().contains("unsupported"));
+    }
+    fn complex_root()->PathBuf{root().parent().unwrap().join("egg-154")}
+    #[tokio::test]async fn egg_complex_originals_match_independent_payloads(){
+        for (folder,file) in [(complex_root(),"manifest.json"),(complex_root().join("original-alzip"),"manifest.json")]{
+            let m:serde_json::Value=serde_json::from_slice(&std::fs::read(folder.join(file)).unwrap()).unwrap();
+            for c in m["cases"].as_array().unwrap(){let p=folder.join(c["archive"].as_str().unwrap());let opts=DecompressOptions{zip_password_encoding:c["encoding"].as_str().map(|_|ZipPasswordEncoding::Cp936),..Default::default()};
+                let out=tempfile::tempdir().unwrap();let pwd=c["password"].as_str();verify(&p,pwd,&opts,flag()).await.unwrap();extract(&p,out.path(),pwd,&opts,flag()).await.unwrap();
+                for e in c["expected"].as_array().unwrap(){let f=out.path().join(e["path"].as_str().unwrap());assert_eq!(std::fs::metadata(&f).unwrap().len(),e["bytes"].as_u64().unwrap());assert_eq!(sha(&f),e["sha256"].as_str().unwrap(),"{}",c["name"]);}
+            }
+        }
+    }
+    #[tokio::test]async fn egg_solid_selection_decodes_dependencies_but_publishes_only_chosen(){
+        for (p,name) in [(root().join("upstream/solid.egg"),"hello.txt"),(complex_root().join("original-alzip/solid-deflate.egg"),"文档/说明 文件.txt"),(complex_root().join("original-alzip/solid-high.egg"),"文档/说明 文件.txt")]{
+            let opts=DecompressOptions{selected_entries:vec![name.into()],..Default::default()};let d=plan(&p,&opts,flag()).await.unwrap();assert_eq!(d.entries.len(),1);assert_eq!(d.entries[0].compressed_size,None);assert!(d.total_compressed_size>0);
+            let out=tempfile::tempdir().unwrap();extract(&p,out.path(),None,&opts,flag()).await.unwrap();assert!(out.path().join(name).is_file());assert!(!out.path().join("payload.bin").exists());assert!(!out.path().join("random.bin").exists());assert!(!out.path().join("空目录").exists());
+        }
+    }
+    #[tokio::test]async fn egg_solid_dependency_crc_failure_blocks_a_selected_early_file(){
+        let dir=tempfile::tempdir().unwrap();let p=dir.path().join("damaged-solid.egg");let mut bytes=std::fs::read(root().join("upstream/solid.egg")).unwrap();
+        let at=bytes.windows(4).position(|b|b==0x02B50C13u32.to_le_bytes()).unwrap();bytes[at+14]^=1;std::fs::write(&p,bytes).unwrap();
+        let opts=DecompressOptions{selected_entries:vec!["hello.txt".into()],..Default::default()};let e=verify(&p,None,&opts,flag()).await.unwrap_err();assert!(e.to_string().contains("archive-inspection:damaged"),"{e}");
+    }
+    #[tokio::test]async fn egg_aes_legacy_codepage_and_wrong_password_are_not_guessed(){
+        let p=complex_root().join("original-alzip/aes256-cn.egg");let opts=DecompressOptions{zip_password_encoding:Some(ZipPasswordEncoding::Cp936),..Default::default()};
+        assert!(try_password(&p,"中文密码123!",&opts,flag()).await.unwrap());assert!(!try_password(&p,"wrong",&opts,flag()).await.unwrap());assert!(!try_password(&p,"中文密码123!",&Default::default(),flag()).await.unwrap());
+        let r=super::super::archive_diagnostics::diagnose_archive_with_encoding(&p,Some("中文密码123!"),Some(ZipPasswordEncoding::Cp936),flag()).await.unwrap();
+        assert_eq!(r.status,"healthy");assert!(r.integrity_tested);
+    }
+    #[tokio::test]async fn egg_encrypted_tampering_never_proves_password_from_verifier(){
+        let source=root().join("upstream/aes128.egg");let dir=tempfile::tempdir().unwrap();let p=dir.path().join("damaged.egg");let mut bytes=std::fs::read(&source).unwrap();
+        let b=bytes.windows(4).position(|b|b==0x02B50C13u32.to_le_bytes()).unwrap();bytes[b+22]^=1;std::fs::write(&p,bytes).unwrap();
+        assert!(!try_password(&p,"test1234",&Default::default(),flag()).await.unwrap());let r=super::super::archive_diagnostics::diagnose_archive(&p,Some("test1234"),flag()).await.unwrap();assert_eq!(r.status,"ambiguous_data");
+    }
+    #[tokio::test]async fn egg_aes_native_missing_middle_precedes_key_and_recovers(){
+        let src=complex_root().join("original-alzip");let dir=tempfile::tempdir().unwrap();
+        for n in 1..=5{let name=format!("aes256-volumes.vol{n}.egg");std::fs::copy(src.join(&name),dir.path().join(name)).unwrap();}
+        let absent=dir.path().join("aes256-volumes.vol2.egg");std::fs::remove_file(&absent).unwrap();let p=dir.path().join("aes256-volumes.vol3.egg");
+        assert!(requires_password(&p,&Default::default(),flag()).await.unwrap_err().to_string().contains("incomplete"));std::fs::copy(src.join("aes256-volumes.vol2.egg"),&absent).unwrap();
+        let opts=DecompressOptions{zip_password_encoding:Some(ZipPasswordEncoding::Cp936),..Default::default()};assert!(try_password(&p,"中文密码123!",&opts,flag()).await.unwrap());
     }
     #[tokio::test]async fn egg_password_is_full_content_not_short_header_or_plain_success(){
         let p=root().join("upstream/zip20.egg");assert!(try_password(&p,"test1234",&Default::default(),flag()).await.unwrap());assert!(!try_password(&p,"wrong",&Default::default(),flag()).await.unwrap());assert!(!try_password(&root().join("upstream/store.egg"),"anything",&Default::default(),flag()).await.unwrap());

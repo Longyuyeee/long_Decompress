@@ -36,7 +36,7 @@ impl AesCtrDecryptor {
     /// mode: 1 = AES-128, 3 = AES-256
     pub fn new(
         mode: u8,
-        password: &str,
+        password: &[u8],
         salt: &[u8],
         stored_verifier: &[u8; 2],
     ) -> EggResult<Self> {
@@ -49,7 +49,7 @@ impl AesCtrDecryptor {
         // PBKDF2-HMAC-SHA1: derive key_size*2 + 2 bytes
         let dk_len = key_size * 2 + 2;
         let mut derived = vec![0u8; dk_len];
-        pbkdf2_hmac::<Sha1>(password.as_bytes(), salt, 1000, &mut derived);
+        pbkdf2_hmac::<Sha1>(password, salt, 1000, &mut derived);
 
         let enc_key = &derived[..key_size];
         let auth_key = derived[key_size..key_size * 2].to_vec();

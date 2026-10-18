@@ -1,0 +1,43 @@
+{
+  "checkedAt": "2026-10-18T03:51:18.274Z",
+  "toolSha256": "d69bc4d2605f0ecac20e8cfae11e313fb011649ed7f182cfcb25d6be73dcf4e2",
+  "helperSha256": "c413c342d79c271e8687b33dc5d8b9c37cde31ec36d7959a98ad323dabde8014",
+  "cases": [
+    {
+      "name": "aes128-cn",
+      "independentAndProductPayloads": true,
+      "originalNames": true,
+      "emptyDirectory": true
+    },
+    {
+      "name": "aes256-cn",
+      "independentAndProductPayloads": true,
+      "originalNames": true,
+      "emptyDirectory": true
+    },
+    {
+      "name": "aes128-volumes",
+      "independentAndProductPayloads": true,
+      "originalNames": true,
+      "emptyDirectory": true
+    },
+    {
+      "name": "aes256-volumes",
+      "independentAndProductPayloads": true,
+      "originalNames": true,
+      "emptyDirectory": true
+    },
+    {
+      "name": "solid-deflate",
+      "independentAndProductPayloads": true,
+      "originalNames": true,
+      "emptyDirectory": true
+    },
+    {
+      "name": "solid-high",
+      "independentAndProductPayloads": true,
+      "originalNames": true,
+      "emptyDirectory": true
+    }
+  ]
+}

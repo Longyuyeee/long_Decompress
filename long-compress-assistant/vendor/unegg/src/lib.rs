@@ -11,3 +11,5 @@ pub mod encoding;
 pub mod error;
 
 pub mod decompress;
+pub mod aes_ctr;
+pub mod lea;

@@ -5,6 +5,7 @@ use serde_json::{json, Value};
 use std::{collections::HashSet, fs::{self,File}, io::{self,Read,Seek,SeekFrom,Write},path::{Path,PathBuf}};
 use unegg::{archive::{EggArchive,EggFileEntry,CompressionMethod,EncryptionMethod},crypto::{ZipCrypto,Decryptor},decompress,error::EggError};
 #[path = "../../../src-tauri/src/services/egg_volumes.rs"] mod egg_volumes;
+mod complex;
 #[derive(Default,Deserialize)]
 struct Request { password:Option<String>,encoding:Option<String>,output:Option<PathBuf>,#[serde(default)]selected:Vec<String>,#[serde(default)]preserve_timestamps:bool }
 fn password_bytes(password:&str,encoding:Option<&str>)->Result<Vec<u8>> {
@@ -34,6 +35,7 @@ fn open(path:&Path)->Result<EggArchive<egg_volumes::Reader>> {
     let mut names=HashSet::new();let mut total=0u64;
     for e in &a.entries {
         let name=safe_name(&e.file_name)?;
+        ensure!(!e.is_directory()||e.uncompressed_size==0,"[archive-inspection:damaged] EGG 目录声明非零文件大小：{name}");
         ensure!(names.insert(name.to_lowercase()),"[archive-inspection:unsupported] EGG 有 Windows 同名条目：{name}");
         let mut sum=0u64;
         for b in &e.blocks {
@@ -51,26 +53,16 @@ fn entries(a:&EggArchive<egg_volumes::Reader>,selected:&[String])->Result<Vec<Eg
     ensure!(requested.is_empty()||chosen.len()==requested.len(),"所选 EGG 条目已变化，请刷新目录后重新选择");Ok(chosen)
 }
 fn plan(a:&EggArchive<egg_volumes::Reader>,entries:&[EggFileEntry])->Result<()> {
-    ensure!(!a.is_solid,"[archive-inspection:unsupported] EGG 固实归档尚不在本版读取范围，不应反复尝试密码");
-    for e in entries {
-        if let Some(ei)=&e.encrypt_info {
-            ensure!(ei.method==EncryptionMethod::ZipCrypto,"[archive-inspection:unsupported] EGG {} 加密尚不在本版读取范围，不应反复尝试密码",ei.method.name());
-            ensure!(ei.data.len()==16,"[archive-inspection:damaged] EGG ZipCrypto 加密头大小无效");
-        }
-        for b in &e.blocks {
-            ensure!(matches!(b.compression_method,CompressionMethod::Store|CompressionMethod::Deflate|CompressionMethod::Bzip2|CompressionMethod::Lzma),"[archive-inspection:unsupported] EGG {} 压缩方法尚不在本版读取范围，不应反复尝试密码",b.compression_method);
-            if b.compression_method==CompressionMethod::Lzma {ensure!(b.compressed_size<=256*1024*1024,"[archive-inspection:unsupported] EGG LZMA 单块压缩输入超过 256 MiB");}
-        }
-    }
-    ensure!(!entries.iter().any(|e|e.encrypt_info.is_some())||entries.iter().any(|e|e.encrypt_info.is_some()&&e.uncompressed_size>0),"[archive-inspection:unsupported] 所选 EGG 只有加密空文件，不能通过实际内容完整确认密码");Ok(())
+    complex::validate(a,entries)
 }
 fn metadata(a:&EggArchive<egg_volumes::Reader>,entries:&[EggFileEntry])->Result<Value> {
     let mut list=vec![];let mut total=0;let mut compressed=0;let mut files=0;let mut encrypted=false;
     for e in entries {
         let path=safe_name(&e.file_name)?;let is_dir=e.is_directory();let packed=e.blocks.iter().map(|b|b.compressed_size as u64).sum::<u64>();
         if !is_dir {files+=1;total+=e.uncompressed_size;encrypted|=e.encrypt_info.is_some()};compressed+=packed;
-        list.push(json!({"name":path.rsplit('/').next(),"path":path,"size":e.uncompressed_size,"sizeKnown":true,"compressedSize":packed,"modified":null,"crc":null,"encrypted":e.encrypt_info.is_some(),"isDir":is_dir,"methods":e.blocks.iter().map(|b|b.compression_method.name()).collect::<Vec<_>>(),"encryption":e.encrypt_info.as_ref().map(|i|i.method.name())}));
+        list.push(json!({"name":path.rsplit('/').next(),"path":path,"size":e.uncompressed_size,"sizeKnown":true,"compressedSize":if a.is_solid{None}else{Some(packed)},"modified":null,"crc":null,"encrypted":e.encrypt_info.is_some(),"isDir":is_dir,"methods":e.blocks.iter().map(|b|b.compression_method.name()).collect::<Vec<_>>(),"encryption":e.encrypt_info.as_ref().map(|i|i.method.name())}));
     }
+    if a.is_solid {encrypted=a.entries.iter().any(|e|e.encrypt_info.is_some()&&!e.blocks.is_empty());compressed=a.entries.iter().flat_map(|e|&e.blocks).map(|b|b.compressed_size as u64).sum();}
     Ok(json!({"format":"EGG","entries":list,"totalFiles":files,"totalDirectories":entries.len()-files,"totalUncompressedSize":total,"totalCompressedSize":compressed,"encrypted":encrypted,"solid":a.is_solid}))
 }
 struct CheckedWriter<W>{inner:W,bytes:u64,limit:u64}
@@ -79,22 +71,12 @@ impl<W:Write>Write for CheckedWriter<W>{
     fn flush(&mut self)->io::Result<()>{self.inner.flush()}
 }
 fn decode<W:Write>(a:&mut EggArchive<egg_volumes::Reader>,e:&EggFileEntry,pwd:Option<&str>,encoding:Option<&str>,mut out:W)->Result<()> {
-    let mut crypto=if let Some(ei)=&e.encrypt_info {
-        let p=pwd.ok_or_else(||map_error(EggError::PasswordNotSet,false))?;
-        let mut c=ZipCrypto::new(&password_bytes(p,encoding)?);let check=ei.data[..12].try_into()?;let crc=u32::from_le_bytes(ei.data[12..16].try_into()?);
-        ensure!(c.check_password(&check,crc),"[egg-password] EGG 密码短头不匹配，也可能是加密头损坏；请核对密码和原文件完整性");Some(c)
-    }else{None};
+    let mut crypto=complex::cipher(&mut a.reader,e,pwd,encoding)?;
     for b in &e.blocks {
         a.reader.seek(SeekFrom::Start(b.data_pos))?;let mut input=(&mut a.reader).take(b.compressed_size as u64);
         let mut checked=CheckedWriter{inner:&mut out,bytes:0,limit:b.uncompressed_size as u64};
-        let cipher=crypto.as_mut().map(|c|c as &mut dyn Decryptor);
-        let crc=match b.compression_method {
-            CompressionMethod::Store=>decompress::store::extract_store(&mut input,&mut checked,b.compressed_size as u64,cipher),
-            CompressionMethod::Deflate=>decompress::deflate::extract_deflate(&mut input,&mut checked,b.compressed_size as u64,cipher),
-            CompressionMethod::Bzip2=>decompress::bzip2::extract_bzip2(&mut input,&mut checked,b.compressed_size as u64,cipher),
-            CompressionMethod::Lzma=>decompress::lzma::extract_lzma(&mut input,&mut checked,b.compressed_size as u64,b.uncompressed_size as u64,cipher),
-            _=>unreachable!(),
-        }.map_err(|err|map_error(err,e.encrypt_info.is_some()))?;
+        let cipher=crypto.as_mut().map(|c| &mut **c as &mut dyn Decryptor);
+        let crc=complex::stream(&mut input,&mut checked,b.compression_method,b.compressed_size as u64,b.uncompressed_size as u64,cipher).map_err(|err|map_error(err,e.encrypt_info.is_some()))?;
         ensure!(checked.bytes==b.uncompressed_size as u64&&crc==b.crc32,"{} EGG 条目「{}」大小或 CRC 校验失败，未记为成功",if e.encrypt_info.is_some(){"[archive-inspection:ambiguous-data]"}else{"[archive-inspection:damaged]"},e.file_name);
     }
     out.flush().context("[archive-inspection:io] [egg-io] EGG 输出刷盘失败")?;Ok(())
@@ -106,6 +88,7 @@ fn run()->Result<Value>{
     let mut a=open(Path::new(&args[1]))?;let mut chosen=entries(&a,&req.selected)?;
     if op=="list" {return metadata(&a,&chosen)}plan(&a,&chosen)?;
     if op=="plan" {return metadata(&a,&chosen)}ensure!(matches!(op,"verify"|"extract"),"Unsupported operation");
+    if a.is_solid {complex::solid(&mut a,&chosen,&req,op=="extract")?;return Ok(json!({"verified":true}));}
     chosen.sort_by_key(|e|e.encrypt_info.is_some());
     for e in chosen {
         if op=="verify" {decode(&mut a,&e,req.password.as_deref(),req.encoding.as_deref(),io::sink())?;continue;}
@@ -114,7 +97,7 @@ fn run()->Result<Value>{
         fs::create_dir_all(dest.parent().context("Invalid output")?).context("[archive-inspection:io] [egg-io] 无法创建 EGG 目录")?;
         let mut f=File::options().write(true).create_new(true).open(dest).context("[archive-inspection:io] [egg-io] 无法创建 EGG 输出文件")?;
         decode(&mut a,&e,req.password.as_deref(),req.encoding.as_deref(),&mut f)?;f.sync_all().context("[archive-inspection:io] [egg-io] EGG 文件刷盘失败")?;
-        if req.preserve_timestamps {if let Some(t)=e.file_time.and_then(|t|(t/10_000_000).checked_sub(11_644_473_600)) {if let Some(t)=std::time::UNIX_EPOCH.checked_add(std::time::Duration::from_secs(t)){f.set_modified(t).context("[archive-inspection:io] [egg-io] EGG 时间写入失败")?;}}}
+        complex::set_time(&f,&e,req.preserve_timestamps)?;
     }
     Ok(json!({"verified":true}))
 }
@@ -134,6 +117,14 @@ fn main(){let (value,code)=match run(){Ok(v)=>(json!({"result":v}),0),Err(e)=>(j
     #[test]fn password_codepages_reject_aliases_and_loss(){
         for s in ["¥","‾","🔑"]{assert!(password_bytes(s,Some("cp932")).is_err());}
         assert_eq!(password_bytes("中文密码123!",Some("cp936")).unwrap(),encoding_rs::GBK.encode("中文密码123!").0.as_ref());
+    }
+    #[test]fn solid_selection_reports_password_from_shared_dependencies(){
+        let root=PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/archives/egg-153/upstream");
+        let mut a=open(&root.join("solid.egg")).unwrap();let encrypted=open(&root.join("aes128.egg")).unwrap();
+        // Metadata-only dependency unit: not a synthesized positive archive.
+        let owner=a.entries.iter().position(|e|!e.blocks.is_empty()).unwrap();a.entries[owner].encrypt_info=encrypted.entries.iter().find_map(|e|e.encrypt_info.clone());
+        let chosen=vec![a.entries.iter().find(|e|e.file_name=="hello.txt").unwrap().clone()];assert!(chosen[0].encrypt_info.is_none());
+        assert_eq!(metadata(&a,&chosen).unwrap()["encrypted"],true);assert!(plan(&a,&chosen).is_ok());
     }
     #[test]fn altered_bzip2_lzma_streams_cannot_pass_complete_content_checks(){
         let root=PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/archives/egg-153/upstream");

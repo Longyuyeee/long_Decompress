@@ -1,7 +1,7 @@
-# Long EGG basic reader changes
+# Long EGG reader changes
 
 Upstream unegg 0.2.1 at 9929009ca4d010e8cd88bb796f7a1868162026d4, MIT, copyright Sungjoon Moon.
 
-Only archive parsing, filename decoding, ZipCrypto and Store/Deflate/Bzip2/LZMA are compiled in this version. The original CLI, extraction, volume discovery, AES/LEA/AZO sources remain for traceability but are not compiled or exposed. Native .volN.egg framing and strict two-way IDs use the app's shared egg_volumes.rs. No EGG creation.
+The parser, strict names, ZipCrypto, AES/LEA and Store/Deflate/Bzip2/LZMA/AZO decoders are compiled. AES/LEA receive explicitly encoded password bytes, not implicit UTF-8 strings. AZO uses vendored libazo 0.1.1 with streaming and exact terminal checks; its I/O errors retain their type. The original CLI, extraction and volume discovery remain for traceability but are not compiled or exposed. The app helper implements bounded solid input and separate file/block-CRC output spans. Native .volN.egg framing and strict two-way IDs use the app's shared egg_volumes.rs. No EGG creation.
 
 Deflate requires StreamEnd; Deflate and Bzip2 reject trailing compressed bytes. LZMA consumes its declared input, but decoder Ok alone is not sufficient: extra input can produce altered/extra output, which the same full length/CRC acceptance condition rejects. Metadata skips cannot seek past input; parser rejects trailing archive bytes, unsupported global/name encryption, unknown versions, duplicate/missing/cyclic relative IDs, excessive metadata/entries. Relative names resolve fully without silently losing parent prefixes. UTF-8 and declared legacy filenames decode strictly; paths are never silently repaired. Full block size/CRC and entry-size sums are required in long-egg before success or password acceptance. CRC is not source authentication.

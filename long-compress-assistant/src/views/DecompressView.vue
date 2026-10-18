@@ -76,7 +76,7 @@ async function applySelectedConfiguration(patch: BatchConfigPatch, complete?: (e
         if (disposed || !taskStore.tasks.includes(task) || task.status !== 'pending' || task.sourceFiles[0] !== source) continue
         if (group?.archive_format) task.format = group.archive_format
         const encoding = patch.zipPasswordEncoding === 'auto' ? undefined : patch.zipPasswordEncoding
-        if (group?.archive_format && ['zip', 'zipx'].includes(group.archive_format.toLowerCase())) {
+        if (group?.archive_format && ['zip', 'zipx', 'alz', 'egg'].includes(group.archive_format.toLowerCase())) {
           task.zipPasswordEncoding = encoding
           changed = true
         } else skipped++
