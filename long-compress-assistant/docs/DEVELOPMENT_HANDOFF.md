@@ -1,10 +1,14 @@
 # 开发交接
 
-## 最新：v1.5.8 本地封板，进入受保护发布（2026-10-18）
+## 最新：v1.5.8 已正式发布，接续加密 RAR 最终原因（2026-10-18）
 
 从 `6950ec9` 接续，原包 `9ee7adb`、功能与桌面实现 `c62a571`。增加 7-Zip 19.00/23.01/26.04 GUI 独立加载器的精确身份，保留 24.09；30 组原包补齐 WinRAR 6.24 GUI/控制台 x86/x64 及内嵌 7Z 回归。67 Rust、150 前端、33 桌面记录场景与十张常用/窄窗实看页面通过，缺卷纠正和转换按已知内容核对，输入 EXE 不执行。见[审计](SFX_MODULES_1.5.8.md)、[封板记录](SFX_MODULES_FREEZE_1.5.8.md)及[桌面证据](evidence/sfx-modules-1.5.8/results.json)。个人安装与数据不动。
 
-本轮继续完成必需 Windows package、候选检查、受保护合入、不可移动同树标签、中文 README/Release/更新 notes 和正式四资产回下载，完成前不称已发布。之后 v1.5.9 按既定路线细化加密 RAR 缺尾/混卷最终原因，余下七版不另起规划。UI 仍必须实际查看，默认设置与 Windows N 边界保持。
+[PR #197](https://github.com/Longyuyeee/long_Decompress/pull/197) 受保护合入，标签 `1c42c1daaca449be779551aaddb0b6f2c12b8237` 与候选 `ad849a4548b5616a200d770265080e5ec9d8a9f1` 同树 `46edaa993240101eb3dc949f281654e824d7f988`。必需候选 CI `39118550791`、主线 CI `39119133766`、正式构建 `39119156950` 均成功。[v1.5.8](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.8) 于 UTC `2026-10-18T10:40:02Z`（北京时间 18:40:02）发布；四资产、中文说明、更新 ZIP 内安装器、签名/地址/时间和包内主程序/四份说明已回下载核对，见[候选](evidence/sfx-modules-1.5.8/candidate.json)与[正式收据](evidence/sfx-modules-1.5.8/release.json)。不移动标签，个人安装和数据不改，包体检查与真实运行证据分开。
+
+十版路线已正式交付三版，剩七版。下一轮 v1.5.9 按既定路线细化加密 RAR 缺尾/混卷最终原因，不另起重复规划。UI 仍必须实际查看，默认设置与 Windows N 边界保持。
+
+v1.5.9 的实际接续证据已经包含在本版 `results.json`：四个 `rar624-*-headers` 的最后一条 faults，在正确密码下均为 `文件损坏: RAR password verification failed: EOpen@Process (Could not open next volume)`，产出为空。原生 `vendor/unrar/src/open_archive.rs::callback` 已从 `UCM_CHANGEVOLUMEW` 保存请求名称到 `user_data.1`，但 `process_file_raw` 返回错误时丢弃它；`rar_support.rs::classify_password_test_error` 又把 EOpen@Process 归为 FileCorrupted。下一轮先保留真实卷请求上下文，再贯通浏览/密码候选/检查/提取/转换与最终历史；不能把通知已找到的卷误当缺失，错密和混卷仍需独立原包证明，不按文件名猜隐藏尾数。
 
 ## 历史：v1.5.7 已正式发布，接续更多 SFX 模块（2026-10-18）
 
