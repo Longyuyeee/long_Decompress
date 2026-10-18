@@ -1,0 +1,89 @@
+{
+  "checkedAt": "2026-10-18T03:20:58.697Z",
+  "functionalFreeze": "d3d0a097c34600dde536ac0d5cc4b95e953c3b58",
+  "candidateCommit": "c5beb80315d400e642cbc66593433e84125da3b6",
+  "candidateRun": 39092798929,
+  "candidateTree": "bf23aa49d7e258eed8967dfa196fbebc66967d34",
+  "installer": "Long解压_1.5.3_x64-setup.exe",
+  "installerBytes": 20854650,
+  "installerSha256": "915da8bb0aecf88a03ea25a7c87eded76da05b0c0f49fd5dac0a0596b993596e",
+  "installerProductVersion": "1.5.3",
+  "embeddedEggEngine": {
+    "engineSha256": "533cd527d52e92ea896347d9c0ba662ee4107cc264a65628e76dd8d90ff7c6e4",
+    "engineBytes": 790528,
+    "noticesVerified": 67,
+    "cases": [
+      {
+        "name": "store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "low",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "normal",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "store5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "deflate5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "lzma5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "bzip2_big",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "mixed_store_deflate5",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "zip20",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_zip20",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "enc_zip20_bzip2",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "split",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "split_store",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-plain",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-key",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-key-volumes",
+        "bundledEngineContentVerification": true
+      },
+      {
+        "name": "native-cn-key",
+        "bundledEngineContentVerification": true
+      }
+    ],
+    "nativeMiddleMemberSelectedExtract": true,
+    "installationExecuted": false,
+    "engineExecutedFromExtractedInstaller": true
+  }
+}
