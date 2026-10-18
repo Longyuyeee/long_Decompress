@@ -234,6 +234,8 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
+**v1.5.6 功能封板候选**：RAR 进度改用实际解码字节，修正跨卷总量、暂停计时、同目录产出统计和停止误报失败。49 项 Rust、133 项前端、12 个真实桌面场景与 8 张实看页面通过；公开安装版仍为 v1.5.5。见[本版审计](long-compress-assistant/docs/RAR_PROGRESS_1.5.6.md)、[封板发布记录](long-compress-assistant/docs/RAR_PROGRESS_FREEZE_1.5.6.md)与[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.6.md)。
+
 **v1.5.5 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.5)。补齐真实 RAR4/5 外置卷 SFX 与固定 7-Zip 24.09 GUI 加载器读取，修复 RAR 空文件密码误判、块内控制和取消后的文件锁，并接通文件管理器中卷入口。94 项 Rust、214 项前端、十五组原包、24 个桌面场景和 18 张实看页面通过；正式四资产、中文说明及包内资源已回下载核对。见[实施审计](long-compress-assistant/docs/SFX_VOLUMES_1.5.5.md)、[封板记录](long-compress-assistant/docs/SFX_VOLUMES_FREEZE_1.5.5.md)与[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.5.md)。SFX 只读、不执行输入 EXE，不创建/修复或处理恢复卷，不承诺所有模块。后续按[十版路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)继续补格式、密码分卷和流程容错。
 
 此前 **v1.5.4** 新增 EGG AZO、AES/LEA 和固实只读，保留基础方法、传统密码和原生分卷，修复批量 ALZ/EGG 密码编码未应用，见[审计](long-compress-assistant/docs/EGG_COMPLEX_1.5.4.md)与[更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.4.md)。EGG 不提供创建、文件名/全局加密或修复，未验证组合不外推。软件图标和既有截图保留。

@@ -12,7 +12,7 @@
 
 原 RAR4/5 普通、内容密码、文件名密码，单包、原生卷及 SFX 分别验证字节累计与固定载荷。大包必须先实际解码再暂停、恢复、取消，核对预分配不冒充进度、暂停不计入吞吐、取消后无发布/暂存残留及源卷保持。实际队列入口和历史耗时走真实桌面，查看常用及窄窗页面。定向单元回归、普通生产构建、受保护 CI/合入、两份 README、中文 Release/更新说明和正式四资产回下载完成后才宣布发布。
 
-当前为实施中，尚未封板或发布。个人安装、设置和历史不修改；智能目录/ZIP 并行仍默认关闭，不恢复快速打包，Windows N 暂不保证支持。
+功能与测试已封板，发布状态见[封板记录](RAR_PROGRESS_FREEZE_1.5.6.md)。个人安装、设置和历史不修改；智能目录/ZIP 并行仍默认关闭，不恢复快速打包，Windows N 暂不保证支持。
 
 ## 真实场景发现与纠偏
 
@@ -25,3 +25,11 @@
 解码回调首次正字节立即可见，后续界面事件限制为约 100 ms 一次；收到暂停时立即刷新上一块已解码累计，再进入原生等待，避免短任务暂停后仍显示旧采样。没有增加解码延迟或测试专用限速。
 
 首轮桌面数据对照显示，实际解码约 205 MiB 时百分比只有约 8%。`rar_preflight.rs` 使用 processing 模式配合 RAR_SKIP，逐卷续块头重复返回整个逻辑文件的 unpacked_size，分母随卷数膨胀。原 RAR4 旧卷回归先复现 `(9,1324120)` 而正确值为 `(5,275544)`。按原生 split-before 标志只计逻辑条目首头，仍检查并跳过全部物理头；不按文件名粗暴去重，并与实际 RAR 筛选/路径规则一致。最终桌面必须同时核对实际字节、逻辑总量和显示比例，早期未核对分母的报告不作为封板证据。
+
+## 最终证据与换机入口
+
+功能冻结 `aed3eca`；49 项不同 Rust、133 项前端、类型检查通过。最终桌面 12 场景和 8 张实看页面、事件中的实际字节/分母/比例、暂停扣时、真实损坏拒绝及来源身份均在[机器证据](evidence/rar-progress-1.5.6/results.json)。运行 E2E 前先设置 `VITE_DESKTOP_E2E=1`，执行 `node node_modules/@tauri-apps/cli/tauri.js build --features desktop-e2e --bundles none`；构建完成再设 `TAURI_APP_BINARY` 为 `src-tauri/target/release/Long解压.exe` 的绝对路径，运行 `node scripts/test-tauri-desktop.mjs --rar-156-only`。不要与普通生产构建并行，共用 dist 和二进制路径。
+
+新增原包生成脚本 `scripts/prepare-rar-156-fixtures.mjs`，默认验证并保留 `test-results/rar-156-originals` 中已存在原字节；原 RAR7.23 路径 `E:/Winrar/Rar.exe`，独立读取使用随附 7-Zip 26.04。公共测试密码与成员 SHA256 在[原包清单](evidence/rar-progress-1.5.6/originals.json)，不把编码器随软件分发。16 MiB 载荷为前版 256 MiB 控制载荷的前缀；大控制包继续复用 `test-results/sfx-155-control/manifest.json`，来源和恢复脚本见[v1.5.5 审计](SFX_VOLUMES_1.5.5.md)。大包未入 Git；换机重建时须核对本版清单，不能用不同原包宣称相同证据。
+
+定向 Rust 过滤入口：`rar_support::tests`、`rar_preflight::tests`、`task_control::tests`、`progress_telemetry`、`sfx_archive::tests`、`extraction_transaction::tests`、`conflict_confirmation_tests` 和 `rar_decoded_progress`。前端六文件为 task store、taskHistory、AeroTable、DecompressView、HistoryView、useTauriCommands 的对应测试。`node scripts/audit-rar-156.mjs` 核对最终回归、桌面数据、文档链接及两份 README 原始图片保留。
