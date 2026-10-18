@@ -1,8 +1,8 @@
 {
-  "completedAt": "2026-10-18T01:42:13.292Z",
+  "completedAt": "2026-10-18T01:50:41.468Z",
   "application": "E:\\ProjectSave\\ClaudeProject\\Long-Decompress\\long-compress-assistant\\src-tauri\\target\\release\\Long解压.exe",
-  "binarySha256": "61d19fb84a7c8d73640ffb6e5d4567765f830f63cd5fc9d041a5b1cff4492d22",
-  "helperSha256": "593e1f96812b8b18752aadc786966bb7ba8ab3ea29a47115b1059049f717afa7",
+  "binarySha256": "2b658e6a3cd5e3c465bc422d9ec662faa0664de46c65754be50a14e86728372b",
+  "helperSha256": "484149b815a05358212be29203d7fe625e3f2c22dcdfe32edcefaeedff806c4d",
   "cases": [
     {
       "original": "store",
@@ -87,6 +87,9 @@
       "nativeVolumes": false,
       "convertedZipIndependentlyDecoded": true,
       "emptyDirectory": true
+    },
+    {
+      "actualCp932AliasesRejectedBeforePasswordClaim": true
     },
     {
       "genuineControlArchive": {
