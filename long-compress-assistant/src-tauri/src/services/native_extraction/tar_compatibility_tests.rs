@@ -4,18 +4,56 @@ use crate::models::compression::{DecompressOptions, TaskLogSeverity};
 use crate::services::io_buffer_pool::IOBufferPool;
 use anyhow::Result;
 use sha2::{Digest, Sha256};
+use std::cell::Cell;
 use std::io::Read;
+use std::io::Write;
 use std::path::{Component, Path, PathBuf};
 use tauri::Window;
 
-struct Runtime { pool: IOBufferPool }
+#[derive(Default)]
+struct Runtime {
+    pool: IOBufferPool,
+    written: Cell<u64>,
+    cancel_after: Option<u64>,
+    write_error: Option<std::io::ErrorKind>,
+}
 impl ExtractionRuntime for Runtime {
-    fn check_cancellation(&self) -> Result<()> { Ok(()) }
-    fn buffer_pool(&self) -> &IOBufferPool { &self.pool }
-    fn copy_buffer_size(&self) -> usize { 64 * 1024 }
+    fn check_cancellation(&self) -> Result<()> {
+        if self.cancel_after.is_some_and(|n| self.written.get() >= n) {
+            return Err(crate::services::compression_service::CompressionError::Cancelled.into());
+        }
+        Ok(())
+    }
+    fn write_extracted_chunk(&self, writer: &mut dyn Write, bytes: &[u8]) -> Result<()> {
+        if let Some(kind) = self.write_error {
+            return Err(std::io::Error::from(kind).into());
+        }
+        writer.write_all(bytes)?;
+        self.written.set(self.written.get() + bytes.len() as u64);
+        Ok(())
+    }
+    fn buffer_pool(&self) -> &IOBufferPool {
+        &self.pool
+    }
+    fn copy_buffer_size(&self) -> usize {
+        64 * 1024
+    }
     fn normalized_archive_path(&self, path: &Path, preserve: bool) -> Option<PathBuf> {
-        let path = if preserve { path } else { Path::new(path.file_name()?) };
-        let clean: PathBuf = path.components().filter_map(|c| if let Component::Normal(p) = c { Some(p) } else { None }).collect();
+        let path = if preserve {
+            path
+        } else {
+            Path::new(path.file_name()?)
+        };
+        let clean: PathBuf = path
+            .components()
+            .filter_map(|c| {
+                if let Component::Normal(p) = c {
+                    Some(p)
+                } else {
+                    None
+                }
+            })
+            .collect();
         (!clean.as_os_str().is_empty()).then_some(clean)
     }
     fn emit_log(&self, _: &Window, _: &str, _: &str, _: TaskLogSeverity) {}
@@ -24,7 +62,7 @@ impl ExtractionRuntime for Runtime {
 fn fixture() -> (PathBuf, serde_json::Value) {
     let p = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/tar-1513");
     let m = serde_json::from_slice(&std::fs::read(p.join("manifest.json")).unwrap()).unwrap();
-    (p,m)
+    (p, m)
 }
 fn decoder(file: &Path) -> Box<dyn Read + Send> {
     let f = std::fs::File::open(file).unwrap();
@@ -37,29 +75,400 @@ fn decoder(file: &Path) -> Box<dyn Read + Send> {
     }
 }
 fn check_original_layout(layout: &str) {
-    let (base,m) = fixture();
-    let runtime = Runtime { pool: IOBufferPool::default() };
+    let (base, m) = fixture();
+    let runtime = Runtime::default();
     for c in m["cases"].as_array().unwrap() {
-        if c["layout"] != layout { continue; }
+        if c["layout"] != layout {
+            continue;
+        }
         let file = base.join(c["archive"].as_str().unwrap());
         let out = tempfile::tempdir().unwrap();
-        extract_inner(&runtime,None,"real-tar-original",file.to_str().unwrap(),out.path(),Some(decoder(&file)),&DecompressOptions { preserve_paths:true, ..Default::default() }).unwrap();
+        extract_inner(
+            &runtime,
+            None,
+            "real-tar-original",
+            file.to_str().unwrap(),
+            out.path(),
+            Some(decoder(&file)),
+            &DecompressOptions {
+                preserve_paths: true,
+                ..Default::default()
+            },
+        )
+        .unwrap();
         for expected in c["expected"].as_array().unwrap() {
             let p = out.path().join(expected["path"].as_str().unwrap());
             assert!(p.is_file(), "{} omitted {}", c["archive"], expected["path"]);
             let bytes = std::fs::read(&p).unwrap();
-            assert_eq!(bytes.len() as u64, expected["bytes"].as_u64().unwrap(), "{}",p.display());
-            assert_eq!(format!("{:x}",Sha256::digest(&bytes)),expected["sha256"].as_str().unwrap(),"{}",p.display());
+            assert_eq!(
+                bytes.len() as u64,
+                expected["bytes"].as_u64().unwrap(),
+                "{}",
+                p.display()
+            );
+            assert_eq!(
+                format!("{:x}", Sha256::digest(&bytes)),
+                expected["sha256"].as_str().unwrap(),
+                "{}",
+                p.display()
+            );
+        }
+        assert_eq!(
+            walkdir::WalkDir::new(out.path())
+                .into_iter()
+                .filter_map(|e| e.ok())
+                .filter(|e| e.file_type().is_file())
+                .count(),
+            c["expected"].as_array().unwrap().len()
+        );
+    }
+}
+#[test]
+fn original_old_gnu_sparse_complete_content() {
+    check_original_layout("old-gnu");
+}
+#[test]
+fn original_pax00_sparse_complete_content() {
+    check_original_layout("pax00");
+}
+#[test]
+fn original_pax01_sparse_complete_content() {
+    check_original_layout("pax01");
+}
+#[test]
+fn original_pax10_sparse_complete_content() {
+    check_original_layout("pax10");
+}
+#[test]
+fn existing_pax_ordinary_long_name_is_not_a_new_feature() {
+    check_original_layout("pax-ordinary");
+}
+
+#[test]
+fn selected_sparse_file_does_not_extract_other_files() {
+    let (base, m) = fixture();
+    for c in m["cases"].as_array().unwrap() {
+        let file = base.join(c["archive"].as_str().unwrap());
+        let out = tempfile::tempdir().unwrap();
+        extract_inner(
+            &Runtime::default(),
+            None,
+            "selected",
+            file.to_str().unwrap(),
+            out.path(),
+            Some(decoder(&file)),
+            &DecompressOptions {
+                preserve_paths: true,
+                selected_entries: vec!["稀疏.bin".into()],
+                ..Default::default()
+            },
+        )
+        .unwrap();
+        assert_eq!(
+            walkdir::WalkDir::new(out.path())
+                .into_iter()
+                .filter_map(|e| e.ok())
+                .filter(|e| e.file_type().is_file())
+                .count(),
+            1
+        );
+        assert_eq!(
+            format!(
+                "{:x}",
+                Sha256::digest(std::fs::read(out.path().join("稀疏.bin")).unwrap())
+            ),
+            c["expected"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .find(|v| v["path"] == "稀疏.bin")
+                .unwrap()["sha256"]
+                .as_str()
+                .unwrap()
+        );
+    }
+}
+#[test]
+fn non_regular_selection_fails_even_in_tolerance_mode_but_regular_selection_works() {
+    let (base, m) = fixture();
+    let file = base.join(m["nonRegular"]["archive"].as_str().unwrap());
+    for tolerance in [false, true] {
+        let out = tempfile::tempdir().unwrap();
+        let e = extract_inner(
+            &Runtime::default(),
+            None,
+            "special",
+            file.to_str().unwrap(),
+            out.path(),
+            None,
+            &DecompressOptions {
+                preserve_paths: true,
+                skip_corrupted: tolerance,
+                ..Default::default()
+            },
+        )
+        .unwrap_err();
+        assert!(
+            e.to_string().contains("[archive-inspection:unsupported]"),
+            "{e:#}"
+        );
+    }
+    let out = tempfile::tempdir().unwrap();
+    extract_inner(
+        &Runtime::default(),
+        None,
+        "regular-selected",
+        file.to_str().unwrap(),
+        out.path(),
+        None,
+        &DecompressOptions {
+            preserve_paths: true,
+            selected_entries: vec![m["nonRegular"]["selected"].as_str().unwrap().into()],
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        format!(
+            "{:x}",
+            Sha256::digest(
+                std::fs::read(
+                    out.path()
+                        .join(m["nonRegular"]["selected"].as_str().unwrap())
+                )
+                .unwrap()
+            )
+        ),
+        m["nonRegular"]["regularSha256"].as_str().unwrap()
+    );
+}
+#[test]
+fn derived_mapping_faults_and_compressed_trailer_never_return_success() {
+    let (base, m) = fixture();
+    for f in m["faults"].as_array().unwrap() {
+        let file = base.join(f["archive"].as_str().unwrap());
+        let out = tempfile::tempdir().unwrap();
+        let e = extract_inner(
+            &Runtime::default(),
+            None,
+            "fault",
+            file.to_str().unwrap(),
+            out.path(),
+            Some(decoder(&file)),
+            &DecompressOptions {
+                preserve_paths: true,
+                ..Default::default()
+            },
+        )
+        .unwrap_err();
+        if f["expectedCategory"] == "unsupported" {
+            assert!(
+                e.to_string().contains("[archive-inspection:unsupported]"),
+                "{e:#}"
+            );
+        } else if !file.to_string_lossy().ends_with(".gz") {
+            assert!(
+                e.to_string().contains("[archive-inspection:damaged]"),
+                "{e:#}"
+            );
         }
     }
 }
 #[test]
-fn original_old_gnu_sparse_complete_content() { check_original_layout("old-gnu"); }
+fn sparse_hole_expansion_obeys_cancellation_between_real_output_chunks() {
+    let (base, _) = fixture();
+    let file = base.join("pax10.tar");
+    let out = tempfile::tempdir().unwrap();
+    let runtime = Runtime {
+        cancel_after: Some(65536),
+        ..Default::default()
+    };
+    let e = extract_inner(
+        &runtime,
+        None,
+        "cancel",
+        file.to_str().unwrap(),
+        out.path(),
+        None,
+        &DecompressOptions {
+            preserve_paths: true,
+            ..Default::default()
+        },
+    )
+    .unwrap_err();
+    assert!(matches!(
+        e.downcast_ref::<crate::services::compression_service::CompressionError>(),
+        Some(crate::services::compression_service::CompressionError::Cancelled)
+    ));
+    assert!(runtime.written.get() >= 65536);
+}
 #[test]
-fn original_pax00_sparse_complete_content() { check_original_layout("pax00"); }
+fn output_io_errors_are_not_skipped_as_corrupt_entries() {
+    let (base, _) = fixture();
+    let file = base.join("pax01.tar");
+    let out = tempfile::tempdir().unwrap();
+    let runtime = Runtime {
+        write_error: Some(std::io::ErrorKind::StorageFull),
+        ..Default::default()
+    };
+    let e = extract_inner(
+        &runtime,
+        None,
+        "io",
+        file.to_str().unwrap(),
+        out.path(),
+        None,
+        &DecompressOptions {
+            preserve_paths: true,
+            skip_corrupted: true,
+            ..Default::default()
+        },
+    )
+    .unwrap_err();
+    assert!(e
+        .chain()
+        .filter_map(|c| c.downcast_ref::<std::io::Error>())
+        .any(|e| e.kind() == std::io::ErrorKind::StorageFull));
+}
 #[test]
-fn original_pax01_sparse_complete_content() { check_original_layout("pax01"); }
+fn requested_timestamps_are_preserved_for_sparse_and_regular_files() {
+    let (base, _) = fixture();
+    let file = base.join("pax10.tar");
+    let out = tempfile::tempdir().unwrap();
+    extract_inner(
+        &Runtime::default(),
+        None,
+        "mtime",
+        file.to_str().unwrap(),
+        out.path(),
+        None,
+        &DecompressOptions {
+            preserve_paths: true,
+            preserve_timestamps: true,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    for name in ["稀疏.bin", "末尾.txt"] {
+        assert_eq!(
+            std::fs::metadata(out.path().join(name))
+                .unwrap()
+                .modified()
+                .unwrap()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+            1577934245
+        );
+    }
+}
+
+#[tokio::test]
+async fn original_browsing_and_text_preview_share_names_and_logical_sizes() {
+    let (base, m) = fixture();
+    for c in m["cases"].as_array().unwrap() {
+        let file = base.join(c["archive"].as_str().unwrap());
+        let result = crate::services::archive_browser::browse_archive(&file, None)
+            .await
+            .unwrap();
+        assert_eq!(result.total_files, 5, "{}", c["archive"]);
+        assert_eq!(
+            result.total_uncompressed_size,
+            c["expected"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|e| e["bytes"].as_u64().unwrap())
+                .sum::<u64>()
+        );
+        for e in c["expected"].as_array().unwrap() {
+            let found = result
+                .entries
+                .iter()
+                .find(|entry| entry.path == e["path"].as_str().unwrap())
+                .unwrap_or_else(|| panic!("{} missing {}", c["archive"], e["path"]));
+            assert_eq!(found.size, e["bytes"].as_u64().unwrap());
+        }
+        assert!(result
+            .entries
+            .iter()
+            .all(|e| !e.path.starts_with("./") && !e.path.contains("GNUSparseFile")));
+        let preview = crate::services::archive_preview::preview_archive_text(
+            &file,
+            m["longName"].as_str().unwrap(),
+            None,
+        )
+        .await
+        .unwrap();
+        assert_eq!(
+            preview.content,
+            "用户只要这份长路径说明。\nPAX / GNU long name.\n"
+        );
+    }
+}
+fn route(file: &Path) -> crate::services::compression_format::CompressionRoute {
+    use crate::services::compression_format::CompressionRoute as R;
+    match file.extension().unwrap().to_str().unwrap() {
+        "gz" => R::TarGzip,
+        "bz2" => R::TarBzip2,
+        "xz" => R::TarXz,
+        _ => R::Tar,
+    }
+}
 #[test]
-fn original_pax10_sparse_complete_content() { check_original_layout("pax10"); }
-#[test]
-fn existing_pax_ordinary_long_name_is_not_a_new_feature() { check_original_layout("pax-ordinary"); }
+fn integrity_reads_all_logical_content_and_rejects_derived_bad_maps_and_footer() {
+    let (base, m) = fixture();
+    for c in m["cases"].as_array().unwrap() {
+        let file = base.join(c["archive"].as_str().unwrap());
+        assert!(crate::services::compression_verification::verify_native(
+            route(&file),
+            &file,
+            None,
+            || false
+        )
+        .unwrap());
+    }
+    for c in m["faults"].as_array().unwrap() {
+        let file = base.join(c["archive"].as_str().unwrap());
+        assert!(
+            crate::services::compression_verification::verify_native(
+                route(&file),
+                &file,
+                None,
+                || false
+            )
+            .is_err(),
+            "{}",
+            file.display()
+        );
+    }
+}
+
+#[tokio::test]
+async fn user_integrity_entry_point_uses_native_tar_layout_not_a_7z_fallback() {
+    let (base, m) = fixture();
+    for c in m["cases"].as_array().unwrap() {
+        crate::services::universal_engine::UniversalCliEngine::test_integrity(
+            &base.join(c["archive"].as_str().unwrap()),
+            None,
+        )
+        .await
+        .unwrap();
+    }
+    for c in m["faults"].as_array().unwrap() {
+        let e = crate::services::universal_engine::UniversalCliEngine::test_integrity(
+            &base.join(c["archive"].as_str().unwrap()),
+            None,
+        )
+        .await
+        .unwrap_err();
+        assert!(
+            format!("{e:#}").contains(if c["expectedCategory"] == "unsupported" {
+                "[archive-inspection:unsupported]"
+            } else {
+                "[archive-inspection:damaged]"
+            }),
+            "{e:#}"
+        );
+    }
+}

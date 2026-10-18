@@ -155,12 +155,12 @@ fn read_tar_entry<R: Read>(reader: R, entry_path: &str) -> Result<Vec<u8>> {
     let reader = ScanLimitedReader::new(reader, MAX_TAR_PREVIEW_SCAN_BYTES);
     let mut archive = tar::Archive::new(reader);
     for entry in archive.entries()? {
-        let mut entry = entry?;
-        let path = entry.path()?.to_string_lossy().replace('\\', "/");
-        if path != entry_path {
+        let mut entry = super::tar_compatibility::LogicalEntry::new(entry?)?;
+        let path = entry.path().to_string_lossy().replace('\\', "/");
+        if path != entry_path.trim_start_matches("./") {
             continue;
         }
-        if !entry.header().entry_type().is_file() {
+        if !entry.is_file() {
             anyhow::bail!("Only regular image files can be previewed");
         }
         let expected_bytes = entry.size();
@@ -179,12 +179,12 @@ fn read_tar_text_entry<R: Read>(reader: R, entry_path: &str) -> Result<TextBytes
     let reader = ScanLimitedReader::new(reader, MAX_TAR_PREVIEW_SCAN_BYTES);
     let mut archive = tar::Archive::new(reader);
     for entry in archive.entries()? {
-        let mut entry = entry?;
-        let path = entry.path()?.to_string_lossy().replace('\\', "/");
-        if path != entry_path {
+        let mut entry = super::tar_compatibility::LogicalEntry::new(entry?)?;
+        let path = entry.path().to_string_lossy().replace('\\', "/");
+        if path != entry_path.trim_start_matches("./") {
             continue;
         }
-        if !entry.header().entry_type().is_file() {
+        if !entry.is_file() {
             anyhow::bail!("Only regular text files can be previewed");
         }
         let total_size = entry.size();

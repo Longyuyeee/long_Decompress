@@ -205,8 +205,9 @@ fn browse_tar_reader<R: Read>(
     let mut entries = Vec::new();
     for entry in archive.entries()? {
         ensure_not_cancelled(cancelled)?;
-        let entry = entry?;
-        let path = entry.path()?.to_string_lossy().replace('\\', "/");
+        let entry = super::tar_compatibility::LogicalEntry::new(entry?)?;
+        if entry.path().as_os_str().is_empty() && entry.header().entry_type().is_dir() { continue; }
+        let path = entry.path().to_string_lossy().replace('\\', "/");
         let header = entry.header();
         let is_dir = header.entry_type().is_dir();
         let modified = header.mtime().ok().and_then(|seconds| {
@@ -216,7 +217,7 @@ fn browse_tar_reader<R: Read>(
         entries.push(ArchiveEntryInfo { size_known: None,
             name: entry_name(&path),
             path,
-            size: if is_dir { 0 } else { header.size().unwrap_or(0) },
+            size: if is_dir { 0 } else { entry.size() },
             compressed_size: None,
             modified,
             crc: None,
