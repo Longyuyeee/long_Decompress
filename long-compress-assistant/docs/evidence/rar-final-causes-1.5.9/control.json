@@ -1,5 +1,5 @@
 {
-  "binarySha256": "24474c375d6a9f3b1fad6f6a66bb19599fb72e52d048abf3b2e2f04e015a608b",
+  "binarySha256": "475416fb1d8d7fa59b4c6cbce173e67a546eacbbf5cb64a5ac4adc98b8bddaca",
   "command": "node scripts/test-tauri-desktop.mjs --sfx-155-only --sfx-control-only",
   "control": {
     "createdAt": "2026-10-18T05:15:13.149Z",
@@ -61,7 +61,7 @@
       }
     ]
   },
-  "actualKnownPayloadBeforePause": 25165824,
+  "actualKnownPayloadBeforePause": 83361792,
   "logicalFileBytesWhenPaused": 268435456,
   "pauseStopsContentWrites": true,
   "resumeWrites": true,
@@ -77,32 +77,32 @@
       {
         "message": "确定解压格式: Rar (后缀: exe)",
         "severity": "Info",
-        "task_id": "sfx155-control-1792322047485",
-        "timestamp": "2026-10-18T11:14:07.708334600Z"
+        "task_id": "sfx155-control-1792323240133",
+        "timestamp": "2026-10-18T11:34:00.295256500Z"
       },
       {
         "message": "正在检测归档加密状态...",
         "severity": "Info",
-        "task_id": "sfx155-control-1792322047485",
-        "timestamp": "2026-10-18T11:14:07.708367600Z"
+        "task_id": "sfx155-control-1792323240133",
+        "timestamp": "2026-10-18T11:34:00.295839Z"
       },
       {
         "message": "加密状态检测完成：本次解压内容无需密码，正在准备解压...",
         "severity": "Success",
-        "task_id": "sfx155-control-1792322047485",
-        "timestamp": "2026-10-18T11:14:07.724216500Z"
+        "task_id": "sfx155-control-1792323240133",
+        "timestamp": "2026-10-18T11:34:00.312733600Z"
       },
       {
         "message": "开始解压：控制原包.part01.exe",
         "severity": "Info",
-        "task_id": "sfx155-control-1792322047485",
-        "timestamp": "2026-10-18T11:14:07.742387200Z"
+        "task_id": "sfx155-control-1792323240133",
+        "timestamp": "2026-10-18T11:34:00.330693500Z"
       },
       {
         "message": "最终失败原因：RAR 解压失败: 系统命令执行失败: RAR extraction cancelled",
         "severity": "Error",
-        "task_id": "sfx155-control-1792322047485",
-        "timestamp": "2026-10-18T11:14:08.295853400Z"
+        "task_id": "sfx155-control-1792323240133",
+        "timestamp": "2026-10-18T11:34:00.916789700Z"
       }
     ]
   },

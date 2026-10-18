@@ -444,13 +444,16 @@ pub async fn diagnose(
             report.evidence.push("自解压包仅做只读完整性检查，不提供自解压模块修复或恢复卷处理".into());
             return Ok(report);
         }
+        let unresolved_input = report.status.contains("password")
+            || (report.status == "missing_volume" && group.recovery.is_empty())
+            || report.issues.iter().any(|issue| matches!(issue.code.as_str(), "rar_later_data" | "rar_volume_unavailable"));
         if !tool {
-            report.issues.push(DiagnosticIssue {
+            if !unresolved_input { report.issues.push(DiagnosticIssue {
                 code: "rar_tool_required".into(),
                 severity: "warning".into(),
                 title: "修复需要本机 RAR 工具".into(),
                 detail: "安装 WinRAR 后重新检查即可；普通 RAR 解压不需要安装。".into(),
-            });
+            }); }
         } else if group.recovery_data_count.is_some() && report.missing_volumes.len() > group.recovery.len() {
             report.issues.push(DiagnosticIssue { code: "insufficient_recovery_volumes".into(), severity: "warning".into(), title: "恢复卷不足".into(), detail: format!("缺少 {} 个数据卷，仅有 {} 个校验通过的恢复卷；请补齐原卷或更多同组恢复卷。", report.missing_volumes.len(), group.recovery.len()) });
         } else if first.is_some()

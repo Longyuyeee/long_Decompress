@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-10-18T11:23:03.333Z",
+  "checkedAt": "2026-10-18T11:36:20.774Z",
   "rustDistinct": 96,
   "rustTests": [
     "test commands::compression::cancellation_tests::analysis_registration_is_removed_when_command_future_drops ... ok",
@@ -106,12 +106,12 @@
   "screenshots": 14,
   "production": {
     "command": "node node_modules/@tauri-apps/cli/tauri.js build --bundles none",
-    "mainBytes": 33954304,
-    "mainSha256": "818e49d6721024aeb627a49a99fb19ef6b54aef24355bbe746957a3421f85397",
+    "mainBytes": 33929728,
+    "mainSha256": "d37f69f82b664acd5425a95950575acb5010998287830c8093a5cd3dd67ef6b8",
     "mainProductVersion": "1.5.9",
     "installationExecuted": false
   },
-  "desktop": "24474c375d6a9f3b1fad6f6a66bb19599fb72e52d048abf3b2e2f04e015a608b",
+  "desktop": "475416fb1d8d7fa59b4c6cbce173e67a546eacbbf5cb64a5ac4adc98b8bddaca",
   "originalsUnchanged": true,
   "readmeImagesPreserved": true
 }

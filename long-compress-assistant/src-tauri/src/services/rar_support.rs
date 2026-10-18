@@ -1040,6 +1040,7 @@ mod tests {
             assert_eq!(report.status, "missing_volume");
             assert!(report.missing_volumes.contains(&missing));
             assert!(!report.can_repair);
+            assert!(!report.issues.iter().any(|i| i.code == "rar_tool_required"));
         }
         assert!(failures.is_empty(), "Native requested volume lost:\n{}", failures.join("\n"));
     }
@@ -1138,6 +1139,7 @@ mod tests {
             let report = super::super::rar_recovery::diagnose(&input, Some(key), Arc::new(AtomicBool::new(false))).await.unwrap();
             assert_eq!(report.status, "damaged", "{}: {:?}", c["name"], report.issues);
             assert!(!report.can_repair, "uncertain mixed volumes must be checked against their originals first");
+            assert!(!report.issues.iter().any(|i| i.code == "rar_tool_required"));
             assert!(report.issues.iter().any(|i| i.detail.contains("[archive-inspection:rar-later-data]")));
         }
     }

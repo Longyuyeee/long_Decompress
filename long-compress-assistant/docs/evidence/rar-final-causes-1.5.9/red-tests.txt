@@ -1,0 +1,61 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling long-compress-assistant v1.5.8 (E:\ProjectSave\ClaudeProject\Long-Decompress\long-compress-assistant\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 17.04s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-a98873875cb473b3.exe)
+
+running 1 test
+
+thread 'services::rar_support::tests::original_159_missing_tail_retains_exact_native_name' (2780) panicked at src\services\rar_support.rs:1020:9:
+Native requested volume lost:
+"rar4-old-native-original" browse: Unable to read RAR metadata: Could not open archive
+"rar4-old-native-original" integrity: RAR 内容未通过完整校验：EOpen@Process (Could not open next volume)
+"rar4-old-native-original" preflight: 解压失败: Unable to continue RAR metadata inspection: EOpen@Process (Could not open next volume)
+"rar4-modern-native-original" browse: Unable to read RAR metadata: Could not open archive
+"rar4-modern-native-original" integrity: RAR 内容未通过完整校验：EOpen@Process (Could not open next volume)
+"rar4-modern-native-original" preflight: 解压失败: Unable to continue RAR metadata inspection: EOpen@Process (Could not open next volume)
+"rar4-old-sfx-original" browse: Unable to read RAR metadata: Could not open archive
+"rar4-old-sfx-original" integrity: RAR 内容未通过完整校验：EOpen@Process (Could not open next volume)
+"rar4-old-sfx-original" preflight: 解压失败: Unable to continue RAR metadata inspection: EOpen@Process (Could not open next volume)
+"rar4-modern-sfx-original" browse: Unable to read RAR metadata: Could not open archive
+"rar4-modern-sfx-original" integrity: RAR 内容未通过完整校验：EOpen@Process (Could not open next volume)
+"rar4-modern-sfx-original" preflight: 解压失败: Unable to continue RAR metadata inspection: EOpen@Process (Could not open next volume)
+"rar5-native-original" browse: Unable to read RAR metadata: Could not open archive
+"rar5-native-original" integrity: RAR 内容未通过完整校验：EOpen@Process (Could not open next volume)
+"rar5-native-original" preflight: 解压失败: Unable to continue RAR metadata inspection: EOpen@Process (Could not open next volume)
+"rar5-sfx-original" browse: Unable to read RAR metadata: Could not open archive
+"rar5-sfx-original" integrity: RAR 内容未通过完整校验：EOpen@Process (Could not open next volume)
+"rar5-sfx-original" preflight: 解压失败: Unable to continue RAR metadata inspection: EOpen@Process (Could not open next volume)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::rar_support::tests::original_159_missing_tail_retains_exact_native_name ... FAILED
+
+failures:
+
+failures:
+    services::rar_support::tests::original_159_missing_tail_retains_exact_native_name
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 687 filtered out; finished in 0.81s
+
+error: test failed, to rerun pass `--lib`

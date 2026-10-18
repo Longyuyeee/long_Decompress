@@ -26,7 +26,7 @@ const images=s=>[...s.matchAll(/<img\b[^>]*>|!\[[^\]]*\]\([^)]+\)/g)].map(m=>m[0
 for(const f of ['README.md','long-compress-assistant/README.md'])assert.deepEqual(images(readFileSync(path.join(root,f),'utf8')),images(execFileSync('git',['show','53035eb:'+f],{cwd:root,encoding:'utf8'})))
 const main='src-tauri/target/release/Long解压.exe',version=execFileSync('powershell.exe',['-NoProfile','-Command',`(Get-Item -LiteralPath '${main}').VersionInfo.ProductVersion`],{encoding:'utf8'}).trim();assert.equal(version,'1.5.9');assert.notEqual(sha(main),report.binarySha256)
 const controlLog=readFileSync('test-results/rar159-control.log','utf8').replaceAll('\r\n','\n'),start=controlLog.indexOf('[\n  {'),end=controlLog.indexOf('\n]\n',start),control=JSON.parse(controlLog.slice(start,end+2))[0]
-assert.equal(control.actualKnownPayloadBeforePause,25165824);assert.equal(control.logicalFileBytesWhenPaused,268435456)
+assert.ok(control.actualKnownPayloadBeforePause>0&&control.actualKnownPayloadBeforePause<268435456);assert.equal(control.logicalFileBytesWhenPaused,268435456)
 for(const f of ['pauseStopsContentWrites','resumeWrites','cancelWhilePaused','sourceRetained','noPublishedOrStagedOutput'])assert.equal(control[f],true)
 const native=JSON.parse(controlLog.slice(end+3).trim());assert.equal(native.control.ok,false);assert.match(native.control.error,/cancelled/)
 writeFileSync(evidence+'/control.json',JSON.stringify({binarySha256:report.binarySha256,command:'node scripts/test-tauri-desktop.mjs --sfx-155-only --sfx-control-only',...control,native,rawIpcNotFrontendTask:true},null,2)+'\n')
