@@ -1,0 +1,109 @@
+{
+  "checkedAt": "2026-10-18T17:01:05.013Z",
+  "producer": "tar (GNU tar) 1.35",
+  "independent": "bsdtar 3.7.2 - libarchive 3.7.2 zlib/1.3 liblzma/5.4.5 bz2lib/1.0.8 liblz4/1.9.4 libzstd/1.5.5",
+  "independentSha256": "f0e3e19ebb911cad681b97bb2dd0f4619d21a7ebe77cf4f7e124512ac24030a4",
+  "source": "Ubuntu noble libarchive-tools/libarchive13t64 3.7.2-2, extracted without installing; validation-only, not shipped",
+  "cases": [
+    {
+      "archive": "old-gnu.tar",
+      "originalSha256": "166448730162d3554faffd22b436ff7b2f5b28728a970257dce07d4301d85550",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "old-gnu.tar.gz",
+      "originalSha256": "6c0ec8fb1fdea4e0788e8a1f2f7dabbea7f2f5fd2a0384aa64715988035d7b0d",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "old-gnu.tar.bz2",
+      "originalSha256": "4e5afcf2bd99e224f87f4013ad7d2ff171adb11f34ea4f3823a864aeb7e1b4e2",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "old-gnu.tar.xz",
+      "originalSha256": "b43bb0ea61f3a4cfab4df09a062960085e3fc9266a1789588eac93b687f4df27",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "pax00.tar",
+      "originalSha256": "5c16ab6d741632bed7bb0d4a225c64f5a6b27741a55ac2e29bcceea88f9af5ee",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "pax00.tar.gz",
+      "originalSha256": "ed6cc1b7300d67499a85a419cca73976d4ae50ea1129a6185be71ebc7d27d375",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "pax00.tar.bz2",
+      "originalSha256": "50076cd7fea21816fc84864c9b3bbef5b2af5c7d354e450e7ba393c406aea477",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "pax00.tar.xz",
+      "originalSha256": "e66b8320285181bc2ba49a3b5bb11a4ad5a5c74eefc67cd2ffc3c72e51c8cadd",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "pax01.tar",
+      "originalSha256": "3778172c4024b32fc63292b16b30e77104159630c4ac5b9dd2b6b608209e436e",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "pax01.tar.gz",
+      "originalSha256": "91427eaa645aea4dd1156a56f786181a728c576e7b3dfe1636495812f69a6d23",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "pax01.tar.bz2",
+      "originalSha256": "42550039bcd762fa40c84cb97875d387a3443e819d42265b75091c0ea387ba43",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "pax01.tar.xz",
+      "originalSha256": "f792e3a07f1e49353f59582322a401ce825312e1bb02a56d67a474d6fb9228c3",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "pax10.tar",
+      "originalSha256": "55fb4bddc9d88e4f9946e9afee7f2beb1dcbf25395efb4dc1fe265a8abc429f1",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "pax10.tar.gz",
+      "originalSha256": "2ef5ed64f58002f538a742744fb0e748afdaa5eeb06e00e397e3c1e4611a66f8",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "pax10.tar.bz2",
+      "originalSha256": "0bc8a3da9da6f63eccf14715b343e26afde4f3bbd69013b98ba4b151056b1384",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "pax10.tar.xz",
+      "originalSha256": "68036a8c7157aa19f62e60a5eeb19cb3289997a2f32d5f8bb5f8dfbbbb5b23ff",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "pax-ordinary.tar",
+      "originalSha256": "2bfa84962fefc834a3de3072ec276d1398122b6c5cc7210b93aa456fdf04da57",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "pax-ordinary.tar.gz",
+      "originalSha256": "d08cc5a51245cbb11e962de0d2f38de07cc836a537533285b06969cedfe021ab",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "pax-ordinary.tar.bz2",
+      "originalSha256": "f629b62e2ee4717cd9d6891f38522a118950afeb5b2305bff67e94dffd2173dd",
+      "allLogicalContentHashes": true
+    },
+    {
+      "archive": "pax-ordinary.tar.xz",
+      "originalSha256": "a7de8187585f9f01ed92ec3eefdcd8a3ad475145b87d0118b68f4731f9a90469",
+      "allLogicalContentHashes": true
+    }
+  ]
+}

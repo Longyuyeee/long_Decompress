@@ -1,0 +1,1165 @@
+{
+  "createdAt": "2026-10-18T16:52:20.062146+00:00",
+  "producer": "tar (GNU tar) 1.35",
+  "producerSha256": "3ee2c3c0b4dd9aacebfd2f0fbae44bad36348203acff78a44888dd58c05f811c",
+  "sources": "Self-authored fixed sparse/zero/empty/Unicode long-path payloads; no external user files",
+  "longName": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+  "cases": [
+    {
+      "name": "old-gnu-tar",
+      "layout": "old-gnu",
+      "archive": "old-gnu.tar",
+      "original": {
+        "path": "old-gnu.tar",
+        "bytes": 40960,
+        "sha256": "166448730162d3554faffd22b436ff7b2f5b28728a970257dce07d4301d85550"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=gnu",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--sparse",
+        "--hole-detection=raw",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/old-gnu.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "old-gnu-tar.gz",
+      "layout": "old-gnu",
+      "archive": "old-gnu.tar.gz",
+      "original": {
+        "path": "old-gnu.tar.gz",
+        "bytes": 585,
+        "sha256": "6c0ec8fb1fdea4e0788e8a1f2f7dabbea7f2f5fd2a0384aa64715988035d7b0d"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=gnu",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--sparse",
+        "--hole-detection=raw",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/old-gnu.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "old-gnu-tar.bz2",
+      "layout": "old-gnu",
+      "archive": "old-gnu.tar.bz2",
+      "original": {
+        "path": "old-gnu.tar.bz2",
+        "bytes": 640,
+        "sha256": "4e5afcf2bd99e224f87f4013ad7d2ff171adb11f34ea4f3823a864aeb7e1b4e2"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=gnu",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--sparse",
+        "--hole-detection=raw",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/old-gnu.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "old-gnu-tar.xz",
+      "layout": "old-gnu",
+      "archive": "old-gnu.tar.xz",
+      "original": {
+        "path": "old-gnu.tar.xz",
+        "bytes": 568,
+        "sha256": "b43bb0ea61f3a4cfab4df09a062960085e3fc9266a1789588eac93b687f4df27"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=gnu",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--sparse",
+        "--hole-detection=raw",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/old-gnu.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "pax00-tar",
+      "layout": "pax00",
+      "archive": "pax00.tar",
+      "original": {
+        "path": "pax00.tar",
+        "bytes": 51200,
+        "sha256": "5c16ab6d741632bed7bb0d4a225c64f5a6b27741a55ac2e29bcceea88f9af5ee"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=pax",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+        "--sparse",
+        "--hole-detection=raw",
+        "--sparse-version=0.0",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/pax00.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "pax00-tar.gz",
+      "layout": "pax00",
+      "archive": "pax00.tar.gz",
+      "original": {
+        "path": "pax00.tar.gz",
+        "bytes": 876,
+        "sha256": "ed6cc1b7300d67499a85a419cca73976d4ae50ea1129a6185be71ebc7d27d375"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=pax",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+        "--sparse",
+        "--hole-detection=raw",
+        "--sparse-version=0.0",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/pax00.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "pax00-tar.bz2",
+      "layout": "pax00",
+      "archive": "pax00.tar.bz2",
+      "original": {
+        "path": "pax00.tar.bz2",
+        "bytes": 898,
+        "sha256": "50076cd7fea21816fc84864c9b3bbef5b2af5c7d354e450e7ba393c406aea477"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=pax",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+        "--sparse",
+        "--hole-detection=raw",
+        "--sparse-version=0.0",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/pax00.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "pax00-tar.xz",
+      "layout": "pax00",
+      "archive": "pax00.tar.xz",
+      "original": {
+        "path": "pax00.tar.xz",
+        "bytes": 820,
+        "sha256": "e66b8320285181bc2ba49a3b5bb11a4ad5a5c74eefc67cd2ffc3c72e51c8cadd"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=pax",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+        "--sparse",
+        "--hole-detection=raw",
+        "--sparse-version=0.0",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/pax00.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "pax01-tar",
+      "layout": "pax01",
+      "archive": "pax01.tar",
+      "original": {
+        "path": "pax01.tar",
+        "bytes": 51200,
+        "sha256": "3778172c4024b32fc63292b16b30e77104159630c4ac5b9dd2b6b608209e436e"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=pax",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+        "--sparse",
+        "--hole-detection=raw",
+        "--sparse-version=0.1",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/pax01.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "pax01-tar.gz",
+      "layout": "pax01",
+      "archive": "pax01.tar.gz",
+      "original": {
+        "path": "pax01.tar.gz",
+        "bytes": 882,
+        "sha256": "91427eaa645aea4dd1156a56f786181a728c576e7b3dfe1636495812f69a6d23"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=pax",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+        "--sparse",
+        "--hole-detection=raw",
+        "--sparse-version=0.1",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/pax01.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "pax01-tar.bz2",
+      "layout": "pax01",
+      "archive": "pax01.tar.bz2",
+      "original": {
+        "path": "pax01.tar.bz2",
+        "bytes": 894,
+        "sha256": "42550039bcd762fa40c84cb97875d387a3443e819d42265b75091c0ea387ba43"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=pax",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+        "--sparse",
+        "--hole-detection=raw",
+        "--sparse-version=0.1",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/pax01.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "pax01-tar.xz",
+      "layout": "pax01",
+      "archive": "pax01.tar.xz",
+      "original": {
+        "path": "pax01.tar.xz",
+        "bytes": 832,
+        "sha256": "f792e3a07f1e49353f59582322a401ce825312e1bb02a56d67a474d6fb9228c3"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=pax",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+        "--sparse",
+        "--hole-detection=raw",
+        "--sparse-version=0.1",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/pax01.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "pax10-tar",
+      "layout": "pax10",
+      "archive": "pax10.tar",
+      "original": {
+        "path": "pax10.tar",
+        "bytes": 51200,
+        "sha256": "55fb4bddc9d88e4f9946e9afee7f2beb1dcbf25395efb4dc1fe265a8abc429f1"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=pax",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+        "--sparse",
+        "--hole-detection=raw",
+        "--sparse-version=1.0",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/pax10.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "pax10-tar.gz",
+      "layout": "pax10",
+      "archive": "pax10.tar.gz",
+      "original": {
+        "path": "pax10.tar.gz",
+        "bytes": 888,
+        "sha256": "2ef5ed64f58002f538a742744fb0e748afdaa5eeb06e00e397e3c1e4611a66f8"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=pax",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+        "--sparse",
+        "--hole-detection=raw",
+        "--sparse-version=1.0",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/pax10.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "pax10-tar.bz2",
+      "layout": "pax10",
+      "archive": "pax10.tar.bz2",
+      "original": {
+        "path": "pax10.tar.bz2",
+        "bytes": 883,
+        "sha256": "0bc8a3da9da6f63eccf14715b343e26afde4f3bbd69013b98ba4b151056b1384"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=pax",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+        "--sparse",
+        "--hole-detection=raw",
+        "--sparse-version=1.0",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/pax10.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "pax10-tar.xz",
+      "layout": "pax10",
+      "archive": "pax10.tar.xz",
+      "original": {
+        "path": "pax10.tar.xz",
+        "bytes": 828,
+        "sha256": "68036a8c7157aa19f62e60a5eeb19cb3289997a2f32d5f8bb5f8dfbbbb5b23ff"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=pax",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+        "--sparse",
+        "--hole-detection=raw",
+        "--sparse-version=1.0",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/pax10.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "pax-ordinary-tar",
+      "layout": "pax-ordinary",
+      "archive": "pax-ordinary.tar",
+      "original": {
+        "path": "pax-ordinary.tar",
+        "bytes": 8540160,
+        "sha256": "2bfa84962fefc834a3de3072ec276d1398122b6c5cc7210b93aa456fdf04da57"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=pax",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/pax-ordinary.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "pax-ordinary-tar.gz",
+      "layout": "pax-ordinary",
+      "archive": "pax-ordinary.tar.gz",
+      "original": {
+        "path": "pax-ordinary.tar.gz",
+        "bytes": 9151,
+        "sha256": "d08cc5a51245cbb11e962de0d2f38de07cc836a537533285b06969cedfe021ab"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=pax",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/pax-ordinary.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "pax-ordinary-tar.bz2",
+      "layout": "pax-ordinary",
+      "archive": "pax-ordinary.tar.bz2",
+      "original": {
+        "path": "pax-ordinary.tar.bz2",
+        "bytes": 762,
+        "sha256": "f629b62e2ee4717cd9d6891f38522a118950afeb5b2305bff67e94dffd2173dd"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=pax",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/pax-ordinary.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    },
+    {
+      "name": "pax-ordinary-tar.xz",
+      "layout": "pax-ordinary",
+      "archive": "pax-ordinary.tar.xz",
+      "original": {
+        "path": "pax-ordinary.tar.xz",
+        "bytes": 2052,
+        "sha256": "a7de8187585f9f01ed92ec3eefdcd8a3ad475145b87d0118b68f4731f9a90469"
+      },
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "producerArguments": [
+        "tar",
+        "--format=pax",
+        "--sort=name",
+        "--mtime=@1577934245",
+        "--owner=0",
+        "--group=0",
+        "--numeric-owner",
+        "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+        "-cf",
+        "/mnt/e/ProjectSave/ClaudeProject/Long-Decompress/long-compress-assistant/tests/fixtures/archives/tar-1513/pax-ordinary.tar",
+        "-C",
+        "/tmp/long-tar1513-wu6gvydw/source",
+        "."
+      ],
+      "gnuFullContentHashes": true
+    }
+  ],
+  "nonRegular": {
+    "archive": "non-regular.tar",
+    "original": {
+      "path": "non-regular.tar",
+      "bytes": 10240,
+      "sha256": "7d072c917db387bd95c214466eec6f3a1a8cd1774857180e7e9614553845107a"
+    },
+    "selected": "硬链接.txt",
+    "regularSha256": "37f77c16d73eae0250652dadd57dbe913a84803181ac397559e2ba3e075128d4"
+  },
+  "faults": [
+    {
+      "archive": "derived-pax10-unknown.tar",
+      "from": "pax10.tar",
+      "derivedNotOriginal": true,
+      "expectedCategory": "unsupported",
+      "identity": {
+        "path": "derived-pax10-unknown.tar",
+        "bytes": 51200,
+        "sha256": "650ae61b19eb3a9a7fe7ff465e8606795de96a6189c98c1dfa12675adfffe906"
+      }
+    },
+    {
+      "archive": "derived-pax10-size.tar",
+      "from": "pax10.tar",
+      "derivedNotOriginal": true,
+      "expectedCategory": "damaged",
+      "identity": {
+        "path": "derived-pax10-size.tar",
+        "bytes": 51200,
+        "sha256": "5a1c058c4c7e8fd58cfa2c902777f7ba61430279266ae4584b3692aec6850a2f"
+      }
+    },
+    {
+      "archive": "derived-pax01-overlap.tar",
+      "from": "pax01.tar",
+      "derivedNotOriginal": true,
+      "expectedCategory": "damaged",
+      "identity": {
+        "path": "derived-pax01-overlap.tar",
+        "bytes": 51200,
+        "sha256": "75643f37ea6a1c2663e564ebd884d7fbea0174e32bf614efed5f6d8f215bc31b"
+      }
+    },
+    {
+      "archive": "derived-pax10-footer.tar.gz",
+      "from": "pax10.tar.gz",
+      "derivedNotOriginal": true,
+      "expectedCategory": "damaged",
+      "identity": {
+        "path": "derived-pax10-footer.tar.gz",
+        "bytes": 883,
+        "sha256": "3cbb5a7e2cb4be23f12a66e92faa70491b3b4de3e6c4d07da96043befd93548b"
+      }
+    }
+  ]
+}
