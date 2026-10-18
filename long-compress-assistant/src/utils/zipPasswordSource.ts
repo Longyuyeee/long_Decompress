@@ -7,7 +7,9 @@ export function supportsZipPasswordEncoding(path: string, actualFormat?: string 
   // Unknown sources can still be ZIPs. Do not hide a restored explicit choice.
   // ALZ reuses this persisted source-codepage field for its ANSI filenames and
   // password bytes. Undefined still means the format-specific default (CP949).
-  return !format || format === 'zip' || format === 'zipx' || format === 'alz'
+  // EGG filenames retain their own Unicode/legacy marker; only its key bytes
+  // use this field. Undefined EGG key encoding means UTF-8.
+  return !format || format === 'zip' || format === 'zipx' || format === 'alz' || format === 'egg'
 }
 
 export function zipPasswordEncodingForSource(path: string, encoding?: ZipPasswordEncoding, actualFormat?: string | null) {

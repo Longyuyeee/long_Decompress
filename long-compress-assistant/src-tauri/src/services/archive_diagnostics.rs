@@ -132,6 +132,7 @@ fn format_label(path: &Path, header: &[u8]) -> String {
     let magic = ArchiveFormat::from_magic(header);
     if magic == ArchiveFormat::Unknown && path.extension().is_some_and(|e| e.eq_ignore_ascii_case("zpaq")) { return "ZPAQ".into(); }
     if magic == ArchiveFormat::Unknown && path.extension().is_some_and(|e| e.eq_ignore_ascii_case("alz")) { return "ALZ".into(); }
+    if magic == ArchiveFormat::Unknown && path.extension().is_some_and(|e| e.eq_ignore_ascii_case("egg")) { return "EGG".into(); }
     match magic {
         ArchiveFormat::Zip => "ZIP".to_string(),
         ArchiveFormat::SevenZip => "7Z".to_string(),
@@ -168,6 +169,14 @@ fn classify_failure(
         // A path can contain incidental words such as "eof". Explicit format
         // evidence must outrank those free-text heuristics.
         ("damaged", "归档损坏", "归档结构已确认损坏或不完整；请重新获取完整文件，反复尝试密码不能修复损坏")
+    } else if lower.contains("[egg-io]") {
+        ("io_error", "EGG 文件读写失败", "请检查源文件是否可读、输出目录权限和磁盘可用空间。读写失败不能据此判定密码错误。")
+    } else if lower.contains("[egg-password-encoding]") {
+        ("password_encoding", "EGG 密码编码不兼容", "请明确选择原工具密码代码页；不会替换字符或据此判定文件损坏")
+    } else if lower.contains("[egg-password]") {
+        ("ambiguous_data", "EGG 密码或加密数据未通过校验", "请核对密码，并检查加密头或文件是否损坏；短头不匹配不能单独证明密码错误。")
+    } else if lower.contains("[archive-inspection:unsupported]") {
+        ("unsupported_feature", "暂不支持此归档特性", "当前引擎无法读取此算法或归档特性；这不等于文件损坏或密码错误")
     } else if lower.contains("[alz-io]") {
         ("io_error", "ALZ 文件读写失败", "请按原始原因检查空间、设备连接或访问权限，不应继续尝试密码")
     } else if lower.contains("[alz-encoding]") || lower.contains("[alz-password-encoding]") {
@@ -305,7 +314,7 @@ pub async fn diagnose_archive_with_encoding(
     }
     let (group, alz_structure_error) = match SplitArchiveDetector::detect_split_archive(path) {
         Ok(group) => (group, None),
-        Err(error) if super::alz_volumes::is_candidate(path) => (None, Some(error)),
+        Err(error) if super::alz_volumes::is_candidate(path) || super::egg_volumes::is_candidate(path) => (None, Some(error)),
         Err(error) => return Err(error),
     };
     let source = group.as_ref().map(|group| group.first_part.as_path()).unwrap_or(path);
@@ -339,7 +348,7 @@ pub async fn diagnose_archive_with_encoding(
         .evidence
         .push(format!("Archive size: {} bytes", report.file_size));
     if let Some(error) = alz_structure_error {
-        report.actual_format = "ALZ".into();
+        report.actual_format = if super::egg_volumes::is_candidate(path) { "EGG" } else { "ALZ" }.into();
         record_failure(&mut report, &error, password.is_some(), false, path);
         return Ok(report);
     }
@@ -502,6 +511,11 @@ pub async fn diagnose_archive_with_encoding(
         }
     } else if actual_format == "7Z" {
         report.encrypted = seven_zip::requires_password(source).unwrap_or(report.encrypted);
+    } else if actual_format == "EGG" {
+        match super::egg_engine::requires_password(source, &Default::default(), cancelled.clone()).await {
+            Ok(encrypted) => report.encrypted = encrypted,
+            Err(error) => { record_failure(&mut report, &error, password.is_some(), false, source); return Ok(report); }
+        }
     } else if actual_format == "ALZ" {
         // Reject unsupported methods/structure before asking for a password.
         let options = crate::models::compression::DecompressOptions { zip_password_encoding, ..Default::default() };
@@ -532,6 +546,10 @@ pub async fn diagnose_archive_with_encoding(
     let verify_password = password.map(str::to_string);
     let verify_cancelled = cancelled.clone();
     let verification = match route {
+        _ if actual_format == "EGG" => {
+            report.integrity_tested = true;
+            super::egg_engine::verify(source, password, &crate::models::compression::DecompressOptions { zip_password_encoding, ..Default::default() }, cancelled.clone()).await
+        }
         _ if actual_format == "ALZ" => {
             report.integrity_tested = true;
             super::alz_engine::verify(source, password, &crate::models::compression::DecompressOptions { zip_password_encoding, ..Default::default() }, cancelled.clone()).await

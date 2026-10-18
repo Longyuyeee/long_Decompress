@@ -27,7 +27,7 @@ export type FailureCategory = keyof typeof failureCategories
 // Classification markers remain in task/history evidence for recovery routing.
 // Only the ordinary toast/log presentation removes them; never mutate records.
 export function archiveInspectionMessageForDisplay(message: string): string {
-  const readable = message.replace(/\[(?:archive-inspection:[^\]]+|alz-(?:encoding|password-encoding|io|password))\]\s*/g, '').trim()
+  const readable = message.replace(/\[(?:archive-inspection:[^\]]+|alz-(?:encoding|password-encoding|io|password)|egg-(?:password-encoding|io|password))\]\s*/g, '').trim()
   return readable || (message ? '归档检测未通过，未提供具体原因。' : '')
 }
 

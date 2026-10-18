@@ -27,11 +27,11 @@ pub struct ArchiveEngineCapabilities {
 
 const NATIVE_BROWSE_EXTENSIONS: &[&str] = &[
     "7z", "rar", "r00", "zip", "zipx", "jar", "epub", "apk", "appx", "tar", "ova",
-    "tgz", "tpz", "tbz", "tbz2", "txz", "tzst", "lz4", "br", "lz", "tlz", "alz", "a00",
+    "tgz", "tpz", "tbz", "tbz2", "txz", "tzst", "lz4", "br", "lz", "tlz", "alz", "a00", "egg",
 ];
 const NESTED_ARCHIVE_EXTENSIONS: &[&str] = &[
     "zip", "zipx", "7z", "rar", "r00", "tar", "tgz", "tpz", "gz", "tbz", "tbz2",
-    "bz2", "txz", "xz", "tzst", "zst", "lz4", "br", "lz", "tlz", "cab", "iso", "jar", "epub", "apk", "appx", "arj", "z", "udf", "alz",
+    "bz2", "txz", "xz", "tzst", "zst", "lz4", "br", "lz", "tlz", "cab", "iso", "jar", "epub", "apk", "appx", "arj", "z", "udf", "alz", "egg",
 ];
 const BOUNDED_PREVIEW_FORMATS: &[&str] = &["ZIP", "TAR"];
 const IMAGE_PREVIEW_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "bmp"];
@@ -302,6 +302,9 @@ pub fn detect_archive_engine_capabilities() -> ArchiveEngineCapabilities {
     let mut formats = parse_archive_engine_formats(&stdout);
     if crate::services::alz_engine::command_path().is_some() {
         formats.push(ArchiveEngineFormatCapability { name: "ALZ".into(), extensions: vec!["alz".into()], can_create: false });
+    }
+    if crate::services::egg_engine::command_path().is_some() {
+        formats.push(ArchiveEngineFormatCapability { name: "EGG".into(), extensions: vec!["egg".into()], can_create: false });
     }
     if crate::services::zpaq_engine::command_path().is_some() {
         formats.push(ArchiveEngineFormatCapability { name: "ZPAQ".into(), extensions: vec!["zpaq".into()], can_create: true });

@@ -40,6 +40,7 @@ enum PasswordCandidateOutcome {
     Mismatch,
     Unrepresentable(ZipPasswordEncoding),
     AlzUnrepresentable,
+    EggUnrepresentable,
 }
 
 pub use crate::services::archive_format::ArchiveFormat;
@@ -341,6 +342,7 @@ impl CompressionService {
             ArchiveFormat::Ntfs => "ntfs".to_string(),
             ArchiveFormat::Hfs => "hfs".to_string(),
             ArchiveFormat::Alz => "alz".to_string(),
+            ArchiveFormat::Egg => "egg".to_string(),
             ArchiveFormat::Arc => "arc".to_string(),
             ArchiveFormat::Apfs => "apfs".to_string(),
             ArchiveFormat::Ext => "ext".to_string(),
@@ -1438,6 +1440,8 @@ impl CompressionService {
 
     pub async fn resolve_archive_password_silent(&self, file_path: &str, options: &DecompressOptions) -> Result<Option<String>> {
         self.check_cancellation()?;
+        if Self::detect_password_format(file_path)? == ArchiveFormat::Egg
+            && !crate::services::egg_engine::requires_password(Path::new(file_path), options, self.cancellation_flag.clone()).await? { return Ok(None); }
         if Self::detect_password_format(file_path)? == ArchiveFormat::Alz
             && !crate::services::alz_engine::requires_password(Path::new(file_path), options, self.cancellation_flag.clone()).await? { return Ok(None); }
         if Self::detect_password_format(file_path)? == ArchiveFormat::Zip
@@ -1600,6 +1604,7 @@ impl CompressionService {
                     }
                 },
                 PasswordCandidateOutcome::AlzUnrepresentable => self.emit_log(window, task_id, "候选密码不能按所选 ALZ 编码无损表示，已跳过；未据此判定密码错误或文件损坏", TaskLogSeverity::Info),
+                PasswordCandidateOutcome::EggUnrepresentable => self.emit_log(window, task_id, "候选密码不能按所选 EGG 密码编码无损表示，已跳过；未据此判定密码错误或文件损坏", TaskLogSeverity::Info),
                 PasswordCandidateOutcome::Unrepresentable(encoding) => self.emit_unrepresentable_candidate(window, task_id, encoding),
             }
         }
@@ -1664,7 +1669,7 @@ impl CompressionService {
             self.check_cancellation()?;
             match self.test_password_candidate(file_path, &password, options).await? {
                 PasswordCandidateOutcome::Matched => return Ok(Some(password)),
-                PasswordCandidateOutcome::Mismatch | PasswordCandidateOutcome::Unrepresentable(_) | PasswordCandidateOutcome::AlzUnrepresentable => continue,
+                PasswordCandidateOutcome::Mismatch | PasswordCandidateOutcome::Unrepresentable(_) | PasswordCandidateOutcome::AlzUnrepresentable | PasswordCandidateOutcome::EggUnrepresentable => continue,
             }
         }
 
@@ -1749,6 +1754,7 @@ impl CompressionService {
                     TaskLogSeverity::Info,
                 ),
                 PasswordCandidateOutcome::AlzUnrepresentable => self.emit_log(window, task_id, "候选密码不能按所选 ALZ 编码无损表示，已跳过；未据此判定密码错误或文件损坏", TaskLogSeverity::Info),
+                PasswordCandidateOutcome::EggUnrepresentable => self.emit_log(window, task_id, "候选密码不能按所选 EGG 密码编码无损表示，已跳过；未据此判定密码错误或文件损坏", TaskLogSeverity::Info),
                 PasswordCandidateOutcome::Unrepresentable(encoding) => self.emit_unrepresentable_candidate(window, task_id, encoding),
             }
         }
@@ -1888,6 +1894,7 @@ impl CompressionService {
                         }
                     }
                     PasswordCandidateOutcome::AlzUnrepresentable => self.emit_log(window, task_id, "候选密码不能按所选 ALZ 编码无损表示，已跳过；未据此判定密码错误或文件损坏", TaskLogSeverity::Info),
+                    PasswordCandidateOutcome::EggUnrepresentable => self.emit_log(window, task_id, "候选密码不能按所选 EGG 密码编码无损表示，已跳过；未据此判定密码错误或文件损坏", TaskLogSeverity::Info),
                     PasswordCandidateOutcome::Unrepresentable(encoding) => self.emit_unrepresentable_candidate(window, task_id, encoding),
                 }
             }
@@ -1909,6 +1916,7 @@ impl CompressionService {
     async fn archive_requires_password(&self, file_path: &str, format: ArchiveFormat) -> Result<bool> {
         match format {
             ArchiveFormat::Alz => crate::services::alz_engine::requires_password(Path::new(file_path), &Default::default(), self.cancellation_flag.clone()).await,
+            ArchiveFormat::Egg => crate::services::egg_engine::requires_password(Path::new(file_path), &Default::default(), self.cancellation_flag.clone()).await,
             ArchiveFormat::Zpaq => crate::services::zpaq_engine::requires_password(Path::new(file_path)),
             // 通过 7z CLI 处理的格式
             ArchiveFormat::Universal | ArchiveFormat::Iso | ArchiveFormat::Cab |
@@ -1971,6 +1979,9 @@ impl CompressionService {
 
     pub async fn verify_archive_password_candidate_with_encoding(&self, file_path: &str, password: &str, encoding: Option<ZipPasswordEncoding>) -> Result<bool> {
         self.check_cancellation()?;
+        if Self::detect_password_format(file_path)? == ArchiveFormat::Egg {
+            return crate::services::egg_engine::try_password(Path::new(file_path), password, &DecompressOptions { zip_password_encoding: encoding, ..Default::default() }, self.cancellation_flag.clone()).await;
+        }
         if Self::detect_password_format(file_path)? == ArchiveFormat::Alz {
             return crate::services::alz_engine::try_password(Path::new(file_path), password,
                 &DecompressOptions { zip_password_encoding: encoding, ..Default::default() }, self.cancellation_flag.clone()).await;
@@ -2023,6 +2034,9 @@ impl CompressionService {
 
     fn resolve_extraction_source(selected: &Path) -> Result<String> {
         Self::source_file_snapshot(selected, "Pre-checking")?;
+        if crate::services::egg_volumes::is_candidate(selected) {
+            return Ok(crate::services::egg_volumes::complete(selected)?.first.to_string_lossy().into_owned());
+        }
         if crate::services::alz_volumes::is_candidate(selected) {
             return Ok(crate::services::alz_volumes::complete(selected)?.first.to_string_lossy().into_owned());
         }
@@ -2132,7 +2146,9 @@ impl CompressionService {
         let mut final_password = password.clone();
         let mut password_verified = false;
         let scoped_zip = format == ArchiveFormat::Zip && crate::services::zip_selection::has_selection(&options);
-        let password_required = if format == ArchiveFormat::Alz {
+        let password_required = if format == ArchiveFormat::Egg {
+            Some(crate::services::egg_engine::requires_password(path, &options, service.cancellation_flag.clone()).await?)
+        } else if format == ArchiveFormat::Alz {
             Some(crate::services::alz_engine::requires_password(path, &options, service.cancellation_flag.clone()).await?)
         } else if scoped_zip {
             Some(UniversalCliEngine::zip_requires_password_for_selection(path, &options)?)
@@ -2183,6 +2199,8 @@ impl CompressionService {
                         "未取得能完整验证此 7Z 归档的密码；请手动核对密码，并检查文件或分卷是否损坏"
                     } else if format == ArchiveFormat::Alz {
                         "未取得能完整验证此 ALZ 归档的密码；请核对密码、原包编码和文件完整性"
+                    } else if format == ArchiveFormat::Egg {
+                        "未取得能完整验证此 EGG 归档的密码；请核对密码和文件完整性"
                     } else if format == ArchiveFormat::Rar {
                         "未取得能完整验证此 RAR 归档的密码；请核对密码，或检查归档及分卷是否损坏"
                     } else {
@@ -2229,6 +2247,9 @@ impl CompressionService {
                 }
                 if format == ArchiveFormat::Alz {
                     return Err(CompressionError::ExtractionFailed("[archive-inspection:ambiguous-data] ALZ 密码未能通过完整内容校验，请核对密码，并检查加密头或内容是否损坏。".into()).into());
+                }
+                if format == ArchiveFormat::Egg {
+                    return Err(CompressionError::ExtractionFailed("[archive-inspection:ambiguous-data] EGG 密码未能通过完整内容校验，请核对密码，并检查加密头或内容是否损坏。".into()).into());
                 }
                 if format == ArchiveFormat::Zpaq {
                     return Err(CompressionError::ExtractionFailed("[archive-inspection:ambiguous-data] ZPAQ 密码不匹配或文件已损坏，请核对密码和源文件。".into()).into());
@@ -2365,6 +2386,8 @@ impl CompressionService {
         let effective_format = format;
 
         let result = match effective_format {
+            ArchiveFormat::Egg => crate::services::egg_engine::extract(
+                path, &out_dir, final_password.as_deref(), &options, service.cancellation_flag.clone()).await,
             ArchiveFormat::Alz => crate::services::alz_engine::extract(
                 path, &out_dir, final_password.as_deref(), &options, service.cancellation_flag.clone()).await,
             ArchiveFormat::Zpaq => crate::services::zpaq_engine::extract(
@@ -2794,6 +2817,10 @@ impl CompressionService {
         options: &DecompressOptions,
     ) -> Result<Option<(usize, u64)>> {
         let stats = match format {
+            ArchiveFormat::Egg => {
+                let directory = crate::services::egg_engine::plan(archive_path, options, self.cancellation_flag.clone()).await?;
+                Some((directory.entries.len(), directory.total_uncompressed_size))
+            }
             ArchiveFormat::Alz => {
                 let directory = crate::services::alz_engine::plan(archive_path, options, self.cancellation_flag.clone()).await?;
                 Some((directory.entries.len(), directory.total_uncompressed_size))
@@ -2873,6 +2900,9 @@ impl CompressionService {
 
     fn archive_output_dir_name(path: &Path) -> String {
         let file_name = path.file_name().and_then(|name| name.to_str()).unwrap_or("archive");
+        if crate::services::egg_volumes::is_candidate(path) {
+            return regex::Regex::new(r"(?i)\.vol\d+\.egg$|\.egg$").unwrap().replace(file_name, "").into_owned();
+        }
         if crate::services::alz_volumes::is_candidate(path) {
             return path.file_stem().unwrap_or_default().to_string_lossy().into_owned();
         }
@@ -3500,6 +3530,9 @@ impl CompressionService {
     }
 
     async fn test_extraction_password(&self, file_path: &str, password: &str, options: &DecompressOptions) -> Result<bool> {
+        if Self::detect_password_format(file_path)? == ArchiveFormat::Egg {
+            return crate::services::egg_engine::try_password(Path::new(file_path), password, options, self.cancellation_flag.clone()).await;
+        }
         if Self::detect_password_format(file_path)? == ArchiveFormat::Alz {
             return crate::services::alz_engine::try_password(Path::new(file_path), password, options, self.cancellation_flag.clone()).await;
         }
@@ -3516,6 +3549,7 @@ impl CompressionService {
             Ok(true) => Ok(PasswordCandidateOutcome::Matched),
             Ok(false) => Ok(PasswordCandidateOutcome::Mismatch),
             Err(error) if error.to_string().contains("[alz-password-encoding]") => Ok(PasswordCandidateOutcome::AlzUnrepresentable),
+            Err(error) if error.to_string().contains("[egg-password-encoding]") => Ok(PasswordCandidateOutcome::EggUnrepresentable),
             Err(error) => match crate::services::zip_password::encoding_error(&error) {
                 Some(cause) if cause.is_unrepresentable() => Ok(PasswordCandidateOutcome::Unrepresentable(cause.encoding)),
                 _ => Err(error),
@@ -3531,6 +3565,9 @@ impl CompressionService {
 
     pub async fn test_archive_password(&self, file_path: &str, password: &str) -> Result<bool> {
         self.check_cancellation()?;
+        if Self::detect_password_format(file_path)? == ArchiveFormat::Egg {
+            return crate::services::egg_engine::try_password(Path::new(file_path), password, &Default::default(), self.cancellation_flag.clone()).await;
+        }
         if Self::detect_password_format(file_path)? == ArchiveFormat::Alz {
             return crate::services::alz_engine::try_password(Path::new(file_path), password, &Default::default(), self.cancellation_flag.clone()).await;
         }

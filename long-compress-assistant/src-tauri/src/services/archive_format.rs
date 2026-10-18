@@ -35,6 +35,7 @@ pub enum ArchiveFormat {
     Ntfs,
     Hfs,
     Alz,
+    Egg,
     Arc,
     Apfs,
     Ext,
@@ -45,6 +46,7 @@ pub enum ArchiveFormat {
 
 impl ArchiveFormat {
     pub fn from_magic(header: &[u8]) -> Self {
+        if header.starts_with(b"EGGA") { return Self::Egg; }
         if header.starts_with(b"ALZ\x01") { return Self::Alz; }
         if header.starts_with(b"7kSt") || header.starts_with(b"zPQ") { return Self::Zpaq; }
         if header.starts_with(b"PK\x03\x04") {
@@ -168,6 +170,7 @@ impl ArchiveFormat {
             "ntfs" => Self::Ntfs,
             "hfs" | "hfsx" => Self::Hfs,
             "alz" => Self::Alz,
+            "egg" => Self::Egg,
             "arc" => Self::Arc,
             "apfs" => Self::Apfs,
             "ext" | "ext2" | "ext3" | "ext4" => Self::Ext,
@@ -194,7 +197,7 @@ impl ArchiveFormat {
     pub fn supports_password(&self) -> bool {
         matches!(
             self,
-            Self::Zip | Self::SevenZip | Self::Rar | Self::Zpaq | Self::Alz | Self::AesEncrypted | Self::Universal
+            Self::Zip | Self::SevenZip | Self::Rar | Self::Zpaq | Self::Alz | Self::Egg | Self::AesEncrypted | Self::Universal
         )
     }
 }

@@ -1254,7 +1254,7 @@ pub async fn browse_archive(
     let resolved_password = match password.filter(|value| !value.is_empty()) {
         Some(password) => Some(password),
         None if crate::services::archive_browser::detect_format(std::path::Path::new(&file_path))
-            .is_ok_and(|format| matches!(format, crate::services::archive_format::ArchiveFormat::Zip | crate::services::archive_format::ArchiveFormat::Alz)) => None,
+            .is_ok_and(|format| matches!(format, crate::services::archive_format::ArchiveFormat::Zip | crate::services::archive_format::ArchiveFormat::Alz | crate::services::archive_format::ArchiveFormat::Egg)) => None,
         None => {
             let service = CompressionService::new_with_defaults().await;
             service
@@ -1663,6 +1663,11 @@ pub async fn test_archive_integrity(
     use crate::services::universal_engine::UniversalCliEngine;
 
     let path = std::path::Path::new(&file_path);
+    if crate::services::archive_browser::detect_format(path).map_err(|e| format!("{e:#}"))?
+        == crate::services::archive_format::ArchiveFormat::Egg {
+        return crate::services::egg_engine::verify(path, password.as_deref(), &DecompressOptions { zip_password_encoding, ..Default::default() }, Arc::new(AtomicBool::new(false)))
+            .await.map(|_| "Archive integrity verified".to_string()).map_err(|e| format!("{e:#}"));
+    }
     if crate::services::archive_browser::detect_format(path).map_err(|e| format!("{e:#}"))?
         == crate::services::archive_format::ArchiveFormat::Alz {
         return crate::services::alz_engine::verify(path, password.as_deref(),

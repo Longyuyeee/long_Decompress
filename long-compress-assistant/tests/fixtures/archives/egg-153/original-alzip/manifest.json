@@ -1,0 +1,152 @@
+{
+  "createdAt": "2026-10-18T02:40:22.130Z",
+  "generator": "Original ALZipCon 11.0.1.16 inside official ALZip 12.37.0.4",
+  "generatorSha256": "13c664d8b809348104999efb734587e2847aab04e5511af2e5345e13d2528433",
+  "dataLicense": "CC0-1.0 self-authored public payloads",
+  "cases": [
+    {
+      "archive": "native-plain.egg",
+      "name": "native-plain",
+      "password": null,
+      "split": false,
+      "members": [
+        {
+          "name": "native-plain.egg",
+          "bytes": 262476,
+          "sha256": "81c8179ef22fee0bd56af4b1d312cf6e0221cd98286be949ed98fa79b3d4e66c"
+        }
+      ],
+      "expected": [
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "346bbb99b1cc1b3275bd33612c1585c22800ac9fe496818cc678c9e1a6fb9e95"
+        },
+        {
+          "path": "说明 文件.txt",
+          "bytes": 48,
+          "sha256": "a5f98229fcaef908edb326e76a71c88085dd9d8d7896f6992e744d29d3488061"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "archive": "native-key.egg",
+      "name": "native-key",
+      "password": "PublicEGG+123!",
+      "split": false,
+      "members": [
+        {
+          "name": "native-key.egg",
+          "bytes": 262524,
+          "sha256": "9dff5fbfea6f7a8fc43d53d8ed7af48250b49f570a1264d9be2ddff8467780d7"
+        }
+      ],
+      "expected": [
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "346bbb99b1cc1b3275bd33612c1585c22800ac9fe496818cc678c9e1a6fb9e95"
+        },
+        {
+          "path": "说明 文件.txt",
+          "bytes": 48,
+          "sha256": "a5f98229fcaef908edb326e76a71c88085dd9d8d7896f6992e744d29d3488061"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "archive": "native-key-volumes.vol1.egg",
+      "name": "native-key-volumes",
+      "password": "PublicEGG+123!",
+      "split": true,
+      "members": [
+        {
+          "name": "native-key-volumes.vol1.egg",
+          "bytes": 65536,
+          "sha256": "fab49a6d7073f1a7dcc3ae4fd5fc7cf5e8a4d8c1d90221b8ebaf6465a67c540d"
+        },
+        {
+          "name": "native-key-volumes.vol2.egg",
+          "bytes": 65536,
+          "sha256": "794d79ecd33c6a78d30ce79371c63d50f7ede93d57da7359fc51b1e7faec9061"
+        },
+        {
+          "name": "native-key-volumes.vol3.egg",
+          "bytes": 65536,
+          "sha256": "e34ffc84385a0895c0710719ac894c5d1aa76d23b07e9a3518b4d73b23702a6e"
+        },
+        {
+          "name": "native-key-volumes.vol4.egg",
+          "bytes": 65536,
+          "sha256": "7c242f5b64f1ee6fa624c0fe7428613c30982697f3d86e49717bfa59b6d1596a"
+        },
+        {
+          "name": "native-key-volumes.vol5.egg",
+          "bytes": 527,
+          "sha256": "c40a9d4c4c0a1ade23bacf7be6cdf3f587abede59457d02a6339b41fde53b489"
+        }
+      ],
+      "expected": [
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "346bbb99b1cc1b3275bd33612c1585c22800ac9fe496818cc678c9e1a6fb9e95"
+        },
+        {
+          "path": "说明 文件.txt",
+          "bytes": 48,
+          "sha256": "a5f98229fcaef908edb326e76a71c88085dd9d8d7896f6992e744d29d3488061"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    },
+    {
+      "archive": "native-cn-key.egg",
+      "name": "native-cn-key",
+      "password": "中文密码123!",
+      "split": false,
+      "members": [
+        {
+          "name": "native-cn-key.egg",
+          "bytes": 262524,
+          "sha256": "1b6c0c30b640e89f2263d6c1bbdaa595762b34b7a9f0087f1b479a4ba12ba659"
+        }
+      ],
+      "expected": [
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 262144,
+          "sha256": "346bbb99b1cc1b3275bd33612c1585c22800ac9fe496818cc678c9e1a6fb9e95"
+        },
+        {
+          "path": "说明 文件.txt",
+          "bytes": 48,
+          "sha256": "a5f98229fcaef908edb326e76a71c88085dd9d8d7896f6992e744d29d3488061"
+        }
+      ],
+      "emptyDirectory": "空目录"
+    }
+  ]
+}
