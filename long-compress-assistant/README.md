@@ -16,7 +16,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 ## 功能概览
 
-**v1.5.8 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.8)。新增原厂 7-Zip 19.00/23.01/26.04 GUI 独立加载器，保留 24.09，并补充 WinRAR 6.24 模块与内嵌 7Z 回归。30 组固定原包、67 项 Rust、150 项前端、33 桌面场景及十张实看页面通过；缺卷最终原因、补卷新任务、密码浏览、所选提取及转换 ZIP 独立回解已核对。见[审计](docs/SFX_MODULES_1.5.8.md)、[封板记录](docs/SFX_MODULES_FREEZE_1.5.8.md)与[更新说明](docs/RELEASE_NOTES_1.5.8.md)。只读且不执行输入 EXE，不外推所有历史模块；下一版细化加密 RAR 缺尾/混卷原因。正式四资产、中文更新说明及包内主程序/四份说明已回下载核对。图标和原截图保留。十版路线已交付三版，余下七版按序推进。
+**v1.5.9 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.9)。加密 RAR 缺卷保留实际卷名和补回位置；前段密码通过后的后续数据异常不再一概当错密，诊断也不再给出不适用的修复工具提示。十二组真原包、96 项 Rust、152 项前端、39 桌面记录及十四张实看页面通过，补回原卷新任务、旧失败保留与转换独立回解已核对。见[审计](docs/RAR_FINAL_CAUSES_1.5.9.md)、[封板记录](docs/RAR_FINAL_CAUSES_FREEZE_1.5.9.md)与[更新说明](docs/RELEASE_NOTES_1.5.9.md)。正式四资产、中文更新说明和包内主程序/四份说明已回下载核对。前段密码通过不等于整包完整；不新增 RAR 创建或修复，不执行输入 EXE。图标和原截图保留。十版路线已交付四版，剩六版，下一版为大 EGG LZMA。
 
 此前 **v1.5.7 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.7)。补齐 7Z 中 PPMdH、Deflate、Deflate64、Bzip2 的原生读取，贯通密码、固实、数字分卷、所选提取及转换；改进损坏、方法不支持和输出错误的最终原因。61 项 Rust、150 项前端、25 个真实桌面场景与 8 张实看页面通过；正式四资产、中文说明及包内主程序/四份说明已回下载核对。见[审计](docs/SEVENZ_METHODS_1.5.7.md)、[封板记录](docs/SEVENZ_METHODS_FREEZE_1.5.7.md)和[更新说明](docs/RELEASE_NOTES_1.5.7.md)。不改变默认压缩算法，软件图标和原截图保留。
 
@@ -43,8 +43,6 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 此前 **v1.4.20**：扩展真实好压 ZipCrypto 论坛 ZIP 的缺卷部分抢救，逐文件区分已恢复、涉及缺卷、校验失败与无法确认；保留原任务设置继续解压。40 项不同 Rust、29 项前端和真实桌面流程通过，12 张常用/窄窗截图已查看。PR #179 已受保护合入，正式四资产、安装器版本及中文更新说明已回下载核对。见[实施审计](docs/ZIP_PARTIAL_RESCUE_1.4.20.md)、[封板记录](docs/ZIP_PARTIAL_RESCUE_FREEZE_1.4.20.md)、[更新说明](docs/RELEASE_NOTES_1.4.20.md)及[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.20)。软件图标及原截图保留。
 
 **v1.4.18** 的 ZIPX（XZ）标准多卷、密码创建、改密/重新分卷/合卷及缺卷补回继续保留。产品输出已用 WinRAR 7.23 独立回解，Bandizip Beta 解码异常及 7-Zip 卷名限制明确保留，原数字卷默认不变。见[ZIPX 审计](docs/STANDARD_ZIPX_1.4.18.md)和[更新说明](docs/RELEASE_NOTES_1.4.18.md)。
-
-v1.5.9 本地封板，正在进入发布：加密 RAR 缺卷显示实际卷名和补回位置，前段密码通过后的后续数据异常不再一概当错密；96 Rust、152 前端、39 桌面记录及十四张实看页面通过。正式下载仍以上方已发布版本为准，见[本版封板](docs/RAR_FINAL_CAUSES_FREEZE_1.5.9.md)。
 
 ## 本地开发
 

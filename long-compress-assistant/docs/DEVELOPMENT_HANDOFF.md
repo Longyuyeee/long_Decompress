@@ -1,10 +1,12 @@
 # 开发交接
 
-## 最新：v1.5.9 本地封板，进入发布（2026-10-18）
+## 最新：v1.5.9 已正式发布，接续大 EGG LZMA（2026-10-18）
 
 从 `53035eb` 接续，范围/红灯原包 `14c5b8f`，最终功能与桌面冻结 `31a46bb68c8e338ebbd1fd735161ce7b0bd92402`。已保留 UnRAR 实际卷名与失败时快照、区分 ASK/NOTIFY，以及前段密码通过后后续失败的明确类别；贯通预检、密码候选、浏览、检查、诊断、提取、转换和历史。页面复核另外修正无依据的修复工具提示，十二组真原包、96 Rust、152 前端、39 桌面记录与十四张最终实看页面通过，256 MiB 暂停/恢复/取消已在最终程序复跑。旧候选 `01c983a` 不发布。见[审计](RAR_FINAL_CAUSES_1.5.9.md)、[封板](RAR_FINAL_CAUSES_FREEZE_1.5.9.md)及[检查](evidence/rar-final-causes-1.5.9/checks.json)。
 
-八处版本 1.5.9，普通生产构建已通过，个人安装和数据不改。待必需候选 Windows package 成功、包内身份核对后受保护合入；候选与标签同树，正式构建完整成功后更新中文 Release/updater 并回下载四资产，最后文档单独回填，未完成前不称发布。下一版 v1.5.10 的 `tools/egg-engine/src/complex.rs` 256 MiB LZMA 单块/固实压缩输入边界需要有界读取或暂存与大原包证据，不能直接删限制；路线尚有六版目标，不重复规划。
+八处版本 1.5.9，普通生产构建通过，个人安装和数据不改。最终候选 `c82187c` 的必需 Windows package `39123949279`、主线 CI `39124574590`、正式构建 `39124580352` 均成功；[PR #199](https://github.com/Longyuyeee/long_Decompress/pull/199) 受保护合入，标签提交 `96a5a6564907a06f9644df786501d7e47014d887` 与候选同树 `a46a3957046464e9bf0586341056e423eccf7e27`，标签不移动。[v1.5.9](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.9) 于 UTC `2026-10-18T12:01:41Z`（北京时间 20:01:41）正式发布；四资产、中文说明、更新 ZIP 内安装器、签名/地址/时间及包内主程序/四份说明已回下载核对，见[候选](evidence/rar-final-causes-1.5.9/candidate.json)与[正式收据](evidence/rar-final-causes-1.5.9/release.json)。发布后只回填文档，不修改运行时或个人数据；包体检查与实际桌面运行证据分开。
+
+下一版 v1.5.10 继续既定大 EGG LZMA 目标。先读 `tools/egg-engine/src/complex.rs::validate/stream/Segments/solid` 和 `vendor/unegg/src/decompress/lzma.rs::extract_lzma`：前者限制单块/固实压缩输入为 256 MiB，但固实输入已有分段 Read；后者仍把全部压缩内容读入 `compressed_data`，再复制到 `full_stream`。应从解码输入/解密和缓冲层做有界读取或暂存，不只删除验证上限。用超过旧边界的真实原 ALZip 包、全包/末条所选、CRC/尾部截断及实际暂停取消核对内容，记录峰值内存和临时盘。EGG helper 版本目前 0.2.0，加密固实/LEA 中文组合另属 v1.5.11，不提前扩张兼容承诺。路线尚有六版目标，不重复规划。
 
 ## 历史：v1.5.8 已正式发布，接续加密 RAR 最终原因（2026-10-18）
 
