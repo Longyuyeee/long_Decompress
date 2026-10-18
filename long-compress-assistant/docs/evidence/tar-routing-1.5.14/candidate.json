@@ -1,0 +1,51 @@
+{
+  "checkedAt": "2026-10-18T18:52:53.160Z",
+  "functionalFreeze": "54aa55d8373abec0a5efbcdd508a3611b19b6f74",
+  "candidateCommit": "3725e02192f5d21d655ebdb9c30cff938e3138e6",
+  "candidateRun": 39155496236,
+  "candidateTree": "27328cf13a884c3a09d42450d570eb9f236803c1",
+  "installer": "Long解压_1.5.14_x64-setup.exe",
+  "installerBytes": 20988509,
+  "installerSha256": "ed0ae1d2cc1e5f2d32c49918f2b9609ca0b311ff8fa7613f55c605c1c78521af",
+  "installerProductVersion": "1.5.14",
+  "packagedMain": {
+    "mainProductVersion": "1.5.14",
+    "mainBytes": 33940480,
+    "mainSha256": "e478581ed3a4d93f50e67f22a2c77a1321116696c71090b1836120c85c1e3264",
+    "notices": [
+      {
+        "name": "archive-engine/licenses/UnRAR-License.txt",
+        "bytes": 1976,
+        "sha256": "6ecc1687808b7d66b24f874755abfed7464d9751ed0001cd4e8e5d9bf397ff8a"
+      },
+      {
+        "name": "archive-engine/SOURCE.md",
+        "bytes": 2722,
+        "sha256": "53830945c4473e5a10ea38b99505d396d450c6a059c123a5c580d779ed252529"
+      },
+      {
+        "name": "archive-engine/licenses/sevenz-rust-Apache-2.0.txt",
+        "bytes": 11556,
+        "sha256": "5ad8c213095c573921d7388edf93f6a9f54490b8ebf3b165ae8ef1947cf70846"
+      },
+      {
+        "name": "archive-engine/licenses/ppmd-rust-MIT-0.md",
+        "bytes": 916,
+        "sha256": "5574529c6fc6bb5f1dba17056a3ae5fb5cac51bc50ae4d7cd146e13b708fe0ff"
+      }
+    ],
+    "installationExecuted": false,
+    "productionSfxRuntimeExecuted": false,
+    "note": "Packaged main version/hash and four notices only. TAR functionality is verified separately by the identified desktop binary; no personal installation upgrade is claimed."
+  },
+  "download": {
+    "checkedAt": "2026-10-18T18:52:14.855Z",
+    "candidateCommit": "3725e02192f5d21d655ebdb9c30cff938e3138e6",
+    "candidateRun": 39155496236,
+    "transport": "Bounded GitHub artifact API ranges for the unchanged original CI artifact",
+    "artifactId": 12146579061,
+    "artifactZipBytes": 20974621,
+    "artifactZipDigest": "sha256:7e31c8e2781dc200420a7f3267f8c9d4360a95c3547a8d6cc8be3bd626d1ab41",
+    "apiDigestVerified": true
+  }
+}

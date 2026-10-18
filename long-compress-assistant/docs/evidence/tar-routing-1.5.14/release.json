@@ -1,0 +1,72 @@
+{
+  "verifiedAt": "2026-10-18T19:11:22.156Z",
+  "tag": "v1.5.14",
+  "tagCommit": "a83748d9fd14530d329033c6c38bf729960380d7",
+  "functionalFreeze": "54aa55d8373abec0a5efbcdd508a3611b19b6f74",
+  "candidateCommit": "3725e02192f5d21d655ebdb9c30cff938e3138e6",
+  "candidateRun": 39155496236,
+  "releaseRun": 39156227065,
+  "url": "https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.14",
+  "publishedAt": "2026-10-18T19:10:09Z",
+  "installerProductVersion": "1.5.14",
+  "assets": [
+    {
+      "name": "Long-Decompress_1.5.14_x64-setup.exe",
+      "bytes": 20982926,
+      "sha256": "b66c1292ed199d2906da7cb21a23cf2ec818ea3987d448fd130b89425e8c71df",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.14/Long-Decompress_1.5.14_x64-setup.exe"
+    },
+    {
+      "name": "Long-Decompress_1.5.14_x64-setup.nsis.zip",
+      "bytes": 20983086,
+      "sha256": "022b1dc9ce10f2a01ced58a2a0ac1f6d9c95c6eb3e6fbe873019b25b6c5297a6",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.14/Long-Decompress_1.5.14_x64-setup.nsis.zip"
+    },
+    {
+      "name": "Long-Decompress_1.5.14_x64-setup.nsis.zip.sig",
+      "bytes": 428,
+      "sha256": "6bcadf1001b7716a6034409cd15d28eec2886b99dcd73de3262bb91b2750f7c4",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.14/Long-Decompress_1.5.14_x64-setup.nsis.zip.sig"
+    },
+    {
+      "name": "latest.json",
+      "bytes": 2421,
+      "sha256": "29cfec2ae83d4572016c07c49d9aa0790c2b91411968f771114e3776794ebf45",
+      "url": "https://github.com/Longyuyeee/long_Decompress/releases/download/v1.5.14/latest.json"
+    }
+  ],
+  "updaterExeMatchesInstaller": true,
+  "signatureMatchesManifest": true,
+  "chineseNotesMatch": true,
+  "onlyManifestNotesChanged": true,
+  "packagedMain": {
+    "mainProductVersion": "1.5.14",
+    "mainBytes": 33940480,
+    "mainSha256": "98a08d5afd8ed5ed9d49d2c2aeb842be0fe47a084267b0e7cfd903a391a889bf",
+    "notices": [
+      {
+        "name": "archive-engine/licenses/UnRAR-License.txt",
+        "bytes": 1976,
+        "sha256": "6ecc1687808b7d66b24f874755abfed7464d9751ed0001cd4e8e5d9bf397ff8a"
+      },
+      {
+        "name": "archive-engine/SOURCE.md",
+        "bytes": 2722,
+        "sha256": "53830945c4473e5a10ea38b99505d396d450c6a059c123a5c580d779ed252529"
+      },
+      {
+        "name": "archive-engine/licenses/sevenz-rust-Apache-2.0.txt",
+        "bytes": 11556,
+        "sha256": "5ad8c213095c573921d7388edf93f6a9f54490b8ebf3b165ae8ef1947cf70846"
+      },
+      {
+        "name": "archive-engine/licenses/ppmd-rust-MIT-0.md",
+        "bytes": 916,
+        "sha256": "5574529c6fc6bb5f1dba17056a3ae5fb5cac51bc50ae4d7cd146e13b708fe0ff"
+      }
+    ],
+    "installationExecuted": false,
+    "productionSfxRuntimeExecuted": false,
+    "note": "Packaged main version/hash and four notices only. TAR functionality is verified separately by the identified desktop binary; no personal installation upgrade is claimed."
+  }
+}

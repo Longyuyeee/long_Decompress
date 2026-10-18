@@ -1,12 +1,12 @@
 # 文档导航与维护规则
 
-- **当前封板候选：[v1.5.14 TAR 与真实路由](TAR_ROUTING_FREEZE_1.5.14.md)**：冻结 `54aa55d`，203 Rust、170 前端、36 桌面记录、18 张实看页面及普通生产通过，正式候选/资产尚待核对。下方为过程快照；v1.5.13 撤回未发布，后续按 v1.5.15 ZIP64、v1.5.16 过程 I/O。
+- **当前正式版：[v1.5.14 TAR 与真实路由](TAR_ROUTING_FREEZE_1.5.14.md)**已封板发布：203 Rust、170 前端、36 桌面记录、18 张实看页面及普通生产通过，PR #208 受保护合入，正式四资产与中文说明已回下载核对；[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.14)。
 
-- **当前开发：[v1.5.14 TAR 与真实路由](TAR_ROUTING_1.5.14.md)**：v1.5.13 发布前发现误后缀回归，正式构建取消、标签保留不移动，未发布。原 TAR 第八目标由 v1.5.14 收口，后续 ZIP64/过程 I/O 调整为 v1.5.15/v1.5.16；见[交接](DEVELOPMENT_HANDOFF.md)和[路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)，原候选证据不冒充正式发布。
+- **下一步：v1.5.15 ZIP64 大边界，再 v1.5.16 过程 I/O**。原十目标按证据调整范围交付八项、余两项，见[交接](DEVELOPMENT_HANDOFF.md)和[路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)。v1.5.13 撤回不计交付；ALZ 方法 3 与 EGG 加密固实未完成状态保留，不重复扩张规划。
 
 - **撤回记录：[v1.5.13 TAR 候选](TAR_SPARSE_FREEZE_1.5.13.md)**未正式发布。原标签保留、正式构建取消；原本地封板和候选证据供追溯，不替代当前 v1.5.14 重新验收。
 
-- **当前正式版：[v1.5.12 ALZ 完整性](ALZ_STREAM_INTEGRITY_1.5.12.md)**已封板发布，PR #205 受保护合入，正式四资产、中文说明及包内引擎核对完成。见[封板](ALZ_STREAM_INTEGRITY_FREEZE_1.5.12.md)、[交接](DEVELOPMENT_HANDOFF.md)与[路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)；[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.12)。方法 3 仍未实现且不支持，下一版 v1.5.13 TAR，余三版按序。
+- **历史记录：[v1.5.12 ALZ 完整性](ALZ_STREAM_INTEGRITY_1.5.12.md)**已封板发布，PR #205 受保护合入，正式四资产、中文说明及包内引擎核对完成。见[封板](ALZ_STREAM_INTEGRITY_FREEZE_1.5.12.md)、[交接](DEVELOPMENT_HANDOFF.md)与[路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)；[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.12)。方法 3 仍未实现且不支持；此为前版快照，准确接续以上方当前正式版和开发交接为准。
 
 - **历史记录：[v1.5.11 EGG 中文密码组合](EGG_PASSWORD_COMBINATIONS_1.5.11.md)**已封板发布，PR #203 受保护合入，正式四资产、中文说明及包内五十五组原包回归已核对。见[封板](EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md)、[交接](DEVELOPMENT_HANDOFF.md)与[路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)；[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.11)。加密固实未验证不承诺，此前接续快照以最新交接为准。
 
