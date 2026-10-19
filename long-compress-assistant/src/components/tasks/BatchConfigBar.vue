@@ -90,7 +90,7 @@ function apply() {
   </section>
   <Modal v-model:visible="visible" :title="mode === 'compression' ? '修改所选压缩配置' : '修改所选解压配置'" :description="`已选 ${count} 项任务`" icon="pi pi-sliders-h" size="md" cancel-text="关闭批量配置" :show-close-button="!applying" :close-on-backdrop="!applying" :close-on-escape="!applying">
     <fieldset :disabled="applying" class="space-y-4 min-w-0" data-testid="batch-config-fields">
-      <p v-if="format === 'tar.lz'" class="text-xs text-muted">TAR.LZIP 不提供密码和分卷，应用到所选任务时会关闭这些选项。</p>
+      <p v-if="format === 'tar.lz'" class="text-xs text-muted">TAR.LZIP 无密码加密；保留各自的数字分卷设置，接收方需集齐全部卷。</p>
       <p class="text-xs leading-relaxed text-muted">只修改下面指定的项目，其他配置保持各自原值。</p>
       <div class="grid min-w-0 gap-3 sm:grid-cols-2">
         <label v-if="mode === 'compression'" class="min-w-0 space-y-1.5 text-xs text-muted">压缩格式 <HelpHint v-if="format === 'zipx'" label="ZIPX 分卷说明">ZIPX 使用 XZ，支持数字卷和 .zx01/…/.zipx 标准卷；卷型沿用各自设置。</HelpHint>

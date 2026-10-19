@@ -38,7 +38,8 @@ describe('compression format helpers', () => {
       expect(isDecompressArchivePath(`C:/下载/中文资料.${extension.toUpperCase()}`)).toBe(true)
       expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain(`.${extension}`)
       expect(isPasswordSupportedFormat(extension)).toBe(false)
-      expect(supportsArchiveSplit(extension)).toBe(false)
+      expect(supportsArchiveSplit(extension)).toBe(true)
+      expect(isPotentialSplitArchivePath(`C:/下载/资料.${extension}.003`)).toBe(true)
     }
     expect(isSingleFileStreamFormat('lz')).toBe(true)
     expect(isSingleFileStreamFormat('tar.lz')).toBe(false)

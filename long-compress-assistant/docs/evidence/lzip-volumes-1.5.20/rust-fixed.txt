@@ -1,0 +1,38 @@
+   Compiling long-compress-assistant v1.5.20 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 12s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-fb0370cce4e4f85a.exe)
+
+running 5 tests
+test services::codec_stream::lzip_volumes_1520_tests::lzip1520_creation_validation_retains_format_and_rejects_password ... ok
+test services::codec_stream::lzip_volumes_1520_tests::lzip1520_missing_middle_and_tail_never_report_healthy ... ok
+test services::codec_stream::lzip_volumes_1520_tests::lzip1520_plain_multimember_preview_is_bounded_and_checks_late_crc ... ok
+test services::codec_stream::lzip_volumes_1520_tests::lzip1520_creation_uses_transactional_split_and_verifies_complete_stream ... ok
+test services::codec_stream::lzip_volumes_1520_tests::lzip1520_gnu_originals_browse_preview_and_full_verification_from_any_member has been running for over 60 seconds
+test services::codec_stream::lzip_volumes_1520_tests::lzip1520_gnu_originals_browse_preview_and_full_verification_from_any_member ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 777 filtered out; finished in 100.76s
+

@@ -72,6 +72,7 @@ import { runTar1514Gate } from './tar-1514-gate.mjs'
 import { runIo1516Gate } from './io-1516-gate.mjs'
 import { runMultistream1517Gate } from './multistream-1517-gate.mjs'
 import { runAes1518Gate } from './aes-1518-gate.mjs'
+import { runLzip1520Gate } from './lzip-1520-gate.mjs'
 import { runChecksum1519Gate } from './checksum-1519-gate.mjs'
 import { runZip641515Gate } from './zip64-1515-gate.mjs'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
@@ -4927,6 +4928,9 @@ try {
     await runPartialZip1413Gate({ driver, bridge: callDesktopBridge, failure: callDesktopBridgeFailure, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, forwardContextAction })
   } else if (process.argv.includes('--lzip-only')) {
     await runLzip1412Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, root })
+    completedSuccessfully = true
+  } else if (process.argv.includes('--lzip-1520-only')) {
+    await runLzip1520Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
     completedSuccessfully = true
   } else if (process.argv.includes('--checksum-1519-only')) {
     await runChecksum1519Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root })

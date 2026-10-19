@@ -465,7 +465,6 @@ export const useCompressionStore = defineStore('compression', () => {
       if (patch.format === 'tar.lz') {
         draft.draftPasswordRequired = false
         settings.password = ''
-        settings.splitArchive = false
         settings.encryptFilenames = false
         settings.createSolidArchive = false
         settings.rarRecoveryPercent = 0

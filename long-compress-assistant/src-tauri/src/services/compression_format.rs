@@ -307,8 +307,8 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
     CompressionFormatCapability { format: "tar.br", extensions: &["tar.br"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "lz4", extensions: &["lz4"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: true, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "br", extensions: &["br"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: false, single_file_only: true, supports_split: true, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "tar.lz", extensions: &["tar.lz", "tlz"], can_compress: true, can_extract: true, supports_password_compress: false, supports_password_extract: false, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
-    CompressionFormatCapability { format: "lz", extensions: &["lz"], can_compress: true, can_extract: true, supports_password_compress: false, supports_password_extract: false, single_file_only: true, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "tar.lz", extensions: &["tar.lz", "tlz"], can_compress: true, can_extract: true, supports_password_compress: false, supports_password_extract: false, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "lz", extensions: &["lz"], can_compress: true, can_extract: true, supports_password_compress: false, supports_password_extract: false, single_file_only: true, supports_split: true, requires_7za: false, requires_winrar: false },
 ];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

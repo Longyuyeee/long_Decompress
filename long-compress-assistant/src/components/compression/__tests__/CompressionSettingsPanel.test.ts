@@ -82,17 +82,17 @@ describe('CompressionSettingsPanel split archive settings', () => {
     wrapper.unmount()
   })
   it('does not detach valid inherited settings merely by opening a LZIP row', async () => {
-    const wrapper = mountPanel(settings({ format: 'tar.lz' }))
+    const wrapper = mountPanel(settings({ format: 'tar.lz', splitArchive: true }))
     await flushPromises()
     expect(wrapper.emitted('update:modelValue')).toBeUndefined()
     wrapper.unmount()
   })
-  it.each(['lz', 'tar.lz'])('clears inherited encryption and split settings when opening %s', async format => {
+  it.each(['lz', 'tar.lz'])('preserves numeric volumes while clearing unsupported encryption when opening %s', async format => {
     const wrapper = mountPanel(settings({ format, password: 'previous ZIP password', splitArchive: true, createSolidArchive: true, encryptFilenames: true }))
     await flushPromises()
     const changed = wrapper.emitted('update:modelValue')?.at(-1)?.[0]
-    expect(changed).toMatchObject({ format, password: '', splitArchive: false, createSolidArchive: false, encryptFilenames: false })
-    expect(wrapper.get('[data-testid="compression-split-toggle"]').attributes('disabled')).toBeDefined()
+    expect(changed).toMatchObject({ format, password: '', splitArchive: true, createSolidArchive: false, encryptFilenames: false })
+    expect(wrapper.get('[data-testid="compression-split-toggle"]').attributes('disabled')).toBeUndefined()
     expect(wrapper.get('[data-testid="compression-password-input"]').attributes('disabled')).toBeDefined()
     wrapper.unmount()
   })
