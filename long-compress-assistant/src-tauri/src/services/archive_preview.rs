@@ -256,7 +256,7 @@ fn read_tar_family_text(path: &Path, format: &str, entry_path: &str) -> Result<T
 // Single compressed files have no entry directory or reliable declared total.
 // Scan at most the existing preview budget, retaining only the displayed prefix.
 fn read_plain_stream(path: &Path, format: &str, entry: &str, max_total: u64, keep: u64) -> Result<TextBytes> {
-    let detected = ArchiveFormat::from_extension(&format.to_ascii_lowercase());
+    let detected = if format == "LZIP" { ArchiveFormat::Lzip } else { ArchiveFormat::from_extension(&format.to_ascii_lowercase()) };
     let (codec, _, suffixes) = super::codec_stream::plain_format(&detected).context("Unsupported compressed preview")?;
     let name = super::native_extraction::single_stream::output_name(path, suffixes);
     anyhow::ensure!(entry == name, "The selected entry was not found in the compressed file");
@@ -404,7 +404,7 @@ fn preview_archive_image_sync(
     let bytes = match format {
         "ZIP" => read_zip_entry(archive_path, &entry_path, password, encoding)?,
         format if format.starts_with("TAR") => read_tar_family(archive_path, format, &entry_path)?,
-        "GZIP" | "BZIP2" | "XZ" | "ZSTD" => read_plain_stream(archive_path, format, &entry_path, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES)?.bytes,
+        "GZIP" | "BZIP2" | "XZ" | "ZSTD" | "LZIP" => read_plain_stream(archive_path, format, &entry_path, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES)?.bytes,
         _ => anyhow::bail!(
             "Safe bounded preview is currently available for ZIP and TAR-family archives only"
         ),
@@ -533,7 +533,7 @@ fn preview_archive_text_sync(
         format if format.starts_with("TAR") => {
             read_tar_family_text(archive_path, format, &entry_path)?
         }
-        "GZIP" | "BZIP2" | "XZ" | "ZSTD" => read_plain_stream(archive_path, format, &entry_path, MAX_TAR_PREVIEW_SCAN_BYTES, MAX_TEXT_PREVIEW_BYTES)?,
+        "GZIP" | "BZIP2" | "XZ" | "ZSTD" | "LZIP" => read_plain_stream(archive_path, format, &entry_path, MAX_TAR_PREVIEW_SCAN_BYTES, MAX_TEXT_PREVIEW_BYTES)?,
         _ => anyhow::bail!(
             "Safe bounded text preview is currently available for ZIP and TAR-family archives only"
         ),

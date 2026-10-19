@@ -1,0 +1,124 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ ❯ src/utils/__tests__/compressionFormat.test.ts (13 tests | 1 failed) 20ms
+     × keeps LZIP files in their chosen format and exposes only supported options 8ms
+ ❯ src/components/compression/__tests__/CompressionSettingsPanel.test.ts (28 tests | 3 failed) 2070ms
+     × does not detach valid inherited settings merely by opening a LZIP row 34ms
+     × preserves numeric volumes while clearing unsupported encryption when opening lz 31ms
+     × preserves numeric volumes while clearing unsupported encryption when opening tar.lz 34ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/utils/__tests__/compressionFormat.test.ts > compression format helpers > keeps LZIP files in their chosen format and exposes only supported options
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/utils/__tests__/compressionFormat.test.ts:41:47
+     39|       expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain(`.${extension}`)
+     40|       expect(isPasswordSupportedFormat(extension)).toBe(false)
+     41|       expect(supportsArchiveSplit(extension)).toBe(true)
+       |                                               ^
+     42|       expect(isPotentialSplitArchivePath(`C:/下载/资料.${extension}.003`))…
+     43|     }
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/components/compression/__tests__/CompressionSettingsPanel.test.ts > CompressionSettingsPanel split archive settings > does not detach valid inherited settings merely by opening a LZIP row
+AssertionError: expected [ [ { format: 'tar.lz', …(10) } ] ] to be undefined
+
+- Expected:
+undefined
+
++ Received:
+[
+  [
+    {
+      "createSolidArchive": false,
+      "deleteAfter": false,
+      "fastPack": false,
+      "filename": "archive",
+      "format": "tar.lz",
+      "keepStructure": true,
+      "level": 6,
+      "password": "",
+      "splitArchive": false,
+      "splitSize": "1024",
+      "verifyAfter": true,
+    },
+  ],
+]
+
+ ❯ src/components/compression/__tests__/CompressionSettingsPanel.test.ts:87:50
+     85|     const wrapper = mountPanel(settings({ format: 'tar.lz', splitArchi…
+     86|     await flushPromises()
+     87|     expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+       |                                                  ^
+     88|     wrapper.unmount()
+     89|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/components/compression/__tests__/CompressionSettingsPanel.test.ts > CompressionSettingsPanel split archive settings > preserves numeric volumes while clearing unsupported encryption when opening lz
+AssertionError: expected { format: 'lz', level: 6, …(10) } to match object { format: 'lz', password: '', …(3) }
+(7 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "createSolidArchive": false,
+    "encryptFilenames": false,
+    "format": "lz",
+    "password": "",
+-   "splitArchive": true,
++   "splitArchive": false,
+  }
+
+ ❯ src/components/compression/__tests__/CompressionSettingsPanel.test.ts:94:21
+     92|     await flushPromises()
+     93|     const changed = wrapper.emitted('update:modelValue')?.at(-1)?.[0]
+     94|     expect(changed).toMatchObject({ format, password: '', splitArchive…
+       |                     ^
+     95|     expect(wrapper.get('[data-testid="compression-split-toggle"]').att…
+     96|     expect(wrapper.get('[data-testid="compression-password-input"]').a…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/components/compression/__tests__/CompressionSettingsPanel.test.ts > CompressionSettingsPanel split archive settings > preserves numeric volumes while clearing unsupported encryption when opening tar.lz
+AssertionError: expected { format: 'tar.lz', level: 6, …(10) } to match object { Object (format, password, ...) }
+(7 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "createSolidArchive": false,
+    "encryptFilenames": false,
+    "format": "tar.lz",
+    "password": "",
+-   "splitArchive": true,
++   "splitArchive": false,
+  }
+
+ ❯ src/components/compression/__tests__/CompressionSettingsPanel.test.ts:94:21
+     92|     await flushPromises()
+     93|     const changed = wrapper.emitted('update:modelValue')?.at(-1)?.[0]
+     94|     expect(changed).toMatchObject({ format, password: '', splitArchive…
+       |                     ^
+     95|     expect(wrapper.get('[data-testid="compression-split-toggle"]').att…
+     96|     expect(wrapper.get('[data-testid="compression-password-input"]').a…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  4 failed | 37 passed (41)
+   Start at  16:34:55
+   Duration  22.82s (transform 3.07s, setup 721ms, import 4.07s, tests 2.09s, environment 30.77s)
+

@@ -1,0 +1,92 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling long-compress-assistant v1.5.19 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: unused import: `File`
+ --> src\services\aes_wrapper.rs:8:15
+  |
+8 | use std::fs::{File, OpenOptions};
+  |               ^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `DecompressOptions`
+ --> src\services\lzip_volumes_1520_tests.rs:2:34
+  |
+2 | use crate::models::compression::{DecompressOptions, TaskLogSeverity};
+  |                                  ^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `prepare_staging_layout` is never used
+    --> src\services\compression_service.rs:2974:8
+     |
+ 296 | impl CompressionService {
+     | ----------------------- method in this implementation
+...
+2974 |     fn prepare_staging_layout(
+     |        ^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `prepare_staging_layout` is never used
+   --> src\services\extraction_transaction.rs:428:15
+    |
+428 | pub(crate) fn prepare_staging_layout(
+    |               ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `stats` is never used
+ --> src\services\rar_preflight.rs:7:15
+  |
+7 | pub(crate) fn stats(
+  |               ^^^^^
+
+warning: `long-compress-assistant` (lib test) generated 1 warning (run `cargo fix --lib -p long-compress-assistant --tests` to apply 1 suggestion)
+warning: `long-compress-assistant` (lib) generated 4 warnings (run `cargo fix --lib -p long-compress-assistant` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4m 48s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-3c07180d0dff631d.exe)
+
+running 4 tests
+test services::codec_stream::lzip_volumes_1520_tests::lzip1520_creation_validation_retains_format_and_rejects_password ... ok
+test services::codec_stream::lzip_volumes_1520_tests::lzip1520_missing_middle_and_tail_never_report_healthy ... ok
+test services::codec_stream::lzip_volumes_1520_tests::lzip1520_creation_uses_transactional_split_and_verifies_complete_stream ... ok
+test services::codec_stream::lzip_volumes_1520_tests::lzip1520_gnu_originals_browse_preview_and_full_verification_from_any_member ... FAILED
+
+failures:
+
+---- services::codec_stream::lzip_volumes_1520_tests::lzip1520_gnu_originals_browse_preview_and_full_verification_from_any_member stdout ----
+
+thread 'services::codec_stream::lzip_volumes_1520_tests::lzip1520_gnu_originals_browse_preview_and_full_verification_from_any_member' (27836) panicked at src\services\lzip_volumes_1520_tests.rs:58:17:
+assertion `left == right` failed
+  left: [230, 148, 182, 229, 136, 176, 32, 76, 90, 73, 80, 32, 229, 142, 139, 231, 188, 169, 230, 150, 135, 228, 187, 182, 239, 188, 140, 229, 133, 136, 230, 181, 143, 232, 167, 136, 239, 188, 140, 229, 134, 141, 233, 128, 137, 230, 139, 169, 232, 167, 163, 229, 142, 139, 227, 128, 130, 10]
+ right: [230, 148, 182, 229, 136, 176, 32, 76, 90, 73, 80, 32, 229, 142, 139, 231, 188, 169, 230, 150, 135, 228, 187, 182, 239, 188, 140, 229, 133, 136, 230, 181, 143, 232, 167, 136, 239, 188, 140, 229, 134, 141, 233, 128, 137, 230, 139, 169, 232, 167, 163, 229, 142, 139, 227, 128, 130, 13, 10]
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    services::codec_stream::lzip_volumes_1520_tests::lzip1520_gnu_originals_browse_preview_and_full_verification_from_any_member
+
+test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 777 filtered out; finished in 19.09s
+
+error: test failed, to rerun pass `--lib`

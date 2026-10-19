@@ -529,6 +529,7 @@ const closeVaultPasswordsAfterFocus = () => {
         <b>MiB</b>
       </label>
       <span v-else-if="canCreateSplitArchive" class="split-settings-state">关闭</span>
+      <p v-if="['lz', 'tar.lz'].includes(compressionOptions.format) && compressionOptions.splitArchive" class="w-full text-xs leading-relaxed text-muted" data-testid="lzip-volume-hint">数字切卷将生成 .lz.001、.002 等文件，解压时需将全部卷放在同一目录。这与 LZIP 原生成员不同；分享给其他软件时，请先按序合并成完整文件。</p>
       <p v-if="compressionOptions.format.endsWith('.aes')" class="w-full text-xs leading-relaxed text-muted" data-testid="aes-volume-hint">Long 自有加密格式，接收方请使用 Long解压。分卷解压需把全部 .aes.001、.002 等文件放在同一目录。</p>
       <div v-if="compressionOptions.splitArchive && ['zip', 'zipx'].includes(compressionOptions.format)" class="zip-split-kind">
         <span class="shrink-0 text-xs">ZIP 卷型</span>

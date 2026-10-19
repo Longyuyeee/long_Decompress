@@ -7,6 +7,10 @@ use std::path::Path;
 use tauri::Window;
 
 #[cfg(test)]
+#[path = "lzip_volumes_1520_tests.rs"]
+mod lzip_volumes_1520_tests;
+
+#[cfg(test)]
 #[path = "codec_stream_measurement.rs"]
 mod measurements;
 
@@ -258,6 +262,7 @@ pub(crate) fn plain_format(format: &super::archive_format::ArchiveFormat)
     -> Option<(&'static str, &'static str, &'static [&'static str])> {
     use super::archive_format::ArchiveFormat as F;
     match format {
+        F::Lzip => Some(("lz", "LZIP", &[".lz"])),
         F::Gzip => Some(("gz", "GZIP", &[".gz", ".gzip"])),
         F::Bzip2 => Some(("bz2", "BZIP2", &[".bz2", ".bzip2"])),
         F::Xz => Some(("xz", "XZ", &[".xz"])),

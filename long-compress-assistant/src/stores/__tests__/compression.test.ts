@@ -81,7 +81,7 @@ describe('Compression Store', () => {
     const groupId = store.createGroup([second.path])
     store.globalSettings = { ...defaultOptions(), format: '7z', password: 'global-secret', splitArchive: true, createSolidArchive: true, encryptFilenames: true }
     expect(store.applyBatchConfiguration([first.path, groupId], { format: 'tar.lz' })).toBe(2)
-    const expected = { format: 'tar.lz', password: '', splitArchive: false, createSolidArchive: false, encryptFilenames: false, rarRecoveryPercent: 0, rarRecoveryVolumes: 0 }
+    const expected = { format: 'tar.lz', password: '', splitArchive: true, createSolidArchive: false, encryptFilenames: false, rarRecoveryPercent: 0, rarRecoveryVolumes: 0 }
     expect(store.selectedFiles[0].settings).toMatchObject(expected)
     expect(store.groups[0].settings).toMatchObject(expected)
     expect(store.selectedFiles[1].settings).toBeUndefined()

@@ -149,7 +149,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 - ZIP/ZIPX 已验证常用 Store、Deflate、Deflate64、BZip2、LZMA、XZ、PPMd 及部分 Zstandard 读取组合；不等于支持所有 ZIPX 专有算法。
 - 创建 ZIP 时可选 Zstandard，创建 ZIPX 时使用 XZ；密码、转换与配置保存保持所选方法。ZIP Zstandard 支持数字卷与标准卷，ZIPX 暂只提供数字卷；接收方需要支持对应压缩方法。
 - 可直接浏览、解压和转换 ZIP/7Z/RAR 自解压 EXE；好压论坛 ZIP 分卷按整组读取，支持已核对的明文与 ZipCrypto 密码样本。收到多个分卷时，把整组放在同一目录即可。具体格式范围见[支持说明](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)。
-- LZIP（单文件）与 TAR.LZIP（目录/多文件）支持创建、浏览、解压、检查和转换，兼容 `.lz`、`.tar.lz`、`.tlz`；支持连续多成员 LZIP，不提供这两种格式的密码或分卷创建。
+- LZIP（单文件）与 TAR.LZIP（目录/多文件）支持创建、浏览、解压、检查和转换，兼容 `.lz`、`.tar.lz`、`.tlz`；支持连续多成员 LZIP 与数字切卷创建，普通格式不提供密码；全部卷需放在同一目录，数字切卷不同于原生成员。
 - ZIP 默认 AES-256，可主动选择 ZipCrypto；与 Windows 7-Zip 交换非 ASCII 密码的归档时，可显式选择匹配的 Windows 密码编码。
 - EGG 只读支持已验证的 Store、Deflate、Bzip2、LZMA、AZO、固实 Deflate/LZMA、ZipCrypto、AES/LEA 与原生卷，可浏览、所选/整包提取、检查和转换。大 LZMA 已流式读取，字典仍限 256 MiB；v1.5.11 验证二十组普通中文密码组合并补编码失败指引。加密固实、全局/文件名加密、创建和修复不承诺，工具互通边界见[本版说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.11.md)。
 - 密码 ZIP 可尝试救回完整文件：目录可读或丢目录后仍能确定本地文件边界时，提供密码救回通过校验的文件；新包沿用填写的密码，统一使用 AES-256 / UTF-8，并显示部分恢复及未恢复原因。
@@ -236,7 +236,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.19 · 看清哪一卷需要补回**。校验清单逐项显示匹配、缺失、内容不符和读取原因；单条展开完整路径及等宽摘要，复制待补列表，按需复查所选或问题项。清单变化会作废旧结果，未检查项不计匹配；可接续原诊断与失败新任务，保留原交互和窄窗滚动。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.19.md) · [范围与记录](long-compress-assistant/docs/CHECKSUM_DETAILS_FREEZE_1.5.19.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.19)。原三项计划按范围收口，下一阶段[v1.5.20～v1.5.22](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)已规划，先做 LZIP 数字分卷，尚未开始。
+**v1.5.20 · LZIP 数字分卷**。LZIP/TAR.LZIP 支持拆卷创建，从任意卷浏览、预览、检查与提取；密码 ZIP 和 TAR.LZIP 分卷转换接通。批量改格式保留分卷设置，补卷后沿原入口创建新任务；单条展开、多选弹窗、左右等宽和窄窗滚动保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.20.md) · [范围与记录](long-compress-assistant/docs/LZIP_VOLUMES_FREEZE_1.5.20.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.20)。下一版按[既定路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)扩展 Long AES 内层，尚未开始。
+
+**v1.5.19 · 看清哪一卷需要补回**。校验清单逐项显示匹配、缺失、内容不符和读取原因；单条展开完整路径及等宽摘要，复制待补列表，按需复查所选或问题项。清单变化会作废旧结果，未检查项不计匹配；可接续原诊断与失败新任务，保留原交互和窄窗滚动。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.19.md) · [范围与记录](long-compress-assistant/docs/CHECKSUM_DETAILS_FREEZE_1.5.19.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.19)。原三项计划按范围收口，下一阶段[v1.5.20～v1.5.22](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)已规划，LZIP 数字分卷已由 v1.5.20 接续，当前进度以上方最新记录为准。
 
 **v1.5.18 · 自有 AES 密码分卷**。九种自有 AES 格式可以拆卷创建，从任意一卷进入浏览、预览和提取；密码 ZIP 与 TAR.AES 转换接通重新拆卷或合并。缺卷/后段内容异常提示更明确，补卷后通过原弹窗创建新任务，旧记录保留；修复 TAR.AES 多源目录与空目录。单条展开、多选弹窗、自然继承、左右等宽及窄窗滚动保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.18.md) · [实施与范围](long-compress-assistant/docs/AES_VOLUMES_1.5.18.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.18)。已由 v1.5.19 接续，当前下一步以上方最新记录为准。
 

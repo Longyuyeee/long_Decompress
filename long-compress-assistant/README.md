@@ -92,7 +92,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.5.19 · 看清哪一卷需要补回**。校验清单逐项显示匹配、缺失、内容不符和读取原因；单条展开完整路径及等宽摘要，复制待补列表，按需复查所选或问题项。清单变化会作废旧结果，未检查项不计匹配；可接续原诊断与失败新任务，保留原交互和窄窗滚动。[中文说明](docs/RELEASE_NOTES_1.5.19.md) · [范围与记录](docs/CHECKSUM_DETAILS_FREEZE_1.5.19.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.19)。原三项计划按范围收口，下一阶段[v1.5.20～v1.5.22](docs/ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)已规划，先做 LZIP 数字分卷，尚未开始。
+**v1.5.20 · LZIP 数字分卷**。LZIP/TAR.LZIP 支持拆卷创建，从任意卷浏览、预览、检查与提取；密码 ZIP 和 TAR.LZIP 分卷转换接通。批量改格式保留分卷设置，补卷后沿原入口创建新任务；单条展开、多选弹窗、左右等宽和窄窗滚动保持。[中文说明](docs/RELEASE_NOTES_1.5.20.md) · [范围与记录](docs/LZIP_VOLUMES_FREEZE_1.5.20.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.20)。下一版按[既定路线](docs/ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)扩展 Long AES 内层，尚未开始。
+
+**v1.5.19 · 看清哪一卷需要补回**。校验清单逐项显示匹配、缺失、内容不符和读取原因；单条展开完整路径及等宽摘要，复制待补列表，按需复查所选或问题项。清单变化会作废旧结果，未检查项不计匹配；可接续原诊断与失败新任务，保留原交互和窄窗滚动。[中文说明](docs/RELEASE_NOTES_1.5.19.md) · [范围与记录](docs/CHECKSUM_DETAILS_FREEZE_1.5.19.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.19)。原三项计划按范围收口，下一阶段[v1.5.20～v1.5.22](docs/ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)已规划，LZIP 数字分卷已由 v1.5.20 接续，当前进度以上方最新记录为准。
 
 **v1.5.18 · 自有 AES 密码分卷**。九种自有 AES 格式可以拆卷创建，从任意一卷进入浏览、预览和提取；密码 ZIP 与 TAR.AES 转换接通重新拆卷或合并。缺卷/后段内容异常提示更明确，补卷后通过原弹窗创建新任务，旧记录保留；修复 TAR.AES 多源目录与空目录。单条展开、多选弹窗、自然继承、左右等宽及窄窗滚动保持。[中文说明](docs/RELEASE_NOTES_1.5.18.md) · [实施与范围](docs/AES_VOLUMES_1.5.18.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.18)。已由 v1.5.19 接续，当前下一步以上方最新记录为准。
 
@@ -136,7 +138,7 @@ docs/                  开发路线、格式说明与历史记录
 
 **v1.4.13** 增加标准 ZIP 缺卷部分抢救、密码包救援与恢复清单，打通失败任务救援后继续解压，见 [更新说明](docs/RELEASE_NOTES_1.4.13.md)和 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.13)。缺卷救援要求目录仍完整可读，不补造缺失数据。
 
-**v1.4.12** 新增 LZIP / TAR.LZIP 的完整用户流程及错误提示改善，见 [更新说明](docs/RELEASE_NOTES_1.4.12.md)和 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.12)。这两种新格式不提供密码或分卷创建。
+**v1.4.12** 新增 LZIP / TAR.LZIP 的完整用户流程及错误提示改善，见 [更新说明](docs/RELEASE_NOTES_1.4.12.md)和 [正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.12)。该版不提供密码或分卷创建；数字分卷已在 v1.5.20 补齐。
 
 v1.4.11 可以直接处理 ZIP/7Z/RAR 自解压包，增加好压论坛 ZIP 的明文与已核对的密码分卷读取，修正部分跨卷正确密码误判，并完善缺卷提示及补回重试；不创建 SFX，不新增好压 7Z 论坛卷支持。
 
