@@ -1,0 +1,42 @@
+
+running 1 test
+test services::compression_service::tests::publication_failure_preserves_target_stage_and_io_cause ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 746 filtered out; finished in 0.01s
+
+
+running 1 test
+test services::native_extraction::seven_zip::tests::real_storage_full_is_classified_and_staging_is_removed ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 746 filtered out; finished in 6.93s
+
+
+running 1 test
+test services::rar_support::tests::rar_password_error_classification_preserves_engine_failures ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 746 filtered out; finished in 0.00s
+
+
+running 1 test
+test services::rar_support::tests::native_volume_request_snapshot_is_not_a_notification_or_wrong_key ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 746 filtered out; finished in 0.01s
+
+
+running 1 test
+test services::archive_diagnostics::tests::structural_and_capability_failures_do_not_turn_into_password_requests ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 746 filtered out; finished in 0.00s
+
+
+running 1 test
+test services::compression_service::tests::incomplete_rollback_keeps_files_but_removes_pending_retry ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 746 filtered out; finished in 0.12s
+
+
+running 1 test
+test services::compression_service::tests::cancellation_before_publication_keeps_verified_output_private ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 746 filtered out; finished in 0.01s
+

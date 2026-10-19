@@ -1,0 +1,36 @@
+
+running 2 tests
+test services::compression_service::tests::source_snapshot_preserves_missing_invalid_and_access_failures ... ok
+test services::compression_service::tests::source_snapshot_detects_archives_that_change_during_extraction ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 745 filtered out; finished in 0.08s
+
+
+running 1 test
+test services::compression_service::tests::injected_storage_full_cleans_unpublished_compression_outputs ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 746 filtered out; finished in 0.00s
+
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 747 filtered out; finished in 0.00s
+
+
+running 1 test
+
+thread 'services::native_extraction::seven_zip::tests::output_os_failures_are_not_password_or_corruption_failures' (48472) panicked at src\services\native_extraction\seven_zip.rs:487:17:
+assertion failed: matches!(classified, CompressionError::ExtractionFailed(message) if
+    message.contains("creating output file") &&
+    !message.contains("archive-inspection:damaged") &&
+    !message.contains("ambiguous-data"))
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::native_extraction::seven_zip::tests::output_os_failures_are_not_password_or_corruption_failures ... FAILED
+
+failures:
+
+failures:
+    services::native_extraction::seven_zip::tests::output_os_failures_are_not_password_or_corruption_failures
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 746 filtered out; finished in 0.00s
+

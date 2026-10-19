@@ -436,10 +436,19 @@ impl CompressionService {
         PENDING_EXTRACTIONS.remove(task_id).is_some()
     }
 
-    fn retain_pending_after_commit_error(task_id: &str, mut pending: PendingExtraction, error: &anyhow::Error) {
-        if !pending.staging.retain_after_incomplete_rollback(error) {
-            PENDING_EXTRACTIONS.insert(task_id.to_string(), pending);
+    fn retain_pending_after_commit_error(task_id: &str, mut pending: PendingExtraction, error: &anyhow::Error) -> Option<String> {
+        if pending.staging.retain_after_incomplete_rollback(error) { return None; }
+        // The UI treats confirmed filesystem failures as terminal and offers a
+        // new task. Keep staging only for an actual conflict reconfirmation;
+        // retaining an unreachable pending commit leaks output space.
+        if crate::services::archive_io::kind(error).is_some() {
+            let path = pending.staging.path().to_path_buf();
+            return pending.staging.cleanup().err().map(|cleanup| format!(
+                "未发布暂存的首次清理未完成，请核对路径 {}；原文件保持不变。清理详情：{}",
+                path.display(), cleanup));
         }
+        PENDING_EXTRACTIONS.insert(task_id.to_string(), pending);
+        None
     }
 
     pub async fn resolve_pending_extraction(
@@ -496,7 +505,10 @@ impl CompressionService {
             if needs_confirmation {
                 pending.observed_conflicts = refreshed_conflicts;
             }
-            Self::retain_pending_after_commit_error(task_id, pending, &error);
+            if let Some(warning) = Self::retain_pending_after_commit_error(task_id, pending, &error) {
+                self.emit_log(window, task_id, &warning, TaskLogSeverity::Warning);
+                return Err(error.context(warning));
+            }
             if targets_changed && needs_confirmation {
                 anyhow::bail!("File conflict requires resolution：目标文件在确认期间发生变化，请重新比较并选择；尚未覆盖任何文件。");
             }
@@ -4634,6 +4646,27 @@ mod tests {
     }
 
     #[test]
+    fn io1516_terminal_io_releases_unpublished_staging_and_pending_commit() {
+        for kind in [std::io::ErrorKind::StorageFull, std::io::ErrorKind::PermissionDenied] {
+            let temp = tempfile::tempdir().unwrap();
+            let output = temp.path().join("output");
+            std::fs::create_dir(&output).unwrap();
+            std::fs::write(output.join("old.txt"), b"original output").unwrap();
+            let staging = ExtractionStaging::create_for(&output).unwrap();
+            let stage = staging.path().to_path_buf();
+            std::fs::write(stage.join("not-published.bin"), b"decoded new output").unwrap();
+            let id = uuid::Uuid::new_v4().to_string();
+            let pending = PendingExtraction { source_times: HashMap::new(), staging, source_archive: temp.path().join("source.zip"),
+                final_output: output.clone(), options: DecompressOptions::default(), expected_expanded_bytes: None, observed_conflicts: HashMap::new() };
+            let error = anyhow::Error::new(std::io::Error::new(kind, "actual commit route"));
+            assert!(CompressionService::retain_pending_after_commit_error(&id, pending, &error).is_none());
+            assert!(!PENDING_EXTRACTIONS.contains_key(&id));
+            assert!(!stage.exists());
+            assert_eq!(std::fs::read(output.join("old.txt")).unwrap(), b"original output");
+        }
+    }
+
+    #[test]
     fn incomplete_rollback_keeps_files_but_removes_pending_retry() {
         let temp = tempfile::tempdir().unwrap();
         let output = temp.path().join("output");
@@ -4644,7 +4677,7 @@ mod tests {
         let pending = PendingExtraction { source_times: HashMap::new(), staging, source_archive: temp.path().join("source.zip"), final_output: output,
             options: DecompressOptions::default(), expected_expanded_bytes: None, observed_conflicts: HashMap::new() };
         let error = CompressionError::RollbackIncomplete(format!("恢复目录：{}", path.display())).into();
-        CompressionService::retain_pending_after_commit_error(&id, pending, &error);
+        let _ = CompressionService::retain_pending_after_commit_error(&id, pending, &error);
         assert!(!PENDING_EXTRACTIONS.contains_key(&id));
         assert!(!CompressionService::discard_pending_extraction(&id));
         assert_eq!(std::fs::read(path.join("backup")).unwrap(), b"original data");
@@ -4652,7 +4685,7 @@ mod tests {
         let ordinary_path = ordinary_staging.path().to_path_buf();
         let pending = PendingExtraction { source_times: HashMap::new(), staging: ordinary_staging, source_archive: temp.path().join("source.zip"),
             final_output: temp.path().join("other-output"), options: DecompressOptions::default(), expected_expanded_bytes: None, observed_conflicts: HashMap::new() };
-        CompressionService::retain_pending_after_commit_error(&id, pending, &anyhow::anyhow!("ordinary commit failure"));
+        let _ = CompressionService::retain_pending_after_commit_error(&id, pending, &anyhow::anyhow!("ordinary commit failure"));
         assert!(PENDING_EXTRACTIONS.contains_key(&id));
         assert!(CompressionService::discard_pending_extraction(&id));
         assert!(!ordinary_path.exists());

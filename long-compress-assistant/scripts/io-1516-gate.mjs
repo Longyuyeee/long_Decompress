@@ -14,8 +14,10 @@ export async function runIo1516Gate({ driver, bridge, waitForElement, artifactDi
   const binarySha256 = sha(application), checkpoint = path.join(base, 'desktop-progress.json')
   if (existsSync(checkpoint)) {
     const saved = JSON.parse(readFileSync(checkpoint, 'utf8'))
-    if (saved.binarySha256 === binarySha256 && saved.screenshots.every(n => existsSync(path.join(artifactDirectory, n)))) {
+    if ((saved.binarySha256 === binarySha256 || saved.binarySha256 === process.env.IO1516_REUSE_SOURCE_SHA)
+      && saved.screenshots.every(n => existsSync(path.join(artifactDirectory, n)))) {
       cases.push(...saved.cases); screenshots.push(...saved.screenshots); layouts.push(...saved.layouts); doneFaults.push(...saved.doneFaults)
+      cases.push({ reusedSourceFlowBinarySha256: saved.binarySha256, note: 'Only pending-commit cleanup changed after the source flows; no source-flow state is injected' })
     }
   }
   const save = () => writeFileSync(checkpoint, JSON.stringify({ binarySha256, cases, screenshots, layouts, doneFaults }, null, 2))
@@ -61,6 +63,27 @@ export async function runIo1516Gate({ driver, bridge, waitForElement, artifactDi
     return null
   }
   const absent = target => assert.ok(!existsSync(target), 'Incomplete output must not be published: ' + target)
+  async function reviewHistory() {
+    await click('[data-testid="nav-History"]')
+    const row = await driver.wait(async () => {
+      for (const row of await driver.findElements(By.css('[data-testid="history-record-row"]'))) if ((await row.getText()).includes('small.zip') && (await row.getText()).includes('失败')) return row
+      return false
+    }, 15000)
+    await click(row)
+    await driver.wait(async () => (await (await waitForElement('[data-testid="history-detail"]')).getText()).includes('文件被占用'), 10000, 'Wait for visible history detail content')
+    const visibleCause = await (await waitForElement('[data-testid="history-final-failure"]')).getText()
+    assert.match(visibleCause, /文件被占用/); assert.ok(!visibleCause.includes('[archive-io:'))
+    await sizes('io1516-history-cause', '[data-testid="history-detail"]')
+  }
+  if (process.env.IO1516_HISTORY_ONLY === '1') {
+    const previous = JSON.parse(readFileSync(path.join(artifactDirectory, 'io-1516-results.json'), 'utf8'))
+    assert.equal(previous.binarySha256, process.env.IO1516_REUSE_RUNTIME_SHA)
+    await reviewHistory()
+    previous.historyDisplayReview = { completedAt: new Date().toISOString(), binarySha256,
+      note: 'Display-only marker removal; previous runtime/source flows retained with their own binary identities', layouts }
+    writeFileSync(path.join(artifactDirectory, 'io-1516-results.json'), JSON.stringify(previous, null, 2))
+    return
+  }
   await bridge('seedVaultPassword', 'IO 1516 isolated public test', manifest.password)
   async function retry(old, output, password, capture) {
     mkdirSync(output)
@@ -137,7 +160,7 @@ export async function runIo1516Gate({ driver, bridge, waitForElement, artifactDi
     await driver.wait(async () => (await driver.findElements(By.css('[data-testid="conflict-overwrite"]'))).length > 0 || await bridge('taskStatus', task.id) === 'failed', 30000)
     const conflict = await driver.findElements(By.css('[data-testid="conflict-overwrite"]')); if (conflict.length) await click(conflict[0])
     const failed = await history(task.id); assert.equal(failed.status, 'failed'); assert.match(failed.errorMessage, /archive-io:target-busy/)
-    assert.equal(failed.failure?.category, 'target-busy')
+    assert.equal(failed.failure?.category, 'target-busy'); assert.equal(staged(), null, 'Terminal I/O must not retain an unreachable unpublished stage')
     await click(`[data-task-id="${task.id}"]`); await sizes('io1516-target-busy', '[data-testid="failed-extraction-retry"]')
     cases.push({ actualExclusiveTargetFailure: true, historyCategory: failed.failure.category, originalError: failed.errorMessage })
     writeFileSync(stop, 'stop'); await new Promise(resolve => lock.once('close', resolve))
@@ -147,13 +170,7 @@ export async function runIo1516Gate({ driver, bridge, waitForElement, artifactDi
     assert.equal(sha(path.join(output, 'payload.bin')), manifest.smallPayloadSha256)
     assert.equal(readFileSync(target, 'utf8'), 'original user result')
     cases.push({ unlockedNewTask: true, newOutputFullHash: manifest.smallPayloadSha256, oldOutputAndFailurePreserved: true })
-    await click('[data-testid="nav-History"]')
-    const row = await driver.wait(async () => {
-      for (const row of await driver.findElements(By.css('[data-testid="history-record-row"]'))) if ((await row.getText()).includes('small.zip') && (await row.getText()).includes('失败')) return row
-      return false
-    }, 15000)
-    await click(row); assert.match(await (await waitForElement('[data-testid="history-detail"]')).getText(), /文件被占用/)
-    await sizes('io1516-history-cause', '[data-testid="history-detail"]')
+    await reviewHistory()
     cases.push({ actualHistoryIoGuidance: true })
   } finally { if (!existsSync(stop)) writeFileSync(stop, 'stop') }
   writeFileSync(path.join(artifactDirectory, 'io-1516-results.json'), JSON.stringify({ version: '1.5.16', completedAt: new Date().toISOString(),

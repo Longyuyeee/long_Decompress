@@ -1,0 +1,44 @@
+{
+  "version": "1.5.16",
+  "rustDistinctPassed": 19,
+  "rustNew": [
+    "commands::compression::io1516_disk_full_keeps_its_category_and_original_context",
+    "commands::task_history::tests::io1516_categories_survive_persistence_filters_and_observed_stages",
+    "services::archive_diagnostics::tests::io1516_diagnosis_keeps_explicit_io_before_incidental_password_errors",
+    "services::archive_io::tests::io1516_real_windows_sharing_violation_is_preserved",
+    "services::archive_io::tests::io1516_typed_native_failures_precede_password_text_without_inventing_corruption",
+    "services::compression_service::tests::io1516_missing_later_volume_retains_its_path_and_confirmed_stage",
+    "services::compression_service::tests::io1516_other_volume_changes_are_not_hidden_by_an_unchanged_first_volume",
+    "services::compression_service::tests::io1516_terminal_io_releases_unpublished_staging_and_pending_commit"
+  ],
+  "rustExisting": [
+    "services::archive_diagnostics::tests::structural_and_capability_failures_do_not_turn_into_password_requests",
+    "services::compression_service::tests::cancellation_before_publication_keeps_verified_output_private",
+    "services::compression_service::tests::incomplete_rollback_keeps_files_but_removes_pending_retry",
+    "services::compression_service::tests::injected_storage_full_cleans_unpublished_compression_outputs",
+    "services::compression_service::tests::publication_failure_preserves_target_stage_and_io_cause",
+    "services::compression_service::tests::source_snapshot_detects_archives_that_change_during_extraction",
+    "services::compression_service::tests::source_snapshot_preserves_missing_invalid_and_access_failures",
+    "services::native_extraction::seven_zip::tests::output_os_failures_are_not_password_or_corruption_failures",
+    "services::native_extraction::seven_zip::tests::real_storage_full_is_classified_and_staging_is_removed",
+    "services::rar_support::tests::native_volume_request_snapshot_is_not_a_notification_or_wrong_key",
+    "services::rar_support::tests::rar_password_error_classification_preserves_engine_failures"
+  ],
+  "frontendDistinctPassed": 157,
+  "frontendFiles": 6,
+  "frontendLogs": [
+    "frontend-fixed.txt",
+    "view-test.txt",
+    "history-view.txt"
+  ],
+  "ignoredNotExecuted": [
+    "io1516_real_disk_full_native_routes_clean_up_and_recover: isolated VHD OS-full test, blocked workflow token scope; not a pass"
+  ],
+  "compiledTestDiskScope": "Own tagged 256 MiB VHD only; no personal drive or global execution policy changes",
+  "coverageBoundaries": [
+    "Real exclusive Windows file handle covered; injected StorageFull is not real disk exhaustion",
+    "Source snapshot is metadata/membership based, not a cryptographic replacement detector",
+    "Related prior results reused when unaffected; repeated rollback test counted once"
+  ],
+  "production": "Required candidate Windows package and formal Release pending at this source snapshot"
+}
