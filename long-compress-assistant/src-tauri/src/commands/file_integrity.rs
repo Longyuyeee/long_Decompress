@@ -1,18 +1,13 @@
 use crate::services::file_integrity_service::{ChecksumAlgorithm, FileIntegrityService};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use crate::services::checksum_manifest::ChecksumVerificationReport;
 
 #[derive(Debug, Deserialize)]
 pub struct ChecksumExportEntry {
     pub file_name: String,
     pub checksum: String,
-}
-
-#[derive(Debug, Serialize)]
-pub struct ChecksumVerificationResponse {
-    pub valid: bool,
-    pub message: String,
 }
 
 fn parse_algorithm(value: &str) -> Result<ChecksumAlgorithm, String> {
@@ -64,35 +59,13 @@ pub async fn export_checksum_file(
 #[tauri::command]
 pub async fn verify_checksum_file(
     checksum_path: String,
-) -> Result<ChecksumVerificationResponse, String> {
+    entry_lines: Option<Vec<usize>>,
+) -> Result<ChecksumVerificationReport, String> {
     tauri::async_runtime::spawn_blocking(move || {
         let checksum_file = PathBuf::from(&checksum_path);
         let base_dir = checksum_file.parent().unwrap_or_else(|| Path::new("."));
-        let results = FileIntegrityService::verify_checksum_file(&checksum_file, base_dir)
-            .map_err(|error| error.to_string())?;
-        let failed: Vec<_> = results
-            .iter()
-            .filter_map(|(name, valid)| (!valid).then_some(name.as_str()))
-            .collect();
-
-        if results.is_empty() {
-            return Ok(ChecksumVerificationResponse {
-                valid: false,
-                message: "No valid checksum entries were found.".to_string(),
-            });
-        }
-
-        let valid = failed.is_empty();
-        let message = if valid {
-            format!("Verified {} file(s).", results.len())
-        } else {
-            format!(
-                "{} file(s) failed verification: {}",
-                failed.len(),
-                failed.join(", ")
-            )
-        };
-        Ok(ChecksumVerificationResponse { valid, message })
+        FileIntegrityService::verify_checksum_entries(&checksum_file, base_dir, entry_lines.as_deref())
+            .map_err(|error| format!("{error:#}"))
     })
     .await
     .map_err(|error| error.to_string())?

@@ -280,7 +280,10 @@ describe('FileIntegrityView', () => {
     mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'load_app_settings') return '{}'
       if (command === 'verify_checksum_file') {
-        return { valid: false, message: '1 file mismatch' }
+        return { valid: false, message: '1 file mismatch',checksumPath:'C:\\data\\checksums.md5',manifestId:'fixed',entries:[{
+          line:1,fileName:'bad.zip',path:'C:\\data\\bad.zip',algorithm:'md5',expectedChecksum:'a'.repeat(32),actualChecksum:'b'.repeat(32),
+          status:'mismatch',reason:'文件内容与清单不符',checkedAt:1000,
+        }] }
       }
       return undefined
     })
@@ -291,17 +294,21 @@ describe('FileIntegrityView', () => {
     await wrapper.findAll('button').find(
       button => button.text().includes(appStore.t('integrity.mode.verify')),
     )?.trigger('click')
-    await wrapper.findAll('button').find(
-      button => button.text().includes(appStore.t('integrity.select_checksum')),
-    )?.trigger('click')
+    await wrapper.get('[data-testid="checksum-choose"]').trigger('click')
     await flushPromises()
 
     expect(mocks.invoke).toHaveBeenCalledWith('verify_checksum_file', {
       checksumPath: 'C:\\data\\checksums.md5',
     })
-    expect(wrapper.text()).toContain('1 file mismatch')
-    expect(wrapper.text()).toContain(appStore.t('integrity.verify_failed'))
-    expect(appStore.error).toBe(appStore.t('integrity.verify_failed', '✗ 校验失败'))
+    expect(wrapper.get('[data-testid="checksum-heading"]').text()).toBe('还有文件需要处理')
+    expect(wrapper.get('[data-testid="checksum-entry"]').text()).toContain('内容不符')
+    await wrapper.get('[data-testid="checksum-row"]').trigger('click')
+    mocks.diagnoseArchive.mockResolvedValue({filePath:'C:\\data\\bad.zip',actualFormat:'ZIP',status:'healthy',issues:[],evidence:[],missingVolumes:[],totalFiles:1,totalDirectories:0,integrityTested:true,canRepair:false})
+    await wrapper.get('[data-testid="checksum-diagnose"]').trigger('click');await flushPromises()
+    expect(mocks.diagnoseArchive).toHaveBeenCalledWith(expect.any(String),'C:\\data\\bad.zip','')
+    await wrapper.get('[data-testid="checksum-verify-mode"]').trigger('click');await flushPromises()
+    expect(wrapper.get('[data-testid="checksum-entry"]').text()).toContain('内容不符')
+    expect(mocks.invoke.mock.calls.filter(call=>call[0]==='verify_checksum_file')).toHaveLength(1)
   })
 
   it('diagnoses a damaged archive, copies evidence, and repairs to a new verified file', async () => {

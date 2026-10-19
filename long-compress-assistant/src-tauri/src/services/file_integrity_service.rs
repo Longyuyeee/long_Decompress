@@ -128,77 +128,24 @@ impl FileIntegrityService {
                 .and_then(|n| n.to_str())
                 .unwrap_or("unknown");
 
-            writeln!(output, "{}  {}", result.checksum, file_name)?;
+            match algorithm {
+                ChecksumAlgorithm::CRC32 => writeln!(output, "{} {}", file_name, result.checksum)?,
+                _ => writeln!(output, "{}  {}", result.checksum, file_name)?,
+            }
         }
 
         Ok(())
     }
 
-    /// 验证校验文件
-    pub fn verify_checksum_file(checksum_file: &Path, base_dir: &Path) -> Result<Vec<(String, bool)>> {
-        use std::io::BufRead;
-
-        let file = File::open(checksum_file)?;
-        let reader = BufReader::new(file);
-        let mut results = Vec::new();
-
-        // 自动检测算法（根据校验和长度）
-        let is_sfv = checksum_file
-            .extension()
-            .and_then(|extension| extension.to_str())
-            .is_some_and(|extension| extension.eq_ignore_ascii_case("sfv"));
-
-        for line in reader.lines() {
-            let line = line?;
-            let line = line.trim();
-            if line.is_empty() || line.starts_with(';') || line.starts_with('#') {
-                continue;
-            }
-
-            let parsed = if is_sfv {
-                line.rsplit_once(char::is_whitespace)
-                    .map(|(name, checksum)| (checksum.trim(), name.trim()))
-            } else {
-                line.split_once(char::is_whitespace)
-                    .map(|(checksum, name)| (checksum.trim(), name.trim_start_matches([' ', '*'])))
-            };
-            let Some((expected_checksum, file_name)) = parsed else {
-                continue;
-            };
-
-            let relative_path = Path::new(file_name);
-            if relative_path.is_absolute()
-                || relative_path.components().any(|component| matches!(component, std::path::Component::ParentDir))
-            {
-                results.push((file_name.to_string(), false));
-                continue;
-            }
-            let file_path = base_dir.join(relative_path);
-
-            if !file_path.exists() {
-                results.push((file_name.to_string(), false));
-                continue;
-            }
-
-            // 根据校验和长度推断算法
-            let algorithm = match expected_checksum.len() {
-                8 => ChecksumAlgorithm::CRC32,
-                32 => ChecksumAlgorithm::MD5,
-                64 => ChecksumAlgorithm::SHA256,
-                _ => {
-                    log::warn!("未知的校验和长度: {}", expected_checksum.len());
-                    continue;
-                }
-            };
-
-            let is_valid = Self::verify_checksum(&file_path, expected_checksum, algorithm)
-                .unwrap_or(false);
-
-            results.push((file_name.to_string(), is_valid));
-        }
-
-        Ok(results)
+    /// Verify every row, including explicit missing/unreadable/invalid causes.
+    pub fn verify_checksum_file(checksum_file: &Path, base_dir: &Path) -> Result<super::checksum_manifest::ChecksumVerificationReport> {
+        Self::verify_checksum_entries(checksum_file, base_dir, None)
     }
+
+    pub fn verify_checksum_entries(checksum_file: &Path, base_dir: &Path, only_lines: Option<&[usize]>) -> Result<super::checksum_manifest::ChecksumVerificationReport> {
+        super::checksum_manifest::verify(checksum_file, base_dir, only_lines)
+    }
+
 }
 
 #[cfg(test)]
