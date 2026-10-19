@@ -7,6 +7,20 @@ use std::path::{Component, Path, PathBuf};
 const MAX_SPARSE_BLOCKS: usize = 65_536;
 const MAX_MAP_BYTES: u64 = 8 * 1024 * 1024;
 
+/// Consume every enclosing codec member and allow only TAR padding after EOF.
+/// A second complete TAR is not one TAR split over several compression streams.
+pub(crate) fn finish_stream(mut reader: impl Read, mut check: impl FnMut() -> anyhow::Result<()>) -> anyhow::Result<()> {
+    let mut bytes = [0u8; 64 * 1024];
+    loop {
+        check()?;
+        let count = reader.read(&mut bytes)?;
+        if count == 0 { return Ok(()); }
+        if bytes[..count].iter().any(|byte| *byte != 0) {
+            anyhow::bail!("[archive-inspection:unsupported] TAR 结束标记后仍有其他数据，可能包含多个拼接的 TAR；本次没有将其当作完整单包处理，请分别提供原包或重新打包");
+        }
+    }
+}
+
 pub(crate) fn integrity_route(
     path: &Path,
     format: &super::archive_format::ArchiveFormat,
@@ -39,6 +53,9 @@ pub(crate) fn integrity_route(
     .then_some(route)
 }
 pub(crate) fn inspection_error(error: anyhow::Error) -> anyhow::Error {
+    if error.to_string().contains("[archive-inspection:damaged] 压缩流") {
+        return error.context("[archive-inspection:damaged] TAR 压缩流数据或尾部无效，请重新获取完整原包，不必反复尝试密码");
+    }
     if error.to_string().contains("[archive-inspection:") {
         return error;
     }
@@ -342,18 +359,10 @@ pub(crate) fn plan(
     let result = (|| -> anyhow::Result<Plan> {
         let reader: Box<dyn Read + Send> = match route {
             Route::Tar => Box::new(super::numeric_volume_reader::ZipInputReader::open(path)?),
-            Route::TarGzip => Box::new(flate2::read::GzDecoder::new(
-                super::numeric_volume_reader::ZipInputReader::open(path)?,
-            )),
-            Route::TarBzip2 => Box::new(bzip2::read::BzDecoder::new(
-                super::numeric_volume_reader::ZipInputReader::open(path)?,
-            )),
-            Route::TarXz => Box::new(xz2::read::XzDecoder::new(
-                super::numeric_volume_reader::ZipInputReader::open(path)?,
-            )),
-            Route::TarZstd => Box::new(zstd::stream::read::Decoder::new(
-                super::numeric_volume_reader::ZipInputReader::open(path)?,
-            )?),
+            Route::TarGzip => super::codec_stream::decoder(path, "gz")?,
+            Route::TarBzip2 => super::codec_stream::decoder(path, "bz2")?,
+            Route::TarXz => super::codec_stream::decoder(path, "xz")?,
+            Route::TarZstd => super::codec_stream::decoder(path, "zst")?,
             Route::TarLz4 => super::codec_stream::decoder(path, "lz4")?,
             Route::TarBrotli => super::codec_stream::decoder(path, "br")?,
             Route::TarLzip => super::codec_stream::decoder(path, "lz")?,
@@ -410,11 +419,7 @@ pub(crate) fn plan(
                     .ok_or_else(|| damaged("数据总量溢出"))?;
             }
         }
-        let mut reader = archive.into_inner();
-        let mut buffer = [0u8; 65536];
-        while reader.read(&mut buffer)? > 0 {
-            check()?;
-        }
+        finish_stream(archive.into_inner(), &check)?;
         Ok(stats)
     })();
     check()?;

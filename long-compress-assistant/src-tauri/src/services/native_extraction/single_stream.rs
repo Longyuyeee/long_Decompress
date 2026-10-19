@@ -112,14 +112,14 @@ pub(crate) fn extract_gzip<R: ExtractionRuntime>(
     output: &Path,
     options: &DecompressOptions,
 ) -> Result<()> {
-    let decoder = flate2::read::GzDecoder::new(crate::services::numeric_volume_reader::ZipInputReader::open(Path::new(file))?);
+    let decoder = crate::services::codec_stream::decoder(Path::new(file), "gz")?;
     extract(
         runtime,
         window,
         task_id,
         decoder,
         output,
-        output_name(Path::new(file), &[".gz"]),
+        output_name(Path::new(file), &[".gz", ".gzip"]),
         options,
     )
 }
@@ -132,14 +132,14 @@ pub(crate) fn extract_bzip2<R: ExtractionRuntime>(
     output: &Path,
     options: &DecompressOptions,
 ) -> Result<()> {
-    let decoder = bzip2::read::BzDecoder::new(crate::services::numeric_volume_reader::ZipInputReader::open(Path::new(file))?);
+    let decoder = crate::services::codec_stream::decoder(Path::new(file), "bz2")?;
     extract(
         runtime,
         window,
         task_id,
         decoder,
         output,
-        output_name(Path::new(file), &[".bz2"]),
+        output_name(Path::new(file), &[".bz2", ".bzip2"]),
         options,
     )
 }
@@ -152,7 +152,7 @@ pub(crate) fn extract_xz<R: ExtractionRuntime>(
     output: &Path,
     options: &DecompressOptions,
 ) -> Result<()> {
-    let decoder = xz2::read::XzDecoder::new(crate::services::numeric_volume_reader::ZipInputReader::open(Path::new(file))?);
+    let decoder = crate::services::codec_stream::decoder(Path::new(file), "xz")?;
     extract(
         runtime,
         window,
@@ -172,7 +172,7 @@ pub(crate) fn extract_zstandard<R: ExtractionRuntime>(
     output: &Path,
     options: &DecompressOptions,
 ) -> Result<()> {
-    let decoder = zstd::stream::read::Decoder::new(crate::services::numeric_volume_reader::ZipInputReader::open(Path::new(file))?)?;
+    let decoder = crate::services::codec_stream::decoder(Path::new(file), "zst")?;
     extract(
         runtime,
         window,

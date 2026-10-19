@@ -215,20 +215,55 @@ impl<R: Read> Read for LzipReader<R> {
 
 pub(crate) fn decoder(path: &Path, format: &str) -> Result<Box<dyn Read + Send>> {
     let mut input = super::numeric_volume_reader::ZipInputReader::open(path)?;
-    Ok(if format.ends_with("lz4") {
-        Box::new(lz4_flex::frame::FrameDecoder::new(input))
-    } else if format == "lz" || format.ends_with(".lz") {
-        // A real .lz contains at least one member; reject empty input before
-        // the decoder can interpret it as a clean end of stream.
-        use std::io::{Seek, SeekFrom};
-        let mut header = [0u8; 6];
-        input.read_exact(&mut header).context("LZIP 文件头不完整")?;
-        ensure!(header.starts_with(b"LZIP"), "文件不是有效的 LZIP 压缩流");
-        input.seek(SeekFrom::Start(0))?;
-        Box::new(LzipReader(lzma_rust2::LzipReader::new(input)))
-    } else {
-        Box::new(brotli::Decompressor::new(input, 64 * 1024))
-    })
+    let reader: Box<dyn Read + Send> = match format {
+        "gz" | "gzip" | "tar.gz" => Box::new(flate2::read::MultiGzDecoder::new(input)),
+        "bz2" | "bzip2" | "tar.bz2" => Box::new(bzip2::read::MultiBzDecoder::new(input)),
+        "xz" | "tar.xz" => Box::new(xz2::read::XzDecoder::new_multi_decoder(input)),
+        "zst" | "zstd" | "tar.zst" => Box::new(zstd::stream::read::Decoder::new(input)?),
+        _ => return Ok(if format.ends_with("lz4") {
+            Box::new(lz4_flex::frame::FrameDecoder::new(input))
+        } else if format == "lz" || format.ends_with(".lz") {
+            use std::io::{Seek, SeekFrom};
+            let mut header = [0u8; 6];
+            input.read_exact(&mut header).context("LZIP 文件头不完整")?;
+            ensure!(header.starts_with(b"LZIP"), "文件不是有效的 LZIP 压缩流");
+            input.seek(SeekFrom::Start(0))?;
+            Box::new(LzipReader(lzma_rust2::LzipReader::new(input)))
+        } else if matches!(format, "br" | "tar.br") {
+            Box::new(brotli::Decompressor::new(input, 64 * 1024))
+        } else { anyhow::bail!("不支持的压缩流：{format}") }),
+    };
+    Ok(Box::new(CompleteStream(reader)))
+}
+
+#[derive(Debug, thiserror::Error)]
+#[error("[archive-inspection:damaged] 压缩流数据或尾部无效，请重新获取完整原文件，不必反复尝试密码。原始原因：{0}")]
+struct StreamDataError(#[source] std::io::Error);
+
+struct CompleteStream(Box<dyn Read + Send>);
+impl Read for CompleteStream {
+    fn read(&mut self, bytes: &mut [u8]) -> std::io::Result<usize> {
+        self.0.read(bytes).map_err(|error| {
+            // Keep genuine filesystem failures and existing classifications intact.
+            if super::archive_io::io_kind(&error).is_none() && !error.to_string().contains("[archive-")
+                && matches!(error.kind(), std::io::ErrorKind::InvalidData | std::io::ErrorKind::UnexpectedEof
+                    | std::io::ErrorKind::InvalidInput | std::io::ErrorKind::Other) {
+                std::io::Error::new(error.kind(), StreamDataError(error))
+            } else { error }
+        })
+    }
+}
+
+pub(crate) fn plain_format(format: &super::archive_format::ArchiveFormat)
+    -> Option<(&'static str, &'static str, &'static [&'static str])> {
+    use super::archive_format::ArchiveFormat as F;
+    match format {
+        F::Gzip => Some(("gz", "GZIP", &[".gz", ".gzip"])),
+        F::Bzip2 => Some(("bz2", "BZIP2", &[".bz2", ".bzip2"])),
+        F::Xz => Some(("xz", "XZ", &[".xz"])),
+        F::Zstd => Some(("zst", "ZSTD", &[".zst", ".zstd"])),
+        _ => None,
+    }
 }
 
 #[cfg(test)]
@@ -288,6 +323,20 @@ mod tests {
         }
         fn emit_log(&self, _: &Window, _: &str, _: &str, _: TaskLogSeverity) {}
         fn emit_progress(&self, _: &Window, _: &str, _: f32, _: Option<String>, _: u64, _: u64) {}
+    }
+
+    #[test]
+    fn stream1517_boundary_keeps_nested_os_errors_out_of_corruption() {
+        struct Busy;
+        impl Read for Busy {
+            fn read(&mut self, _: &mut [u8]) -> std::io::Result<usize> {
+                Err(std::io::Error::other(std::io::Error::from_raw_os_error(32)))
+            }
+        }
+        let error = CompleteStream(Box::new(Busy)).read(&mut [0; 8]).unwrap_err();
+        assert!(!error.to_string().contains("[archive-inspection:damaged]"));
+        let error = anyhow::Error::new(error);
+        assert!(super::super::archive_io::message(&error).contains("[archive-io:target-busy]"));
     }
 
     #[test]

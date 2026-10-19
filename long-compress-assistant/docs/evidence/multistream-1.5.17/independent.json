@@ -1,0 +1,46 @@
+{
+  "tool": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\resources\\archive-engine\\7z.exe",
+  "toolSha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53",
+  "results": [
+    {
+      "original": "说明.txt.gz",
+      "independentDecodedBytes": 44168,
+      "sha256": "2427777562d2d5e9c7c3767f92582f1e97181aa215ce959006786d338c57d564"
+    },
+    {
+      "original": "跨段.tar.gz",
+      "independentDecodedBytes": 143360,
+      "sha256": "2c5d1e8907369086bf3a9f05ae2b43b85aa21979422ab1fa783a23ff1dbaad2c"
+    },
+    {
+      "original": "说明.txt.bz2",
+      "independentDecodedBytes": 44168,
+      "sha256": "2427777562d2d5e9c7c3767f92582f1e97181aa215ce959006786d338c57d564"
+    },
+    {
+      "original": "跨段.tar.bz2",
+      "independentDecodedBytes": 143360,
+      "sha256": "2c5d1e8907369086bf3a9f05ae2b43b85aa21979422ab1fa783a23ff1dbaad2c"
+    },
+    {
+      "original": "说明.txt.xz",
+      "independentDecodedBytes": 44168,
+      "sha256": "2427777562d2d5e9c7c3767f92582f1e97181aa215ce959006786d338c57d564"
+    },
+    {
+      "original": "跨段.tar.xz",
+      "independentDecodedBytes": 143360,
+      "sha256": "2c5d1e8907369086bf3a9f05ae2b43b85aa21979422ab1fa783a23ff1dbaad2c"
+    },
+    {
+      "original": "说明.txt.zst",
+      "independentDecodedBytes": 44168,
+      "sha256": "2427777562d2d5e9c7c3767f92582f1e97181aa215ce959006786d338c57d564"
+    },
+    {
+      "original": "跨段.tar.zst",
+      "independentDecodedBytes": 143360,
+      "sha256": "2c5d1e8907369086bf3a9f05ae2b43b85aa21979422ab1fa783a23ff1dbaad2c"
+    }
+  ]
+}

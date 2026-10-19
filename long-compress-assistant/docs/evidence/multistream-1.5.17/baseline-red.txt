@@ -1,0 +1,97 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+   Compiling long-compress-assistant v1.5.16 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 59.39s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-012836b40da3a464.exe)
+
+running 8 tests
+test services::multistream_tests::stream1517_bzip2_tar_reads_tail_across_members ... FAILED
+test services::multistream_tests::stream1517_complete_decoding_keeps_raw_payload_hash ... FAILED
+test services::multistream_tests::stream1517_gzip_tar_reads_tail_across_members ... FAILED
+test services::multistream_tests::stream1517_later_member_damage_is_not_success ... FAILED
+test services::multistream_tests::stream1517_plain_stream_has_complete_size_and_preview ... FAILED
+test services::multistream_tests::stream1517_separate_tar_concatenation_is_explicit_not_partial_success ... FAILED
+test services::multistream_tests::stream1517_xz_tar_reads_tail_across_members_and_padding ... FAILED
+test services::multistream_tests::stream1517_zstd_tar_keeps_existing_multiframe_support ... FAILED
+
+failures:
+
+---- services::multistream_tests::stream1517_bzip2_tar_reads_tail_across_members stdout ----
+
+thread 'services::multistream_tests::stream1517_bzip2_tar_reads_tail_across_members' (41244) panicked at src\services\multistream_tests.rs:37:63:
+called `Result::unwrap()` on an `Err` value: unexpected EOF during skip
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- services::multistream_tests::stream1517_complete_decoding_keeps_raw_payload_hash stdout ----
+
+thread 'services::multistream_tests::stream1517_complete_decoding_keeps_raw_payload_hash' (19132) panicked at src\services\multistream_tests.rs:94:144:
+called `Result::unwrap()` on an `Err` value: Custom { kind: InvalidData, error: "Invalid Data" }
+
+---- services::multistream_tests::stream1517_gzip_tar_reads_tail_across_members stdout ----
+
+thread 'services::multistream_tests::stream1517_gzip_tar_reads_tail_across_members' (18304) panicked at src\services\multistream_tests.rs:37:63:
+called `Result::unwrap()` on an `Err` value: unexpected EOF during skip
+
+---- services::multistream_tests::stream1517_later_member_damage_is_not_success stdout ----
+
+thread 'services::multistream_tests::stream1517_later_member_damage_is_not_success' (21588) panicked at src\services\multistream_tests.rs:64:13:
+E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\../tests/fixtures/archives/multistream-1517\说明.txt.gz.truncated: truncated
+
+---- services::multistream_tests::stream1517_plain_stream_has_complete_size_and_preview stdout ----
+
+thread 'services::multistream_tests::stream1517_plain_stream_has_complete_size_and_preview' (3080) panicked at src\services\multistream_tests.rs:74:43:
+assertion `left == right` failed
+  left: 31
+ right: 44168
+
+---- services::multistream_tests::stream1517_separate_tar_concatenation_is_explicit_not_partial_success stdout ----
+
+thread 'services::multistream_tests::stream1517_separate_tar_concatenation_is_explicit_not_partial_success' (10008) panicked at src\services\multistream_tests.rs:84:90:
+called `Result::unwrap_err()` on an `Ok` value: true
+
+---- services::multistream_tests::stream1517_xz_tar_reads_tail_across_members_and_padding stdout ----
+
+thread 'services::multistream_tests::stream1517_xz_tar_reads_tail_across_members_and_padding' (49652) panicked at src\services\multistream_tests.rs:37:63:
+called `Result::unwrap()` on an `Err` value: corrupt xz stream
+
+---- services::multistream_tests::stream1517_zstd_tar_keeps_existing_multiframe_support stdout ----
+
+thread 'services::multistream_tests::stream1517_zstd_tar_keeps_existing_multiframe_support' (32484) panicked at src\services\multistream_tests.rs:46:94:
+called `Result::unwrap()` on an `Err` value: Invalid Data
+
+
+failures:
+    services::multistream_tests::stream1517_bzip2_tar_reads_tail_across_members
+    services::multistream_tests::stream1517_complete_decoding_keeps_raw_payload_hash
+    services::multistream_tests::stream1517_gzip_tar_reads_tail_across_members
+    services::multistream_tests::stream1517_later_member_damage_is_not_success
+    services::multistream_tests::stream1517_plain_stream_has_complete_size_and_preview
+    services::multistream_tests::stream1517_separate_tar_concatenation_is_explicit_not_partial_success
+    services::multistream_tests::stream1517_xz_tar_reads_tail_across_members_and_padding
+    services::multistream_tests::stream1517_zstd_tar_keeps_existing_multiframe_support
+
+test result: FAILED. 0 passed; 8 failed; 0 ignored; 0 measured; 748 filtered out; finished in 0.43s
+
+error: test failed, to rerun pass `--lib`

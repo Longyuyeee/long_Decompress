@@ -11,6 +11,7 @@ import { useTauriCommands, type ArchiveDiagnosticReport, type ZipRepairResult } 
 import { open, save } from '@tauri-apps/api/dialog'
 import { useTaskStore } from '@/stores/task'
 import { generateId } from '@/utils'
+import { archiveInspectionMessageForDisplay } from '@/utils/taskFailure'
 import { parentDirectory } from '@/utils/resultLocation'
 import ZipPasswordEncodingField from '@/components/ui/ZipPasswordEncodingField.vue'
 import { zipPasswordEncodingArguments, zipPasswordEncodingLabel, type ZipPasswordEncoding } from '@/types/zipPassword'
@@ -729,7 +730,7 @@ onUnmounted(() => {
 
             <div v-if="diagnosticReport.issues.length" class="mt-6 space-y-3">
               <article v-for="issue in diagnosticReport.issues" :key="issue.code" class="diagnostic-issue" :data-severity="issue.severity">
-                <strong>{{ issue.title }}</strong><p>{{ issue.detail }}</p>
+                <strong>{{ issue.title }}</strong><p>{{ archiveInspectionMessageForDisplay(issue.detail) }}</p>
               </article>
             </div>
             <div class="mt-6 rounded-2xl bg-input/30 p-4 min-w-0">
