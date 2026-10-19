@@ -1,0 +1,132 @@
+{
+  "version": "1.5.19",
+  "base": "47a41ab",
+  "redCommit": "feffb16",
+  "productCommit": "5eb9a19",
+  "desktopSelectionHookCommit": "c2ebb66",
+  "rustDistinctPassed": 7,
+  "rustTests": [
+    "services::checksum_details_tests::checksum1519_selective_pass_does_not_read_unselected_files_or_claim_full_success",
+    "services::checksum_details_tests::checksum1519_actual_windows_lock_has_its_reason_and_recovers_without_reading_other_files",
+    "services::checksum_details_tests::checksum1519_report_distinguishes_real_file_failures",
+    "services::checksum_details_tests::checksum1519_malformed_rows_remain_visible_and_empty_manifests_do_not_pass",
+    "services::checksum_details_tests::checksum1519_manifest_identity_changes_before_selective_results_can_be_merged",
+    "services::checksum_details_tests::checksum1519_generated_lists_roundtrip_all_three_algorithms",
+    "services::checksum_details_tests::checksum1519_reads_independent_sfv_md5_sha256_with_bom_spaces_and_binary_marker"
+  ],
+  "frontendDistinctPassed": 26,
+  "frontendReusedUtilityTests": 4,
+  "frontendComponentTests": 6,
+  "frontendFinalRouteTests": 16,
+  "typeCheck": true,
+  "productionFrontendBuild": true,
+  "shellVersionBuild": true,
+  "nativeRecords": 4,
+  "uiFlows": 5,
+  "viewedScreenshots": 8,
+  "earlyDesktopBinarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da",
+  "finalDesktopBinarySha256": "e08be2d515c99e725e8df10016d4ae6416712e3f0b09cf68bc9352573716225f",
+  "layouts": [
+    {
+      "name": "file-causes",
+      "digests": [
+        {
+          "left": 379.015625,
+          "overflow": 0,
+          "right": 379.015625
+        }
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "name": "file-causes",
+      "digests": [
+        {
+          "left": 279.015625,
+          "overflow": 0,
+          "right": 279.015625
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "name": "selective-restored",
+      "digests": [
+        {
+          "left": 379.015625,
+          "overflow": 0,
+          "right": 379.015625
+        },
+        {
+          "left": 379.015625,
+          "overflow": 0,
+          "right": 379.015625
+        }
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "name": "selective-restored",
+      "digests": [
+        {
+          "left": 279.015625,
+          "overflow": 0,
+          "right": 279.015625
+        },
+        {
+          "left": 279.015625,
+          "overflow": 0,
+          "right": 279.015625
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "name": "manifest-changed",
+      "digests": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "name": "manifest-changed",
+      "digests": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "name": "retry-new-task",
+      "binarySha256": "e08be2d515c99e725e8df10016d4ae6416712e3f0b09cf68bc9352573716225f",
+      "digests": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "retry-new-task",
+      "binarySha256": "e08be2d515c99e725e8df10016d4ae6416712e3f0b09cf68bc9352573716225f",
+      "digests": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "completedAt": "2026-10-19T07:49:15.983Z",
+  "installationExecuted": false,
+  "unchangedArchiveMatrixRerun": false
+}

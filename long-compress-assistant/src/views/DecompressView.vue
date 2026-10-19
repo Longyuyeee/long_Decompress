@@ -304,7 +304,9 @@ const setGlobalOutput = (selected: string) => {
 }
 const handleGlobalSelectDir = async () => {
   try {
-    const selected = await open({
+    const queued = import.meta.env.VITE_DESKTOP_E2E === '1'
+      ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection() : undefined
+    const selected = queued !== undefined ? queued : await open({
       directory: true,
       multiple: false,
       title: appStore.t('decompress.config.output_select')

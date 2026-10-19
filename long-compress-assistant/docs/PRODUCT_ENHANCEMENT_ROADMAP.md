@@ -1,10 +1,10 @@
 # Long解压产品增强路线
 
-## 当前 v1.5.18 功能封板，下一版接续逐文件校验
+## 当前 v1.5.19 功能封板，接续下一阶段三版
 
-九种自有 AES 格式数字分卷创建、任意成员读取、密码与认证后浏览/有界预览、检查、所选/整包提取及密码 ZIP/TAR.AES 转换贯通，修复 TAR.AES 多源目录创建。22 不同 Rust、805 前端单元、24 原生记录、五条实际 UI 与十张实看页面完成；完整内容独立回解通过。见[实施](AES_VOLUMES_1.5.18.md)、[封板](AES_VOLUMES_FREEZE_1.5.18.md)、[开发交接](DEVELOPMENT_HANDOFF.md)和[发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.18)。保留原交互与等宽/窄窗布局。
+逐文件清单状态、完整原因、复制待补列表、按需复查、变化后的旧结果作废和原失败新任务接续完成。七项 Rust、26 前端、四条原生 IPC、五条实际 UI 与八张实看页面通过；单条展开、多选弹窗、自然继承、等宽与窄窗布局保持。见[实施](CHECKSUM_DETAILS_1.5.19.md)、[封板](CHECKSUM_DETAILS_FREEZE_1.5.19.md)、[交接](DEVELOPMENT_HANDOFF.md)及[发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.19)。
 
-v1.5.17 已正式发布。下一步只推进[既定路线](ARCHIVE_ROADMAP_1.5.17_TO_1.5.19.md)的 v1.5.19 逐文件校验原因与待补列表，尚未开始，不重复开发基础哈希。用户补充 workflow 授权后恢复隔离 VHD 检查，结果在本版 PR 接续；ALZ 方法 3 与 EGG 加密固实的原未完成状态保留。
+v1.5.17～v1.5.19 按本轮范围完成；[后续三版](ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)已规划，先 LZIP/TAR.LZIP 数字分卷，再扩展 Long AES 的 LZ4/Brotli/LZIP 内层，最后大清单真实进度/停止/继续，均尚未实施。ALZ 方法 3、EGG 加密固实保留未完成；真实 VHD 盘满已在 v1.5.18 补测通过，不重复执行。
 
 下方均为历史阶段快照，不据旧“下一步”重复开工。
 

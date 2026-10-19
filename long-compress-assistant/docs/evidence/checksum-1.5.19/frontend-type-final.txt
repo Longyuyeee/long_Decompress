@@ -1,0 +1,4 @@
+
+> long-compress-assistant@1.5.19 type-check
+> vue-tsc --noEmit
+

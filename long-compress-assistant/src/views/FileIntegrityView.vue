@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import ChecksumVerificationPanel from '@/components/integrity/ChecksumVerificationPanel.vue'
 import ArchiveRecoveryDetails from '@/components/compression/ArchiveRecoveryDetails.vue'
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useArchiveRecoveryStore } from '@/composables/useArchiveRecoveryBatch'
 import ArchiveRecoveryBatch from '@/components/compression/ArchiveRecoveryBatch.vue'
 import RarRecoveryVolumesDialog from '@/components/compression/RarRecoveryVolumesDialog.vue'
@@ -18,6 +20,7 @@ import { zipPasswordEncodingArguments, zipPasswordEncodingLabel, type ZipPasswor
 import { supportsZipPasswordEncoding, zipPasswordEncodingForSource } from '@/utils/zipPasswordSource'
 
 const appStore = useAppStore()
+const router = useRouter()
 const uiStore = useUIStore()
 const tauriCommands = useTauriCommands()
 const taskStore = useTaskStore()
@@ -47,7 +50,7 @@ const checksumResults = ref<ChecksumResult[]>([])
 const isCalculating = ref(false)
 const recoveryWorkspace = useArchiveRecoveryStore()
 const activeMode = ref<'calculate' | 'verify' | 'archive'>(recoveryWorkspace.rows.length ? 'archive' : 'calculate')
-const verifyResult = ref<{ valid: boolean; message: string } | null>(null)
+const isVerifying = ref(false)
 const archivePath = ref(recoveryWorkspace.sourcePaths[0] || '')
 const diagnosticSources = ref<string[]>([...recoveryWorkspace.sourcePaths])
 const batchBusy = computed(() => recoveryWorkspace.busy || recoveryWorkspace.preparing)
@@ -91,7 +94,6 @@ const selectFiles = async () => {
     if (files) {
       selectedFiles.value = Array.isArray(files) ? files : [files]
       checksumResults.value = []
-      verifyResult.value = null
     }
   } catch (error) {
     appStore.setError(appStore.t('common.error'))
@@ -182,53 +184,9 @@ const exportChecksumFile = async () => {
   }
 }
 
-const selectChecksumFile = async () => {
-  try {
-    const file = await open({
-      multiple: false,
-      title: appStore.t('integrity.select_checksum', '选择校验文件'),
-      filters: [{
-        name: 'Checksum Files',
-        extensions: ['md5', 'sha256', 'sfv']
-      }]
-    })
-    if (file && typeof file === 'string') {
-      await verifyChecksumFile(file)
-    }
-  } catch (error) {
-    appStore.setError(appStore.t('common.error'))
-  }
-}
-
-const verifyChecksumFile = async (checksumPath: string) => {
-  isCalculating.value = true
-  verifyResult.value = null
-
-  try {
-    const result = await tauriCommands.invoke<{ valid: boolean; message: string }>('verify_checksum_file', {
-      checksumPath
-    })
-    verifyResult.value = result
-    if (result.valid) {
-      appStore.setSuccess(appStore.t('integrity.verify_success', '✓ 校验通过'))
-    } else {
-      appStore.setError(appStore.t('integrity.verify_failed', '✗ 校验失败'))
-    }
-  } catch (error: any) {
-    verifyResult.value = {
-      valid: false,
-      message: String(error)
-    }
-    appStore.setError(appStore.t('integrity.verify_error', '校验出错'))
-  } finally {
-    isCalculating.value = false
-  }
-}
-
 const clearResults = () => {
   selectedFiles.value = []
   checksumResults.value = []
-  verifyResult.value = null
   archivePath.value = ''
   diagnosticSources.value = []
   batchDetailOpen.value = false
@@ -526,7 +484,7 @@ onUnmounted(() => {
         <nav class="integrity-mode-switch" aria-label="文件完整性工具">
           <button
             @click="activeMode = 'calculate'; clearResults()"
-            :disabled="isDiagnosing || isRepairing"
+            :disabled="isDiagnosing || isRepairing || isCalculating || isVerifying"
             :class="{ active: activeMode === 'calculate' }"
           >
             <span class="mode-icon"><i class="pi pi-hashtag"></i></span>
@@ -534,8 +492,9 @@ onUnmounted(() => {
             <i class="pi pi-chevron-right mode-arrow"></i>
           </button>
           <button
+            data-testid="checksum-verify-mode"
             @click="activeMode = 'verify'; clearResults()"
-            :disabled="isDiagnosing || isRepairing"
+            :disabled="isDiagnosing || isRepairing || isCalculating || isVerifying"
             :class="{ active: activeMode === 'verify' }"
           >
             <span class="mode-icon"><i class="pi pi-check-circle"></i></span>
@@ -545,7 +504,7 @@ onUnmounted(() => {
           <button
             data-testid="archive-diagnostic-mode"
             @click="openArchiveMode"
-            :disabled="isDiagnosing || isRepairing"
+            :disabled="isDiagnosing || isRepairing || isCalculating || isVerifying"
             :class="{ active: activeMode === 'archive' }"
           >
             <span class="mode-icon"><i class="pi pi-search"></i></span>
@@ -637,41 +596,11 @@ onUnmounted(() => {
           </section>
         </div>
 
-        <!-- 验证模式 -->
-        <div v-else-if="activeMode === 'verify'" class="integrity-single-column">
-          <section class="integrity-panel">
-            <button
-              @click="selectChecksumFile"
-              :disabled="isCalculating"
-              class="integrity-verify-dropzone"
-            >
-              <span class="dropzone-icon"><i class="pi pi-check-circle"></i></span>
-              <span><strong>{{ appStore.t('integrity.select_checksum') }}</strong><small>支持 .md5、.sha256、.sfv</small></span>
-              <i class="pi pi-folder-open"></i>
-            </button>
-          </section>
-
-          <!-- 验证结果 -->
-          <section v-if="verifyResult" class="integrity-panel verify-result"
-            :class="verifyResult.valid
-              ? 'bg-green-500/5 border-green-500'
-              : 'bg-red-500/5 border-red-500'"
-          >
-            <div class="flex items-center gap-4">
-              <span class="verify-result-icon"><i :class="verifyResult.valid ? 'pi pi-check' : 'pi pi-times'"></i></span>
-              <div class="flex-1">
-                <div class="text-lg font-black uppercase tracking-widest"
-                  :class="verifyResult.valid ? 'text-green-500' : 'text-red-500'"
-                >
-                  {{ verifyResult.valid ? appStore.t('integrity.verify_success') : appStore.t('integrity.verify_failed') }}
-                </div>
-                <div class="text-xs text-muted mt-2 uppercase tracking-tighter">{{ verifyResult.message }}</div>
-              </div>
-            </div>
-          </section>
+        <div v-show="activeMode === 'verify'" class="integrity-single-column">
+          <ChecksumVerificationPanel @busy="isVerifying = $event" @diagnose="appStore.openArchiveForDiagnosis({path: $event})" @tasks="router.push('/decompress')" />
         </div>
 
-        <div v-else class="integrity-single-column min-w-0 overflow-x-hidden" data-testid="archive-diagnostic-panel">
+        <div v-if="activeMode === 'archive'" class="integrity-single-column min-w-0 overflow-x-hidden" data-testid="archive-diagnostic-panel">
           <div v-if="diagnosticSources.length > 1" class="flex flex-wrap items-center justify-between gap-2">
             <button v-if="batchDetailOpen" class="archive-secondary" @click="batchDetailOpen = false"><i class="pi pi-arrow-left"></i>返回批量列表</button>
             <button class="archive-secondary" :disabled="batchBusy || isDiagnosing || isRepairing" @click="selectArchive"><i class="pi pi-folder-open"></i>重新选择压缩包</button>

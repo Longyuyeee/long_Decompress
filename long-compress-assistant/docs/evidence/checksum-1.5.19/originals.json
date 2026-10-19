@@ -1,0 +1,23 @@
+{
+  "tool": "CPython 3.12.10 zipfile/hashlib/zlib",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319",
+  "manifest": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\校验清单.sha256",
+  "parts": [
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\论坛资料.zip.001",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\论坛资料.zip.002",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\论坛资料.zip.003"
+  ],
+  "blocked": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\待解除占用的说明.txt",
+  "expectedFiles": {
+    "开头.txt": "70e1f054338b331e57f15181a457fab10cedc7e37d417b2f5c3b56b4e0aa2d24",
+    "数据.bin": "83c0823c3dea443684f7cfe2ec53d5be1badebfdb32826e64b2025fbe50d6165",
+    "末尾.txt": "cadfd0a243eed74d78b9dbe2ac1b69570a007724d2efb332eab0c6bac6a690f7"
+  },
+  "archiveSha256": "6e0173de6a7405ef9befcf70a72cb0a2665f894153fae3a6c325742314555122",
+  "partSha256": {
+    "论坛资料.zip.001": "565a46ecbd4d9b5a111472d67872eea9d6919925bdda2063c78f7235dbc30b2e",
+    "论坛资料.zip.002": "2e940236568f56faa245942106fb5c953902bb80022d0f08684661eaf2ef23f1",
+    "论坛资料.zip.003": "7048730460a5eb369daa25627e5594a8fb5a39459af869e910b1bea0078f954b"
+  },
+  "emptyDirectory": "空目录"
+}

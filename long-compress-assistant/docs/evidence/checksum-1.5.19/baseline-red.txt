@@ -1,0 +1,43 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+   Compiling long-compress-assistant v1.5.18 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 07s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-0ec16a6261f2e63a.exe)
+
+running 1 test
+
+thread 'services::checksum_details_tests::checksum1519_report_distinguishes_real_file_failures' (27524) panicked at src\services\checksum_details_tests.rs:14:57:
+per-file entries instead of one boolean
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::checksum_details_tests::checksum1519_report_distinguishes_real_file_failures ... FAILED
+
+failures:
+
+failures:
+    services::checksum_details_tests::checksum1519_report_distinguishes_real_file_failures
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 770 filtered out; finished in 0.02s
+
+error: test failed, to rerun pass `--lib`
