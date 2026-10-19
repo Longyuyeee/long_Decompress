@@ -1,0 +1,8 @@
+
+running 3 tests
+test services::native_compression::aes::tests::temporary_input_is_removed_on_drop ... ok
+test services::native_compression::aes::tests::pre_cancelled_aes_cleans_output ... ok
+test services::native_compression::aes::tests::wrapped_gzip_aes_round_trip_preserves_payload ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 767 filtered out; finished in 10.61s
+

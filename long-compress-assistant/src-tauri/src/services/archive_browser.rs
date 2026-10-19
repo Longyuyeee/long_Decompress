@@ -311,6 +311,22 @@ pub async fn browse_archive_cancellable_with_encoding(
     let password = password.map(str::to_string);
     let operation_cancelled = cancelled.clone();
     let operation = async move {
+        if format == ArchiveFormat::AesEncrypted {
+            let aes_path = path.clone();
+            let aes_password = password.clone();
+            let aes_cancelled = operation_cancelled.clone();
+            let inner = tauri::async_runtime::spawn_blocking(move ||
+                super::aes_container::AuthenticatedInner::open(&aes_path, aes_password.as_deref(), || ensure_not_cancelled(&aes_cancelled))
+            ).await??;
+            let mut result = Box::pin(browse_archive_cancellable_with_encoding(
+                &inner.path, None, operation_cancelled, encoding)).await?;
+            result.format = format!("LONG AES.{}", result.format);
+            result.encrypted = true;
+            for entry in &mut result.entries { entry.encrypted = true; }
+            result.total_compressed_size = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(&path)?
+                .map(|group| group.total_size).unwrap_or(std::fs::metadata(&path)?.len());
+            return Ok(result);
+        }
         if format == ArchiveFormat::Alz {
             return super::alz_engine::browse_with_encoding(&path, encoding, operation_cancelled).await;
         }

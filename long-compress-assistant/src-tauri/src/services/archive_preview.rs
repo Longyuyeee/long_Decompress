@@ -395,6 +395,10 @@ fn preview_archive_image_sync(
     password: Option<&str>,
     encoding: Option<ZipPasswordEncoding>,
 ) -> Result<ArchiveImagePreview> {
+    if super::archive_browser::detect_format(archive_path)? == ArchiveFormat::AesEncrypted {
+        let inner = super::aes_container::AuthenticatedInner::open(archive_path, password, || Ok(()))?;
+        return preview_archive_image_sync(&inner.path, entry_path, None, encoding);
+    }
     let entry_path = normalized_entry_path(entry_path)?;
     let format = preview_format(archive_path)?;
     let bytes = match format {
@@ -518,6 +522,10 @@ fn preview_archive_text_sync(
     password: Option<&str>,
     password_encoding: Option<ZipPasswordEncoding>,
 ) -> Result<ArchiveTextPreview> {
+    if super::archive_browser::detect_format(archive_path)? == ArchiveFormat::AesEncrypted {
+        let inner = super::aes_container::AuthenticatedInner::open(archive_path, password, || Ok(()))?;
+        return preview_archive_text_sync(&inner.path, entry_path, None, password_encoding);
+    }
     let entry_path = normalized_entry_path(entry_path)?;
     let format = preview_format(archive_path)?;
     let text_bytes = match format {

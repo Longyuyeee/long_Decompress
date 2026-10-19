@@ -1,0 +1,14 @@
+
+running 9 tests
+test services::compression_format::tests::aliases_share_the_same_execution_route ... ok
+test services::compression_format::tests::compatibility_facade_exposes_the_extracted_rules ... ok
+test services::compression_format::tests::every_compressible_capability_has_exactly_one_execution_route ... ok
+test services::compression_format::tests::every_declared_extension_normalizes_to_its_canonical_format ... ok
+test services::compression_format::tests::longest_extensions_win_when_inferring_from_output_paths ... ok
+test services::compression_format::tests::recognizes_every_tar_wrapper_alias ... ok
+test services::compression_format::tests::validation_enforces_single_file_and_explicit_encryption_fallbacks ... ok
+test services::compression_format::tests::filename_encryption_requires_explicit_seven_zip_password ... ok
+test services::compression_format::tests::validation_rejects_unimplemented_split_and_solid_combinations ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 761 filtered out; finished in 0.01s
+

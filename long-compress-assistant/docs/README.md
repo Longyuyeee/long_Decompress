@@ -1,8 +1,8 @@
 # 文档导航与维护规则
 
-- **本轮 v1.5.17 功能封板**：[多段压缩流实施](MULTISTREAM_1.5.17.md)、[封板快照](MULTISTREAM_FREEZE_1.5.17.md)、[中文说明](RELEASE_NOTES_1.5.17.md)。52 Rust、16 前端、25 原生记录、五条实际 UI 与十张实看页面；候选/正式状态在[发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.17)接续。
-- **下一步**：[现有三版路线](ARCHIVE_ROADMAP_1.5.17_TO_1.5.19.md)中的 v1.5.18 自有 AES 容器分卷，再 v1.5.19 逐文件校验原因/待补列表，尚未实施；准确交接见[开发交接](DEVELOPMENT_HANDOFF.md)。
-- **上一版 v1.5.16 已正式发布**：[实施](IO_RECOVERY_1.5.16.md)、[封板](IO_RECOVERY_FREEZE_1.5.16.md)、[Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.16)。真实 VHD 盘满补测未执行。
+- **本轮 v1.5.18 功能封板**：[自有 AES 数字分卷](AES_VOLUMES_1.5.18.md)、[封板快照](AES_VOLUMES_FREEZE_1.5.18.md)、[中文说明](RELEASE_NOTES_1.5.18.md)。22 Rust、805 前端单元、24 原生记录、五条实际 UI、十张实看页面和独立全内容回解；最终候选/正式状态在本版 PR 与[发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.18)接续。
+- **下一步**：[现有路线](ARCHIVE_ROADMAP_1.5.17_TO_1.5.19.md)中的 v1.5.19 逐文件校验原因/待补列表，尚未开始；准确状态见[开发交接](DEVELOPMENT_HANDOFF.md)。隔离 VHD 补测已恢复 CI，最终结果在本版 PR 接续。
+- **上一版 v1.5.17 已正式发布**：[多流实施](MULTISTREAM_1.5.17.md)、[封板](MULTISTREAM_FREEZE_1.5.17.md)、[Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.17)。
 
 下方为历史阶段记录，不覆盖本轮状态与接续顺序。
 

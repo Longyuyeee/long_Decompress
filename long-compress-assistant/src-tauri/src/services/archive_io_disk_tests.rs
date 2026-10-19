@@ -47,6 +47,20 @@ fn create(runtime: &Runtime, format: &str, sources: &[String], target: &Path) ->
         _ => create::tar::compress_tar(runtime, None, "io1516", sources, target, options),
     }
 }
+fn retains_actual_storage_full(error: &anyhow::Error) -> bool {
+    error.chain().any(|cause| {
+        // These libraries own their io::Error without exposing it via source().
+        let io = cause.downcast_ref::<std::io::Error>()
+            .or_else(|| match cause.downcast_ref::<sevenz_rust::Error>() {
+                Some(sevenz_rust::Error::Io(io, _)) => Some(io), _ => None,
+            })
+            .or_else(|| match cause.downcast_ref::<zip_aes::result::ZipError>() {
+                Some(zip_aes::result::ZipError::Io(io)) => Some(io), _ => None,
+            });
+        io.is_some_and(|io| io.kind() == std::io::ErrorKind::StorageFull
+            && io.raw_os_error() == Some(112))
+    })
+}
 #[test]
 #[ignore = "requires CI-owned 256 MiB NTFS VHD and IO1516_TEST_VOLUME"]
 fn io1516_real_disk_full_native_routes_clean_up_and_recover() -> Result<()> {
@@ -73,8 +87,7 @@ fn io1516_real_disk_full_native_routes_clean_up_and_recover() -> Result<()> {
         let result = create(&runtime, format, &sources, &staged);
         let error = CompressionService::finalize_compression_output(result, &staged, &target, false, false).unwrap_err();
         assert_eq!(archive_io::kind(&error).unwrap().0, "disk-full", "{error:#}");
-        assert!(error.chain().any(|cause| cause.downcast_ref::<std::io::Error>()
-            .is_some_and(|cause| cause.kind() == std::io::ErrorKind::StorageFull)), "OS cause must survive: {error:#}");
+        assert!(retains_actual_storage_full(&error), "OS cause must survive: {error:#}");
         assert!(!staged.exists() && !target.exists());
         assert_eq!(std::fs::read(&sentinel)?, b"original result");
         std::fs::remove_file(filler)?;
@@ -99,8 +112,7 @@ fn io1516_real_disk_full_native_routes_clean_up_and_recover() -> Result<()> {
         let error = extract::zip::extract_with_optional_window(&runtime, None, "io1516", original_zip.to_str().unwrap(),
             staging.path().to_str().unwrap(), None, &DecompressOptions::default()).unwrap_err();
         assert_eq!(archive_io::kind(&error).unwrap().0, "disk-full", "{error:#}");
-        assert!(error.chain().any(|cause| cause.downcast_ref::<std::io::Error>()
-            .is_some_and(|cause| cause.kind() == std::io::ErrorKind::StorageFull)));
+        assert!(retains_actual_storage_full(&error), "OS cause must survive: {error:#}");
     }
     assert!(!staged.exists() && !output.exists());
     std::fs::remove_file(filler)?;

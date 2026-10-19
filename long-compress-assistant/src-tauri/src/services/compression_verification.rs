@@ -1,7 +1,6 @@
 use crate::services::aes_wrapper::AesWrapper;
 use crate::services::compression_format::CompressionRoute;
 use crate::services::compression_service::CompressionError;
-use crate::services::tar_aes_engine::TarAesEngine;
 use crate::services::zip_password::ZipPasswordEncoding;
 use anyhow::Result;
 #[cfg(test)]
@@ -320,10 +319,8 @@ pub(crate) fn verify_native_with_zip_encoding(
                     "TAR.AES verification requires the requested password".to_string(),
                 )
             })?;
-            let temporary = TemporaryDirectory::create("long-compress-verify-tar-aes-")?;
-            TarAesEngine::decompress_tar_aes_cancellable(path, temporary.path(), password, || {
-                check_cancelled(&is_cancelled)
-            })?;
+            let inner = super::aes_container::AuthenticatedInner::open(path, Some(password), || check_cancelled(&is_cancelled))?;
+            verify_tar_reader(super::numeric_volume_reader::ZipInputReader::open(&inner.path)?, &is_cancelled)?;
             Ok(true)
         }
         CompressionRoute::TarGzipAes

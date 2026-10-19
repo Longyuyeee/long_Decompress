@@ -6,7 +6,7 @@ use aes_gcm::{
 use anyhow::{anyhow, Context, Result};
 use argon2::{Algorithm, Argon2, Params, Version};
 use std::fs::{File, OpenOptions};
-use std::io::{Read, Write};
+use std::io::{Read, Write, Seek, SeekFrom};
 use std::path::Path;
 use zeroize::{Zeroize, Zeroizing};
 
@@ -107,13 +107,13 @@ impl AesWrapper {
         check_cancellation: &mut impl FnMut() -> Result<()>,
     ) -> Result<Zeroizing<Vec<u8>>> {
         check_cancellation()?;
-        if input.metadata()?.len() > MAX_LEGACY_AES_BYTES + 128 {
+        let mut file = super::aes_stream_v2::open_input(input)?;
+        if file.seek(SeekFrom::End(0))? > MAX_LEGACY_AES_BYTES + 128 {
             return Err(anyhow!(
                 "Legacy AES container exceeds the safe 512 MiB in-memory limit"
             ));
         }
-        let mut file =
-            File::open(input).with_context(|| format!("打开加密文件失败: {:?}", input))?;
+        file.seek(SeekFrom::Start(0))?;
 
         let mut magic = [0u8; 8];
         file.read_exact(&mut magic).context("读取文件头失败")?;
@@ -155,7 +155,7 @@ impl AesWrapper {
     }
 
     fn has_magic(path: &Path, expected: &[u8; 8]) -> Result<bool> {
-        let mut file = File::open(path)?;
+        let mut file = super::aes_stream_v2::open_input(path)?;
         let mut magic = [0u8; 8];
         if file.read_exact(&mut magic).is_err() {
             return Ok(false);
@@ -164,7 +164,7 @@ impl AesWrapper {
     }
 
     pub fn is_aes_encrypted(path: &Path) -> Result<bool> {
-        let mut file = File::open(path)?;
+        let mut file = super::aes_stream_v2::open_input(path)?;
         let mut magic = [0u8; 8];
         if file.read_exact(&mut magic).is_err() {
             return Ok(false);

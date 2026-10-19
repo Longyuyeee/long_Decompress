@@ -1,0 +1,6 @@
+{
+  "tool": "Python zipfile metadata + cryptography AES-CTR + PBKDF2/HMAC-SHA1; explicit UTF-8 password bytes",
+  "fullContentMatches": true,
+  "authenticatedFiles": 3,
+  "emptyDirectoryPreserved": true
+}

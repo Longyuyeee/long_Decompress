@@ -6,7 +6,7 @@ use aes_gcm::{
 use anyhow::{anyhow, Context, Result};
 use argon2::{Algorithm, Argon2, Params, Version};
 use std::fs::{File, OpenOptions};
-use std::io::Read;
+use std::io::{Read, Write, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use tar::Builder;
 use zeroize::{Zeroize, Zeroizing};
@@ -118,6 +118,22 @@ impl TarAesEngine {
             .context("解压 TAR 归档失败")
     }
 
+    /// Produce an authenticated inner TAR before any browse/extract publication.
+    pub(crate) fn decrypt_to_file(
+        archive_path: &Path, output: &Path, password: &str,
+        mut check: impl FnMut() -> Result<()>,
+    ) -> Result<()> {
+        if AesStreamV2::is_kind(archive_path, AesStreamKind::Tar)? {
+            return AesStreamV2::decrypt_file_cancellable(archive_path, output, password, AesStreamKind::Tar, check);
+        }
+        let bytes = Self::decrypt_legacy_data(archive_path, password, &mut check)?;
+        check()?;
+        let mut file = OpenOptions::new().write(true).create_new(true).open(output)?;
+        file.write_all(&bytes)?;
+        file.sync_all()?;
+        check()
+    }
+
     fn validate_sources(
         files: &[PathBuf],
         check_cancellation: &mut impl FnMut() -> Result<()>,
@@ -185,13 +201,13 @@ impl TarAesEngine {
         check_cancellation: &mut impl FnMut() -> Result<()>,
     ) -> Result<Zeroizing<Vec<u8>>> {
         check_cancellation()?;
-        if archive_path.metadata()?.len() > MAX_LEGACY_TAR_AES_BYTES + 128 {
+        let mut file = super::aes_stream_v2::open_input(archive_path)?;
+        if file.seek(SeekFrom::End(0))? > MAX_LEGACY_TAR_AES_BYTES + 128 {
             return Err(anyhow!(
                 "Legacy TAR.AES container exceeds the safe 512 MiB in-memory limit"
             ));
         }
-        let mut file = File::open(archive_path)
-            .with_context(|| format!("打开加密文件失败: {:?}", archive_path))?;
+        file.seek(SeekFrom::Start(0))?;
         let mut magic = [0u8; 8];
         file.read_exact(&mut magic).context("读取文件头失败")?;
         if &magic != LEGACY_MAGIC {
@@ -259,7 +275,7 @@ impl TarAesEngine {
     }
 
     pub fn is_tar_aes(path: &Path) -> Result<bool> {
-        let mut file = File::open(path)?;
+        let mut file = super::aes_stream_v2::open_input(path)?;
         let mut magic = [0u8; 8];
         if file.read_exact(&mut magic).is_err() {
             return Ok(false);
@@ -295,7 +311,7 @@ impl TarAesEngine {
     }
 
     fn has_legacy_magic(path: &Path) -> Result<bool> {
-        let mut file = File::open(path)?;
+        let mut file = super::aes_stream_v2::open_input(path)?;
         let mut magic = [0u8; 8];
         if file.read_exact(&mut magic).is_err() {
             return Ok(false);

@@ -6,12 +6,18 @@ use anyhow::{anyhow, Context, Result};
 use argon2::{Algorithm, Argon2, Params, Version};
 use rand::RngCore;
 use std::fs::{File, OpenOptions};
-use std::io::{BufReader, BufWriter, Read, Write};
+use std::io::{BufReader, BufWriter, Read, Write, Seek, SeekFrom};
 use std::path::{Path, PathBuf};
 use zeroize::{Zeroize, Zeroizing};
 
 pub const AES_MAGIC_V2: &[u8; 8] = b"AESENC02";
 pub const TAR_AES_MAGIC_V2: &[u8; 8] = b"TARAES02";
+
+/// Keep the container byte layout unchanged; numeric volumes are one reader.
+pub(crate) fn open_input(path: &Path) -> Result<super::numeric_volume_reader::ZipInputReader> {
+    let source = super::split_archive_detector::SplitArchiveDetector::complete_source(path)?;
+    super::numeric_volume_reader::ZipInputReader::open(&source)
+}
 
 const HEADER_SIZE: usize = 76;
 const DEFAULT_CHUNK_SIZE: usize = 1024 * 1024;
@@ -360,7 +366,7 @@ impl AesStreamV2 {
     }
 
     pub fn is_kind(path: &Path, kind: AesStreamKind) -> Result<bool> {
-        let mut file = File::open(path)?;
+        let mut file = open_input(path)?;
         let mut magic = [0u8; 8];
         if file.read_exact(&mut magic).is_err() {
             return Ok(false);
@@ -410,13 +416,23 @@ impl AesStreamV2 {
         check_cancellation: &mut impl FnMut() -> Result<()>,
     ) -> Result<()> {
         check_cancellation()?;
-        let input_file = File::open(input)
+        let mut input_file = open_input(input)
             .with_context(|| format!("打开 AES v2 文件失败: {}", input.display()))?;
-        let actual_len = input_file.metadata()?.len();
+        let actual_len = input_file.seek(SeekFrom::End(0))?;
+        input_file.seek(SeekFrom::Start(0))?;
         let mut reader = BufReader::new(input_file);
         let header = Header::read(&mut reader, kind)?;
-        if actual_len != header.expected_container_len()? {
-            return Err(anyhow!("AES v2 文件长度不匹配，文件可能被截断或附加了数据"));
+        let expected_len = header.expected_container_len()?;
+        if actual_len < expected_len {
+            let grouped = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(input)?.is_some();
+            return Err(anyhow!(if grouped {
+                "[archive-inspection:incomplete] AES 卷组缺少尾部数据，请补齐原始尾卷后重试；数字卷没有内嵌总卷数，不能猜测缺失卷数"
+            } else {
+                "[archive-inspection:truncated] AES v2 文件长度不匹配，文件被截断，请重新获取完整原文件"
+            }));
+        }
+        if actual_len > expected_len {
+            return Err(anyhow!("[archive-inspection:damaged] AES v2 文件长度不匹配，包含多余数据；请确认卷组来自同一原包"));
         }
         let cipher = derive_cipher(password, &header.salt)?;
         check_cancellation()?;
@@ -440,11 +456,17 @@ impl AesStreamV2 {
                             aad: &aad,
                         },
                     )
-                    .map_err(|_| anyhow!("AES v2 解密失败: 密码错误或文件已损坏"))?,
+                    .map_err(|_| if index == 0 {
+                        anyhow!("[archive-inspection:ambiguous-data] AES v2 解密失败: 密码错误或文件已损坏；请核对密码和完整来源")
+                    } else {
+                        anyhow!("[archive-inspection:damaged] AES v2 后续分块认证失败；前段已通过认证，请重新获取损坏或混入的分卷，不必继续试密码")
+                    })?,
             );
             writer.write_all(&plaintext)?;
         }
         check_cancellation()?;
+        let mut extra = [0u8; 1];
+        anyhow::ensure!(reader.read(&mut extra)? == 0, "[archive-inspection:damaged] AES 容器读取期间出现附加数据");
         ciphertext.zeroize();
         Ok(())
     }

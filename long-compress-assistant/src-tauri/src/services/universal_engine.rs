@@ -623,6 +623,20 @@ impl UniversalCliEngine {
         let source = crate::services::split_archive_detector::SplitArchiveDetector::complete_source(file_path)?;
         let file_path = source.as_path();
         let format = super::archive_browser::detect_format(file_path)?;
+        if format == super::archive_format::ArchiveFormat::AesEncrypted {
+            let path = file_path.to_path_buf();
+            let password = password.map(str::to_owned);
+            return tokio::task::spawn_blocking(move || {
+                let logical = super::aes_container::logical_path(&path)?;
+                let requested = super::compression_format::infer_compression_format(&logical.to_string_lossy(), None);
+                let route = if super::tar_aes_engine::TarAesEngine::is_tar_aes(&path)? {
+                    super::compression_format::CompressionRoute::TarAes
+                } else {
+                    super::compression_format::compression_route(&requested).ok_or_else(|| anyhow::anyhow!("[archive-inspection:unsupported] 无法识别 AES 内层格式"))?
+                };
+                super::compression_verification::verify_native(route, &path, password.as_deref(), || false).map(|_| ())
+            }).await?;
+        }
         if let Some(route)=super::tar_compatibility::integrity_route(file_path,&format) {
             let path=file_path.to_path_buf();
             return tokio::task::spawn_blocking(move||super::compression_verification::verify_native(route,&path,None,||false).map(|_|())).await?;

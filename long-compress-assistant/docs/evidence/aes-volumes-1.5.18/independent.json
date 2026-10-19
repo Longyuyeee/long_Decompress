@@ -1,0 +1,75 @@
+{
+  "tool": "cryptography 49.0.0 with independent AESGCM/Argon2id decoder and 7-Zip/TAR readback",
+  "cases": [
+    {
+      "format": "tar.aes",
+      "fullContentMatches": true,
+      "innerSha256": "8a007390e5fc688aaf3602f45cadc1edec28d2ba85be1ba32ae174535cd0b89e",
+      "volumeCount": 33,
+      "emptyDirectory": true
+    },
+    {
+      "format": "tar.gz.aes",
+      "fullContentMatches": true,
+      "innerSha256": "c1488d9e08d890f6ab80f5464ce7e66afd773ed5eb3a3f6b123643e40ecb425d",
+      "volumeCount": 33,
+      "emptyDirectory": true
+    },
+    {
+      "format": "tar.bz2.aes",
+      "fullContentMatches": true,
+      "innerSha256": "26be3bdbdfed6071b9a66e490693051f6c08298ce08b54248e83d54a35e6e993",
+      "volumeCount": 33,
+      "emptyDirectory": true
+    },
+    {
+      "format": "tar.xz.aes",
+      "fullContentMatches": true,
+      "innerSha256": "1471151b5c189a2a716dde81fa5d253c3ae0af1ec7a95061fd2d0505e399c290",
+      "volumeCount": 33,
+      "emptyDirectory": true
+    },
+    {
+      "format": "tar.zst.aes",
+      "fullContentMatches": true,
+      "innerSha256": "8a366463f1d3b7df9cd2e3df9dc51a8203e89ee737edd87e80ea029d197c0b1f",
+      "volumeCount": 33,
+      "emptyDirectory": true
+    },
+    {
+      "format": "gz.aes",
+      "fullContentMatches": true,
+      "innerSha256": "69172740bb47dad9d39563bfebf45f7b94914c360a48ef593319dc9b7dfec9d9",
+      "volumeCount": 33,
+      "emptyDirectory": false
+    },
+    {
+      "format": "bz2.aes",
+      "fullContentMatches": true,
+      "innerSha256": "6dba0ce3307da57f1a792cf011dc19c5455db6dd1b12124bde94efcf39b0b329",
+      "volumeCount": 33,
+      "emptyDirectory": false
+    },
+    {
+      "format": "xz.aes",
+      "fullContentMatches": true,
+      "innerSha256": "1f443ac98614c5456fca6fca901bbdf5ee85f19f1312df938aeff5fa55cfaf04",
+      "volumeCount": 33,
+      "emptyDirectory": false
+    },
+    {
+      "format": "zst.aes",
+      "fullContentMatches": true,
+      "innerSha256": "a0743acb55613cc7d12d9a53c9cef508b4eddc278cde277832790a35631d5174",
+      "volumeCount": 33,
+      "emptyDirectory": false
+    },
+    {
+      "format": "tar.xz.aes",
+      "fullContentMatches": true,
+      "innerSha256": "4a582bf8f18a154f2a4f4e0bcb9a1f90f4427d1bccdbac59ff71615517b35a25",
+      "volumeCount": 3,
+      "emptyDirectory": true
+    }
+  ]
+}
