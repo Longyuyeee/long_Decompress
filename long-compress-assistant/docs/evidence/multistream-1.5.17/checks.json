@@ -65,7 +65,15 @@
     "One prior TAR diagnosis failure corrected and rerun alone",
     "Metadata compressed-size projection and suffix aliases are also covered by the final desktop gate"
   ],
-  "desktop": "pending at this implementation snapshot",
+  "desktop": {
+    "nativeRecords": 25,
+    "uiFlows": 5,
+    "screenshotsViewed": 10,
+    "savedGeometryRecords": 2,
+    "snapshot": "desktop-results.json",
+    "recoveredCompletedUi": "completed-ui-reuse.json",
+    "note": "24 native records retain earlier binary identity. All UI and image previews use final binary. Eight prior screenshots passed overflow capture assertions but exact geometry was not saved; two final geometry records have overflow 0."
+  },
   "deferred": [
     "AES container numeric volumes: v1.5.18",
     "Per-file checksum reasons: v1.5.19",

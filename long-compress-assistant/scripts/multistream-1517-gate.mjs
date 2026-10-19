@@ -63,6 +63,30 @@ export async function runMultistream1517Gate({ driver, bridge, waitForElement, a
       else assert.ok(existsSync(path.join(output, manifest.emptyDirectory)))
     } else assert.equal(sha(path.join(output, plainName)), c.decodedSha256)
   }
+  const diagnosis = async () => {
+    await driver.manage().window().setRect({ width: 1100, height: 700 })
+    await click('[data-testid="nav-FileIntegrity"]'); await click('[data-testid="archive-diagnostic-mode"]')
+    const bad = cases.find(c => c.kind === 'bad-tail' && c.key === 'tar-gz').source
+    await bridge('queueDesktopDialogSelections', [bad]); await click('.archive-select')
+    await click('[data-testid="start-archive-diagnosis"]')
+    await driver.wait(async () => (await (await waitForElement('[data-testid="diagnostic-report"] h2')).getText()) === '归档损坏', 30000)
+    const visible = await (await waitForElement('[data-testid="diagnostic-report"]')).getText()
+    assert.match(visible, /TAR.*尾部|压缩流数据或尾部/)
+    assert.ok(!visible.includes('[archive-inspection:'))
+    await sizes('stream1517-later-damage', '[data-testid="diagnostic-report"] h2')
+    return { actualLaterMemberDamagedReport: true }
+  }
+  const finish = (uiCases, reusedUi) => writeFileSync(path.join(artifactDirectory, 'multistream-1517-results.json'), JSON.stringify({
+    version: '1.5.17', completedAt: new Date().toISOString(), application, binarySha256, reusedExtractionBinarySha256,
+    work, cases, uiCases, reusedUi, screenshots, layouts,
+  }, null, 2))
+  if (process.env.STREAM1517_DIAGNOSIS_ONLY === '1') {
+    const reusedUi = JSON.parse(readFileSync(path.join(resultRoot, 'completed-ui-reuse.json'), 'utf8'))
+    assert.equal(reusedUi.binarySha256, binarySha256)
+    for (const file of reusedUi.screenshotIdentities) assert.equal(sha(path.join(artifactDirectory, file.name)), file.sha256)
+    screenshots.push(...reusedUi.screenshots)
+    const result = await diagnosis(); finish([result], reusedUi); return
+  }
   for (const c of manifest.cases) {
     const source = path.join(base, c.archive), key = c.kind + '-' + c.codec
     assert.equal(sha(source), c.sha256)
@@ -197,18 +221,6 @@ export async function runMultistream1517Gate({ driver, bridge, waitForElement, a
   assert.match(listing, /Path = 空目录\/?\r?\n/)
   await sizes('stream1517-conversion-result', '[data-testid="conversion-item"]')
   uiCases.push({ actualPasswordZipConversion: true, numericXzSource: true, independentFullHashes: true, emptyDirectoryPreserved: true, output: converted })
-  await click('[data-testid="nav-FileIntegrity"]'); await click('[data-testid="archive-diagnostic-mode"]')
-  const bad = cases.find(c => c.kind === 'bad-tail' && c.key === 'tar-gz').source
-  await bridge('queueDesktopDialogSelections', [bad]); await click('.archive-select')
-  await click('[data-testid="start-archive-diagnosis"]')
-  await driver.wait(async () => (await (await waitForElement('[data-testid="diagnostic-report"] h2')).getText()) === '归档损坏', 30000)
-  const visible = await (await waitForElement('[data-testid="diagnostic-report"]')).getText()
-  assert.match(visible, /TAR.*尾部|压缩流数据或尾部/)
-  assert.ok(!visible.includes('[archive-inspection:'))
-  await sizes('stream1517-later-damage', '[data-testid="diagnostic-report"] h2')
-  uiCases.push({ actualLaterMemberDamagedReport: true })
-  writeFileSync(path.join(artifactDirectory, 'multistream-1517-results.json'), JSON.stringify({
-    version: '1.5.17', completedAt: new Date().toISOString(), application, binarySha256, reusedExtractionBinarySha256,
-    work, cases, uiCases, screenshots, layouts,
-  }, null, 2))
+  await click(await driver.findElement(By.xpath('//*[@role="dialog"]//button[normalize-space(.)="关闭"]')))
+  uiCases.push(await diagnosis()); finish(uiCases)
 }

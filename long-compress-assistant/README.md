@@ -21,16 +21,12 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 解压中心 | 导入多包、配置目录与子文件夹、使用密码候选、处理文件冲突、查看阶段和结果 |
 | 压缩中心 | 文件/文件夹/组归档、ZIP/7Z/RAR 密码分卷、ZPAQ 原生密码创建、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
 | 特殊压缩 | JPEG/PNG/WebP 图片编码与缩放、视频压缩预设、PDF 分析与结构优化 |
-| 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、受支持预览与选择性解压 |
+| 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、文本/图片预览与选择性解压；支持普通 GZIP/BZIP2/XZ/Zstandard 流查看 |
 | 密码保险箱 | 本地加密保存常用解压密码，分类、搜索、导入导出与使用统计 |
 | 文件完整性 | CRC32/MD5/SHA256 校验、归档诊断、RAR4/RAR5 副本修复与恢复卷（需本机 Rar.exe），以及密码 ZIP 与目录可读的标准卷完整文件救援 |
 | 历史与系统集成 | 搜索和再次执行、统一结果操作、托盘、资源管理器经典菜单与应用内更新 |
 
 详细格式能力见 [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md)；RAR 创建依赖用户安装的 WinRAR，视频暂不保证支持 Windows N。功能介绍和快速上手见 [项目首页](../README.md)。
-
-此前 **v1.4.20**：扩展真实好压 ZipCrypto 论坛 ZIP 的缺卷部分抢救，逐文件区分已恢复、涉及缺卷、校验失败与无法确认；保留原任务设置继续解压。40 项不同 Rust、29 项前端和真实桌面流程通过，12 张常用/窄窗截图已查看。PR #179 已受保护合入，正式四资产、安装器版本及中文更新说明已回下载核对。见[实施审计](docs/ZIP_PARTIAL_RESCUE_1.4.20.md)、[封板记录](docs/ZIP_PARTIAL_RESCUE_FREEZE_1.4.20.md)、[更新说明](docs/RELEASE_NOTES_1.4.20.md)及[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.20)。软件图标及原截图保留。
-
-**v1.4.18** 的 ZIPX（XZ）标准多卷、密码创建、改密/重新分卷/合卷及缺卷补回继续保留。产品输出已用 WinRAR 7.23 独立回解，Bandizip Beta 解码异常及 7-Zip 卷名限制明确保留，原数字卷默认不变。见[ZIPX 审计](docs/STANDARD_ZIPX_1.4.18.md)和[更新说明](docs/RELEASE_NOTES_1.4.18.md)。
 
 ## 本地开发
 
@@ -96,6 +92,8 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
+**v1.5.17 · 多段压缩流完整读取**。补齐 GZIP/BZIP2/XZ 连续流与跨段 TAR 末尾内容；后段损坏明确提示，普通压缩文件可以直接浏览和预览。从数字分卷中间卷进入也能查看末尾文件，补卷后的新任务与密码 ZIP 转换接续原流程。单条展开、多选弹窗、自然配置继承、左右等宽及窄窗滚动保持。[中文更新说明](docs/RELEASE_NOTES_1.5.17.md) · [实施与范围](docs/MULTISTREAM_1.5.17.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.17)。下一步按[既定路线](docs/ARCHIVE_ROADMAP_1.5.17_TO_1.5.19.md)做 AES 容器分卷，再逐文件校验原因。
+
 **v1.5.16 · 读写故障与任务接续**。处理中盘满、文件占用和权限问题保留真正原因；后续卷被撤回或替换时明确提示来源变化，不发布本次不完整结果。修复提交失败后旧暂存无法接续的问题，恢复条件后通过原纠正入口创建新任务，保留旧失败历史。单条展开、多选弹窗、左右等宽与窄窗滚动保持。[中文更新说明](docs/RELEASE_NOTES_1.5.16.md) · [实施与范围](docs/IO_RECOVERY_1.5.16.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.16)。真实 VHD 盘满补测未执行，未计通过；下一阶段已写入[开发路线](docs/ARCHIVE_ROADMAP_1.5.17_TO_1.5.19.md)：多段压缩流、自有 AES 容器分卷、逐文件校验原因。
 
 **v1.5.15 · ZIP64 大文件与密码分卷修复**。压缩/转换保留独立空文件夹，明确 ZIP64 目录损坏，救援密码问题不再盖过结构损坏原因。超过 4 GiB 的真实文件覆盖普通/AES/传统密码、单包/数字卷/标准卷及跨卷数据描述符，实际改密码转换与独立完整回解通过。保留单条展开、多选弹窗与原布局。[中文更新说明](docs/RELEASE_NOTES_1.5.15.md) · [封板快照](docs/ZIP64_VOLUMES_FREEZE_1.5.15.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.15)。该项已由 v1.5.16 接续；ALZ 方法 3、EGG 加密固实的未完成状态保留。
@@ -121,6 +119,10 @@ docs/                  开发路线、格式说明与历史记录
 此前 **v1.5.2** 新增 ALZ 只读引擎，贯通普通/传统密码/原生分卷的浏览、所选与整包提取、检查、转换及失败接续。默认 CP949，可明确选择原工具代码页；历史与重试保留编码，不保存密码或局部选择。73 项不同 Rust、235 项前端、真实桌面与独立载荷核对通过，22 张页面已查看；正式四资产、中文说明及包内引擎已核对。见[实施审计](docs/ALZ_READ_1.5.2.md)、[封板记录](docs/ALZ_READ_FREEZE_1.5.2.md)及[更新说明](docs/RELEASE_NOTES_1.5.2.md)。ALZ 不提供创建、损坏修复或缺卷部分救援。
 
 **v1.5.2**：ALZ 只读、传统密码和原生分卷、编码选择及失败接续，见[更新说明](docs/RELEASE_NOTES_1.5.2.md)与[封板记录](docs/ALZ_READ_FREEZE_1.5.2.md)。
+
+此前 **v1.4.20**：扩展真实好压 ZipCrypto 论坛 ZIP 的缺卷部分抢救，逐文件区分已恢复、涉及缺卷、校验失败与无法确认；保留原任务设置继续解压。40 项不同 Rust、29 项前端和真实桌面流程通过，12 张常用/窄窗截图已查看。PR #179 已受保护合入，正式四资产、安装器版本及中文更新说明已回下载核对。见[实施审计](docs/ZIP_PARTIAL_RESCUE_1.4.20.md)、[封板记录](docs/ZIP_PARTIAL_RESCUE_FREEZE_1.4.20.md)、[更新说明](docs/RELEASE_NOTES_1.4.20.md)及[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.20)。软件图标及原截图保留。
+
+**v1.4.18** 的 ZIPX（XZ）标准多卷、密码创建、改密/重新分卷/合卷及缺卷补回继续保留。产品输出已用 WinRAR 7.23 独立回解，Bandizip Beta 解码异常及 7-Zip 卷名限制明确保留，原数字卷默认不变。见[ZIPX 审计](docs/STANDARD_ZIPX_1.4.18.md)和[更新说明](docs/RELEASE_NOTES_1.4.18.md)。
 
 **v1.4.17**：好压论坛 7Z 密码分卷、缺卷与损坏准确分类、补卷继续和输出名称修正。见[更新说明](docs/RELEASE_NOTES_1.4.17.md)、[封板记录](docs/SPECIAL_VOLUME_FREEZE_1.4.17.md)及 [Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.4.17)。
 

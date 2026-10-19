@@ -1,0 +1,307 @@
+{
+  "version": "1.5.17",
+  "completedAt": "2026-10-19T05:33:45.474Z",
+  "application": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\target\\release\\long-compress-assistant.exe",
+  "binarySha256": "80badc42510476cbe54b1f345ec92b4405f55f602736b0786b4c619923413558",
+  "reusedExtractionBinarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc",
+  "cases": [
+    {
+      "key": "plain-gz",
+      "kind": "original",
+      "fullPayloadHashes": true,
+      "actualIntegrity": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\原件-plain-gz-6a1aa7e6-58d3-49ec-81cb-34d847469a27",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "plain-gz",
+      "kind": "bad-tail",
+      "originalReason": "[archive-inspection:damaged] 压缩流数据或尾部无效，请重新获取完整原文件，不必反复尝试密码。原始原因：corrupt gzip stream does not have a matching checksum: corrupt gzip stream does not have a matching checksum",
+      "noPublishedPartial": true,
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\损坏-plain-gz.txt.gz",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "plain-gz",
+      "kind": "numeric",
+      "middleMember": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\数字卷-plain-gz-1b7609fb-4c1e-4642-8dc1-3b9790d565cf\\原件.txt.gz.003",
+      "fullSelectedHash": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\中卷读取-plain-gz-bbf947b1-3e3c-44d4-9ce6-00fa3322bf43",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "tar-gz",
+      "kind": "original",
+      "fullPayloadHashes": true,
+      "actualIntegrity": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\原件-tar-gz-a88c41f5-aa49-462b-a33a-8c49995d70fa",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "tar-gz",
+      "kind": "bad-tail",
+      "originalReason": "[archive-inspection:damaged] TAR 压缩流数据或尾部无效，请重新获取完整原包，不必反复尝试密码: [archive-inspection:damaged] 压缩流数据或尾部无效，请重新获取完整原文件，不必反复尝试密码。原始原因：corrupt gzip stream does not have a matching checksum: corrupt gzip stream does not have a matching checksum",
+      "noPublishedPartial": true,
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\损坏-tar-gz.tar.gz",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "tar-gz",
+      "kind": "numeric",
+      "middleMember": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\数字卷-tar-gz-f81f7ecc-dae7-446d-8a0e-1cb6349d9291\\原件.tar.gz.009",
+      "fullSelectedHash": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\中卷读取-tar-gz-e03084d0-a638-4322-b42d-40469ca0947d",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "plain-bz2",
+      "kind": "original",
+      "fullPayloadHashes": true,
+      "actualIntegrity": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\原件-plain-bz2-c57a98a8-ea51-4bf7-b71e-de177b516f2f",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "plain-bz2",
+      "kind": "bad-tail",
+      "originalReason": "[archive-inspection:damaged] 压缩流数据或尾部无效，请重新获取完整原文件，不必反复尝试密码。原始原因：bzip2: invalid data: bzip2: invalid data",
+      "noPublishedPartial": true,
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\损坏-plain-bz2.txt.bz2",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "plain-bz2",
+      "kind": "numeric",
+      "middleMember": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\数字卷-plain-bz2-44909c77-b04c-4c67-ac84-c0ffe200b37e\\原件.txt.bz2.002",
+      "fullSelectedHash": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\中卷读取-plain-bz2-3b69b925-3024-4c77-839b-89f07cf4175a",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "tar-bz2",
+      "kind": "original",
+      "fullPayloadHashes": true,
+      "actualIntegrity": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\原件-tar-bz2-af24f68f-dafd-44a7-8fec-ced641fab7e7",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "tar-bz2",
+      "kind": "bad-tail",
+      "originalReason": "[archive-inspection:damaged] TAR 压缩流数据或尾部无效，请重新获取完整原包，不必反复尝试密码: [archive-inspection:damaged] 压缩流数据或尾部无效，请重新获取完整原文件，不必反复尝试密码。原始原因：bzip2: invalid data: bzip2: invalid data",
+      "noPublishedPartial": true,
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\损坏-tar-bz2.tar.bz2",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "tar-bz2",
+      "kind": "numeric",
+      "middleMember": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\数字卷-tar-bz2-e9549ca6-a4c9-467e-b1a3-24c17a1440eb\\原件.tar.bz2.009",
+      "fullSelectedHash": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\中卷读取-tar-bz2-543ab426-af6c-45f3-8960-b494379197d3",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "plain-xz",
+      "kind": "original",
+      "fullPayloadHashes": true,
+      "actualIntegrity": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\原件-plain-xz-82e77c5c-8fc8-4519-890e-49eb616b24e8",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "plain-xz",
+      "kind": "bad-tail",
+      "originalReason": "[archive-inspection:damaged] 压缩流数据或尾部无效，请重新获取完整原文件，不必反复尝试密码。原始原因：lzma data error: lzma data error",
+      "noPublishedPartial": true,
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\损坏-plain-xz.txt.xz",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "plain-xz",
+      "kind": "numeric",
+      "middleMember": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\数字卷-plain-xz-19d22d74-c09d-43ac-a097-fc2723640f66\\原件.txt.xz.002",
+      "fullSelectedHash": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\中卷读取-plain-xz-d3abe848-7f55-4343-8c13-2a1599369562",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "tar-xz",
+      "kind": "original",
+      "fullPayloadHashes": true,
+      "actualIntegrity": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\原件-tar-xz-37d1ed3d-6b29-48ef-a80e-789bf9df4388",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "tar-xz",
+      "kind": "bad-tail",
+      "originalReason": "[archive-inspection:damaged] TAR 压缩流数据或尾部无效，请重新获取完整原包，不必反复尝试密码: [archive-inspection:damaged] 压缩流数据或尾部无效，请重新获取完整原文件，不必反复尝试密码。原始原因：lzma data error: lzma data error",
+      "noPublishedPartial": true,
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\损坏-tar-xz.tar.xz",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "tar-xz",
+      "kind": "numeric",
+      "middleMember": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\数字卷-tar-xz-c50c5f2b-9d59-4d37-ad3a-16913a9b12c2\\原件.tar.xz.009",
+      "fullSelectedHash": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\中卷读取-tar-xz-c10ac0dc-b8ca-433e-83cb-1f00e384bc87",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "plain-zst",
+      "kind": "original",
+      "fullPayloadHashes": true,
+      "actualIntegrity": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\原件-plain-zst-a854ac94-7ebc-42b5-a12f-9493946947a5",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "plain-zst",
+      "kind": "bad-tail",
+      "originalReason": "[archive-inspection:damaged] 压缩流数据或尾部无效，请重新获取完整原文件，不必反复尝试密码。原始原因：Restored data doesn't match checksum: Restored data doesn't match checksum",
+      "noPublishedPartial": true,
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\损坏-plain-zst.txt.zst",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "plain-zst",
+      "kind": "numeric",
+      "middleMember": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\数字卷-plain-zst-72dfb718-e1da-4a9c-ab0c-81c3dabe2f9f\\原件.txt.zst.003",
+      "fullSelectedHash": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\中卷读取-plain-zst-8eb1b746-7487-4ff0-ba9a-1379a307fef9",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "tar-zst",
+      "kind": "original",
+      "fullPayloadHashes": true,
+      "actualIntegrity": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\原件-tar-zst-e7ef37c3-1305-4211-abf9-033b754cec0a",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "tar-zst",
+      "kind": "bad-tail",
+      "originalReason": "[archive-inspection:damaged] TAR 压缩流数据或尾部无效，请重新获取完整原包，不必反复尝试密码: [archive-inspection:damaged] 压缩流数据或尾部无效，请重新获取完整原文件，不必反复尝试密码。原始原因：Data corruption detected: Data corruption detected",
+      "noPublishedPartial": true,
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\损坏-tar-zst.tar.zst",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "key": "tar-zst",
+      "kind": "numeric",
+      "middleMember": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\数字卷-tar-zst-932ce6cc-0555-47a2-80b6-94aa75a208fa\\原件.tar.zst.009",
+      "fullSelectedHash": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\中卷读取-tar-zst-44c370bf-f2ae-4b40-b1c9-947c95cd1c14",
+      "binarySha256": "e1898beaa8764f58e9a8bb4bbae3c58b69643f74a1a83ee9cebd27c0aea1f0b5"
+    },
+    {
+      "kind": "image-preview",
+      "numericLastMemberAlsoMatches": true,
+      "nodeProducer": "v24.14.0",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\图标.png.gz",
+      "sourceSha256": "86ae4b83f90321a4dbec7ce7fa04acf9fd22c22ad699b9fee3e2126af582c989",
+      "originalPngHash": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+      "binarySha256": "80badc42510476cbe54b1f345ec92b4405f55f602736b0786b4c619923413558"
+    }
+  ],
+  "uiCases": [
+    {
+      "actualLaterMemberDamagedReport": true
+    }
+  ],
+  "reusedUi": {
+    "binarySha256": "80badc42510476cbe54b1f345ec92b4405f55f602736b0786b4c619923413558",
+    "sourceRun": "desktop-final.log",
+    "completedStages": [
+      "actual ordinary text preview",
+      "actual numeric TAR tail preview",
+      "missing volume restored, explicit new-task start, complete hashes and unchanged prior failure",
+      "actual password ZIP conversion, independent complete hashes and empty directory"
+    ],
+    "note": "Assertions for these four stages completed before navigation timed out because the script left the completed conversion modal open. This is a recovered receipt for observed completed assertions, not injected task state. Exact inner viewport geometry was not persisted; each capture passed the overflow assertion.",
+    "converted": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\转换结果-43540a62-b02c-4ee3-a76e-ea9b4d756255.zip",
+    "restoredOutput": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\multistream-1517\\ui-0c25fddb-fd50-4b24-8339-9fbf1c9529fc\\补卷后的新任务-e232e464-de15-4a45-8452-d85061de376b",
+    "screenshots": [
+      "stream1517-plain-preview-1100x700.png",
+      "stream1517-plain-preview-760x520.png",
+      "stream1517-tar-preview-1100x700.png",
+      "stream1517-tar-preview-760x520.png",
+      "stream1517-restored-batch-1100x700.png",
+      "stream1517-restored-batch-760x520.png",
+      "stream1517-conversion-result-1100x700.png",
+      "stream1517-conversion-result-760x520.png"
+    ],
+    "screenshotIdentities": [
+      {
+        "name": "stream1517-plain-preview-1100x700.png",
+        "sha256": "342f0178460cae9ef8ee62cbf1f42eeafa2a9d96a41f195ca68673d7bb7dd13e",
+        "capturedAt": "2026-10-19T05:30:38.106Z"
+      },
+      {
+        "name": "stream1517-plain-preview-760x520.png",
+        "sha256": "0f218425b49b6315010b4d2db6b76e25d45d7cb1a15130ba7584d7ea544fa7f5",
+        "capturedAt": "2026-10-19T05:30:38.717Z"
+      },
+      {
+        "name": "stream1517-tar-preview-1100x700.png",
+        "sha256": "ed3c8dd019904d1952d43cea2930b00dbc755fb4c5178f496a37c58627274c5b",
+        "capturedAt": "2026-10-19T05:30:42.506Z"
+      },
+      {
+        "name": "stream1517-tar-preview-760x520.png",
+        "sha256": "cd68cd5149c5ec012577660d265dc10ad748dd061b48a3006aa8f0dd01ea2a11",
+        "capturedAt": "2026-10-19T05:30:43.098Z"
+      },
+      {
+        "name": "stream1517-restored-batch-1100x700.png",
+        "sha256": "6d8b481fa9dc0f22717e23a76f693d41f605c83e3e1f23cd801ef0c62953fe2e",
+        "capturedAt": "2026-10-19T05:30:48.024Z"
+      },
+      {
+        "name": "stream1517-restored-batch-760x520.png",
+        "sha256": "96b37c57f869bfcffb62127bd3ccc71f874c13ce9a1023b7de6c17983332a84c",
+        "capturedAt": "2026-10-19T05:30:48.641Z"
+      },
+      {
+        "name": "stream1517-conversion-result-1100x700.png",
+        "sha256": "9ef8a8df6f9dff29f84faffab01e3021c9f47dd63701e49af381e073edc498bb",
+        "capturedAt": "2026-10-19T05:31:02.673Z"
+      },
+      {
+        "name": "stream1517-conversion-result-760x520.png",
+        "sha256": "e24a71e4fd13b4144cb4a2137ca7546ce2c93a3f1eacb1e2f2a0001e5e3c5534",
+        "capturedAt": "2026-10-19T05:31:03.304Z"
+      }
+    ]
+  },
+  "screenshots": [
+    "stream1517-plain-preview-1100x700.png",
+    "stream1517-plain-preview-760x520.png",
+    "stream1517-tar-preview-1100x700.png",
+    "stream1517-tar-preview-760x520.png",
+    "stream1517-restored-batch-1100x700.png",
+    "stream1517-restored-batch-760x520.png",
+    "stream1517-conversion-result-1100x700.png",
+    "stream1517-conversion-result-760x520.png",
+    "stream1517-later-damage-1100x700.png",
+    "stream1517-later-damage-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "stream1517-later-damage",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "stream1517-later-damage",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ]
+}

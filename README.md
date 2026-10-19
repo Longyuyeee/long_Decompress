@@ -130,9 +130,10 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | 能力 | 主要格式与说明 |
 | --- | --- |
 | 创建归档 | ZIP（Deflate / Zstandard）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式与原生密码）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM |
-| 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式/日志式当前文件）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
+| 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式/日志式当前文件）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
 | 密码与分卷 | ZIP 支持密码数字切卷与标准 `.z01/.zip` 分卷；7Z 支持密码数字卷；RAR 支持原生密码分卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合和既有 AES 包装）、WIM、ZPAQ（含输出与改密）；密码和分卷随目标格式提供，ZPAQ 不提供固定大小分卷 |
+| 内部预览 | ZIP/TAR 系列及普通 GZIP/BZIP2/XZ/Zstandard 流中的受支持图片与文本；预览超出读取范围时可先提取后打开 |
 | 图片压缩 | JPEG、PNG、WebP；质量、尺寸与格式按对应编码能力调整 |
 | 视频压缩 | MP4、MOV、AVI、WMV、WebM、MKV、M4V 等受支持输入，输出 MP4 / H.264 |
 | PDF 优化 | 分析结构、优化体积；是否适合处理会在分析后显示 |
@@ -234,6 +235,8 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
+**v1.5.17 · 多段压缩流完整读取**。补齐 GZIP/BZIP2/XZ 连续流与跨段 TAR 末尾内容；后段损坏明确提示，普通压缩文件可以直接浏览和预览。从数字分卷中间卷进入也能查看末尾文件，补卷后的新任务与密码 ZIP 转换接续原流程。单条展开、多选弹窗、自然配置继承、左右等宽及窄窗滚动保持。[中文更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.17.md) · [实施与范围](long-compress-assistant/docs/MULTISTREAM_1.5.17.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.17)。下一步按[既定路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.17_TO_1.5.19.md)做 AES 容器分卷，再逐文件校验原因。
+
 **v1.5.16 · 读写故障与任务接续**。处理中盘满、文件占用和权限问题保留真正原因；后续卷被撤回或替换时明确提示来源变化，不发布本次不完整结果。修复提交失败后旧暂存无法接续的问题，恢复条件后通过原纠正入口创建新任务，保留旧失败历史。单条展开、多选弹窗、左右等宽与窄窗滚动保持。[中文更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.16.md) · [实施与范围](long-compress-assistant/docs/IO_RECOVERY_1.5.16.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.16)。真实 VHD 盘满补测未执行，未计通过；下一阶段已写入[开发路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.17_TO_1.5.19.md)：多段压缩流、自有 AES 容器分卷、逐文件校验原因。
 
 **v1.5.15 · ZIP64 大文件与密码分卷修复**。压缩/转换保留独立空文件夹，明确 ZIP64 目录损坏，救援密码问题不再盖过结构损坏原因。超过 4 GiB 的真实文件覆盖普通/AES/传统密码、单包/数字卷/标准卷及跨卷数据描述符，实际改密码转换与独立完整回解通过。保留单条展开、多选弹窗与原布局。[中文更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.15.md) · [封板快照](long-compress-assistant/docs/ZIP64_VOLUMES_FREEZE_1.5.15.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.15)。该项已由 v1.5.16 接续；ALZ 方法 3、EGG 加密固实的未完成状态保留。
@@ -258,6 +261,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
+| **v1.5.17** | 多段压缩流与跨段 TAR 完整读取、普通流预览及后段损坏提示 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.17.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.17) |
 | **v1.5.16** | 盘满/占用/权限原因、处理中卷组变化与失败新任务接续 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.16.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.16) |
 | **v1.5.15** | ZIP64 结构原因、密码救援主次提示与独立空目录保留；真实大文件密码分卷及转换 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.15.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.15) |
 | **v1.5.14** | GNU/PAX 稀疏 TAR 完整内容、计量与真实格式路由；v1.5.13 候选撤回未发布 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.14.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.14) |
