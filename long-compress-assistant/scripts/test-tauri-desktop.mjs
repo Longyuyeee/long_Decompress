@@ -4927,6 +4927,7 @@ try {
     completedSuccessfully = true
   } else if (process.argv.includes('--io-1516-only')) {
     await runIo1516Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root })
+    completedSuccessfully = true
   } else if (process.argv.includes('--zip64-1515-only')) {
     await runZip641515Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
     completedSuccessfully = true

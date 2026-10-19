@@ -40,5 +40,11 @@
     "Source snapshot is metadata/membership based, not a cryptographic replacement detector",
     "Related prior results reused when unaffected; repeated rollback test counted once"
   ],
-  "production": "Required candidate Windows package and formal Release pending at this source snapshot"
+  "production": "Required candidate Windows package and formal Release pending at this source snapshot",
+  "desktopFunctionalFlows": 6,
+  "desktopProvenanceRecordsNotCounted": 1,
+  "finalScreenshotsViewed": 12,
+  "initialRuntimeSha256": "1a594c763739646aa780d228058f3fbf58ad8fd56f9e079d815d4c86441dd514",
+  "finalHistoryDisplaySha256": "90d1fd0932a0433f1f1d9dedbb0f838d70585c083dbff4a00696c605f51f64e6",
+  "sourceFlowSha256": "37e9717e1e2f4035ce1d0e4edf96108b95caba3cce25bed3df2635045c858f67"
 }
