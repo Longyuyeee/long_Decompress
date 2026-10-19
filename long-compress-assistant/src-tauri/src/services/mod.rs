@@ -89,3 +89,6 @@ pub(crate) mod archive_io;
 
 #[cfg(all(test, windows))]
 mod archive_io_disk_tests;
+
+#[cfg(test)]
+mod multistream_tests;

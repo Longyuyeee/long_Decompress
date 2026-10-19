@@ -1,0 +1,150 @@
+{
+  "python": "3.12.3",
+  "tarProducer": "tar (GNU tar) 1.35",
+  "zstdProducer": "1.5.5",
+  "tarArguments": [
+    "tar",
+    "--format=pax",
+    "--mtime=@1577934245",
+    "--owner=0",
+    "--group=0",
+    "--numeric-owner",
+    "--pax-option=exthdr.name=%d/PaxHeaders/%f,delete=atime,delete=ctime",
+    "-cf",
+    "/tmp/long-multistream1517-88aw1933/original.tar",
+    "-C",
+    "/tmp/long-multistream1517-88aw1933",
+    "开头.txt",
+    "数据.bin",
+    "末尾.txt",
+    "空目录"
+  ],
+  "tarCuts": [
+    6657,
+    136717
+  ],
+  "expected": [
+    {
+      "path": "开头.txt",
+      "bytes": 19,
+      "sha256": "f8a5bc434c0684948506c5c7986e972b4e16c2bac0c17ad83bc3e15efb6826cb"
+    },
+    {
+      "path": "数据.bin",
+      "bytes": 131089,
+      "sha256": "19df36bd7170680c8b55751b54c8a8b4f3f48f331d3b0a266dd0f85e56a04c88"
+    },
+    {
+      "path": "末尾.txt",
+      "bytes": 2726,
+      "sha256": "e712a88f60a61b9babe587833561925d9052d2c0d7e99137ed8376272cfbcc3e"
+    }
+  ],
+  "emptyDirectory": "空目录",
+  "cases": [
+    {
+      "codec": "gz",
+      "kind": "plain",
+      "archive": "说明.txt.gz",
+      "bytes": 2492,
+      "sha256": "520440f9405d5b76cd6910f26d9362ce14105dd7e358051bd61e921d0a483ab4",
+      "members": 4,
+      "xzPaddingBytes": 0,
+      "decodedBytes": 44168,
+      "decodedSha256": "2427777562d2d5e9c7c3767f92582f1e97181aa215ce959006786d338c57d564",
+      "truncated": "说明.txt.gz.truncated",
+      "corrupt": "说明.txt.gz.corrupt"
+    },
+    {
+      "codec": "gz",
+      "kind": "tar",
+      "archive": "跨段.tar.gz",
+      "bytes": 131856,
+      "sha256": "b60117e17d543505a487e05f3a09edb832a379389810f4676f8832b24e8d6664",
+      "members": 3,
+      "xzPaddingBytes": 0,
+      "decodedBytes": 143360,
+      "decodedSha256": "2c5d1e8907369086bf3a9f05ae2b43b85aa21979422ab1fa783a23ff1dbaad2c",
+      "truncated": "跨段.tar.gz.truncated",
+      "corrupt": "跨段.tar.gz.corrupt"
+    },
+    {
+      "codec": "bz2",
+      "kind": "plain",
+      "archive": "说明.txt.bz2",
+      "bytes": 1065,
+      "sha256": "7da4e84ddc205b786753889891a3107cf073ac12f4d8cf6de2de900d67fa18d2",
+      "members": 4,
+      "xzPaddingBytes": 0,
+      "decodedBytes": 44168,
+      "decodedSha256": "2427777562d2d5e9c7c3767f92582f1e97181aa215ce959006786d338c57d564",
+      "truncated": "说明.txt.bz2.truncated",
+      "corrupt": "说明.txt.bz2.corrupt"
+    },
+    {
+      "codec": "bz2",
+      "kind": "tar",
+      "archive": "跨段.tar.bz2",
+      "bytes": 133271,
+      "sha256": "73b01f9ff9ce14eeab9b05dc255354ddb9956abc45bd45795e06100730b67bd1",
+      "members": 3,
+      "xzPaddingBytes": 0,
+      "decodedBytes": 143360,
+      "decodedSha256": "2c5d1e8907369086bf3a9f05ae2b43b85aa21979422ab1fa783a23ff1dbaad2c",
+      "truncated": "跨段.tar.bz2.truncated",
+      "corrupt": "跨段.tar.bz2.corrupt"
+    },
+    {
+      "codec": "xz",
+      "kind": "plain",
+      "archive": "说明.txt.xz",
+      "bytes": 768,
+      "sha256": "5efaf50824d3feadf9b7fe455f42718a2783e958f2a9d42d0fd2e546854745eb",
+      "members": 4,
+      "xzPaddingBytes": 4,
+      "decodedBytes": 44168,
+      "decodedSha256": "2427777562d2d5e9c7c3767f92582f1e97181aa215ce959006786d338c57d564",
+      "truncated": "说明.txt.xz.truncated",
+      "corrupt": "说明.txt.xz.corrupt"
+    },
+    {
+      "codec": "xz",
+      "kind": "tar",
+      "archive": "跨段.tar.xz",
+      "bytes": 131924,
+      "sha256": "a59b9408347c10722f4497a27d6be662b3792412ca129d92adf6e791ab733d30",
+      "members": 3,
+      "xzPaddingBytes": 4,
+      "decodedBytes": 143360,
+      "decodedSha256": "2c5d1e8907369086bf3a9f05ae2b43b85aa21979422ab1fa783a23ff1dbaad2c",
+      "truncated": "跨段.tar.xz.truncated",
+      "corrupt": "跨段.tar.xz.corrupt"
+    },
+    {
+      "codec": "zst",
+      "kind": "plain",
+      "archive": "说明.txt.zst",
+      "bytes": 871,
+      "sha256": "d2d696e0b7d5b6e48ecd601c94bbef07654b8fe8fdd4607dffb8fcb22bf28b97",
+      "members": 4,
+      "xzPaddingBytes": 0,
+      "decodedBytes": 44168,
+      "decodedSha256": "2427777562d2d5e9c7c3767f92582f1e97181aa215ce959006786d338c57d564",
+      "truncated": "说明.txt.zst.truncated",
+      "corrupt": "说明.txt.zst.corrupt"
+    },
+    {
+      "codec": "zst",
+      "kind": "tar",
+      "archive": "跨段.tar.zst",
+      "bytes": 133586,
+      "sha256": "4e50b5c02b30609b6fe8a247c692b5a7e944ee5c5ae5d5b4e0acbee6c4c4c015",
+      "members": 3,
+      "xzPaddingBytes": 0,
+      "decodedBytes": 143360,
+      "decodedSha256": "2c5d1e8907369086bf3a9f05ae2b43b85aa21979422ab1fa783a23ff1dbaad2c",
+      "truncated": "跨段.tar.zst.truncated",
+      "corrupt": "跨段.tar.zst.corrupt"
+    }
+  ]
+}
