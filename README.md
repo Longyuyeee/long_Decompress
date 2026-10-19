@@ -234,7 +234,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.15 · ZIP64 大文件与密码分卷修复**。压缩/转换保留独立空文件夹，明确 ZIP64 目录损坏，救援密码问题不再盖过结构损坏原因。超过 4 GiB 的真实文件覆盖普通/AES/传统密码、单包/数字卷/标准卷及跨卷数据描述符，实际改密码转换与独立完整回解通过。保留单条展开、多选弹窗与原布局。[中文更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.15.md) · [封板快照](long-compress-assistant/docs/ZIP64_VOLUMES_FREEZE_1.5.15.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.15)。下一版为既定 v1.5.16 过程 I/O 故障接续；ALZ 方法 3、EGG 加密固实的未完成状态保留。
+**v1.5.16 · 读写故障与任务接续**。处理中盘满、文件占用和权限问题保留真正原因；后续卷被撤回或替换时明确提示来源变化，不发布本次不完整结果。修复提交失败后旧暂存无法接续的问题，恢复条件后通过原纠正入口创建新任务，保留旧失败历史。单条展开、多选弹窗、左右等宽与窄窗滚动保持。[中文更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.16.md) · [实施与范围](long-compress-assistant/docs/IO_RECOVERY_1.5.16.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.16)。真实 VHD 盘满补测未执行，未计通过；下一阶段已写入[开发路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.17_TO_1.5.19.md)：多段压缩流、自有 AES 容器分卷、逐文件校验原因。
+
+**v1.5.15 · ZIP64 大文件与密码分卷修复**。压缩/转换保留独立空文件夹，明确 ZIP64 目录损坏，救援密码问题不再盖过结构损坏原因。超过 4 GiB 的真实文件覆盖普通/AES/传统密码、单包/数字卷/标准卷及跨卷数据描述符，实际改密码转换与独立完整回解通过。保留单条展开、多选弹窗与原布局。[中文更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.15.md) · [封板快照](long-compress-assistant/docs/ZIP64_VOLUMES_FREEZE_1.5.15.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.15)。该项已由 v1.5.16 接续；ALZ 方法 3、EGG 加密固实的未完成状态保留。
 
 此前 **v1.5.14 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.14)。统一交付 GNU/PAX 稀疏 TAR 的真实名称、完整内容、稀疏计量和失败原因，并修正真实 ZIP/TAR 被误后缀带偏的浏览、预览、检查及提取路由。二十原件独立回解、203 Rust、170 前端、36 桌面记录、18 张实看页面和普通生产通过；正式四附件及中文更新说明已回下载核对。见[审计](long-compress-assistant/docs/TAR_ROUTING_1.5.14.md)、[封板发布](long-compress-assistant/docs/TAR_ROUTING_FREEZE_1.5.14.md)及[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.14.md)。v1.5.13 已撤回未发布，原标签不移动。图标与原截图保留；Windows 为普通填零输出，不承诺 NTFS 稀疏分配或 Linux 元数据。此为 v1.5.14 交付快照，当前状态以上方最新版本和开发交接为准。
 
@@ -256,6 +258,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 | 版本 | 主要变化 | 详情 |
 | --- | --- | --- |
+| **v1.5.16** | 盘满/占用/权限原因、处理中卷组变化与失败新任务接续 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.16.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.16) |
 | **v1.5.15** | ZIP64 结构原因、密码救援主次提示与独立空目录保留；真实大文件密码分卷及转换 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.15.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.15) |
 | **v1.5.14** | GNU/PAX 稀疏 TAR 完整内容、计量与真实格式路由；v1.5.13 候选撤回未发布 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.14.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.14) |
 | **v1.5.12** | ALZ Deflate 尾部完整性与确定损坏最终原因；方法 3 仍不支持 | [更新说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.12.md) · [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.12) |

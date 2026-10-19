@@ -3,6 +3,9 @@
 - **本轮：[v1.5.15 ZIP64 大包](ZIP64_VOLUMES_FREEZE_1.5.15.md)已功能封板进入发布**。真实大文件密码分卷与改密转换通过，空目录、结构原因和救援提示修正完成；两份 README 和[中文说明](RELEASE_NOTES_1.5.15.md)同步。[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.15)记录最终发布状态。
 - **下一步：既定 v1.5.16 过程 I/O**，尚未开工。现行路线收口九项、余一项；见[交接](DEVELOPMENT_HANDOFF.md)及[路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)。下方 v1.5.14/八目标为历史快照。
 
+- **当前 v1.5.16 功能收口**：[实施与范围](IO_RECOVERY_1.5.16.md)、[封板](IO_RECOVERY_FREEZE_1.5.16.md)、[中文 Release](RELEASE_NOTES_1.5.16.md)。19 Rust、157 前端与实际失败接续完成，保留原交互；必需候选和最终发布状态见[发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.16)，真实 VHD 盘满补测未执行。
+- **下一阶段**：[v1.5.17～v1.5.19 路线](ARCHIVE_ROADMAP_1.5.17_TO_1.5.19.md)已写入，尚未开工。先多段压缩流，再自有 AES 容器分卷，最后逐文件校验原因与待补列表；下方为历史版本快照。
+
 - **当前正式版：[v1.5.14 TAR 与真实路由](TAR_ROUTING_FREEZE_1.5.14.md)**已封板发布：203 Rust、170 前端、36 桌面记录、18 张实看页面及普通生产通过，PR #208 受保护合入，正式四资产与中文说明已回下载核对；[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.14)。
 
 - **下一步：v1.5.15 ZIP64 大边界，再 v1.5.16 过程 I/O**。原十目标按证据调整范围交付八项、余两项，见[交接](DEVELOPMENT_HANDOFF.md)和[路线](ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)。v1.5.13 撤回不计交付；ALZ 方法 3 与 EGG 加密固实未完成状态保留，不重复扩张规划。

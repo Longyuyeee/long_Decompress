@@ -16,7 +16,9 @@ export const failureCategories = {
   timeout: '检测超时',
   'engine-unavailable': '引擎不可用',
   'engine-start': '引擎启动失败',
-  io: '检测读取失败',
+  io: '文件读写失败',
+  'disk-full': '磁盘空间不足',
+  'target-busy': '文件被占用',
   'ambiguous-data': '加密数据异常（原因未确定）',
   'rar-later-data': 'RAR 后续数据异常（前段密码已通过）',
   'password-encoding': '原包编码不兼容',
@@ -29,7 +31,7 @@ export type FailureCategory = keyof typeof failureCategories
 // Classification markers remain in task/history evidence for recovery routing.
 // Only the ordinary toast/log presentation removes them; never mutate records.
 export function archiveInspectionMessageForDisplay(message: string): string {
-  const readable = message.replace(/\[(?:archive-inspection:[^\]]+|alz-(?:encoding|password-encoding|io|password)|egg-(?:password-encoding|io|password))\]\s*/g, '').trim()
+  const readable = message.replace(/\[(?:archive-inspection:[^\]]+|archive-io:[^\]]+|alz-(?:encoding|password-encoding|io|password)|egg-(?:password-encoding|io|password))\]\s*/g, '').trim()
   return readable || (message ? '归档检测未通过，未提供具体原因。' : '')
 }
 
@@ -37,7 +39,7 @@ const stageLabels: Record<string, string> = {
   inspection: '归档检测', unknown: '阶段未知', 'Pre-checking': '预检', Extracting: '解压',
   Verifying: '校验', Splitting: '分卷', Finalizing: '完成处理', 'password-attempt': '密码验证',
   Probing: '媒体探测', Encoding: '编码', Transforming: '转换', Validating: '输出校验',
-  Publishing: '发布输出', 'still-encoding': '编码',
+  Compressing: '压缩', Publishing: '发布输出', 'still-encoding': '编码',
 }
 
 export function describeTaskFailure(record: Pick<TaskHistoryRecord, 'status' | 'errorMessage' | 'failure'>) {
@@ -45,6 +47,7 @@ export function describeTaskFailure(record: Pick<TaskHistoryRecord, 'status' | '
   const message = record.errorMessage?.trim() || '原记录未保存具体失败原因'
   const marker = message.match(/\[archive-inspection:([a-z-]+)\]/)?.[1]
   const sourceMarker = message.match(/\[archive-source:(Pre-checking|Extracting):(source-changed|source-missing|source-unavailable|source-invalid)\]/)
+  const ioMarker = message.match(/\[archive-io:(disk-full|target-busy|permission|io)\]/)?.[1] as FailureCategory | undefined
   const sourceStage = sourceMarker?.[1]
   const verification = message.includes('[archive-output:Verifying:verification-failed]')
   const publication = message.match(/\[archive-output:Publishing:(output-conflict|publication-failed|rollback-incomplete)\]/)?.[1] as FailureCategory | undefined
@@ -53,7 +56,7 @@ export function describeTaskFailure(record: Pick<TaskHistoryRecord, 'status' | '
   const inspection = Boolean(marker) || message.includes('归档检测失败：')
   const persisted = record.failure?.schemaVersion === 1 ? record.failure : null
   const savedCategory = persisted && Object.hasOwn(failureCategories, persisted.category)
-    ? persisted.category as FailureCategory : publication || (verification ? 'verification-failed' : sourceMarker ? sourceMarker[2] as FailureCategory : category)
+    ? persisted.category as FailureCategory : publication || (verification ? 'verification-failed' : sourceMarker ? sourceMarker[2] as FailureCategory : ioMarker || category)
   const stage = persisted && Object.hasOwn(stageLabels, persisted.stage)
     ? persisted.stage : publication ? 'Publishing' : verification ? 'Verifying' : sourceStage || (inspection ? 'inspection' : 'unknown')
   return {
@@ -61,7 +64,7 @@ export function describeTaskFailure(record: Pick<TaskHistoryRecord, 'status' | '
     categoryLabel: failureCategories[savedCategory],
     stage,
     stageLabel: stageLabels[stage] + (persisted?.evidence === 'observed-stage' ? '（最后观测阶段）' : ''),
-    evidence: persisted?.evidence || (marker || sourceStage || verification || publication ? 'recorded-marker' : 'legacy-message'),
+    evidence: persisted?.evidence || (marker || sourceStage || verification || publication || ioMarker ? 'recorded-marker' : 'legacy-message'),
     message,
   }
 }
@@ -111,6 +114,22 @@ export function getTaskRecoveryGuidance(record: Pick<TaskHistoryRecord, 'status'
       return { title: '缺失分卷：补齐后重新检查', steps: [
         '查看上方原始错误中的缺卷信息；未记录具体名称时不猜测缺失分卷名称，请向提供者核对完整分卷列表。',
         '将同一归档的全部分卷放在同一目录，保持原文件名；补齐后选择归档或首卷。下方解压草稿会重新检测分卷，不会直接执行旧任务。', report,
+      ] }
+    case 'disk-full':
+      return { title: '空间不足：处理好空间后继续', steps: [
+        '按原始错误中的路径确认空间不足发生在哪个盘；释放空间，或在下方选择空间充足的输出目录。转换还需要原内容和新压缩包的暂存空间。',
+        '本任务没有完整完成，请保留源文件和原失败记录；不要把隐藏暂存或零散文件当作完整结果。回滚不完整时先按恢复目录指引核对。',
+        '确认空间和来源后创建新任务；不会直接继续提交旧暂存。', report,
+      ] }
+    case 'target-busy':
+      return { title: '文件被占用：关闭占用后继续', steps: [
+        '按原始错误中的路径确认是来源、暂存还是输出被占用，关闭使用该文件的程序后再处理；也可在确认来源可读后选择新的输出目录。',
+        '保留原失败记录和现有文件，确认条件恢复后创建新任务；不会强制关闭其他程序或覆盖尚未核对的结果。', report,
+      ] }
+    case 'io':
+      return { title: '读写未完成：检查路径和设备后继续', steps: [
+        '先按原始错误中的路径检查来源是否仍在、设备是否连接、目录是否可写。没有具体路径或阶段时，不能仅凭读写失败判断是密码或文件内容问题。',
+        '恢复来源和访问条件后创建新任务；旧失败记录保留，不会自动提交旧暂存。', report,
       ] }
     case 'permission': {
       const confirmed = failure.evidence === 'recorded-marker'

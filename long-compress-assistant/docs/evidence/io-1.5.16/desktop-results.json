@@ -1,0 +1,155 @@
+{
+  "version": "1.5.16",
+  "completedAt": "2026-10-19T04:24:35.619Z",
+  "application": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\target\\release\\long-compress-assistant.exe",
+  "binarySha256": "1a594c763739646aa780d228058f3fbf58ad8fd56f9e079d815d4c86441dd514",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\io-1516\\ui-86413704-fcdf-4bf6-a7e4-2d77a0170ca1",
+  "cases": [
+    {
+      "sourceFault": "withdrawn-volume",
+      "actualWrittenBeforePause": 16199982,
+      "pauseStoppedWriting": true,
+      "noPublishedOrStagedPartial": true,
+      "failure": "[archive-source:Extracting:source-missing] 源压缩包不存在或已被移动，请重新选择源文件：系统找不到指定的文件。 (os error 2)；原卷：E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\io-1516\\ui-bc66ee7e-c4c8-4205-929f-742545015d74\\原卷被撤回\\original.zip.263",
+      "historyCategory": "source-missing"
+    },
+    {
+      "restoredSourceNewTask": true,
+      "fullPayloadHash": "120c216a60a21960a6c33009734babf4952e8b0b64f45acabebe9b37b23cbb54",
+      "previousFailureUnchanged": true,
+      "retryId": "q0w68uafxmveqmtre"
+    },
+    {
+      "sourceFault": "replaced-volume",
+      "actualWrittenBeforePause": 12599986,
+      "pauseStoppedWriting": true,
+      "noPublishedOrStagedPartial": true,
+      "failure": "[archive-source:Extracting:source-changed] 源压缩包在解压期间发生变化，当前结果已丢弃；请等待下载或复制完成后重试",
+      "historyCategory": "source-changed"
+    },
+    {
+      "reusedSourceFlowBinarySha256": "37e9717e1e2f4035ce1d0e4edf96108b95caba3cce25bed3df2635045c858f67",
+      "note": "Only pending-commit cleanup changed after the source flows; no source-flow state is injected"
+    },
+    {
+      "actualExclusiveTargetFailure": true,
+      "historyCategory": "target-busy",
+      "originalError": "[archive-io:target-busy] 文件正在被其他程序占用，请按原始路径关闭占用后创建新任务。原始原因：另一个程序正在使用此文件，进程无法访问。 (os error 32)"
+    },
+    {
+      "unlockedNewTask": true,
+      "newOutputFullHash": "d34299ef9d4c142ed413d71fa977a67b821156a3f9f7bac7409321bed27d5bf1",
+      "oldOutputAndFailurePreserved": true
+    },
+    {
+      "actualHistoryIoGuidance": true
+    }
+  ],
+  "screenshots": [
+    "io1516-source-missing-1100x700.png",
+    "io1516-source-missing-760x520.png",
+    "io1516-retry-config-1100x700.png",
+    "io1516-retry-config-760x520.png",
+    "io1516-retry-completed-1100x700.png",
+    "io1516-retry-completed-760x520.png",
+    "io1516-source-changed-1100x700.png",
+    "io1516-source-changed-760x520.png",
+    "io1516-target-busy-1100x700.png",
+    "io1516-target-busy-760x520.png",
+    "io1516-history-cause-1100x700.png",
+    "io1516-history-cause-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "io1516-source-missing",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "io1516-source-missing",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "io1516-retry-config",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "io1516-retry-config",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "io1516-retry-completed",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "io1516-retry-completed",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "io1516-source-changed",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "io1516-source-changed",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "io1516-target-busy",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "io1516-target-busy",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "io1516-history-cause",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "io1516-history-cause",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "historyDisplayReview": {
+    "completedAt": "2026-10-19T04:32:01.304Z",
+    "binarySha256": "90d1fd0932a0433f1f1d9dedbb0f838d70585c083dbff4a00696c605f51f64e6",
+    "note": "Display-only marker removal; previous runtime/source flows retained with their own binary identities",
+    "layouts": [
+      {
+        "name": "io1516-history-cause",
+        "height": 700,
+        "overflow": 0,
+        "width": 1100
+      },
+      {
+        "name": "io1516-history-cause",
+        "height": 520,
+        "overflow": 0,
+        "width": 760
+      }
+    ]
+  }
+}

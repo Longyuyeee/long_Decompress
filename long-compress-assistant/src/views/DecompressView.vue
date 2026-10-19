@@ -606,7 +606,7 @@ const handleConflictResolve = async (action: 'overwrite' | 'skip' | 'rename', ap
       appStore.setError(reason.replace(/.*File conflict requires resolution[:：]?\s*/i, '') || '目标文件发生变化，请重新确认冲突。')
     } else {
       task.error = reason
-      appStore.setError(appStore.t('decompress.extract_failed').replace('{0}', e))
+      appStore.setError(appStore.t('decompress.extract_failed').replace('{0}', archiveInspectionMessageForDisplay(reason)))
     }
   } finally {
     task.conflictResolutionPending = false

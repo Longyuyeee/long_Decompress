@@ -20,7 +20,7 @@ import HistoryRetryBatch from '@/components/tasks/HistoryRetryBatch.vue'
 import { save } from '@tauri-apps/api/dialog'
 import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/tauri'
-import { createTaskDiagnosticReport, describeTaskFailure, failureCategories, getTaskRecoveryGuidance, type FailureCategory } from '@/utils/taskFailure'
+import { archiveInspectionMessageForDisplay, createTaskDiagnosticReport, describeTaskFailure, failureCategories, getTaskRecoveryGuidance, type FailureCategory } from '@/utils/taskFailure'
 
 type TypeFilter = 'all' | 'compression' | 'decompression'
 type StatusFilter = 'all' | TaskHistoryStatus
@@ -414,7 +414,7 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
             <section v-if="selectedFailure" class="detail-section border-red-500/20 bg-red-500/5 mb-5" data-testid="history-final-failure" aria-label="最终失败原因">
               <h3 class="text-red-500">最终失败原因</h3>
               <p class="text-sm text-red-500 font-bold mt-2">{{ selectedFailure.categoryLabel }} · {{ selectedFailure.stageLabel }}</p>
-              <p class="text-sm text-red-500/90 break-words mt-3">{{ selectedFailure.message }}</p>
+              <p class="text-sm text-red-500/90 break-words mt-3">{{ archiveInspectionMessageForDisplay(selectedFailure.message) }}</p>
             </section>
             <div class="grid grid-cols-2 gap-3 mb-5"><div class="detail-metric"><span>{{ appStore.t('history.detail.status') }}</span><strong :class="terminalColor[selectedRecord.status].split(' ')[0]">{{ statusLabel(selectedRecord) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.duration') }}</span><strong>{{ formatDuration(selectedRecord.durationMs) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.volume') }}</span><strong>{{ formatBytes(Math.max(selectedRecord.processedBytes, selectedRecord.totalBytes)) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.completed_at') }}</span><strong>{{ formatDateTime(selectedRecord.completedAt) }}</strong></div></div>
             <section class="detail-section"><h3><i class="pi pi-sign-in"></i>{{ appStore.t('history.detail.sources') }}</h3><div class="space-y-2 mt-3"><code v-for="source in selectedRecord.sourcePaths" :key="source" class="detail-path">{{ source }}</code><p v-if="!selectedRecord.sourcePaths.length" class="text-sm text-dim">—</p></div></section>

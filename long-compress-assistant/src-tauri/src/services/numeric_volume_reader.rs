@@ -38,7 +38,9 @@ impl ZipInputReader {
         }
         if Self::is_numeric_first(path) {
             Ok(Self::Volumes(NumericVolumeReader::open(path).map_err(|error|
-                anyhow::anyhow!("[archive-inspection:incomplete] 无法读取完整 7Z 卷组：{error}"))?))
+                if super::archive_io::kind(&error).is_some() {
+                    error.context("[archive-inspection:io] 无法读取 7Z 卷组，请检查原始读写原因")
+                } else { error.context("[archive-inspection:incomplete] 无法读取完整 7Z 卷组") })?))
         } else {
             Self::open(path)
         }

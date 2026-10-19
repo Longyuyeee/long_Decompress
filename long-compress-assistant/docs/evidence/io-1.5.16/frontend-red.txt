@@ -1,0 +1,109 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ ❯ src/utils/__tests__/archiveIoFailure.test.ts (6 tests | 4 failed) 27ms
+     × preserves disk-full without a guessed inspection stage or password retry 17ms
+     × preserves target-busy without a guessed inspection stage or password retry 2ms
+     × preserves permission without a guessed inspection stage or password retry 2ms
+     × preserves io without a guessed inspection stage or password retry 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/utils/__tests__/archiveIoFailure.test.ts > processing I/O failures > preserves disk-full without a guessed inspection stage or password retry
+AssertionError: expected { category: 'unknown', …(5) } to match object { category: 'disk-full', …(1) }
+(4 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "category": "disk-full",
++   "category": "unknown",
+    "stage": "unknown",
+  }
+
+ ❯ src/utils/__tests__/archiveIoFailure.test.ts:8:69
+      6|   it.each(['disk-full', 'target-busy', 'permission', 'io'] as const)('…
+      7|     const errorMessage = `[archive-io:${category}] writing password.zi…
+      8|     expect(describeTaskFailure({ status: 'failed', errorMessage })).to…
+       |                                                                     ^
+      9|     expect(isPasswordRelatedError(errorMessage + '; wrong password fro…
+     10|     expect(archiveInspectionMessageForDisplay(errorMessage)).not.toCon…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  src/utils/__tests__/archiveIoFailure.test.ts > processing I/O failures > preserves target-busy without a guessed inspection stage or password retry
+AssertionError: expected { category: 'unknown', …(5) } to match object { category: 'target-busy', …(1) }
+(4 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "category": "target-busy",
++   "category": "unknown",
+    "stage": "unknown",
+  }
+
+ ❯ src/utils/__tests__/archiveIoFailure.test.ts:8:69
+      6|   it.each(['disk-full', 'target-busy', 'permission', 'io'] as const)('…
+      7|     const errorMessage = `[archive-io:${category}] writing password.zi…
+      8|     expect(describeTaskFailure({ status: 'failed', errorMessage })).to…
+       |                                                                     ^
+      9|     expect(isPasswordRelatedError(errorMessage + '; wrong password fro…
+     10|     expect(archiveInspectionMessageForDisplay(errorMessage)).not.toCon…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  src/utils/__tests__/archiveIoFailure.test.ts > processing I/O failures > preserves permission without a guessed inspection stage or password retry
+AssertionError: expected { category: 'unknown', …(5) } to match object { category: 'permission', …(1) }
+(4 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "category": "permission",
++   "category": "unknown",
+    "stage": "unknown",
+  }
+
+ ❯ src/utils/__tests__/archiveIoFailure.test.ts:8:69
+      6|   it.each(['disk-full', 'target-busy', 'permission', 'io'] as const)('…
+      7|     const errorMessage = `[archive-io:${category}] writing password.zi…
+      8|     expect(describeTaskFailure({ status: 'failed', errorMessage })).to…
+       |                                                                     ^
+      9|     expect(isPasswordRelatedError(errorMessage + '; wrong password fro…
+     10|     expect(archiveInspectionMessageForDisplay(errorMessage)).not.toCon…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  src/utils/__tests__/archiveIoFailure.test.ts > processing I/O failures > preserves io without a guessed inspection stage or password retry
+AssertionError: expected { category: 'unknown', …(5) } to match object { category: 'io', stage: 'unknown' }
+(4 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "category": "io",
++   "category": "unknown",
+    "stage": "unknown",
+  }
+
+ ❯ src/utils/__tests__/archiveIoFailure.test.ts:8:69
+      6|   it.each(['disk-full', 'target-busy', 'permission', 'io'] as const)('…
+      7|     const errorMessage = `[archive-io:${category}] writing password.zi…
+      8|     expect(describeTaskFailure({ status: 'failed', errorMessage })).to…
+       |                                                                     ^
+      9|     expect(isPasswordRelatedError(errorMessage + '; wrong password fro…
+     10|     expect(archiveInspectionMessageForDisplay(errorMessage)).not.toCon…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 2 passed (6)
+   Start at  11:39:28
+   Duration  23.63s (transform 283ms, setup 524ms, import 218ms, tests 27ms, environment 21.39s)
+

@@ -1,0 +1,36 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling long-compress-assistant v1.5.15 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 40s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-46ecfa4aae5fa078.exe)
+
+running 4 tests
+test commands::compression::io1516_disk_full_keeps_its_category_and_original_context ... ok
+test services::archive_io::tests::io1516_typed_native_failures_precede_password_text_without_inventing_corruption ... ok
+test services::archive_io::tests::io1516_real_windows_sharing_violation_is_preserved ... ok
+test services::compression_service::tests::io1516_other_volume_changes_are_not_hidden_by_an_unchanged_first_volume ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 739 filtered out; finished in 0.07s
+
