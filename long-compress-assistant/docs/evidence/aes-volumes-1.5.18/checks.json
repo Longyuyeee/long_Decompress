@@ -1,0 +1,148 @@
+{
+  "version": "1.5.18",
+  "runtimeCommit": "06101cc",
+  "base": "6f41d9e",
+  "fixtureCommit": "c26dea9",
+  "rustDistinctPassed": 22,
+  "rustTests": [
+    "services::aes_stream_v2::tests::storage_full_errors_remove_partial_and_uncommitted_outputs",
+    "services::aes_stream_v2::tests::tampering_and_truncation_are_rejected",
+    "services::aes_volume_tests::aes1518_all_independent_v1_v2_originals_decrypt_from_middle_member",
+    "services::aes_volume_tests::aes1518_existing_creation_reaches_numeric_split_for_all_nine_formats",
+    "services::aes_volume_tests::aes1518_independent_original_reads_header_across_tiny_volumes",
+    "services::aes_volume_tests::aes1518_independent_original_single_numeric_member_control",
+    "services::aes_volume_tests::aes1518_missing_head_middle_tail_and_late_authentication_are_distinct",
+    "services::aes_volume_tests::aes1518_native_browse_preview_integrity_and_diagnosis_use_complete_container",
+    "services::aes_volume_tests::aes1518_tar_creation_keeps_multi_source_empty_directory_layout",
+    "services::aes_volume_tests::aes1518_wrong_password_is_ambiguous_and_cancelled_output_is_removed",
+    "services::compression_format::tests::aliases_share_the_same_execution_route",
+    "services::compression_format::tests::compatibility_facade_exposes_the_extracted_rules",
+    "services::compression_format::tests::every_compressible_capability_has_exactly_one_execution_route",
+    "services::compression_format::tests::every_declared_extension_normalizes_to_its_canonical_format",
+    "services::compression_format::tests::filename_encryption_requires_explicit_seven_zip_password",
+    "services::compression_format::tests::longest_extensions_win_when_inferring_from_output_paths",
+    "services::compression_format::tests::recognizes_every_tar_wrapper_alias",
+    "services::compression_format::tests::validation_enforces_single_file_and_explicit_encryption_fallbacks",
+    "services::compression_format::tests::validation_rejects_unimplemented_split_and_solid_combinations",
+    "services::native_compression::aes::tests::pre_cancelled_aes_cleans_output",
+    "services::native_compression::aes::tests::temporary_input_is_removed_on_drop",
+    "services::native_compression::aes::tests::wrapped_gzip_aes_round_trip_preserves_payload"
+  ],
+  "frontendUnitPassed": 805,
+  "frontendUnitFiles": 86,
+  "umbrellaNpmTestPassed": false,
+  "playwrightCounted": false,
+  "desktopBinarySha256": "63c1b3426fef3fb3508cdd623dac83fdd4990bdad61ac299ab6d556edac49008",
+  "nativeRecords": 24,
+  "actualUiFlows": 5,
+  "screenshotsViewed": 10,
+  "independentAesOutputs": 10,
+  "independentZipAuthenticatedFiles": 3,
+  "layouts": [
+    {
+      "name": "inline-config",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "inline-config",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "middle-preview",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "middle-preview",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "batch-recovery",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "batch-recovery",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "conversion-zip",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "conversion-zip",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "conversion-aes",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "conversion-aes",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "completedAt": "2026-10-19T06:44:10.339Z",
+  "vhdRun": "https://github.com/Longyuyeee/long_Decompress/actions/runs/39211588338",
+  "vhdStatus": "in_progress_not_counted",
+  "screenshots": [
+    {
+      "file": "aes1518-inline-config-1100x700.png",
+      "sha256": "a2981108492318388fc81f38242ef88eb7f2b2cfbebe707e03fe7058a6df46c6"
+    },
+    {
+      "file": "aes1518-inline-config-760x520.png",
+      "sha256": "93f3920da00156df006816eb93e56931229b82af5574920bc2f4a8119f6671bb"
+    },
+    {
+      "file": "aes1518-middle-preview-1100x700.png",
+      "sha256": "26439f09e548f20cc71689144b70b7d6206570512829ac1a9925acb3b7a01ad5"
+    },
+    {
+      "file": "aes1518-middle-preview-760x520.png",
+      "sha256": "4f1ae72fc3d5c5e24a67b4fd2badd92aed2ee80bce29bd18149a042b9c2644ec"
+    },
+    {
+      "file": "aes1518-batch-recovery-1100x700.png",
+      "sha256": "3c76d3f62b4b096cc40319da64ac408bdd1efebed2c9bc2a9ef9b3666c84e6e7"
+    },
+    {
+      "file": "aes1518-batch-recovery-760x520.png",
+      "sha256": "c3ced9b7a763461e842afad74e98af389c591ec51939ce00a1ff403e7f24e1c9"
+    },
+    {
+      "file": "aes1518-conversion-zip-1100x700.png",
+      "sha256": "14e82629b3a81b8ff60e4570ca10f281f719176560caf3ec29a02f507456b95c"
+    },
+    {
+      "file": "aes1518-conversion-zip-760x520.png",
+      "sha256": "e5981150cd7448ecd79058f0458925971b5e857020a28a909b2fdb5aa48f1a5b"
+    },
+    {
+      "file": "aes1518-conversion-aes-1100x700.png",
+      "sha256": "9b87e54d160971faf072aa3b6783298f12f55cd03fb602f96c964c4f57c3cbfe"
+    },
+    {
+      "file": "aes1518-conversion-aes-760x520.png",
+      "sha256": "cc86a7243dd2300a907b9231f206bc2405bc85c6324f6f9403d1653b8afca4e9"
+    }
+  ]
+}

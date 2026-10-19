@@ -1,0 +1,37 @@
+
+> long-compress-assistant@1.5.17 test
+> npm run test:unit && npm run test:e2e --run src/components/compression/__tests__/CompressionSettingsPanel.test.ts src/utils/__tests__/compressionFormat.test.ts
+
+
+> long-compress-assistant@1.5.17 pretest:unit
+> npm run test:pdf-contract && npm run test:fixtures:media:images
+
+
+> long-compress-assistant@1.5.17 test:pdf-contract
+> node scripts/check-pdf-optimization-contract.mjs
+
+PDF optimization contract gate passed (13 fixture kinds; D-04.3 real and installed matrices required).
+
+> long-compress-assistant@1.5.17 test:fixtures:media:images
+> node scripts/prepare-media-test-fixtures.mjs --images-only
+
+Real image fixture baseline passed (11 images and one PDF rejection boundary).
+
+> long-compress-assistant@1.5.17 test:unit
+> vitest run src tests/fixtures
+
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+
+ Test Files  86 passed (86)
+      Tests  805 passed (805)
+   Start at  14:13:15
+   Duration  21.75s (transform 45.51s, setup 17.48s, import 66.77s, tests 39.23s, environment 129.22s)
+
+npm warn "src/components/compression/__tests__/CompressionSettingsPanel.test.ts" is being parsed as a normal command line argument.
+npm warn Unknown cli config "--run". This will stop working in the next major version of npm.
+
+> long-compress-assistant@1.5.17 test:e2e
+> playwright test src/components/compression/__tests__/CompressionSettingsPanel.test.ts src/utils/__tests__/compressionFormat.test.ts
+

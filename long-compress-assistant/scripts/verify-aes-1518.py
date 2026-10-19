@@ -1,9 +1,10 @@
 """Independent readback of application-created AES numeric volumes."""
 from pathlib import Path
-import hashlib, io, json, struct, subprocess, sys, tarfile
+import hashlib, hmac, io, json, struct, subprocess, sys, tarfile, zipfile, zlib
 import cryptography
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.argon2 import Argon2id
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 
 def sha(b): return hashlib.sha256(b).hexdigest()
 def decrypt(paths,password):
@@ -23,6 +24,43 @@ def decrypt(paths,password):
 
 def main():
     request=json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+    if request.get("type")=="zip":
+        # Match explicit UTF-8 password bytes. Windows 7-Zip's local-codepage
+        # argv interpretation is not a UTF-8 interoperability oracle.
+        data=Path(request["file"]).read_bytes();files={};directories=[]
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            for info in archive.infolist():
+                if info.is_dir(): directories.append(info.filename.rstrip("/"));continue
+                offset=info.header_offset
+                assert data[offset:offset+4]==b"PK\x03\x04"
+                n,e=struct.unpack_from("<HH",data,offset+26)
+                payload=data[offset+30+n+e:offset+30+n+e+info.compress_size]
+                assert info.compress_type==99
+                extra=info.extra;aes=None
+                while extra:
+                    tag,size=struct.unpack_from("<HH",extra);value=extra[4:4+size];extra=extra[4+size:]
+                    if tag==0x9901: aes=value
+                assert aes is not None
+                version,vendor,strength,method=struct.unpack("<H2sBH",aes)
+                assert vendor==b"AE" and strength==3 and version in (1,2)
+                keys=hashlib.pbkdf2_hmac("sha1",request["password"].encode("utf-8"),payload[:16],1000,66)
+                assert hmac.compare_digest(payload[16:18],keys[64:])
+                encrypted=payload[18:-10]
+                assert hmac.compare_digest(hmac.new(keys[32:64],encrypted,"sha1").digest()[:10],payload[-10:])
+                counters=b"".join(i.to_bytes(16,"little") for i in range(1,(len(encrypted)+15)//16+1))
+                encryptor=Cipher(algorithms.AES(keys[:32]),modes.ECB()).encryptor()
+                stream=encryptor.update(counters)+encryptor.finalize()
+                raw=bytes(a^b for a,b in zip(encrypted,stream))
+                assert method in (0,8)
+                decoded=zlib.decompress(raw,-15) if method==8 else raw
+                assert len(decoded)==info.file_size
+                files[info.filename]=sha(decoded)
+        assert files==request["expectedFiles"]
+        assert request["emptyDirectory"] in directories
+        result=dict(tool="Python zipfile metadata + cryptography AES-CTR + PBKDF2/HMAC-SHA1; explicit UTF-8 password bytes",
+            fullContentMatches=True,authenticatedFiles=len(files),emptyDirectoryPreserved=True)
+        Path(sys.argv[2]).write_text(json.dumps(result,ensure_ascii=False,indent=2)+"\n",encoding="utf-8")
+        return
     results=[]
     for c in request["cases"]:
         raw=decrypt(c["parts"],request["password"])

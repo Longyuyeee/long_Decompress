@@ -1,0 +1,46 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling long-compress-assistant v1.5.17 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 49.03s
+     Running unittests src\lib.rs (target\debug\deps\long_compress_assistant-74a0bffd737a2e09.exe)
+
+running 1 test
+test services::aes_volume_tests::aes1518_tar_creation_keeps_multi_source_empty_directory_layout ... FAILED
+
+failures:
+
+---- services::aes_volume_tests::aes1518_tar_creation_keeps_multi_source_empty_directory_layout stdout ----
+
+thread 'services::aes_volume_tests::aes1518_tar_creation_keeps_multi_source_empty_directory_layout' (55488) panicked at src\services\aes_volume_tests.rs:137:66:
+called `Result::unwrap()` on an `Err` value: 压缩失败: TAR.AES 压缩失败: 创建 TAR 归档失败
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    services::aes_volume_tests::aes1518_tar_creation_keeps_multi_source_empty_directory_layout
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 769 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--lib`
