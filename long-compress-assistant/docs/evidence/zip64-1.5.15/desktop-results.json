@@ -1,0 +1,177 @@
+{
+  "version": "1.5.15",
+  "application": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\target\\release\\long-compress-assistant.exe",
+  "binarySha256": "48449ae74c1d92382436355c263d011882f487ef746b97c4c122e79fe8540c38",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip64-1515",
+  "ui": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip64-1515\\ui-6bbdb01a-5b1b-4b64-afb7-da3b4f875709",
+  "cases": [
+    {
+      "fullIntegrity": true,
+      "original": "plain",
+      "reusedFrom": "desktop-run.log: browse and full integrity returned before the missing required options field rejected extraction",
+      "browse": true,
+      "selectedTailHash": true,
+      "unselectedLargeFileNotWritten": true
+    },
+    {
+      "original": "aes",
+      "browse": true,
+      "fullIntegrity": true,
+      "selectedTailHash": true,
+      "unselectedLargeFileNotWritten": true
+    },
+    {
+      "original": "zipcrypto",
+      "browse": true,
+      "fullIntegrity": true,
+      "selectedTailHash": true,
+      "unselectedLargeFileNotWritten": true
+    },
+    {
+      "original": "plain-stream",
+      "browse": true,
+      "fullIntegrity": true,
+      "selectedTailHash": true,
+      "unselectedLargeFileNotWritten": true
+    },
+    {
+      "product": "plain",
+      "layout": "numeric",
+      "anyMemberBrowse": true,
+      "selectedTailHash": true
+    },
+    {
+      "product": "plain",
+      "layout": "standard",
+      "anyMemberBrowse": true,
+      "selectedTailHash": true
+    },
+    {
+      "product": "aes",
+      "layout": "numeric",
+      "anyMemberBrowse": true,
+      "selectedTailHash": true
+    },
+    {
+      "product": "aes",
+      "layout": "standard",
+      "anyMemberBrowse": true,
+      "selectedTailHash": true
+    },
+    {
+      "product": "zipcrypto",
+      "layout": "numeric",
+      "anyMemberBrowse": true,
+      "selectedTailHash": true
+    },
+    {
+      "product": "zipcrypto",
+      "layout": "standard",
+      "anyMemberBrowse": true,
+      "selectedTailHash": true
+    },
+    {
+      "product": "plain-stream",
+      "layout": "standard-descriptor",
+      "anyMemberBrowse": true,
+      "selectedTailHash": true
+    },
+    {
+      "corruptZip64End": true,
+      "damagedBeforePasswordRetry": true,
+      "failedExtractionNotPublished": true,
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip64-1515\\ui-6bbdb01a-5b1b-4b64-afb7-da3b4f875709\\ZIP64终目录损坏\\大文件分卷.zip"
+    },
+    {
+      "actualDamagedDiagnosticHeading": true,
+      "actualRecoveryPasswordKeptSecondary": true
+    },
+    {
+      "actualBrowser": true,
+      "actualTextPreviewBeyond4GiB": true
+    },
+    {
+      "actualConversion": true,
+      "fullLargePayloadHash": true,
+      "emptyRootDirectoryPreserved": true,
+      "changedPassword": true,
+      "standardVolumes": true,
+      "independentReadback": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip64-1515\\ui-6bbdb01a-5b1b-4b64-afb7-da3b4f875709\\大文件改密标准分卷.zip"
+    }
+  ],
+  "screenshots": [
+    "zip641515-diagnosis-1100x700.png",
+    "zip641515-diagnosis-760x520.png",
+    "zip641515-browser-1100x700.png",
+    "zip641515-browser-760x520.png",
+    "zip641515-tail-preview-1100x700.png",
+    "zip641515-tail-preview-760x520.png",
+    "zip641515-conversion-config-1100x700.png",
+    "zip641515-conversion-config-760x520.png",
+    "zip641515-conversion-completed-1100x700.png",
+    "zip641515-conversion-completed-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "zip641515-diagnosis",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "zip641515-diagnosis",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "zip641515-browser",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "zip641515-browser",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "zip641515-tail-preview",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "zip641515-tail-preview",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "zip641515-conversion-config",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "zip641515-conversion-config",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "zip641515-conversion-completed",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "zip641515-conversion-completed",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ]
+}

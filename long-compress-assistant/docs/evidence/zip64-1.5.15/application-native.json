@@ -1,0 +1,79 @@
+[
+  {
+    "fullIntegrity": true,
+    "original": "plain",
+    "reusedFrom": "desktop-run.log: browse and full integrity returned before the missing required options field rejected extraction",
+    "browse": true,
+    "selectedTailHash": true,
+    "unselectedLargeFileNotWritten": true
+  },
+  {
+    "original": "aes",
+    "browse": true,
+    "fullIntegrity": true,
+    "selectedTailHash": true,
+    "unselectedLargeFileNotWritten": true
+  },
+  {
+    "original": "zipcrypto",
+    "browse": true,
+    "fullIntegrity": true,
+    "selectedTailHash": true,
+    "unselectedLargeFileNotWritten": true
+  },
+  {
+    "original": "plain-stream",
+    "browse": true,
+    "fullIntegrity": true,
+    "selectedTailHash": true,
+    "unselectedLargeFileNotWritten": true
+  },
+  {
+    "product": "plain",
+    "layout": "numeric",
+    "anyMemberBrowse": true,
+    "selectedTailHash": true
+  },
+  {
+    "product": "plain",
+    "layout": "standard",
+    "anyMemberBrowse": true,
+    "selectedTailHash": true
+  },
+  {
+    "product": "aes",
+    "layout": "numeric",
+    "anyMemberBrowse": true,
+    "selectedTailHash": true
+  },
+  {
+    "product": "aes",
+    "layout": "standard",
+    "anyMemberBrowse": true,
+    "selectedTailHash": true
+  },
+  {
+    "product": "zipcrypto",
+    "layout": "numeric",
+    "anyMemberBrowse": true,
+    "selectedTailHash": true
+  },
+  {
+    "product": "zipcrypto",
+    "layout": "standard",
+    "anyMemberBrowse": true,
+    "selectedTailHash": true
+  },
+  {
+    "product": "plain-stream",
+    "layout": "standard-descriptor",
+    "anyMemberBrowse": true,
+    "selectedTailHash": true
+  },
+  {
+    "corruptZip64End": true,
+    "damagedBeforePasswordRetry": true,
+    "failedExtractionNotPublished": true,
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip64-1515\\ui-6bbdb01a-5b1b-4b64-afb7-da3b4f875709\\ZIP64终目录损坏\\大文件分卷.zip"
+  }
+]

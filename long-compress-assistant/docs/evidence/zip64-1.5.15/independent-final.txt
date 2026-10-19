@@ -1,0 +1,10 @@
+[zip64-1515] reuse completed independent plain/single
+[zip64-1515] reuse completed independent plain/numeric
+[zip64-1515] reuse completed independent plain/standard
+[zip64-1515] independent full read aes/single
+[zip64-1515] independent full read aes/numeric
+[zip64-1515] independent full read aes/standard
+[zip64-1515] independent full read zipcrypto/single
+[zip64-1515] independent full read zipcrypto/numeric
+[zip64-1515] independent full read zipcrypto/standard
+[zip64-1515] independent full read plain-stream/standard-descriptor

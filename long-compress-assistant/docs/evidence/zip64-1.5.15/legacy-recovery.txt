@@ -1,0 +1,12 @@
+
+running 1 test
+test services::archive_diagnostics::tests::lost_directory_password_zip_recovers_intact_encrypted_files_and_rejects_wrong_password ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 738 filtered out; finished in 11.11s
+
+
+running 1 test
+test services::archive_diagnostics::tests::lost_standard_zip_directory_recovers_cross_disk_plain_and_password_files ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 738 filtered out; finished in 4.00s
+

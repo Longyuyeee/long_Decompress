@@ -1,0 +1,243 @@
+{
+  "tool": {
+    "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\resources\\archive-engine\\7z.exe",
+    "sha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53",
+    "banner": [
+      "7-Zip 26.04 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-10-05",
+      "Libs:",
+      " 0 : 26.04 : E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\resources\\archive-engine\\7z.dll"
+    ]
+  },
+  "cases": [
+    {
+      "mode": "plain",
+      "layout": "single",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\product-plain.zip",
+      "files": [
+        {
+          "name": "01-实际写入4GiB.bin",
+          "bytes": 4295098367,
+          "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+        },
+        {
+          "name": "99-末尾说明.txt",
+          "bytes": 88,
+          "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+        },
+        {
+          "name": "中间空文件.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "independentlyDecoded": true
+    },
+    {
+      "mode": "plain",
+      "layout": "numeric",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\plain-numeric\\大文件分卷.zip.001",
+      "files": [
+        {
+          "name": "01-实际写入4GiB.bin",
+          "bytes": 4295098367,
+          "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+        },
+        {
+          "name": "99-末尾说明.txt",
+          "bytes": 88,
+          "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+        },
+        {
+          "name": "中间空文件.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "independentlyDecoded": true
+    },
+    {
+      "mode": "plain",
+      "layout": "standard",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\plain-standard\\大文件分卷.zip",
+      "files": [
+        {
+          "name": "01-实际写入4GiB.bin",
+          "bytes": 4295098367,
+          "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+        },
+        {
+          "name": "99-末尾说明.txt",
+          "bytes": 88,
+          "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+        },
+        {
+          "name": "中间空文件.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "independentlyDecoded": true
+    },
+    {
+      "mode": "aes",
+      "layout": "single",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\product-aes.zip",
+      "files": [
+        {
+          "name": "01-实际写入4GiB.bin",
+          "bytes": 4295098367,
+          "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+        },
+        {
+          "name": "99-末尾说明.txt",
+          "bytes": 88,
+          "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+        },
+        {
+          "name": "中间空文件.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "independentlyDecoded": true
+    },
+    {
+      "mode": "aes",
+      "layout": "numeric",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\aes-numeric\\大文件分卷.zip.001",
+      "files": [
+        {
+          "name": "01-实际写入4GiB.bin",
+          "bytes": 4295098367,
+          "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+        },
+        {
+          "name": "99-末尾说明.txt",
+          "bytes": 88,
+          "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+        },
+        {
+          "name": "中间空文件.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "independentlyDecoded": true
+    },
+    {
+      "mode": "aes",
+      "layout": "standard",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\aes-standard\\大文件分卷.zip",
+      "files": [
+        {
+          "name": "01-实际写入4GiB.bin",
+          "bytes": 4295098367,
+          "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+        },
+        {
+          "name": "99-末尾说明.txt",
+          "bytes": 88,
+          "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+        },
+        {
+          "name": "中间空文件.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "independentlyDecoded": true
+    },
+    {
+      "mode": "zipcrypto",
+      "layout": "single",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\product-zipcrypto.zip",
+      "files": [
+        {
+          "name": "01-实际写入4GiB.bin",
+          "bytes": 4295098367,
+          "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+        },
+        {
+          "name": "99-末尾说明.txt",
+          "bytes": 88,
+          "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+        },
+        {
+          "name": "中间空文件.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "independentlyDecoded": true
+    },
+    {
+      "mode": "zipcrypto",
+      "layout": "numeric",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\zipcrypto-numeric\\大文件分卷.zip.001",
+      "files": [
+        {
+          "name": "01-实际写入4GiB.bin",
+          "bytes": 4295098367,
+          "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+        },
+        {
+          "name": "99-末尾说明.txt",
+          "bytes": 88,
+          "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+        },
+        {
+          "name": "中间空文件.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "independentlyDecoded": true
+    },
+    {
+      "mode": "zipcrypto",
+      "layout": "standard",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\zipcrypto-standard\\大文件分卷.zip",
+      "files": [
+        {
+          "name": "01-实际写入4GiB.bin",
+          "bytes": 4295098367,
+          "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+        },
+        {
+          "name": "99-末尾说明.txt",
+          "bytes": 88,
+          "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+        },
+        {
+          "name": "中间空文件.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "independentlyDecoded": true
+    },
+    {
+      "mode": "plain-stream",
+      "layout": "standard-descriptor",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\streamed-descriptor-standard\\流式ZIP64跨卷.zip",
+      "files": [
+        {
+          "name": "01-实际写入4GiB.bin",
+          "bytes": 4295098367,
+          "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+        },
+        {
+          "name": "99-末尾说明.txt",
+          "bytes": 88,
+          "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+        },
+        {
+          "name": "中间空文件.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "independentlyDecoded": true
+    }
+  ]
+}

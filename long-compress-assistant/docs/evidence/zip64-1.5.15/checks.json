@@ -1,0 +1,59 @@
+{
+  "version": "1.5.15",
+  "capturedUtc": "2026-10-19T03:05:20.476856+00:00",
+  "runtimeCommit": "e861e32",
+  "baseCommit": "05506ff0800c9ccc02c3554524cd80366b9723a5",
+  "distinctRustTests": 12,
+  "newRustTests": 5,
+  "existingRustTests": 7,
+  "nativeFullContentGroups": 10,
+  "independentFullContentGroups": 10,
+  "applicationRecords": 15,
+  "screenshotsViewed": [
+    "zip641515-diagnosis-1100x700.png",
+    "zip641515-diagnosis-760x520.png",
+    "zip641515-browser-1100x700.png",
+    "zip641515-browser-760x520.png",
+    "zip641515-tail-preview-1100x700.png",
+    "zip641515-tail-preview-760x520.png",
+    "zip641515-conversion-config-1100x700.png",
+    "zip641515-conversion-config-760x520.png",
+    "zip641515-conversion-completed-1100x700.png",
+    "zip641515-conversion-completed-760x520.png"
+  ],
+  "allDocumentHorizontalOverflow": 0,
+  "sourceBytes": 4295098367,
+  "sourceSha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6",
+  "desktopFinal": {
+    "version": "1.5.15",
+    "sha256": "48449ae74c1d92382436355c263d011882f487ef746b97c4c122e79fe8540c38",
+    "features": [
+      "custom-protocol",
+      "desktop-e2e"
+    ],
+    "source": "e861e32",
+    "scope": "new damaged IPC/diagnostic UI, actual browser/preview, actual password-changing standard-volume conversion and independent full readback"
+  },
+  "reusedApplicationRecords": 11,
+  "provenance": "The 11 healthy application records ran on the earlier optimized v1.5.15 desktop build with the same collector/standard-reader fixes (6a869c6), before the diagnosis-only change. Earlier executable hashes were not saved before rebuilding the same paths. Do not attribute the final desktop SHA to those earlier stages or native test executables.",
+  "frontend": "Type check and E2E frontend build passed once; no frontend runtime changes in this release. Ordinary production bundle is supplied by the required Windows package/Release workflows.",
+  "identity": "All eight package/Cargo/Tauri/Shell identities and the v1.5.15 DLL passed the existing identity command.",
+  "scope": "Targeted tests only; not the entire project suite, installed upgrade lifecycle, exhaustive ZIP64 interoperability or a performance benchmark.",
+  "logs": [
+    "native-fixed.txt",
+    "native-matrix-final.txt",
+    "descriptor-final.txt",
+    "related-tests.txt",
+    "diagnosis-fixed.txt",
+    "legacy-recovery.txt",
+    "independent-first.txt",
+    "independent-final.txt",
+    "desktop-final.txt",
+    "desktop-resume.txt",
+    "frontend-e2e-build.txt",
+    "desktop-build.txt",
+    "desktop-build-diagnosis.txt",
+    "version-identity.txt",
+    "shell-build.txt"
+  ]
+}
