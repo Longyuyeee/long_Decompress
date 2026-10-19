@@ -1,0 +1,29 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[zip64-1515] application original plain
+[zip64-1515] application original aes
+[zip64-1515] application original zipcrypto
+[zip64-1515] application original plain-stream
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
++ actual - expected
+
++ 'wrong_password'
+- 'damaged'
+
+    at runZip641515Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/zip64-1515-gate.mjs:97:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:4928:5 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: 'wrong_password',
+  expected: 'damaged',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

@@ -1,0 +1,282 @@
+[
+  {
+    "mode": "plain",
+    "layout": "single",
+    "baseReused": false,
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\product-plain.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\product-plain.zip"
+    ],
+    "tailVirtualOffset": 4295098440,
+    "files": [
+      {
+        "name": "01-实际写入4GiB.bin",
+        "bytes": 4295098367,
+        "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+      },
+      {
+        "name": "99-末尾说明.txt",
+        "bytes": 88,
+        "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+      },
+      {
+        "name": "中间空文件.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  {
+    "mode": "plain",
+    "layout": "numeric",
+    "baseReused": false,
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\plain-numeric\\大文件分卷.zip.001",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\plain-numeric\\大文件分卷.zip.001",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\plain-numeric\\大文件分卷.zip.002",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\plain-numeric\\大文件分卷.zip.003"
+    ],
+    "tailVirtualOffset": 4295098440,
+    "files": [
+      {
+        "name": "01-实际写入4GiB.bin",
+        "bytes": 4295098367,
+        "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+      },
+      {
+        "name": "99-末尾说明.txt",
+        "bytes": 88,
+        "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+      },
+      {
+        "name": "中间空文件.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  {
+    "mode": "plain",
+    "layout": "standard",
+    "baseReused": false,
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\plain-standard\\大文件分卷.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\plain-standard\\大文件分卷.z01",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\plain-standard\\大文件分卷.zip"
+    ],
+    "tailVirtualOffset": 4295098444,
+    "files": [
+      {
+        "name": "01-实际写入4GiB.bin",
+        "bytes": 4295098367,
+        "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+      },
+      {
+        "name": "99-末尾说明.txt",
+        "bytes": 88,
+        "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+      },
+      {
+        "name": "中间空文件.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  {
+    "mode": "aes",
+    "layout": "single",
+    "baseReused": true,
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\product-aes.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\product-aes.zip"
+    ],
+    "tailVirtualOffset": 1203250111,
+    "files": [
+      {
+        "name": "01-实际写入4GiB.bin",
+        "bytes": 4295098367,
+        "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+      },
+      {
+        "name": "99-末尾说明.txt",
+        "bytes": 88,
+        "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+      },
+      {
+        "name": "中间空文件.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  {
+    "mode": "aes",
+    "layout": "numeric",
+    "baseReused": true,
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\aes-numeric\\大文件分卷.zip.001",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\aes-numeric\\大文件分卷.zip.001",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\aes-numeric\\大文件分卷.zip.002"
+    ],
+    "tailVirtualOffset": 1203250111,
+    "files": [
+      {
+        "name": "01-实际写入4GiB.bin",
+        "bytes": 4295098367,
+        "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+      },
+      {
+        "name": "99-末尾说明.txt",
+        "bytes": 88,
+        "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+      },
+      {
+        "name": "中间空文件.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  {
+    "mode": "aes",
+    "layout": "standard",
+    "baseReused": true,
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\aes-standard\\大文件分卷.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\aes-standard\\大文件分卷.z01",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\aes-standard\\大文件分卷.z02",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\aes-standard\\大文件分卷.zip"
+    ],
+    "tailVirtualOffset": 1203250115,
+    "files": [
+      {
+        "name": "01-实际写入4GiB.bin",
+        "bytes": 4295098367,
+        "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+      },
+      {
+        "name": "99-末尾说明.txt",
+        "bytes": 88,
+        "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+      },
+      {
+        "name": "中间空文件.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  {
+    "mode": "zipcrypto",
+    "layout": "single",
+    "baseReused": false,
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\product-zipcrypto.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\product-zipcrypto.zip"
+    ],
+    "tailVirtualOffset": 1203250108,
+    "files": [
+      {
+        "name": "01-实际写入4GiB.bin",
+        "bytes": 4295098367,
+        "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+      },
+      {
+        "name": "99-末尾说明.txt",
+        "bytes": 88,
+        "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+      },
+      {
+        "name": "中间空文件.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  {
+    "mode": "zipcrypto",
+    "layout": "numeric",
+    "baseReused": false,
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\zipcrypto-numeric\\大文件分卷.zip.001",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\zipcrypto-numeric\\大文件分卷.zip.001",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\zipcrypto-numeric\\大文件分卷.zip.002"
+    ],
+    "tailVirtualOffset": 1203250108,
+    "files": [
+      {
+        "name": "01-实际写入4GiB.bin",
+        "bytes": 4295098367,
+        "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+      },
+      {
+        "name": "99-末尾说明.txt",
+        "bytes": 88,
+        "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+      },
+      {
+        "name": "中间空文件.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  {
+    "mode": "zipcrypto",
+    "layout": "standard",
+    "baseReused": false,
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\zipcrypto-standard\\大文件分卷.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\zipcrypto-standard\\大文件分卷.z01",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\zipcrypto-standard\\大文件分卷.z02",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\zipcrypto-standard\\大文件分卷.zip"
+    ],
+    "tailVirtualOffset": 1203250112,
+    "files": [
+      {
+        "name": "01-实际写入4GiB.bin",
+        "bytes": 4295098367,
+        "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+      },
+      {
+        "name": "99-末尾说明.txt",
+        "bytes": 88,
+        "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+      },
+      {
+        "name": "中间空文件.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  {
+    "mode": "plain-stream",
+    "layout": "standard-descriptor",
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\streamed-descriptor-standard\\流式ZIP64跨卷.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\streamed-descriptor-standard\\流式ZIP64跨卷.z01",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip64-1515\\streamed-descriptor-standard\\流式ZIP64跨卷.zip"
+    ],
+    "files": [
+      {
+        "name": "01-实际写入4GiB.bin",
+        "bytes": 4295098367,
+        "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+      },
+      {
+        "name": "99-末尾说明.txt",
+        "bytes": 88,
+        "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+      },
+      {
+        "name": "中间空文件.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "descriptorCrossesDisk": true,
+    "descriptorVirtualOffset": 30098274
+  }
+]

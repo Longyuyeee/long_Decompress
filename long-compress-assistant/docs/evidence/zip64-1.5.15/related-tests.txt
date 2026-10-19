@@ -1,0 +1,32 @@
+
+running 2 tests
+test services::compression_entries::tests::flattened_duplicate_names_remain_unique ... ok
+test services::compression_entries::tests::explicitly_selected_empty_roots_survive_mixed_inputs_without_renaming_children ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 736 filtered out; finished in 0.02s
+
+
+running 1 test
+test services::standard_zip_writer::tests::plain_aes_zipcrypto_zip64_and_cross_disk_directory_roundtrip has been running for over 60 seconds
+test services::standard_zip_writer::tests::plain_aes_zipcrypto_zip64_and_cross_disk_directory_roundtrip ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 737 filtered out; finished in 172.41s
+
+
+running 1 test
+test services::archive_diagnostics::tests::structural_and_capability_failures_do_not_turn_into_password_requests ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 737 filtered out; finished in 0.00s
+
+
+running 1 test
+test services::native_compression::seven_zip::tests::encrypted_header_preserves_empty_and_unicode_archives ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 737 filtered out; finished in 0.21s
+
+
+running 1 test
+test services::native_compression::tar::tests::tar_preserves_long_paths_and_real_payload_size ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 737 filtered out; finished in 0.04s
+

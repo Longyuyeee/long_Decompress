@@ -221,6 +221,85 @@ mod tests {
     use super::*;
 
     #[test]
+    #[ignore = "writes and hashes genuine >4 GiB content; run explicitly for v1.5.15"]
+    fn zip64_1515_real_written_password_volume_matrix() {
+        use sha2::{Digest, Sha256};
+        use crate::services::{standard_zip_writer::ZipSplitMode, zip_password::ZipEncryption};
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../test-results/zip64-1515");
+        let source = root.join("source");
+        let manifest: serde_json::Value = serde_json::from_slice(&std::fs::read(root.join("source.json")).unwrap()).unwrap();
+        assert_eq!(manifest["physicalWrite"], true);
+        assert!(manifest["bytesActuallyWritten"].as_u64().unwrap() > u32::MAX as u64);
+        let files = manifest["files"].as_array().unwrap();
+        let mut sources = files.iter().map(|f| source.join(f["name"].as_str().unwrap()).to_string_lossy().into_owned()).collect::<Vec<_>>();
+        sources.push(source.join("空目录").to_string_lossy().into_owned());
+        let checkpoint = root.join("native-progress.json");
+        let mut cases: Vec<serde_json::Value> = if checkpoint.exists() {
+            serde_json::from_slice(&std::fs::read(&checkpoint).unwrap()).unwrap()
+        } else { Vec::new() };
+        for (mode, encryption) in [("plain", None), ("aes", Some(ZipEncryption::Aes256)), ("zipcrypto", Some(ZipEncryption::Zipcrypto))] {
+            let password = encryption.map(|_| "ZIP64-test-password + !");
+            let output = root.join(format!("product-{mode}.zip"));
+            let reused = output.exists();
+            if !reused {
+                eprintln!("[zip64-1515] create {mode}, genuinely written {} bytes", manifest["bytesActuallyWritten"]);
+                compress(&TestRuntime::default(), None, "zip64-1515", &sources, &output.to_string_lossy(),
+                    CompressionOptions { format: Some("zip".into()), level: if encryption.is_none() { 0 } else { 1 },
+                        password: password.map(str::to_owned), zip_encryption: encryption.unwrap_or_default(),
+                        preserve_paths: Some(true), ..Default::default() }).unwrap();
+            }
+            for layout in [None, Some(ZipSplitMode::Numeric), Some(ZipSplitMode::Standard)] {
+                let length = output.metadata().unwrap().len();
+                let layout_name = match layout { None => "single", Some(ZipSplitMode::Numeric) => "numeric", _ => "standard" };
+                if cases.iter().any(|case| case["mode"] == mode && case["layout"] == layout_name) {
+                    eprintln!("[zip64-1515] reuse completed {mode}/{layout_name} with unchanged runtime source");
+                    continue;
+                }
+                let destination = root.join(format!("{mode}-{layout_name}"));
+                std::fs::create_dir_all(&destination).unwrap();
+                let split_output = destination.join("大文件分卷.zip");
+                let parts = match layout {
+                    None => vec![output.clone()],
+                    Some(ZipSplitMode::Numeric) => crate::services::split_compression::SplitCompressionService::split_archive_file_with_progress(
+                        &output, &split_output, (length / 2).max(65536), || Ok(()), |_, _| {}).unwrap().part_files,
+                    Some(ZipSplitMode::Standard) => crate::services::standard_zip_writer::split(&output, &split_output,
+                        (length / 2).clamp(65536, u32::MAX as u64 - 65536), || Ok(()), |_, _| {}).unwrap().part_files,
+                };
+                let input = if layout == Some(ZipSplitMode::Standard) { parts.last().unwrap() } else { &parts[0] };
+                eprintln!("[zip64-1515] read all content {mode}/{layout_name}, {} parts", parts.len());
+                let reader = crate::services::numeric_volume_reader::ZipInputReader::open(input).unwrap();
+                let mut archive = zip_aes::ZipArchive::new(reader).unwrap();
+                let mut checked = Vec::new();
+                let mut tail_offset = None;
+                for file in files {
+                    let name = file["name"].as_str().unwrap();
+                    let mut entry = if let Some(password) = password {
+                        crate::services::zip_password::open_named_entry(&mut archive, name, password).unwrap()
+                    } else { archive.by_name(name).unwrap() };
+                    assert_eq!(entry.size(), file["bytes"].as_u64().unwrap());
+                    if name == "99-末尾说明.txt" { tail_offset = Some(entry.header_start()); }
+                    let mut hash = Sha256::new();
+                    let mut buffer = vec![0; 1024 * 1024];
+                    let mut bytes = 0u64;
+                    loop { let n = entry.read(&mut buffer).unwrap(); if n == 0 { break; } hash.update(&buffer[..n]); bytes += n as u64; }
+                    let digest = format!("{:x}", hash.finalize());
+                    assert_eq!(digest, file["sha256"].as_str().unwrap(), "{mode}/{layout_name}/{name}");
+                    assert_eq!(bytes, entry.size());
+                    checked.push(serde_json::json!({"name":name,"bytes":bytes,"sha256":digest}));
+                }
+                assert!(archive.by_name("空目录/").unwrap().is_dir());
+                let tail_offset = tail_offset.expect("Following entry was fully checked above, including its password");
+                if mode == "plain" { assert!(tail_offset > u32::MAX as u64); }
+                cases.push(serde_json::json!({"mode":mode,"layout":layout_name,"baseReused":reused,
+                    "source":input,"parts":parts,"tailVirtualOffset":tail_offset,"files":checked}));
+                std::fs::write(root.join("native-progress.json"), serde_json::to_vec_pretty(&cases).unwrap()).unwrap();
+            }
+        }
+        assert_eq!(cases.len(), 9);
+        std::fs::write(root.join("native-results.json"), serde_json::to_vec_pretty(&cases).unwrap()).unwrap();
+    }
+
+    #[test]
     fn zip_output_1414_methods_passwords_and_both_volume_types_round_trip() {
         use crate::services::{zip_method::ZipMethod, zip_password::ZipEncryption, standard_zip_writer::ZipSplitMode};
         let mut seed = 1414u32;

@@ -1,0 +1,66 @@
+{
+  "tool": {
+    "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\resources\\archive-engine\\7z.exe",
+    "sha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53",
+    "banner": [
+      "7-Zip 26.04 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-10-05",
+      "Libs:",
+      " 0 : 26.04 : E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\resources\\archive-engine\\7z.dll"
+    ]
+  },
+  "source": {
+    "generator": "prepare-zip64-1515.mjs",
+    "seed": 1515,
+    "physicalWrite": true,
+    "sparseOrPreallocationUsed": false,
+    "bytesActuallyWritten": 4295098367,
+    "files": [
+      {
+        "name": "01-实际写入4GiB.bin",
+        "bytes": 4295098367,
+        "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+      },
+      {
+        "name": "99-末尾说明.txt",
+        "bytes": 88,
+        "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+      },
+      {
+        "name": "中间空文件.txt",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "emptyDirectory": "空目录"
+  },
+  "cases": [
+    {
+      "mode": "plain",
+      "file": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip64-1515\\external-plain.zip",
+      "bytes": 30099083,
+      "sha256": "b17e236096e742dc44245db2af7cdf4ccda9243ca4860f5ba6139797ecf7080c",
+      "reused": true
+    },
+    {
+      "mode": "aes",
+      "file": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip64-1515\\external-aes.zip",
+      "bytes": 30099233,
+      "sha256": "049adc186c9b3cecf756700fbe06af08132a67f23d380a16760e1789c39ec45f",
+      "reused": true
+    },
+    {
+      "mode": "zipcrypto",
+      "file": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip64-1515\\external-zipcrypto.zip",
+      "bytes": 30099119,
+      "sha256": "715c0c0f755e55279ff08f6e4c8dec3b65d193248cc08b366f3306868ca9a7d3",
+      "reused": true
+    },
+    {
+      "mode": "plain-stream",
+      "file": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip64-1515\\external-plain-stream.zip",
+      "bytes": 30099149,
+      "sha256": "6cfd341486983b9091fc769e8929f40d20bc993ea9450ec5ca73666649181701",
+      "producerMode": "actual stdout, no seek"
+    }
+  ]
+}

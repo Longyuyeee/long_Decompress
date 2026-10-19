@@ -59,7 +59,11 @@ fn u64_at(bytes: &[u8], index: usize) -> u64 {
 fn read_at(reader: &mut NumericVolumeReader, offset: u64, size: usize) -> Result<Vec<u8>> {
     reader.seek(SeekFrom::Start(offset))?;
     let mut bytes = vec![0; size];
-    reader.read_exact(&mut bytes)?;
+    reader.read_exact(&mut bytes).map_err(|error| {
+        if error.kind() == io::ErrorKind::UnexpectedEof {
+            anyhow::Error::new(error).context("[archive-inspection:damaged] ZIP 分卷目录或文件头被截断，请重新获取完整原卷")
+        } else { error.into() }
+    })?;
     Ok(bytes)
 }
 fn absolute(starts: &[u64], disk: u32, relative: u64) -> Result<u64> {
@@ -69,7 +73,7 @@ fn absolute(starts: &[u64], disk: u32, relative: u64) -> Result<u64> {
     let end = *starts
         .get(disk as usize + 1)
         .context("ZIP disk boundary missing")?;
-    ensure!(relative <= end - start, "ZIP offset is outside its disk");
+    ensure!(relative <= end - start, "[archive-inspection:damaged] ZIP 目录记录的偏移超出所在分卷，请重新获取完整原卷");
     start.checked_add(relative).context("ZIP offset overflow")
 }
 
@@ -169,7 +173,7 @@ impl StandardZipReader {
                 )?;
                 ensure!(
                     &record[..4] == b"PK\x06\x06" && u64_at(&record, 4) >= 44,
-                    "Invalid ZIP64 end record"
+                    "[archive-inspection:damaged] ZIP64 终目录记录损坏或不完整，请重新获取完整原卷，不必反复尝试密码"
                 );
                 last_disk = u32_at(&record, 16);
                 cd_disk = u32_at(&record, 20);
@@ -187,13 +191,13 @@ impl StandardZipReader {
             directory_start
                 .checked_add(cd_size)
                 .is_some_and(|end| end <= eocd_position),
-            "Invalid ZIP directory range"
+            "[archive-inspection:damaged] ZIP 中央目录范围无效，请重新获取完整原卷"
         );
         ensure!(directory_start.checked_add(cd_size).is_some_and(|end| end <= layout.contiguous_end(cd_disk).unwrap_or(0)),
             "ZIP 目录涉及缺失分卷，无法确定完整文件清单；请补齐分卷后重试");
         ensure!(
             cd_size <= 256 * 1024 * 1024,
-            "ZIP directory exceeds the metadata reading limit"
+            "[archive-inspection:unsupported] ZIP 中央目录超出当前元数据读取范围"
         );
         let original = read_at(&mut source, directory_start, cd_size as usize)?;
         let mut directory = Vec::with_capacity(original.len());
@@ -209,14 +213,14 @@ impl StandardZipReader {
             ensure!(!cancelled.is_some_and(|flag| flag.load(Ordering::SeqCst)), "ZIP recovery cancelled");
             ensure!(
                 cursor + 46 <= original.len() && &original[cursor..cursor + 4] == b"PK\x01\x02",
-                "Invalid ZIP central entry"
+                "[archive-inspection:damaged] ZIP 中央目录条目损坏或被截断"
             );
             let mut header = original[cursor..cursor + 46].to_vec();
             let name_len = u16_at(&header, 28) as usize;
             let extra_len = u16_at(&header, 30) as usize;
             let comment_len = u16_at(&header, 32) as usize;
             let entry_end = cursor + 46 + name_len + extra_len + comment_len;
-            ensure!(entry_end <= original.len(), "Truncated ZIP central entry");
+            ensure!(entry_end <= original.len(), "[archive-inspection:damaged] ZIP 中央目录条目被截断");
             let original_extra =
                 &original[cursor + 46 + name_len..cursor + 46 + name_len + extra_len];
             let mut offset = u32_at(&header, 42) as u64;
@@ -234,20 +238,20 @@ impl StandardZipReader {
             while extra_cursor < original_extra.len() {
                 ensure!(
                     extra_cursor + 4 <= original_extra.len(),
-                    "Truncated ZIP extra field"
+                    "[archive-inspection:damaged] ZIP 扩展字段被截断"
                 );
                 let tag = u16_at(original_extra, extra_cursor);
                 let end = extra_cursor + 4 + u16_at(original_extra, extra_cursor + 2) as usize;
-                ensure!(end <= original_extra.len(), "Truncated ZIP extra payload");
+                ensure!(end <= original_extra.len(), "[archive-inspection:damaged] ZIP 扩展字段长度无效");
                 if tag == 1 {
-                    ensure!(!found_zip64, "Duplicate ZIP64 extra field");
+                    ensure!(!found_zip64, "[archive-inspection:damaged] ZIP64 扩展字段重复");
                     found_zip64 = true;
                     let data = &original_extra[extra_cursor + 4..end];
                     let size_bytes = (large_size as usize + large_compressed as usize) * 8;
                     ensure!(
                         data.len()
                             >= size_bytes + large_offset as usize * 8 + large_disk as usize * 4,
-                        "Missing ZIP64 values"
+                        "[archive-inspection:damaged] ZIP64 扩展字段缺少所需的大小、偏移或卷号"
                     );
                     sizes.extend_from_slice(&data[..size_bytes]);
                     if large_compressed { compressed = u64_at(data, large_size as usize * 8); }
@@ -264,7 +268,7 @@ impl StandardZipReader {
             }
             ensure!(
                 !(large_size || large_compressed || large_offset || large_disk) || found_zip64,
-                "Missing ZIP64 extra field"
+                "[archive-inspection:damaged] ZIP64 大小或偏移缺少对应的扩展字段"
             );
             let entry_offset = (|| -> Result<u64> {
                 let offset = layout.absolute(disk, offset)?;
@@ -404,6 +408,29 @@ impl Seek for StandardZipReader {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn zip64_1515_corrupt_end_record_is_a_final_structural_cause() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("source.zip");
+        let output = temp.path().join("用户收到的大包.zip");
+        let mut writer = zip_aes::ZipWriter::new(std::fs::File::create(&source).unwrap());
+        writer.start_file("内容.bin", zip_aes::write::SimpleFileOptions::default()
+            .compression_method(zip_aes::CompressionMethod::Stored)).unwrap();
+        writer.write_all(&vec![73; 170_003]).unwrap();
+        writer.finish().unwrap();
+        super::super::standard_zip_writer::split(&source, &output, 65536, || Ok(()), |_, _| {}).unwrap();
+        let mut bytes = std::fs::read(&output).unwrap();
+        let at = bytes.windows(4).position(|b| b == b"PK\x06\x06").unwrap();
+        bytes[at] ^= 1;
+        std::fs::write(&output, bytes).unwrap();
+        let error = match super::StandardZipReader::try_open(&output) {
+            Err(error) => error,
+            Ok(_) => panic!("A changed ZIP64 end signature must not be accepted"),
+        };
+        assert!(error.to_string().contains("[archive-inspection:damaged]"), "{error:#}");
+        assert!(error.to_string().contains("ZIP64"), "{error:#}");
+    }
+
     use super::*;
     use crate::services::{
         archive_browser::browse_archive, archive_engine::ArchiveEngine,

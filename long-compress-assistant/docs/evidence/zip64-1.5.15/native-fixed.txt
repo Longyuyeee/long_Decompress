@@ -1,0 +1,36 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling long-compress-assistant v1.5.14 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 47.80s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-f5d366dee6c0365f.exe)
+
+running 2 tests
+[zip64-1515] create plain, genuinely written 4295098367 bytes
+test services::standard_zip_reader::tests::zip64_1515_corrupt_end_record_is_a_final_structural_cause ... ok
+[zip64-1515] read all content plain/single, 1 parts
+[zip64-1515] read all content plain/numeric, 3 parts
+[zip64-1515] read all content plain/standard, 2 parts
+test services::native_compression::zip::tests::zip64_1515_real_written_password_volume_matrix has been running for over 60 seconds
+[zip64-1515] create aes, genuinely written 4295098367 bytes

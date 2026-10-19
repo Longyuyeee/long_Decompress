@@ -69,6 +69,7 @@ pub(crate) fn collect(
                 .and_then(|name| name.to_str())
                 .unwrap_or("folder")
                 .to_string();
+            let mut has_descendants = false;
 
             for entry in walkdir::WalkDir::new(path) {
                 let entry = entry.map_err(|error| {
@@ -77,6 +78,7 @@ pub(crate) fn collect(
                         path.display()
                     ))
                 })?;
+                has_descendants |= entry.depth() > 0;
                 let entry_path = entry.path();
                 let is_dir = entry.file_type().is_dir();
                 if is_dir && !include_dirs {
@@ -111,6 +113,16 @@ pub(crate) fn collect(
                     is_dir,
                 });
             }
+            // A conversion passes top-level directories as separate sources.
+            // An empty source still represents a directory the user selected.
+            // Nonempty roots retain the existing relative-path layout.
+            if include_dirs && !has_descendants {
+                entries.push(CompressionEntry {
+                    path: path.to_path_buf(),
+                    archive_name: unique_archive_name(&mut used_archive_names, root_name),
+                    is_dir: true,
+                });
+            }
         }
     }
 
@@ -120,6 +132,24 @@ pub(crate) fn collect(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn explicitly_selected_empty_roots_survive_mixed_inputs_without_renaming_children() {
+        let temp = tempfile::tempdir().unwrap();
+        let first = temp.path().join("one/空目录");
+        let second = temp.path().join("two/空目录");
+        std::fs::create_dir_all(&first).unwrap();
+        std::fs::create_dir_all(&second).unwrap();
+        let file = temp.path().join("说明.txt");
+        std::fs::write(&file, b"keep every selected input").unwrap();
+        let sources = [first.to_string_lossy().into_owned(), file.to_string_lossy().into_owned(), second.to_string_lossy().into_owned()];
+        for preserve in [true, false] {
+            let entries = collect(&sources, preserve, true).unwrap();
+            assert_eq!(entries.iter().map(|e| e.archive_name.as_str()).collect::<Vec<_>>(), ["空目录", "说明.txt", "空目录 (1)"]);
+            assert_eq!(entries.iter().map(|e| e.is_dir).collect::<Vec<_>>(), [true, false, true]);
+        }
+        assert_eq!(collect(&sources, true, false).unwrap().len(), 1);
+    }
 
     #[test]
     fn flattened_duplicate_names_remain_unique() {
