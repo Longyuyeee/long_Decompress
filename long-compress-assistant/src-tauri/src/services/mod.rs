@@ -95,3 +95,5 @@ mod multistream_tests;
 #[cfg(test)]
 mod aes_volume_tests;
 pub(crate) mod aes_container;
+#[cfg(test)]
+mod checksum_details_tests;
