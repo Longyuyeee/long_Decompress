@@ -92,12 +92,13 @@ async function locate(path: string) {
         <div class="checksum-entry-heading">
           <input type="checkbox" :checked="selected.includes(row.line)" :disabled="busy" :aria-label="`选择 ${row.fileName || `第 ${row.line} 行`}`" @change="selected = toggle(selected, row.line)" />
           <button class="checksum-row" data-testid="checksum-row" :aria-expanded="expanded.includes(row.line)" @click="expanded = toggle(expanded, row.line)">
-            <span class="checksum-file"><strong>{{ row.fileName || `清单第 ${row.line} 行` }}</strong><small>{{ row.reason }}</small></span>
+            <span class="checksum-file"><strong>{{ row.fileName || `清单第 ${row.line} 行` }}</strong><small :title="row.reason">{{ row.reason }}</small></span>
             <span class="checksum-badge">{{ checksumStatusLabels[row.status] }}</span><i :class="expanded.includes(row.line) ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i>
           </button>
         </div>
         <div v-if="expanded.includes(row.line)" class="checksum-details" data-testid="checksum-details">
           <p class="checksum-full-path">{{ row.path || '此清单行无法确定文件路径' }}</p>
+          <p class="checksum-note checksum-reason">{{ row.reason }}</p>
           <p class="checksum-note">清单第 {{ row.line }} 行 · {{ row.algorithm?.toUpperCase() || '未知算法' }} · {{ row.checkedAt ? `检查于 ${new Date(row.checkedAt).toLocaleTimeString()}` : '尚未读取文件' }}</p>
           <div class="checksum-digests"><div><span>清单预期</span><code>{{ row.expectedChecksum || '无法识别' }}</code></div><div><span>实际摘要</span><code>{{ row.actualChecksum || '尚无可用摘要' }}</code></div></div>
           <div class="checksum-actions">
