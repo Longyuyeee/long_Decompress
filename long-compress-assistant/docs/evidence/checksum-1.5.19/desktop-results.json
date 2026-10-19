@@ -1,0 +1,317 @@
+{
+  "version": "1.5.19",
+  "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da",
+  "original": {
+    "tool": "CPython 3.12.10 zipfile/hashlib/zlib",
+    "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319",
+    "manifest": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\校验清单.sha256",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\论坛资料.zip.001",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\论坛资料.zip.002",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\论坛资料.zip.003"
+    ],
+    "blocked": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\待解除占用的说明.txt",
+    "expectedFiles": {
+      "开头.txt": "70e1f054338b331e57f15181a457fab10cedc7e37d417b2f5c3b56b4e0aa2d24",
+      "数据.bin": "83c0823c3dea443684f7cfe2ec53d5be1badebfdb32826e64b2025fbe50d6165",
+      "末尾.txt": "cadfd0a243eed74d78b9dbe2ac1b69570a007724d2efb332eab0c6bac6a690f7"
+    },
+    "archiveSha256": "6e0173de6a7405ef9befcf70a72cb0a2665f894153fae3a6c325742314555122",
+    "partSha256": {
+      "论坛资料.zip.001": "565a46ecbd4d9b5a111472d67872eea9d6919925bdda2063c78f7235dbc30b2e",
+      "论坛资料.zip.002": "2e940236568f56faa245942106fb5c953902bb80022d0f08684661eaf2ef23f1",
+      "论坛资料.zip.003": "7048730460a5eb369daa25627e5594a8fb5a39459af869e910b1bea0078f954b"
+    },
+    "emptyDirectory": "空目录"
+  },
+  "native": [
+    {
+      "algorithm": "sfv",
+      "fullContentMatches": true,
+      "manifestId": "d57c1b926b0bda49711f30f40fc72cf6d10a754e687925c140279d9c5cf69b0a",
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "algorithm": "md5",
+      "fullContentMatches": true,
+      "manifestId": "031b5fec6fcb2982f378d57b6c314982500509f9f02b968e2340a3b2a9207c62",
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "algorithm": "sha256",
+      "fullContentMatches": true,
+      "manifestId": "95f02ea1a14e4bdffaf073e4a8b058362573a42b9bb01a16da6594b8a258e7ef",
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "kind": "selective-only",
+      "report": {
+        "checksumPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\校验清单.sha256",
+        "entries": [
+          {
+            "actualChecksum": null,
+            "algorithm": "sha256",
+            "checkedAt": null,
+            "expectedChecksum": "565a46ecbd4d9b5a111472d67872eea9d6919925bdda2063c78f7235dbc30b2e",
+            "fileName": "论坛资料.zip.001",
+            "line": 1,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\论坛资料.zip.001",
+            "reason": "本次未选择此项，尚未读取文件",
+            "status": "not_checked"
+          },
+          {
+            "actualChecksum": null,
+            "algorithm": "sha256",
+            "checkedAt": null,
+            "expectedChecksum": "2e940236568f56faa245942106fb5c953902bb80022d0f08684661eaf2ef23f1",
+            "fileName": "论坛资料.zip.002",
+            "line": 2,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\论坛资料.zip.002",
+            "reason": "本次未选择此项，尚未读取文件",
+            "status": "not_checked"
+          },
+          {
+            "actualChecksum": null,
+            "algorithm": "sha256",
+            "checkedAt": null,
+            "expectedChecksum": "7048730460a5eb369daa25627e5594a8fb5a39459af869e910b1bea0078f954b",
+            "fileName": "论坛资料.zip.003",
+            "line": 3,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\论坛资料.zip.003",
+            "reason": "本次未选择此项，尚未读取文件",
+            "status": "not_checked"
+          },
+          {
+            "actualChecksum": null,
+            "algorithm": "sha256",
+            "checkedAt": 1792395686955,
+            "expectedChecksum": "dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f",
+            "fileName": "待解除占用的说明.txt",
+            "line": 4,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\待解除占用的说明.txt",
+            "reason": "文件无法读取，请检查占用、权限或路径后复查。原始原因：拒绝访问。 (os error 5)",
+            "status": "unreadable"
+          }
+        ],
+        "manifestId": "fe1e18d3da3ac1a49c8e7f7152e6fcbebe54a0629d103c8359fe62c5859c0096",
+        "message": "共 4 项，本次检查 1 项，匹配 0 项，未检查 3 项",
+        "valid": false
+      },
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    }
+  ],
+  "ui": [
+    {
+      "kind": "import-and-pending",
+      "fourDistinctStatuses": true,
+      "realClipboardWriteSucceeded": true,
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "kind": "selective-restoration",
+      "unselectedMatchedVolumeNotRehashed": true,
+      "unreadableFixedSeparately": true,
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "kind": "manifest-change",
+      "oldMatchesInvalidated": true,
+      "uncheckedNeverPassed": true,
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "kind": "diagnosis-return",
+      "actualArchiveIntegrityHealthy": true,
+      "observationsRetained": true,
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "kind": "failed-task-continuation",
+      "binarySha256": "e08be2d515c99e725e8df10016d4ae6416712e3f0b09cf68bc9352573716225f",
+      "pendingBeforeExplicitStart": true,
+      "fullContentHashes": true,
+      "emptyDirectory": true,
+      "oldFailureUnchanged": true,
+      "failedId": "th24c8rujmveydpk5",
+      "retryId": "4ygrz3dqgmveye38k",
+      "completed": {
+        "archiveOutput": null,
+        "completedAt": "2026-10-19T07:49:15.925Z",
+        "durationMs": 328,
+        "errorMessage": null,
+        "executionConfig": {
+          "extractToSubfolder": false,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\补齐后新任务输出-b694125e-1991-4b49-b22a-efd23e801151",
+          "schemaVersion": 1
+        },
+        "failure": null,
+        "format": "zip",
+        "id": "4ygrz3dqgmveye38k",
+        "logs": [
+          {
+            "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 21.5 GiB，预计输出 2.00 MiB）",
+            "severity": "info",
+            "timestamp": "2026-10-19T07:49:15.652Z"
+          },
+          {
+            "message": "确定解压格式: Zip (后缀: 001)",
+            "severity": "info",
+            "timestamp": "2026-10-19T07:49:15.716368700Z"
+          },
+          {
+            "message": "正在检测归档加密状态...",
+            "severity": "info",
+            "timestamp": "2026-10-19T07:49:15.720868Z"
+          },
+          {
+            "message": "加密状态检测完成：本次解压内容无需密码，正在准备解压...",
+            "severity": "success",
+            "timestamp": "2026-10-19T07:49:15.731534100Z"
+          },
+          {
+            "message": "开始解压：论坛资料.zip.001",
+            "severity": "info",
+            "timestamp": "2026-10-19T07:49:15.773586800Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 2097227 字节",
+            "severity": "success",
+            "timestamp": "2026-10-19T07:49:15.915464300Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-19T07:49:15.915507500Z"
+          }
+        ],
+        "metrics": null,
+        "name": "论坛资料.zip.001",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\补齐后新任务输出-b694125e-1991-4b49-b22a-efd23e801151",
+        "processedBytes": 2097227,
+        "retryOfTaskId": "th24c8rujmveydpk5",
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\checksum-1519\\ui-8c5c1fd5-cc1d-4fef-a4a9-140fc3e14319\\论坛资料.zip.001"
+        ],
+        "startedAt": "2026-10-19T07:49:15.597Z",
+        "status": "completed",
+        "taskType": "decompression",
+        "totalBytes": 2097227,
+        "workloadKind": "archive"
+      }
+    }
+  ],
+  "screenshots": [
+    "checksum1519-file-causes-1100x700.png",
+    "checksum1519-file-causes-760x520.png",
+    "checksum1519-selective-restored-1100x700.png",
+    "checksum1519-selective-restored-760x520.png",
+    "checksum1519-manifest-changed-1100x700.png",
+    "checksum1519-manifest-changed-760x520.png",
+    "checksum1519-retry-new-task-1100x700.png",
+    "checksum1519-retry-new-task-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "file-causes",
+      "digests": [
+        {
+          "left": 379.015625,
+          "overflow": 0,
+          "right": 379.015625
+        }
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "name": "file-causes",
+      "digests": [
+        {
+          "left": 279.015625,
+          "overflow": 0,
+          "right": 279.015625
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "name": "selective-restored",
+      "digests": [
+        {
+          "left": 379.015625,
+          "overflow": 0,
+          "right": 379.015625
+        },
+        {
+          "left": 379.015625,
+          "overflow": 0,
+          "right": 379.015625
+        }
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "name": "selective-restored",
+      "digests": [
+        {
+          "left": 279.015625,
+          "overflow": 0,
+          "right": 279.015625
+        },
+        {
+          "left": 279.015625,
+          "overflow": 0,
+          "right": 279.015625
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "name": "manifest-changed",
+      "digests": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "name": "manifest-changed",
+      "digests": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "6d9c064b9fce05da436f5bac49cdf652edaf2e96c760417af4ec74447125f6da"
+    },
+    {
+      "name": "retry-new-task",
+      "binarySha256": "e08be2d515c99e725e8df10016d4ae6416712e3f0b09cf68bc9352573716225f",
+      "digests": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "retry-new-task",
+      "binarySha256": "e08be2d515c99e725e8df10016d4ae6416712e3f0b09cf68bc9352573716225f",
+      "digests": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "currentBinarySha256": "e08be2d515c99e725e8df10016d4ae6416712e3f0b09cf68bc9352573716225f",
+  "resumedScope": "Only queue navigation and failed-task continuation; earlier four UI flows retained with original identity",
+  "completedAt": "2026-10-19T07:49:15.983Z"
+}

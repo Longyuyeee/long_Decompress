@@ -1,0 +1,151 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+stderr | src/components/integrity/__tests__/ChecksumVerificationPanel.test.ts > per-file checksum workspace > copies only downloadable problems and hands off diagnosis/queue without starting tasks
+Failed to update close-to-tray behavior: TypeError: window.__TAURI_IPC__ is not a function
+    at file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/node_modules/@tauri-apps/api/tauri.js:55:16
+    at new Promise (<anonymous>)
+    at invoke (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/node_modules/@tauri-apps/api/tauri.js:46:12)
+    at immediate (E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/src/stores/app.ts:144:13)
+    at callWithErrorHandling (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\@vue\runtime-core\dist\runtime-core.cjs.js:200:19)
+    at callWithAsyncErrorHandling (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\@vue\runtime-core\dist\runtime-core.cjs.js:207:17)
+    at baseWatchOptions.call (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\@vue\runtime-core\dist\runtime-core.cjs.js:886:47)
+    at job (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\@vue\reactivity\dist\reactivity.cjs.js:1928:18)
+    at Object.watch (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\@vue\reactivity\dist\reactivity.cjs.js:1963:7)
+    at doWatch (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\@vue\runtime-core\dist\runtime-core.cjs.js:914:34)
+
+stderr | src/components/integrity/__tests__/ChecksumVerificationPanel.test.ts > per-file checksum workspace > copies only downloadable problems and hands off diagnosis/queue without starting tasks
+Failed to synchronize Explorer context menu: TypeError: window.__TAURI_IPC__ is not a function
+    at file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/node_modules/@tauri-apps/api/tauri.js:55:16
+    at new Promise (<anonymous>)
+    at invoke (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/node_modules/@tauri-apps/api/tauri.js:46:12)
+    at E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/src/stores/app.ts:156:32
+
+ ❯ src/components/integrity/__tests__/ChecksumVerificationPanel.test.ts (6 tests | 1 failed) 219ms
+     × copies only downloadable problems and hands off diagnosis/queue without starting tasks 29ms
+ ❯ src/views/__tests__/FileIntegrityView.test.ts (16 tests | 1 failed) 578ms
+     × verifies a checksum file and surfaces an invalid result 18ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/views/__tests__/FileIntegrityView.test.ts > FileIntegrityView > verifies a checksum file and surfaces an invalid result
+AssertionError: expected "vi.fn()" to be called with arguments: [ 'verify_checksum_file', …(1) ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   "verify_checksum_file",
++   "set_close_to_tray",
+    {
+-     "checksumPath": "C:\\data\\checksums.md5",
++     "enabled": true,
+    },
+  ]
+
+  2nd vi.fn() call:
+
+  [
+-   "verify_checksum_file",
+-   {
+-     "checksumPath": "C:\\data\\checksums.md5",
+-   },
++   "load_app_settings",
+  ]
+
+  3rd vi.fn() call:
+
+  [
+-   "verify_checksum_file",
+-   {
+-     "checksumPath": "C:\\data\\checksums.md5",
+-   },
++   "is_context_menu_registered",
+  ]
+
+  4th vi.fn() call:
+
+  [
+-   "verify_checksum_file",
+-   {
+-     "checksumPath": "C:\\data\\checksums.md5",
+-   },
++   "register_context_menu",
+  ]
+
+
+Number of calls: 4
+
+ ❯ src/views/__tests__/FileIntegrityView.test.ts:299:26
+    297|     await flushPromises()
+    298|
+    299|     expect(mocks.invoke).toHaveBeenCalledWith('verify_checksum_file', {
+       |                          ^
+    300|       checksumPath: 'C:\\data\\checksums.md5',
+    301|     })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/components/integrity/__tests__/ChecksumVerificationPanel.test.ts > per-file checksum workspace > copies only downloadable problems and hands off diagnosis/queue without starting tasks
+Error: Unable to get [data-testid="checksum-diagnose"] within: <div data-v-9c9dcdf4="" class="checksum-verification" data-testid="checksum-verification" aria-busy="false">
+  <section data-v-9c9dcdf4="" class="checksum-panel"><button data-v-9c9dcdf4="" class="checksum-picker" data-testid="checksum-choose"><i data-v-9c9dcdf4="" class="pi pi-check-circle picker-icon"></i><span data-v-9c9dcdf4=""><strong data-v-9c9dcdf4="">选择其他校验清单</strong><small data-v-9c9dcdf4="">SFV · MD5 · SHA256　文件与清单放在同一目录</small></span><i data-v-9c9dcdf4="" class="pi pi-folder-open"></i></button>
+    <!--v-if-->
+    <!--v-if-->
+  </section>
+  <section data-v-9c9dcdf4="" class="checksum-panel" data-testid="checksum-report">
+    <header data-v-9c9dcdf4="" class="checksum-summary" data-valid="false"><i data-v-9c9dcdf4="" class="pi pi-info-circle"></i>
+      <div data-v-9c9dcdf4="">
+        <h2 data-v-9c9dcdf4="" data-testid="checksum-heading">还有文件需要处理</h2>
+        <p data-v-9c9dcdf4="" class="checksum-path" title="C:/校验.sha256">C:/校验.sha256</p>
+      </div>
+    </header>
+    <div data-v-9c9dcdf4="" class="checksum-counts" data-testid="checksum-counts"><span data-v-9c9dcdf4=""><strong data-v-9c9dcdf4="">0</strong> 已匹配</span><span data-v-9c9dcdf4=""><strong data-v-9c9dcdf4="">3</strong> 待处理</span><span data-v-9c9dcdf4=""><strong data-v-9c9dcdf4="">0</strong> 未检查</span></div>
+    <p data-v-9c9dcdf4="" class="checksum-note">摘要匹配仅表示与这份清单一致。复查所选时，其他项目显示上次结果；如有改动请主动复查。</p>
+    <!--v-if-->
+    <div data-v-9c9dcdf4="" class="checksum-actions"><button data-v-9c9dcdf4="" data-testid="checksum-recheck-problems"><i data-v-9c9dcdf4="" class="pi pi-refresh"></i>复查问题项</button><button data-v-9c9dcdf4="" disabled="" data-testid="checksum-recheck-selected">复查所选</button><button data-v-9c9dcdf4="" data-testid="checksum-copy-pending"><i data-v-9c9dcdf4="" class="pi pi-copy"></i>复制待补列表</button><button data-v-9c9dcdf4="" data-testid="checksum-recheck-all">全部重新检查</button></div>
+    <p data-v-9c9dcdf4="" class="checksum-note">待补列表包含缺失和内容不符的文件；无法读取的文件请先解除占用或恢复访问。</p>
+    <div data-v-9c9dcdf4="" class="checksum-filters" aria-label="筛选校验结果"><button data-v-9c9dcdf4="" aria-pressed="true">全部</button><button data-v-9c9dcdf4="" aria-pressed="false">待处理</button><button data-v-9c9dcdf4="" aria-pressed="false">未检查</button></div>
+    <!--v-if-->
+    <article data-v-9c9dcdf4="" class="checksum-entry" data-status="missing" data-line="1" data-testid="checksum-entry">
+      <div data-v-9c9dcdf4="" class="checksum-entry-heading"><input data-v-9c9dcdf4="" type="checkbox" aria-label="选择 资料.zip.001"><button data-v-9c9dcdf4="" class="checksum-row" data-testid="checksum-row" aria-expanded="false"><span data-v-9c9dcdf4="" class="checksum-file"><strong data-v-9c9dcdf4="">资料.zip.001</strong><small data-v-9c9dcdf4="">真实原因 missing</small></span><span data-v-9c9dcdf4="" class="checksum-badge">缺失</span><i data-v-9c9dcdf4="" class="pi pi-chevron-down"></i></button></div>
+      <!--v-if-->
+    </article>
+    <article data-v-9c9dcdf4="" class="checksum-entry" data-status="mismatch" data-line="2" data-testid="checksum-entry">
+      <div data-v-9c9dcdf4="" class="checksum-entry-heading"><input data-v-9c9dcdf4="" type="checkbox" aria-label="选择 资料.zip.002"><button data-v-9c9dcdf4="" class="checksum-row" data-testid="checksum-row" aria-expanded="true"><span data-v-9c9dcdf4="" class="checksum-file"><strong data-v-9c9dcdf4="">资料.zip.002</strong><small data-v-9c9dcdf4="">真实原因 mismatch</small></span><span data-v-9c9dcdf4="" class="checksum-badge">内容不符</span><i data-v-9c9dcdf4="" class="pi pi-chevron-up"></i></button></div>
+      <div data-v-9c9dcdf4="" class="checksum-details" data-testid="checksum-details">
+        <p data-v-9c9dcdf4="" class="checksum-full-path">C:/资料.zip.002</p>
+        <p data-v-9c9dcdf4="" class="checksum-note">清单第 2 行 · SHA256 · 检查于 08:00:01</p>
+        <div data-v-9c9dcdf4="" class="checksum-digests">
+          <div data-v-9c9dcdf4=""><span data-v-9c9dcdf4="">清单预期</span><code data-v-9c9dcdf4="">aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa</code></div>
+          <div data-v-9c9dcdf4=""><span data-v-9c9dcdf4="">实际摘要</span><code data-v-9c9dcdf4="">尚无可用摘要</code></div>
+        </div>
+        <div data-v-9c9dcdf4="" class="checksum-actions"><button data-v-9c9dcdf4="" data-testid="checksum-recheck-2">仅复查此项</button><button data-v-9c9dcdf4="">复制路径</button><button data-v-9c9dcdf4="">打开所在目录</button>
+          <!--v-if-->
+        </div>
+      </div>
+    </article>
+    <article data-v-9c9dcdf4="" class="checksum-entry" data-status="unreadable" data-line="3" data-testid="checksum-entry">
+      <div data-v-9c9dcdf4="" class="checksum-entry-heading"><input data-v-9c9dcdf4="" type="checkbox" aria-label="选择 资料.zip.003"><button data-v-9c9dcdf4="" class="checksum-row" data-testid="checksum-row" aria-expanded="false"><span data-v-9c9dcdf4="" class="checksum-file"><strong data-v-9c9dcdf4="">资料.zip.003</strong><small data-v-9c9dcdf4="">真实原因 unreadable</small></span><span data-v-9c9dcdf4="" class="checksum-badge">无法读取</span><i data-v-9c9dcdf4="" class="pi pi-chevron-down"></i></button></div>
+      <!--v-if-->
+    </article>
+    <footer data-v-9c9dcdf4="" class="checksum-footer"><span data-v-9c9dcdf4="">补齐来源后，可在解压中心通过失败任务纠正入口创建新任务。</span><button data-v-9c9dcdf4="" data-testid="checksum-go-tasks">前往解压队列<i data-v-9c9dcdf4="" class="pi pi-arrow-right"></i></button></footer>
+  </section>
+</div>
+ ❯ VueWrapper.get node_modules/@vue/test-utils/dist/vue-test-utils.cjs.js:7182:15
+ ❯ src/components/integrity/__tests__/ChecksumVerificationPanel.test.ts:55:81
+     53|     await w.get('[data-testid="checksum-copy-pending"]').trigger('clic…
+     54|     expect(mocks.copy).toHaveBeenCalledWith('资料.zip.001\n资料.zip.002')
+     55|     await w.findAll('[data-testid="checksum-row"]')[1].trigger('click'…
+       |                                                                                 ^
+     56|     expect(w.emitted('diagnose')).toEqual([['C:/资料.zip.002']])
+     57|     await w.get('[data-testid="checksum-go-tasks"]').trigger('click');…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed | 1 passed (3)
+      Tests  2 failed | 24 passed (26)
+   Start at  15:24:47
+   Duration  25.75s (transform 3.33s, setup 1.30s, import 4.38s, tests 801ms, environment 60.18s)
+

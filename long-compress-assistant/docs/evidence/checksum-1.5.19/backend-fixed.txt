@@ -1,0 +1,39 @@
+   Compiling long-compress-assistant v1.5.19 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 52s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-3c07180d0dff631d.exe)
+
+running 7 tests
+test services::checksum_details_tests::checksum1519_selective_pass_does_not_read_unselected_files_or_claim_full_success ... ok
+test services::checksum_details_tests::checksum1519_actual_windows_lock_has_its_reason_and_recovers_without_reading_other_files ... ok
+test services::checksum_details_tests::checksum1519_report_distinguishes_real_file_failures ... ok
+test services::checksum_details_tests::checksum1519_malformed_rows_remain_visible_and_empty_manifests_do_not_pass ... ok
+test services::checksum_details_tests::checksum1519_manifest_identity_changes_before_selective_results_can_be_merged ... ok
+test services::checksum_details_tests::checksum1519_generated_lists_roundtrip_all_three_algorithms ... ok
+test services::checksum_details_tests::checksum1519_reads_independent_sfv_md5_sha256_with_bom_spaces_and_binary_marker ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 770 filtered out; finished in 0.06s
+
