@@ -41,7 +41,9 @@ async function verify(path: string, lines?: number[]) {
 }
 async function choose() {
   try {
-    const file = await open({ multiple: false, title: '选择校验清单', filters: [{ name: '校验清单', extensions: ['md5', 'sha256', 'sfv'] }] })
+    const queued = import.meta.env.VITE_DESKTOP_E2E === '1'
+      ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection() : undefined
+    const file = queued !== undefined ? queued : await open({ multiple: false, title: '选择校验清单', filters: [{ name: '校验清单', extensions: ['md5', 'sha256', 'sfv'] }] })
     if (typeof file === 'string') await verify(file)
   } catch (cause) { error.value = String(cause) }
 }

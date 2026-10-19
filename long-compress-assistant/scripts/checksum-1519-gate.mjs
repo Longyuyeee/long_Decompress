@@ -53,7 +53,7 @@ export async function runChecksum1519Gate({driver,bridge,waitForElement,artifact
     await bridge('queueDesktopDialogSelections',[[parts[0]]]);await click('[data-testid="dropzone-file"]')
     const task=await driver.wait(async()=>(await bridge('extractionRecoveryTasks'))[0]||false,15000)
     const firstOutput=owned(path.join(work,'首次输出'));mkdirSync(firstOutput)
-    await bridge('queueDesktopDialogSelections',[[firstOutput]])
+    await bridge('queueDesktopDialogSelections',[firstOutput])
     await click(await driver.findElement(By.xpath('//*[contains(@class,"global-config-controls")]//button[.//i[contains(@class,"pi-folder-open")]]')))
     renameSync(parts[1],backup)
     await click('[data-testid="start-decompression-queue"]')
@@ -62,7 +62,7 @@ export async function runChecksum1519Gate({driver,bridge,waitForElement,artifact
     const corrupt=Buffer.from(originalBytes[2]);corrupt[Math.floor(corrupt.length/2)]^=1;writeFileSync(parts[2],corrupt)
 
     await click('[data-testid="nav-FileIntegrity"]');await click('[data-testid="checksum-verify-mode"]')
-    await bridge('queueDesktopDialogSelections',[[original.manifest]]);await click('[data-testid="checksum-choose"]')
+    await bridge('queueDesktopDialogSelections',[original.manifest]);await click('[data-testid="checksum-choose"]')
     await settled(['matched','missing','mismatch','unreadable']);await expand(3)
     await sizes('file-causes',row(3)+' .checksum-digests')
     await click('[data-testid="checksum-copy-pending"]')
