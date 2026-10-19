@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [master, develop]
   workflow_dispatch:
+    inputs:
+      archive_io_only:
+        description: 'Run only the bounded v1.5.16 real disk fault check'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -20,6 +25,7 @@ env:
 jobs:
   package:
     name: Windows package
+    if: ${{ github.event_name != 'workflow_dispatch' || !inputs.archive_io_only }}
     runs-on: windows-latest
     timeout-minutes: 30
     defaults:
@@ -49,3 +55,27 @@ jobs:
           path: long-compress-assistant/src-tauri/target/release/bundle/nsis/*.exe
           if-no-files-found: error
           retention-days: 7
+
+  archive-io:
+    name: Isolated archive I/O
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.archive_io_only }}
+    runs-on: windows-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: long-compress-assistant
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: long-compress-assistant/src-tauri -> target
+      - name: Actual disk full and recovery on owned 256 MiB NTFS VHD
+        shell: pwsh
+        run: ./scripts/test-archive-io-1516.ps1
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: archive-io-1516-evidence
+          path: long-compress-assistant/test-results/io-1516/
+          if-no-files-found: warn
