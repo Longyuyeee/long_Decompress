@@ -174,7 +174,7 @@ pub async fn resolve_extraction_conflict(
     service
         .resolve_pending_extraction(&window, &task_id, resolutions, fallback_action)
         .await
-        .map_err(|error| error.to_string())
+        .map_err(|error| crate::services::archive_io::message(&error))
 }
 
 #[command]
@@ -189,7 +189,7 @@ pub async fn verify_archive_password(
     service
         .verify_archive_password_candidate_with_encoding(&file_path, &password, zip_password_encoding)
         .await
-        .map_err(|error| error.to_string())
+        .map_err(|error| crate::services::archive_io::message(&error))
 }
 
 #[command]
@@ -333,15 +333,15 @@ pub async fn convert_archive(
         return Err("转换已取消，原包保留".to_string());
     }
     let mut files = std::fs::read_dir(staging.path())
-        .map_err(|error| format!("无法读取转换暂存内容：{error}"))?
+        .map_err(|error| format!("无法读取转换暂存内容：{}", crate::services::archive_io::message(&error.into())))?
         .map(|entry| entry.map(|entry| entry.path().to_string_lossy().into_owned()))
-        .collect::<Result<Vec<_>, _>>().map_err(|error| error.to_string())?;
+        .collect::<Result<Vec<_>, _>>().map_err(|error| crate::services::archive_io::message(&error.into()))?;
     files.sort();
     if files.is_empty() { return Err("原包没有可转换的条目".to_string()); }
     // Extraction and rebuilding share the destination volume. Recheck after
     // staging has consumed space, not only before the source was expanded.
     crate::services::extraction_transaction::validate_staging_disk_reserve(staging.path())
-        .map_err(|error| format!("转换写入新包前空间检查失败：{error}"))?;
+        .map_err(|error| format!("转换写入新包前空间检查失败：{}", crate::services::archive_io::message(&error)))?;
     let _ = window.emit("archive-conversion-phase", serde_json::json!({"taskId": task_id, "phase": "writing"}));
     let split = options.split_size.is_some_and(|size| size > 0);
     service.compress(window, task_id, files, output_path.clone(), options)

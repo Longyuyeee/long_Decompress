@@ -69,6 +69,7 @@ import { runEgg1511Gate } from './egg-1511-gate.mjs'
 import { runAlz1512Gate } from './alz-1512-gate.mjs'
 import { runTar1513Gate } from './tar-1513-gate.mjs'
 import { runTar1514Gate } from './tar-1514-gate.mjs'
+import { runIo1516Gate } from './io-1516-gate.mjs'
 import { runZip641515Gate } from './zip64-1515-gate.mjs'
 import { Builder, By, Capabilities, Key } from 'selenium-webdriver'
 
@@ -4924,6 +4925,8 @@ try {
   } else if (process.argv.includes('--lzip-only')) {
     await runLzip1412Gate({ driver, bridge: callDesktopBridge, waitForElement, fixtureDirectory, artifactDirectory, bundledSevenZip, application, root })
     completedSuccessfully = true
+  } else if (process.argv.includes('--io-1516-only')) {
+    await runIo1516Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root })
   } else if (process.argv.includes('--zip64-1515-only')) {
     await runZip641515Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
     completedSuccessfully = true

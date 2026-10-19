@@ -1,0 +1,14 @@
+{
+  "applicationSha256": "37e9717e1e2f4035ce1d0e4edf96108b95caba3cce25bed3df2635045c858f67",
+  "observedAfterActualUiFailureAndNewTask": true,
+  "runStoppedOnHistoryTextTimingAssertion": true,
+  "unpublishedStageStillPresent": [
+    {
+      "path": "long-compress-assistant\\test-results\\io-1516\\ui-dab223e8-a041-491a-b5de-2667fb4673f5\\.long-extract-cdc0a2e9-b41a-46d2-b597-697366f53214",
+      "bytes": 65536
+    }
+  ],
+  "existingResult": "original user result",
+  "newTaskOutputSha256": "d34299ef9d4c142ed413d71fa977a67b821156a3f9f7bac7409321bed27d5bf1",
+  "codeCause": "retain_pending_after_commit_error reinserts ordinary filesystem errors even though the UI has terminally failed the task"
+}

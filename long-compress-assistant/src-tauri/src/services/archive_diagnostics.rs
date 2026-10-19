@@ -163,7 +163,15 @@ fn classify_failure(
     let lower = message.to_ascii_lowercase();
     // Structural/IO evidence and explicit ambiguous markers outrank incidental
     // words such as "encrypted" or "wrong password?" in an engine's message.
-    if lower.contains("[archive-inspection:incomplete]") || lower.contains("missing disk") {
+    if lower.contains("[archive-io:disk-full]") {
+        ("io_error", "磁盘空间不足", "请释放空间或更换临时/输出位置后重新检查；不能据此判断密码错误或文件损坏")
+    } else if lower.contains("[archive-io:target-busy]") {
+        ("io_error", "文件被占用", "请按原始路径关闭占用文件的程序后重新检查")
+    } else if lower.contains("[archive-io:permission]") {
+        ("permission_error", "文件访问受阻", "请检查原始路径的访问权限，处理后重新检查")
+    } else if lower.contains("[archive-io:io]") || lower.contains("[archive-inspection:io]") {
+        ("io_error", "文件读写未完成", "请按原始原因检查来源、设备和访问条件；不要仅据此继续尝试密码")
+    } else if lower.contains("[archive-inspection:incomplete]") || lower.contains("missing disk") {
         ("missing_volume", "缺少分卷", "卷组不完整；请补齐分卷后重新检查，不必反复尝试密码")
     } else if lower.contains("[archive-inspection:damaged]") {
         // A path can contain incidental words such as "eof". Explicit format
@@ -253,6 +261,8 @@ fn record_failure(report: &mut ArchiveDiagnosticReport, error: &anyhow::Error, p
             })
     });
     let (code, title, detail) = match io_kind {
+        Some(std::io::ErrorKind::StorageFull) =>
+            ("io_error", "磁盘空间不足", "请释放空间或更换临时/输出位置后重新检查；不能据此判定密码错误"),
         Some(std::io::ErrorKind::PermissionDenied) =>
             ("permission_error", "无法读取归档", "请确认文件访问权限或占用情况，处理后重新检查"),
         Some(std::io::ErrorKind::NotFound) =>
@@ -861,6 +871,16 @@ mod tests {
     use sha2::{Digest, Sha256};
     use std::io::Write;
     use tauri::Window;
+
+    #[test]
+    fn io1516_diagnosis_keeps_explicit_io_before_incidental_password_errors() {
+        for marker in ["[archive-io:io]", "[archive-io:disk-full]", "[archive-io:target-busy]", "[archive-inspection:io]"] {
+            for encrypted in [false, true] {
+                assert_eq!(classify_failure(&format!("{marker} device error; wrong password"), encrypted, true).0, "io_error");
+            }
+        }
+        assert_eq!(classify_failure("[archive-io:permission] wrong password", true, true).0, "permission_error");
+    }
 
     #[tokio::test]
     async fn zip64_1515_diagnosis_preserves_directory_damage_and_recovery_password_requirements() {

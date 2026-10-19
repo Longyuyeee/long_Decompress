@@ -484,8 +484,10 @@ mod tests {
                 let mapped = into_sevenz_error(anyhow::Error::new(std::io::Error::from_raw_os_error(code)).context("creating output file"));
                 assert!(matches!(&mapped, sevenz_rust::Error::Io(io, _) if io.raw_os_error() == Some(code)));
                 let classified = classify_error(mapped, encrypted, false);
-                assert!(matches!(classified, CompressionError::ExtractionFailed(message)
-                    if message.contains("creating output file") && !message.contains("archive-inspection:damaged") && !message.contains("ambiguous-data")));
+                let error: anyhow::Error = classified.into();
+                let text = crate::services::archive_io::message(&error);
+                assert!(text.contains("creating output file") && !text.contains("archive-inspection:damaged") && !text.contains("ambiguous-data"), "{text}");
+                assert!(error.chain().any(|cause| cause.downcast_ref::<std::io::Error>().is_some_and(|io| io.raw_os_error() == Some(code))));
             }
         }
     }

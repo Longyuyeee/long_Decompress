@@ -1,0 +1,47 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+ElementClickInterceptedError: element click intercepted: Element <button data-v-59172e5b="" data-testid="create-retry-drafts" class="retry-button text-primary">...</button> is not clickable at point (294, 299). Other element would receive the click: <label data-v-59172e5b="" class="block text-xs">...</label>
+  (Session info: MicrosoftEdge=155.0.4283.62)
+    at Object.throwDecodedError (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\error.js:523:15)
+    at parseHttpResponse (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\http.js:527:13)
+    at Executor.execute (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\http.js:459:28)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async WebDriver.execute (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:745:17)
+    at async click (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/io-1516-gate.mjs:26:53)
+    at async retry (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/io-1516-gate.mjs:68:5)
+    at async runIo1516Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/io-1516-gate.mjs:114:25)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:4929:5 {
+  remoteStacktrace: '\tmsedgedriver!GetHandleVerifier [0x7ff6aaa27275+4f25]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa976e34]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff6aadb6a0f+3946bf]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa755b42]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa75426f]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa752355]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa751937]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa74694f]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa770c5a]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa7460cd]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa745fca]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa7460cd]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa78def8]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa74590c]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa744b8d]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa745733]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa881a91]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa891a78]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff6aaacff6a+adc1a]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff6aaad65d1+b4281]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa9825dc]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa97d0f4]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa97d21a]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6aa96eba8]\n' +
+    '\tKERNEL32!BaseThreadInitThunk [0x7ffbb71fdda7+17]\n' +
+    '\tntdll!RtlUserThreadStart [0x7ffbb78dee4c+2c]\n'
+}
+
+Node.js v24.14.0

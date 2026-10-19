@@ -27,6 +27,7 @@ pub(crate) fn kind(error: &anyhow::Error) -> Option<(&'static str, &'static str)
             Some(("io", "文件读写未完成，请按原始路径检查来源、输出目录和设备连接，处理后创建新任务")),
         // Decoder-generated EOF/invalid data is not proof of a filesystem fault.
         io::ErrorKind::Other if cause.raw_os_error().is_some() => Some(("io", "设备读写失败，请按原始原因恢复设备或访问条件后创建新任务")),
+        _ if cause.raw_os_error().is_some() => Some(("io", "文件系统操作失败，请按原始路径恢复访问条件后创建新任务")),
         _ => None,
     }
 }
