@@ -31,7 +31,7 @@ export async function runLzip1520Gate({driver,bridge,waitForElement,artifactDire
   const fill=async(selector,value)=>{const e=await waitForElement(selector);await driver.wait(async()=>await e.isDisplayed()&&await e.isEnabled(),10000);await driver.executeScript(e=>e.scrollIntoView({block:'center',behavior:'instant'}),e);await e.sendKeys(Key.chord(Key.CONTROL,'a'),Key.BACK_SPACE);if(value)await e.sendKeys(value)}
   const choose=async(selector,label)=>{await click(selector);for(const e of await driver.findElements(By.css('[role="option"]'))){const strong=await e.findElements(By.css('strong'));if((await(strong[0]||e).getAttribute('textContent')).trim().startsWith(label)){await driver.executeScript(e=>e.scrollIntoView({block:'nearest',behavior:'instant'}),e);await e.click();return}}assert.fail('Option missing: '+label)}
   const sizes=async(name,anchor)=>{for(const[width,height]of[[1100,700],[760,520]]){
-    await driver.manage().window().setRect({width,height});await driver.executeScript(e=>e.scrollIntoView({block:'center',behavior:'instant'}),await waitForElement(anchor))
+    await driver.manage().window().setRect({width,height});await driver.executeScript(e=>e.scrollIntoView({block:'center',behavior:'instant'}),typeof anchor==='string'?await waitForElement(anchor):anchor)
     await driver.wait(()=>driver.executeScript(()=>document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).every(a=>a.playState!=='running')),10000)
     const geometry=await driver.executeScript(()=>{const d=document.querySelector('[data-testid="compression-draft-details"]'),cols=d?[...d.children].map(c=>c.getBoundingClientRect().width):[];return{width:innerWidth,height:innerHeight,overflow:document.documentElement.scrollWidth-innerWidth,columns:cols,detailOverflow:d?d.scrollWidth-d.clientWidth:0}})
     assert.ok(geometry.overflow<=1&&geometry.detailOverflow<=1,JSON.stringify(geometry));if(name==='inline-config'&&width===1100)assert.ok(Math.abs(geometry.columns[0]-geometry.columns[1])<=1,JSON.stringify(geometry));state.layouts.push({name,...geometry,binarySha256})
@@ -55,7 +55,7 @@ export async function runLzip1520Gate({driver,bridge,waitForElement,artifactDire
     for(const member of [parts[0],parts[1],parts.at(-1)]){
       const browse=await ipc('browse_archive',{filePath:member,password:null,browseId:randomUUID()});assert.equal(browse.format,expected.format);assert.equal(browse.totalUncompressedSize,expected.totalUncompressedSize)
       const report=await bridge('diagnoseArchive',member,null);assert.equal(report.status,'healthy',JSON.stringify(report));assert.equal(report.integrityTested,true)
-      if(tar){const preview=await ipc('preview_archive_text',{filePath:member,entryPath:'说明.txt',password:null});assert.match(preview.content,/收到 LZIP/)}
+      const preview=await ipc('preview_archive_text',{filePath:member,entryPath:tar?'说明.txt':expected.entries[0].path,password:null});assert.match(preview.content,/收到 LZIP/)
     }
     const out=fresh('GNU完整提取');mkdirSync(out);await ipc('extract_file',{taskId:randomUUID(),filePath:parts[1],outputPath:out,password:null,options})
     if(tar)sameTree(out,state.small.source);else assert.equal(hash(path.join(out,path.basename(file,'.lz'))),sha(tools.lzip(['-d','-c',linuxPath(file)])))
@@ -71,6 +71,13 @@ export async function runLzip1520Gate({driver,bridge,waitForElement,artifactDire
     if(format==='lz')assert.equal(hash(path.join(out,path.basename(output,'.lz'))),hash(files[0]));else sameTree(out,state.source)
     state.native.push({created:format,published,fullHashes:true,gnuReadback:true,binarySha256});save()
   }
+  if(!state.native.some(r=>r.kind==='image-preview')){
+    const source=path.join(root,'src-tauri/icons/32x32.png'),output=fresh('图标.png')+'.lz'
+    const published=await ipc('compress_files',{taskId:randomUUID(),files:[source],outputPath:output,options:{format:'lz',level:1,password:null,split_size:97,preserve_paths:true,verify_after:true,delete_after:false}})
+    const preview=await ipc('preview_archive_image',{filePath:published.files.at(-1).path,entryPath:path.basename(output,'.lz'),password:null})
+    assert.equal(sha(Buffer.from(preview.dataUrl.split(',')[1],'base64')),hash(source));independent(published.files.map(f=>f.path),source,false)
+    state.native.push({kind:'image-preview',tailMember:true,fullImageHash:true,binarySha256});save()
+  }
   if(!state.ui.some(r=>r.kind==='creation')){
     await bridge('clearCompressionWorkspace');await click('[data-testid="nav-Compress"]');await bridge('queueDesktopDialogSelections',[[path.join(state.source,'数据.bin')]]);await click('[data-testid="compression-center"] [data-testid="dropzone-file"]')
     if(!(await driver.findElements(By.css('[data-testid="compression-draft-details"]'))).length)await click('[data-testid="compression-draft-row"]')
@@ -82,7 +89,7 @@ export async function runLzip1520Gate({driver,bridge,waitForElement,artifactDire
     state.ui.push({kind:'creation',history:h,binarySha256,independentFullHash:true});save()
   }
   if(!state.ui.some(r=>r.kind==='batch')){
-    await bridge('clearCompressionWorkspace');await bridge('queueDesktopDialogSelections',[[path.join(state.source,'说明.txt'),path.join(state.source,'空文件.txt')]]);await click('[data-testid="compression-center"] [data-testid="dropzone-file"]')
+    await click('[data-testid="nav-Compress"]');await bridge('clearCompressionWorkspace');await bridge('queueDesktopDialogSelections',[[path.join(state.source,'说明.txt'),path.join(state.source,'空文件.txt')]]);await click('[data-testid="compression-center"] [data-testid="dropzone-file"]')
     if(!(await driver.findElements(By.css('[data-testid="compression-draft-details"]'))).length)await click('[data-testid="compression-draft-row"]')
     const toggle=await waitForElement('[data-testid="compression-split-toggle"]');if(!await toggle.isSelected())await click(toggle)
     await fill('[data-testid="compression-split-size"]','1')
@@ -94,9 +101,16 @@ export async function runLzip1520Gate({driver,bridge,waitForElement,artifactDire
   }
   const original=state.native.find(r=>r.original==='tar')
   if(!state.ui.some(r=>r.kind==='preview')){
-    await click('[data-testid="nav-ArchiveBrowser"]');await bridge('queueDesktopDialogSelections',[[original.parts.at(-1)]]);await click('[data-testid="file-manager-open-archive"]');await click('[data-entry-path="说明.txt"] .preview-trigger')
+    await click('[data-testid="nav-ArchiveBrowser"]');await bridge('queueDesktopDialogSelections',[[original.parts.at(-1)]]);await click((await driver.findElements(By.css('.browser-header-actions .browser-primary'))).length?'.browser-header-actions .browser-primary':'[data-testid="file-manager-open-archive"]');await click('[data-entry-path="说明.txt"] .preview-trigger')
     assert.match(await(await waitForElement('[data-testid="archive-text-preview"]')).getText(),/收到 LZIP/);await sizes('tail-preview','[data-testid="archive-text-preview"]');await click('.preview-close')
     state.ui.push({kind:'preview',tailMember:true,binarySha256});save()
+  }
+  if(!state.ui.some(r=>r.kind==='plain-preview')){
+    await click('[data-testid="nav-ArchiveBrowser"]');const original=state.native.find(r=>r.original==='multi')
+    await bridge('queueDesktopDialogSelections',[[original.parts.at(-1)]]);await click((await driver.findElements(By.css('.browser-header-actions .browser-primary'))).length?'.browser-header-actions .browser-primary':'[data-testid="file-manager-open-archive"]')
+    await click('[data-entry-path="多成员.txt"] .preview-trigger');assert.match(await(await waitForElement('[data-testid="archive-text-preview"]')).getText(),/第二成员/)
+    await sizes('plain-preview','[data-testid="archive-text-preview"]');await click('.preview-close')
+    state.ui.push({kind:'plain-preview',lastMemberIncluded:true,binarySha256});save()
   }
   if(!state.ui.some(r=>r.kind==='recovery')){
     await bridge('clearTasks');await click('[data-testid="nav-Decompress"]');await bridge('queueDesktopDialogSelections',[[original.parts[1]]]);await click('[data-testid="dropzone-file"]')
@@ -122,7 +136,7 @@ export async function runLzip1520Gate({driver,bridge,waitForElement,artifactDire
     const normalized=output.replaceAll('\\','/').toLowerCase(),h=await driver.wait(async()=>(await bridge('taskHistory')).find(h=>[normalized,normalized+'.001'].includes(h.outputPath?.replaceAll('\\','/').toLowerCase())&&['completed','failed'].includes(h.status))||false,90000);assert.equal(h.status,'completed',JSON.stringify(h))
     const prefix=path.basename(output),parts=readdirSync(work).filter(f=>f.startsWith(prefix+'.')&&/^\d{3,}$/.test(f.slice(prefix.length+1))).sort().map(f=>path.join(work,f));assert.ok(parts.length>1)
     if(target==='tar.lz')independent(parts,state.source,true);else{const merged=fresh('独立密码')+'.zip';writeFileSync(merged,Buffer.concat(parts.map(f=>readFileSync(f))));const out=fresh('密码ZIP回解');seven(['x','-y','-pLong1520','-o'+out,merged]);sameTree(out,state.source)}
-    await sizes('conversion-'+target.replace('.','-'),'[data-testid="conversion-item"]');state.ui.push({kind:'conversion',target,parts,history:h,independentFullHashes:true,binarySha256});save()
+    await sizes('conversion-'+target.replace('.','-'),item);state.ui.push({kind:'conversion',target,parts,history:h,independentFullHashes:true,binarySha256});save()
     await click(await driver.findElement(By.xpath('//*[@role="dialog"]//button[normalize-space(.)="关闭"]')))
   }
   state.completedAt=new Date().toISOString();save();writeFileSync(path.join(artifactDirectory,'lzip-1520-results.json'),JSON.stringify(state,null,2))

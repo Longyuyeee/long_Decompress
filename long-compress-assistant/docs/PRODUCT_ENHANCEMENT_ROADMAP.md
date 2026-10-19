@@ -1,6 +1,13 @@
 # Long解压产品增强路线
 
-## 当前 v1.5.19 功能封板，接续下一阶段三版
+## 当前 v1.5.20 功能封板，接续既定 v1.5.21/22
+
+LZIP/TAR.LZIP 数字切卷与任意卷用户链完成，普通 LZIP 有界文本/图片预览接通；批量改格式保留分卷，缺卷恢复后沿原弹窗创建新任务。六 Rust、66 前端、七原生、七实际 UI 与十二张有效实看页面通过，完整内容独立回解一致。见[实施](LZIP_VOLUMES_1.5.20.md)、[封板](LZIP_VOLUMES_FREEZE_1.5.20.md)及[交接](DEVELOPMENT_HANDOFF.md)。
+
+下一版按[现有三版路线](ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)扩展六种 Long AES 内层，再做清单校验真实进度、停止与继续，两版尚未实施。不新增重复规划；原交互和等宽/窄窗布局保持。
+
+
+## 历史 v1.5.19 功能封板，接续下一阶段三版
 
 逐文件清单状态、完整原因、复制待补列表、按需复查、变化后的旧结果作废和原失败新任务接续完成。七项 Rust、26 前端、四条原生 IPC、五条实际 UI 与八张实看页面通过；单条展开、多选弹窗、自然继承、等宽与窄窗布局保持。见[实施](CHECKSUM_DETAILS_1.5.19.md)、[封板](CHECKSUM_DETAILS_FREEZE_1.5.19.md)、[交接](DEVELOPMENT_HANDOFF.md)及[发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.19)。
 

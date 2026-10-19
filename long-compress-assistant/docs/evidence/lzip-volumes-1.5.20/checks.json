@@ -1,0 +1,53 @@
+{
+  "runtimeCommit": "f2c868a",
+  "productVersion": "1.5.20",
+  "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572",
+  "frontend": {
+    "files": 4,
+    "passed": 66
+  },
+  "rust": {
+    "distinctPassed": 6,
+    "newLzipTests": 5,
+    "capabilityPolicy": 1
+  },
+  "desktop": {
+    "nativeRecords": 7,
+    "userFlows": 7,
+    "viewedScreenshots": [
+      "lzip1520-inline-config-1100x700.png",
+      "lzip1520-inline-config-760x520.png",
+      "lzip1520-batch-config-1100x700.png",
+      "lzip1520-batch-config-760x520.png",
+      "lzip1520-tail-preview-1100x700.png",
+      "lzip1520-tail-preview-760x520.png",
+      "lzip1520-plain-preview-1100x700.png",
+      "lzip1520-plain-preview-760x520.png",
+      "lzip1520-retry-modal-1100x700.png",
+      "lzip1520-retry-modal-760x520.png",
+      "lzip1520-conversion-tar-lz-1100x700.png",
+      "lzip1520-conversion-tar-lz-760x520.png"
+    ],
+    "sameBinaryAcrossResume": true,
+    "completedAt": "2026-10-19T09:08:03.957Z",
+    "resumeReason": "Second archive opening used a file-manager-only selector. Fixed harness entry selection; reused passed native/create/batch/TAR preview without repeating.",
+    "excludedScreenshots": [
+      "conversion-zip-1100x700",
+      "conversion-zip-760x520"
+    ],
+    "excludedReason": "Duplicate first TAR result due to anchor, not evidence of ZIP row visibility; actual ZIP task and independent full extraction passed."
+  },
+  "gnuTool": {
+    "package": "Ubuntu lzip 1.24.1-1build1",
+    "packageSha256": "51141ecbbc1ca1b1b2251e8b7754cfaf90501e86f003a5d72327f2e5a9f950bb",
+    "binarySha256": "fb52c41132a98d22ea2b7969b268407ab5c272e7654ff78bf975f573357d48fd"
+  },
+  "finalHarnessSha256": "686eb12e203ab4db83ffcbb4dcc45f4519d172d43986de2036dcdf01c02bf267",
+  "unaffectedChecksReused": [
+    "v1.5.18 AES/VHD",
+    "v1.5.19 checksum",
+    "prior unrelated format matrices"
+  ],
+  "personalInstallationChanged": false,
+  "harnessAfterRunAdjustment": "Future conversion screenshots anchor the current row rather than the first row; no product change and no repeated conversion run."
+}

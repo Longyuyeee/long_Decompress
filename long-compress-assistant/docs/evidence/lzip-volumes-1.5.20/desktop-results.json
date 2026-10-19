@@ -1,0 +1,1095 @@
+{
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20",
+  "native": [
+    {
+      "original": "single",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-c87fd5fa-6106-4ff2-91fa-42d828840eb6\\说明.txt.lz.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-c87fd5fa-6106-4ff2-91fa-42d828840eb6\\说明.txt.lz.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-c87fd5fa-6106-4ff2-91fa-42d828840eb6\\说明.txt.lz.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-c87fd5fa-6106-4ff2-91fa-42d828840eb6\\说明.txt.lz.004"
+      ],
+      "completeHashes": true,
+      "firstMiddleTail": true,
+      "browse": true,
+      "integrity": true,
+      "selected": false,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "original": "tar",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-318399c6-102a-46cd-8637-46efbc75ab53\\资料.tar.lz.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-318399c6-102a-46cd-8637-46efbc75ab53\\资料.tar.lz.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-318399c6-102a-46cd-8637-46efbc75ab53\\资料.tar.lz.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-318399c6-102a-46cd-8637-46efbc75ab53\\资料.tar.lz.004"
+      ],
+      "completeHashes": true,
+      "firstMiddleTail": true,
+      "browse": true,
+      "integrity": true,
+      "selected": true,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "original": "alias",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-1724773a-ff8d-45e7-8092-f71d1a48c45d\\资料别名.tlz.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-1724773a-ff8d-45e7-8092-f71d1a48c45d\\资料别名.tlz.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-1724773a-ff8d-45e7-8092-f71d1a48c45d\\资料别名.tlz.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-1724773a-ff8d-45e7-8092-f71d1a48c45d\\资料别名.tlz.004"
+      ],
+      "completeHashes": true,
+      "firstMiddleTail": true,
+      "browse": true,
+      "integrity": true,
+      "selected": true,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "original": "multi",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-e824bee1-c99b-45bb-ba2d-05ba6eb26f85\\多成员.txt.lz.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-e824bee1-c99b-45bb-ba2d-05ba6eb26f85\\多成员.txt.lz.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-e824bee1-c99b-45bb-ba2d-05ba6eb26f85\\多成员.txt.lz.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-e824bee1-c99b-45bb-ba2d-05ba6eb26f85\\多成员.txt.lz.004"
+      ],
+      "completeHashes": true,
+      "firstMiddleTail": true,
+      "browse": true,
+      "integrity": true,
+      "selected": false,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "created": "lz",
+      "published": {
+        "files": [
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.001"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.002"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.003"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.004"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.005"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.006"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.007"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.008"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.009"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.010"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.011"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.012"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.013"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.014"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.015"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.016"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.017"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.018"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.019"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.020"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.021"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.022"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.023"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.024"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.025"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.026"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.027"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.028"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.029"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.030"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.031"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.032"
+          },
+          {
+            "bytes": 30743,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.033"
+          }
+        ],
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-0ee632f1-68ad-49e5-92d8-59c97249bdf4.lz.001",
+        "split": true,
+        "totalBytes": 2127415
+      },
+      "fullHashes": true,
+      "gnuReadback": true,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "created": "tar.lz",
+      "published": {
+        "files": [
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.001"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.002"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.003"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.004"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.005"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.006"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.007"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.008"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.009"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.010"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.011"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.012"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.013"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.014"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.015"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.016"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.017"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.018"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.019"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.020"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.021"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.022"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.023"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.024"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.025"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.026"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.027"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.028"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.029"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.030"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.031"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.032"
+          },
+          {
+            "bytes": 31079,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.033"
+          }
+        ],
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\应用创建-b8d8ee87-dbab-4a27-86c1-0a4695276c05.tar.lz.001",
+        "split": true,
+        "totalBytes": 2127751
+      },
+      "fullHashes": true,
+      "gnuReadback": true,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "kind": "image-preview",
+      "tailMember": true,
+      "fullImageHash": true,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    }
+  ],
+  "ui": [
+    {
+      "kind": "creation",
+      "history": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\界面创建.lz.001"
+            },
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\界面创建.lz.002"
+            },
+            {
+              "bytes": 28516,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\界面创建.lz.003"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\界面创建.lz.001",
+          "split": true,
+          "totalBytes": 2125668
+        },
+        "completedAt": "2026-10-19T09:02:23.052Z",
+        "durationMs": 63051,
+        "errorMessage": null,
+        "executionConfig": {
+          "kind": "archive-compression",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20",
+          "passwordRequired": false,
+          "schemaVersion": 1,
+          "settings": {
+            "createSolidArchive": false,
+            "encryptFilenames": false,
+            "fastPack": false,
+            "filename": "界面创建",
+            "format": "lz",
+            "keepStructure": true,
+            "level": 6,
+            "rarRecoveryPercent": 0,
+            "rarRecoveryVolumes": 0,
+            "splitArchive": true,
+            "splitSize": "1",
+            "verifyAfter": true,
+            "zipEncryption": "aes256",
+            "zipMethod": "deflate",
+            "zipPasswordEncoding": "utf8",
+            "zipSplitMode": "numeric"
+          }
+        },
+        "failure": null,
+        "format": "lz",
+        "id": "3kvngjdn2mvf0ytpn",
+        "logs": [
+          {
+            "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 11.2 GiB，预计输出 2.10 MiB）",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:01:20.023Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\界面创建.lz",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:01:20.039724Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:02:22.882838300Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-19T09:02:23.013058300Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-19T09:02:23.026684300Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 2097189,
+          "media": null,
+          "outputBytes": 2125668,
+          "savingsRatio": -0.013579605843822371,
+          "schemaVersion": 1
+        },
+        "name": "数据.bin",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\界面创建.lz.001",
+        "processedBytes": 2097189,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\创建来源\\数据.bin"
+        ],
+        "startedAt": "2026-10-19T09:01:20.001Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 2097189,
+        "workloadKind": "archive"
+      },
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572",
+      "independentFullHash": true
+    },
+    {
+      "kind": "batch",
+      "twoDrafts": true,
+      "modalOnly": true,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "kind": "preview",
+      "tailMember": true,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "kind": "plain-preview",
+      "lastMemberIncluded": true,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "kind": "recovery",
+      "failed": {
+        "archiveOutput": null,
+        "completedAt": "2026-10-19T09:06:55.006Z",
+        "durationMs": 27,
+        "errorMessage": "[archive-inspection:incomplete] 缺少分卷：资料.tar.lz.002",
+        "executionConfig": {
+          "extractToSubfolder": false,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-318399c6-102a-46cd-8637-46efbc75ab53",
+          "schemaVersion": 1
+        },
+        "failure": {
+          "category": "incomplete",
+          "evidence": "recorded-marker",
+          "schemaVersion": 1,
+          "stage": "inspection"
+        },
+        "format": "tar.lz",
+        "id": "ld89b89ypmvf15zxl",
+        "logs": [
+          {
+            "message": "资源预检：已验证目标盘安全预留，但输出体积仍需在运行时确认。（local/ssd，可用 11.2 GiB，预计输出 未知）",
+            "severity": "warning",
+            "timestamp": "2026-10-19T09:06:54.996Z"
+          },
+          {
+            "message": "最终失败原因：[archive-inspection:incomplete] 缺少分卷：资料.tar.lz.002",
+            "severity": "error",
+            "timestamp": "2026-10-19T09:06:55.006Z"
+          }
+        ],
+        "metrics": null,
+        "name": "资料.tar.lz (4 个分卷)",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-318399c6-102a-46cd-8637-46efbc75ab53",
+        "processedBytes": 0,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-318399c6-102a-46cd-8637-46efbc75ab53\\资料.tar.lz.001"
+        ],
+        "startedAt": "2026-10-19T09:06:54.979Z",
+        "status": "failed",
+        "taskType": "decompression",
+        "totalBytes": 0,
+        "workloadKind": "archive"
+      },
+      "completed": {
+        "archiveOutput": null,
+        "completedAt": "2026-10-19T09:06:59.127Z",
+        "durationMs": 279,
+        "errorMessage": null,
+        "executionConfig": {
+          "extractToSubfolder": false,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\补卷新任务-fd9b9cae-fe1d-490f-b19c-4452eef8bd05",
+          "schemaVersion": 1
+        },
+        "failure": null,
+        "format": "tar.lz",
+        "id": "lndssvsv2mvf16260",
+        "logs": [
+          {
+            "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 11.2 GiB，预计输出 32.1 KiB）",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:06:58.900Z"
+          },
+          {
+            "message": "确定解压格式: Lzip (后缀: 001)",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:06:58.966802800Z"
+          },
+          {
+            "message": "开始解压：资料.tar.lz.001",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:06:59.019881500Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 32849 字节",
+            "severity": "success",
+            "timestamp": "2026-10-19T09:06:59.113846100Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-19T09:06:59.114453600Z"
+          }
+        ],
+        "metrics": null,
+        "name": "资料.tar.lz.001",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\补卷新任务-fd9b9cae-fe1d-490f-b19c-4452eef8bd05",
+        "processedBytes": 32849,
+        "retryOfTaskId": "ld89b89ypmvf15zxl",
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU卷组-318399c6-102a-46cd-8637-46efbc75ab53\\资料.tar.lz.001"
+        ],
+        "startedAt": "2026-10-19T09:06:58.848Z",
+        "status": "completed",
+        "taskType": "decompression",
+        "totalBytes": 32849,
+        "workloadKind": "archive"
+      },
+      "oldFailureUnchanged": true,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "kind": "conversion",
+      "target": "tar.lz",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-ba1a54b5-bd13-4d7d-a3bd-5528aef66b59.tar.lz.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-ba1a54b5-bd13-4d7d-a3bd-5528aef66b59.tar.lz.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-ba1a54b5-bd13-4d7d-a3bd-5528aef66b59.tar.lz.003"
+      ],
+      "history": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-ba1a54b5-bd13-4d7d-a3bd-5528aef66b59.tar.lz.001"
+            },
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-ba1a54b5-bd13-4d7d-a3bd-5528aef66b59.tar.lz.002"
+            },
+            {
+              "bytes": 28808,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-ba1a54b5-bd13-4d7d-a3bd-5528aef66b59.tar.lz.003"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-ba1a54b5-bd13-4d7d-a3bd-5528aef66b59.tar.lz.001",
+          "split": true,
+          "totalBytes": 2125960
+        },
+        "completedAt": "2026-10-19T09:07:45.031Z",
+        "durationMs": 40012,
+        "errorMessage": null,
+        "executionConfig": {
+          "encryptFilenames": false,
+          "format": "tar.lz",
+          "kind": "archive-conversion",
+          "level": 6,
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-ba1a54b5-bd13-4d7d-a3bd-5528aef66b59.tar.lz",
+          "passwordRequired": false,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "schemaVersion": 1,
+          "splitSize": 1048576,
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        },
+        "failure": null,
+        "format": "zip",
+        "id": "conversion-a6a36619-bcd5-4d9c-9e8d-c7c22c97d8d0",
+        "logs": [
+          {
+            "message": "转换归档：先解压至临时目录，再校验并发布新包；保留原包。",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:07:05.021006200Z"
+          },
+          {
+            "message": "确定解压格式: Zip (后缀: zip)",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:07:05.051721500Z"
+          },
+          {
+            "message": "正在检测归档加密状态...",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:07:05.052069800Z"
+          },
+          {
+            "message": "已收到手动输入的解压密码「 [已隐藏]",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:07:05.059401400Z"
+          },
+          {
+            "message": "密码验证通过：本次解压使用密码「 [已隐藏]",
+            "severity": "success",
+            "timestamp": "2026-10-19T09:07:05.123052900Z"
+          },
+          {
+            "message": "开始解压：密码来源.zip",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:07:05.130932400Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 2097290 字节",
+            "severity": "success",
+            "timestamp": "2026-10-19T09:07:05.219125900Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-19T09:07:05.219140800Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-ba1a54b5-bd13-4d7d-a3bd-5528aef66b59.tar.lz",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:07:05.236546200Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:07:44.906440700Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-19T09:07:45.012994800Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-19T09:07:45.020665700Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 2102272,
+          "media": null,
+          "outputBytes": 2125960,
+          "savingsRatio": -0.011267809303458354,
+          "schemaVersion": 1
+        },
+        "name": "归档转换 · 密码来源.zip",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-ba1a54b5-bd13-4d7d-a3bd-5528aef66b59.tar.lz.001",
+        "processedBytes": 2102272,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\密码来源.zip"
+        ],
+        "startedAt": "2026-10-19T09:07:05.019Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 2102272,
+        "workloadKind": "archive"
+      },
+      "independentFullHashes": true,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "kind": "conversion",
+      "target": "zip",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-b1994938-b248-4b46-88dd-9079c21dbaed.zip.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-b1994938-b248-4b46-88dd-9079c21dbaed.zip.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-b1994938-b248-4b46-88dd-9079c21dbaed.zip.003"
+      ],
+      "history": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-b1994938-b248-4b46-88dd-9079c21dbaed.zip.001"
+            },
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-b1994938-b248-4b46-88dd-9079c21dbaed.zip.002"
+            },
+            {
+              "bytes": 1245,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-b1994938-b248-4b46-88dd-9079c21dbaed.zip.003"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-b1994938-b248-4b46-88dd-9079c21dbaed.zip.001",
+          "split": true,
+          "totalBytes": 2098397
+        },
+        "completedAt": "2026-10-19T09:08:01.094Z",
+        "durationMs": 505,
+        "errorMessage": null,
+        "executionConfig": {
+          "encryptFilenames": false,
+          "format": "zip",
+          "kind": "archive-conversion",
+          "level": 6,
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-b1994938-b248-4b46-88dd-9079c21dbaed.zip",
+          "passwordRequired": true,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "schemaVersion": 1,
+          "splitSize": 1048576,
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        },
+        "failure": null,
+        "format": "tar.lz",
+        "id": "conversion-f3ebd7ca-0319-471b-a0eb-4019fd6be073",
+        "logs": [
+          {
+            "message": "转换归档：先解压至临时目录，再校验并发布新包；保留原包。",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:08:00.590220700Z"
+          },
+          {
+            "message": "确定解压格式: Lzip (后缀: 001)",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:08:00.623634100Z"
+          },
+          {
+            "message": "开始解压：转换-ba1a54b5-bd13-4d7d-a3bd-5528aef66b59.tar.lz.001",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:08:00.743123200Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 2097290 字节",
+            "severity": "success",
+            "timestamp": "2026-10-19T09:08:00.896557300Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-19T09:08:00.896692200Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-b1994938-b248-4b46-88dd-9079c21dbaed.zip",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:08:00.910614400Z"
+          },
+          {
+            "message": "正在创建 ZIP · Deflate · 密码保护…",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:08:00.911804900Z"
+          },
+          {
+            "message": "ZIP · Deflate 创建完成",
+            "severity": "success",
+            "timestamp": "2026-10-19T09:08:01.015534700Z"
+          },
+          {
+            "message": "分卷压缩完成：3 个分卷",
+            "severity": "success",
+            "timestamp": "2026-10-19T09:08:01.039966800Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-19T09:08:01.048808Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-19T09:08:01.074249900Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-19T09:08:01.083989500Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 2097290,
+          "media": null,
+          "outputBytes": 2098397,
+          "savingsRatio": -0.0005278240014494896,
+          "schemaVersion": 1
+        },
+        "name": "归档转换 · 转换-ba1a54b5-bd13-4d7d-a3bd-5528aef66b59.tar.lz.001",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-b1994938-b248-4b46-88dd-9079c21dbaed.zip.001",
+        "processedBytes": 2097290,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-ba1a54b5-bd13-4d7d-a3bd-5528aef66b59.tar.lz.001",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-ba1a54b5-bd13-4d7d-a3bd-5528aef66b59.tar.lz.002",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\转换-ba1a54b5-bd13-4d7d-a3bd-5528aef66b59.tar.lz.003"
+        ],
+        "startedAt": "2026-10-19T09:08:00.589Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 2097290,
+        "workloadKind": "archive"
+      },
+      "independentFullHashes": true,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    }
+  ],
+  "screenshots": [
+    "lzip1520-inline-config-1100x700.png",
+    "lzip1520-inline-config-760x520.png",
+    "lzip1520-batch-config-1100x700.png",
+    "lzip1520-batch-config-760x520.png",
+    "lzip1520-tail-preview-1100x700.png",
+    "lzip1520-tail-preview-760x520.png",
+    "lzip1520-plain-preview-1100x700.png",
+    "lzip1520-plain-preview-760x520.png",
+    "lzip1520-retry-modal-1100x700.png",
+    "lzip1520-retry-modal-760x520.png",
+    "lzip1520-conversion-tar-lz-1100x700.png",
+    "lzip1520-conversion-tar-lz-760x520.png",
+    "lzip1520-conversion-zip-1100x700.png",
+    "lzip1520-conversion-zip-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "inline-config",
+      "columns": [
+        378,
+        378
+      ],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "name": "inline-config",
+      "columns": [
+        286,
+        286
+      ],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "name": "batch-config",
+      "columns": [
+        378,
+        378
+      ],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "name": "batch-config",
+      "columns": [
+        286,
+        286
+      ],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "name": "tail-preview",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "name": "tail-preview",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "name": "plain-preview",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "name": "plain-preview",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "name": "retry-modal",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "name": "retry-modal",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "name": "conversion-tar-lz",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "name": "conversion-tar-lz",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "name": "conversion-zip",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    },
+    {
+      "name": "conversion-zip",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572"
+    }
+  ],
+  "identities": [
+    {
+      "binarySha256": "319ed08fb6663ab5f18158ca2a3864db30f9376bf3e5836e84590c2232ee1572",
+      "source": "f2c868acd437a18357a7a556bd0f120fb04c13a8",
+      "startedAt": "2026-10-19T08:59:51.783Z"
+    }
+  ],
+  "small": {
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU原件\\原文件",
+    "single": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU原件\\说明.txt.lz",
+    "tar": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU原件\\资料.tar.lz",
+    "alias": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU原件\\资料别名.tlz",
+    "multi": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\GNU原件\\多成员.txt.lz",
+    "manifest": {
+      "generator": "lzip 1.24.1",
+      "generatorPath": "/mnt/e/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/test-results/lzip-tools/unpacked/usr/bin/lzip.lzip",
+      "generatorSha256": "fb52c41132a98d22ea2b7969b268407ab5c272e7654ff78bf975f573357d48fd",
+      "files": [
+        {
+          "name": "说明.txt.lz",
+          "sha256": "55fe1be5f56c3f153213b661c54a78a3d5d3ae9502c470ef6e140e032e8aebf7",
+          "size": 94
+        },
+        {
+          "name": "资料.tar.lz",
+          "sha256": "d55d466b4911fdf6422597f945f130e733c7ac7da1b5dfb5f6d65885604d2d6d",
+          "size": 12842
+        },
+        {
+          "name": "资料别名.tlz",
+          "sha256": "d55d466b4911fdf6422597f945f130e733c7ac7da1b5dfb5f6d65885604d2d6d",
+          "size": 12842
+        },
+        {
+          "name": "多成员.txt.lz",
+          "sha256": "b527766a731b1865b14b9a187e0d86aec1f75449e70929a42788c460988b1fc5",
+          "size": 178
+        }
+      ],
+      "payloads": [
+        {
+          "name": "说明.txt",
+          "sha256": "0de8963d45a6bea509b9594357dc9e1bf03238bc658de21ca81085b378ac4579",
+          "size": 58
+        },
+        {
+          "name": "中文目录/数据.bin",
+          "sha256": "188d0669b8eb413c579bf4acc7e9c860e8c99fb0e7eb3c5c0a392cfdd4787258",
+          "size": 32791
+        },
+        {
+          "name": "空文件.txt",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        }
+      ],
+      "multiContentSha256": "57e825179857c18793bd4dcadfe12f3a89774570d1c0d30e1fee90f88692df21",
+      "note": ".tlz is a byte-identical conventional alias of the generated .tar.lz. GNU lzip is a test tool only and is not distributed with the application."
+    }
+  },
+  "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\创建来源",
+  "expected": [
+    {
+      "name": "空文件.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "数据.bin",
+      "sha256": "3ef1426e59df03857818a1350961d80a924ac19a040f776073ab2c17f3940eb6"
+    },
+    {
+      "name": "说明.txt",
+      "sha256": "439c21ad2d57ae258ff8121f40f4a9e95265c99236dbeae0ad9796cd30b4c1db"
+    },
+    {
+      "name": "中文目录/末尾.txt",
+      "sha256": "ed821ac7d4f00ccdcc78c1123fd2aef748bcedd53d4b9249943ae1a2deb81a13"
+    }
+  ],
+  "encrypted": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzip-1520\\work-f310fee1-1d9a-4bf8-b1ac-e6b2f33b5c20\\密码来源.zip",
+  "completedAt": "2026-10-19T09:08:03.957Z"
+}
