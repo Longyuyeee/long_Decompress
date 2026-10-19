@@ -1,6 +1,6 @@
 {
   "version": "1.5.17",
-  "rustDistinctPassed": 50,
+  "rustDistinctPassed": 52,
   "rustNew": [
     "services::codec_stream::tests::stream1517_boundary_keeps_nested_os_errors_out_of_corruption",
     "services::multistream_tests::stream1517_boundary_existing_aes_containers_verify_every_inner_member",
@@ -11,6 +11,7 @@
     "services::multistream_tests::stream1517_complete_decoding_keeps_raw_payload_hash",
     "services::multistream_tests::stream1517_gzip_tar_reads_tail_across_members",
     "services::multistream_tests::stream1517_later_member_damage_is_not_success",
+    "services::multistream_tests::stream1517_numeric_preview_resolves_first_middle_and_last_members",
     "services::multistream_tests::stream1517_plain_stream_has_complete_size_and_preview",
     "services::multistream_tests::stream1517_separate_tar_concatenation_is_explicit_not_partial_success",
     "services::multistream_tests::stream1517_xz_tar_reads_tail_across_members_and_padding",
@@ -20,6 +21,7 @@
     "commands::compression::io1516_disk_full_keeps_its_category_and_original_context",
     "services::archive_io::tests::io1516_real_windows_sharing_violation_is_preserved",
     "services::archive_io::tests::io1516_typed_native_failures_precede_password_text_without_inventing_corruption",
+    "services::archive_preview::tests::fixed_password_encoding_previews_original_infozip_text_and_numeric_slices",
     "services::native_extraction::tar_compatibility_tests::bzip2_and_xz_truncated_compressed_tails_are_not_success",
     "services::native_extraction::tar_compatibility_tests::derived_mapping_faults_and_compressed_trailer_never_return_success",
     "services::native_extraction::tar_compatibility_tests::diagnosis_retains_actual_tar_mapping_version_or_footer_cause",

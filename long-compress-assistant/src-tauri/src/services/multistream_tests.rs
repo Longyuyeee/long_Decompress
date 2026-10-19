@@ -117,6 +117,24 @@ fn stream1517_boundary_full_checks_honor_cancellation() {
     assert!(matches!(error.downcast_ref::<super::compression_service::CompressionError>(),Some(super::compression_service::CompressionError::Cancelled)));
 }
 
+#[tokio::test]
+async fn stream1517_numeric_preview_resolves_first_middle_and_last_members() {
+    let (base,m)=fixture(); let temp=tempfile::tempdir().unwrap();
+    for c in m["cases"].as_array().unwrap() {
+        let codec=c["codec"].as_str().unwrap(); let tar=c["kind"]=="tar";
+        let dest=temp.path().join(format!("{}-group.{}.{}",if tar {"tar"}else{"plain"},if tar {"tar"}else{"txt"},codec));
+        let split=super::split_compression::SplitCompressionService::split_archive_file(
+            &base.join(c["archive"].as_str().unwrap()),&dest,
+            (c["bytes"].as_u64().unwrap()/3).min(8193),||Ok(())).unwrap();
+        let entry=if tar {"末尾.txt".into()}else{format!("plain-group.txt")};
+        for index in [0,split.part_files.len()/2,split.part_files.len()-1] {
+            let preview=archive_preview::preview_archive_text(&split.part_files[index],&entry,None).await.unwrap();
+            if tar { assert!(preview.content.ends_with("内容不能丢。\n")); }
+            else { assert_eq!(preview.content.as_bytes(),std::fs::read(base.join("说明.txt")).unwrap()); }
+        }
+    }
+}
+
 #[test]
 fn stream1517_boundary_existing_aes_containers_verify_every_inner_member() {
     let (base,m)=fixture(); let temp=tempfile::tempdir().unwrap(); let password="Multistream public test + !";

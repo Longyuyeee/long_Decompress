@@ -14,12 +14,19 @@ export async function runMultistream1517Gate({ driver, bridge, waitForElement, a
   const sha = file => hash(readFileSync(file)), binarySha256 = sha(application)
   const progress = path.join(resultRoot, 'desktop-progress.json')
   const saved = existsSync(progress) ? JSON.parse(readFileSync(progress, 'utf8')) : null
-  const prior = saved?.binarySha256 === binarySha256 ? saved : null
+  const prior = saved && (saved.binarySha256 === binarySha256 || saved.binarySha256 === process.env.STREAM1517_REUSE_EXTRACTION_SHA) ? saved : null
   const work = prior?.work || path.join(resultRoot, 'ui-' + randomUUID())
   assert.ok(path.resolve(work).startsWith(path.resolve(resultRoot) + path.sep))
   mkdirSync(work, { recursive: true })
-  const cases = prior?.cases || [], groups = prior?.groups || {}, screenshots = [], layouts = []
-  const save = () => writeFileSync(progress, JSON.stringify({ binarySha256, work, cases, groups }, null, 2))
+  const reuse = prior && prior.binarySha256 !== binarySha256
+  const reusedExtractionBinarySha256 = prior?.reusedExtractionBinarySha256 || (reuse ? prior.binarySha256 : undefined)
+  const cases = (prior?.cases || []).filter(c => !reuse || c.kind !== 'image-preview')
+    .map(c => ({ ...c, binarySha256: c.binarySha256 || prior.binarySha256 }))
+  const groups = prior?.groups || {}, screenshots = [], layouts = []
+  const save = () => {
+    for (const c of cases) c.binarySha256 ||= binarySha256
+    writeFileSync(progress, JSON.stringify({ binarySha256, reusedExtractionBinarySha256, work, cases, groups }, null, 2))
+  }
   const owned = p => { assert.ok(path.resolve(p).startsWith(path.resolve(work) + path.sep)); return p }
   const fresh = label => owned(path.join(work, label + '-' + randomUUID()))
   const opts = { preserve_paths: true, overwrite_existing: false, delete_after: false, preserve_timestamps: true,
@@ -49,12 +56,12 @@ export async function runMultistream1517Gate({ driver, bridge, waitForElement, a
       writeFileSync(path.join(artifactDirectory, file), Buffer.from(await driver.takeScreenshot(), 'base64')); screenshots.push(file)
     }
   }
-  const checkOutput = (c, output, selected = false) => {
+  const checkOutput = (c, output, selected = false, plainName = '说明.txt') => {
     if (c.kind === 'tar') {
       for (const f of manifest.expected.filter(f => !selected || f.path === '末尾.txt')) assert.equal(sha(path.join(output, f.path)), f.sha256)
       if (selected) assert.ok(!existsSync(path.join(output, '数据.bin')))
       else assert.ok(existsSync(path.join(output, manifest.emptyDirectory)))
-    } else assert.equal(sha(path.join(output, '说明.txt')), c.decodedSha256)
+    } else assert.equal(sha(path.join(output, plainName)), c.decodedSha256)
   }
   for (const c of manifest.cases) {
     const source = path.join(base, c.archive), key = c.kind + '-' + c.codec
@@ -95,8 +102,8 @@ export async function runMultistream1517Gate({ driver, bridge, waitForElement, a
       if (c.kind === 'plain') assert.equal(browse.totalCompressedSize, c.bytes)
       const output = fresh('中卷读取-' + key)
       await ipc('extract_file', { taskId: randomUUID(), filePath: member, outputPath: output, password: null,
-        options: { ...opts, selected_entries: c.kind === 'tar' ? ['末尾.txt'] : null } })
-      checkOutput(c, output, c.kind === 'tar')
+        options: { ...opts, selected_entries: c.kind === 'tar' ? ['末尾.txt'] : [] } })
+      checkOutput(c, output, c.kind === 'tar', '原件.txt')
       cases.push({ key, kind: 'numeric', middleMember: member, fullSelectedHash: true, output }); save()
     }
   }
@@ -107,7 +114,15 @@ export async function runMultistream1517Gate({ driver, bridge, waitForElement, a
     const preview = await ipc('preview_archive_image', { filePath: source, entryPath: '图标.png', password: null })
     assert.equal(preview.width, 32); assert.equal(preview.height, 32)
     assert.equal(hash(Buffer.from(preview.dataUrl.split(',')[1], 'base64')), hash(original))
-    cases.push({ kind: 'image-preview', nodeProducer: process.version, source, sourceSha256: sha(source), originalPngHash: hash(original) }); save()
+    const folder = fresh('图片数字卷'); mkdirSync(folder)
+    const raw = readFileSync(source), chunk = Math.max(1, Math.floor(raw.length / 3)), parts = []
+    for (let offset = 0; offset < raw.length; offset += chunk) {
+      const file = owned(path.join(folder, '图标.png.gz.' + String(parts.length + 1).padStart(3, '0')))
+      writeFileSync(file, raw.subarray(offset, offset + chunk)); parts.push(file)
+    }
+    const tail = await ipc('preview_archive_image', { filePath: parts.at(-1), entryPath: '图标.png', password: null })
+    assert.equal(hash(Buffer.from(tail.dataUrl.split(',')[1], 'base64')), hash(original))
+    cases.push({ kind: 'image-preview', numericLastMemberAlsoMatches: true, nodeProducer: process.version, source, sourceSha256: sha(source), originalPngHash: hash(original) }); save()
   }
   // The following actions use real UI controls and real retained task records.
   await driver.manage().window().setRect({ width: 1100, height: 700 })
@@ -118,8 +133,9 @@ export async function runMultistream1517Gate({ driver, bridge, waitForElement, a
   await click('[data-entry-path="说明.txt"] .preview-trigger')
   assert.match(await (await waitForElement('[data-testid="archive-text-preview"]')).getText(), /用户需要的末尾内容/)
   await sizes('stream1517-plain-preview', '[data-testid="archive-text-preview"]'); await click('.preview-close')
+  await driver.manage().window().setRect({ width: 1100, height: 700 })
   await bridge('queueDesktopDialogSelections', [[groups['tar-xz'][1]]])
-  await click('[data-testid="file-manager-open-archive"]')
+  await click('.browser-header-actions .browser-primary')
   await click('[data-entry-path="末尾.txt"] .preview-trigger')
   assert.match(await (await waitForElement('[data-testid="archive-text-preview"]')).getText(), /跨越压缩流边界/)
   await sizes('stream1517-tar-preview', '[data-testid="archive-text-preview"]'); await click('.preview-close')
@@ -192,6 +208,7 @@ export async function runMultistream1517Gate({ driver, bridge, waitForElement, a
   await sizes('stream1517-later-damage', '[data-testid="diagnostic-report"] h2')
   uiCases.push({ actualLaterMemberDamagedReport: true })
   writeFileSync(path.join(artifactDirectory, 'multistream-1517-results.json'), JSON.stringify({
-    version: '1.5.17', completedAt: new Date().toISOString(), application, binarySha256, work, cases, uiCases, screenshots, layouts,
+    version: '1.5.17', completedAt: new Date().toISOString(), application, binarySha256, reusedExtractionBinarySha256,
+    work, cases, uiCases, screenshots, layouts,
   }, null, 2))
 }

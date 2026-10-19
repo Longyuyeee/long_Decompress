@@ -437,7 +437,8 @@ pub async fn preview_archive_image_with_encoding(
     let entry_path = entry_path.to_string();
     let password = password.map(str::to_string);
     tauri::async_runtime::spawn_blocking(move || {
-        preview_archive_image_sync(&archive_path, &entry_path, password.as_deref(), encoding)
+        let source = super::split_archive_detector::SplitArchiveDetector::complete_source(&archive_path)?;
+        preview_archive_image_sync(&source, &entry_path, password.as_deref(), encoding)
     })
     .await
     .context("Archive image preview worker failed")?
@@ -565,7 +566,8 @@ pub async fn preview_archive_text_with_encoding(
     let entry_path = entry_path.to_string();
     let password = password.map(str::to_string);
     tauri::async_runtime::spawn_blocking(move || {
-        preview_archive_text_sync(&archive_path, &entry_path, password.as_deref(), encoding)
+        let source = super::split_archive_detector::SplitArchiveDetector::complete_source(&archive_path)?;
+        preview_archive_text_sync(&source, &entry_path, password.as_deref(), encoding)
     })
     .await
     .context("Archive text preview worker failed")?

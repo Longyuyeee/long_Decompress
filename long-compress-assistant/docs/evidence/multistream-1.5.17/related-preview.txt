@@ -1,0 +1,5 @@
+
+running 1 test
+test services::archive_preview::tests::fixed_password_encoding_previews_original_infozip_text_and_numeric_slices ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 761 filtered out; finished in 6.95s
