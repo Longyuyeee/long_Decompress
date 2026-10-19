@@ -283,6 +283,22 @@ fn record_failure(report: &mut ArchiveDiagnosticReport, error: &anyhow::Error, p
     report.evidence.push(format!("Integrity failure class: {code}"));
 }
 
+fn preserve_confirmed_zip64_damage(report: &mut ArchiveDiagnosticReport, error: Option<&anyhow::Error>) {
+    let Some(error) = error else { return; };
+    // Finding readable local entries does not undo proven directory damage.
+    // Keep password/encoding issues as additional recovery requirements while
+    // retaining the original cause and the existing can_repair decision.
+    report.status = "damaged".into();
+    report.integrity_tested = false;
+    let message = error.to_string();
+    let detail = message.strip_prefix("[archive-inspection:damaged] ").unwrap_or(&message);
+    report.issues.insert(0, DiagnosticIssue {
+        code: "damaged".into(), severity: "error".into(), title: "ZIP64 目录信息损坏".into(),
+        detail: format!("{detail}。救援密码仅用于检查已找到的本地条目，不能修复原目录；原包保持不变。"),
+    });
+    report.evidence.push("Confirmed ZIP64 directory damage retained during local-entry recovery/password checks".into());
+}
+
 pub async fn diagnose_archive(
     path: &Path,
     password: Option<&str>,
@@ -465,6 +481,8 @@ pub async fn diagnose_archive_with_encoding(
 
     if actual_format == "ZIP" {
         if metadata.is_err() {
+            let zip64_structure = metadata.as_ref().err()
+                .filter(|error| format!("{error:#}").contains("[archive-inspection:damaged] ZIP64"));
             if let Ok(mut local) = super::zip_recovery_reader::RecoveryReader::open(source, &cancelled) {
                 if local.directory_rebuilt {
                     report.encrypted = local.encrypted;
@@ -484,6 +502,7 @@ pub async fn diagnose_archive_with_encoding(
                                 let error: anyhow::Error = error.into();
                                 if super::zip_password::encoding_error(&error).is_some() {
                                     record_failure(&mut report, &error, true, false, source);
+                                    preserve_confirmed_zip64_damage(&mut report, zip64_structure);
                                     return Ok(report);
                                 }
                                 report.can_repair = false;
@@ -504,6 +523,7 @@ pub async fn diagnose_archive_with_encoding(
                         code: format!("local_boundary_{index}"), severity: "warning".to_string(), title: "部分内容无法确认".to_string(), detail,
                     }));
                     check_cancelled(&cancelled)?;
+                    preserve_confirmed_zip64_damage(&mut report, zip64_structure);
                     return Ok(report);
                 }
             }
@@ -841,6 +861,38 @@ mod tests {
     use sha2::{Digest, Sha256};
     use std::io::Write;
     use tauri::Window;
+
+    #[tokio::test]
+    async fn zip64_1515_diagnosis_preserves_directory_damage_and_recovery_password_requirements() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("source.zip");
+        let output = temp.path().join("损坏的ZIP64目录.zip");
+        let secret = "zip64-recovery-secret";
+        let mut writer = zip_aes::ZipWriter::new(File::create(&source).unwrap());
+        writer.start_file("完整文件.bin", zip_aes::write::SimpleFileOptions::default()
+            .compression_method(zip_aes::CompressionMethod::Stored)
+            .with_aes_encryption(zip_aes::AesMode::Aes256, secret)).unwrap();
+        writer.write_all(&vec![81; 170_003]).unwrap();
+        writer.finish().unwrap();
+        super::super::standard_zip_writer::split(&source, &output, 65536, || Ok(()), |_, _| {}).unwrap();
+        let mut bytes = std::fs::read(&output).unwrap();
+        let locator = bytes.len() - 42;
+        assert_eq!(&bytes[locator..locator + 4], b"PK\x06\x07");
+        let at = u64::from_le_bytes(bytes[locator + 8..locator + 16].try_into().unwrap()) as usize;
+        bytes[at] ^= 1;
+        std::fs::write(&output, bytes).unwrap();
+        for password in [None, Some("wrong-password"), Some(secret)] {
+            let report = diagnose_archive(&output, password, Arc::new(AtomicBool::new(false))).await.unwrap();
+            assert_eq!(report.status, "damaged", "{report:?}");
+            assert!(!report.integrity_tested);
+            assert!(report.encrypted);
+            assert_eq!(report.issues[0].code, "damaged");
+            assert_eq!(report.can_repair, password == Some(secret));
+            assert_eq!(report.recoverability, "local_entries");
+            if password.is_none() { assert!(report.issues.iter().any(|i| i.code == "password_required")); }
+            if password == Some("wrong-password") { assert!(report.issues.iter().any(|i| i.code == "wrong_password")); }
+        }
+    }
 
     #[cfg(windows)]
     #[tokio::test]

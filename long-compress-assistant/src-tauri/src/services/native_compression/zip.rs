@@ -270,12 +270,14 @@ mod tests {
                 let reader = crate::services::numeric_volume_reader::ZipInputReader::open(input).unwrap();
                 let mut archive = zip_aes::ZipArchive::new(reader).unwrap();
                 let mut checked = Vec::new();
+                let mut tail_offset = None;
                 for file in files {
                     let name = file["name"].as_str().unwrap();
                     let mut entry = if let Some(password) = password {
                         crate::services::zip_password::open_named_entry(&mut archive, name, password).unwrap()
                     } else { archive.by_name(name).unwrap() };
                     assert_eq!(entry.size(), file["bytes"].as_u64().unwrap());
+                    if name == "99-末尾说明.txt" { tail_offset = Some(entry.header_start()); }
                     let mut hash = Sha256::new();
                     let mut buffer = vec![0; 1024 * 1024];
                     let mut bytes = 0u64;
@@ -286,7 +288,7 @@ mod tests {
                     checked.push(serde_json::json!({"name":name,"bytes":bytes,"sha256":digest}));
                 }
                 assert!(archive.by_name("空目录/").unwrap().is_dir());
-                let tail_offset = archive.by_name("99-末尾说明.txt").unwrap().header_start();
+                let tail_offset = tail_offset.expect("Following entry was fully checked above, including its password");
                 if mode == "plain" { assert!(tail_offset > u32::MAX as u64); }
                 cases.push(serde_json::json!({"mode":mode,"layout":layout_name,"baseReused":reused,
                     "source":input,"parts":parts,"tailVirtualOffset":tail_offset,"files":checked}));

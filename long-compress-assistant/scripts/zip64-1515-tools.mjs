@@ -77,9 +77,16 @@ if (process.argv.includes('--prepare')) {
   cases.push({ mode: 'plain-stream', file, bytes: statSync(file).size, sha256: await sha(file), producerMode: 'actual stdout, no seek' })
   writeFileSync(path.join(work, 'originals.json'), JSON.stringify({ tool: identity, source: manifest, cases }, null, 2))
 } else if (process.argv.includes('--read-products')) {
-  const native = JSON.parse(readFileSync(path.join(work, 'native-results.json'), 'utf8'))
-  const cases = []
+  const finished = existsSync(path.join(work, 'native-results.json'))
+  assert.ok(finished || process.argv.includes('--partial'), 'Wait for the matrix, or explicitly read its completed stages')
+  const native = JSON.parse(readFileSync(path.join(work, finished ? 'native-results.json' : 'native-progress.json'), 'utf8'))
+  const checkpoint = path.join(work, 'independent-progress.json')
+  const cases = existsSync(checkpoint) ? JSON.parse(readFileSync(checkpoint, 'utf8')).cases : []
   for (const c of native) {
+    if (cases.some(done => done.mode === c.mode && done.layout === c.layout && done.source === c.source)) {
+      console.log(`[zip64-1515] reuse completed independent ${c.mode}/${c.layout}`)
+      continue
+    }
     console.log(`[zip64-1515] independent full read ${c.mode}/${c.layout}`)
     const files = []
     for (const f of manifest.files) {
@@ -91,7 +98,7 @@ if (process.argv.includes('--prepare')) {
     cases.push({ mode: c.mode, layout: c.layout, source: c.source, files, independentlyDecoded: true })
     writeFileSync(path.join(work, 'independent-progress.json'), JSON.stringify({ tool: identity, cases }, null, 2))
   }
-  writeFileSync(path.join(work, 'independent-results.json'), JSON.stringify({ tool: identity, cases }, null, 2))
+  if (finished) writeFileSync(path.join(work, 'independent-results.json'), JSON.stringify({ tool: identity, cases }, null, 2))
 } else {
   assert.fail('Choose --prepare or --read-products')
 }

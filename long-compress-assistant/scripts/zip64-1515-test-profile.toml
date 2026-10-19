@@ -1,0 +1,18 @@
+# Explicitly selected only by the multi-GiB regression command. This does not
+# change application profiles, default tests, archive algorithms or settings.
+[profile.test.package.sha2]
+opt-level = 3
+[profile.test.package.miniz_oxide]
+opt-level = 3
+[profile.test.package.sha1]
+opt-level = 3
+[profile.test.package.aes]
+opt-level = 3
+[profile.test.package.hmac]
+opt-level = 3
+[profile.test.package.pbkdf2]
+opt-level = 3
+[profile.test.package.crc32fast]
+opt-level = 3
+[profile.test.package."zip@8.6.0"]
+opt-level = 3

@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict'
 import { createHash, randomUUID } from 'node:crypto'
 import { spawn, spawnSync } from 'node:child_process'
-import { copyFileSync, createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { copyFileSync, createReadStream, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { By, Key } from 'selenium-webdriver'
 
 export async function runZip641515Gate({ driver, bridge, waitForElement, artifactDirectory, application, root, bundledSevenZip }) {
   const work = path.join(root, 'test-results/zip64-1515')
   const manifest = JSON.parse(readFileSync(path.join(work, 'source.json'), 'utf8'))
-  const native = JSON.parse(readFileSync(path.join(work, 'native-results.json'), 'utf8'))
+  let native = []
   const original = JSON.parse(readFileSync(path.join(work, 'originals.json'), 'utf8'))
   const ui = path.join(work, 'ui-' + randomUUID()); mkdirSync(ui)
   const password = 'ZIP64-test-password + !', cases = [], screenshots = [], layouts = []
@@ -42,23 +42,39 @@ export async function runZip641515Gate({ driver, bridge, waitForElement, artifac
       writeFileSync(path.join(artifactDirectory, file), Buffer.from(await driver.takeScreenshot(), 'base64')); screenshots.push(file)
     }
   }
-  const options = { preserve_paths: true, overwrite_existing: false, delete_after: false, preserve_timestamps: true, skip_corrupted: false, create_subdirectory: false, conflict_policy: 'rename', enable_bruteforce: false, bruteforce_wordlists: [] }
+  const options = { preserve_paths: true, overwrite_existing: false, delete_after: false, preserve_timestamps: true, skip_corrupted: false, extract_only_newer: false, file_filter: null, create_subdirectory: false, conflict_policy: 'rename', enable_bruteforce: false, bruteforce_wordlists: [] }
   const checkpoint = path.join(work, 'application-native.json')
-  if (!existsSync(checkpoint)) {
+  if (existsSync(checkpoint)) cases.push(...JSON.parse(readFileSync(checkpoint, 'utf8')))
+  {
     for (const c of original.cases) {
+      if (cases.some(done => done.original === c.mode && done.selectedTailHash && done.fullIntegrity)) { console.log('[zip64-1515] reuse application original', c.mode); continue }
       console.log('[zip64-1515] application original', c.mode)
       assert.equal(await sha(c.file), c.sha256)
       const secret = c.mode.startsWith('plain') ? null : password
-      const browse = await ipc('browse_archive', { filePath: c.file, password: secret })
-      assert.equal(browse.entries.find(e => e.path === manifest.files[0].name).size, manifest.files[0].bytes)
-      await ipc('test_archive_integrity', { filePath: c.file, password: secret })
+      let state = cases.find(done => done.original === c.mode)
+      if (!state) { state = { original: c.mode }; cases.push(state) }
+      if (!state.browse) {
+        const browse = await ipc('browse_archive', { filePath: c.file, password: secret })
+        assert.equal(browse.entries.find(e => e.path === manifest.files[0].name).size, manifest.files[0].bytes)
+        state.browse = true; writeFileSync(checkpoint, JSON.stringify(cases, null, 2))
+      }
+      if (!state.fullIntegrity) {
+        await ipc('test_archive_integrity', { filePath: c.file, password: secret })
+        state.fullIntegrity = true; writeFileSync(checkpoint, JSON.stringify(cases, null, 2))
+      }
       const out = path.join(ui, '原包所选-' + c.mode)
       await ipc('extract_file', { taskId: randomUUID(), filePath: c.file, outputPath: out, password: secret, options: { ...options, selected_entries: [manifest.files[1].name] } })
       assert.equal(await sha(path.join(out, manifest.files[1].name)), manifest.files[1].sha256)
       assert.ok(!existsSync(path.join(out, manifest.files[0].name)))
-      cases.push({ original: c.mode, fullIntegrity: true, selectedTailHash: true, unselectedLargeFileNotWritten: true })
+      Object.assign(state, { selectedTailHash: true, unselectedLargeFileNotWritten: true })
+      writeFileSync(checkpoint, JSON.stringify(cases, null, 2))
     }
+    await driver.wait(() => {
+      try { return JSON.parse(readFileSync(path.join(work, 'native-results.json'), 'utf8')).length === 10 } catch { return false }
+    }, 600000, 'Wait for the ten completed native groups, including the real streaming descriptor boundary')
+    native = JSON.parse(readFileSync(path.join(work, 'native-results.json'), 'utf8'))
     for (const c of native.filter(c => c.layout !== 'single')) {
+      if (cases.some(done => done.product === c.mode && done.layout === c.layout)) { console.log('[zip64-1515] reuse application product', c.mode, c.layout); continue }
       const member = c.parts[1]
       const browse = await ipc('browse_archive', { filePath: member, password: c.mode.startsWith('plain') ? null : password })
       assert.equal(browse.entries.find(e => e.path === manifest.files[0].name).size, manifest.files[0].bytes)
@@ -66,7 +82,9 @@ export async function runZip641515Gate({ driver, bridge, waitForElement, artifac
       await ipc('extract_file', { taskId: randomUUID(), filePath: member, outputPath: out, password: c.mode.startsWith('plain') ? null : password, options: { ...options, selected_entries: [manifest.files[1].name] } })
       assert.equal(await sha(path.join(out, manifest.files[1].name)), manifest.files[1].sha256)
       cases.push({ product: c.mode, layout: c.layout, anyMemberBrowse: true, selectedTailHash: true })
+      writeFileSync(checkpoint, JSON.stringify(cases, null, 2))
     }
+    if (!cases.some(done => done.corruptZip64End)) {
     const encrypted = native.find(c => c.mode === 'aes' && c.layout === 'standard')
     const damaged = path.join(ui, 'ZIP64终目录损坏'); mkdirSync(damaged)
     for (const member of encrypted.parts) copyFileSync(member, path.join(damaged, path.basename(member)))
@@ -79,9 +97,20 @@ export async function runZip641515Gate({ driver, bridge, waitForElement, artifac
     assert.equal(diagnosis.status, 'damaged'); assert.equal(diagnosis.integrityTested, false)
     const failure = await invoke('extract_file', { taskId: randomUUID(), filePath: bad, outputPath: damaged + '-不应发布', password: 'incorrect-password', options })
     assert.equal(failure.ok, false); assert.match(failure.error, /\[archive-inspection:damaged\].*ZIP64/)
-    cases.push({ corruptZip64End: true, damagedBeforePasswordRetry: true, failedExtractionNotPublished: true })
+    assert.ok(!existsSync(damaged + '-不应发布') || readdirSync(damaged + '-不应发布').length === 0)
+    cases.push({ corruptZip64End: true, damagedBeforePasswordRetry: true, failedExtractionNotPublished: true, source: bad })
     writeFileSync(checkpoint, JSON.stringify(cases, null, 2))
-  } else { cases.push(...JSON.parse(readFileSync(checkpoint, 'utf8'))); console.log('[zip64-1515] reuse completed application command cases') }
+    }
+  }
+
+  await click('[data-testid="nav-FileIntegrity"]'); await click('[data-testid="archive-diagnostic-mode"]')
+  await bridge('queueDesktopDialogSelections', [cases.find(c => c.corruptZip64End).source])
+  await click('.archive-select'); await fill('.archive-password', 'incorrect-password')
+  await click('[data-testid="start-archive-diagnosis"]')
+  await driver.wait(async () => await (await waitForElement('[data-testid="diagnostic-report"] h2')).getText() === '归档损坏', 30000)
+  assert.match(await (await waitForElement('[data-testid="diagnostic-report"]')).getText(), /ZIP64\s*目录信息损坏/)
+  await sizes('zip641515-diagnosis', '[data-testid="diagnostic-report"] h2')
+  cases.push({ actualDamagedDiagnosticHeading: true, actualRecoveryPasswordKeptSecondary: true })
 
   // Actual browser and text preview seek to a local header beyond 4 GiB.
   const standard = native.find(c => c.mode === 'plain' && c.layout === 'standard')
