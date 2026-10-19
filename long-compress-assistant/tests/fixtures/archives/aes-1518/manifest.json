@@ -1,0 +1,142 @@
+{
+  "tool": "CPython 3.12.10/cryptography 49.0.0",
+  "specification": "Existing AESENC01/TARAES01 and AESENC02/TARAES02 in published v1.5.17 source",
+  "password": "Long 分卷-1518",
+  "kdf": "Argon2id v19, 65536 KiB, 3 iterations, 1 lane, 32-byte key",
+  "cipher": "AES-256-GCM; V2 64 KiB chunks and header/index AAD; V1 single authenticated message",
+  "sourceManifestSha256": "6ffba225f34f64a65978a24f10b7f924ee1f606193b2935386de85cdae7bf4a4",
+  "cases": [
+    {
+      "version": 2,
+      "kind": "tar",
+      "codec": "",
+      "archive": "v2-资料.tar.aes",
+      "innerName": "资料.tar",
+      "source": "original.tar",
+      "sha256": "65e34fdf9d8f8f1b66a876d66723f30188082cf876c513a8fe63d6b599dfa89f",
+      "bytes": 143484,
+      "innerSha256": "2c5d1e8907369086bf3a9f05ae2b43b85aa21979422ab1fa783a23ff1dbaad2c",
+      "innerBytes": 143360
+    },
+    {
+      "version": 1,
+      "kind": "tar",
+      "codec": "",
+      "archive": "v1-资料.tar.aes",
+      "innerName": "资料.tar",
+      "source": "original.tar",
+      "sha256": "bafccffd8fc3d8eb0b5502346df3e291f62922578c36e5833fce9f9a6657ab15",
+      "bytes": 143428,
+      "innerSha256": "2c5d1e8907369086bf3a9f05ae2b43b85aa21979422ab1fa783a23ff1dbaad2c",
+      "innerBytes": 143360
+    },
+    {
+      "version": 2,
+      "kind": "tar",
+      "codec": "gz",
+      "archive": "v2-资料.tar.gz.aes",
+      "innerName": "资料.tar.gz",
+      "source": "跨段.tar.gz",
+      "sha256": "a77d7044c866a33094a60052e9fe61cba4ec62d4d735704eb9a71dd3a17a72e6",
+      "bytes": 131980,
+      "innerSha256": "b60117e17d543505a487e05f3a09edb832a379389810f4676f8832b24e8d6664",
+      "innerBytes": 131856
+    },
+    {
+      "version": 2,
+      "kind": "tar",
+      "codec": "bz2",
+      "archive": "v2-资料.tar.bz2.aes",
+      "innerName": "资料.tar.bz2",
+      "source": "跨段.tar.bz2",
+      "sha256": "1e72b93be10b2de37583569513a29573c33bf235838ac1c64426893d4a8a75e2",
+      "bytes": 133395,
+      "innerSha256": "73b01f9ff9ce14eeab9b05dc255354ddb9956abc45bd45795e06100730b67bd1",
+      "innerBytes": 133271
+    },
+    {
+      "version": 2,
+      "kind": "tar",
+      "codec": "xz",
+      "archive": "v2-资料.tar.xz.aes",
+      "innerName": "资料.tar.xz",
+      "source": "跨段.tar.xz",
+      "sha256": "7558c4a7349bb217dfa1abbd23cdb5d3bbe569c80d6733bcf432a6e03a9d881f",
+      "bytes": 132048,
+      "innerSha256": "a59b9408347c10722f4497a27d6be662b3792412ca129d92adf6e791ab733d30",
+      "innerBytes": 131924
+    },
+    {
+      "version": 2,
+      "kind": "tar",
+      "codec": "zst",
+      "archive": "v2-资料.tar.zst.aes",
+      "innerName": "资料.tar.zst",
+      "source": "跨段.tar.zst",
+      "sha256": "9eecfe85b15223ed673a290f31ac51378e124e0969822045f0b7d1b8e783cd0a",
+      "bytes": 133710,
+      "innerSha256": "4e50b5c02b30609b6fe8a247c692b5a7e944ee5c5ae5d5b4e0acbee6c4c4c015",
+      "innerBytes": 133586
+    },
+    {
+      "version": 2,
+      "kind": "plain",
+      "codec": "gz",
+      "archive": "v2-说明.txt.gz.aes",
+      "innerName": "说明.txt.gz",
+      "source": "说明.txt.gz",
+      "sha256": "4b5e3b48595fe5a2004eca06833f27f6380e3e19d4968b1842e0f17468a4c092",
+      "bytes": 2584,
+      "innerSha256": "520440f9405d5b76cd6910f26d9362ce14105dd7e358051bd61e921d0a483ab4",
+      "innerBytes": 2492
+    },
+    {
+      "version": 1,
+      "kind": "plain",
+      "codec": "gz",
+      "archive": "v1-说明.txt.gz.aes",
+      "innerName": "说明.txt.gz",
+      "source": "说明.txt.gz",
+      "sha256": "b8a5414c33674c1372cbb427fffde9a14301fd4bb7b0f88559d6592f4a64f8f2",
+      "bytes": 2560,
+      "innerSha256": "520440f9405d5b76cd6910f26d9362ce14105dd7e358051bd61e921d0a483ab4",
+      "innerBytes": 2492
+    },
+    {
+      "version": 2,
+      "kind": "plain",
+      "codec": "bz2",
+      "archive": "v2-说明.txt.bz2.aes",
+      "innerName": "说明.txt.bz2",
+      "source": "说明.txt.bz2",
+      "sha256": "757e888a551d8c47c5ee7cce7fcb137da07fffcb3d23cd3f5837006372da0ee7",
+      "bytes": 1157,
+      "innerSha256": "7da4e84ddc205b786753889891a3107cf073ac12f4d8cf6de2de900d67fa18d2",
+      "innerBytes": 1065
+    },
+    {
+      "version": 2,
+      "kind": "plain",
+      "codec": "xz",
+      "archive": "v2-说明.txt.xz.aes",
+      "innerName": "说明.txt.xz",
+      "source": "说明.txt.xz",
+      "sha256": "f94c4f8dd867ffa7d3617b59df67488de29f38c8d3761c0553ae28cc62bbec3d",
+      "bytes": 860,
+      "innerSha256": "5efaf50824d3feadf9b7fe455f42718a2783e958f2a9d42d0fd2e546854745eb",
+      "innerBytes": 768
+    },
+    {
+      "version": 2,
+      "kind": "plain",
+      "codec": "zst",
+      "archive": "v2-说明.txt.zst.aes",
+      "innerName": "说明.txt.zst",
+      "source": "说明.txt.zst",
+      "sha256": "e7688849390206fad467defc704cc6b79f218a5489611c657bfeff1385e85bec",
+      "bytes": 963,
+      "innerSha256": "d2d696e0b7d5b6e48ecd601c94bbef07654b8fe8fdd4607dffb8fcb22bf28b97",
+      "innerBytes": 871
+    }
+  ]
+}

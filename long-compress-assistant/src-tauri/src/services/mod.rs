@@ -92,3 +92,5 @@ mod archive_io_disk_tests;
 
 #[cfg(test)]
 mod multistream_tests;
+#[cfg(test)]
+mod aes_volume_tests;
