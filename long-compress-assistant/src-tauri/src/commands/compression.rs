@@ -147,7 +147,7 @@ pub async fn extract_file(
             opts,
         )
         .await
-        .map_err(|e| e.to_string());
+        .map_err(|e| crate::services::archive_io::message(&e));
 
     if let Err(error) = result.as_ref() {
         service.emit_log(
@@ -245,7 +245,7 @@ fn io1516_disk_full_keeps_its_category_and_original_context() {
 }
 
 fn compression_command_error(error: &anyhow::Error) -> String {
-    let message = error.to_string();
+    let message = crate::services::archive_io::message(error);
     if message.starts_with("压缩失败:") || message.starts_with("压缩失败：") {
         message
     } else {
@@ -322,13 +322,13 @@ pub async fn convert_archive(
     let _task_guard = TaskCancellationGuard::new(&task_id);
     let parent = Path::new(&output_path).parent().ok_or("请选择输出目录")?;
     let staging = tempfile::Builder::new().prefix(".long-convert-").tempdir_in(parent)
-        .map_err(|error| format!("无法创建转换暂存目录：{error}"))?;
+        .map_err(|error| format!("无法创建转换暂存目录：{}", crate::services::archive_io::message(&error.into())))?;
     service.emit_log(&window, &task_id, "转换归档：先解压至临时目录，再校验并发布新包；保留原包。", TaskLogSeverity::Info);
     let extraction = conversion_extraction_options(source_zip_password_encoding);
     let _ = window.emit("archive-conversion-phase", serde_json::json!({"taskId": task_id, "phase": "reading"}));
     service.extract(window.clone(), task_id.clone(), source_path,
         Some(staging.path().to_string_lossy().into_owned()), source_password, extraction)
-        .await.map_err(|error| format!("转换读取原包失败：{error}"))?;
+        .await.map_err(|error| format!("转换读取原包失败：{}", crate::services::archive_io::message(&error)))?;
     if service.cancellation_flag.load(Ordering::Relaxed) {
         return Err("转换已取消，原包保留".to_string());
     }

@@ -128,18 +128,14 @@ fn classify_error(
     archive_encrypted: bool,
     password_provided: bool,
 ) -> CompressionError {
-    if matches!(
-        &error,
-        sevenz_rust::Error::Io(io_error, _)
-            if io_error.kind() == std::io::ErrorKind::StorageFull
-    ) {
-        return CompressionError::DiskFull;
-    }
-    // A decoder's invalid input is not the same as an invalid output path or
-    // a device/permission failure. Preserve OS errors before data/password rules.
-    if matches!(&error, sevenz_rust::Error::Io(io, _) if io.raw_os_error().is_some()) {
-        return CompressionError::ExtractionFailed(error.to_string());
-    }
+    let error = match error {
+        sevenz_rust::Error::Io(cause, detail) if cause.raw_os_error().is_some() || matches!(cause.kind(),
+            std::io::ErrorKind::StorageFull | std::io::ErrorKind::PermissionDenied |
+            std::io::ErrorKind::NotFound | std::io::ErrorKind::TimedOut |
+            std::io::ErrorKind::BrokenPipe | std::io::ErrorKind::WriteZero) =>
+                return CompressionError::IoFailure { cause, detail: format!("7Z 文件读写未完成：{detail}") },
+        other => other,
+    };
 
     if archive_encrypted {
         if !password_provided {
@@ -1085,10 +1081,7 @@ mod tests {
                 &DecompressOptions::default(),
             )
             .expect_err("injected storage exhaustion must fail");
-            assert!(matches!(
-                error.downcast_ref::<CompressionError>(),
-                Some(CompressionError::DiskFull)
-            ));
+            assert_eq!(crate::services::archive_io::kind(&error).unwrap().0, "disk-full");
             assert!(!staging.path().join("disk-full.bin").exists());
         }
 

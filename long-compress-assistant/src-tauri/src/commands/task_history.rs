@@ -45,13 +45,15 @@ fn classify_failure(record: &TaskHistoryRecord) -> Option<TaskFailureV1> {
     }
     let marker = message.split_once("[archive-inspection:")
         .and_then(|(_, tail)| tail.split_once(']').map(|(code, _)| code));
-    let category = marker.filter(|code| matches!(*code,
+    let io_category = message.split_once("[archive-io:").and_then(|(_, tail)| tail.split_once(']').map(|(code, _)| code))
+        .filter(|code| matches!(*code, "disk-full" | "target-busy" | "permission" | "io"));
+    let category = io_category.or_else(|| marker.filter(|code| matches!(*code,
         "damaged" | "missing-volume" | "incomplete" | "permission" | "timeout" |
         "engine-unavailable" | "engine-start" | "io" | "ambiguous-data" | "rar-later-data" | "password-encoding" | "unsupported"
-    )).unwrap_or("unknown");
+    ))).unwrap_or("unknown");
     let observed = record.failure.as_ref().filter(|failure| failure.schema_version == 1)
         .map(|failure| failure.stage.as_str()).filter(|stage| matches!(*stage,
-            "Pre-checking" | "Extracting" | "Verifying" | "Finalizing" | "password-attempt" |
+            "Pre-checking" | "Extracting" | "Compressing" | "Verifying" | "Finalizing" | "password-attempt" |
             "Probing" | "Encoding" | "Transforming" | "Validating" | "Publishing" | "still-encoding"
         ));
     let inspection = marker.is_some() || message.contains("归档检测失败：");
@@ -59,7 +61,7 @@ fn classify_failure(record: &TaskHistoryRecord) -> Option<TaskFailureV1> {
         schema_version: 1,
         category: category.into(),
         stage: if inspection { "inspection" } else { observed.unwrap_or("unknown") }.into(),
-        evidence: if marker.is_some() { "recorded-marker" }
+        evidence: if marker.is_some() || (io_category.is_some() && observed.is_none()) { "recorded-marker" }
             else if observed.is_some() && !inspection { "observed-stage" } else { "unknown" }.into(),
     })
 }
@@ -491,7 +493,7 @@ pub struct HistoryQuery {
 // records saved before structured failure metadata existed.
 fn history_failure_category_sql() -> String {
     let categories = ["rollback-incomplete", "output-conflict", "publication-failed", "verification-failed",
-        "source-changed", "source-missing", "source-unavailable", "source-invalid", "damaged",
+        "source-changed", "source-missing", "source-unavailable", "source-invalid", "disk-full", "target-busy", "damaged",
         "missing-volume", "incomplete", "permission", "timeout", "engine-unavailable", "engine-start", "io", "ambiguous-data", "rar-later-data", "password-encoding", "unsupported", "unknown"];
     let accepted = categories.iter().map(|value| format!("'{value}'")).collect::<Vec<_>>().join(",");
     let mut expression = format!("CASE WHEN status != 'failed' THEN NULL WHEN json_valid(failure) THEN CASE WHEN json_extract(failure, '$.schemaVersion') = 1 AND json_extract(failure, '$.category') IN ({accepted}) THEN json_extract(failure, '$.category') END END");
@@ -501,6 +503,8 @@ fn history_failure_category_sql() -> String {
             "rollback-incomplete" | "output-conflict" | "publication-failed" => vec![format!("[archive-output:Publishing:{category}]")],
             "verification-failed" => vec![format!("[archive-output:Verifying:{category}]")],
             "source-changed" | "source-missing" | "source-unavailable" | "source-invalid" => vec![format!("[archive-source:Pre-checking:{category}]"), format!("[archive-source:Extracting:{category}]")],
+            "disk-full" | "target-busy" => vec![format!("[archive-io:{category}]")],
+            "permission" | "io" => vec![format!("[archive-io:{category}]"), format!("[archive-inspection:{category}]")],
             _ => vec![format!("[archive-inspection:{category}]")],
         };
         for marker in markers { fallback.push_str(&format!("WHEN instr(COALESCE(error_message, ''), '{marker}') > 0 THEN '{category}' ")); }
@@ -669,6 +673,30 @@ pub async fn clear_task_history() -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn io1516_categories_survive_persistence_filters_and_observed_stages() {
+        let dir = tempfile::tempdir().unwrap();
+        let db = crate::database::connection::DatabaseConnection::new(&dir.path().join("io.db"), None).await.unwrap();
+        for category in ["disk-full", "target-busy", "permission", "io"] {
+            let record = serde_json::from_value(serde_json::json!({
+                "id":category, "name":"source.zip", "taskType":"compression", "workloadKind":"archive",
+                "status":"failed", "sourcePaths":["D:/source.bin"], "outputPath":"D:/out.zip",
+                "completedAt":"2026-10-19T00:00:00Z", "durationMs":1, "processedBytes":1024,
+                "totalBytes":4096, "logs":[], "errorMessage":format!("[archive-io:{category}] original filesystem detail"),
+                "failure":{"schemaVersion":1,"category":"unknown","stage":"Compressing","evidence":"observed-stage"}
+            })).unwrap();
+            save_task_history_to_pool(db.pool(), record).await.unwrap();
+            let page = history_query_from_pool(db.pool(), 100, None, HistoryQuery {
+                failure_category: Some(category.into()), ..Default::default()
+            }).await.unwrap();
+            assert_eq!(page.records.len(), 1, "{category}");
+            let saved = page.records[0].failure.as_ref().unwrap();
+            assert_eq!(saved.category, category);
+            assert_eq!(saved.stage, "Compressing");
+            assert_eq!(saved.evidence, "observed-stage");
+        }
+    }
 
     #[tokio::test]
     async fn unsupported_egg_feature_keeps_final_cause_in_history_queries() {

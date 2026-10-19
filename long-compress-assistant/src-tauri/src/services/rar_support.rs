@@ -59,6 +59,9 @@ impl RarSupportService {
     pub(crate) fn native_failure_message(error: &unrar::error::UnrarError, password_proven: bool) -> Option<String> {
         if let Some(message) = error.volume_failure_message() { return Some(message); }
         use unrar::error::Code;
+        if matches!(error.code, Code::EOpen | Code::ERead | Code::EWrite | Code::ECreate | Code::EClose) {
+            return Some(format!("[archive-io:io] RAR 文件读写未完成，请按原始错误检查来源、输出目录或设备状态，处理后创建新任务；不能判定为密码错误。原始错误：{error:?}"));
+        }
         if password_proven && matches!(error.code, Code::BadData | Code::BadPassword | Code::MissingPassword) {
             return Some(format!("[archive-inspection:rar-later-data] RAR 前面的加密头或内容已用该密码成功读取，后续数据未通过校验；请核对同组分卷是否混用、传输是否完整，或后续条目是否使用其他密码。不要重复尝试已经通过的密码。原始错误：{error:?}"));
         }

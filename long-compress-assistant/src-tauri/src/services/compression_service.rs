@@ -82,6 +82,8 @@ pub enum CompressionError {
     PartialSuccess(Vec<String>),
     #[error("IO错误: {0}")]
     IoError(#[from] std::io::Error),
+    #[error("{detail}: {cause}")]
+    IoFailure { detail: String, #[source] cause: std::io::Error },
     #[error("任务已取消")]
     Cancelled,
 }
@@ -186,10 +188,11 @@ pub struct ArchiveFormatDetectedPayload {
     pub format: String,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct SourceFileSnapshot {
     len: u64,
     modified: Option<SystemTime>,
+    members: Vec<(PathBuf, u64, Option<SystemTime>, Option<SystemTime>)>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -1035,7 +1038,7 @@ impl CompressionService {
                 .is_some_and(|io_error| io_error.kind() == std::io::ErrorKind::StorageFull)
         });
         if storage_full {
-            CompressionError::DiskFull.into()
+            error.context("[archive-io:disk-full] 磁盘空间不足，当前处理未完成；请释放空间或更换输出目录后创建新任务")
         } else {
             error
         }
@@ -2063,10 +2066,34 @@ impl CompressionService {
     }
 
     pub async fn extract(&self, window: Window, task_id: String, file_path: String, output_dir: Option<String>, password: Option<String>, options: DecompressOptions) -> Result<String> {
-        let service = self.clone();
         let file_path = Self::resolve_extraction_source(Path::new(&file_path))?;
+        let snapshot = Self::source_file_snapshot(Path::new(&file_path), "Pre-checking")?;
+        let executing = AtomicBool::new(false);
+        let result = self.extract_with_source_snapshot(window, task_id, file_path.clone(), output_dir, password, options, snapshot.clone(), &executing).await;
+        if let Err(error) = result {
+            let message = format!("{error:#}");
+            if !self.cancellation_flag.load(Ordering::Relaxed) && !message.contains("[archive-source:")
+                && !message.contains("[archive-output:") {
+                let stage = if executing.load(Ordering::Relaxed) { "Extracting" } else { "Pre-checking" };
+                match Self::source_file_changed(Path::new(&file_path), &snapshot, stage) {
+                    Ok(true) => return Err(anyhow::Error::new(if stage == "Extracting" {
+                        CompressionError::SourceChangedDuringExtraction
+                    } else { CompressionError::SourceChangedDuringPrecheck })
+                        .context(format!("原处理未完成：{message}"))),
+                    Err(source_error) => return Err(source_error.context(format!("原处理未完成：{message}"))),
+                    Ok(false) => {}
+                }
+            }
+            return Err(error);
+        }
+        result
+    }
+
+    async fn extract_with_source_snapshot(&self, window: Window, task_id: String, file_path: String,
+        output_dir: Option<String>, password: Option<String>, options: DecompressOptions,
+        source_snapshot: SourceFileSnapshot, executing: &AtomicBool) -> Result<String> {
+        let service = self.clone();
         let path = Path::new(&file_path);
-        let source_snapshot = Self::source_file_snapshot(path, "Pre-checking")?;
         if source_snapshot.len == 0 {
             return Err(CompressionError::ExtractionFailed(
                 "压缩包为空，可能仍在下载、复制或尚未写入完成".to_string(),
@@ -2292,7 +2319,7 @@ impl CompressionService {
                 TaskLogSeverity::Success,
             );
         }
-        if Self::source_file_changed(path, source_snapshot, "Pre-checking")? {
+        if Self::source_file_changed(path, &source_snapshot, "Pre-checking")? {
             return Err(CompressionError::SourceChangedDuringPrecheck.into());
         }
         let mark_of_web = if options.preserve_mark_of_web {
@@ -2404,6 +2431,7 @@ impl CompressionService {
         // would read unselected entries before the staging filter can run.
         let effective_format = format;
 
+        executing.store(true, Ordering::Relaxed);
         let result = match effective_format {
             ArchiveFormat::Egg => crate::services::egg_engine::extract(
                 path, &out_dir, final_password.as_deref(), &options, service.cancellation_flag.clone()).await,
@@ -2646,7 +2674,7 @@ impl CompressionService {
         };
 
         let extraction_result = result.map_err(Self::normalize_storage_full_error);
-        let source_changed = Self::source_file_changed(path, source_snapshot, "Extracting")?;
+        let source_changed = Self::source_file_changed(path, &source_snapshot, "Extracting")?;
         if let Err(error) = extraction_result {
             if let Err(cleanup_error) = staging.cleanup() {
                 service.emit_log(
@@ -2790,14 +2818,42 @@ impl CompressionService {
                 stage, code: "source-invalid", detail: "源路径不是普通文件，请选择压缩包文件".into(),
             }.into());
         }
-        Ok(SourceFileSnapshot {
-            len: metadata.len(),
-            modified: metadata.modified().ok(),
-        })
+        let paths = if crate::services::egg_volumes::is_candidate(path) {
+            crate::services::egg_volumes::complete(path)?.parts
+        } else if crate::services::alz_volumes::is_candidate(path) {
+            crate::services::alz_volumes::complete(path)?.parts
+        } else if let Some(group) = SplitArchiveDetector::detect_split_archive(path)? {
+            anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少分卷：{}", group.missing_part_names());
+            group.parts
+        } else { vec![path.to_path_buf()] };
+        let members = paths.into_iter().map(|part| {
+            let m = std::fs::metadata(&part).map_err(|error| Self::source_access_error(error, stage))?;
+            anyhow::ensure!(m.is_file(), "[archive-source:{stage}:source-invalid] 分卷不是普通文件：{}", part.display());
+            Ok((part, m.len(), m.modified().ok(), m.created().ok()))
+        }).collect::<Result<Vec<_>>>()?;
+        Ok(SourceFileSnapshot { len: metadata.len(), modified: metadata.modified().ok(), members })
     }
 
-    fn source_file_changed(path: &Path, original: SourceFileSnapshot, stage: &'static str) -> Result<bool> {
-        Ok(Self::source_file_snapshot(path, stage)? != original)
+    fn source_file_changed(path: &Path, original: &SourceFileSnapshot, stage: &'static str) -> Result<bool> {
+        // Recheck every previously observed member before rediscovering the group:
+        // a missing later disk must retain its actual path, not become wrong-password.
+        for (part, len, modified, created) in &original.members {
+            let m = std::fs::metadata(part).map_err(|error| {
+                let mut access = Self::source_access_error(error, stage);
+                if let CompressionError::SourceAccess { detail, .. } = &mut access {
+                    detail.push_str(&format!("；原卷：{}", part.display()));
+                }
+                access
+            })?;
+            if !m.is_file() || m.len() != *len || m.modified().ok() != *modified || m.created().ok() != *created {
+                return Ok(true);
+            }
+        }
+        let current = Self::source_file_snapshot(path, stage).map_err(|error| CompressionError::SourceAccess {
+            stage, code: "source-changed",
+            detail: format!("处理中卷组无法按原状态读取，当前结果未提交，请确认同组原卷后创建新任务：{error:#}"),
+        })?;
+        Ok(current != *original)
     }
 
     fn ensure_no_link_ancestors(path: &Path) -> Result<()> {
@@ -4434,6 +4490,20 @@ mod tests {
     }
 
     #[test]
+    fn io1516_missing_later_volume_retains_its_path_and_confirmed_stage() {
+        let temp = tempfile::tempdir().unwrap();
+        let first = temp.path().join("任务.zip.001");
+        let second = temp.path().join("任务.zip.002");
+        std::fs::write(&first, b"first volume").unwrap();
+        std::fs::write(&second, b"second volume").unwrap();
+        let before = CompressionService::source_file_snapshot(&first, "Pre-checking").unwrap();
+        std::fs::remove_file(&second).unwrap();
+        let error = CompressionService::source_file_changed(&first, &before, "Extracting").unwrap_err();
+        assert!(error.to_string().contains("[archive-source:Extracting:source-missing]"), "{error:#}");
+        assert!(error.to_string().contains("任务.zip.002"), "{error:#}");
+    }
+
+    #[test]
     fn io1516_other_volume_changes_are_not_hidden_by_an_unchanged_first_volume() {
         let temp = tempfile::tempdir().unwrap();
         let first = temp.path().join("任务.zip.001");
@@ -4442,7 +4512,7 @@ mod tests {
         std::fs::write(&second, b"second volume").unwrap();
         let before = CompressionService::source_file_snapshot(&first, "Pre-checking").unwrap();
         std::fs::write(&second, b"replaced second volume with different bytes").unwrap();
-        assert!(CompressionService::source_file_changed(&first, before, "Extracting").unwrap(),
+        assert!(CompressionService::source_file_changed(&first, &before, "Extracting").unwrap(),
             "A changed second volume must invalidate the extraction before publication");
     }
 
@@ -4453,14 +4523,14 @@ mod tests {
         std::fs::write(&archive, b"initial bytes").expect("write fixture");
         let snapshot = CompressionService::source_file_snapshot(&archive, "Pre-checking").expect("snapshot");
 
-        assert!(!CompressionService::source_file_changed(&archive, snapshot, "Extracting").expect("unchanged"));
+        assert!(!CompressionService::source_file_changed(&archive, &snapshot, "Extracting").expect("unchanged"));
         std::fs::OpenOptions::new()
             .append(true)
             .open(&archive)
             .expect("open fixture")
             .write_all(b"more bytes")
             .expect("grow fixture");
-        assert!(CompressionService::source_file_changed(&archive, snapshot, "Extracting").expect("changed"));
+        assert!(CompressionService::source_file_changed(&archive, &snapshot, "Extracting").expect("changed"));
     }
 
     #[test]
@@ -4470,7 +4540,7 @@ mod tests {
         std::fs::write(&archive, b"fixture").unwrap();
         let snapshot = CompressionService::source_file_snapshot(&archive, "Pre-checking").unwrap();
         std::fs::remove_file(&archive).unwrap();
-        let missing = CompressionService::source_file_changed(&archive, snapshot, "Extracting").unwrap_err();
+        let missing = CompressionService::source_file_changed(&archive, &snapshot, "Extracting").unwrap_err();
         assert!(missing.to_string().contains("[archive-source:Extracting:source-missing]"));
         let invalid = CompressionService::source_file_snapshot(temp.path(), "Pre-checking").err().unwrap();
         assert!(invalid.to_string().contains("[archive-source:Pre-checking:source-invalid]"));
@@ -4510,10 +4580,8 @@ mod tests {
         )
         .expect_err("storage-full compression must fail");
 
-        assert!(matches!(
-            error.downcast_ref::<CompressionError>(),
-            Some(CompressionError::DiskFull)
-        ));
+        assert_eq!(crate::services::archive_io::kind(&error).unwrap().0, "disk-full");
+        assert!(format!("{error:#}").contains("simulated compression storage full"));
         assert!(!working_output.exists());
         assert!(!sidecar.exists());
         assert!(!final_output.exists());

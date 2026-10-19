@@ -71,6 +71,7 @@ export const isPasswordRelatedError = (error: unknown): boolean => {
   const message = extractErrorMessage(error).toLowerCase()
   // Inspection failure details may quote a password suggestion from the engine.
   // The backend has already classified these as non-password/unknown failures.
+    if (message.includes('[archive-io:')) return false
     if (message.includes('[archive-inspection:') || message.includes('归档检测失败：')) return false
     if (message.includes('[archive-output:verifying:verification-failed]')) return false
     if (/\[archive-output:publishing:(output-conflict|publication-failed|rollback-incomplete)\]/.test(message)) return false

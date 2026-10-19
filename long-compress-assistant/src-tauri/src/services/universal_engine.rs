@@ -883,6 +883,14 @@ impl ArchiveEngine for UniversalCliEngine {
             .map_err(|error| anyhow::anyhow!("Failed to join 7z error stream: {}", error))??;
         let err_msg = String::from_utf8_lossy(&err_bytes).to_string();
         if !status.success() {
+            if err_msg.lines().any(|line| {
+                let line = line.trim();
+                line == "System ERROR:" || line.starts_with("ERROR: Cannot open output file")
+                    || line.starts_with("ERROR: Can not open output file")
+                    || line.starts_with("ERROR: Cannot create directory")
+            }) {
+                anyhow::bail!("[archive-io:io] 通用引擎文件读写未完成，请按原始路径检查设备、空间和访问条件，处理后创建新任务。原始错误：{}", err_msg);
+            }
             if err_msg.contains("Wrong password") {
                 return Err(CompressionError::InvalidPassword.into());
             }

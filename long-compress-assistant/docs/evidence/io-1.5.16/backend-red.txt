@@ -1,0 +1,49 @@
+   Compiling sevenz-rust v0.6.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\sevenz-rust)
+   Compiling long-compress-assistant v1.5.15 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 26s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-46ecfa4aae5fa078.exe)
+
+running 2 tests
+
+thread 'commands::compression::io1516_disk_full_keeps_its_category_and_original_context' (9616) panicked at src\commands\compression.rs:243:5:
+压缩失败: writing selected archive output
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test commands::compression::io1516_disk_full_keeps_its_category_and_original_context ... FAILED
+
+thread 'services::compression_service::tests::io1516_other_volume_changes_are_not_hidden_by_an_unchanged_first_volume' (28352) panicked at src\services\compression_service.rs:4445:9:
+A changed second volume must invalidate the extraction before publication
+test services::compression_service::tests::io1516_other_volume_changes_are_not_hidden_by_an_unchanged_first_volume ... FAILED
+
+failures:
+
+failures:
+    commands::compression::io1516_disk_full_keeps_its_category_and_original_context
+    services::compression_service::tests::io1516_other_volume_changes_are_not_hidden_by_an_unchanged_first_volume
+
+test result: FAILED. 0 passed; 2 failed; 0 ignored; 0 measured; 739 filtered out; finished in 0.01s
+
+error: test failed, to rerun pass `--lib`

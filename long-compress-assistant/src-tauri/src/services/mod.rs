@@ -85,3 +85,7 @@ pub mod pdf_output_validation;
 pub mod pdf_publish;
 #[cfg(test)]
 mod standard_zipx_tests;
+pub(crate) mod archive_io;
+
+#[cfg(all(test, windows))]
+mod archive_io_disk_tests;

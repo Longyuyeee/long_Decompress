@@ -127,7 +127,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
         .max(1);
     let mut processed_bytes = 0u64;
     let mut writer = sevenz_rust::SevenZWriter::create(output)
-        .map_err(|error| CompressionError::CompressionFailed(error.to_string()))?;
+        .map_err(crate::services::archive_io::seven_zip_error)?;
     // Legacy requests default to contents-only encryption; hiding filenames
     // must be explicitly requested and requires the password checked above.
     writer.set_encrypt_header(options.encrypt_filenames);
@@ -162,7 +162,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
             if entry.is_dir {
                 writer
                     .push_archive_entry::<&[u8]>(archive_entry, None)
-                    .map_err(|error| CompressionError::CompressionFailed(error.to_string()))?;
+                    .map_err(crate::services::archive_io::seven_zip_error)?;
                 continue;
             }
 
@@ -204,7 +204,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
                 if runtime.cancellation_flag().load(Ordering::Relaxed) {
                     return Err(CompressionError::Cancelled.into());
                 }
-                return Err(CompressionError::CompressionFailed(error.to_string()).into());
+                return Err(crate::services::archive_io::seven_zip_error(error));
             }
         }
     } else {
@@ -215,7 +215,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
             if entry.is_dir {
                 writer
                     .push_archive_entry::<&[u8]>(archive_entry, None)
-                    .map_err(|error| CompressionError::CompressionFailed(error.to_string()))?;
+                    .map_err(crate::services::archive_io::seven_zip_error)?;
             } else {
                 let file = File::open(&entry.path)?;
                 let current_name = entry.archive_name.clone();
@@ -243,7 +243,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
                     if runtime.cancellation_flag().load(Ordering::Relaxed) {
                         return Err(CompressionError::Cancelled.into());
                     }
-                    return Err(CompressionError::CompressionFailed(error.to_string()).into());
+                    return Err(crate::services::archive_io::seven_zip_error(error));
                 }
             }
             if processed_bytes == 0 {
@@ -263,7 +263,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
 
     writer
         .finish()
-        .map_err(|error| CompressionError::CompressionFailed(error.to_string()))?;
+        .map_err(crate::services::archive_io::seven_zip_error)?;
     Ok(())
 }
 
