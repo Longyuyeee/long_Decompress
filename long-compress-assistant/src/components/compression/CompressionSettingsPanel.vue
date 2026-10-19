@@ -529,6 +529,7 @@ const closeVaultPasswordsAfterFocus = () => {
         <b>MiB</b>
       </label>
       <span v-else-if="canCreateSplitArchive" class="split-settings-state">关闭</span>
+      <p v-if="compressionOptions.format.endsWith('.aes')" class="w-full text-xs leading-relaxed text-muted" data-testid="aes-volume-hint">Long 自有加密格式，接收方请使用 Long解压。分卷解压需把全部 .aes.001、.002 等文件放在同一目录。</p>
       <div v-if="compressionOptions.splitArchive && ['zip', 'zipx'].includes(compressionOptions.format)" class="zip-split-kind">
         <span class="shrink-0 text-xs">ZIP 卷型</span>
         <ThemedSelect :model-value="compressionOptions.zipSplitMode ?? 'numeric'" :options="[{ value: 'numeric', label: `数字切卷 · .${compressionOptions.format}.001` }, { value: 'standard', label: compressionOptions.format === 'zipx' ? '标准 ZIPX' : '标准 ZIP · .z01/.zip', detail: compressionOptions.format === 'zipx' ? '.zx01/.zipx' : undefined }]" test-id="compression-zip-split-mode" floating @update:model-value="compressionOptions.zipSplitMode = $event as 'numeric' | 'standard'" />

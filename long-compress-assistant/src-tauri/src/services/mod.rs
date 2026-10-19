@@ -94,3 +94,4 @@ mod archive_io_disk_tests;
 mod multistream_tests;
 #[cfg(test)]
 mod aes_volume_tests;
+pub(crate) mod aes_container;

@@ -286,7 +286,8 @@ fn record_failure(report: &mut ArchiveDiagnosticReport, error: &anyhow::Error, p
         else { "diagnostic_only" }.to_string();
     let message=format!("{error:#}");
     let detail=if message.contains("[archive-inspection:damaged] TAR") || message.contains("[archive-inspection:unsupported] TAR")
-        || message.contains("[archive-inspection:damaged] 压缩流") {
+        || message.contains("[archive-inspection:damaged] 压缩流")
+        || message.contains("[archive-inspection:") && message.contains("AES") {
         format!("{detail}。原始原因：{message}")
     } else {detail.to_string()};
     report.issues.push(DiagnosticIssue { code: code.to_string(), severity: "error".to_string(),
@@ -564,6 +565,7 @@ pub async fn diagnose_archive_with_encoding(
             Err(error) => { record_failure(&mut report, &error, password.is_some(), false, source); return Ok(report); }
         }
     }
+    if actual_format == "LONG AES" { report.encrypted = true; }
     if report.encrypted && password.filter(|value| !value.is_empty()).is_none() {
         report.status = "password_required".to_string();
         report.recoverability = "password_required".to_string();

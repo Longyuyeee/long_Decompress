@@ -2,7 +2,6 @@ use super::{single_stream, tar, CompressionRuntime};
 use crate::models::compression::{CompressionOptions, TaskLogSeverity};
 use crate::services::aes_wrapper::AesWrapper;
 use crate::services::compression_service::CompressionError;
-use crate::services::tar_aes_engine::TarAesEngine;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 use tauri::Window;
@@ -119,19 +118,17 @@ pub(crate) fn compress<R: CompressionRuntime>(
     }
 
     if matches!(kind, AesCompressionKind::Tar) {
-        let source_paths: Vec<PathBuf> = sources.iter().map(PathBuf::from).collect();
-        let base_dir = if sources.len() == 1 {
-            Path::new(&sources[0]).parent()
-        } else {
-            None
-        };
-        let result = TarAesEngine::compress_tar_aes_cancellable(
-            &source_paths,
-            Path::new(output),
-            password,
-            base_dir,
-            || runtime.check_cancellation(),
-        );
+        // Use the same source-relative names and empty-directory policy as TAR.
+        let temporary = TemporaryAesInput::new("tar");
+        let mut plain_options = options.clone();
+        plain_options.password = None;
+        plain_options.split_size = None;
+        let result = (|| {
+            tar::compress_tar(runtime, window, task_id, sources, &temporary.path().to_string_lossy(), plain_options)?;
+            crate::services::aes_stream_v2::AesStreamV2::encrypt_file_cancellable(
+                temporary.path(), Path::new(output), password,
+                crate::services::aes_stream_v2::AesStreamKind::Tar, || runtime.check_cancellation())
+        })();
         if let Err(error) = result {
             if matches!(
                 error.downcast_ref::<CompressionError>(),

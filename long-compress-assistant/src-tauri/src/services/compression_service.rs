@@ -974,7 +974,7 @@ impl CompressionService {
         let split_requested = options.split_size.is_some_and(|size| size > 0);
         let has_password = options.password.as_deref().is_some_and(|password| !password.is_empty());
         let format = Self::infer_compression_format(output_path, options.format.as_deref());
-        if split_requested && has_password && !matches!(format.as_str(), "zip" | "zipx" | "7z" | "rar") {
+        if split_requested && has_password && !matches!(format.as_str(), "zip" | "zipx" | "7z" | "rar") && !(format.ends_with(".aes") && compression_format::has_native_password_container(&format)) {
             return Err(CompressionError::CompressionFailed(
                 "Encrypted split archive creation is currently supported only for ZIP, 7Z and RAR; choose a supported format or disable splitting".to_string()
             ).into());
@@ -2174,7 +2174,7 @@ impl CompressionService {
             format = ArchiveFormat::from_extension(Path::new(file_stem).extension().and_then(|value| value.to_str()).unwrap_or(""));
         }
         let native_seven_zip = Self::uses_native_seven_zip_volumes(path, &format);
-        let native_stream = matches!(format, ArchiveFormat::Tar | ArchiveFormat::Gzip | ArchiveFormat::Bzip2 | ArchiveFormat::Xz | ArchiveFormat::Zstd | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip);
+        let native_stream = matches!(format, ArchiveFormat::AesEncrypted | ArchiveFormat::Tar | ArchiveFormat::Gzip | ArchiveFormat::Bzip2 | ArchiveFormat::Xz | ArchiveFormat::Zstd | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip);
         if is_split_archive && !native_seven_zip && !native_stream && format != ArchiveFormat::Zip && format != ArchiveFormat::Unknown && format != ArchiveFormat::Universal {
             service.emit_log(&window, &task_id, &format!("检测到分卷压缩包 (后缀: .{})，使用 7z CLI 合并解压", ext), TaskLogSeverity::Info);
             format = ArchiveFormat::Universal;
@@ -3111,13 +3111,12 @@ impl CompressionService {
     }
 
     fn map_aes_extraction_error(error: anyhow::Error) -> anyhow::Error {
-        if matches!(
-            error.downcast_ref::<CompressionError>(),
-            Some(CompressionError::Cancelled)
-        ) {
-            return CompressionError::Cancelled.into();
+        if error.downcast_ref::<CompressionError>().is_some()
+            || crate::services::archive_io::kind(&error).is_some()
+            || format!("{error:#}").contains("[archive-inspection:") {
+            return error;
         }
-        let message = error.to_string();
+        let message = format!("{error:#}");
         if message.contains("密码错误") || message.contains("解密失败") {
             CompressionError::InvalidPassword.into()
         } else {
@@ -3126,96 +3125,36 @@ impl CompressionService {
     }
 
     fn do_extract_aes(
-        &self,
-        window: &Window,
-        task_id: &str,
-        file: &str,
-        output: &Path,
-        password: Option<&str>,
-        options: &DecompressOptions,
+        &self, window: &Window, task_id: &str, file: &str, output: &Path,
+        password: Option<&str>, options: &DecompressOptions,
     ) -> Result<()> {
-        let password = password.ok_or(CompressionError::PasswordRequired)?;
-        let source = Path::new(file);
-
-        if TarAesEngine::is_tar_aes(source).unwrap_or(false) {
-            self.emit_log(window, task_id, "正在解密并解压 TAR.AES", TaskLogSeverity::Info);
-            return TarAesEngine::decompress_tar_aes_cancellable(
-                source,
-                output,
-                password,
-                || self.check_cancellation(),
-            )
-            .map_err(Self::map_aes_extraction_error);
-        }
-
-        if !AesWrapper::is_aes_encrypted(source).unwrap_or(false) {
-            return Err(CompressionError::ExtractionFailed(
-                "无法识别的 AES 加密归档".to_string(),
-            )
-            .into());
-        }
-
-        let source_name = source
-            .file_name()
-            .and_then(|name| name.to_str())
-            .unwrap_or("archive.aes");
-        let inner_name = source_name
-            .strip_suffix(".aes")
-            .or_else(|| source_name.strip_suffix(".AES"))
-            .filter(|name| !name.is_empty())
-            .ok_or_else(|| {
-                CompressionError::ExtractionFailed(
-                    "AES 归档文件名缺少内层格式，例如 .tar.gz.aes".to_string(),
-                )
-            })?;
-        let temporary_root = std::env::temp_dir().join(format!(
-            "long-compress-aes-{}",
-            uuid::Uuid::new_v4()
-        ));
-        std::fs::create_dir_all(&temporary_root)?;
-        let decrypted = temporary_root.join(inner_name);
-
-        let result = (|| -> Result<()> {
-            AesWrapper::decrypt_file_cancellable(
-                source,
-                &decrypted,
-                password,
-                || self.check_cancellation(),
-            )
-            .map_err(Self::map_aes_extraction_error)?;
-
-            let lower_name = inner_name.to_lowercase();
-            let decrypted_path = decrypted.to_string_lossy();
-            if lower_name.ends_with(".tar.gz") || lower_name.ends_with(".tgz") {
-                self.do_extract_tar_gz(window, task_id, &decrypted_path, output, options)
-            } else if lower_name.ends_with(".tar.bz2")
-                || lower_name.ends_with(".tbz")
-                || lower_name.ends_with(".tbz2")
-            {
-                self.do_extract_tar_bz2(window, task_id, &decrypted_path, output, options)
-            } else if lower_name.ends_with(".tar.xz") || lower_name.ends_with(".txz") {
-                self.do_extract_tar_xz(window, task_id, &decrypted_path, output, options)
-            } else if lower_name.ends_with(".tar.zst") || lower_name.ends_with(".tzst") {
-                self.do_extract_tar_zstd(window, task_id, &decrypted_path, output, options)
-            } else if lower_name.ends_with(".gz") || lower_name.ends_with(".gzip") {
-                self.do_extract_gz(window, task_id, &decrypted_path, output, options)
-            } else if lower_name.ends_with(".bz2") || lower_name.ends_with(".bzip2") {
-                self.do_extract_bz2(window, task_id, &decrypted_path, output, options)
-            } else if lower_name.ends_with(".xz") {
-                self.do_extract_xz(window, task_id, &decrypted_path, output, options)
-            } else if lower_name.ends_with(".zst") || lower_name.ends_with(".zstd") {
-                self.do_extract_zstd(window, task_id, &decrypted_path, output, options)
-            } else {
-                Err(CompressionError::ExtractionFailed(format!(
-                    "不支持的 AES 内层格式: {}",
-                    inner_name
-                ))
-                .into())
-            }
-        })();
-
-        let _ = std::fs::remove_dir_all(&temporary_root);
-        result
+        self.emit_log(window, task_id, "正在认证 AES 完整容器及卷组，完成后读取内层内容", TaskLogSeverity::Info);
+        let inner = crate::services::aes_container::AuthenticatedInner::open(
+            Path::new(file), password, || self.check_cancellation()).map_err(Self::map_aes_extraction_error)?;
+        let source = inner.path.to_string_lossy();
+        let name = inner.path.file_name().unwrap_or_default().to_string_lossy().to_ascii_lowercase();
+        let result = if name.ends_with(".tar") {
+            self.do_extract_tar(window, task_id, &source, output, None, options)
+        } else if name.ends_with(".tar.gz") || name.ends_with(".tgz") || name.ends_with(".tpz") {
+            self.do_extract_tar_gz(window, task_id, &source, output, options)
+        } else if name.ends_with(".tar.bz2") || name.ends_with(".tbz") || name.ends_with(".tbz2") {
+            self.do_extract_tar_bz2(window, task_id, &source, output, options)
+        } else if name.ends_with(".tar.xz") || name.ends_with(".txz") {
+            self.do_extract_tar_xz(window, task_id, &source, output, options)
+        } else if name.ends_with(".tar.zst") || name.ends_with(".tzst") {
+            self.do_extract_tar_zstd(window, task_id, &source, output, options)
+        } else if name.ends_with(".gz") || name.ends_with(".gzip") {
+            self.do_extract_gz(window, task_id, &source, output, options)
+        } else if name.ends_with(".bz2") || name.ends_with(".bzip2") {
+            self.do_extract_bz2(window, task_id, &source, output, options)
+        } else if name.ends_with(".xz") {
+            self.do_extract_xz(window, task_id, &source, output, options)
+        } else if name.ends_with(".zst") || name.ends_with(".zstd") {
+            self.do_extract_zstd(window, task_id, &source, output, options)
+        } else {
+            anyhow::bail!("[archive-inspection:unsupported] 不支持的 AES 内层格式：{name}")
+        };
+        result.map_err(Self::map_aes_extraction_error)
     }
 
     fn do_compress_zip(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {

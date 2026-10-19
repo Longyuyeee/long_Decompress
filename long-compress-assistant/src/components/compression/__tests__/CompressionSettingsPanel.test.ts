@@ -222,7 +222,7 @@ describe('CompressionSettingsPanel split archive settings', () => {
     expect(toggle.attributes('disabled')).toBeUndefined()
   })
 
-  it.each(['zip', '7z'])('preserves %s split settings when entering, changing or clearing a password', async (format) => {
+  it.each(['zip', '7z', 'tar.aes', 'tar.gz.aes', 'tar.bz2.aes', 'tar.xz.aes', 'tar.zst.aes', 'gz.aes', 'bz2.aes', 'xz.aes', 'zst.aes'])('preserves %s split settings when entering, changing or clearing a password', async (format) => {
     const wrapper = mountPanel(settings({ format, splitArchive: true, splitSize: '128' }))
     await flushPromises()
     for (const password of ['中文密码 + !测试', 'second secret', '']) {
