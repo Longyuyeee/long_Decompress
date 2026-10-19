@@ -404,6 +404,29 @@ impl Seek for StandardZipReader {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn zip64_1515_corrupt_end_record_is_a_final_structural_cause() {
+        let temp = tempfile::tempdir().unwrap();
+        let source = temp.path().join("source.zip");
+        let output = temp.path().join("用户收到的大包.zip");
+        let mut writer = zip_aes::ZipWriter::new(std::fs::File::create(&source).unwrap());
+        writer.start_file("内容.bin", zip_aes::write::SimpleFileOptions::default()
+            .compression_method(zip_aes::CompressionMethod::Stored)).unwrap();
+        writer.write_all(&vec![73; 170_003]).unwrap();
+        writer.finish().unwrap();
+        super::super::standard_zip_writer::split(&source, &output, 65536, || Ok(()), |_, _| {}).unwrap();
+        let mut bytes = std::fs::read(&output).unwrap();
+        let at = bytes.windows(4).position(|b| b == b"PK\x06\x06").unwrap();
+        bytes[at] ^= 1;
+        std::fs::write(&output, bytes).unwrap();
+        let error = match super::StandardZipReader::try_open(&output) {
+            Err(error) => error,
+            Ok(_) => panic!("A changed ZIP64 end signature must not be accepted"),
+        };
+        assert!(error.to_string().contains("[archive-inspection:damaged]"), "{error:#}");
+        assert!(error.to_string().contains("ZIP64"), "{error:#}");
+    }
+
     use super::*;
     use crate::services::{
         archive_browser::browse_archive, archive_engine::ArchiveEngine,

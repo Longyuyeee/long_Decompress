@@ -1,0 +1,58 @@
+   Compiling sha2 v0.10.9
+   Compiling sqlx-core v0.7.4
+   Compiling tauri-codegen v1.4.6
+   Compiling pbkdf2 v0.11.0
+   Compiling lzma-rust2 v0.16.2
+   Compiling zip v0.6.6
+   Compiling sevenz-rust v0.6.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\sevenz-rust)
+   Compiling zip v8.6.0 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\zip)
+   Compiling tauri-macros v1.4.7
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+   Compiling tauri v1.8.3
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling sqlx-sqlite v0.7.4
+   Compiling sqlx-macros-core v0.7.4
+   Compiling sqlx-macros v0.7.4
+   Compiling sqlx v0.7.4
+   Compiling long-compress-assistant v1.5.14 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 47s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-f5d366dee6c0365f.exe)
+
+running 1 test
+[zip64-1515] read all content plain/single, 1 parts
+
+thread 'services::native_compression::zip::tests::zip64_1515_real_written_password_volume_matrix' (52548) panicked at src\services\native_compression\zip.rs:281:52:
+called `Result::unwrap()` on an `Err` value: FileNotFound
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::native_compression::zip::tests::zip64_1515_real_written_password_volume_matrix ... FAILED
+
+failures:
+
+failures:
+    services::native_compression::zip::tests::zip64_1515_real_written_password_volume_matrix
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 734 filtered out; finished in 16.52s
+
+error: test failed, to rerun pass `--lib`

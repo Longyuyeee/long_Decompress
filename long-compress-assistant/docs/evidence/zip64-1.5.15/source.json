@@ -1,0 +1,25 @@
+{
+  "generator": "prepare-zip64-1515.mjs",
+  "seed": 1515,
+  "physicalWrite": true,
+  "sparseOrPreallocationUsed": false,
+  "bytesActuallyWritten": 4295098367,
+  "files": [
+    {
+      "name": "01-实际写入4GiB.bin",
+      "bytes": 4295098367,
+      "sha256": "b367b19cb8b5e3c7ca1c9ddf6d116d148fced70adc198ffaa3c5ddd4149a2ce6"
+    },
+    {
+      "name": "99-末尾说明.txt",
+      "bytes": 88,
+      "sha256": "26bb7fb27e2aaf707aa4c2d0ae479863d84c117d2cf25e3f78c6c80ef0e4cef0"
+    },
+    {
+      "name": "中间空文件.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "emptyDirectory": "空目录"
+}
