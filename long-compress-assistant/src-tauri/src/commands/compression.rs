@@ -234,6 +234,16 @@ pub async fn extract_multiple(
     Ok(results)
 }
 
+#[cfg(test)]
+#[test]
+fn io1516_disk_full_keeps_its_category_and_original_context() {
+    let error = anyhow::Error::new(std::io::Error::from(std::io::ErrorKind::StorageFull))
+        .context("writing selected archive output");
+    let text = compression_command_error(&error);
+    assert!(text.contains("[archive-io:disk-full]"), "{text}");
+    assert!(text.contains("writing selected archive output"), "{text}");
+}
+
 fn compression_command_error(error: &anyhow::Error) -> String {
     let message = error.to_string();
     if message.starts_with("压缩失败:") || message.starts_with("压缩失败：") {

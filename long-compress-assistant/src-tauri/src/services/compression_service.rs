@@ -4434,6 +4434,19 @@ mod tests {
     }
 
     #[test]
+    fn io1516_other_volume_changes_are_not_hidden_by_an_unchanged_first_volume() {
+        let temp = tempfile::tempdir().unwrap();
+        let first = temp.path().join("任务.zip.001");
+        let second = temp.path().join("任务.zip.002");
+        std::fs::write(&first, b"first volume").unwrap();
+        std::fs::write(&second, b"second volume").unwrap();
+        let before = CompressionService::source_file_snapshot(&first, "Pre-checking").unwrap();
+        std::fs::write(&second, b"replaced second volume with different bytes").unwrap();
+        assert!(CompressionService::source_file_changed(&first, before, "Extracting").unwrap(),
+            "A changed second volume must invalidate the extraction before publication");
+    }
+
+    #[test]
     fn source_snapshot_detects_archives_that_change_during_extraction() {
         let temp = tempfile::tempdir().expect("temp dir");
         let archive = temp.path().join("growing.rar");
