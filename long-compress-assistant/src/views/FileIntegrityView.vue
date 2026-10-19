@@ -2,6 +2,7 @@
 import ChecksumVerificationPanel from '@/components/integrity/ChecksumVerificationPanel.vue'
 import ArchiveRecoveryDetails from '@/components/compression/ArchiveRecoveryDetails.vue'
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useArchiveRecoveryStore } from '@/composables/useArchiveRecoveryBatch'
 import ArchiveRecoveryBatch from '@/components/compression/ArchiveRecoveryBatch.vue'
 import RarRecoveryVolumesDialog from '@/components/compression/RarRecoveryVolumesDialog.vue'
@@ -19,6 +20,7 @@ import { zipPasswordEncodingArguments, zipPasswordEncodingLabel, type ZipPasswor
 import { supportsZipPasswordEncoding, zipPasswordEncodingForSource } from '@/utils/zipPasswordSource'
 
 const appStore = useAppStore()
+const router = useRouter()
 const uiStore = useUIStore()
 const tauriCommands = useTauriCommands()
 const taskStore = useTaskStore()
@@ -595,7 +597,7 @@ onUnmounted(() => {
         </div>
 
         <div v-show="activeMode === 'verify'" class="integrity-single-column">
-          <ChecksumVerificationPanel @busy="isVerifying = $event" @diagnose="appStore.openArchiveForDiagnosis({path: $event})" @tasks="uiStore.setCurrentView('Decompress')" />
+          <ChecksumVerificationPanel @busy="isVerifying = $event" @diagnose="appStore.openArchiveForDiagnosis({path: $event})" @tasks="router.push('/decompress')" />
         </div>
 
         <div v-if="activeMode === 'archive'" class="integrity-single-column min-w-0 overflow-x-hidden" data-testid="archive-diagnostic-panel">

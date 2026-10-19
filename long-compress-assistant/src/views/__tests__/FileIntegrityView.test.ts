@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   repairRar: vi.fn(),
   cancelZipRepair: vi.fn(),
   createRarRecoveryVolumes: vi.fn(),
+  routerPush: vi.fn(),
 }))
 
 vi.mock('@tauri-apps/api/dialog', () => ({
@@ -25,6 +26,7 @@ vi.mock('@tauri-apps/api/dialog', () => ({
   save: mocks.save,
 }))
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
+vi.mock('vue-router', async importOriginal => ({ ...(await importOriginal<typeof import('vue-router')>()), useRouter: () => ({push:mocks.routerPush}) }))
 vi.mock('@/composables/useTauriCommands', () => ({
   useTauriCommands: () => ({
     invoke: mocks.invoke,
@@ -309,6 +311,8 @@ describe('FileIntegrityView', () => {
     await wrapper.get('[data-testid="checksum-verify-mode"]').trigger('click');await flushPromises()
     expect(wrapper.get('[data-testid="checksum-entry"]').text()).toContain('内容不符')
     expect(mocks.invoke.mock.calls.filter(call=>call[0]==='verify_checksum_file')).toHaveLength(1)
+    await wrapper.get('[data-testid="checksum-go-tasks"]').trigger('click')
+    expect(mocks.routerPush).toHaveBeenCalledWith('/decompress')
   })
 
   it('diagnoses a damaged archive, copies evidence, and repairs to a new verified file', async () => {

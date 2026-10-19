@@ -8,12 +8,21 @@ import {By,Key} from 'selenium-webdriver'
 export async function runChecksum1519Gate({driver,bridge,waitForElement,artifactDirectory,application,root}) {
   const base=path.join(root,'test-results/checksum-1519');mkdirSync(base,{recursive:true})
   const hash=b=>createHash('sha256').update(b).digest('hex'),sha=p=>hash(readFileSync(p))
-  const work=path.join(base,'ui-'+randomUUID()),owned=p=>{assert.ok(path.resolve(p).startsWith(work+path.sep));return p}
-  execFileSync('python',[path.join(root,'scripts/prepare-checksum-1519.py'),work],{windowsHide:true})
+  const resume=process.argv.includes('--checksum-1519-retry-only')
+  const previous=resume?JSON.parse(readFileSync(path.join(artifactDirectory,'checksum-1519-results.json'),'utf8')):null
+  if(previous){assert.equal(previous.ui.length,4);assert.equal(previous.screenshots.length,6);assert.ok(!previous.completedAt)}
+  const work=previous?.original.work||path.join(base,'ui-'+randomUUID()),owned=p=>{assert.ok(path.resolve(p).startsWith(work+path.sep));return p}
+  if(!previous)execFileSync('python',[path.join(root,'scripts/prepare-checksum-1519.py'),work],{windowsHide:true})
   const original=JSON.parse(readFileSync(owned(path.join(work,'originals.json')),'utf8'))
   const parts=original.parts,originalBytes=parts.map(p=>readFileSync(owned(p))),manifestBytes=readFileSync(original.manifest)
   assert.equal(parts.length,3)
-  const result={version:'1.5.19',binarySha256:sha(application),original,native:[],ui:[],screenshots:[],layouts:[]}
+  const currentBinarySha256=sha(application)
+  const result=previous||{version:'1.5.19',binarySha256:currentBinarySha256,original,native:[],ui:[],screenshots:[],layouts:[]}
+  if(previous){
+    for(const record of [...result.native,...result.ui])record.binarySha256??=previous.binarySha256
+    for(const layout of result.layouts)layout.binarySha256??=previous.binarySha256
+    result.currentBinarySha256=currentBinarySha256;result.resumedScope='Only queue navigation and failed-task continuation; earlier four UI flows retained with original identity'
+  }
   const record=()=>writeFileSync(path.join(artifactDirectory,'checksum-1519-results.json'),JSON.stringify(result,null,2))
   const click=async target=>{
     for(const toast of await driver.findElements(By.css('.toast-item button'))){try{if(await toast.isDisplayed())await toast.click()}catch{}}
@@ -36,10 +45,11 @@ export async function runChecksum1519Gate({driver,bridge,waitForElement,artifact
       const geometry=await driver.executeScript(()=>({width:innerWidth,height:innerHeight,overflow:document.documentElement.scrollWidth-innerWidth,digests:[...document.querySelectorAll('.checksum-details')].map(e=>{const cols=e.querySelectorAll('.checksum-digests>div');return{left:cols[0].getBoundingClientRect().width,right:cols[1].getBoundingClientRect().width,overflow:e.scrollWidth-e.clientWidth}})}))
       assert.ok(geometry.overflow<=1,JSON.stringify(geometry));for(const cols of geometry.digests)assert.ok(Math.abs(cols.left-cols.right)<=1&&cols.overflow<=1,JSON.stringify(cols))
       const file=`checksum1519-${name}-${width}x${height}.png`;writeFileSync(path.join(artifactDirectory,file),Buffer.from(await driver.takeScreenshot(),'base64'))
-      result.screenshots.push(file);result.layouts.push({name,...geometry});record()
+      result.screenshots.push(file);result.layouts.push({name,binarySha256:currentBinarySha256,...geometry});record()
     }await driver.manage().window().setRect({width:1100,height:700})
   }
   await driver.manage().setTimeouts({script:90000});await driver.manage().window().setRect({width:1100,height:700})
+  if(!resume){
   for(const extension of ['sfv','md5','sha256']){
     const r=await ipc('verify_checksum_file',{checksumPath:owned(path.join(work,'独立小清单.'+extension))})
     assert.equal(r.valid,true);assert.equal(r.entries[0].status,'matched');assert.ok(r.entries[0].actualChecksum);result.native.push({algorithm:extension,fullContentMatches:true,manifestId:r.manifestId})
@@ -47,18 +57,20 @@ export async function runChecksum1519Gate({driver,bridge,waitForElement,artifact
   const unreadable=await ipc('verify_checksum_file',{checksumPath:original.manifest,entryLines:[4]})
   assert.deepEqual(unreadable.entries.map(e=>e.status),['not_checked','not_checked','not_checked','unreadable']);assert.equal(unreadable.valid,false)
   result.native.push({kind:'selective-only',report:unreadable});record()
+  }
   const backup=owned(parts[1]+'.owned-original')
   try {
     await bridge('clearTasks');await click('[data-testid="nav-Decompress"]')
     await bridge('queueDesktopDialogSelections',[[parts[0]]]);await click('[data-testid="dropzone-file"]')
     const task=await driver.wait(async()=>(await bridge('extractionRecoveryTasks'))[0]||false,15000)
-    const firstOutput=owned(path.join(work,'首次输出'));mkdirSync(firstOutput)
+    const firstOutput=owned(path.join(work,'首次输出-'+randomUUID()));mkdirSync(firstOutput)
     await bridge('queueDesktopDialogSelections',[firstOutput])
     await click(await driver.findElement(By.xpath('//*[contains(@class,"global-config-controls")]//button[.//i[contains(@class,"pi-folder-open")]]')))
     renameSync(parts[1],backup)
     await click('[data-testid="start-decompression-queue"]')
     const failed=await driver.wait(async()=>(await bridge('taskHistory')).find(h=>h.id===task.id&&h.status==='failed')||false,30000)
     assert.match(failed.errorMessage,/incomplete|缺少|分卷|source-missing/);assert.deepEqual(readdirSync(firstOutput),[])
+    if(!resume){
     const corrupt=Buffer.from(originalBytes[2]);corrupt[Math.floor(corrupt.length/2)]^=1;writeFileSync(parts[2],corrupt)
 
     await click('[data-testid="nav-FileIntegrity"]');await click('[data-testid="checksum-verify-mode"]')
@@ -92,9 +104,14 @@ export async function runChecksum1519Gate({driver,bridge,waitForElement,artifact
     await driver.wait(async()=>/完整性正常/.test(await(await waitForElement('[data-testid="diagnostic-report"]')).getText()),30000)
     await click('[data-testid="checksum-verify-mode"]');await settled(['matched','matched','matched','matched'])
     result.ui.push({kind:'diagnosis-return',actualArchiveIntegrityHealthy:true,observationsRetained:true});record()
+    }else{
+      renameSync(backup,parts[1]);writeFileSync(parts[2],originalBytes[2])
+      await click('[data-testid="nav-FileIntegrity"]');await click('[data-testid="checksum-verify-mode"]')
+      await bridge('queueDesktopDialogSelections',[original.manifest]);await click('[data-testid="checksum-choose"]');await settled(['matched','matched','matched','matched'])
+    }
 
     await click('[data-testid="checksum-go-tasks"]');await click('[data-testid="retry-batch-failures"]')
-    const output=owned(path.join(work,'补齐后新任务输出'));mkdirSync(output)
+    const output=owned(path.join(work,'补齐后新任务输出-'+randomUUID()));mkdirSync(output)
     await fill('[role="dialog"] [data-testid="retry-output"]',output)
     const sub=await waitForElement('[role="dialog"] [data-testid="retry-subfolder"]');if(await sub.isSelected())await click(sub)
     await sizes('retry-new-task','[role="dialog"]')
@@ -107,7 +124,7 @@ export async function runChecksum1519Gate({driver,bridge,waitForElement,artifact
     const completed=await driver.wait(async()=>(await bridge('taskHistory')).find(h=>h.id===retry.id&&['completed','failed'].includes(h.status))||false,30000);assert.equal(completed.status,'completed',JSON.stringify(completed))
     for(const[name,expected]of Object.entries(original.expectedFiles))assert.equal(sha(path.join(output,name)),expected)
     assert.ok(existsSync(path.join(output,original.emptyDirectory)));assert.deepEqual((await bridge('taskHistory')).find(h=>h.id===task.id),failed)
-    result.ui.push({kind:'failed-task-continuation',pendingBeforeExplicitStart:true,fullContentHashes:true,emptyDirectory:true,oldFailureUnchanged:true});result.completedAt=new Date().toISOString();record()
+    result.ui.push({kind:'failed-task-continuation',binarySha256:currentBinarySha256,pendingBeforeExplicitStart:true,fullContentHashes:true,emptyDirectory:true,oldFailureUnchanged:true,failedId:failed.id,retryId:retry.id,completed});result.completedAt=new Date().toISOString();record()
   }finally{
     if(existsSync(backup))renameSync(backup,parts[1]);for(let i=0;i<parts.length;i++)writeFileSync(parts[i],originalBytes[i]);writeFileSync(original.manifest,manifestBytes)
   }
