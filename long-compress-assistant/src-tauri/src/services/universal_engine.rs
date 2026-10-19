@@ -580,6 +580,10 @@ impl UniversalCliEngine {
             let plan=tokio::task::spawn_blocking(move||super::tar_compatibility::plan(&path,route,&Default::default(),||Ok(()))).await??;
             return Ok((plan.entries,plan.logical_bytes));
         }
+        if super::codec_stream::plain_format(&format).is_some() {
+            let result = super::archive_browser::browse_archive(file_path, None).await?;
+            return Ok((result.total_files, result.total_uncompressed_size));
+        }
         let args = vec![
             "l".to_string(),
             "-slt".to_string(),
@@ -622,6 +626,12 @@ impl UniversalCliEngine {
         if let Some(route)=super::tar_compatibility::integrity_route(file_path,&format) {
             let path=file_path.to_path_buf();
             return tokio::task::spawn_blocking(move||super::compression_verification::verify_native(route,&path,None,||false).map(|_|())).await?;
+        }
+        if let Some((codec, _, _)) = super::codec_stream::plain_format(&format) {
+            use super::compression_format::CompressionRoute as R;
+            let route = match codec { "gz" => R::Gzip, "bz2" => R::Bzip2, "xz" => R::Xz, _ => R::Zstd };
+            let path = file_path.to_path_buf();
+            return tokio::task::spawn_blocking(move || super::compression_verification::verify_native(route, &path, None, || false).map(|_| ())).await?;
         }
         if format == super::archive_format::ArchiveFormat::Rar {
             return super::rar_recovery::verify_readonly(file_path, password, Arc::new(AtomicBool::new(false))).await;

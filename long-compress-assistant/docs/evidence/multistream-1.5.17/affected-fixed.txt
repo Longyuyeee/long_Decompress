@@ -1,0 +1,40 @@
+   Compiling long-compress-assistant v1.5.17 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3m 51s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-74a0bffd737a2e09.exe)
+
+running 9 tests
+test services::codec_stream::tests::stream1517_boundary_keeps_nested_os_errors_out_of_corruption ... ok
+test services::multistream_tests::stream1517_boundary_existing_aes_containers_verify_every_inner_member ... ok
+test services::multistream_tests::stream1517_boundary_plain_preview_caps_text_and_checks_entry_name ... ok
+test services::multistream_tests::stream1517_bzip2_tar_reads_tail_across_members ... ok
+test services::multistream_tests::stream1517_gzip_tar_reads_tail_across_members ... ok
+test services::multistream_tests::stream1517_later_member_damage_is_not_success ... ok
+test services::multistream_tests::stream1517_plain_stream_has_complete_size_and_preview ... ok
+test services::multistream_tests::stream1517_xz_tar_reads_tail_across_members_and_padding ... ok
+test services::multistream_tests::stream1517_zstd_tar_keeps_existing_multiframe_support ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 752 filtered out; finished in 194.40s

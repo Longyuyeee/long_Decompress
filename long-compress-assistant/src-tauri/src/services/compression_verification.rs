@@ -4,6 +4,7 @@ use crate::services::compression_service::CompressionError;
 use crate::services::tar_aes_engine::TarAesEngine;
 use crate::services::zip_password::ZipPasswordEncoding;
 use anyhow::Result;
+#[cfg(test)]
 use std::fs::File;
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -165,7 +166,7 @@ fn verify_tar_reader(reader: impl Read, is_cancelled: &impl Fn() -> bool) -> Res
         check_cancelled(is_cancelled)?;
         drain_reader(super::tar_compatibility::LogicalEntry::new(entry?)?, is_cancelled)?;
     }
-    drain_reader(archive.into_inner(), is_cancelled)?;
+    super::tar_compatibility::finish_stream(archive.into_inner(), || check_cancelled(is_cancelled))?;
     Ok(())
     })();
     result.map_err(super::tar_compatibility::inspection_error)
@@ -185,35 +186,35 @@ fn verify_wrapped_aes(
     check_cancelled(is_cancelled)?;
     match route {
         CompressionRoute::TarGzipAes => verify_tar_reader(
-            flate2::read::GzDecoder::new(File::open(&decrypted)?),
+            super::codec_stream::decoder(&decrypted, "gz")?,
             is_cancelled,
         ),
         CompressionRoute::TarBzip2Aes => verify_tar_reader(
-            bzip2::read::BzDecoder::new(File::open(&decrypted)?),
+            super::codec_stream::decoder(&decrypted, "bz2")?,
             is_cancelled,
         ),
         CompressionRoute::TarXzAes => verify_tar_reader(
-            xz2::read::XzDecoder::new(File::open(&decrypted)?),
+            super::codec_stream::decoder(&decrypted, "xz")?,
             is_cancelled,
         ),
         CompressionRoute::TarZstdAes => verify_tar_reader(
-            zstd::stream::read::Decoder::new(File::open(&decrypted)?)?,
+            super::codec_stream::decoder(&decrypted, "zst")?,
             is_cancelled,
         ),
         CompressionRoute::GzipAes => drain_reader(
-            flate2::read::GzDecoder::new(File::open(&decrypted)?),
+            super::codec_stream::decoder(&decrypted, "gz")?,
             is_cancelled,
         ),
         CompressionRoute::Bzip2Aes => drain_reader(
-            bzip2::read::BzDecoder::new(File::open(&decrypted)?),
+            super::codec_stream::decoder(&decrypted, "bz2")?,
             is_cancelled,
         ),
         CompressionRoute::XzAes => drain_reader(
-            xz2::read::XzDecoder::new(File::open(&decrypted)?),
+            super::codec_stream::decoder(&decrypted, "xz")?,
             is_cancelled,
         ),
         CompressionRoute::ZstdAes => drain_reader(
-            zstd::stream::read::Decoder::new(File::open(&decrypted)?)?,
+            super::codec_stream::decoder(&decrypted, "zst")?,
             is_cancelled,
         ),
         _ => unreachable!("only wrapped AES routes reach this verifier"),
@@ -265,50 +266,50 @@ pub(crate) fn verify_native_with_zip_encoding(
         }
         CompressionRoute::TarGzip => {
             verify_tar_reader(
-                flate2::read::GzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?),
+                crate::services::codec_stream::decoder(path, "gz")?,
                 &is_cancelled,
             )?;
             Ok(true)
         }
         CompressionRoute::TarBzip2 => {
             verify_tar_reader(
-                bzip2::read::BzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?),
+                crate::services::codec_stream::decoder(path, "bz2")?,
                 &is_cancelled,
             )?;
             Ok(true)
         }
         CompressionRoute::TarXz => {
-            verify_tar_reader(xz2::read::XzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), &is_cancelled)?;
+            verify_tar_reader(crate::services::codec_stream::decoder(path, "xz")?, &is_cancelled)?;
             Ok(true)
         }
         CompressionRoute::TarZstd => {
             verify_tar_reader(
-                zstd::stream::read::Decoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?)?,
+                crate::services::codec_stream::decoder(path, "zst")?,
                 &is_cancelled,
             )?;
             Ok(true)
         }
         CompressionRoute::Gzip => {
             drain_reader(
-                flate2::read::GzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?),
+                crate::services::codec_stream::decoder(path, "gz")?,
                 &is_cancelled,
             )?;
             Ok(true)
         }
         CompressionRoute::Bzip2 => {
             drain_reader(
-                bzip2::read::BzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?),
+                crate::services::codec_stream::decoder(path, "bz2")?,
                 &is_cancelled,
             )?;
             Ok(true)
         }
         CompressionRoute::Xz => {
-            drain_reader(xz2::read::XzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), &is_cancelled)?;
+            drain_reader(crate::services::codec_stream::decoder(path, "xz")?, &is_cancelled)?;
             Ok(true)
         }
         CompressionRoute::Zstd => {
             drain_reader(
-                zstd::stream::read::Decoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?)?,
+                crate::services::codec_stream::decoder(path, "zst")?,
                 &is_cancelled,
             )?;
             Ok(true)

@@ -7,11 +7,26 @@ pub(crate) fn kind(error: &anyhow::Error) -> Option<(&'static str, &'static str)
         return Some(("disk-full", "磁盘空间不足，请释放空间或选择空间充足的输出目录后创建新任务"));
     }
     if error.chain().any(|cause| matches!(cause.downcast_ref::<CompressionError>(), Some(CompressionError::Cancelled))) { return None; }
-    let cause = error.chain().find_map(|cause| {
+    error.chain().find_map(|cause| {
         cause.downcast_ref::<io::Error>()
             .or_else(|| match cause.downcast_ref::<zip_aes::result::ZipError>() { Some(zip_aes::result::ZipError::Io(io)) => Some(io), _ => None })
             .or_else(|| match cause.downcast_ref::<sevenz_rust::Error>() { Some(sevenz_rust::Error::Io(io, _)) => Some(io), _ => None })
-    })?;
+            .and_then(io_kind)
+    })
+}
+
+// std::io::Error::source may skip a directly boxed io::Error; inspect get_ref too.
+pub(crate) fn io_kind(error: &io::Error) -> Option<(&'static str, &'static str)> {
+    fn nested(error: &(dyn std::error::Error + 'static), depth: usize) -> Option<(&'static str, &'static str)> {
+        if depth > 16 { return None; }
+        if let Some(io) = error.downcast_ref::<io::Error>() {
+            direct_io_kind(io).or_else(|| io.get_ref().and_then(|inner| nested(inner, depth + 1)))
+        } else { error.source().and_then(|inner| nested(inner, depth + 1)) }
+    }
+    nested(error, 0)
+}
+
+fn direct_io_kind(cause: &io::Error) -> Option<(&'static str, &'static str)> {
     // Sharing/lock violations are not the same as account permissions.
     #[cfg(windows)]
     if matches!(cause.raw_os_error(), Some(32 | 33)) {

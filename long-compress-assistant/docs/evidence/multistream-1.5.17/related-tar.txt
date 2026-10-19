@@ -1,0 +1,37 @@
+
+running 21 tests
+test services::native_extraction::tar_compatibility_tests::bzip2_and_xz_truncated_compressed_tails_are_not_success ... ok
+test services::native_extraction::tar_compatibility_tests::derived_mapping_faults_and_compressed_trailer_never_return_success ... ok
+test services::native_extraction::tar_compatibility_tests::diagnosis_retains_actual_tar_mapping_version_or_footer_cause ... FAILED
+test services::native_extraction::tar_compatibility_tests::existing_pax_ordinary_long_name_is_not_a_new_feature ... ok
+test services::native_extraction::tar_compatibility_tests::integrity_reads_all_logical_content_and_rejects_derived_bad_maps_and_footer ... ok
+test services::native_extraction::tar_compatibility_tests::logical_plan_counts_validated_sparse_payload_without_reading_holes ... ok
+test services::native_extraction::tar_compatibility_tests::non_regular_selection_fails_even_in_tolerance_mode_but_regular_selection_works ... ok
+test services::native_extraction::tar_compatibility_tests::original_browsing_and_text_preview_share_names_and_logical_sizes ... ok
+test services::native_extraction::tar_compatibility_tests::original_old_gnu_sparse_complete_content ... ok
+test services::native_extraction::tar_compatibility_tests::original_pax00_sparse_complete_content ... ok
+test services::native_extraction::tar_compatibility_tests::original_pax01_sparse_complete_content ... ok
+test services::native_extraction::tar_compatibility_tests::original_pax10_sparse_complete_content ... ok
+test services::native_extraction::tar_compatibility_tests::original_zip_with_mistaken_tar_suffix_keeps_its_real_integrity_route ... ok
+test services::native_extraction::tar_compatibility_tests::output_io_errors_are_not_skipped_as_corrupt_entries ... ok
+test services::native_extraction::tar_compatibility_tests::preflight_statistics_use_logical_tar_sizes_not_condensed_stream_size ... ok
+test services::native_extraction::tar_compatibility_tests::real_tar_signature_with_mistaken_wrapped_or_zip_suffix_stays_raw_tar ... ok
+test services::native_extraction::tar_compatibility_tests::requested_timestamps_are_preserved_for_sparse_and_regular_files ... ok
+test services::native_extraction::tar_compatibility_tests::selected_sparse_file_does_not_extract_other_files ... ok
+test services::native_extraction::tar_compatibility_tests::sparse_hole_expansion_obeys_cancellation_between_real_output_chunks ... ok
+test services::native_extraction::tar_compatibility_tests::sparse_plan_rejects_bad_maps_and_preserves_cancellation ... ok
+test services::native_extraction::tar_compatibility_tests::user_integrity_entry_point_uses_native_tar_layout_not_a_7z_fallback ... ok
+
+failures:
+
+---- services::native_extraction::tar_compatibility_tests::diagnosis_retains_actual_tar_mapping_version_or_footer_cause stdout ----
+
+thread 'services::native_extraction::tar_compatibility_tests::diagnosis_retains_actual_tar_mapping_version_or_footer_cause' (35708) panicked at src\services\native_extraction\tar_compatibility_tests.rs:648:9:
+ArchiveDiagnosticReport { file_path: "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-1513\\derived-pax10-footer.tar.gz", file_size: 883, actual_format: "GZIP", status: "damaged", encrypted: false, split_archive: false, volumes_found: 1, missing_volumes: [], total_files: 0, total_directories: 0, total_uncompressed_size: 0, total_uncompressed_size_known: false, integrity_tested: true, can_repair: false, recoverability: "diagnostic_only", issues: [DiagnosticIssue { code: "damaged", severity: "error", title: "归档损坏", detail: "归档结构已确认损坏或不完整；请重新获取完整文件，反复尝试密码不能修复损坏" }], evidence: ["Archive size: 883 bytes", "Magic/extension format: GZIP", "Integrity failure class: damaged"] }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    services::native_extraction::tar_compatibility_tests::diagnosis_retains_actual_tar_mapping_version_or_footer_cause
+
+test result: FAILED. 20 passed; 1 failed; 0 ignored; 0 measured; 740 filtered out; finished in 39.90s

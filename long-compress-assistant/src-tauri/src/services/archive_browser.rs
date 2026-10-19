@@ -226,12 +226,7 @@ fn browse_tar_reader<R: Read>(
         });
     }
     // TAR stops at zero blocks; read the enclosing stream's trailer as well.
-    let mut tail = archive.into_inner();
-    let mut buffer = [0u8; 64 * 1024];
-    loop {
-        ensure_not_cancelled(cancelled)?;
-        if tail.read(&mut buffer)? == 0 { break; }
-    }
+    super::tar_compatibility::finish_stream(archive.into_inner(), || ensure_not_cancelled(cancelled))?;
     Ok(summarize(format, entries))
 }
 
@@ -246,7 +241,7 @@ fn browse_tar_family(
     }
     if name.ends_with(".tar.gz") || name.ends_with(".tgz") || name.ends_with(".tpz") {
         return browse_tar_reader(
-            flate2::read::GzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?),
+            crate::services::codec_stream::decoder(path, "gz")?,
             "TAR.GZ",
             cancelled,
         )
@@ -254,7 +249,7 @@ fn browse_tar_family(
     }
     if name.ends_with(".tar.bz2") || name.ends_with(".tbz") || name.ends_with(".tbz2") {
         return browse_tar_reader(
-            bzip2::read::BzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?),
+            crate::services::codec_stream::decoder(path, "bz2")?,
             "TAR.BZ2",
             cancelled,
         )
@@ -262,7 +257,7 @@ fn browse_tar_family(
     }
     if name.ends_with(".tar.xz") || name.ends_with(".txz") {
         return browse_tar_reader(
-            xz2::read::XzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?),
+            crate::services::codec_stream::decoder(path, "xz")?,
             "TAR.XZ",
             cancelled,
         )
@@ -270,7 +265,7 @@ fn browse_tar_family(
     }
     if name.ends_with(".tar.zst") || name.ends_with(".tzst") {
         return browse_tar_reader(
-            zstd::stream::read::Decoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?)?,
+            crate::services::codec_stream::decoder(path, "zst")?,
             "TAR.ZST",
             cancelled,
         )
@@ -325,7 +320,7 @@ pub async fn browse_archive_cancellable_with_encoding(
         if format == ArchiveFormat::Zpaq {
             return super::zpaq_engine::browse(&path, password.as_deref(), operation_cancelled).await;
         }
-        if is_tar_family
+        if is_tar_family || super::codec_stream::plain_format(&format).is_some()
             || matches!(
                 format,
                 ArchiveFormat::Zip | ArchiveFormat::SevenZip | ArchiveFormat::Rar | ArchiveFormat::Tar | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip
@@ -337,6 +332,25 @@ pub async fn browse_archive_cancellable_with_encoding(
                     if let Some(result) = browse_tar_family(&path, &native_cancelled)? {
                         return Ok(result);
                     }
+                }
+                if let Some((codec, label, suffixes)) = super::codec_stream::plain_format(&format) {
+                    let mut reader = super::codec_stream::decoder(&path, codec)?;
+                    let mut buffer = [0u8; 64 * 1024];
+                    let mut size = 0u64;
+                    let mut size_known = true;
+                    loop {
+                        ensure_not_cancelled(&native_cancelled)?;
+                        let count = reader.read(&mut buffer)?;
+                        if count == 0 { break; }
+                        size = size.checked_add(count as u64).context("Stream size overflow")?;
+                        // Listing one large compressed file must not require full decoding.
+                        if size > 8 * 1024 * 1024 { size = 0; size_known = false; break; }
+                    }
+                    let name = super::native_extraction::single_stream::output_name(&path, suffixes);
+                    let compressed_size = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(&path)?
+                        .map(|group| group.total_size).unwrap_or(std::fs::metadata(&path)?.len());
+                    return Ok(summarize(label, vec![ArchiveEntryInfo { size_known: Some(size_known), name: name.clone(), path: name,
+                        size, compressed_size: Some(compressed_size), modified: None, crc: None, encrypted: false, is_dir: false }]));
                 }
                 match format {
                     ArchiveFormat::Tar => browse_tar_reader(super::numeric_volume_reader::ZipInputReader::open(&path)?, "TAR", &native_cancelled),

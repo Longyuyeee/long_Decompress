@@ -1,0 +1,16 @@
+
+running 12 tests
+test services::tar_compatibility::tests::decimal_is_strict_and_overflow_checked ... ok
+test services::tar_compatibility::tests::declared_regular_size_does_not_turn_truncation_into_success ... ok
+test services::tar_compatibility::tests::empty_map_represents_all_holes_without_allocating_logical_content ... ok
+test services::tar_compatibility::tests::mapped_name_must_be_nonempty_utf8_without_nul ... ok
+test services::tar_compatibility::tests::pax00_rejects_missing_or_out_of_order_pairs ... ok
+test services::tar_compatibility::tests::pax00_retains_repeated_pairs_and_trailing_holes ... ok
+test services::tar_compatibility::tests::pax01_rejects_odd_maps_and_count_mismatch ... ok
+test services::tar_compatibility::tests::pax10_checks_map_padding_and_truncation ... ok
+test services::tar_compatibility::tests::source_read_io_kind_is_preserved ... ok
+test services::tar_compatibility::tests::sparse_ranges_reject_overlap_order_overflow_size_and_stored_mismatch ... ok
+test services::tar_compatibility::tests::tar_suffix_must_not_override_a_known_non_tar_signature ... ok
+test services::tar_compatibility::tests::unknown_version_is_unsupported_not_a_password_question ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 749 filtered out; finished in 0.01s

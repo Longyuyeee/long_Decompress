@@ -117,9 +117,8 @@ pub(crate) fn extract_inner<R: ExtractionRuntime>(runtime: &R, window: Option<&W
     }
     // TAR's zero blocks are not the end of a compressed stream: consume its
     // footer so truncation/checksum failures cannot publish partial success.
-    let mut tail = archive.into_inner();
-    let mut buffer = [0u8; 64 * 1024];
-    while tail.read(&mut buffer).map_err(|e|crate::services::tar_compatibility::inspection_error(e.into()))? > 0 {}
+    crate::services::tar_compatibility::finish_stream(archive.into_inner(), || runtime.check_cancellation())
+        .map_err(crate::services::tar_compatibility::inspection_error)?;
     Ok(())
 }
 
@@ -131,14 +130,14 @@ pub(crate) fn extract_gzip<R: ExtractionRuntime>(
     output: &Path,
     options: &DecompressOptions,
 ) -> Result<()> {
-    let decoder = flate2::read::GzDecoder::new(crate::services::numeric_volume_reader::ZipInputReader::open(Path::new(file))?);
+    let decoder = crate::services::codec_stream::decoder(Path::new(file), "gz")?;
     extract(
         runtime,
         window,
         task_id,
         file,
         output,
-        Some(Box::new(decoder)),
+        Some(decoder),
         options,
     )
 }
@@ -151,14 +150,14 @@ pub(crate) fn extract_bzip2<R: ExtractionRuntime>(
     output: &Path,
     options: &DecompressOptions,
 ) -> Result<()> {
-    let decoder = bzip2::read::BzDecoder::new(crate::services::numeric_volume_reader::ZipInputReader::open(Path::new(file))?);
+    let decoder = crate::services::codec_stream::decoder(Path::new(file), "bz2")?;
     extract(
         runtime,
         window,
         task_id,
         file,
         output,
-        Some(Box::new(decoder)),
+        Some(decoder),
         options,
     )
 }
@@ -171,14 +170,14 @@ pub(crate) fn extract_xz<R: ExtractionRuntime>(
     output: &Path,
     options: &DecompressOptions,
 ) -> Result<()> {
-    let decoder = xz2::read::XzDecoder::new(crate::services::numeric_volume_reader::ZipInputReader::open(Path::new(file))?);
+    let decoder = crate::services::codec_stream::decoder(Path::new(file), "xz")?;
     extract(
         runtime,
         window,
         task_id,
         file,
         output,
-        Some(Box::new(decoder)),
+        Some(decoder),
         options,
     )
 }
@@ -191,14 +190,14 @@ pub(crate) fn extract_zstandard<R: ExtractionRuntime>(
     output: &Path,
     options: &DecompressOptions,
 ) -> Result<()> {
-    let decoder = zstd::stream::read::Decoder::new(crate::services::numeric_volume_reader::ZipInputReader::open(Path::new(file))?)?;
+    let decoder = crate::services::codec_stream::decoder(Path::new(file), "zst")?;
     extract(
         runtime,
         window,
         task_id,
         file,
         output,
-        Some(Box::new(decoder)),
+        Some(decoder),
         options,
     )
 }

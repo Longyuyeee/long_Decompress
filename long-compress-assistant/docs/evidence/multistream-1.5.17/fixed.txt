@@ -1,0 +1,80 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling long-compress-assistant v1.5.16 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3m 00s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-012836b40da3a464.exe)
+
+running 11 tests
+test services::codec_stream::tests::stream1517_boundary_keeps_nested_os_errors_out_of_corruption ... FAILED
+test services::multistream_tests::stream1517_boundary_full_checks_honor_cancellation ... ok
+test services::multistream_tests::stream1517_boundary_large_plain_file_lists_unknown_without_full_scan ... ok
+test services::multistream_tests::stream1517_bzip2_tar_reads_tail_across_members ... FAILED
+test services::multistream_tests::stream1517_complete_decoding_keeps_raw_payload_hash ... ok
+test services::multistream_tests::stream1517_gzip_tar_reads_tail_across_members ... FAILED
+test services::multistream_tests::stream1517_later_member_damage_is_not_success ... ok
+test services::multistream_tests::stream1517_plain_stream_has_complete_size_and_preview ... ok
+test services::multistream_tests::stream1517_separate_tar_concatenation_is_explicit_not_partial_success ... ok
+test services::multistream_tests::stream1517_xz_tar_reads_tail_across_members_and_padding ... FAILED
+test services::multistream_tests::stream1517_zstd_tar_keeps_existing_multiframe_support ... FAILED
+
+failures:
+
+---- services::codec_stream::tests::stream1517_boundary_keeps_nested_os_errors_out_of_corruption stdout ----
+
+thread 'services::codec_stream::tests::stream1517_boundary_keeps_nested_os_errors_out_of_corruption' (30324) panicked at src\services\codec_stream.rs:343:9:
+assertion failed: !error.to_string().contains("[archive-inspection:damaged]")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- services::multistream_tests::stream1517_bzip2_tar_reads_tail_across_members stdout ----
+
+thread 'services::multistream_tests::stream1517_bzip2_tar_reads_tail_across_members' (50068) panicked at src\services\multistream_tests.rs:39:81:
+called `Result::unwrap()` on an `Err` value: The selected entry was not found in the compressed file
+
+---- services::multistream_tests::stream1517_gzip_tar_reads_tail_across_members stdout ----
+
+thread 'services::multistream_tests::stream1517_gzip_tar_reads_tail_across_members' (21220) panicked at src\services\multistream_tests.rs:39:81:
+called `Result::unwrap()` on an `Err` value: The selected entry was not found in the compressed file
+
+---- services::multistream_tests::stream1517_xz_tar_reads_tail_across_members_and_padding stdout ----
+
+thread 'services::multistream_tests::stream1517_xz_tar_reads_tail_across_members_and_padding' (1768) panicked at src\services\multistream_tests.rs:39:81:
+called `Result::unwrap()` on an `Err` value: The selected entry was not found in the compressed file
+
+---- services::multistream_tests::stream1517_zstd_tar_keeps_existing_multiframe_support stdout ----
+
+thread 'services::multistream_tests::stream1517_zstd_tar_keeps_existing_multiframe_support' (22772) panicked at src\services\multistream_tests.rs:39:81:
+called `Result::unwrap()` on an `Err` value: The selected entry was not found in the compressed file
+
+
+failures:
+    services::codec_stream::tests::stream1517_boundary_keeps_nested_os_errors_out_of_corruption
+    services::multistream_tests::stream1517_bzip2_tar_reads_tail_across_members
+    services::multistream_tests::stream1517_gzip_tar_reads_tail_across_members
+    services::multistream_tests::stream1517_xz_tar_reads_tail_across_members_and_padding
+    services::multistream_tests::stream1517_zstd_tar_keeps_existing_multiframe_support
+
+test result: FAILED. 6 passed; 5 failed; 0 ignored; 0 measured; 748 filtered out; finished in 3.11s
+
+error: test failed, to rerun pass `--lib`

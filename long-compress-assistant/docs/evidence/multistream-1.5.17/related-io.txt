@@ -1,0 +1,6 @@
+
+running 2 tests
+test services::archive_io::tests::io1516_real_windows_sharing_violation_is_preserved ... ok
+test services::archive_io::tests::io1516_typed_native_failures_precede_password_text_without_inventing_corruption ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 759 filtered out; finished in 0.02s

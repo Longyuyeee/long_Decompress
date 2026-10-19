@@ -206,7 +206,8 @@ fn preview_format(path: &Path) -> Result<&'static str> {
         Some(Route::TarLz4) => Ok("TAR.LZ4"),
         Some(Route::TarBrotli) => Ok("TAR.BR"),
         Some(Route::TarLzip) => Ok("TAR.LZIP"),
-        _ => anyhow::bail!("Safe bounded preview is currently available for ZIP and TAR-family archives only"),
+        _ => super::codec_stream::plain_format(&format).map(|(_,label,_)| label)
+            .context("此格式暂不支持内部预览，请先提取后打开"),
     }
 }
 
@@ -216,11 +217,11 @@ fn read_tar_family(path: &Path, format: &str, entry_path: &str) -> Result<Vec<u8
         "TAR.BR" => read_tar_entry(super::codec_stream::decoder(path, "br")?, entry_path),
         "TAR.LZIP" => read_tar_entry(super::codec_stream::decoder(path, "lz")?, entry_path),
         "TAR" => read_tar_entry(super::numeric_volume_reader::ZipInputReader::open(path)?, entry_path),
-        "TAR.GZ" => read_tar_entry(flate2::read::GzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), entry_path),
-        "TAR.BZ2" => read_tar_entry(bzip2::read::BzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), entry_path),
-        "TAR.XZ" => read_tar_entry(xz2::read::XzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), entry_path),
+        "TAR.GZ" => read_tar_entry(crate::services::codec_stream::decoder(path, "gz")?, entry_path),
+        "TAR.BZ2" => read_tar_entry(crate::services::codec_stream::decoder(path, "bz2")?, entry_path),
+        "TAR.XZ" => read_tar_entry(crate::services::codec_stream::decoder(path, "xz")?, entry_path),
         "TAR.ZST" => read_tar_entry(
-            zstd::stream::read::Decoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?)?,
+            crate::services::codec_stream::decoder(path, "zst")?,
             entry_path,
         ),
         _ => anyhow::bail!(
@@ -236,20 +237,42 @@ fn read_tar_family_text(path: &Path, format: &str, entry_path: &str) -> Result<T
         "TAR.LZIP" => read_tar_text_entry(super::codec_stream::decoder(path, "lz")?, entry_path),
         "TAR" => read_tar_text_entry(super::numeric_volume_reader::ZipInputReader::open(path)?, entry_path),
         "TAR.GZ" => {
-            read_tar_text_entry(flate2::read::GzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), entry_path)
+            read_tar_text_entry(crate::services::codec_stream::decoder(path, "gz")?, entry_path)
         }
         "TAR.BZ2" => {
-            read_tar_text_entry(bzip2::read::BzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), entry_path)
+            read_tar_text_entry(crate::services::codec_stream::decoder(path, "bz2")?, entry_path)
         }
-        "TAR.XZ" => read_tar_text_entry(xz2::read::XzDecoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?), entry_path),
+        "TAR.XZ" => read_tar_text_entry(crate::services::codec_stream::decoder(path, "xz")?, entry_path),
         "TAR.ZST" => read_tar_text_entry(
-            zstd::stream::read::Decoder::new(super::numeric_volume_reader::ZipInputReader::open(path)?)?,
+            crate::services::codec_stream::decoder(path, "zst")?,
             entry_path,
         ),
         _ => anyhow::bail!(
             "Safe bounded text preview is currently available for ZIP and TAR-family archives only"
         ),
     }
+}
+
+// Single compressed files have no entry directory or reliable declared total.
+// Scan at most the existing preview budget, retaining only the displayed prefix.
+fn read_plain_stream(path: &Path, format: &str, entry: &str, max_total: u64, keep: u64) -> Result<TextBytes> {
+    let detected = ArchiveFormat::from_extension(&format.to_ascii_lowercase());
+    let (codec, _, suffixes) = super::codec_stream::plain_format(&detected).context("Unsupported compressed preview")?;
+    let name = super::native_extraction::single_stream::output_name(path, suffixes);
+    anyhow::ensure!(entry == name, "The selected entry was not found in the compressed file");
+    let mut reader = super::codec_stream::decoder(path, codec)?;
+    let mut bytes = Vec::new();
+    let mut total = 0u64;
+    let mut buffer = [0u8; 64 * 1024];
+    loop {
+        let count = reader.read(&mut buffer)?;
+        if count == 0 { break; }
+        total += count as u64;
+        anyhow::ensure!(total <= max_total, "此压缩流超出内部预览的读取范围，请先解压后打开；未将部分预览当作完整文件");
+        let retained = (keep.saturating_sub(bytes.len() as u64) as usize).min(count);
+        bytes.extend_from_slice(&buffer[..retained]);
+    }
+    Ok(TextBytes { bytes, total_size: total })
 }
 
 fn be_u32(bytes: &[u8]) -> u32 {
@@ -377,6 +400,7 @@ fn preview_archive_image_sync(
     let bytes = match format {
         "ZIP" => read_zip_entry(archive_path, &entry_path, password, encoding)?,
         format if format.starts_with("TAR") => read_tar_family(archive_path, format, &entry_path)?,
+        "GZIP" | "BZIP2" | "XZ" | "ZSTD" => read_plain_stream(archive_path, format, &entry_path, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES)?.bytes,
         _ => anyhow::bail!(
             "Safe bounded preview is currently available for ZIP and TAR-family archives only"
         ),
@@ -500,6 +524,7 @@ fn preview_archive_text_sync(
         format if format.starts_with("TAR") => {
             read_tar_family_text(archive_path, format, &entry_path)?
         }
+        "GZIP" | "BZIP2" | "XZ" | "ZSTD" => read_plain_stream(archive_path, format, &entry_path, MAX_TAR_PREVIEW_SCAN_BYTES, MAX_TEXT_PREVIEW_BYTES)?,
         _ => anyhow::bail!(
             "Safe bounded text preview is currently available for ZIP and TAR-family archives only"
         ),
