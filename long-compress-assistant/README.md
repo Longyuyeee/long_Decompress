@@ -16,26 +16,6 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 ## 功能概览
 
-**v1.5.14 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.14)。统一交付 GNU/PAX 稀疏 TAR 的真实名称、完整内容、稀疏计量和失败原因，并修正真实 ZIP/TAR 被误后缀带偏的浏览、预览、检查及提取路由。二十原件独立回解、203 Rust、170 前端、36 桌面记录、18 张实看页面和普通生产通过；正式四附件及中文更新说明已回下载核对。见[审计](docs/TAR_ROUTING_1.5.14.md)、[封板发布](docs/TAR_ROUTING_FREEZE_1.5.14.md)及[中文说明](docs/RELEASE_NOTES_1.5.14.md)。v1.5.13 已撤回未发布，原标签不移动。图标与原截图保留；Windows 为普通填零输出，不承诺 NTFS 稀疏分配或 Linux 元数据。下一版 v1.5.15 ZIP64 大边界，再 v1.5.16 过程 I/O；ALZ 方法 3 与 EGG 加密固实仍未完成。
-
-此前 **v1.5.12 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.12)。修复 ALZ Deflate 在声明压缩范围尚有尾部数据时误报完整成功；加密条目全部内容大小/CRC 匹配后明确报尾部损坏并停止试密，未匹配仍保留不确定类别。八组原厂普通/中文密码、单包/原生卷独立回解通过，八派生故障不再错误成功；105 Rust、170 前端、二十二桌面记录、十四张实看页面及普通生产通过。正式四资产、中文说明、包内引擎二十组原件/八故障/124 份许可已核对。见[审计](docs/ALZ_STREAM_INTEGRITY_1.5.12.md)、[封板记录](docs/ALZ_STREAM_INTEGRITY_FREEZE_1.5.12.md)和[更新说明](docs/RELEASE_NOTES_1.5.12.md)。原计划 Obfuscated Deflate（方法 3）未取得原厂正面包，仍不支持且保留未完成；不冒称新增该方法。图标和原截图保留；此为前版交付快照，最新状态与下一步以上方 v1.5.14 及开发交接为准。
-
-此前 **v1.5.11 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.11)。补齐二十组原中文 ALZip 密码 EGG 的 ZipCrypto/AES/LEA、Deflate/LZMA、单包与原生卷验证，改善密码编码不匹配后的最终原因和重试指引；用户主动选择 CP936 后以新任务继续，旧失败保留。101 Rust、170 前端、二十五桌面记录和十二张实看页面通过；正式四资产、中文说明、包内引擎五十五组原包与 103 份许可已核对。见[审计](docs/EGG_PASSWORD_COMBINATIONS_1.5.11.md)、[封板记录](docs/EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md)和[更新说明](docs/RELEASE_NOTES_1.5.11.md)。加密固实无真实正面原包，不承诺支持；两组 LEA/LZMA 原生卷由原厂回解核对，不承诺本机 Bandizip 互通。默认编码和 helper 不变，图标与原截图保留；十版路线已交付六版、剩四版，下一版 v1.5.12 补 ALZ 方法兼容。
-
-此前 **v1.5.10 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.10)。大 EGG LZMA 改为有界流式读取，超过旧 256 MiB 压缩输入的普通、固实和传统密码原生四卷已验证；完整 CRC、缺卷最终原因和事务输出保持。99 项 Rust、152 项前端、三组大原包、七条桌面流程和十六张实看页面通过，实际写出后暂停/恢复/取消及历史最终原因已核对。见[审计](docs/EGG_LARGE_LZMA_1.5.10.md)、[封板记录](docs/EGG_LARGE_LZMA_FREEZE_1.5.10.md)和[更新说明](docs/RELEASE_NOTES_1.5.10.md)。正式四资产、中文说明、包内引擎的 35 组原包和 103 份许可已核对。EGG 不创建，LZMA 字典仍限 256 MiB，未验证密码组合不外推。图标和原截图保留；十版路线已交付五版、剩五版，下一版 v1.5.11 补特殊 EGG 密码组合。
-
-此前 **v1.5.9 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.9)。加密 RAR 缺卷保留实际卷名和补回位置；前段密码通过后的后续数据异常不再一概当错密，诊断也不再给出不适用的修复工具提示。十二组真原包、96 项 Rust、152 项前端、39 桌面记录及十四张实看页面通过，补回原卷新任务、旧失败保留与转换独立回解已核对。见[审计](docs/RAR_FINAL_CAUSES_1.5.9.md)、[封板记录](docs/RAR_FINAL_CAUSES_FREEZE_1.5.9.md)与[更新说明](docs/RELEASE_NOTES_1.5.9.md)。正式四资产、中文更新说明和包内主程序/四份说明已回下载核对。前段密码通过不等于整包完整；不新增 RAR 创建或修复，不执行输入 EXE。图标和原截图保留。
-
-此前 **v1.5.7 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.7)。补齐 7Z 中 PPMdH、Deflate、Deflate64、Bzip2 的原生读取，贯通密码、固实、数字分卷、所选提取及转换；改进损坏、方法不支持和输出错误的最终原因。61 项 Rust、150 项前端、25 个真实桌面场景与 8 张实看页面通过；正式四资产、中文说明及包内主程序/四份说明已回下载核对。见[审计](docs/SEVENZ_METHODS_1.5.7.md)、[封板记录](docs/SEVENZ_METHODS_FREEZE_1.5.7.md)和[更新说明](docs/RELEASE_NOTES_1.5.7.md)。不改变默认压缩算法，软件图标和原截图保留。
-
-此前 **v1.5.6 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.6)。RAR 进度改用实际解码字节，修正跨卷总量、暂停计时、同目录产出统计和停止误报失败。49 项 Rust、133 项前端、12 个真实桌面场景与 8 张实看页面通过；正式四资产、中文说明及包内主程序已回下载核对。见[本版审计](docs/RAR_PROGRESS_1.5.6.md)、[封板发布记录](docs/RAR_PROGRESS_FREEZE_1.5.6.md)与[更新说明](docs/RELEASE_NOTES_1.5.6.md)。后续十版路线已交付一版，下一版补齐真实 7Z 方法兼容；原图标和截图保留。
-
-此前 **v1.5.5** 已正式发布，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.5)。补齐真实 RAR4/5 外置卷 SFX 与固定 7-Zip 24.09 GUI 加载器读取，修复 RAR 密码判断、块内暂停取消及取消后的文件锁；文件管理器中卷浏览、补卷新任务和历史重做完成。94 项 Rust、214 项前端、十五组原包、24 个桌面场景和 18 张实看页面通过。正式四资产、中文说明及包内资源已回下载核对；见[审计](docs/SFX_VOLUMES_1.5.5.md)、[封板记录](docs/SFX_VOLUMES_FREEZE_1.5.5.md)与[更新说明](docs/RELEASE_NOTES_1.5.5.md)。SFX 只读、不执行输入 EXE，不创建/修复或处理恢复卷，未验证模块不外推。原十二版路线已全部交付，接[后续十版目标](docs/ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)，先改善 RAR 实际字节进度。软件图标和既有截图保留。
-
-此前 **v1.5.3** 完成 EGG 基础方法、传统 ZipCrypto、原生卷与明确密码编码的只读闭环，见[当时审计](docs/EGG_BASIC_1.5.3.md)与[更新说明](docs/RELEASE_NOTES_1.5.3.md)；其复杂方法限制是当时状态，现以 v1.5.4 的实际组合和资源边界为准。
-
-此前 **v1.5.2** 新增 ALZ 只读引擎，贯通普通/传统密码/原生分卷的浏览、所选与整包提取、检查、转换及失败接续。默认 CP949，可明确选择原工具代码页；历史与重试保留编码，不保存密码或局部选择。73 项不同 Rust、235 项前端、真实桌面与独立载荷核对通过，22 张页面已查看；正式四资产、中文说明及包内引擎已核对。见[实施审计](docs/ALZ_READ_1.5.2.md)、[封板记录](docs/ALZ_READ_FREEZE_1.5.2.md)及[更新说明](docs/RELEASE_NOTES_1.5.2.md)。ALZ 不提供创建、损坏修复或缺卷部分救援。
-
 | 工作区 | 用户可以做什么 |
 | --- | --- |
 | 解压中心 | 导入多包、配置目录与子文件夹、使用密码候选、处理文件冲突、查看阶段和结果 |
@@ -115,6 +95,26 @@ docs/                  开发路线、格式说明与历史记录
 项目代码使用 [MIT License](../LICENSE)。随包 7-Zip、ZPAQ、ALZ、EGG、视频与 PDF 引擎分别遵循各自许可；ALZ/EGG 的源码、构建与完整依赖许可位于 `vendor/unalz/`、`vendor/unegg/`、`vendor/libazo/`、`tools/alz-engine/`、`tools/egg-engine/` 和对应 resources 目录。WinRAR 编码器不随项目分发。
 
 ## 更新记录
+
+**v1.5.14 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.14)。统一交付 GNU/PAX 稀疏 TAR 的真实名称、完整内容、稀疏计量和失败原因，并修正真实 ZIP/TAR 被误后缀带偏的浏览、预览、检查及提取路由。二十原件独立回解、203 Rust、170 前端、36 桌面记录、18 张实看页面和普通生产通过；正式四附件及中文更新说明已回下载核对。见[审计](docs/TAR_ROUTING_1.5.14.md)、[封板发布](docs/TAR_ROUTING_FREEZE_1.5.14.md)及[中文说明](docs/RELEASE_NOTES_1.5.14.md)。v1.5.13 已撤回未发布，原标签不移动。图标与原截图保留；Windows 为普通填零输出，不承诺 NTFS 稀疏分配或 Linux 元数据。下一版 v1.5.15 ZIP64 大边界，再 v1.5.16 过程 I/O；ALZ 方法 3 与 EGG 加密固实仍未完成。
+
+此前 **v1.5.12 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.12)。修复 ALZ Deflate 在声明压缩范围尚有尾部数据时误报完整成功；加密条目全部内容大小/CRC 匹配后明确报尾部损坏并停止试密，未匹配仍保留不确定类别。八组原厂普通/中文密码、单包/原生卷独立回解通过，八派生故障不再错误成功；105 Rust、170 前端、二十二桌面记录、十四张实看页面及普通生产通过。正式四资产、中文说明、包内引擎二十组原件/八故障/124 份许可已核对。见[审计](docs/ALZ_STREAM_INTEGRITY_1.5.12.md)、[封板记录](docs/ALZ_STREAM_INTEGRITY_FREEZE_1.5.12.md)和[更新说明](docs/RELEASE_NOTES_1.5.12.md)。原计划 Obfuscated Deflate（方法 3）未取得原厂正面包，仍不支持且保留未完成；不冒称新增该方法。图标和原截图保留；此为前版交付快照，最新状态与下一步以上方 v1.5.14 及开发交接为准。
+
+此前 **v1.5.11 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.11)。补齐二十组原中文 ALZip 密码 EGG 的 ZipCrypto/AES/LEA、Deflate/LZMA、单包与原生卷验证，改善密码编码不匹配后的最终原因和重试指引；用户主动选择 CP936 后以新任务继续，旧失败保留。101 Rust、170 前端、二十五桌面记录和十二张实看页面通过；正式四资产、中文说明、包内引擎五十五组原包与 103 份许可已核对。见[审计](docs/EGG_PASSWORD_COMBINATIONS_1.5.11.md)、[封板记录](docs/EGG_PASSWORD_COMBINATIONS_FREEZE_1.5.11.md)和[更新说明](docs/RELEASE_NOTES_1.5.11.md)。加密固实无真实正面原包，不承诺支持；两组 LEA/LZMA 原生卷由原厂回解核对，不承诺本机 Bandizip 互通。默认编码和 helper 不变，图标与原截图保留；十版路线已交付六版、剩四版，下一版 v1.5.12 补 ALZ 方法兼容。
+
+此前 **v1.5.10 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.10)。大 EGG LZMA 改为有界流式读取，超过旧 256 MiB 压缩输入的普通、固实和传统密码原生四卷已验证；完整 CRC、缺卷最终原因和事务输出保持。99 项 Rust、152 项前端、三组大原包、七条桌面流程和十六张实看页面通过，实际写出后暂停/恢复/取消及历史最终原因已核对。见[审计](docs/EGG_LARGE_LZMA_1.5.10.md)、[封板记录](docs/EGG_LARGE_LZMA_FREEZE_1.5.10.md)和[更新说明](docs/RELEASE_NOTES_1.5.10.md)。正式四资产、中文说明、包内引擎的 35 组原包和 103 份许可已核对。EGG 不创建，LZMA 字典仍限 256 MiB，未验证密码组合不外推。图标和原截图保留；十版路线已交付五版、剩五版，下一版 v1.5.11 补特殊 EGG 密码组合。
+
+此前 **v1.5.9 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.9)。加密 RAR 缺卷保留实际卷名和补回位置；前段密码通过后的后续数据异常不再一概当错密，诊断也不再给出不适用的修复工具提示。十二组真原包、96 项 Rust、152 项前端、39 桌面记录及十四张实看页面通过，补回原卷新任务、旧失败保留与转换独立回解已核对。见[审计](docs/RAR_FINAL_CAUSES_1.5.9.md)、[封板记录](docs/RAR_FINAL_CAUSES_FREEZE_1.5.9.md)与[更新说明](docs/RELEASE_NOTES_1.5.9.md)。正式四资产、中文更新说明和包内主程序/四份说明已回下载核对。前段密码通过不等于整包完整；不新增 RAR 创建或修复，不执行输入 EXE。图标和原截图保留。
+
+此前 **v1.5.7 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.7)。补齐 7Z 中 PPMdH、Deflate、Deflate64、Bzip2 的原生读取，贯通密码、固实、数字分卷、所选提取及转换；改进损坏、方法不支持和输出错误的最终原因。61 项 Rust、150 项前端、25 个真实桌面场景与 8 张实看页面通过；正式四资产、中文说明及包内主程序/四份说明已回下载核对。见[审计](docs/SEVENZ_METHODS_1.5.7.md)、[封板记录](docs/SEVENZ_METHODS_FREEZE_1.5.7.md)和[更新说明](docs/RELEASE_NOTES_1.5.7.md)。不改变默认压缩算法，软件图标和原截图保留。
+
+此前 **v1.5.6 已正式发布**，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.6)。RAR 进度改用实际解码字节，修正跨卷总量、暂停计时、同目录产出统计和停止误报失败。49 项 Rust、133 项前端、12 个真实桌面场景与 8 张实看页面通过；正式四资产、中文说明及包内主程序已回下载核对。见[本版审计](docs/RAR_PROGRESS_1.5.6.md)、[封板发布记录](docs/RAR_PROGRESS_FREEZE_1.5.6.md)与[更新说明](docs/RELEASE_NOTES_1.5.6.md)。后续十版路线已交付一版，下一版补齐真实 7Z 方法兼容；原图标和截图保留。
+
+此前 **v1.5.5** 已正式发布，[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.5)。补齐真实 RAR4/5 外置卷 SFX 与固定 7-Zip 24.09 GUI 加载器读取，修复 RAR 密码判断、块内暂停取消及取消后的文件锁；文件管理器中卷浏览、补卷新任务和历史重做完成。94 项 Rust、214 项前端、十五组原包、24 个桌面场景和 18 张实看页面通过。正式四资产、中文说明及包内资源已回下载核对；见[审计](docs/SFX_VOLUMES_1.5.5.md)、[封板记录](docs/SFX_VOLUMES_FREEZE_1.5.5.md)与[更新说明](docs/RELEASE_NOTES_1.5.5.md)。SFX 只读、不执行输入 EXE，不创建/修复或处理恢复卷，未验证模块不外推。原十二版路线已全部交付，接[后续十版目标](docs/ARCHIVE_ROADMAP_1.5.6_TO_1.5.15.md)，先改善 RAR 实际字节进度。软件图标和既有截图保留。
+
+此前 **v1.5.3** 完成 EGG 基础方法、传统 ZipCrypto、原生卷与明确密码编码的只读闭环，见[当时审计](docs/EGG_BASIC_1.5.3.md)与[更新说明](docs/RELEASE_NOTES_1.5.3.md)；其复杂方法限制是当时状态，现以 v1.5.4 的实际组合和资源边界为准。
+
+此前 **v1.5.2** 新增 ALZ 只读引擎，贯通普通/传统密码/原生分卷的浏览、所选与整包提取、检查、转换及失败接续。默认 CP949，可明确选择原工具代码页；历史与重试保留编码，不保存密码或局部选择。73 项不同 Rust、235 项前端、真实桌面与独立载荷核对通过，22 张页面已查看；正式四资产、中文说明及包内引擎已核对。见[实施审计](docs/ALZ_READ_1.5.2.md)、[封板记录](docs/ALZ_READ_FREEZE_1.5.2.md)及[更新说明](docs/RELEASE_NOTES_1.5.2.md)。ALZ 不提供创建、损坏修复或缺卷部分救援。
 
 **v1.5.2**：ALZ 只读、传统密码和原生分卷、编码选择及失败接续，见[更新说明](docs/RELEASE_NOTES_1.5.2.md)与[封板记录](docs/ALZ_READ_FREEZE_1.5.2.md)。
 

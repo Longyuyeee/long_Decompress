@@ -425,6 +425,49 @@ pub(crate) fn split(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    #[ignore = "requires the genuine streaming >4 GiB original and the completed main matrix"]
+    fn zip64_1515_streamed_descriptor_crosses_a_volume_boundary() {
+        use sha2::{Digest, Sha256};
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../test-results/zip64-1515");
+        let manifest: serde_json::Value = serde_json::from_slice(&std::fs::read(root.join("source.json")).unwrap()).unwrap();
+        let source = root.join("external-plain-stream.zip");
+        let mut archive = zip_aes::ZipArchive::new(File::open(&source).unwrap()).unwrap();
+        let big = archive.by_index(0).unwrap();
+        assert!(big.size() > u32::MAX as u64);
+        let descriptor = big.data_start().expect("Original local header must be readable") + big.compressed_size();
+        drop(big); drop(archive);
+        let mut file = File::open(&source).unwrap();
+        let local = read_at(&mut file, 0, 30).unwrap();
+        assert_ne!(u16_at(&local, 6) & 8, 0, "Original must actually use a data descriptor");
+        assert_eq!(read_at(&mut file, descriptor, 4).unwrap(), b"PK\x07\x08");
+        let directory = root.join("streamed-descriptor-standard");
+        std::fs::create_dir_all(&directory).unwrap();
+        let output = directory.join("流式ZIP64跨卷.zip");
+        let result = split(&source, &output, descriptor + 4 + 10, || Ok(()), |_, _| {}).unwrap();
+        assert!(descriptor + 4 < result.part_files[0].metadata().unwrap().len());
+        assert!(descriptor + 4 + 24 > result.part_files[0].metadata().unwrap().len());
+        let reader = super::super::numeric_volume_reader::ZipInputReader::open(&output).unwrap();
+        let mut archive = zip_aes::ZipArchive::new(reader).unwrap();
+        let mut checked = Vec::new();
+        for expected in manifest["files"].as_array().unwrap() {
+            let name = expected["name"].as_str().unwrap();
+            let mut entry = archive.by_name(name).unwrap();
+            let mut h = Sha256::new(); let mut bytes = 0u64; let mut buffer = vec![0; 1024 * 1024];
+            loop { let n = entry.read(&mut buffer).unwrap(); if n == 0 { break; } h.update(&buffer[..n]); bytes += n as u64; }
+            let digest = format!("{:x}", h.finalize());
+            assert_eq!(bytes, expected["bytes"].as_u64().unwrap());
+            assert_eq!(digest, expected["sha256"].as_str().unwrap());
+            checked.push(serde_json::json!({"name":name,"bytes":bytes,"sha256":digest}));
+        }
+        assert!(archive.by_name("空目录/").unwrap().is_dir());
+        let mut cases: Vec<serde_json::Value> = serde_json::from_slice(&std::fs::read(root.join("native-results.json")).unwrap()).unwrap();
+        assert_eq!(cases.len(), 9, "Run after the completed main matrix, once");
+        cases.push(serde_json::json!({"mode":"plain-stream","layout":"standard-descriptor","source":output,
+            "parts":result.part_files,"files":checked,"descriptorCrossesDisk":true,"descriptorVirtualOffset":descriptor+4}));
+        std::fs::write(root.join("native-results.json"), serde_json::to_vec_pretty(&cases).unwrap()).unwrap();
+    }
+
     const PASSWORD: &str = "volume-password + !";
     fn fixture(path: &Path, mode: u8, many: bool) -> Vec<u8> {
         let mut writer = zip_aes::ZipWriter::new(File::create(path).unwrap());

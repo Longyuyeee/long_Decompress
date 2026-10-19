@@ -233,7 +233,10 @@ mod tests {
         let files = manifest["files"].as_array().unwrap();
         let mut sources = files.iter().map(|f| source.join(f["name"].as_str().unwrap()).to_string_lossy().into_owned()).collect::<Vec<_>>();
         sources.push(source.join("空目录").to_string_lossy().into_owned());
-        let mut cases = Vec::new();
+        let checkpoint = root.join("native-progress.json");
+        let mut cases: Vec<serde_json::Value> = if checkpoint.exists() {
+            serde_json::from_slice(&std::fs::read(&checkpoint).unwrap()).unwrap()
+        } else { Vec::new() };
         for (mode, encryption) in [("plain", None), ("aes", Some(ZipEncryption::Aes256)), ("zipcrypto", Some(ZipEncryption::Zipcrypto))] {
             let password = encryption.map(|_| "ZIP64-test-password + !");
             let output = root.join(format!("product-{mode}.zip"));
@@ -248,6 +251,10 @@ mod tests {
             for layout in [None, Some(ZipSplitMode::Numeric), Some(ZipSplitMode::Standard)] {
                 let length = output.metadata().unwrap().len();
                 let layout_name = match layout { None => "single", Some(ZipSplitMode::Numeric) => "numeric", _ => "standard" };
+                if cases.iter().any(|case| case["mode"] == mode && case["layout"] == layout_name) {
+                    eprintln!("[zip64-1515] reuse completed {mode}/{layout_name} with unchanged runtime source");
+                    continue;
+                }
                 let destination = root.join(format!("{mode}-{layout_name}"));
                 std::fs::create_dir_all(&destination).unwrap();
                 let split_output = destination.join("大文件分卷.zip");

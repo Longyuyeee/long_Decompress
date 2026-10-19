@@ -83,7 +83,7 @@ if (process.argv.includes('--prepare')) {
     console.log(`[zip64-1515] independent full read ${c.mode}/${c.layout}`)
     const files = []
     for (const f of manifest.files) {
-      const got = await extractHash(c.source, f.name, c.mode === 'plain' ? null : password)
+      const got = await extractHash(c.source, f.name, c.mode.startsWith('plain') ? null : password)
       assert.equal(got.bytes, f.bytes)
       assert.equal(got.sha256, f.sha256)
       files.push({ name: f.name, ...got })

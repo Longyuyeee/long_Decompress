@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { createHash, randomUUID } from 'node:crypto'
-import { spawn } from 'node:child_process'
-import { createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { spawn, spawnSync } from 'node:child_process'
+import { copyFileSync, createReadStream, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { By, Key } from 'selenium-webdriver'
 
@@ -60,13 +60,26 @@ export async function runZip641515Gate({ driver, bridge, waitForElement, artifac
     }
     for (const c of native.filter(c => c.layout !== 'single')) {
       const member = c.parts[1]
-      const browse = await ipc('browse_archive', { filePath: member, password: c.mode === 'plain' ? null : password })
+      const browse = await ipc('browse_archive', { filePath: member, password: c.mode.startsWith('plain') ? null : password })
       assert.equal(browse.entries.find(e => e.path === manifest.files[0].name).size, manifest.files[0].bytes)
       const out = path.join(ui, `${c.mode}-${c.layout}-末尾`)
-      await ipc('extract_file', { taskId: randomUUID(), filePath: member, outputPath: out, password: c.mode === 'plain' ? null : password, options: { ...options, selected_entries: [manifest.files[1].name] } })
+      await ipc('extract_file', { taskId: randomUUID(), filePath: member, outputPath: out, password: c.mode.startsWith('plain') ? null : password, options: { ...options, selected_entries: [manifest.files[1].name] } })
       assert.equal(await sha(path.join(out, manifest.files[1].name)), manifest.files[1].sha256)
       cases.push({ product: c.mode, layout: c.layout, anyMemberBrowse: true, selectedTailHash: true })
     }
+    const encrypted = native.find(c => c.mode === 'aes' && c.layout === 'standard')
+    const damaged = path.join(ui, 'ZIP64终目录损坏'); mkdirSync(damaged)
+    for (const member of encrypted.parts) copyFileSync(member, path.join(damaged, path.basename(member)))
+    const bad = path.join(damaged, path.basename(encrypted.source)), bytes = readFileSync(bad)
+    const locator = bytes.length - 42
+    assert.equal(bytes.subarray(locator, locator + 4).toString('hex'), '504b0607')
+    const at = Number(bytes.readBigUInt64LE(locator + 8))
+    assert.equal(bytes.subarray(at, at + 4).toString('hex'), '504b0606'); bytes[at] ^= 1; writeFileSync(bad, bytes)
+    const diagnosis = await ipc('diagnose_archive', { diagnosticId: randomUUID(), filePath: bad, password: 'incorrect-password' })
+    assert.equal(diagnosis.status, 'damaged'); assert.equal(diagnosis.integrityTested, false)
+    const failure = await invoke('extract_file', { taskId: randomUUID(), filePath: bad, outputPath: damaged + '-不应发布', password: 'incorrect-password', options })
+    assert.equal(failure.ok, false); assert.match(failure.error, /\[archive-inspection:damaged\].*ZIP64/)
+    cases.push({ corruptZip64End: true, damagedBeforePasswordRetry: true, failedExtractionNotPublished: true })
     writeFileSync(checkpoint, JSON.stringify(cases, null, 2))
   } else { cases.push(...JSON.parse(readFileSync(checkpoint, 'utf8'))); console.log('[zip64-1515] reuse completed application command cases') }
 
@@ -96,7 +109,7 @@ export async function runZip641515Gate({ driver, bridge, waitForElement, artifac
   await select('[data-testid="conversion-zip-split-mode"]', '标准 ZIP · .z01/.zip')
   await sizes('zip641515-conversion-config', '[data-testid="conversion-source-password"]')
   await click('[data-testid="conversion-start"]')
-  const record = await driver.wait(async () => (await bridge('taskHistory')).find(h => h.output === output && ['completed', 'failed', 'cancelled'].includes(h.status)) || false, 600000)
+  const record = await driver.wait(async () => (await bridge('taskHistory')).find(h => h.outputPath.replaceAll('\\', '/').toLowerCase() === output.replaceAll('\\', '/').toLowerCase() && ['completed', 'failed', 'cancelled'].includes(h.status)) || false, 600000)
   assert.equal(record.status, 'completed', JSON.stringify(record))
   for (const f of manifest.files) {
     const got = await new Promise((resolve, reject) => {
@@ -107,7 +120,10 @@ export async function runZip641515Gate({ driver, bridge, waitForElement, artifac
     })
     assert.equal(got.bytes, f.bytes); assert.equal(got.sha256, f.sha256)
   }
+  const listing = spawnSync(bundledSevenZip, ['l', '-slt', '-sccUTF-8', output], { windowsHide: true, encoding: 'utf8' })
+  assert.equal(listing.status, 0, listing.stderr)
+  assert.match(listing.stdout, /Path = 空目录\/?\r?\n/)
   await sizes('zip641515-conversion-completed', '[data-testid="conversion-item"]')
-  cases.push({ actualConversion: true, fullLargePayloadHash: true, changedPassword: true, standardVolumes: true, independentReadback: true, output })
+  cases.push({ actualConversion: true, fullLargePayloadHash: true, emptyRootDirectoryPreserved: true, changedPassword: true, standardVolumes: true, independentReadback: true, output })
   writeFileSync(path.join(artifactDirectory, 'zip64-1515-results.json'), JSON.stringify({ version: '1.5.15', application, binarySha256: await sha(application), work, ui, cases, screenshots, layouts }, null, 2))
 }
