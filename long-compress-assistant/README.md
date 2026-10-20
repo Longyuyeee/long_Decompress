@@ -21,7 +21,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 解压中心 | 导入多包、配置目录与子文件夹、使用密码候选、处理文件冲突、查看阶段和结果 |
 | 压缩中心 | 文件/文件夹/组归档、ZIP 方法选择（Deflate/Zstandard/BZip2/PPMd）、ZIP/7Z/RAR 与十七种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码、数字分卷与保留历史的增量更新、WIM 存储/XPRESS/LZX/LZMS 压缩与数字分卷、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
 | 特殊压缩 | JPEG/PNG/WebP 图片编码与缩放、视频压缩预设、PDF 分析与结构优化 |
-| 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、文本/图片预览与选择性解压；支持普通压缩流、自有 AES 密码卷组、原生 SWM 多镜像及 ZPAQ 历史快照查看 |
+| 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、文本/图片预览与选择性解压；支持普通压缩流、自有 AES 密码卷组、原生 SWM 多镜像及 ZPAQ 历史快照对比与变化提取 |
 | 密码保险箱 | 本地加密保存常用解压密码，分类、搜索、导入导出与使用统计 |
 | 文件完整性 | 从完成结果生成整组相对路径清单、CRC32/MD5/SHA256 校验、清单逐文件原因与待补列表/按需复查、真实进度/停止与继续、归档诊断、RAR4/RAR5 副本修复与恢复卷（需本机 Rar.exe），以及密码 ZIP 与目录可读的标准卷完整文件救援 |
 | 历史与系统集成 | 搜索和再次执行、统一结果操作、托盘、资源管理器经典菜单（压缩/解压/校验清单）与应用内更新 |
@@ -92,7 +92,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.5.36 · ZPAQ 增量更新**。往已有备份添加与更新内容，显示归档内位置，保留原件、未选内容与全部历史；普通/密码及数字卷、草稿/重做/失败纠正和新旧快照读取贯通。未变化时明确说明未新增快照，保持原交互与布局。[中文说明](docs/RELEASE_NOTES_1.5.36.md) · [范围与记录](docs/ZPAQ_INCREMENTAL_FREEZE_1.5.36.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.36)。下一版 [v1.5.37 快照对比与变化提取](docs/ARCHIVE_ROADMAP_1.5.37.md)仅规划，尚未开发。
+**v1.5.37 · ZPAQ 快照对比与变化提取**。查看两版之间的新增、候选、元数据和移除，按需核对内容，再按版本创建所选提取任务。密码数字卷、草稿、补卷重试和历史重做保持范围与来源，原交互和布局不变。[中文说明](docs/RELEASE_NOTES_1.5.37.md) · [范围与记录](docs/ZPAQ_DIFF_FREEZE_1.5.37.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.37)。下一版 [v1.5.38 ZIP LZMA创建](docs/ARCHIVE_ROADMAP_1.5.38.md)仅规划，尚未开发。
+
+**v1.5.36 · ZPAQ 增量更新**。往已有备份添加与更新内容，显示归档内位置，保留原件、未选内容与全部历史；普通/密码及数字卷、草稿/重做/失败纠正和新旧快照读取贯通。未变化时明确说明未新增快照，保持原交互与布局。[中文说明](docs/RELEASE_NOTES_1.5.36.md) · [范围与记录](docs/ZPAQ_INCREMENTAL_FREEZE_1.5.36.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.36)。下一版 [v1.5.37 快照对比与变化提取](docs/ARCHIVE_ROADMAP_1.5.37.md)已由 v1.5.37 接续，当前进度以上方最新记录为准。
 
 **v1.5.35 · ZIP PPMd 创建**。为文本资料归档增加可选方法，就近显示内存预算，接通密码、数字/标准卷、转换与补卷后续流程。实际体积分析、暂停恢复、草稿/历史和多选保持方法，原交互与等宽/窄窗布局不变。[中文说明](docs/RELEASE_NOTES_1.5.35.md) · [范围与记录](docs/ZIP_PPMD_FREEZE_1.5.35.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.35)。下一版 [v1.5.36 ZPAQ增量更新](docs/ARCHIVE_ROADMAP_1.5.36.md)已由 v1.5.36 接续，当前进度以上方最新记录为准。
 

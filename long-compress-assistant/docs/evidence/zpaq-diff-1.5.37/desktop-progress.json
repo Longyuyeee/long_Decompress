@@ -1,0 +1,968 @@
+{
+  "version": "1.5.37",
+  "binarySha256": "26b93e6502f8effa4e62aeb598e0b3c4077ce73c89f73e9dc57d2c1b33fa015b",
+  "sourceCommit": "8d96ff3816040666099db1ea259479554924952b",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58",
+  "native": [
+    {
+      "kind": "public-catalog-cancellation-and-missing-volume",
+      "binarySha256": "c3896b9c32eda62bb4b88a34e3d12adf740a15c2844e95ba8615333a89f096bf",
+      "referenceOnly": true,
+      "cancelledBeforeRegistration": {
+        "error": "快照对比已停止",
+        "ok": false
+      },
+      "wrongPasswordRejected": true,
+      "missingMemberRejected": true
+    },
+    {
+      "kind": "selected-empty-directory-only-publication",
+      "binarySha256": "26b93e6502f8effa4e62aeb598e0b3c4077ce73c89f73e9dc57d2c1b33fa015b",
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\仅空目录-107b256a-00b3-4632-8ad6-a51e1519a6f3",
+      "onlyExplicitEmptyDirectoryPublished": true
+    }
+  ],
+  "ui": [
+    {
+      "kind": "compare-exact-and-queue-by-version",
+      "binarySha256": "c3896b9c32eda62bb4b88a34e3d12adf740a15c2844e95ba8615333a89f096bf",
+      "drafts": [
+        {
+          "configurationMode": "individual",
+          "draftPasswordRequired": true,
+          "extractToSubfolder": false,
+          "id": "af9a687c-6a74-4f3c-b47e-654af76a64c2",
+          "name": "资料备份 · 变化提取（快照 1）",
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58/ZPAQ变化_第1版_1792523854705_a24644",
+          "recycleSourceAfterExtract": false,
+          "selectedEntries": [
+            "资料/后来删除.txt",
+            "资料/说明.txt"
+          ],
+          "sourceFiles": [
+            "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.001"
+          ],
+          "zpaqCatalogId": "3ff7e54788894691177d8f5774b3ffc1edf499c36bde925630fb4b774d2ce8b7",
+          "zpaqSnapshot": {
+            "date": 20261020130000,
+            "version": 1
+          }
+        },
+        {
+          "configurationMode": "individual",
+          "draftPasswordRequired": true,
+          "extractToSubfolder": false,
+          "id": "f55de890-aa13-4ba1-b484-b1e185c32a8c",
+          "name": "资料备份 · 变化提取（快照 2）",
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58/ZPAQ变化_第2版_1792523854705_a24644",
+          "recycleSourceAfterExtract": false,
+          "selectedEntries": [
+            "资料/图标.png",
+            "资料/新增.txt",
+            "资料/空文件.txt",
+            "资料/空目录",
+            "资料/说明.txt",
+            "资料/项目/数据.bin"
+          ],
+          "sourceFiles": [
+            "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.001"
+          ],
+          "zpaqCatalogId": "81cff7604ec43c5bda93322efea19b5c7013e193e4523fbde4951a55d9b76823",
+          "zpaqSnapshot": {
+            "date": 20261020140000,
+            "version": 2
+          }
+        }
+      ],
+      "notAutomaticallyStarted": true
+    },
+    {
+      "kind": "restored-selection-missing-volume-retry",
+      "binarySha256": "26b93e6502f8effa4e62aeb598e0b3c4077ce73c89f73e9dc57d2c1b33fa015b",
+      "failures": [
+        {
+          "archiveOutput": null,
+          "completedAt": "2026-10-20T19:19:04.839Z",
+          "durationMs": 100,
+          "errorMessage": "[archive-inspection:incomplete] 缺少分卷：资料备份.zpaq.003",
+          "executionConfig": {
+            "extractToSubfolder": false,
+            "kind": "archive-extraction",
+            "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58/ZPAQ变化_第1版_1792523854705_a24644",
+            "schemaVersion": 1,
+            "selectedEntries": [
+              "资料/后来删除.txt",
+              "资料/说明.txt"
+            ],
+            "zpaqCatalogId": "3ff7e54788894691177d8f5774b3ffc1edf499c36bde925630fb4b774d2ce8b7",
+            "zpaqSnapshot": {
+              "date": 20261020130000,
+              "version": 1
+            }
+          },
+          "failure": {
+            "category": "incomplete",
+            "evidence": "recorded-marker",
+            "schemaVersion": 1,
+            "stage": "inspection"
+          },
+          "format": null,
+          "id": "recovered-fcaf5e55-2f14-435a-a664-86a0439b930b",
+          "logs": [
+            {
+              "message": "资源预检：已验证目标盘安全预留，但输出体积仍需在运行时确认。（local/ssd，可用 120.3 GiB，预计输出 未知）",
+              "severity": "warning",
+              "timestamp": "2026-10-20T19:19:04.753Z"
+            },
+            {
+              "message": "最终失败原因：[archive-inspection:incomplete] 缺少分卷：资料备份.zpaq.003",
+              "severity": "error",
+              "timestamp": "2026-10-20T19:19:04.839Z"
+            }
+          ],
+          "metrics": null,
+          "name": "资料备份 · 变化提取（快照 1）",
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58/ZPAQ变化_第1版_1792523854705_a24644",
+          "processedBytes": 0,
+          "retryOfTaskId": null,
+          "sourcePaths": [
+            "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.001"
+          ],
+          "startedAt": "2026-10-20T19:19:04.739Z",
+          "status": "failed",
+          "taskType": "decompression",
+          "totalBytes": 0,
+          "workloadKind": "archive"
+        },
+        {
+          "archiveOutput": null,
+          "completedAt": "2026-10-20T19:19:04.870Z",
+          "durationMs": 24,
+          "errorMessage": "[archive-inspection:incomplete] 缺少分卷：资料备份.zpaq.003",
+          "executionConfig": {
+            "extractToSubfolder": false,
+            "kind": "archive-extraction",
+            "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58/ZPAQ变化_第2版_1792523854705_a24644",
+            "schemaVersion": 1,
+            "selectedEntries": [
+              "资料/图标.png",
+              "资料/新增.txt",
+              "资料/空文件.txt",
+              "资料/空目录",
+              "资料/说明.txt",
+              "资料/项目/数据.bin"
+            ],
+            "zpaqCatalogId": "81cff7604ec43c5bda93322efea19b5c7013e193e4523fbde4951a55d9b76823",
+            "zpaqSnapshot": {
+              "date": 20261020140000,
+              "version": 2
+            }
+          },
+          "failure": {
+            "category": "incomplete",
+            "evidence": "recorded-marker",
+            "schemaVersion": 1,
+            "stage": "inspection"
+          },
+          "format": null,
+          "id": "recovered-a67b2542-71d2-444a-8814-d8846bc5cf6e",
+          "logs": [
+            {
+              "message": "资源预检：已验证目标盘安全预留，但输出体积仍需在运行时确认。（local/ssd，可用 120.3 GiB，预计输出 未知）",
+              "severity": "warning",
+              "timestamp": "2026-10-20T19:19:04.863Z"
+            },
+            {
+              "message": "最终失败原因：[archive-inspection:incomplete] 缺少分卷：资料备份.zpaq.003",
+              "severity": "error",
+              "timestamp": "2026-10-20T19:19:04.870Z"
+            }
+          ],
+          "metrics": null,
+          "name": "资料备份 · 变化提取（快照 2）",
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58/ZPAQ变化_第2版_1792523854705_a24644",
+          "processedBytes": 0,
+          "retryOfTaskId": null,
+          "sourcePaths": [
+            "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.001"
+          ],
+          "startedAt": "2026-10-20T19:19:04.846Z",
+          "status": "failed",
+          "taskType": "decompression",
+          "totalBytes": 0,
+          "workloadKind": "archive"
+        }
+      ],
+      "priorCompletedRanges": [
+        {
+          "archiveOutput": null,
+          "completedAt": "2026-10-20T19:19:11.037Z",
+          "durationMs": 1682,
+          "errorMessage": null,
+          "executionConfig": {
+            "extractToSubfolder": false,
+            "kind": "archive-extraction",
+            "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58/ZPAQ变化_第1版_1792523854705_a24644",
+            "schemaVersion": 1,
+            "selectedEntries": [
+              "资料/后来删除.txt",
+              "资料/说明.txt"
+            ],
+            "zpaqCatalogId": "3ff7e54788894691177d8f5774b3ffc1edf499c36bde925630fb4b774d2ce8b7",
+            "zpaqSnapshot": {
+              "date": 20261020130000,
+              "version": 1
+            }
+          },
+          "failure": null,
+          "format": "zpaq",
+          "id": "oww7wle9omvh2h66g",
+          "logs": [
+            {
+              "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 120.3 GiB，预计输出 129.8 KiB）",
+              "severity": "info",
+              "timestamp": "2026-10-20T19:19:09.527Z"
+            },
+            {
+              "message": "确定解压格式: Zpaq (后缀: 001)",
+              "severity": "info",
+              "timestamp": "2026-10-20T19:19:09.557452100Z"
+            },
+            {
+              "message": "正在检测归档加密状态...",
+              "severity": "info",
+              "timestamp": "2026-10-20T19:19:09.557599600Z"
+            },
+            {
+              "message": "已收到手动输入的解压密码「 [已隐藏]",
+              "severity": "info",
+              "timestamp": "2026-10-20T19:19:09.567632700Z"
+            },
+            {
+              "message": "密码验证通过：本次解压使用密码「 [已隐藏]",
+              "severity": "success",
+              "timestamp": "2026-10-20T19:19:10.418491Z"
+            },
+            {
+              "message": "开始解压：资料备份.zpaq.001",
+              "severity": "info",
+              "timestamp": "2026-10-20T19:19:10.428493200Z"
+            },
+            {
+              "message": "解压数据统计完成：实际产出 94 字节",
+              "severity": "success",
+              "timestamp": "2026-10-20T19:19:11.031993900Z"
+            },
+            {
+              "message": "全部解压任务已完成",
+              "severity": "success",
+              "timestamp": "2026-10-20T19:19:11.032006100Z"
+            }
+          ],
+          "metrics": null,
+          "name": "资料备份.zpaq.001（快照 1）",
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58/ZPAQ变化_第1版_1792523854705_a24644",
+          "processedBytes": 94,
+          "retryOfTaskId": "recovered-fcaf5e55-2f14-435a-a664-86a0439b930b",
+          "sourcePaths": [
+            "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.001"
+          ],
+          "startedAt": "2026-10-20T19:19:09.355Z",
+          "status": "completed",
+          "taskType": "decompression",
+          "totalBytes": 132879,
+          "workloadKind": "archive"
+        },
+        {
+          "archiveOutput": null,
+          "completedAt": "2026-10-20T19:19:12.789Z",
+          "durationMs": 1746,
+          "errorMessage": null,
+          "executionConfig": {
+            "extractToSubfolder": false,
+            "kind": "archive-extraction",
+            "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58/ZPAQ变化_第2版_1792523854705_a24644",
+            "schemaVersion": 1,
+            "selectedEntries": [
+              "资料/图标.png",
+              "资料/新增.txt",
+              "资料/空文件.txt",
+              "资料/空目录",
+              "资料/说明.txt",
+              "资料/项目/数据.bin"
+            ],
+            "zpaqCatalogId": "81cff7604ec43c5bda93322efea19b5c7013e193e4523fbde4951a55d9b76823",
+            "zpaqSnapshot": {
+              "date": 20261020140000,
+              "version": 2
+            }
+          },
+          "failure": null,
+          "format": "zpaq",
+          "id": "wkgln3sp8mvh2h6g5",
+          "logs": [
+            {
+              "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 120.3 GiB，预计输出 142.2 KiB）",
+              "severity": "info",
+              "timestamp": "2026-10-20T19:19:11.230Z"
+            },
+            {
+              "message": "确定解压格式: Zpaq (后缀: 001)",
+              "severity": "info",
+              "timestamp": "2026-10-20T19:19:11.258310500Z"
+            },
+            {
+              "message": "正在检测归档加密状态...",
+              "severity": "info",
+              "timestamp": "2026-10-20T19:19:11.258328300Z"
+            },
+            {
+              "message": "已收到手动输入的解压密码「 [已隐藏]",
+              "severity": "info",
+              "timestamp": "2026-10-20T19:19:11.268234600Z"
+            },
+            {
+              "message": "密码验证通过：本次解压使用密码「 [已隐藏]",
+              "severity": "success",
+              "timestamp": "2026-10-20T19:19:12.072454800Z"
+            },
+            {
+              "message": "开始解压：资料备份.zpaq.001",
+              "severity": "info",
+              "timestamp": "2026-10-20T19:19:12.085085900Z"
+            },
+            {
+              "message": "解压数据统计完成：实际产出 145626 字节",
+              "severity": "success",
+              "timestamp": "2026-10-20T19:19:12.784141300Z"
+            },
+            {
+              "message": "全部解压任务已完成",
+              "severity": "success",
+              "timestamp": "2026-10-20T19:19:12.784152900Z"
+            }
+          ],
+          "metrics": null,
+          "name": "资料备份.zpaq.001（快照 2）",
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58/ZPAQ变化_第2版_1792523854705_a24644",
+          "processedBytes": 145626,
+          "retryOfTaskId": "recovered-a67b2542-71d2-444a-8814-d8846bc5cf6e",
+          "sourcePaths": [
+            "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.001"
+          ],
+          "startedAt": "2026-10-20T19:19:11.043Z",
+          "status": "completed",
+          "taskType": "decompression",
+          "totalBytes": 145626,
+          "workloadKind": "archive"
+        }
+      ],
+      "corrected": {
+        "archiveOutput": null,
+        "completedAt": "2026-10-20T19:27:59.638Z",
+        "durationMs": 1918,
+        "errorMessage": null,
+        "executionConfig": {
+          "extractToSubfolder": false,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\空目录修正-e2c08c46-5435-4950-9635-43b9827f6980",
+          "schemaVersion": 1,
+          "selectedEntries": [
+            "资料/图标.png",
+            "资料/新增.txt",
+            "资料/空文件.txt",
+            "资料/空目录",
+            "资料/说明.txt",
+            "资料/项目/数据.bin"
+          ],
+          "zpaqCatalogId": "81cff7604ec43c5bda93322efea19b5c7013e193e4523fbde4951a55d9b76823",
+          "zpaqSnapshot": {
+            "date": 20261020140000,
+            "version": 2
+          }
+        },
+        "failure": null,
+        "format": "zpaq",
+        "id": "hgdz8al4vmvh2shgx",
+        "logs": [
+          {
+            "message": "从历史任务 wkgln3sp8mvh2h6g5 创建所选变化草稿；输出目录和子目录使用本次确认的设置。",
+            "severity": "info",
+            "timestamp": "2026-10-20T19:27:55.761Z"
+          },
+          {
+            "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 120.3 GiB，预计输出 142.2 KiB）",
+            "severity": "info",
+            "timestamp": "2026-10-20T19:27:57.914Z"
+          },
+          {
+            "message": "确定解压格式: Zpaq (后缀: 001)",
+            "severity": "info",
+            "timestamp": "2026-10-20T19:27:58.038261600Z"
+          },
+          {
+            "message": "正在检测归档加密状态...",
+            "severity": "info",
+            "timestamp": "2026-10-20T19:27:58.038389300Z"
+          },
+          {
+            "message": "已收到手动输入的解压密码「 [已隐藏]",
+            "severity": "info",
+            "timestamp": "2026-10-20T19:27:58.050765800Z"
+          },
+          {
+            "message": "密码验证通过：本次解压使用密码「 [已隐藏]",
+            "severity": "success",
+            "timestamp": "2026-10-20T19:27:58.909338900Z"
+          },
+          {
+            "message": "开始解压：资料备份.zpaq.001",
+            "severity": "info",
+            "timestamp": "2026-10-20T19:27:58.919853700Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 145626 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T19:27:59.634034Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T19:27:59.634072Z"
+          }
+        ],
+        "metrics": null,
+        "name": "资料备份.zpaq.001（快照 2）",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\空目录修正-e2c08c46-5435-4950-9635-43b9827f6980",
+        "processedBytes": 145626,
+        "retryOfTaskId": "wkgln3sp8mvh2h6g5",
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.001"
+        ],
+        "startedAt": "2026-10-20T19:27:57.720Z",
+        "status": "completed",
+        "taskType": "decompression",
+        "totalBytes": 145626,
+        "workloadKind": "archive"
+      },
+      "columns": [
+        451.4921875,
+        451.5
+      ],
+      "retainedPriorIdentity": {
+        "binarySha256": "c3896b9c32eda62bb4b88a34e3d12adf740a15c2844e95ba8615333a89f096bf",
+        "sourceCommit": "da81da73c63d3c2df9824ea04d8ec4bc7547afc3"
+      },
+      "onlyAffectedEmptyDirectoryRepeated": true
+    },
+    {
+      "kind": "history-redo-exact-range",
+      "binarySha256": "26b93e6502f8effa4e62aeb598e0b3c4077ce73c89f73e9dc57d2c1b33fa015b",
+      "record": {
+        "archiveOutput": null,
+        "completedAt": "2026-10-20T19:28:12.544Z",
+        "durationMs": 1710,
+        "errorMessage": null,
+        "executionConfig": {
+          "extractToSubfolder": false,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\历史所选-aeae3706-5ba0-4189-84b0-e4687aa3520b",
+          "schemaVersion": 1,
+          "selectedEntries": [
+            "资料/后来删除.txt",
+            "资料/说明.txt"
+          ],
+          "zpaqCatalogId": "3ff7e54788894691177d8f5774b3ffc1edf499c36bde925630fb4b774d2ce8b7",
+          "zpaqSnapshot": {
+            "date": 20261020130000,
+            "version": 1
+          }
+        },
+        "failure": null,
+        "format": "zpaq",
+        "id": "jihwochfbmvh2srkw",
+        "logs": [
+          {
+            "message": "从历史任务 oww7wle9omvh2h66g 创建所选变化草稿；输出目录和子目录使用本次确认的设置。",
+            "severity": "info",
+            "timestamp": "2026-10-20T19:28:08.865Z"
+          },
+          {
+            "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 120.3 GiB，预计输出 129.8 KiB）",
+            "severity": "info",
+            "timestamp": "2026-10-20T19:28:11.037Z"
+          },
+          {
+            "message": "确定解压格式: Zpaq (后缀: 001)",
+            "severity": "info",
+            "timestamp": "2026-10-20T19:28:11.071037500Z"
+          },
+          {
+            "message": "正在检测归档加密状态...",
+            "severity": "info",
+            "timestamp": "2026-10-20T19:28:11.071067500Z"
+          },
+          {
+            "message": "已收到手动输入的解压密码「 [已隐藏]",
+            "severity": "info",
+            "timestamp": "2026-10-20T19:28:11.084283200Z"
+          },
+          {
+            "message": "密码验证通过：本次解压使用密码「 [已隐藏]",
+            "severity": "success",
+            "timestamp": "2026-10-20T19:28:11.909538100Z"
+          },
+          {
+            "message": "开始解压：资料备份.zpaq.001",
+            "severity": "info",
+            "timestamp": "2026-10-20T19:28:11.918536300Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 94 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T19:28:12.538774900Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T19:28:12.538954900Z"
+          }
+        ],
+        "metrics": null,
+        "name": "资料备份.zpaq.001（快照 1）",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\历史所选-aeae3706-5ba0-4189-84b0-e4687aa3520b",
+        "processedBytes": 94,
+        "retryOfTaskId": "oww7wle9omvh2h66g",
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.001"
+        ],
+        "startedAt": "2026-10-20T19:28:10.834Z",
+        "status": "completed",
+        "taskType": "decompression",
+        "totalBytes": 132879,
+        "workloadKind": "archive"
+      },
+      "rangeNotExpanded": true
+    },
+    {
+      "kind": "changed-source-does-not-read-another-version",
+      "binarySha256": "26b93e6502f8effa4e62aeb598e0b3c4077ce73c89f73e9dc57d2c1b33fa015b",
+      "record": {
+        "archiveOutput": null,
+        "completedAt": "2026-10-20T19:28:20.356Z",
+        "durationMs": 820,
+        "errorMessage": "[archive-inspection:snapshot-unavailable] 归档目录或历史已变化，请重新对比并选择；未改为提取其他版本",
+        "executionConfig": {
+          "extractToSubfolder": false,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\变化后拒绝-bd6edbc0-394e-4749-97a7-108cdb6632c0",
+          "schemaVersion": 1,
+          "selectedEntries": [
+            "资料/图标.png",
+            "资料/新增.txt",
+            "资料/空文件.txt",
+            "资料/空目录",
+            "资料/说明.txt",
+            "资料/项目/数据.bin"
+          ],
+          "zpaqCatalogId": "81cff7604ec43c5bda93322efea19b5c7013e193e4523fbde4951a55d9b76823",
+          "zpaqSnapshot": {
+            "date": 20261020140000,
+            "version": 2
+          }
+        },
+        "failure": {
+          "category": "unknown",
+          "evidence": "recorded-marker",
+          "schemaVersion": 1,
+          "stage": "inspection"
+        },
+        "format": "zpaq",
+        "id": "wr6dlc06smvh2syal",
+        "logs": [
+          {
+            "message": "从历史任务 hgdz8al4vmvh2shgx 创建所选变化草稿；输出目录和子目录使用本次确认的设置。",
+            "severity": "info",
+            "timestamp": "2026-10-20T19:28:17.565Z"
+          },
+          {
+            "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 120.3 GiB，预计输出 142.2 KiB）",
+            "severity": "info",
+            "timestamp": "2026-10-20T19:28:19.714Z"
+          },
+          {
+            "message": "确定解压格式: Zpaq (后缀: 001)",
+            "severity": "info",
+            "timestamp": "2026-10-20T19:28:19.741498300Z"
+          },
+          {
+            "message": "正在检测归档加密状态...",
+            "severity": "info",
+            "timestamp": "2026-10-20T19:28:19.741516600Z"
+          },
+          {
+            "message": "已收到手动输入的解压密码「 [已隐藏]",
+            "severity": "info",
+            "timestamp": "2026-10-20T19:28:19.752771500Z"
+          },
+          {
+            "message": "最终失败原因：[archive-inspection:snapshot-unavailable] 归档目录或历史已变化，请重新对比并选择；未改为提取其他版本",
+            "severity": "error",
+            "timestamp": "2026-10-20T19:28:20.356Z"
+          }
+        ],
+        "metrics": null,
+        "name": "资料备份.zpaq.001（快照 2）",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\变化后拒绝-bd6edbc0-394e-4749-97a7-108cdb6632c0",
+        "processedBytes": 0,
+        "retryOfTaskId": "hgdz8al4vmvh2shgx",
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.001"
+        ],
+        "startedAt": "2026-10-20T19:28:19.536Z",
+        "status": "failed",
+        "taskType": "decompression",
+        "totalBytes": 0,
+        "workloadKind": "archive"
+      },
+      "noWrongVersionOutput": true
+    }
+  ],
+  "screenshots": [
+    "zpaq1537-catalog-comparison-1100x700.png",
+    "zpaq1537-catalog-comparison-760x520.png",
+    "zpaq1537-verified-and-selection-1100x700.png",
+    "zpaq1537-verified-and-selection-760x520.png",
+    "zpaq1537-pending-confirmation-1100x700.png",
+    "zpaq1537-pending-confirmation-760x520.png",
+    "zpaq1537-restored-pending-1100x700.png",
+    "zpaq1537-restored-pending-760x520.png",
+    "zpaq1537-guarded-missing-volume-retry-1100x700.png",
+    "zpaq1537-guarded-missing-volume-retry-760x520.png",
+    "zpaq1537-history-guarded-selection-1100x700.png",
+    "zpaq1537-history-guarded-selection-760x520.png",
+    "zpaq1537-version-result-1100x700.png",
+    "zpaq1537-version-result-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "catalog-comparison",
+      "binarySha256": "c3896b9c32eda62bb4b88a34e3d12adf740a15c2844e95ba8615333a89f096bf",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "catalog-comparison",
+      "binarySha256": "c3896b9c32eda62bb4b88a34e3d12adf740a15c2844e95ba8615333a89f096bf",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "verified-and-selection",
+      "binarySha256": "c3896b9c32eda62bb4b88a34e3d12adf740a15c2844e95ba8615333a89f096bf",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "verified-and-selection",
+      "binarySha256": "c3896b9c32eda62bb4b88a34e3d12adf740a15c2844e95ba8615333a89f096bf",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "pending-confirmation",
+      "binarySha256": "c3896b9c32eda62bb4b88a34e3d12adf740a15c2844e95ba8615333a89f096bf",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "pending-confirmation",
+      "binarySha256": "c3896b9c32eda62bb4b88a34e3d12adf740a15c2844e95ba8615333a89f096bf",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "restored-pending",
+      "binarySha256": "c3896b9c32eda62bb4b88a34e3d12adf740a15c2844e95ba8615333a89f096bf",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "restored-pending",
+      "binarySha256": "c3896b9c32eda62bb4b88a34e3d12adf740a15c2844e95ba8615333a89f096bf",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "guarded-missing-volume-retry",
+      "binarySha256": "c3896b9c32eda62bb4b88a34e3d12adf740a15c2844e95ba8615333a89f096bf",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "guarded-missing-volume-retry",
+      "binarySha256": "c3896b9c32eda62bb4b88a34e3d12adf740a15c2844e95ba8615333a89f096bf",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "version-result",
+      "binarySha256": "26b93e6502f8effa4e62aeb598e0b3c4077ce73c89f73e9dc57d2c1b33fa015b",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "version-result",
+      "binarySha256": "26b93e6502f8effa4e62aeb598e0b3c4077ce73c89f73e9dc57d2c1b33fa015b",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "history-guarded-selection",
+      "binarySha256": "26b93e6502f8effa4e62aeb598e0b3c4077ce73c89f73e9dc57d2c1b33fa015b",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "history-guarded-selection",
+      "binarySha256": "26b93e6502f8effa4e62aeb598e0b3c4077ce73c89f73e9dc57d2c1b33fa015b",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    }
+  ],
+  "parts": [
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.001",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.002",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.003",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.004",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.005",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.006",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.007"
+  ],
+  "previousIdentities": [
+    {
+      "binarySha256": "c3896b9c32eda62bb4b88a34e3d12adf740a15c2844e95ba8615333a89f096bf",
+      "sourceCommit": "da81da73c63d3c2df9824ea04d8ec4bc7547afc3"
+    }
+  ],
+  "records": [
+    {
+      "archiveOutput": null,
+      "completedAt": "2026-10-20T19:19:11.037Z",
+      "durationMs": 1682,
+      "errorMessage": null,
+      "executionConfig": {
+        "extractToSubfolder": false,
+        "kind": "archive-extraction",
+        "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58/ZPAQ变化_第1版_1792523854705_a24644",
+        "schemaVersion": 1,
+        "selectedEntries": [
+          "资料/后来删除.txt",
+          "资料/说明.txt"
+        ],
+        "zpaqCatalogId": "3ff7e54788894691177d8f5774b3ffc1edf499c36bde925630fb4b774d2ce8b7",
+        "zpaqSnapshot": {
+          "date": 20261020130000,
+          "version": 1
+        }
+      },
+      "failure": null,
+      "format": "zpaq",
+      "id": "oww7wle9omvh2h66g",
+      "logs": [
+        {
+          "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 120.3 GiB，预计输出 129.8 KiB）",
+          "severity": "info",
+          "timestamp": "2026-10-20T19:19:09.527Z"
+        },
+        {
+          "message": "确定解压格式: Zpaq (后缀: 001)",
+          "severity": "info",
+          "timestamp": "2026-10-20T19:19:09.557452100Z"
+        },
+        {
+          "message": "正在检测归档加密状态...",
+          "severity": "info",
+          "timestamp": "2026-10-20T19:19:09.557599600Z"
+        },
+        {
+          "message": "已收到手动输入的解压密码「 [已隐藏]",
+          "severity": "info",
+          "timestamp": "2026-10-20T19:19:09.567632700Z"
+        },
+        {
+          "message": "密码验证通过：本次解压使用密码「 [已隐藏]",
+          "severity": "success",
+          "timestamp": "2026-10-20T19:19:10.418491Z"
+        },
+        {
+          "message": "开始解压：资料备份.zpaq.001",
+          "severity": "info",
+          "timestamp": "2026-10-20T19:19:10.428493200Z"
+        },
+        {
+          "message": "解压数据统计完成：实际产出 94 字节",
+          "severity": "success",
+          "timestamp": "2026-10-20T19:19:11.031993900Z"
+        },
+        {
+          "message": "全部解压任务已完成",
+          "severity": "success",
+          "timestamp": "2026-10-20T19:19:11.032006100Z"
+        }
+      ],
+      "metrics": null,
+      "name": "资料备份.zpaq.001（快照 1）",
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58/ZPAQ变化_第1版_1792523854705_a24644",
+      "processedBytes": 94,
+      "retryOfTaskId": "recovered-fcaf5e55-2f14-435a-a664-86a0439b930b",
+      "sourcePaths": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.001"
+      ],
+      "startedAt": "2026-10-20T19:19:09.355Z",
+      "status": "completed",
+      "taskType": "decompression",
+      "totalBytes": 132879,
+      "workloadKind": "archive"
+    },
+    {
+      "archiveOutput": null,
+      "completedAt": "2026-10-20T19:27:59.638Z",
+      "durationMs": 1918,
+      "errorMessage": null,
+      "executionConfig": {
+        "extractToSubfolder": false,
+        "kind": "archive-extraction",
+        "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\空目录修正-e2c08c46-5435-4950-9635-43b9827f6980",
+        "schemaVersion": 1,
+        "selectedEntries": [
+          "资料/图标.png",
+          "资料/新增.txt",
+          "资料/空文件.txt",
+          "资料/空目录",
+          "资料/说明.txt",
+          "资料/项目/数据.bin"
+        ],
+        "zpaqCatalogId": "81cff7604ec43c5bda93322efea19b5c7013e193e4523fbde4951a55d9b76823",
+        "zpaqSnapshot": {
+          "date": 20261020140000,
+          "version": 2
+        }
+      },
+      "failure": null,
+      "format": "zpaq",
+      "id": "hgdz8al4vmvh2shgx",
+      "logs": [
+        {
+          "message": "从历史任务 wkgln3sp8mvh2h6g5 创建所选变化草稿；输出目录和子目录使用本次确认的设置。",
+          "severity": "info",
+          "timestamp": "2026-10-20T19:27:55.761Z"
+        },
+        {
+          "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 120.3 GiB，预计输出 142.2 KiB）",
+          "severity": "info",
+          "timestamp": "2026-10-20T19:27:57.914Z"
+        },
+        {
+          "message": "确定解压格式: Zpaq (后缀: 001)",
+          "severity": "info",
+          "timestamp": "2026-10-20T19:27:58.038261600Z"
+        },
+        {
+          "message": "正在检测归档加密状态...",
+          "severity": "info",
+          "timestamp": "2026-10-20T19:27:58.038389300Z"
+        },
+        {
+          "message": "已收到手动输入的解压密码「 [已隐藏]",
+          "severity": "info",
+          "timestamp": "2026-10-20T19:27:58.050765800Z"
+        },
+        {
+          "message": "密码验证通过：本次解压使用密码「 [已隐藏]",
+          "severity": "success",
+          "timestamp": "2026-10-20T19:27:58.909338900Z"
+        },
+        {
+          "message": "开始解压：资料备份.zpaq.001",
+          "severity": "info",
+          "timestamp": "2026-10-20T19:27:58.919853700Z"
+        },
+        {
+          "message": "解压数据统计完成：实际产出 145626 字节",
+          "severity": "success",
+          "timestamp": "2026-10-20T19:27:59.634034Z"
+        },
+        {
+          "message": "全部解压任务已完成",
+          "severity": "success",
+          "timestamp": "2026-10-20T19:27:59.634072Z"
+        }
+      ],
+      "metrics": null,
+      "name": "资料备份.zpaq.001（快照 2）",
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\空目录修正-e2c08c46-5435-4950-9635-43b9827f6980",
+      "processedBytes": 145626,
+      "retryOfTaskId": "wkgln3sp8mvh2h6g5",
+      "sourcePaths": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-diff-1537\\ui-945ff691-fc82-47ee-8e64-81c22f653b58\\资料备份.zpaq.001"
+      ],
+      "startedAt": "2026-10-20T19:27:57.720Z",
+      "status": "completed",
+      "taskType": "decompression",
+      "totalBytes": 145626,
+      "workloadKind": "archive"
+    }
+  ],
+  "completedAt": "2026-10-20T19:28:20.425Z"
+}

@@ -1,0 +1,35 @@
+{
+  "version": "1.5.37",
+  "completedAt": "2026-10-20T19:28:20.425Z",
+  "finalRuntimeSource": "8d96ff3816040666099db1ea259479554924952b",
+  "finalRuntimeSha256": "26b93e6502f8effa4e62aeb598e0b3c4077ce73c89f73e9dc57d2c1b33fa015b",
+  "previousIdentities": [
+    {
+      "binarySha256": "c3896b9c32eda62bb4b88a34e3d12adf740a15c2844e95ba8615333a89f096bf",
+      "sourceCommit": "da81da73c63d3c2df9824ea04d8ec4bc7547afc3"
+    }
+  ],
+  "rustDistinctPassed": 6,
+  "frontendDistinctPassed": 8,
+  "publicNativeChains": 2,
+  "uiChains": 4,
+  "layoutSnapshots": 14,
+  "maximumHorizontalOverflowPx": 0,
+  "representativeScreenshotsViewedAndRetained": [
+    "catalog-comparison-1100x700",
+    "catalog-comparison-760x520",
+    "verified-and-selection-760x520",
+    "pending-confirmation-760x520",
+    "guarded-missing-volume-retry-760x520",
+    "version-result-1100x700",
+    "history-guarded-selection-760x520"
+  ],
+  "productionFrontendBuild": "passed",
+  "desktopE2eFrontendBuild": "passed",
+  "shellBuild": "passed",
+  "releaseIdentity": "passed",
+  "emptyDirectoryAffectedRangeRerunOnly": true,
+  "priorFormatMatricesRerun": false,
+  "realDiskFullRerun": false,
+  "personalInstallationChanged": false
+}

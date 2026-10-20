@@ -528,13 +528,22 @@ pub(crate) fn prepare_staging_layout_with_tar_plan(
 
     // A full extraction that preserves paths must also preserve archived empty
     // folders. Prune empty remnants only after flattening or filtering entries.
+    let mut retained_selected_directories = 0usize;
     if !options.preserve_paths || !file_filter.is_empty() || !options.selected_entries.is_empty() {
+        let selected_directories: HashSet<_> = if options.zpaq_catalog_id.is_some() && options.preserve_paths && file_filter.is_empty() {
+            options.selected_entries.iter().filter_map(|p| normalized_selected_entry(p)).collect()
+        } else { HashSet::new() };
         directories.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
         for directory in directories {
+            let relative = directory.strip_prefix(staging)?.to_string_lossy().replace('\\', "/");
+            if selected_directories.contains(&relative) {
+                retained_selected_directories += 1;
+                continue;
+            }
             let _ = std::fs::remove_dir(&directory);
         }
     }
-    if !options.selected_entries.is_empty() && retained_file_count == 0 {
+    if !options.selected_entries.is_empty() && retained_file_count == 0 && retained_selected_directories == 0 {
         return Err(CompressionError::ExtractionFailed(
             "None of the selected archive entries matched the extracted file paths".to_string(),
         )
@@ -999,6 +1008,17 @@ mod tests {
             };
             prepare_staging_layout(&temp.path().join("source.zip"), &staging, &options).unwrap();
             assert_eq!(staging.join("资料/空目录").is_dir(), expected);
+        }
+    }
+
+    #[test]
+    fn zpaq1537_selected_empty_directory_is_published_without_unselected_remnants() {
+        for with_file in [false,true] {
+            let temp=tempfile::tempdir().unwrap();let source=temp.path().join("source.zpaq");std::fs::write(&source,b"resource fixture").unwrap();let staging=temp.path().join("staging");
+            std::fs::create_dir_all(staging.join("资料/保留空目录")).unwrap();std::fs::create_dir_all(staging.join("资料/未选空目录")).unwrap();
+            let mut selected=vec!["资料/保留空目录".into()];if with_file{std::fs::write(staging.join("资料/说明.txt"),b"selected").unwrap();selected.push("资料/说明.txt".into());}
+            let options=DecompressOptions{zpaq_catalog_id:Some("a".repeat(64)),zpaq_snapshot:Some(crate::models::compression::ZpaqSnapshot{version:1,date:20261020130000}),selected_entries:selected,preserve_paths:true,..Default::default()};
+            prepare_staging_layout(&source,&staging,&options).unwrap();assert!(staging.join("资料/保留空目录").is_dir());assert!(!staging.join("资料/未选空目录").exists());assert_eq!(staging.join("资料/说明.txt").is_file(),with_file);
         }
     }
 

@@ -1,0 +1,34 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling long-compress-assistant v1.5.36 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+    Finished `release` profile [optimized] target(s) in 2m 28s
+     Running unittests src\lib.rs (src-tauri\target\release\deps\long_compress_assistant-368d08da9285952a.exe)
+
+running 3 tests
+test services::zpaq_diff::tests::zpaq1537_actual_hash_progress_can_stop_and_metadata_never_claims_exact_content ... ok
+test services::zpaq_diff::tests::zpaq1537_plain_password_numeric_catalog_and_exact_selected_changes_match_independent_content ... ok
+test services::zpaq_diff::tests::zpaq1537_wrong_identity_source_mutation_and_missing_volume_do_not_fall_back ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 880 filtered out; finished in 5.92s

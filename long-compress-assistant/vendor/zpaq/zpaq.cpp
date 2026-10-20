@@ -63,6 +63,7 @@ Possible options:
 
 // Long read adapter: transport only; upstream codecs and cryptography unchanged.
 static bool long_json=false;
+static bool long_refs=false;
 static bool long_streaming=false;
 static bool long_journaling=false;
 static int long_scan_errors=0;
@@ -1354,6 +1355,7 @@ int Jidac::doCommand(int argc, const char** argv) {
     else if (opt=="-summary" && i<argc-1) summary=atoi(argv[++i]);
     else if (opt[1]=='s') summary=atoi(argv[i]+2);
     else if (opt=="-long-json") long_json=true;
+    else if (opt=="-long-refs") long_refs=true;
     else if (opt=="-long-snapshot" && i+2<argc) {
       long_snapshot=strtoull(argv[++i], 0, 10);
       long_snapshot_date=strtoll(argv[++i], 0, 10);
@@ -3780,9 +3782,23 @@ int Jidac::list() {
       }
       if (comma) putchar(','); comma=true;
       printf("{\"path\":"); long_json_string(p->first);
-      printf(",\"size\":%lld,\"date\":%lld,\"directory\":%s}",
+      printf(",\"size\":%lld,\"date\":%lld,\"directory\":%s",
         (long long)p->second.size, (long long)p->second.date,
         p->first[p->first.size()-1]=='/' ? "true" : "false");
+      if (long_refs && long_journaling && !long_streaming) {
+        libzpaq::SHA256 ref;
+        for (unsigned i=0; i<p->second.ptr.size(); ++i) {
+          const HT& fragment=ht[p->second.ptr[i]];
+          if (fragment.usize<0) error("unknown journaling fragment size");
+          for (unsigned j=0; j<20; ++j) ref.put(fragment.sha1[j]);
+          for (unsigned j=0; j<4; ++j) ref.put((unsigned(fragment.usize)>>(j*8))&255);
+        }
+        const unsigned char* digest=(const unsigned char*)ref.result();
+        printf(",\"contentRef\":\"");
+        for (unsigned j=0; j<32; ++j) printf("%02x", unsigned(digest[j]));
+        putchar('"');
+      }
+      putchar('}');
     }
     printf("]");
     if (long_journaling && !long_streaming) {

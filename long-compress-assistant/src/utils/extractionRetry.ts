@@ -13,13 +13,15 @@ export function extractionRetryPolicy(task: Task) {
   const blocked = task.type !== 'decompression' || (task.workloadKind && task.workloadKind !== 'archive')
     || task.status !== 'failed' ? '仅支持已失败的归档解压任务。'
     : category === 'rollback-incomplete' ? '请先保留并人工核对原输出和恢复目录；此处不能直接重试回滚不完整的任务。'
-    : task.sourceFiles.length !== 1 || task.fileFilter || task.selectedEntries?.length
+    : task.sourceFiles.length !== 1 || task.fileFilter || (task.selectedEntries?.length && !(task.zpaqSnapshot && task.zpaqCatalogId))
       ? '此任务包含特殊来源或局部解压范围，请返回归档浏览重新选择范围。' : ''
   return { blocked, category, guidance: getTaskRecoveryGuidance(record), requireIntegrity: category === 'damaged' }
 }
 
 export interface ExtractionRetryInput {
   zpaqSnapshot?: import('@/types/zpaqSnapshot').ZpaqSnapshot
+  zpaqCatalogId?: string
+  selectedEntries?: string[]
   source: string
   output: string
   password: string
@@ -55,11 +57,22 @@ export async function validateExtractionRetry(
     output = await invoke<{ is_dir: boolean }>('get_file_info', { path: outputPath })
   } catch (error) {
     check()
-    throw new Error(`无法读取本次输出目录「${outputPath}」，请创建该目录或选择已存在且可访问的目录。原归档未改动。详情：${String(error)}`)
+    // A comparison draft reserves a new version folder without creating it.
+    // Keep that distinct output after a failure before extraction started.
+    const parent = outputPath.slice(0, Math.max(outputPath.lastIndexOf('/'), outputPath.lastIndexOf('\\')) + 1)
+    let parentExists = false
+    if (input.zpaqCatalogId && parent && parent !== outputPath) {
+      try { parentExists = (await invoke<{ is_dir: boolean }>('get_file_info', { path: parent })).is_dir } catch { /* Show the original directory error. */ }
+    }
+    if (!parentExists) throw new Error(`无法读取本次输出目录「${outputPath}」，请创建该目录或选择已存在且可访问的目录。原归档未改动。详情：${String(error)}`)
+    output = { is_dir: true }
   }
   check()
   if (!output.is_dir) throw new Error('输出位置必须是已存在的目录。')
   const zipPasswordEncoding = zipPasswordEncodingForSource(path, input.zipPasswordEncoding, split?.archive_format)
+  if (input.zpaqCatalogId && input.zpaqSnapshot) {
+    await invoke('check_zpaq_snapshot_catalog', { filePath: path, password: input.password || null, snapshot: input.zpaqSnapshot, catalogId: input.zpaqCatalogId }); check()
+  }
   if (input.zpaqSnapshot) {
     await invoke('browse_archive', { filePath: path, password: input.password || null, ...snapshotArguments(input.zpaqSnapshot) })
     check()

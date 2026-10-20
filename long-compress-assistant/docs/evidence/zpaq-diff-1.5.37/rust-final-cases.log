@@ -1,0 +1,33 @@
+   Compiling long-compress-assistant v1.5.37 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 2m 18s
+     Running unittests src\lib.rs (src-tauri\target\release\deps\long_compress_assistant-c52ad30bd00987a8.exe)
+
+running 2 tests
+test commands::history_execution_config::zpaq1537_final_history_preserves_guarded_selection_and_rejects_missing_identity ... ok
+test services::zpaq_diff::tests::zpaq1537_final_same_size_time_content_change_and_metadata_only_have_distinct_meanings ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 883 filtered out; finished in 1.92s

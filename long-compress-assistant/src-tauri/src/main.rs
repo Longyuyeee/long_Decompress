@@ -494,6 +494,8 @@ fn main() {
             long_compress_assistant::commands::compression::open_rar_download_page,
             long_compress_assistant::commands::compression::list_archive_contents,
             long_compress_assistant::commands::compression::browse_archive,
+            long_compress_assistant::commands::compression::compare_zpaq_snapshots,
+            long_compress_assistant::commands::compression::check_zpaq_snapshot_catalog,
             long_compress_assistant::commands::compression::cancel_archive_browse,
             long_compress_assistant::commands::compression::preview_archive_image,
             long_compress_assistant::commands::compression::preview_archive_text,

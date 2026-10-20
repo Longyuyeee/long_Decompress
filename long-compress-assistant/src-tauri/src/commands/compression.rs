@@ -1357,6 +1357,29 @@ pub async fn cancel_archive_browse(browse_id: String) -> Result<(), String> {
     Ok(())
 }
 
+/// Reuses browse cancellation, including cancellation arriving before registration.
+#[command]
+pub async fn compare_zpaq_snapshots(window:Window,file_path:String,password:Option<String>,browse_id:String,before:crate::models::compression::ZpaqSnapshot,after:crate::models::compression::ZpaqSnapshot,verify_paths:Vec<String>,expected_revision:Option<String>)->Result<crate::services::zpaq_diff::Comparison,String>{
+    let flag=Arc::new(AtomicBool::new(false));
+    match ARCHIVE_BROWSE_FLAGS.entry(browse_id.clone()){
+        Entry::Vacant(e)=>{e.insert(flag.clone());},
+        Entry::Occupied(e)=>{if e.get().load(Ordering::Acquire){e.remove();return Err("快照对比已停止".into())}return Err("同一对比请求已在执行".into())}
+    }
+    let _guard=ArchiveBrowseGuard{browse_id:browse_id.clone()};
+    let password=resolve_zpaq_password(&file_path,password).await?;
+    let progress=Arc::new(move|event:crate::services::zpaq_diff::DiffProgress|{let _=window.emit("zpaq-comparison-progress",serde_json::json!({"requestId":browse_id,"phase":event.phase,"processedBytes":event.processed_bytes,"totalBytes":event.total_bytes}));});
+    crate::services::zpaq_diff::run(Path::new(&file_path),password.as_deref(),before,after,&verify_paths,expected_revision.as_deref(),flag,progress).await.map_err(|e|format!("{e:#}"))
+}
+async fn resolve_zpaq_password(path:&str,password:Option<String>)->Result<Option<String>,String>{
+    if let Some(password)=password.filter(|p|!p.is_empty()){return Ok(Some(password))}
+    CompressionService::new_with_defaults().await.resolve_archive_password_silent(path,&DecompressOptions::default()).await.map_err(|e|format!("{e:#}"))
+}
+#[command]
+pub async fn check_zpaq_snapshot_catalog(file_path:String,password:Option<String>,snapshot:crate::models::compression::ZpaqSnapshot,catalog_id:String)->Result<(),String>{
+    let password=resolve_zpaq_password(&file_path,password).await?;
+    crate::services::zpaq_engine::check_catalog(Path::new(&file_path),password.as_deref(),&snapshot,&catalog_id,Arc::new(AtomicBool::new(false))).await.map_err(|e|format!("{e:#}"))
+}
+
 /// Reads one supported raster image from an archive under strict byte and pixel limits.
 #[command]
 pub async fn preview_archive_image(
@@ -1542,6 +1565,7 @@ pub async fn materialize_nested_archive(
         .create_entry_dir(expected_bytes)
         .map_err(|error| error.to_string())?;
     let options = DecompressOptions {
+        zpaq_catalog_id: None,
         zpaq_snapshot,
         zip_password_encoding,
         parallel_zip: false,
@@ -1664,6 +1688,7 @@ pub async fn open_archive_entry(
         .map_err(|error| error.to_string())?;
 
     let options = DecompressOptions {
+        zpaq_catalog_id: None,
         zpaq_snapshot,
         zip_password_encoding,
         parallel_zip: false,

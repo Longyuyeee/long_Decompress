@@ -1,0 +1,13 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ ✓ src/utils/__tests__/extractionRetry.test.ts > zpaq1537 retries a reserved version folder via its existing parent and preserves the catalog check 9ms
+ ↓ src/utils/__tests__/extractionRetry.test.ts > forum ZIP retry source resolution > identifies an unreadable output directory instead of blaming the source archive
+ ↓ src/utils/__tests__/extractionRetry.test.ts > forum ZIP retry source resolution > uses the chosen input encoding for required integrity checks and keeps encoding failures distinct
+ ↓ src/utils/__tests__/extractionRetry.test.ts > forum ZIP retry source resolution > does not retry an unconfirmed forum volume as an independent ZIP
+ ↓ src/utils/__tests__/extractionRetry.test.ts > forum ZIP retry source resolution > canonicalizes a complete group without changing the selected output
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 4 skipped (5)
+   Start at  03:12:46
+   Duration  2.02s (transform 220ms, setup 270ms, import 346ms, tests 11ms, environment 1.03s)

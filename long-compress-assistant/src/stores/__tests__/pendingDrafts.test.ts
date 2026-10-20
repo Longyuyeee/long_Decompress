@@ -14,6 +14,11 @@ afterEach(() => { session?.dispose(); session = undefined })
 function file(path: string) { return { path, name: path.split('/').pop()!, size: 20, type: 'file', isDirectory: false } }
 function reopen() { session?.dispose(); setActivePinia(createPinia()); session = usePendingDraftStore(); session.initialize(); return session }
 describe('pending archive draft recovery', () => {
+  it('zpaq1537 recovers guarded selections without passwords or merging different ranges of one snapshot',async()=>{
+    session=usePendingDraftStore();session.initialize();const tasks=useTaskStore(),snapshot={version:1,date:20261020130000}
+    for(const path of ['old.txt','other.txt'])tasks.addTask({id:path,name:path,type:'decompression',sourceFiles:['C:/old.zpaq'],outputPath:'D:/out',zpaqSnapshot:snapshot,zpaqCatalogId:'a'.repeat(64),selectedEntries:[path],password:'secret-1537',configurationMode:'individual'})
+    session.flush();expect(localStorage.getItem(PENDING_DRAFTS_KEY)).not.toContain('secret-1537');await reopen().restore();expect(useTaskStore().tasks).toHaveLength(2);expect(useTaskStore().tasks.map(t=>t.selectedEntries)).toEqual([['old.txt'],['other.txt']]);expect(useTaskStore().tasks.every(t=>t.zpaqCatalogId==='a'.repeat(64)&&t.draftPasswordRequired&&t.status==='pending')).toBe(true);expect(mocks.invoke.mock.calls.some(([cmd])=>cmd==='extract_file')).toBe(false)
+  })
   it('zpaq1536 restores update mapping alongside conversion, excludes passwords and flags missing additional sources without starting',async()=>{
     mocks.invoke.mockImplementation(async(cmd,args)=>{if(cmd==='detect_split_archive')return{is_split:false,archive_format:'zpaq'};if(cmd==='get_file_info'&&args.path==='C:/missing.txt')throw Error('missing');return{name:'file',size:20,is_dir:false}})
     session=usePendingDraftStore();session.initialize();const store=useArchiveConversionStore()

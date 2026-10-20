@@ -3,6 +3,15 @@ import { validateExtractionRetry } from '../extractionRetry'
 const mocks = vi.hoisted(() => ({ invoke: vi.fn() }))
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 beforeEach(() => vi.resetAllMocks())
+it('zpaq1537 retries a reserved version folder via its existing parent and preserves the catalog check',async()=>{
+  mocks.invoke.mockImplementation(async(cmd,args)=>{
+    if(cmd==='detect_split_archive')return{is_split:false,archive_format:'ZPAQ'}
+    if(cmd==='get_file_info'){if(args.path==='D:/versions/new')throw Error('not created');return{name:'input.zpaq',is_dir:args.path==='D:/versions/',size:100}}
+    return{}
+  })
+  const input={source:'C:/input.zpaq',output:'D:/versions/new',password:'source-key',extractToSubfolder:false,zpaqSnapshot:{version:1,date:20261020130000},zpaqCatalogId:'a'.repeat(64),selectedEntries:['old.txt']}
+  const result=await validateExtractionRetry(input,false,'retry-1537',()=>false);expect(result.outputPath).toBe(input.output);expect(mocks.invoke).toHaveBeenCalledWith('check_zpaq_snapshot_catalog',expect.objectContaining({catalogId:input.zpaqCatalogId,snapshot:input.zpaqSnapshot}));expect(mocks.invoke.mock.calls.some(([cmd])=>cmd==='extract_file')).toBe(false)
+})
 
 describe('forum ZIP retry source resolution', () => {
   it('identifies an unreadable output directory instead of blaming the source archive', async () => {

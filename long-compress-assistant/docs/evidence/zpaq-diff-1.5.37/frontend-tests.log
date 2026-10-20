@@ -1,0 +1,28 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ ✓ src/components/archive/__tests__/ZpaqDiff1537.test.ts > zpaq1537 separates new/removed versions and retains exact guarded ranges through config copies 5ms
+ ✓ src/components/archive/__tests__/ZpaqDiff1537.test.ts > zpaq1537 remembers actual verified results only for the same archive revision 1ms
+ ✓ src/components/archive/__tests__/ZpaqDiff1537.test.ts > zpaq1537 creates two independent pending tasks, never starts extraction, and keeps original password out of history config 95ms
+ ✓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > zpaq1537 recovers guarded selections without passwords or merging different ranges of one snapshot 38ms
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > zpaq1536 restores update mapping alongside conversion, excludes passwords and flags missing additional sources without starting
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > zpaq1530 restores two snapshots of one archive as separate drafts without starting them
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > keeps extraction, compression and separate conversion encodings after reopening without secrets
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > retains the new package password requirement after only the source password was reentered
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > recovers files, groups, extraction and conversion without passwords or automatic execution
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > saves only unstarted drafts and marks missing sources in the recovered item
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > keeps unopened old work while saving new work and discard only drops the recovery offer
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > preserves extraction defaults and avoids adding duplicate sources on recovery
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > wim1531 reopens mixed stored/XPRESS drafts without silently changing the method or starting
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > wim1532 reopens mixed stored/LZX drafts without silently changing the method or starting
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > wim1533 reopens old Store, XPRESS, LZX and new LZMS without changing methods or starting
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > zip1535 restores old Deflate, Zstandard, new PPMd and ZIPX without automatic execution
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > zip1534 restores old Deflate, Zstandard, new BZip2 and ZIPX without automatic execution
+ ✓ src/components/archive/__tests__/ZpaqDiff1537.test.ts > zpaq1537 ignores a late cancelled comparison and clears stale results when precise verification fails 49ms
+ ✓ src/components/archive/__tests__/ZpaqDiff1537.test.ts > zpaq1537 displays at most 200 rows and can select just the next page 259ms
+ ✓ src/components/archive/__tests__/ZpaqDiff1537.test.ts > zpaq1537 closing while source checks are pending cannot create a stale draft 20ms
+
+ Test Files  2 passed (2)
+      Tests  7 passed | 13 skipped (20)
+   Start at  03:07:31
+   Duration  2.51s (transform 1.64s, setup 311ms, import 2.29s, tests 470ms, environment 1.25s)
