@@ -12,6 +12,7 @@ import { describeArchiveBrowseError, useArchiveBrowseRequest } from '@/composabl
 import { useArchiveWorkspaceNavigation } from '@/composables/useArchiveWorkspaceNavigation'
 import ArchiveDirectoryPane from '@/components/archive/ArchiveDirectoryPane.vue'
 import ZpaqSnapshotPicker from '@/components/archive/ZpaqSnapshotPicker.vue'
+import ZpaqSnapshotDiff from '@/components/archive/ZpaqSnapshotDiff.vue'
 import { type ZpaqSnapshot } from '@/types/zpaqSnapshot'
 import { useArchiveConversionStore } from '@/stores/archiveConversion'
 
@@ -64,6 +65,7 @@ const {
 const loading = browseRequest.loading
 const extracting = ref(false)
 const checkingSnapshot = ref(false)
+const diffVisible = ref(false)
 const openingEntryPath = ref('')
 const inputBusy = computed(() => loading.value || extracting.value || checkingSnapshot.value || !!openingEntryPath.value)
 const dangerousOpenEntry = ref<ArchiveEntryInfo | null>(null)
@@ -720,9 +722,11 @@ const extractSelected = async () => {
     </nav>
 
     <ZpaqSnapshotPicker v-if="result?.zpaqHistory && result.zpaqHistory.snapshots.length > 1" :history="result.zpaqHistory" :disabled="inputBusy" class="shrink-0" @change="changeSnapshot">
+      <button type="button" data-testid="zpaq-snapshot-diff" class="browser-secondary" :disabled="inputBusy" @click="diffVisible=true">对比快照</button>
       <button type="button" data-testid="zpaq-snapshot-check" class="browser-secondary" :disabled="inputBusy" @click="checkSnapshot">{{ checkingSnapshot ? '检查中…' : '检查此快照' }}</button>
       <button type="button" data-testid="zpaq-snapshot-convert" class="browser-secondary" :disabled="inputBusy" @click="convertSnapshot">转换此快照</button>
     </ZpaqSnapshotPicker>
+    <ZpaqSnapshotDiff v-if="result?.zpaqHistory" v-model:visible="diffVisible" :path="archivePath" :password="password" :history="result.zpaqHistory" :output-directory="outputPath" />
     <p v-if="result?.format === 'WIM'" data-testid="wim-image-hint" class="text-xs leading-relaxed text-muted">多镜像按 1、2 等编号目录展示，可进入后选择文件；根目录的 [1].xml 为镜像说明。原生 SWM 请将同组 install.swm、install2.swm 等放在同一目录，可从任意一卷进入。提取与转换保留当前目录视图，不修改原镜像。</p>
     <section class="aero-card shrink-0 p-3 grid gap-3 browser-toolbar" :class="{'has-zip-encoding': archivePath && supportsZipPasswordEncoding(archivePath, result?.format)}">
       <div class="min-w-0 browser-field">
@@ -763,7 +767,7 @@ const extractSelected = async () => {
     <template v-else>
       <section class="browser-summary shrink-0" aria-label="压缩包摘要">
         <span><b>{{ result.format }}</b> 格式</span>
-        <span v-if="result.format === 'ZPAQ'" data-testid="zpaq-current-view">当前文件<HelpHint label="ZPAQ 当前文件视图">只显示最新有效文件，已删除文件和历史修订不会混入。支持流式、日志式及原生密码读取；压缩中心可创建新的日志式 ZPAQ，不提供固定大小分卷、增量更新或历史恢复。文件检查不能检测所有未认证头部信息的变化。</HelpHint></span>
+        <span v-if="result.format === 'ZPAQ'" data-testid="zpaq-current-view">当前文件<HelpHint label="ZPAQ 当前文件视图">按当前所选快照显示有效文件，其他版本不会混入。日志包支持历史选择、版本对比与变化提取，普通和原生密码数字卷可继续读取；压缩中心支持另存增量更新。流式包仅显示当前内容，文件检查不能检测所有未认证头部变化。</HelpHint></span>
           <span v-if="result.format === 'ALZ'" data-testid="alz-read-view">只读<HelpHint label="ALZ 读取范围">支持已验证的存储、Deflate、ALZ 变体 Bzip2、ZipCrypto 及原生 .alz/.aNN 卷组。文件名与密码默认按 CP949，可明确选择原工具代码页，不能无损转换时会说明原因。需补齐原卷后解压；不提供 ALZ 创建或损坏修复。</HelpHint></span>
           <span v-if="result.format === 'EGG'" data-testid="egg-read-view">只读<HelpHint label="EGG 读取范围">支持已验证的存储、Deflate、Bzip2、LZMA、AZO、固实及 ZipCrypto、AES/LEA 密码读取。UTF-8 名称与原生 .volN.egg 卷组按真实组合支持，需补齐原卷。固实所选提取仍要读取共享流，单个文件的压缩体积不单独计算。不提供 EGG 创建、文件名/全局加密或损坏修复。</HelpHint></span>
           <span><b>{{ result.totalFiles }}</b> 个文件</span>

@@ -1,9 +1,17 @@
 use serde_json::{Map, Value};
 
+#[cfg(test)]
+#[test]
+fn zpaq1537_final_history_preserves_guarded_selection_and_rejects_missing_identity(){
+    let config=serde_json::json!({"schemaVersion":1,"kind":"archive-extraction","outputDirectory":"D:/out","extractToSubfolder":false,"zpaqSnapshot":{"version":1,"date":20261020130000i64},"zpaqCatalogId":"a".repeat(64),"selectedEntries":["资料/后来删除.txt"],"password":"not-persisted"});
+    let saved=sanitize(config.clone(),"decompression","archive").unwrap();assert_eq!(saved["selectedEntries"],config["selectedEntries"]);assert_eq!(saved["zpaqCatalogId"],config["zpaqCatalogId"]);assert!(saved.get("password").is_none());
+    let mut bad=config.clone();bad.as_object_mut().unwrap().remove("zpaqSnapshot");assert!(sanitize(bad,"decompression","archive").is_none());let mut bad=config;bad["selectedEntries"]=serde_json::json!([]);assert!(sanitize(bad,"decompression","archive").is_none());
+}
+
 // Persist only the supported snapshot schema. A bad/unknown snapshot must not
 // prevent saving the task's final error and logs.
 pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<Value> {
-    if value.get("schemaVersion")?.as_u64()? != 1 || value.to_string().len() > if value.get("operation").and_then(Value::as_str)==Some("zpaq-update") {262_144} else {16_384} { return None; }
+    if value.get("schemaVersion")?.as_u64()? != 1 || value.to_string().len() > if value.get("operation").and_then(Value::as_str)==Some("zpaq-update") || value.get("zpaqCatalogId").is_some() {262_144} else {16_384} { return None; }
     let kind = value.get("kind")?.as_str()?;
     let expected = match kind {
         "archive-extraction" => ("decompression", "archive"),
@@ -46,6 +54,11 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
             output.insert(key.into(), serde_json::to_value(snapshot).ok()?);
         }
     }
+    if kind=="archive-extraction" {if let Some(id)=value.get("zpaqCatalogId") {
+        let text=id.as_str()?;if text.len()!=64||!text.bytes().all(|b|b.is_ascii_hexdigit())||!output.contains_key("zpaqSnapshot"){return None}
+        let selected=value.get("selectedEntries")?.as_array()?;if selected.is_empty()||selected.len()>2000||!selected.iter().all(|p|p.as_str().is_some_and(|s|!s.is_empty()&&s.len()<=32768)){return None}
+        output.insert("zpaqCatalogId".into(),id.clone());output.insert("selectedEntries".into(),Value::Array(selected.clone()));
+    }}
     if kind == "archive-conversion" {
         if let Some(operation)=value.get("operation") {
             if operation.as_str()!=Some("zpaq-update") || value.get("format")?.as_str()? != "zpaq" || value.get("sourceZpaqSnapshot").is_some() { return None; }

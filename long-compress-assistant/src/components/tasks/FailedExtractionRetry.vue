@@ -33,7 +33,7 @@ const rows = ref(props.taskIds.flatMap(id => {
     password: props.taskIds.length === 1 ? props.suppliedPassword || '' : '',
     extractToSubfolder: task.extractToSubfolder ?? true,
     zipPasswordEncoding: draft ? draft.zipPasswordEncoding : task.zipPasswordEncoding,
-    zpaqSnapshot: draft?.zpaqSnapshot || task.zpaqSnapshot,
+    zpaqSnapshot: draft?.zpaqSnapshot || task.zpaqSnapshot, zpaqCatalogId: draft?.zpaqCatalogId || task.zpaqCatalogId, selectedEntries: draft?.selectedEntries || task.selectedEntries,
     originalSource: task.sourceFiles[0], sourceFormat: task.format,
     createdId: task.retryDraftId || '', error: '', checking: false, missing: [] as string[] }]
 }))
@@ -126,7 +126,8 @@ async function createDrafts() {
           retryOfTaskId: parent.id, sourceFiles: [result.path], outputPath: result.outputPath,
           configurationMode: 'individual', extractToSubfolder: row.extractToSubfolder,
           recycleSourceAfterExtract: false, password: row.password || undefined,
-          zipPasswordEncoding: result.zipPasswordEncoding, format: result.format, zpaqSnapshot: row.zpaqSnapshot,
+          zipPasswordEncoding: result.zipPasswordEncoding, format: result.format, zpaqSnapshot: row.zpaqSnapshot, zpaqCatalogId: row.zpaqCatalogId, selectedEntries: row.selectedEntries,
+          ...(row.zpaqCatalogId ? {executionConfig:{schemaVersion:1,kind:'archive-extraction',outputDirectory:result.outputPath,extractToSubfolder:row.extractToSubfolder,zpaqSnapshot:row.zpaqSnapshot,zpaqCatalogId:row.zpaqCatalogId,selectedEntries:[...(row.selectedEntries || [])]}} : {}),
         })
         parent.retryDraftId = id
         row.source = result.path

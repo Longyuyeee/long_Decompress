@@ -46,3 +46,10 @@ stderr reports actual processed input bytes for pause/cancellation and progress.
 The host verifies the complete updated archive before publishing another file
 or fresh numeric slices. Fresh `-long-create` still refuses an existing file.
 The user original is never an append target. Codec and cryptography are unchanged.
+
+The v1.5.37 optional `-long-refs` catalog emits a SHA256 digest of the ordered
+fragment SHA1/size references for each journaling entry. It is a catalog reference
+identity, not a decoded-file SHA256. Different references are candidates until
+explicit extraction and content hashing; no payload is decoded for catalog-only
+comparison. Host catalog guards also include actual member lengths/write times.
+Codecs, native cryptography and the default listing/creation behavior are unchanged.

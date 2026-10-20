@@ -35,6 +35,7 @@ const zipPasswordArguments = (encoding?: ZipPasswordEncoding) => encoding === un
 
 export interface DecompressOptions {
   zpaqSnapshot?: ZpaqSnapshot
+  zpaqCatalogId?: string
   /** Actual browse format for task/history presentation, not a backend override. */
   sourceFormat?: string
   /** ZIP automatic compatibility; ALZ CP949 default for names and password. */
@@ -324,14 +325,15 @@ export const useTauriCommands = () => {
     const trackedTask = taskStore.tasks.find(item => item.id === taskId)
     if (trackedTask) {
       if (options.zpaqSnapshot && !trackedTask.name.includes(`（快照 ${options.zpaqSnapshot.version}）`)) trackedTask.name += `（快照 ${options.zpaqSnapshot.version}）`
+      trackedTask.zpaqCatalogId = options.zpaqCatalogId
       trackedTask.zpaqSnapshot = options.zpaqSnapshot ? { ...options.zpaqSnapshot } : undefined
       trackedTask.selectedEntries = options.selectedEntries ? [...options.selectedEntries] : undefined
       trackedTask.zipPasswordEncoding = options.zipPasswordEncoding
-      // Keep reusable directory/codepage even for a selection: history explicitly
-      // creates a whole-archive draft and never restores the original selection.
-      // Dropping the codepage makes legacy ALZ names/password unreadable on rerun.
+      // Comparison selections retain their exact range and catalog identity.
+      // Older unguarded selections keep the existing whole-archive history policy.
       trackedTask.executionConfig = {
         schemaVersion: 1, kind: 'archive-extraction', outputDirectory: options.outputPath,
+        ...(options.zpaqCatalogId ? { zpaqCatalogId: options.zpaqCatalogId, selectedEntries: [...(options.selectedEntries || [])] } : {}),
         ...(options.zpaqSnapshot ? { zpaqSnapshot: { ...options.zpaqSnapshot } } : {}),
         extractToSubfolder: options.createSubdirectory ?? false,
         ...(options.zipPasswordEncoding ? { zipPasswordEncoding: options.zipPasswordEncoding } : {}),
@@ -348,6 +350,7 @@ export const useTauriCommands = () => {
         outputPath: options.outputPath,
         password: options.password || null,
         options: {
+          ...(options.zpaqCatalogId ? { zpaq_catalog_id: options.zpaqCatalogId } : {}),
           ...(options.zpaqSnapshot ? { zpaq_snapshot: options.zpaqSnapshot } : {}),
           ...(options.zipPasswordEncoding === undefined ? {} : { zip_password_encoding: options.zipPasswordEncoding }),
           preserve_paths: options.keepStructure,

@@ -1,5 +1,5 @@
 use crate::models::compression::{CompressionOptions, DecompressOptions, TaskLog, TaskLogSeverity};
-use anyhow::Result;
+use anyhow::{Context,Result};
 use std::collections::{HashMap, HashSet};
 use std::path::{Component, Path, PathBuf};
 use zip::{write::FileOptions, CompressionMethod};
@@ -2182,6 +2182,7 @@ impl CompressionService {
         if format == ArchiveFormat::Unknown && crate::services::numeric_volume_reader::ZipInputReader::is_numeric_first(path) {
             format = ArchiveFormat::from_extension(Path::new(file_stem).extension().and_then(|value| value.to_str()).unwrap_or(""));
         }
+        anyhow::ensure!(options.zpaq_catalog_id.is_none() || (format==ArchiveFormat::Zpaq&&options.zpaq_snapshot.is_some()), "变化提取必须使用原ZPAQ快照，请重新对比");
         anyhow::ensure!(options.zpaq_snapshot.is_none() || format == ArchiveFormat::Zpaq,
             "所选快照只适用于 ZPAQ 日志归档，请重新选择原归档");
         let native_seven_zip = Self::uses_native_seven_zip_volumes(path, &format);
@@ -2460,8 +2461,8 @@ impl CompressionService {
                 path, &out_dir, final_password.as_deref(), &options, service.cancellation_flag.clone()).await,
             ArchiveFormat::Alz => crate::services::alz_engine::extract(
                 path, &out_dir, final_password.as_deref(), &options, service.cancellation_flag.clone()).await,
-            ArchiveFormat::Zpaq => crate::services::zpaq_engine::extract_at(
-                path, &out_dir, final_password.as_deref(), &options.selected_entries, options.zpaq_snapshot.as_ref(), service.cancellation_flag.clone()).await,
+            ArchiveFormat::Zpaq => crate::services::zpaq_engine::extract_checked_at(
+                path, &out_dir, final_password.as_deref(), &options.selected_entries, options.zpaq_snapshot.as_ref(), options.zpaq_catalog_id.as_deref(), service.cancellation_flag.clone()).await,
             ArchiveFormat::Zip => {
                 let srv = service.clone();
                 let f_path = file_path.clone();
@@ -2930,6 +2931,7 @@ impl CompressionService {
                 Some((directory.entries.len(), directory.total_uncompressed_size))
             }
             ArchiveFormat::Zpaq => {
+                if let Some(expected)=options.zpaq_catalog_id.as_deref(){crate::services::zpaq_engine::check_catalog(archive_path,password,options.zpaq_snapshot.as_ref().context("变化提取缺少来源快照")?,expected,self.cancellation_flag.clone()).await?;}
                 let directory = crate::services::zpaq_engine::browse_at(archive_path, password, options.zpaq_snapshot.as_ref(), self.cancellation_flag.clone()).await?;
                 if directory.entries.iter().all(|e| e.size_known != Some(false)) {
                     Some((directory.entries.len(), directory.total_uncompressed_size))

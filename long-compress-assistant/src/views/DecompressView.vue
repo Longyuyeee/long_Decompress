@@ -448,7 +448,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
       createSubdirectory: task.extractToSubfolder ?? false,
       password: task.password || undefined, // 只使用用户手动输入的密码
       zipPasswordEncoding: zipPasswordEncodingForSource(task.sourceFiles[0], task.zipPasswordEncoding, task.format),
-      zpaqSnapshot: task.zpaqSnapshot, selectedEntries: task.selectedEntries,
+      zpaqSnapshot: task.zpaqSnapshot, zpaqCatalogId: task.zpaqCatalogId, selectedEntries: task.selectedEntries,
       fileFilter: task.fileFilter || null
       ,conflictPolicy: appStore.settings.conflictPolicy
     }

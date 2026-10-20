@@ -163,6 +163,8 @@ pub struct CompressionOptions {
 pub struct DecompressOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zpaq_snapshot: Option<ZpaqSnapshot>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zpaq_catalog_id: Option<String>,
     /// ZIP: None retains automatic password compatibility, filenames unchanged.
     /// ALZ: None means CP949; an explicit source codepage reads names and key.
       /// EGG: None means UTF-8 password; names use their own format marker.
@@ -229,6 +231,7 @@ impl Default for DecompressOptions {
     fn default() -> Self {
         Self {
             zpaq_snapshot: None,
+            zpaq_catalog_id: None,
             zip_password_encoding: None,
             parallel_zip: false,
             preserve_paths: false,

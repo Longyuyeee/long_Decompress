@@ -48,6 +48,10 @@ async fn run(path: &Path, password: Option<&str>, output: Option<&Path>, test: b
 }
 
 async fn run_with_preview(path: &Path, password: Option<&str>, output: Option<&Path>, test: bool, selected: &[String], cancelled: Arc<AtomicBool>, preview_limit: Option<u64>, snapshot: Option<&ZpaqSnapshot>) -> Result<Vec<u8>> {
+    run_catalog_mode(path,password,output,test,selected,cancelled,preview_limit,snapshot,false).await
+}
+
+async fn run_catalog_mode(path: &Path,password: Option<&str>,output: Option<&Path>,test: bool,selected: &[String],cancelled: Arc<AtomicBool>,preview_limit: Option<u64>,snapshot: Option<&ZpaqSnapshot>, refs: bool) -> Result<Vec<u8>> {
     anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Relaxed), "ZPAQ 读取已取消");
     let source = super::split_archive_detector::SplitArchiveDetector::complete_source(path)?;
     let path = source.as_path();
@@ -76,6 +80,7 @@ async fn run_with_preview(path: &Path, password: Option<&str>, output: Option<&P
         }
     }
     if let Some(limit) = preview_limit { command.args(["-long-preview", &limit.to_string()]); }
+    if refs { command.arg("-long-refs"); }
     if test { command.arg("-test"); }
     else if let Some(output) = output { command.arg("-to").arg(output); }
     else { command.arg("-long-json"); }
@@ -158,10 +163,10 @@ pub async fn create(sources: &[String], output: &Path, options: &crate::models::
     Ok(())
 }
 
-#[derive(Deserialize)]
+#[derive(serde::Serialize, Deserialize)]
 struct Directory { kind: String, versions: u64, entries: Vec<Entry>, #[serde(default)] history: Option<ZpaqHistory> }
-#[derive(Deserialize)]
-struct Entry { path: String, size: i64, date: i64, directory: bool }
+#[derive(Clone, serde::Serialize, Deserialize)]
+pub(crate) struct Entry { pub path: String, pub size: i64, pub date: i64, pub directory: bool, #[serde(default,rename="contentRef",skip_serializing_if="Option::is_none")] pub content_ref: Option<String> }
 
 fn modified_date(date: i64) -> Option<String> {
     let s = date.to_string();
@@ -386,4 +391,34 @@ mod tests {
         assert!(parse_directory(b"no directory", false).is_err());
         assert!(parse_directory(b"\nLONG_ZPAQ_JSON\n{\"kind\":\"journaling\",\"versions\":1,\"entries\":[{\"path\":\"../file\",\"size\":1,\"date\":20261018000000,\"directory\":false}]}", false).is_err());
     }
+}
+
+/// Metadata reference identity, not a hash of decoded file contents.
+pub(crate) struct Catalog { pub id: String, pub entries: Vec<Entry>, pub history: ZpaqHistory }
+fn catalog_source_stamp(path:&Path)->Result<Vec<u8>> {
+    let first=super::split_archive_detector::SplitArchiveDetector::complete_source(path)?;
+    let members=super::split_archive_detector::SplitArchiveDetector::detect_split_archive(&first)?.map(|g|g.parts).unwrap_or_else(||vec![first]);
+    let mut stamp=Vec::new();for member in members {let metadata=std::fs::metadata(member)?;stamp.extend_from_slice(&metadata.len().to_le_bytes());stamp.extend_from_slice(format!("{:?};",metadata.modified()?).as_bytes());}Ok(stamp)
+}
+pub(crate) async fn catalog(path: &Path,password: Option<&str>,snapshot: &ZpaqSnapshot,flag: Arc<AtomicBool>) -> Result<Catalog> {
+    use sha2::{Digest,Sha256};
+    let stamp=catalog_source_stamp(path)?;
+    let bytes=run_catalog_mode(path,password,None,false,&[],flag,None,Some(snapshot),true).await?;
+    let text=String::from_utf8(bytes)?.replace("\r\n","\n");
+    let directory:Directory=serde_json::from_str(text.split_once("\nLONG_ZPAQ_JSON\n").context("缺少ZPAQ目录响应")?.1)?;
+    anyhow::ensure!(directory.kind=="journaling","仅支持完整日志式ZPAQ快照对比");
+    let history=directory.history.clone().context("此归档没有历史快照")?;
+    anyhow::ensure!(history.selected==*snapshot,"所选快照已变化，请重新对比");
+    for e in &directory.entries { super::archive_entry_open::normalize_safe_entry_path(e.path.trim_end_matches('/'))?;anyhow::ensure!(e.size>=0&&e.content_ref.as_ref().is_some_and(|id|id.len()==64),"ZPAQ目录缺少完整内容引用，请修复引擎或重新获取归档"); }
+    anyhow::ensure!(stamp==catalog_source_stamp(path)?,"读取期间来源已变化，请重新对比");
+    let mut digest=Sha256::new();digest.update(stamp);digest.update(serde_json::to_vec(&directory)?);let id=format!("{:x}",digest.finalize());
+    Ok(Catalog{id,entries:directory.entries,history})
+}
+pub async fn check_catalog(path:&Path,password:Option<&str>,snapshot:&ZpaqSnapshot,expected:&str,flag:Arc<AtomicBool>)->Result<()> {
+    anyhow::ensure!(expected.len()==64&&expected.bytes().all(|b|b.is_ascii_hexdigit()),"快照目录标识无效，请重新对比");
+    anyhow::ensure!(catalog(path,password,snapshot,flag).await?.id==expected,"[archive-inspection:snapshot-unavailable] 归档目录或历史已变化，请重新对比并选择；未改为提取其他版本");Ok(())
+}
+pub async fn extract_checked_at(path:&Path,output:&Path,password:Option<&str>,selected:&[String],snapshot:Option<&ZpaqSnapshot>,expected:Option<&str>,flag:Arc<AtomicBool>)->Result<()> {
+    if let Some(expected)=expected { check_catalog(path,password,snapshot.context("变化提取必须保留来源快照")?,expected,flag.clone()).await?; }
+    extract_at(path,output,password,selected,snapshot,flag).await
 }
