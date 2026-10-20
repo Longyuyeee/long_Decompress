@@ -3212,7 +3212,7 @@ impl CompressionService {
         )
     }
 
-    /// 使用 7z CLI 进行 LZMA 压缩
+    /// 使用原生 LZMA-alone 编码器压缩
     fn do_compress_lzma(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
         if self.maybe_delegate_to_7z_for_password(window, task_id, sources, output, &options, "LZMA")? {
             return Ok(());

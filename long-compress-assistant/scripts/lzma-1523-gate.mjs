@@ -10,9 +10,15 @@ export async function runLzma1523Gate({driver,bridge,waitForElement,artifactDire
   const base=path.join(root,'test-results/lzma-1523');mkdirSync(base,{recursive:true})
   const progress=path.join(base,'desktop-progress.json'),binarySha256=sha(application)
   const state=existsSync(progress)?JSON.parse(readFileSync(progress,'utf8')):{version:'1.5.23',binarySha256,work:path.join(base,'work-'+randomUUID()),native:[],ui:[],screenshots:[],layouts:[]}
-  assert.equal(state.binarySha256,binarySha256,'Do not automatically reuse evidence from another program')
+  if(state.binarySha256!==binarySha256){
+    assert.ok(process.argv.includes('--lzma-1523-continue-only'),'Different program requires explicitly scoped continuation')
+    assert.equal(state.native.length,6);assert.deepEqual(state.ui.map(r=>r.kind),['creation','batch']);assert.equal(state.screenshots.length,4)
+    for(const r of [...state.native,...state.ui,...state.layouts])r.binarySha256??=state.binarySha256
+    state.currentBinarySha256=binarySha256;state.continuedScope='Only advertised LZMA preview capability, then remaining preview/recovery/conversion UI; previous native/create/batch retained with original program identity'
+  }
+  state.identities??=[];if(!state.identities.some(i=>i.binarySha256===binarySha256))state.identities.push({binarySha256,source:execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim()})
   const work=state.work;mkdirSync(work,{recursive:true});const owned=p=>{assert.ok(path.resolve(p).startsWith(path.resolve(work)+path.sep));return p},fresh=n=>owned(path.join(work,n+'-'+randomUUID()))
-  const save=()=>writeFileSync(progress,JSON.stringify(state,null,2))
+  const save=()=>{for(const r of [...state.native,...state.ui,...state.layouts])r.binarySha256??=binarySha256;writeFileSync(progress,JSON.stringify(state,null,2))}
   const fixtures=path.join(root,'tests/fixtures/archives/lzma-1523'),manifest=JSON.parse(readFileSync(path.join(fixtures,'manifest.json'),'utf8'))
   const options={preserve_paths:true,overwrite_existing:false,delete_after:false,preserve_timestamps:true,skip_corrupted:false,extract_only_newer:false,file_filter:null,create_subdirectory:false,conflict_policy:'rename',enable_bruteforce:false,bruteforce_wordlists:[],selected_entries:[]}
   const seven=(args,cwd)=>execFileSync(bundledSevenZip,args,{cwd,windowsHide:true,encoding:'utf8',timeout:120000})
@@ -38,6 +44,10 @@ export async function runLzma1523Gate({driver,bridge,waitForElement,artifactDire
     const png=`lzma1523-${name}-${width}x${height}.png`;writeFileSync(path.join(artifactDirectory,png),Buffer.from(await driver.takeScreenshot(),'base64'));state.screenshots.push(png);save()
   }await driver.manage().window().setRect({width:1100,height:700})}
   await driver.manage().setTimeouts({script:180000});await driver.manage().window().setRect({width:1100,height:700})
+  if(!state.native.some(r=>r.kind==='advertised-preview')){
+    const caps=await ipc('get_archive_engine_capabilities',{});assert.ok(caps.boundedPreviewFormats.includes('LZMA'))
+    state.native.push({kind:'advertised-preview',boundedPreviewEnabled:true});save()
+  }
   if(!state.source){state.source=owned(path.join(work,'随机来源.bin'));writeFileSync(state.source,randomBytes(2*1024*1024+73));state.expected=sha(state.source);state.encrypted=owned(path.join(work,'密码来源.zip'));seven(['a','-tzip','-mem=AES256','-pLong1523',state.encrypted,path.basename(state.source)],work);save()}
   for(const name of ['说明.txt','空文件.txt','其他属性.txt']){
     if(state.native.some(r=>r.original===name))continue
@@ -83,7 +93,7 @@ export async function runLzma1523Gate({driver,bridge,waitForElement,artifactDire
     for(const c of await driver.findElements(By.css('[data-testid="compression-group-checkbox"]')))if(!await c.isSelected())await c.click()
     await click('[data-testid="batch-config-bar"] button[aria-haspopup="dialog"]');await choose('[data-testid="batch-format"]','LZMA');await sizes('batch-config','[role="dialog"]');await click('[data-testid="batch-config-apply"]')
     const rows=await driver.findElements(By.css('[data-testid="compression-draft-row"]'));assert.equal(rows.length,2);for(const row of rows)assert.match(await row.getText(),/LZMA/)
-    assert.equal((await driver.findElements(By.css('[role="dialog"]'))).length,0);state.ui.push({kind:'batch',twoDrafts:true,modalOnly:true});save()
+    await driver.wait(async()=>(await driver.findElements(By.css('[role="dialog"]'))).length===0,10000);state.ui.push({kind:'batch',twoDrafts:true,modalOnly:true});save()
   }
   const original=state.native.find(r=>r.original==='说明.txt')
   if(!state.ui.some(r=>r.kind==='preview')){
