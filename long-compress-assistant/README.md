@@ -19,7 +19,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 工作区 | 用户可以做什么 |
 | --- | --- |
 | 解压中心 | 导入多包、配置目录与子文件夹、使用密码候选、处理文件冲突、查看阶段和结果 |
-| 压缩中心 | 文件/文件夹/组归档、ZIP/7Z/RAR 与十七种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码与数字分卷创建、WIM 存储/XPRESS 压缩与数字分卷、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
+| 压缩中心 | 文件/文件夹/组归档、ZIP/7Z/RAR 与十七种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码与数字分卷创建、WIM 存储/XPRESS/LZX 压缩与数字分卷、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
 | 特殊压缩 | JPEG/PNG/WebP 图片编码与缩放、视频压缩预设、PDF 分析与结构优化 |
 | 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、文本/图片预览与选择性解压；支持普通压缩流、自有 AES 密码卷组、原生 SWM 多镜像及 ZPAQ 历史快照查看 |
 | 密码保险箱 | 本地加密保存常用解压密码，分类、搜索、导入导出与使用统计 |
@@ -92,7 +92,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.5.31 · WIM XPRESS 压缩创建**。在 WIM 方法中选择快速压缩，批量配置、配置组/模板、草稿、历史重做和转换保留方法；密码原包可转为 XPRESS WIM 数字卷，完成源数据与压缩比统计接通。保留原交互与等宽/窄窗布局。[中文说明](docs/RELEASE_NOTES_1.5.31.md) · [范围与记录](docs/WIM_XPRESS_FREEZE_1.5.31.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.31)。下一版 [v1.5.32 WIM LZX创建](docs/ARCHIVE_ROADMAP_1.5.32.md)仅规划，尚未开发。
+**v1.5.32 · WIM LZX 体积优先创建**。现有方法选择增加 LZX，接通文件/目录、密码原包转换、数字分卷与后续浏览、预览、检查、提取、补卷和统一结果；配置组/模板、草稿、历史保留方法，混合批量修改不改变无关任务的继承关系。原交互与等宽/窄窗布局保持。[中文说明](docs/RELEASE_NOTES_1.5.32.md) · [范围与记录](docs/WIM_LZX_FREEZE_1.5.32.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.32)。下一版 [v1.5.33 LZMS非固实创建](docs/ARCHIVE_ROADMAP_1.5.33.md)仅规划，尚未开发。
+
+**v1.5.31 · WIM XPRESS 压缩创建**。在 WIM 方法中选择快速压缩，批量配置、配置组/模板、草稿、历史重做和转换保留方法；密码原包可转为 XPRESS WIM 数字卷，完成源数据与压缩比统计接通。保留原交互与等宽/窄窗布局。[中文说明](docs/RELEASE_NOTES_1.5.31.md) · [范围与记录](docs/WIM_XPRESS_FREEZE_1.5.31.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.31)。下一版 [v1.5.32 WIM LZX创建](docs/ARCHIVE_ROADMAP_1.5.32.md)已由 v1.5.32 接续，当前进度以上方最新记录为准。
 
 **v1.5.30 · ZPAQ 历史快照**。按时间选择旧版，预览、检查和取回后来删除的文件；密码数字卷、转换、草稿和失败重试保留各自快照，来源变化明确提示。单条展开、多选弹窗与等宽/窄窗布局保持。[中文说明](docs/RELEASE_NOTES_1.5.30.md) · [范围与记录](docs/ZPAQ_SNAPSHOTS_FREEZE_1.5.30.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.30)。下一版 [v1.5.31 WIM XPRESS创建](docs/ARCHIVE_ROADMAP_1.5.31.md)已由 v1.5.31 接续，当前进度以上方最新记录为准。
 
