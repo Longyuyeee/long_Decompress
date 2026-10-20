@@ -37,7 +37,7 @@ async fn wim1531_created_numeric_members_browse_preview_integrity_and_selected_e
 fn wim1531_flatten_keeps_duplicate_files_and_old_request_defaults(){
     let temp=tempfile::tempdir().unwrap();for folder in ["one","two"]{fs::create_dir(temp.path().join(folder)).unwrap();fs::write(temp.path().join(folder).join("same.txt"),folder).unwrap();}fs::create_dir(temp.path().join("空目录")).unwrap();
     let sources=["one","two","空目录"].map(|n|temp.path().join(n).to_string_lossy().into_owned());let output=temp.path().join("flat.wim");create(&sources,&output,false,WimMethod::Xpress,flag(),|_|{}).unwrap();let decoded=temp.path().join("out");independent_decode(&output,&decoded);assert_eq!(fs::read(decoded.join("same.txt")).unwrap(),b"one");assert_eq!(fs::read(decoded.join("same (1).txt")).unwrap(),b"two");assert!(decoded.join("空目录").is_dir());
-    let legacy:crate::models::compression::CompressionOptions=serde_json::from_value(serde_json::json!({"level":6,"password":null,"split_size":null})).unwrap();assert_eq!(legacy.wim_method,WimMethod::Store);assert!(serde_json::from_value::<WimMethod>(serde_json::json!("lzms")).is_err());
+    let legacy:crate::models::compression::CompressionOptions=serde_json::from_value(serde_json::json!({"level":6,"password":null,"split_size":null})).unwrap();assert_eq!(legacy.wim_method,WimMethod::Store);assert!(serde_json::from_value::<WimMethod>(serde_json::json!("unknown")).is_err());
 }
 #[test]
 fn wim1531_real_encoder_cancel_removes_unpublished_output_and_preserves_existing_file(){

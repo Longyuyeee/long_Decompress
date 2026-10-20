@@ -317,3 +317,10 @@ it('wim1532 selects an effective method while keeping volume configuration and d
   await wrapper.get('[data-testid="compression-wim-method"]').trigger('click');const option=wrapper.findAll('[role="option"]').find(item=>item.text().includes('LZX'))!;await option.trigger('click');await flushPromises()
   expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({format:'wim',wimMethod:'lzx',splitArchive:true,splitSize:'2',password:''});expect(wrapper.get('input[type="range"]').attributes('disabled')).toBeDefined()
 })
+
+it('wim1533 selects an effective method while keeping volume configuration and disabling fake strength',async()=>{
+  invoke.mockImplementation(async (command: string) => command === 'get_archive_engine_capabilities' ? {available:true,fullEngine:true,formats:[],browseExtensions:[],nestedExtensions:[],boundedPreviewFormats:[],imagePreviewExtensions:[],textPreviewExtensions:[],message:''} : ['list_encrypted_passwords','get_compression_profiles'].includes(command) ? [] : '{}')
+  const wrapper=mountPanel(settings({format:'wim',splitArchive:true,splitSize:'2'}));await flushPromises();expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+  await wrapper.get('[data-testid="compression-wim-method"]').trigger('click');const option=wrapper.findAll('[role="option"]').find(item=>item.text().includes('LZMS'))!;await option.trigger('click');await flushPromises()
+  expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({format:'wim',wimMethod:'lzms',splitArchive:true,splitSize:'2',password:''});expect(wrapper.get('input[type="range"]').attributes('disabled')).toBeDefined()
+})

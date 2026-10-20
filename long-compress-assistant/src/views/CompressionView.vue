@@ -284,14 +284,14 @@ const getCompressionEstimate = (
 
 const runCompressionResourcePreflight = async (
   taskId: string,
-  job: { id: string, files: FileObject[], outputPath: string, settings: { format: string, level: number, zipMethod?: 'deflate' | 'zstd', wimMethod?: 'store' | 'xpress' | 'lzx' } },
+  job: { id: string, files: FileObject[], outputPath: string, settings: { format: string, level: number, zipMethod?: 'deflate' | 'zstd', wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' } },
 ) => {
   const task = taskStore.tasks.find(item => item.id === taskId)
   if (!task) return false
 
   taskStore.updateTaskStatus(taskId, 'preparing')
   try {
-    const estimate = job.settings.format === 'wim' && ['xpress', 'lzx'].includes(job.settings.wimMethod || '') ? undefined : getCompressionEstimate(job.id, job.files, job.settings.format, job.settings.level, job.settings.zipMethod)
+    const estimate = job.settings.format === 'wim' && ['xpress', 'lzx', 'lzms'].includes(job.settings.wimMethod || '') ? undefined : getCompressionEstimate(job.id, job.files, job.settings.format, job.settings.level, job.settings.zipMethod)
     const report = await tauriCommands.preflightOperationResources({
       operation: 'compression',
       outputPath: job.outputPath,

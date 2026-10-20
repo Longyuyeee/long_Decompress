@@ -62,7 +62,7 @@ function apply() {
   if (props.mode === 'compression') {
     if (formats.some(option => option.value === format.value) && format.value !== 'keep') patch.format = format.value as BatchConfigPatch['format']
     if (zipMethod.value === 'zstd' || zipMethod.value === 'deflate') patch.zipMethod = zipMethod.value
-    if (wimMethod.value !== 'keep' && (format.value === 'keep' || format.value === 'wim')) patch.wimMethod = wimMethod.value as 'store' | 'xpress' | 'lzx'
+    if (wimMethod.value !== 'keep' && (format.value === 'keep' || format.value === 'wim')) patch.wimMethod = wimMethod.value as 'store' | 'xpress' | 'lzx' | 'lzms'
     if (level.value !== 'keep' && format.value !== 'wim') patch.level = Number(level.value)
     if (recovery.value !== 'keep') patch.rarRecoveryPercent = Number(recovery.value)
     if (recoveryVolumes.value !== 'keep') patch.rarRecoveryVolumes = Number(recoveryVolumes.value)
@@ -93,7 +93,7 @@ function apply() {
   </section>
   <Modal v-model:visible="visible" :title="mode === 'compression' ? '修改所选压缩配置' : '修改所选解压配置'" :description="`已选 ${count} 项任务`" icon="pi pi-sliders-h" size="md" cancel-text="关闭批量配置" :show-close-button="!applying" :close-on-backdrop="!applying" :close-on-escape="!applying">
     <fieldset :disabled="applying" class="space-y-4 min-w-0" data-testid="batch-config-fields">
-      <p v-if="format === 'wim'" class="text-xs text-muted" data-testid="batch-wim-hint">WIM 可选仅存储、XPRESS 快速压缩或 LZX 体积优先压缩，不使用压缩强度；保留各条分卷大小。带密码的任务需先明确处理密码，应用失败时原配置保持。</p>
+      <p v-if="format === 'wim'" class="text-xs text-muted" data-testid="batch-wim-hint">WIM 可选仅存储、XPRESS、LZX 或 LZMS 压缩，不使用压缩强度；保留各条分卷大小。带密码的任务需先明确处理密码，应用失败时原配置保持。</p>
       <p v-if="format === 'tar.lz'" class="text-xs text-muted">TAR.LZIP 无密码加密；保留各自的数字分卷设置，接收方需集齐全部卷。</p>
       <p v-if="format === 'lzma'" class="text-xs text-muted" data-testid="batch-lzma-hint">每条任务需是一个普通文件；保留各自分卷，关闭不适用的密码和文件名加密。目录或多文件请选择 TAR 组合。</p>
       <p v-if="['tar.lzma', 'lzma.aes', 'tar.lzma.aes'].includes(format)" class="text-xs leading-relaxed text-muted" data-testid="batch-lzma-combination-hint">{{ format === 'tar.lzma' ? '适合目录和多个文件；保留各自分卷，关闭不适用的加密。需要密码请选择 TAR.LZMA.AES。' : `${format === 'lzma.aes' ? '每条任务需是一个普通文件。' : '适合目录和多个文件。'}保留各自密码和分卷；未设置密码的任务请展开后填写。接收方需使用 Long解压 v1.5.24 或更新版本。` }}</p>
@@ -118,7 +118,7 @@ function apply() {
         <ThemedSelect v-model="zipPasswordEncoding" :disabled="applying" :options="[keep, ...ZIP_PASSWORD_ENCODING_OPTIONS]" aria-label="批量新包 ZIP 密码编码" test-id="batch-zip-password-encoding" floating />
       </div>
       <label v-if="mode === 'compression' && (format === 'keep' || format === 'wim')" class="block min-w-0 space-y-1.5 text-xs text-muted">WIM 压缩方法
-        <ThemedSelect v-model="wimMethod" :options="[keep,{value:'store',label:'仅存储 · 去重'},{value:'xpress',label:'XPRESS · 快速压缩'},{value:'lzx',label:'LZX · 体积优先'}]" test-id="batch-wim-method" floating />
+        <ThemedSelect v-model="wimMethod" :options="[keep,{value:'store',label:'仅存储 · 去重'},{value:'xpress',label:'XPRESS · 快速压缩'},{value:'lzx',label:'LZX · 体积优先'},{value:'lzms',label:'LZMS · 高压缩'}]" test-id="batch-wim-method" floating />
         <span class="block leading-relaxed">仅修改所选 WIM 任务，其余格式保持各自设置。</span>
       </label>
       <label v-if="mode === 'compression' && (format === 'keep' || format === 'zip')" class="block min-w-0 space-y-1.5 text-xs text-muted">ZIP 压缩方法

@@ -1,0 +1,15 @@
+{
+  "method": "LZMS",
+  "nonSolid": true,
+  "chunkSize": 32768,
+  "threads": 1,
+  "inputBytes": 8413608,
+  "outputBytes": 4239876,
+  "seconds": 0.457,
+  "sampledPeakWorkingSetBytes": 8396800,
+  "sampledPeakCommitBytes": 2842624,
+  "headerFlags": "0x80082",
+  "independentHashes": true,
+  "emptyDirectory": true,
+  "scope": "local synthetic probe, not product UI or general benchmark"
+}

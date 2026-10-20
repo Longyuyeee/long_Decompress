@@ -79,7 +79,7 @@ const normalizeProfile = (raw: any): CompressionProfile => {
     encryptFilenames: raw.config.encryptFilenames ?? raw.config.encrypt_filenames ?? false,
     ...((raw.config.rarRecoveryPercent ?? raw.config.extra_params?.rar_recovery_percent ?? raw.config.extraParams?.rar_recovery_percent) ? { rarRecoveryPercent: Number(raw.config.rarRecoveryPercent ?? raw.config.extra_params?.rar_recovery_percent ?? raw.config.extraParams?.rar_recovery_percent) } : {}),
     ...((raw.config.rarRecoveryVolumes ?? raw.config.extra_params?.rar_recovery_volumes ?? raw.config.extraParams?.rar_recovery_volumes) ? { rarRecoveryVolumes: Number(raw.config.rarRecoveryVolumes ?? raw.config.extra_params?.rar_recovery_volumes ?? raw.config.extraParams?.rar_recovery_volumes) } : {}),
-    ...(wimMethod === 'xpress' || wimMethod === 'lzx' ? { wimMethod } : {}),
+    ...(wimMethod === 'xpress' || wimMethod === 'lzx' || wimMethod === 'lzms' ? { wimMethod } : {}),
     ...(isZipPasswordEncoding(zipEncoding) ? { zipPasswordEncoding: zipEncoding } : {}),
     ...((raw.config.zipMethod ?? raw.config.extra_params?.zip_method ?? raw.config.extraParams?.zip_method) === 'zstd' ? { zipMethod: 'zstd' as const } : {}),
     ...((raw.config.zipEncryption ?? raw.config.extra_params?.zip_encryption ?? raw.config.extraParams?.zip_encryption) === 'zipcrypto' ? { zipEncryption: 'zipcrypto' as const } : {}),
