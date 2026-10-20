@@ -1,0 +1,149 @@
+{
+  "version": "1.5.22",
+  "binarySha256": "41d2236fd8f85f96bbffae14bee6472a7638b4615bca5c2a09a3054601dcb53b",
+  "work": "C:\\Users\\39633\\AppData\\Local\\Temp\\long-checksum-1522-R4lkRb",
+  "ui": [
+    {
+      "kind": "manifest-stop-continue",
+      "progress": {
+        "fileBytes": 340525056,
+        "totalBytes": 4294967322
+      },
+      "stoppedStatuses": [
+        "matched",
+        "interrupted",
+        "not_checked"
+      ],
+      "independentDigestMatched": true,
+      "completedFileNotReopened": true
+    },
+    {
+      "kind": "changed-manifest",
+      "oldObservationsInvalidated": true,
+      "oldLineSelectionDidNotReadNewManifest": true
+    },
+    {
+      "kind": "calculate-stop-continue",
+      "progress": {
+        "fileBytes": 109510656,
+        "totalBytes": 4294967322
+      },
+      "completedFileNotReopened": true,
+      "allDigestsMatchIndependentMd5": true
+    }
+  ],
+  "screenshots": [
+    "checksum1522-live-manifest.png",
+    "checksum1522-stopped-1100x700.png",
+    "checksum1522-stopped-760x520.png",
+    "checksum1522-continued-1100x700.png",
+    "checksum1522-continued-760x520.png",
+    "checksum1522-changed-manifest-1100x700.png",
+    "checksum1522-changed-manifest-760x520.png",
+    "checksum1522-calculate-stopped-1100x700.png",
+    "checksum1522-calculate-stopped-760x520.png",
+    "checksum1522-calculate-completed-1100x700.png",
+    "checksum1522-calculate-completed-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "stopped",
+      "details": [
+        {
+          "left": 379.015625,
+          "overflow": 0,
+          "right": 379.015625
+        }
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "stopped",
+      "details": [
+        {
+          "left": 279.015625,
+          "overflow": 0,
+          "right": 279.015625
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "continued",
+      "details": [
+        {
+          "left": 379.015625,
+          "overflow": 0,
+          "right": 379.015625
+        }
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "continued",
+      "details": [
+        {
+          "left": 279.015625,
+          "overflow": 0,
+          "right": 279.015625
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "changed-manifest",
+      "details": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "changed-manifest",
+      "details": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "calculate-stopped",
+      "details": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "calculate-stopped",
+      "details": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "calculate-completed",
+      "details": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "calculate-completed",
+      "details": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "fixture": {
+    "largeBytes": 4294967296,
+    "largeMd5": "5559a060d0a5695c4018fdbc1f75babc"
+  },
+  "completedAt": "2026-10-20T02:44:40.592Z"
+}

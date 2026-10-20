@@ -23,7 +23,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 特殊压缩 | JPEG/PNG/WebP 图片编码与缩放、视频压缩预设、PDF 分析与结构优化 |
 | 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、文本/图片预览与选择性解压；支持普通压缩流及自有 AES 密码卷组查看 |
 | 密码保险箱 | 本地加密保存常用解压密码，分类、搜索、导入导出与使用统计 |
-| 文件完整性 | CRC32/MD5/SHA256 校验、清单逐文件原因与待补列表/按需复查、归档诊断、RAR4/RAR5 副本修复与恢复卷（需本机 Rar.exe），以及密码 ZIP 与目录可读的标准卷完整文件救援 |
+| 文件完整性 | CRC32/MD5/SHA256 校验、清单逐文件原因与待补列表/按需复查、真实进度/停止与继续、归档诊断、RAR4/RAR5 副本修复与恢复卷（需本机 Rar.exe），以及密码 ZIP 与目录可读的标准卷完整文件救援 |
 | 历史与系统集成 | 搜索和再次执行、统一结果操作、托盘、资源管理器经典菜单与应用内更新 |
 
 详细格式能力见 [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md)；RAR 创建依赖用户安装的 WinRAR，视频暂不保证支持 Windows N。功能介绍和快速上手见 [项目首页](../README.md)。
@@ -92,7 +92,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.5.21 · 六种新 Long AES 组合**。LZ4/Brotli/LZIP 及对应 TAR 组合支持密码、数字分卷、认证后浏览/预览、检查、提取、转换与结果；批量弹窗与补卷新任务接通，普通 LZIP 完整性分派修正。保持原有交互、等宽及窄窗布局。[中文说明](docs/RELEASE_NOTES_1.5.21.md) · [范围与记录](docs/AES_CODECS_FREEZE_1.5.21.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.21)。下一步按[既定路线](docs/ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)推进校验进度、停止与继续，尚未开发。
+**v1.5.22 · 校验进度与继续未完成项**。计算摘要与核对清单显示真实字节和当前文件，可停止后主动继续；完成观察留在工作区，中断项不计匹配，清单变化作废旧结果。保持原有交互和窄窗显示。[中文说明](docs/RELEASE_NOTES_1.5.22.md) · [范围与记录](docs/CHECKSUM_PROGRESS_FREEZE_1.5.22.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.22)。后续 [v1.5.23～v1.5.25](docs/ARCHIVE_ROADMAP_1.5.23_TO_1.5.25.md) 已规划：LZMA 数字卷、TAR/Long AES 组合、结果生成校验清单，均尚未开发。
+
+**v1.5.21 · 六种新 Long AES 组合**。LZ4/Brotli/LZIP 及对应 TAR 组合支持密码、数字分卷、认证后浏览/预览、检查、提取、转换与结果；批量弹窗与补卷新任务接通，普通 LZIP 完整性分派修正。保持原有交互、等宽及窄窗布局。[中文说明](docs/RELEASE_NOTES_1.5.21.md) · [范围与记录](docs/AES_CODECS_FREEZE_1.5.21.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.21)。下一步按[既定路线](docs/ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)推进校验进度、停止与继续，已由 v1.5.22 接续，当前进度以上方最新记录为准。
 
 **v1.5.20 · LZIP 数字分卷**。LZIP/TAR.LZIP 支持拆卷创建，从任意卷浏览、预览、检查与提取；密码 ZIP 和 TAR.LZIP 分卷转换接通。批量改格式保留分卷设置，补卷后沿原入口创建新任务；单条展开、多选弹窗、左右等宽和窄窗滚动保持。[中文说明](docs/RELEASE_NOTES_1.5.20.md) · [范围与记录](docs/LZIP_VOLUMES_FREEZE_1.5.20.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.20)。下一版按[既定路线](docs/ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)Long AES 内层扩展已由 v1.5.21 接续，当前进度以上方最新记录为准。
 

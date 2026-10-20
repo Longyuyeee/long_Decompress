@@ -4939,6 +4939,7 @@ try {
     completedSuccessfully = true
   } else if (process.argv.includes('--checksum-1522-only')) {
     await runChecksum1522Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root })
+    completedSuccessfully = true
   } else if (process.argv.includes('--checksum-1519-only')) {
     await runChecksum1519Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root })
     completedSuccessfully = true
