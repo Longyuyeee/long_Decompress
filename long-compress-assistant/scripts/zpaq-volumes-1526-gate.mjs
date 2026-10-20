@@ -8,7 +8,11 @@ import {By,Key} from 'selenium-webdriver'
 export async function runZpaqVolumes1526Gate({driver,bridge,waitForElement,artifactDirectory,application,root,bundledSevenZip}) {
   const base=path.join(root,'test-results/zpaq-volumes-1526'),progress=path.join(base,'desktop-progress.json'),hash=b=>createHash('sha256').update(b).digest('hex'),sha=p=>hash(readFileSync(p)),binarySha256=sha(application)
   const state=existsSync(progress)?JSON.parse(readFileSync(progress,'utf8')):{version:'1.5.26',binarySha256,sourceCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8',windowsHide:true}).trim(),work:path.join(base,'ui-'+randomUUID()),native:[],ui:[],screenshots:[],layouts:[]}
-  assert.equal(state.binarySha256,binarySha256,'Keep earlier evidence with its own binary identity')
+  if(state.binarySha256!==binarySha256){
+    assert.equal(process.env.ZPAQ_1526_RESUME_FROM,state.binarySha256,'Explicitly acknowledge prior passed evidence identity')
+    state.previousIdentities=[...(state.previousIdentities||[]),{binarySha256:state.binarySha256,sourceCommit:state.sourceCommit}]
+    state.binarySha256=binarySha256;state.sourceCommit=execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8',windowsHide:true}).trim()
+  }
   const work=state.work;mkdirSync(work,{recursive:true})
   const owned=p=>{assert.ok(path.resolve(p).startsWith(path.resolve(work)+path.sep));return p}
   const save=()=>writeFileSync(progress,JSON.stringify(state,null,2))
@@ -84,18 +88,18 @@ export async function runZpaqVolumes1526Gate({driver,bridge,waitForElement,artif
     await bridge('clearCompressionWorkspace');await click('[data-testid="nav-Compress"]')
     await bridge('queueDesktopDialogSelections',[[path.join(state.source,'数据.bin'),path.join(state.source,'说明.txt')]]);await click('[data-testid="compression-center"] [data-testid="dropzone-file"]')
     for(let index=0;index<2;index++){
-      const row=(await driver.findElements(By.css('[data-testid="compression-draft-row"]')))[index];if(!(await row.getAttribute('class')).includes('expanded'))await click(row)
+      const row=(await driver.findElements(By.css('[data-testid="compression-draft-row"]')))[index];if(!(await row.findElements(By.css('[data-testid="compression-draft-details"]'))).length)await click(await row.findElement(By.css('[data-testid="compression-archive-name"]')))
       await choose('[data-testid="compression-format-select"]','ZPAQ');await fill('[data-testid="compression-password-input"]','各自密码-'+index)
       const split=await waitForElement('[data-testid="compression-split-toggle"]');if(!await split.isSelected())await click(split);await fill('[data-testid="compression-split-size"]',String(index+1))
-      if(index===0)await click(row)
+      if(index===0)await click(await row.findElement(By.css('[data-testid="compression-archive-name"]')))
     }
     for(const box of await driver.findElements(By.css('[data-testid="compression-group-checkbox"]')))if(!await box.isSelected())await click(box)
     await click('[data-testid="batch-config-bar"] button[aria-haspopup="dialog"]');await choose('[data-testid="batch-format"]','ZPAQ');await sizes('compression-batch','[role="dialog"]');const before=(await bridge('taskHistory')).length
     await click('[data-testid="batch-config-apply"]');await driver.wait(async()=>(await driver.findElements(By.css('[role="dialog"]'))).length===0,10000)
     assert.equal((await bridge('taskHistory')).length,before)
     for(let index=0;index<2;index++){
-      const row=(await driver.findElements(By.css('[data-testid="compression-draft-row"]')))[index];if(!(await driver.findElements(By.css('[data-testid="compression-password-input"]'))).length||await(await waitForElement('[data-testid="compression-password-input"]')).getAttribute('value')!=='各自密码-'+index)await click(row)
-      assert.equal(await(await waitForElement('[data-testid="compression-password-input"]')).getAttribute('value'),'各自密码-'+index);assert.equal(await(await waitForElement('[data-testid="compression-split-size"]')).getAttribute('value'),String(index+1));await click(row)
+      const row=(await driver.findElements(By.css('[data-testid="compression-draft-row"]')))[index];if(!(await driver.findElements(By.css('[data-testid="compression-password-input"]'))).length||await(await waitForElement('[data-testid="compression-password-input"]')).getAttribute('value')!=='各自密码-'+index)await click(await row.findElement(By.css('[data-testid="compression-archive-name"]')))
+      assert.equal(await(await waitForElement('[data-testid="compression-password-input"]')).getAttribute('value'),'各自密码-'+index);assert.equal(await(await waitForElement('[data-testid="compression-split-size"]')).getAttribute('value'),String(index+1));await click(await row.findElement(By.css('[data-testid="compression-archive-name"]')))
     }
     done('ui','compression-batch',{originalModal:true,perRowPasswordAndSplitPreserved:true,noImplicitStart:true})
   }

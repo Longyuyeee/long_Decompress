@@ -974,9 +974,9 @@ impl CompressionService {
         let split_requested = options.split_size.is_some_and(|size| size > 0);
         let has_password = options.password.as_deref().is_some_and(|password| !password.is_empty());
         let format = Self::infer_compression_format(output_path, options.format.as_deref());
-        if split_requested && has_password && !matches!(format.as_str(), "zip" | "zipx" | "7z" | "rar") && !(format.ends_with(".aes") && compression_format::has_native_password_container(&format)) {
+        if split_requested && has_password && !matches!(format.as_str(), "zip" | "zipx" | "7z" | "rar" | "zpaq") && !(format.ends_with(".aes") && compression_format::has_native_password_container(&format)) {
             return Err(CompressionError::CompressionFailed(
-                "Encrypted split archive creation is currently supported only for ZIP, 7Z and RAR; choose a supported format or disable splitting".to_string()
+                "当前格式不支持密码分卷，请选择 ZIP、ZIPX、7Z、RAR、ZPAQ 或 Long AES 格式，或关闭分卷".to_string()
             ).into());
         }
 
@@ -3882,6 +3882,15 @@ mod tests {
                 assert!(rar.extract_rar(&parts[0], &temp.path().join(format!("错误密码-{mode}")), Some("wrong-password"), &DecompressOptions::default(), Arc::new(AtomicBool::new(false))).await.is_err());
             }
         }
+    }
+
+    #[test]
+    fn zpaq_1526_public_io_paths_accept_native_password_volumes() {
+        let root = tempfile::tempdir().unwrap();
+        let source = root.path().join("source.txt");
+        std::fs::write(&source, b"data").unwrap();
+        let options = CompressionOptions { format: Some("zpaq".into()), password: Some("native password".into()), split_size: Some(37), ..Default::default() };
+        CompressionService::validate_compression_io_paths(&[source.to_string_lossy().into_owned()], &root.path().join("output.zpaq").to_string_lossy(), &options).unwrap();
     }
 
     #[test]
