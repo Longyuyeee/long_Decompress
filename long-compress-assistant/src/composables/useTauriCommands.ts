@@ -70,7 +70,7 @@ export interface CompressOptions {
   fast_pack?: boolean
   zip_password_encoding?: ZipPasswordEncoding
   wim_method?: 'store' | 'xpress' | 'lzx' | 'lzms'
-  zip_method?: 'deflate' | 'zstd' | 'bzip2'
+  zip_method?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd'
   zip_encryption?: 'aes256' | 'zipcrypto'
   zip_split_mode?: 'numeric' | 'standard'
   format?: string

@@ -312,8 +312,8 @@ export const useAppStore = defineStore('app', () => {
   }
 
   // 压缩预设
-  const compressionPresets = ref<Array<{ name: string; format: string; level: number; password?: string; zipMethod?: 'deflate' | 'zstd' | 'bzip2'; wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' }>>([])
-  const saveCompressionPreset = (name: string, format: string, level: number, password?: string, zipMethod?: 'deflate' | 'zstd' | 'bzip2', wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms') => {
+  const compressionPresets = ref<Array<{ name: string; format: string; level: number; password?: string; zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd'; wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' }>>([])
+  const saveCompressionPreset = (name: string, format: string, level: number, password?: string, zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd', wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms') => {
     compressionPresets.value = [{ name, format, level, password, zipMethod, wimMethod }, ...compressionPresets.value].slice(0, 8)
     try { localStorage.setItem('compression-presets', JSON.stringify(compressionPresets.value)) } catch { }
   }

@@ -20,7 +20,7 @@ export interface CompressionProfile {
 export interface CompressionConfig {
   zipPasswordEncoding?: ZipPasswordEncoding
   wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms'
-  zipMethod?: 'deflate' | 'zstd' | 'bzip2'
+  zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd'
   zipEncryption?: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
   format: string
@@ -141,7 +141,7 @@ export interface TaskTemplate {
     splitSizeMib: number | null
     zipPasswordEncoding?: ZipPasswordEncoding
     wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms'
-    zipMethod?: 'deflate' | 'zstd' | 'bzip2'
+    zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd'
     zipEncryption?: 'aes256' | 'zipcrypto'
     zipSplitMode?: 'numeric' | 'standard'
     keepStructure: boolean

@@ -59,7 +59,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
             if !matches!(percent.as_u64(), Some(0 | 3 | 5 | 10)) { return None; }
             output.insert("rarRecoveryPercent".into(), percent.clone());
         }
-        for (key, default, allowed) in [("zipMethod", "deflate", &["deflate", "zstd", "bzip2"][..]), ("zipEncryption", "aes256", &["aes256", "zipcrypto"][..]),
+        for (key, default, allowed) in [("zipMethod", "deflate", &["deflate", "zstd", "bzip2", "ppmd"][..]), ("zipEncryption", "aes256", &["aes256", "zipcrypto"][..]),
             ("zipSplitMode", "numeric", &["numeric", "standard"][..])] {
             let selected = value.get(key).and_then(Value::as_str).unwrap_or(default);
             if !allowed.contains(&selected) { return None; }
@@ -98,7 +98,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
                 settings.insert("zipSplitMode".into(), mode.clone());
             }
             if let Some(method) = value.get("settings")?.get("zipMethod") {
-                if !matches!(method.as_str(), Some("deflate" | "zstd" | "bzip2")) { return None; }
+                if !matches!(method.as_str(), Some("deflate" | "zstd" | "bzip2" | "ppmd")) { return None; }
                 settings.insert("zipMethod".into(), method.clone());
             }
             if let Some(encryption) = value.get("settings")?.get("zipEncryption") {
@@ -135,6 +135,15 @@ fn project(value: &Value, fields: &[(&str, char)]) -> Option<Map<String, Value>>
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn zip1535_history_preserves_ppmd_in_creation_and_conversion() {
+        let conversion=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","format":"zip","level":0,"outputPath":"D:/out.zip","splitSize":65536,"encryptFilenames":false,"passwordRequired":true,"zipMethod":"ppmd","password":"secret"});
+        let saved=super::sanitize(conversion,"compression","archive").unwrap();assert_eq!(saved["zipMethod"],"ppmd");assert!(saved.get("password").is_none());
+        let compression=serde_json::json!({"schemaVersion":1,"kind":"archive-compression","outputDirectory":"D:/out","passwordRequired":true,"settings":{"format":"zip","level":0,"filename":"new","splitArchive":true,"splitSize":"1","keepStructure":true,"verifyAfter":true,"createSolidArchive":false,"zipMethod":"ppmd"}});
+        assert_eq!(super::sanitize(compression,"compression","archive").unwrap()["settings"]["zipMethod"],"ppmd");
+    }
+
+
     #[test]
     fn zip1534_history_preserves_bzip2_in_creation_and_conversion() {
         let conversion=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","format":"zip","level":0,"outputPath":"D:/out.zip","splitSize":65536,"encryptFilenames":false,"passwordRequired":true,"zipMethod":"bzip2","password":"secret"});

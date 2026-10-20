@@ -445,6 +445,10 @@ it('wim1533 profile loading and saving preserve encoder method and old profile d
   const old=rawProfile();old.config.format='wim';mocks.invoke.mockResolvedValueOnce(old);expect((await api.getProfileById(old.id))?.config.wimMethod).toBeUndefined()
 })
 
+it('zip1535 normalizes and saves the PPMd profile method',async()=>{
+ const raw=rawProfile(),api=useCompressionProfiles();raw.config.format='zip';raw.config.extra_params={...raw.config.extra_params,zip_method:'ppmd'};mocks.invoke.mockResolvedValueOnce(raw);const loaded=await api.getProfileById(raw.id);expect(loaded?.config.zipMethod).toBe('ppmd');mocks.invoke.mockResolvedValueOnce(undefined);await api.updateProfile(loaded!);expect(mocks.invoke).toHaveBeenLastCalledWith('update_compression_profile',expect.objectContaining({profile:expect.objectContaining({config:expect.objectContaining({extra_params:expect.objectContaining({zip_method:'ppmd'})})})}))
+})
+
 it('zip1534 normalizes and saves the BZip2 profile method',async()=>{
  const raw=rawProfile(),api=useCompressionProfiles();raw.config.format='zip';raw.config.extra_params={...raw.config.extra_params,zip_method:'bzip2'};mocks.invoke.mockResolvedValueOnce(raw);const loaded=await api.getProfileById(raw.id);expect(loaded?.config.zipMethod).toBe('bzip2');mocks.invoke.mockResolvedValueOnce(undefined);await api.updateProfile(loaded!);expect(mocks.invoke).toHaveBeenLastCalledWith('update_compression_profile',expect.objectContaining({profile:expect.objectContaining({config:expect.objectContaining({extra_params:expect.objectContaining({zip_method:'bzip2'})})})}))
 })

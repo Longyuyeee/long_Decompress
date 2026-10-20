@@ -177,7 +177,26 @@ fn sample_files(files: &[SourceFile], cancelled: &AtomicBool) -> Result<(Vec<u8>
     Ok((sample, sampled_files))
 }
 
+#[cfg(test)]
 fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usize> {
+    compressed_sample_size_with_cancel(sample, format, level, &AtomicBool::new(false))
+}
+
+fn compressed_sample_size_with_cancel(sample: &[u8], format: &str, level: u32, cancelled: &AtomicBool) -> Result<usize> {
+    if format == "zip-ppmd" {
+        // Use the real ZIP writer, including method-98 parameters and stream finalization.
+        let mut archive = zip_aes::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+        check_cancelled(cancelled)?;
+        archive.start_file("sample", crate::services::zip_method::file_options(false, crate::services::zip_method::ZipMethod::Ppmd, level))?;
+        for chunk in sample.chunks(SAMPLE_CHUNK_BYTES) {
+            check_cancelled(cancelled)?;
+            archive.write_all(chunk)?;
+        }
+        check_cancelled(cancelled)?;
+        let output = archive.finish()?;
+        check_cancelled(cancelled)?;
+        return Ok(output.into_inner().len());
+    }
     let format = format.strip_suffix(".aes").unwrap_or(format);
     if format == "tar" || (format == "wim" && level == 0) {
         return Ok(sample.len());
@@ -233,6 +252,7 @@ fn duration_range(total_size: u64, format: &str, level: u32, file_count: usize) 
     let base_mib_per_second = match format {
         "7z" | "xz" | "tar.xz" | "lzma" | "tar.lzma" | "lz" | "tar.lz" => 45.0,
         "bz2" | "tar.bz2" => 35.0,
+        "zip-ppmd" => 12.0,
         "zst" | "zstd" | "tar.zst" => 180.0,
         "tar" => 350.0,
         _ => 110.0,
@@ -270,8 +290,9 @@ pub fn analyze_compression(
     let sample_ratio = if sample.is_empty() {
         1.0
     } else {
-        compressed_sample_size(&sample, format, level)? as f64 / sample.len() as f64
+        compressed_sample_size_with_cancel(&sample, format, level, cancelled)? as f64 / sample.len() as f64
     };
+    check_cancelled(cancelled)?;
     let low_value_share = if total_size == 0 {
         0.0
     } else {
@@ -441,4 +462,18 @@ fn lzma1523_analysis_uses_alone_framing_from_independent_fixture() {
     let mut bytes = vec![];
     super::codec_stream::decoder(&path, "lzma").unwrap().read_to_end(&mut bytes).unwrap();
     assert_eq!(compressed_sample_size(&bytes, "lzma", 1).unwrap(), std::fs::metadata(path).unwrap().len() as usize);
+}
+
+#[cfg(test)]
+mod ppmd_1535_tests {
+    use super::*;
+    #[test]
+    fn zip1535_analysis_uses_the_real_ppmd_writer_and_honors_cancellation() {
+        let data="PPMd 文本样本与真实归档参数。\n".repeat(500);
+        let mut writer=zip_aes::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+        writer.start_file("sample",crate::services::zip_method::file_options(false,crate::services::zip_method::ZipMethod::Ppmd,0)).unwrap();
+        writer.write_all(data.as_bytes()).unwrap();let expected=writer.finish().unwrap().into_inner();
+        assert_eq!(compressed_sample_size(data.as_bytes(),"zip-ppmd",0).unwrap(),expected.len());
+        assert!(compressed_sample_size_with_cancel(data.as_bytes(),"zip-ppmd",9,&AtomicBool::new(true)).is_err());
+    }
 }

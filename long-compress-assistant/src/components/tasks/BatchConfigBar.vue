@@ -61,7 +61,7 @@ function apply() {
   if (destination.value !== 'keep') patch.outputDirectory = destination.value === 'source' ? '' : outputDirectory.value.trim()
   if (props.mode === 'compression') {
     if (formats.some(option => option.value === format.value) && format.value !== 'keep') patch.format = format.value as BatchConfigPatch['format']
-    if (zipMethod.value === 'bzip2' || zipMethod.value === 'zstd' || zipMethod.value === 'deflate') patch.zipMethod = zipMethod.value
+    if (zipMethod.value === 'ppmd' || zipMethod.value === 'bzip2' || zipMethod.value === 'zstd' || zipMethod.value === 'deflate') patch.zipMethod = zipMethod.value
     if (wimMethod.value !== 'keep' && (format.value === 'keep' || format.value === 'wim')) patch.wimMethod = wimMethod.value as 'store' | 'xpress' | 'lzx' | 'lzms'
     if (level.value !== 'keep' && format.value !== 'wim') patch.level = Number(level.value)
     if (recovery.value !== 'keep') patch.rarRecoveryPercent = Number(recovery.value)
@@ -122,7 +122,7 @@ function apply() {
         <span class="block leading-relaxed">仅修改所选 WIM 任务，其余格式保持各自设置。</span>
       </label>
       <label v-if="mode === 'compression' && (format === 'keep' || format === 'zip')" class="block min-w-0 space-y-1.5 text-xs text-muted">ZIP 压缩方法
-        <ThemedSelect v-model="zipMethod" :options="[keep, { value: 'deflate', label: '兼容 ZIP · Deflate' }, { value: 'zstd', label: 'Zstandard' }, { value: 'bzip2', label: 'BZip2' }]" test-id="batch-zip-method" floating />
+        <ThemedSelect v-model="zipMethod" :options="[keep, { value: 'deflate', label: '兼容 ZIP · Deflate' }, { value: 'zstd', label: 'Zstandard' }, { value: 'bzip2', label: 'BZip2' }, { value: 'ppmd', label: 'PPMd · 文本归档' }]" test-id="batch-zip-method" floating />
         <span class="block leading-relaxed">只修改所选 ZIP 任务的方法；ZIPX 始终使用 XZ。</span>
       </label>
       <label v-if="mode === 'compression'" class="block min-w-0 space-y-1.5 text-xs text-muted">RAR 分包恢复卷

@@ -83,7 +83,16 @@ jobs:
           )
           gh release upload $tag $manifestPath --clobber
 
-          $published = Invoke-RestMethod "https://github.com/${{ github.repository }}/releases/download/$tag/latest.json"
+          # Uploaded assets can briefly return BlobNotFound while the download CDN catches up.
+          for ($attempt = 1; $attempt -le 6; $attempt++) {
+            try {
+              $published = Invoke-RestMethod "https://github.com/${{ github.repository }}/releases/download/$tag/latest.json"
+              break
+            } catch {
+              if ($attempt -eq 6) { throw }
+              Start-Sleep -Seconds ([int][Math]::Pow(2, $attempt))
+            }
+          }
           if ($published.version -ne $version -or -not $published.platforms.'windows-x86_64'.signature) {
             throw 'Published updater manifest failed validation.'
           }
