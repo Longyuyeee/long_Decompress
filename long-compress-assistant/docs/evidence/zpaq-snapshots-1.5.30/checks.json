@@ -1,0 +1,38 @@
+{
+  "version": "1.5.30",
+  "recordedFrom": "completed local tool outputs; counts are distinct tests, old filtered/skipped cases are not passes",
+  "rust": [
+    {
+      "command": "cargo test --lib zpaq_1530 -- --nocapture",
+      "passed": 4
+    },
+    {
+      "command": "cargo test --lib zpaq_1530_contract -- --nocapture",
+      "passed": 2
+    }
+  ],
+  "frontend": {
+    "command": "npx vitest run src/composables/__tests__/useTauriCommands.test.ts src/stores/__tests__/pendingDrafts.test.ts src/stores/__tests__/archiveConversion.test.ts src/views/__tests__/ArchiveBrowserView.test.ts -t zpaq1530",
+    "passed": 4,
+    "skipped": 104
+  },
+  "independentOriginals": {
+    "tool": "official ZPAQ 7.15 x64",
+    "cases": 2,
+    "snapshotsPerArchive": 3,
+    "allSnapshotTreesMatched": true
+  },
+  "initialBuilds": {
+    "vueTypesAndDesktopFrontend": true,
+    "rustDesktopRelease": true,
+    "versionedShell": true,
+    "eightVersionIdentitiesAndEngineLock": true
+  },
+  "functionalDesktop": {
+    "native": 2,
+    "ui": 5,
+    "sourceCommit": "de012bac473b767ae7841b82d93748b556e713cc",
+    "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564"
+  },
+  "reusedChecks": "old format/password matrices and previously passed real disk-full checks were not rerun"
+}
