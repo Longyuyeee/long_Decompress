@@ -77,8 +77,8 @@ fn create_zip<R: CompressionRuntime>(
     let total_bytes = source_total_bytes(&entries)?;
     let mut progress = ByteProgress::new(total_bytes);
     let mut progress_gate = ProgressGate::new();
-    // PPMd is CPU intensive: keep pause/cancel and byte progress responsive.
-    let buffer_size = if !zipx && method == crate::services::zip_method::ZipMethod::Ppmd {
+    // PPMd / LZMA are CPU intensive: keep pause/cancel and byte progress responsive.
+    let buffer_size = if !zipx && matches!(method, crate::services::zip_method::ZipMethod::Ppmd | crate::services::zip_method::ZipMethod::Lzma) {
         runtime.copy_buffer_size().min(64 * 1024)
     } else { runtime.copy_buffer_size() };
     let mut copy_buffer = vec![0u8; buffer_size];
@@ -202,7 +202,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
     }
 
     let zipx = output.to_ascii_lowercase().ends_with(".zipx");
-    let method_name = if zipx { "XZ" } else if options.zip_method == crate::services::zip_method::ZipMethod::Ppmd { "PPMd" } else if options.zip_method == crate::services::zip_method::ZipMethod::Bzip2 { "BZip2" } else if options.zip_method == crate::services::zip_method::ZipMethod::Zstd { "Zstandard" }
+    let method_name = if zipx { "XZ" } else if options.zip_method == crate::services::zip_method::ZipMethod::Lzma { "LZMA" } else if options.zip_method == crate::services::zip_method::ZipMethod::Ppmd { "PPMd" } else if options.zip_method == crate::services::zip_method::ZipMethod::Bzip2 { "BZip2" } else if options.zip_method == crate::services::zip_method::ZipMethod::Zstd { "Zstandard" }
         else if options.level == 0 { "Store" } else { "Deflate" };
     if let Some(window) = window {
         runtime.emit_log(window, task_id, &format!("正在创建 {} · {}{}…",
@@ -741,3 +741,7 @@ mod bzip2_tests;
 #[cfg(test)]
 #[path = "zip_ppmd_1535_tests.rs"]
 mod ppmd_tests;
+
+#[cfg(test)]
+#[path = "zip_lzma_1538_tests.rs"]
+mod lzma_tests;

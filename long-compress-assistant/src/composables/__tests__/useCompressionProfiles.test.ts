@@ -452,3 +452,7 @@ it('zip1535 normalizes and saves the PPMd profile method',async()=>{
 it('zip1534 normalizes and saves the BZip2 profile method',async()=>{
  const raw=rawProfile(),api=useCompressionProfiles();raw.config.format='zip';raw.config.extra_params={...raw.config.extra_params,zip_method:'bzip2'};mocks.invoke.mockResolvedValueOnce(raw);const loaded=await api.getProfileById(raw.id);expect(loaded?.config.zipMethod).toBe('bzip2');mocks.invoke.mockResolvedValueOnce(undefined);await api.updateProfile(loaded!);expect(mocks.invoke).toHaveBeenLastCalledWith('update_compression_profile',expect.objectContaining({profile:expect.objectContaining({config:expect.objectContaining({extra_params:expect.objectContaining({zip_method:'bzip2'})})})}))
 })
+
+it('zip1538 normalizes and saves the LZMA profile method',async()=>{
+ const raw=rawProfile(),api=useCompressionProfiles();raw.config.format='zip';raw.config.extra_params={...raw.config.extra_params,zip_method:'lzma'};mocks.invoke.mockResolvedValueOnce(raw);const loaded=await api.getProfileById(raw.id);expect(loaded?.config.zipMethod).toBe('lzma');mocks.invoke.mockResolvedValueOnce(undefined);await api.updateProfile(loaded!);expect(mocks.invoke).toHaveBeenLastCalledWith('update_compression_profile',expect.objectContaining({profile:expect.objectContaining({config:expect.objectContaining({extra_params:expect.objectContaining({zip_method:'lzma'})})})}))
+})

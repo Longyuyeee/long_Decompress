@@ -5,7 +5,7 @@ use crate::datetime::DateTime;
 use crate::extra_fields::AexEncryption;
 use crate::extra_fields::UsedExtraField;
 use crate::extra_fields::Zip64ExtendedInformation;
-use crate::read::{Config, ZipArchive, ZipFile, parse_single_extra_field};
+use crate::read::{Config, HasZipMetadata, ZipArchive, ZipFile, parse_single_extra_field};
 use crate::result::{ZipError, ZipResult, invalid};
 use crate::spec::{self, FixedSizeBlock, Magic, Pod, Zip32CDEBlock, ZipLocalEntryBlock};
 use crate::types::{AesVendorVersion, MIN_VERSION, System, ZipFileData, ZipRawValues, ffi};
@@ -98,6 +98,8 @@ enum GenericZipWriter<W: Write + Seek> {
     Bzip2(bzip2::write::BzEncoder<MaybeEncrypted<W>>),
     #[cfg(feature = "zstd")]
     Zstd(zstd::stream::write::Encoder<'static, MaybeEncrypted<W>>),
+    #[cfg(feature = "lzma")]
+    Lzma(Box<lzma_rust2::LzmaWriter<MaybeEncrypted<W>>>),
     #[cfg(feature = "xz")]
     Xz(Box<lzma_rust2::XzWriter<MaybeEncrypted<W>>>),
     #[cfg(feature = "ppmd")]
@@ -119,6 +121,8 @@ impl<W: Write + Seek> Debug for GenericZipWriter<W> {
             Self::Bzip2(w) => f.write_fmt(format_args!("Bzip2({:?})", w.get_ref())),
             #[cfg(feature = "zstd")]
             Self::Zstd(w) => f.write_fmt(format_args!("Zstd({:?})", w.get_ref())),
+            #[cfg(feature = "lzma")]
+            Self::Lzma(_) => f.write_str("LzmaWriter"),
             #[cfg(feature = "xz")]
             Self::Xz(w) => f.write_fmt(format_args!("Xz({:?})", w.inner())),
             #[cfg(feature = "ppmd")]
@@ -210,6 +214,8 @@ pub(crate) mod zip_writer {
                 GenericZipWriter::Bzip2(w) => Some(w.get_ref().get_ref()),
                 #[cfg(feature = "zstd")]
                 GenericZipWriter::Zstd(w) => Some(w.get_ref().get_ref()),
+                #[cfg(feature = "lzma")]
+                GenericZipWriter::Lzma(w) => Some(w.inner().get_ref()),
                 #[cfg(feature = "xz")]
                 GenericZipWriter::Xz(w) => Some(w.inner().get_ref()),
                 #[cfg(feature = "ppmd")]
@@ -240,6 +246,8 @@ pub(crate) mod zip_writer {
                     GenericZipWriter::Bzip2(w) => Some(w.get_mut().get_mut()),
                     #[cfg(feature = "zstd")]
                     GenericZipWriter::Zstd(w) => Some(w.get_mut().get_mut()),
+                    #[cfg(feature = "lzma")]
+                    GenericZipWriter::Lzma(w) => Some(w.inner_mut().get_mut()),
                     #[cfg(feature = "xz")]
                     GenericZipWriter::Xz(w) => Some(w.inner_mut().get_mut()),
                     #[cfg(feature = "ppmd")]
@@ -1179,6 +1187,7 @@ impl<W: Write + Seek> ZipWriter<W> {
             crc32: 0,
             compressed_size: 0,
             uncompressed_size: 0,
+            codec_flags: 1 << 1, // Newly encoded LZMA always writes an EOS marker.
         });
 
         let mut extra_data = match options.extended_options.extra_data() {
@@ -1286,6 +1295,8 @@ impl<W: Write + Seek> ZipWriter<W> {
             aes_mode,
             &extra_data,
         );
+        // Keep raw-copy EOS semantics; only LZMA interprets bit 1 here.
+        file.flags |= raw_values.codec_flags;
         if let Some(comment) = options.extended_options.take_file_comment() {
             if comment.len() > u16::MAX as usize {
                 return Err(invalid!("File comment must be less than 64KiB"));
@@ -1642,6 +1653,7 @@ impl<W: Write + Seek> ZipWriter<W> {
             crc32: file.crc32(),
             compressed_size: file.compressed_size(),
             uncompressed_size: file.size(),
+            codec_flags: file.get_metadata().flags & (1 << 1),
         };
 
         self.start_entry(name, options, Some(raw_values))?;
@@ -2196,7 +2208,18 @@ impl<W: Write + Seek> GenericZipWriter<W> {
             )),
             #[cfg(feature = "lzma")]
             CompressionMethod::Lzma => {
-                Err(UnsupportedArchive("LZMA isn't supported for compression"))
+                let level = validate_value_in_range(compression_level.unwrap_or(6), 1_u32..=9_u32)
+                    .ok_or(UnsupportedArchive("Unsupported compression level"))?;
+                Ok(Box::new(move |mut bare| {
+                    let options = lzma_rust2::LzmaOptions::with_preset(level);
+                    // APPNOTE 5.8.8: SDK version, property length, lc/lp/pb and dictionary.
+                    // This is ZIP method 14, not an LZMA-alone or XZ stream.
+                    bare.write_all(&[9, 4, 5, 0, options.get_props()])?;
+                    bare.write_all(&options.dict_size.to_le_bytes())?;
+                    Ok(GenericZipWriter::Lzma(Box::new(
+                        lzma_rust2::LzmaWriter::new_no_header(bare, &options, true)?,
+                    )))
+                }))
             }
             #[cfg(feature = "xz")]
             CompressionMethod::Xz => {
@@ -2274,6 +2297,8 @@ impl<W: Write + Seek> GenericZipWriter<W> {
             GenericZipWriter::Bzip2(w) => w.finish()?,
             #[cfg(feature = "zstd")]
             GenericZipWriter::Zstd(w) => w.finish()?,
+            #[cfg(feature = "lzma")]
+            GenericZipWriter::Lzma(w) => w.finish()?,
             #[cfg(feature = "xz")]
             GenericZipWriter::Xz(w) => w.finish()?,
             #[cfg(feature = "ppmd")]
@@ -2306,6 +2331,8 @@ impl<W: Write + Seek> GenericZipWriter<W> {
             GenericZipWriter::Bzip2(w) => Some(w as &mut dyn Write),
             #[cfg(feature = "zstd")]
             GenericZipWriter::Zstd(w) => Some(w as &mut dyn Write),
+            #[cfg(feature = "lzma")]
+            GenericZipWriter::Lzma(w) => Some(w as &mut dyn Write),
             #[cfg(feature = "xz")]
             GenericZipWriter::Xz(w) => Some(w as &mut dyn Write),
             #[cfg(feature = "ppmd")]

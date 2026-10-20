@@ -36,7 +36,7 @@ const confidenceLabel = (confidence?: string) => ({ low: '初步', medium: '中�
 const analyze = async () => {
   if (props.disabled || state.value?.status === 'running') return
   const settings = { ...props.modelValue }
-  const analysisFormat = settings.format === 'zipx' ? 'xz' : settings.format === 'zip' && settings.zipMethod === 'zstd' ? 'zst' : settings.format === 'zip' && settings.zipMethod === 'bzip2' ? 'bz2' : settings.format === 'zip' && settings.zipMethod === 'ppmd' ? 'zip-ppmd' : settings.format
+  const analysisFormat = settings.format === 'zipx' ? 'xz' : settings.format === 'zip' && settings.zipMethod === 'zstd' ? 'zst' : settings.format === 'zip' && settings.zipMethod === 'bzip2' ? 'bz2' : settings.format === 'zip' && settings.zipMethod === 'lzma' ? 'zip-lzma' : settings.zipMethod === 'ppmd' ? 'zip-ppmd' : settings.format
   const analysisId = `analysis-${Date.now()}-${Math.random().toString(36).slice(2)}`
   store.setAnalysisState(props.jobId, {
     status: 'running', analysisId, format: settings.format, level: settings.level, zipMethod: settings.zipMethod,
@@ -62,7 +62,7 @@ const analyze = async () => {
 
 const cancel = async () => {
   const settings = { ...props.modelValue }
-  const analysisFormat = settings.format === 'zipx' ? 'xz' : settings.format === 'zip' && settings.zipMethod === 'zstd' ? 'zst' : settings.format === 'zip' && settings.zipMethod === 'bzip2' ? 'bz2' : settings.format === 'zip' && settings.zipMethod === 'ppmd' ? 'zip-ppmd' : settings.format
+  const analysisFormat = settings.format === 'zipx' ? 'xz' : settings.format === 'zip' && settings.zipMethod === 'zstd' ? 'zst' : settings.format === 'zip' && settings.zipMethod === 'bzip2' ? 'bz2' : settings.format === 'zip' && settings.zipMethod === 'lzma' ? 'zip-lzma' : settings.zipMethod === 'ppmd' ? 'zip-ppmd' : settings.format
   const analysisId = state.value?.analysisId
   if (!analysisId || state.value?.status !== 'running') return
   store.setAnalysisState(props.jobId, { ...state.value, status: 'cancelled' })

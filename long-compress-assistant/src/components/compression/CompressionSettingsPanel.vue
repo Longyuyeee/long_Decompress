@@ -145,7 +145,7 @@ const effectiveOutputExtension = computed(() =>
 
 const presets = computed(() => appStore.compressionPresets)
 
-const applyPreset = (preset: { name: string; format: string; level: number; password?: string; zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd'; wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' }) => {
+const applyPreset = (preset: { name: string; format: string; level: number; password?: string; zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'; wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' }) => {
   compressionOptions.value.format = preset.format as any
   compressionOptions.value.level = preset.level
   compressionOptions.value.wimMethod = preset.wimMethod ?? 'store'
@@ -363,7 +363,7 @@ const closeVaultPasswordsAfterFocus = () => {
       <div class="flex flex-col gap-1.5 min-w-0">
         <div class="flex justify-between items-center px-1">
           <label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.level') }}</label>
-          <span class="text-xs font-mono text-primary font-black">{{ compressionOptions.format === 'wim' ? (compressionOptions.wimMethod === 'lzms' ? 'LZMS · 固定算法' : compressionOptions.wimMethod === 'lzx' ? 'LZX · 固定算法' : compressionOptions.wimMethod === 'xpress' ? 'XPRESS · 固定算法' : '仅存储 · 去重') : isLz4Format(compressionOptions.format) ? '快速模式' : `${compressionOptions.format === 'zip' && ['bzip2', 'ppmd'].includes(compressionOptions.zipMethod || '') ? Math.max(1, compressionOptions.level) : compressionOptions.level} / 9` }}</span>
+          <span class="text-xs font-mono text-primary font-black">{{ compressionOptions.format === 'wim' ? (compressionOptions.wimMethod === 'lzms' ? 'LZMS · 固定算法' : compressionOptions.wimMethod === 'lzx' ? 'LZX · 固定算法' : compressionOptions.wimMethod === 'xpress' ? 'XPRESS · 固定算法' : '仅存储 · 去重') : isLz4Format(compressionOptions.format) ? '快速模式' : `${compressionOptions.format === 'zip' && ['bzip2', 'ppmd', 'lzma'].includes(compressionOptions.zipMethod || '') ? Math.max(1, compressionOptions.level) : compressionOptions.level} / 9` }}</span>
         </div>
         <input
           type="range" :disabled="isLz4Format(compressionOptions.format) || compressionOptions.format === 'wim'" v-model.number="compressionOptions.level" min="1" max="9" step="1"

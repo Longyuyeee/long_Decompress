@@ -80,6 +80,7 @@ import { prepareExplorerChecksum1528Startup, runExplorerChecksum1528Gate } from 
 import { runWimVolumes1527Gate } from './wim-volumes-1527-gate.mjs'
 import { runSwm1529Gate } from './native-swm-1529-gate.mjs'
 import { runZpaqSnapshots1530Gate } from './zpaq-snapshots-1530-gate.mjs'
+import { runZipLzma1538Gate } from './zip-lzma-1538-gate.mjs'
 import { runZipPpmd1535Gate } from './zip-ppmd-1535-gate.mjs'
 import { runZpaqIncremental1536Gate } from './zpaq-incremental-1536-gate.mjs'
 import { runZpaqDiff1537Gate } from './zpaq-diff-1537-gate.mjs'
@@ -4960,6 +4961,8 @@ try {
   } else if (process.argv.includes('--zpaq-incremental-1536-only')) {
     await runZpaqIncremental1536Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
     completedSuccessfully = true
+  } else if (process.argv.includes('--zip-lzma-1538-only')) {
+    await runZipLzma1538Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
   } else if (process.argv.includes('--zip-ppmd-1535-only')) {
     await runZipPpmd1535Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
   } else if (process.argv.includes('--zip-bzip2-1534-only')) {

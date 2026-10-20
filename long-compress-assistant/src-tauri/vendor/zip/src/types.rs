@@ -28,6 +28,7 @@ pub(crate) mod ffi {
 }
 
 pub(crate) struct ZipRawValues {
+    pub(crate) codec_flags: u16,
     pub(crate) crc32: u32,
     pub(crate) compressed_size: u64,
     pub(crate) uncompressed_size: u64,
@@ -604,7 +605,11 @@ impl ZipFileData {
 
         let encrypted_bit: u16 = if self.encrypted { 1u16 << 0 } else { 0 };
 
-        utf8_bit | using_data_descriptor_bit | encrypted_bit
+        #[cfg(feature = "lzma")]
+        let codec_bits = if self.compression_method == CompressionMethod::Lzma { self.flags & (1 << 1) } else { 0 };
+        #[cfg(not(feature = "lzma"))]
+        let codec_bits = 0;
+        utf8_bit | using_data_descriptor_bit | encrypted_bit | codec_bits
     }
     fn clamp_size_field(&self, field: u64) -> Result<u32, std::io::Error> {
         if self.large_file {
