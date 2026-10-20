@@ -1,0 +1,87 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+zpaq-1526: ui bounded-previews
+zpaq-1526: ui missing-volume-recovery
+ERROR: Wrong password : ����\ͼ��.png
+ERROR: Wrong password : ����\����.bin
+ERROR: Wrong password : ����\���ļ�.txt
+ERROR: Wrong password : ����\˵��.txt
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+Error: Command failed: E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\resources\archive-engine\7z.exe x -y -p新的目标密码1526 -oE:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\zpaq-volumes-1526\ui-a5867b87-a54e-4092-b73e-84fe035cff37\密码ZIP独立回解 E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\zpaq-volumes-1526\ui-a5867b87-a54e-4092-b73e-84fe035cff37\互转-zip.zip
+ERROR: Wrong password : ����\ͼ��.png
+
+ERROR: Wrong password : ����\����.bin
+
+ERROR: Wrong password : ����\���ļ�.txt
+
+ERROR: Wrong password : ����\˵��.txt
+
+
+    at genericNodeError (node:internal/errors:985:15)
+    at wrappedFn (node:internal/errors:539:14)
+    at checkExecSyncError (node:child_process:925:11)
+    at execFileSync (node:child_process:961:15)
+    at runZpaqVolumes1526Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/zpaq-volumes-1526-gate.mjs:142:79)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:4942:5 {
+  status: 2,
+  signal: null,
+  output: [
+    null,
+    Buffer(607) [Uint8Array] [
+       13,  10,  55,  45,  90, 105, 112,  32,  50,  54,  46,  48,
+       52,  32,  40, 120,  54,  52,  41,  32,  58,  32,  67, 111,
+      112, 121, 114, 105, 103, 104, 116,  32,  40,  99,  41,  32,
+       49,  57,  57,  57,  45,  50,  48,  50,  54,  32,  73, 103,
+      111, 114,  32,  80,  97, 118, 108, 111, 118,  32,  58,  32,
+       50,  48,  50,  54,  45,  49,  48,  45,  48,  53,  13,  10,
+       13,  10,  83,  99,  97, 110, 110, 105, 110, 103,  32, 116,
+      104, 101,  32, 100, 114, 105, 118, 101,  32, 102, 111, 114,
+       32,  97, 114,  99,
+      ... 507 more items
+    ],
+    Buffer(158) [Uint8Array] [
+       69,  82,  82,  79,  82,  58,  32,  87, 114, 111, 110, 103,
+       32, 112,  97, 115, 115, 119, 111, 114, 100,  32,  58,  32,
+      215, 202, 193, 207,  92, 205, 188, 177, 234,  46, 112, 110,
+      103,  13,  10,  69,  82,  82,  79,  82,  58,  32,  87, 114,
+      111, 110, 103,  32, 112,  97, 115, 115, 119, 111, 114, 100,
+       32,  58,  32, 215, 202, 193, 207,  92, 202, 253, 190, 221,
+       46,  98, 105, 110,  13,  10,  69,  82,  82,  79,  82,  58,
+       32,  87, 114, 111, 110, 103,  32, 112,  97, 115, 115, 119,
+      111, 114, 100,  32,
+      ... 58 more items
+    ]
+  ],
+  pid: 28648,
+  stdout: Buffer(607) [Uint8Array] [
+     13,  10,  55,  45,  90, 105, 112,  32,  50,  54,  46,  48,
+     52,  32,  40, 120,  54,  52,  41,  32,  58,  32,  67, 111,
+    112, 121, 114, 105, 103, 104, 116,  32,  40,  99,  41,  32,
+     49,  57,  57,  57,  45,  50,  48,  50,  54,  32,  73, 103,
+    111, 114,  32,  80,  97, 118, 108, 111, 118,  32,  58,  32,
+     50,  48,  50,  54,  45,  49,  48,  45,  48,  53,  13,  10,
+     13,  10,  83,  99,  97, 110, 110, 105, 110, 103,  32, 116,
+    104, 101,  32, 100, 114, 105, 118, 101,  32, 102, 111, 114,
+     32,  97, 114,  99,
+    ... 507 more items
+  ],
+  stderr: Buffer(158) [Uint8Array] [
+     69,  82,  82,  79,  82,  58,  32,  87, 114, 111, 110, 103,
+     32, 112,  97, 115, 115, 119, 111, 114, 100,  32,  58,  32,
+    215, 202, 193, 207,  92, 205, 188, 177, 234,  46, 112, 110,
+    103,  13,  10,  69,  82,  82,  79,  82,  58,  32,  87, 114,
+    111, 110, 103,  32, 112,  97, 115, 115, 119, 111, 114, 100,
+     32,  58,  32, 215, 202, 193, 207,  92, 202, 253, 190, 221,
+     46,  98, 105, 110,  13,  10,  69,  82,  82,  79,  82,  58,
+     32,  87, 114, 111, 110, 103,  32, 112,  97, 115, 115, 119,
+    111, 114, 100,  32,
+    ... 58 more items
+  ]
+}
+
+Node.js v24.14.0

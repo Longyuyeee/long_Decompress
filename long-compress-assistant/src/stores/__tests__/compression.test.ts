@@ -416,6 +416,16 @@ it('lzma1524 batch preserves each password and split while clearing unsupported 
   expect(store.selectedFiles[0].settings).toMatchObject({format:'tar.lzma',password:'',splitArchive:true,splitSize:'64'})
   expect(store.selectedFiles[1].settings?.format).toBe('tar.lzma.aes')
 })
+it('zpaq1526 batch keeps per-row passwords and volume sizes and clears unsupported flags',()=>{
+  setActivePinia(createPinia());const store=useCompressionStore(),first=mockFile('a.bin',10),second=mockFile('b.bin',20)
+  ;[first,second].forEach(file=>store.addFile(file))
+  store.updateFileSettings(first.path,{...defaultOptions(),password:'one',splitArchive:true,splitSize:'1',encryptFilenames:true,createSolidArchive:true})
+  store.updateFileSettings(second.path,{...defaultOptions(),password:'two',splitArchive:true,splitSize:'2'})
+  store.applyBatchConfiguration([first.path,second.path],{format:'zpaq'})
+  expect(store.selectedFiles[0].settings).toMatchObject({format:'zpaq',password:'one',splitArchive:true,splitSize:'1',encryptFilenames:false,createSolidArchive:false})
+  expect(store.selectedFiles[1].settings).toMatchObject({format:'zpaq',password:'two',splitArchive:true,splitSize:'2'})
+  expect(store.globalSettings.format).toBe('zip')
+})
 it('lzma1524 single-file encrypted batch refuses directories atomically',()=>{
   setActivePinia(createPinia());const store=useCompressionStore(),first=mockFile('a.bin',10),folder={...mockFile('目录',20),isDirectory:true}
   ;[first,folder].forEach(f=>store.addFile(f))

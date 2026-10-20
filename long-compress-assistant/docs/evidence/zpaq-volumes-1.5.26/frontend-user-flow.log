@@ -1,0 +1,26 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ ❯ src/components/tasks/__tests__/BatchConfigBar.test.ts (8 tests | 1 failed | 7 skipped) 185ms
+     × zpaq1526 configures selected rows only inside the original modal 183ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/tasks/__tests__/BatchConfigBar.test.ts > batch ZIP output encoding > zpaq1526 configures selected rows only inside the original modal
+TypeError: Cannot read properties of undefined (reading 'trigger')
+ ❯ src/components/tasks/__tests__/BatchConfigBar.test.ts:12:97
+     10|     expect(wrapper.find('[data-testid="batch-format"]').exists()).toBe…
+     11|     await wrapper.get('button[aria-haspopup="dialog"]').trigger('click…
+     12|     await wrapper.findAll('[role="option"]').find(option=>option.find(…
+       |                                                                                                 ^
+     13|     await wrapper.get('[data-testid="batch-config-apply"]').trigger('c…
+     14|     expect(wrapper.emitted('apply')?.[0]?.[0]).toEqual({format:'zpaq'}…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 3 passed | 84 skipped (88)
+   Start at  14:40:26
+   Duration  7.93s (transform 8.79s, setup 887ms, import 10.74s, tests 736ms, environment 5.79s)
+

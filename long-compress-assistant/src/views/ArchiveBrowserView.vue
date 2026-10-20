@@ -713,7 +713,7 @@ const extractSelected = async () => {
         <i class="pi pi-spin pi-spinner text-primary text-3xl"></i>
         <p class="mt-4 font-bold">正在读取压缩包结构…</p>
         <p class="mt-2 text-xs">大型或异常归档最多等待 30 秒，你也可以立即取消。</p>
-        <button class="browser-icon-button mt-4 mx-auto px-4" data-testid="archive-browse-cancel" type="button" @click="cancelArchiveLoad">
+        <button class="browser-icon-button browser-cancel-read mt-4 mx-auto px-4" data-testid="archive-browse-cancel" type="button" @click="cancelArchiveLoad">
           <i class="pi pi-times"></i><span>取消读取</span>
         </button>
       </div>
@@ -838,12 +838,12 @@ const extractSelected = async () => {
           <pre v-else-if="textPreview" data-testid="archive-text-preview" class="preview-text">{{ textPreview.content }}</pre>
         </div>
         <footer v-if="imagePreview" class="preview-meta">
-          <span>{{ imagePreview.width }} × {{ imagePreview.height }}</span><span>{{ formatBytes(imagePreview.byteSize) }}</span><span>{{ imagePreview.mimeType }}</span><span>只读 · 未写入磁盘</span>
+          <span>{{ imagePreview.width }} × {{ imagePreview.height }}</span><span>{{ formatBytes(imagePreview.byteSize) }}</span><span>{{ imagePreview.mimeType }}</span><span>只读 · 不改原包</span>
         </footer>
         <footer v-else-if="textPreview" class="preview-meta">
-          <span>{{ textPreview.encoding }}</span><span>已读 {{ formatBytes(textPreview.byteSize) }} / {{ formatBytes(textPreview.totalSize) }}</span><span>{{ textPreview.lineCount }} 行</span><span>{{ textPreview.truncated ? '仅显示前 1 MiB' : '完整显示' }}</span><span>只读 · 未写入磁盘</span>
+          <span>{{ textPreview.encoding }}</span><span>已读 {{ formatBytes(textPreview.byteSize) }} / {{ formatBytes(textPreview.totalSize) }}</span><span>{{ textPreview.lineCount }} 行</span><span>{{ textPreview.truncated ? '仅显示前 1 MiB' : '完整显示' }}</span><span>只读 · 不改原包</span>
         </footer>
-        <p v-if="previewKind(previewEntry) === 'image'" class="preview-safety">内部查看器直接在内存中显示经魔数确认的 PNG、JPEG、GIF、WebP、BMP；解压后最大 8 MiB、最多 1600 万像素，TAR 流最多扫描 64 MiB。SVG、截断与扩展名伪装内容不会渲染。</p>
+        <p v-if="previewKind(previewEntry) === 'image'" class="preview-safety">内部查看器显示经魔数确认的 PNG、JPEG、GIF、WebP、BMP；解压后最大 8 MiB、最多 1600 万像素，TAR 流最多扫描 64 MiB。SVG、截断与扩展名伪装内容不会渲染。</p>
         <p v-else class="preview-safety">内部查看器只读最多 1 MiB，并识别 UTF-8、UTF-16、GBK、Big5 与常见西文编码；二进制内容会被拒绝。需要完整编辑、播放或查看 PDF 时，请使用“默认应用打开”，文件将安全提取到隔离缓存。</p>
       </section>
     </div>
@@ -945,6 +945,7 @@ const extractSelected = async () => {
 .browser-input, .browser-search, .browser-select { height: 2.75rem; border: 1px solid var(--border-subtle); border-radius: .85rem; background: var(--bg-input); color: var(--text-content); padding: 0 .9rem; outline: none; }
 .browser-input:focus, .browser-search:focus-within, .browser-select:focus { border-color: var(--dynamic-accent); }
 .browser-icon-button { width: 2.75rem; height: 2.75rem; border-radius: .85rem; border: 1px solid var(--border-subtle); color: var(--dynamic-accent); background: var(--bg-input); }
+.browser-cancel-read { width: auto; display: inline-flex; align-items: center; justify-content: center; gap: .5rem; white-space: nowrap; }
 .browser-primary { min-height: 2.85rem; padding: 0 1.15rem; border-radius: .9rem; display: inline-flex; align-items: center; justify-content: center; gap: .55rem; color: white; font-size: .8rem; font-weight: 900; background: var(--dynamic-accent); box-shadow: 0 8px 24px color-mix(in srgb, var(--dynamic-accent) 25%, transparent); }
 .browser-primary:disabled, .browser-icon-button:disabled { opacity: .45; cursor: not-allowed; }
 .browser-empty { flex: 1 0 auto; padding-block: 1.5rem; overflow-wrap: anywhere; cursor: pointer; transition: border-color .2s ease, background .2s ease, transform .2s ease; }

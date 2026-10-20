@@ -16,8 +16,10 @@ pub fn command_path() -> Option<PathBuf> {
 }
 
 pub fn requires_password(path: &Path) -> Result<bool> {
-    let mut header = [0u8; 32];
-    let n = std::fs::File::open(path)?.read(&mut header)?;
+    let source = super::split_archive_detector::SplitArchiveDetector::complete_source(path)?;
+    let mut header = Vec::with_capacity(32);
+    super::numeric_volume_reader::ZipInputReader::open(&source)?.take(32).read_to_end(&mut header)?;
+    let n = header.len();
     anyhow::ensure!(n >= 4, "[archive-inspection:damaged] ZPAQ 文件头不完整");
     if header.starts_with(b"7kSt") || header.starts_with(b"zPQ") { return Ok(false); }
     anyhow::ensure!(n == 32, "[archive-inspection:damaged] ZPAQ 文件过短，文件头或密码盐不完整");
@@ -42,21 +44,45 @@ fn input(password: Option<&str>, selected: &[String]) -> Result<Vec<u8>> {
 }
 
 async fn run(path: &Path, password: Option<&str>, output: Option<&Path>, test: bool, selected: &[String], cancelled: Arc<AtomicBool>) -> Result<Vec<u8>> {
+    run_with_preview(path, password, output, test, selected, cancelled, None).await
+}
+
+async fn run_with_preview(path: &Path, password: Option<&str>, output: Option<&Path>, test: bool, selected: &[String], cancelled: Arc<AtomicBool>, preview_limit: Option<u64>) -> Result<Vec<u8>> {
+    anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Relaxed), "ZPAQ 读取已取消");
+    let source = super::split_archive_detector::SplitArchiveDetector::complete_source(path)?;
+    let path = source.as_path();
     let encrypted = requires_password(path)?;
     anyhow::ensure!(!encrypted || password.is_some(), "[archive-inspection:password-required] ZPAQ 需要原生密码；也请确认文件未损坏");
     let tool = command_path().context("[archive-inspection:engine-unavailable] 缺少随附的 ZPAQ 读取引擎，请修复安装")?;
     let mut command = crate::utils::process::async_command(tool);
     command.arg(if test || output.is_some() { "x" } else { "l" }).arg(path)
         .args(["-long-stdin", "-threads", "2", "-noattributes"]);
+    let mut data = input(if encrypted { password } else { None }, selected)?;
+    if super::numeric_volume_reader::ZipInputReader::is_numeric_first(path) {
+        let group = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(path)?.context("没有找到 ZPAQ 数字卷组")?;
+        anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少 ZPAQ 分卷：{}", group.missing_part_names());
+        anyhow::ensure!(group.parts.len() <= 100000, "ZPAQ 分卷数量过多");
+        command.arg("-long-volumes");
+        data.extend_from_slice(&(group.parts.len() as u32).to_le_bytes());
+        for part in group.parts {
+            let name = part.to_str().context("ZPAQ 分卷路径不能表示为 UTF-8")?.replace('\\', "/");
+            anyhow::ensure!(name.len() <= 65536 && !name.contains('\0'), "ZPAQ 分卷路径过长或无效");
+            data.extend_from_slice(&(name.len() as u32).to_le_bytes()); data.extend_from_slice(name.as_bytes());
+        }
+    }
+    if let Some(limit) = preview_limit { command.args(["-long-preview", &limit.to_string()]); }
     if test { command.arg("-test"); }
     else if let Some(output) = output { command.arg("-to").arg(output); }
     else { command.arg("-long-json"); }
     let result = crate::utils::process::cancellable_archive_output_with_stdin(
-        &mut command, &cancelled, Duration::from_secs(24 * 60 * 60), Some(input(if encrypted { password } else { None }, selected)?))
+        &mut command, &cancelled, Duration::from_secs(if preview_limit.is_some() { 30 } else { 24 * 60 * 60 }), Some(data))
         .await.map_err(|e| anyhow::anyhow!("ZPAQ 读取取消或引擎运行失败：{e}"))?;
     if !result.status.success() {
         let detail = format!("{}\n{}", String::from_utf8_lossy(&result.stderr), String::from_utf8_lossy(&result.stdout));
         if let Some(error) = io_failure(&detail) { return Err(error); }
+        if detail.contains("LONG_ZPAQ_PREVIEW:") {
+            anyhow::bail!("此 ZPAQ 条目的大小、共享块或读取量超过内部预览范围，请先解压后打开；未输出部分预览作为完整文件。");
+        }
         if detail.contains("password incorrect") {
             anyhow::bail!("[archive-inspection:ambiguous-data] ZPAQ 密码不匹配或文件头已损坏，无法仅凭解密头确定原因");
         }
@@ -158,9 +184,31 @@ fn parse_directory(bytes: &[u8], encrypted: bool) -> Result<ArchiveBrowseResult>
 
 pub async fn browse(path: &Path, password: Option<&str>, cancelled: Arc<AtomicBool>) -> Result<ArchiveBrowseResult> {
     let bytes = run(path, password, None, false, &[], cancelled).await?;
-    let directory = parse_directory(&bytes, requires_password(path)?)?;
+    let mut directory = parse_directory(&bytes, requires_password(path)?)?;
+    directory.total_compressed_size = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(path)?
+        .map(|group| group.total_size).unwrap_or(std::fs::metadata(path)?.len());
     super::extraction_transaction::validate_resource_limits(path, directory.entries.len(), directory.total_uncompressed_size)?;
     Ok(directory)
+}
+
+/// A bounded temporary copy of the selected entry, never of the whole archive.
+/// Unknown streaming sizes are deliberately not treated as known zero.
+pub async fn preview_entry(path: &Path, entry: &str, password: Option<&str>, max_output: u64, keep: u64) -> Result<(Vec<u8>, u64)> {
+    let entry = super::archive_entry_open::normalize_safe_entry_path(entry)?;
+    let flag = Arc::new(AtomicBool::new(false));
+    let listing = run_with_preview(path, password, None, false, &[], flag.clone(), Some(max_output)).await?;
+    let directory = parse_directory(&listing, requires_password(path)?)?;
+    let item = directory.entries.iter().find(|item| item.path == entry && !item.is_dir).context("找不到所选 ZPAQ 文件")?;
+    anyhow::ensure!(item.size_known != Some(false) && item.size <= max_output,
+        "此 ZPAQ 文件大小未知或超过内部预览范围，请先解压后打开。");
+    let temporary = tempfile::Builder::new().prefix("long-zpaq-preview-").tempdir()?;
+    run_with_preview(path, password, Some(temporary.path()), false, &[entry.clone()], flag, Some(max_output)).await?;
+    let file = std::fs::File::open(temporary.path().join(&entry))?;
+    let actual = file.metadata()?.len();
+    anyhow::ensure!(actual == item.size && actual <= max_output, "ZPAQ 预览条目大小不一致，请先解压并检查原包。");
+    let mut bytes = Vec::with_capacity(actual.min(keep) as usize);
+    file.take(keep).read_to_end(&mut bytes)?;
+    Ok((bytes, actual))
 }
 
 pub async fn verify(path: &Path, password: Option<&str>, cancelled: Arc<AtomicBool>) -> Result<()> {

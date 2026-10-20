@@ -130,6 +130,7 @@ fn copy_cancellable_bounded(
 
 fn format_label(path: &Path, header: &[u8]) -> String {
     let magic = ArchiveFormat::from_magic(header);
+    let path = if ZipInputReader::is_numeric_first(path) { Path::new(path.file_stem().unwrap()) } else { path };
     if magic == ArchiveFormat::Unknown && path.extension().is_some_and(|e| e.eq_ignore_ascii_case("zpaq")) { return "ZPAQ".into(); }
     if magic == ArchiveFormat::Unknown && path.extension().is_some_and(|e| e.eq_ignore_ascii_case("alz")) { return "ALZ".into(); }
     if magic == ArchiveFormat::Unknown && path.extension().is_some_and(|e| e.eq_ignore_ascii_case("egg")) { return "EGG".into(); }

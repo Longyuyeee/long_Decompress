@@ -122,6 +122,12 @@ static int long_scan_errors=0;
 
 using std::string;
 using std::vector;
+// Read only the exact members selected by the host, including .1000 and
+// non-uniform slices. Keep the upstream wildcard interface unchanged.
+static vector<string> long_volume_paths;
+static uint64_t long_preview_max_output=0;
+static uint64_t long_preview_read_bytes=0;
+static const uint64_t LONG_PREVIEW_BUDGET=64u*1024u*1024u;
 static vector<string> long_selected;
 static bool long_create=false;
 static std::map<string, string> long_create_names;
@@ -705,6 +711,9 @@ class InputArchive: public ArchiveBase, public libzpaq::Reader {
   vector<int64_t> sz;  // part sizes
   int64_t off;  // current offset
   string fn;  // filename, possibly multi-part with wildcards
+  string part_name(unsigned i) const {
+    return long_volume_paths.empty() ? subpart(fn, i) : long_volume_paths.at(i-1);
+  }
 public:
 
   // Open filename. If password then decrypt input.
@@ -719,15 +728,24 @@ public:
   // Read up to len bytes into obuf at current offset. Return 0..len bytes
   // actually read. 0 indicates EOF.
   int read(char* obuf, int len) {
-    int nr=fread(obuf, 1, len, fp);
-    if (nr==0) {
-      seek(0, SEEK_CUR);
-      nr=fread(obuf, 1, len, fp);
+    int total=0;
+    while (total<len) {
+      int nr=fread(obuf+total, 1, len-total, fp);
+      if (nr==0) {
+        seek(0, SEEK_CUR);
+        nr=fread(obuf+total, 1, len-total, fp);
+      }
+      if (nr==0) break;
+      if (long_preview_max_output) {
+        long_preview_read_bytes+=nr;
+        if (long_preview_read_bytes>LONG_PREVIEW_BUDGET)
+          error("LONG_ZPAQ_PREVIEW: read budget exceeded");
+      }
+      if (aes) aes->encrypt(obuf+total, nr, off);
+      off+=nr; total+=nr;
+      if (long_volume_paths.empty()) break;
     }
-    if (nr==0) return 0;
-    if (aes) aes->encrypt(obuf, nr, off);
-    off+=nr;
-    return nr;
+    return total;
   }
 
   // Like fseeko()
@@ -765,7 +783,7 @@ void InputArchive::seek(int64_t p, int whence) {
     sum+=sz[i];
     if (sum>off || i+1>=sz.size()) break;
   }
-  const string next=subpart(fn, i+1);
+  const string next=part_name(i+1);
   fclose(fp);
   fp=fopen(next.c_str(), RB);
   if (fp==FPNULL) ioerr(next.c_str());
@@ -783,17 +801,18 @@ InputArchive::InputArchive(const char* filename, const char* password):
   // Get file sizes
   const string part0=subpart(filename, 0);
   for (unsigned i=1; ; ++i) {
-    const string parti=subpart(filename, i);
+    if (!long_volume_paths.empty() && i>long_volume_paths.size()) break;
+    const string parti=part_name(i);
     if (i>1 && parti==part0) break;
     fp=fopen(parti.c_str(), RB);
-    if (fp==FPNULL) break;
+    if (fp==FPNULL) { if (!long_volume_paths.empty()) ioerr(parti.c_str()); break; }
     fseeko(fp, 0, SEEK_END);
     sz.push_back(ftello(fp));
     fclose(fp);
   }
 
   // Open first part
-  const string part1=subpart(filename, 1);
+  const string part1=part_name(1);
   fp=fopen(part1.c_str(), RB);
   if (!isopen()) ioerr(part1.c_str());
   assert(fp!=FPNULL);
@@ -801,7 +820,8 @@ InputArchive::InputArchive(const char* filename, const char* password):
   // Get encryption salt
   if (password) {
     char salt[32], key[32];
-    if (fread(salt, 1, 32, fp)!=32) error("cannot read salt");
+    int got=0;
+    while (got<32) { int n=read(salt+got, 32-got); if (!n) error("cannot read salt"); got+=n; }
     libzpaq::stretchKey(key, password, salt);
     aes=new libzpaq::AES_CTR(key, 32, salt);
     off=32;
@@ -1331,6 +1351,20 @@ int Jidac::doCommand(int argc, const char** argv) {
     else if (opt=="-summary" && i<argc-1) summary=atoi(argv[++i]);
     else if (opt[1]=='s') summary=atoi(argv[i]+2);
     else if (opt=="-long-json") long_json=true;
+    else if (opt=="-long-volumes") {
+      unsigned n=long_input_u32();
+      if (n==0 || n>100000) error("Long volume list empty or too large");
+      for (unsigned j=0; j<n; ++j) {
+        string name=long_input_string(long_input_u32());
+        if (name.empty() || name.find('\0')!=string::npos) error("Long invalid volume name");
+        long_volume_paths.push_back(name);
+      }
+    }
+    else if (opt=="-long-preview" && i<argc-1) {
+      long_preview_max_output=strtoull(argv[++i], 0, 10);
+      if (!long_preview_max_output || long_preview_max_output>LONG_PREVIEW_BUDGET)
+        error("LONG_ZPAQ_PREVIEW: invalid output budget");
+    }
     else if (opt=="-long-stdin") {
       _setmode(_fileno(stdin), _O_BINARY);
       unsigned n=long_input_u32();
@@ -1516,6 +1550,8 @@ int64_t Jidac::read_archive(const char* arc, int *errors) {
       d.setInput(&in);
       double mem=0;
       while (d.findBlock(&mem)) {
+        if (long_preview_max_output && mem>256.0*1024*1024)
+          error("LONG_ZPAQ_PREVIEW: decoder memory budget exceeded");
         found_data=true;
 
         // Read the segments in the current block
@@ -1565,6 +1601,8 @@ int64_t Jidac::read_archive(const char* arc, int *errors) {
             libzpaq::SHA1 sha1;
             d.setSHA1(&sha1);
             if (strchr("chi", filename.s[17])) {
+              if (long_preview_max_output && usize>LONG_PREVIEW_BUDGET)
+                error("LONG_ZPAQ_PREVIEW: metadata budget exceeded");
               if (mem>1.5e9) error("index block requires too much memory");
               d.decompress();
               char sha1result[21]={0};
@@ -1746,6 +1784,7 @@ int64_t Jidac::read_archive(const char* arc, int *errors) {
       done=true;
     }  // end try
     catch (std::exception& e) {
+      if (long_preview_max_output) throw;
       in.seek(-d.buffered(), SEEK_CUR);
       fflush(stdout);
       fprintf(stderr, "Skipping block at %1.0f: %s\n", double(block_offset),
@@ -2995,6 +3034,8 @@ ThreadReturn decompressThread(void* arg) {
       out.setLimit(b.usize);
       d.setOutput(&out);
       if (!d.findBlock(&mem)) error("archive block not found");
+      if (long_preview_max_output && mem>256.0*1024*1024)
+        error("LONG_ZPAQ_PREVIEW: decoder memory budget exceeded");
       if (mem>job.maxMemory) job.maxMemory=mem;
       while (d.findFilename()) {
         d.readComment();
@@ -3172,6 +3213,8 @@ ThreadReturn decompressThread(void* arg) {
         uint64_t nz=q;  // first nonzero byte in fragments to be written
         while (nz<q+usize && out.c_str()[nz]==0) ++nz;
         if (!job.jd.dotest && (nz<q+usize || j+1==ptr.size())) {
+          if (long_preview_max_output && uint64_t(offset)+usize>long_preview_max_output)
+            error("LONG_ZPAQ_PREVIEW: output budget exceeded");
           fseeko(job.outf, offset, SEEK_SET);
           fwrite(out.c_str()+q, 1, usize, job.outf);
         }
@@ -3270,6 +3313,12 @@ int Jidac::extract() {
   const int64_t sz=read_archive(archive.c_str());
   if (long_scan_errors) error("damaged or incomplete ZPAQ metadata");
   if (sz<1) error("archive not found");
+  if (long_preview_max_output) {
+    if (long_selected.size()!=1) error("LONG_ZPAQ_PREVIEW: select one file");
+    DTMap::iterator p=dt.find(long_selected[0]);
+    if (p==dt.end() || p->second.size<0 || uint64_t(p->second.size)>long_preview_max_output)
+      error("LONG_ZPAQ_PREVIEW: unknown or excessive file size");
+  }
 
   // test blocks
   for (unsigned i=0; i<block.size(); ++i) {
@@ -3341,6 +3390,7 @@ int Jidac::extract() {
   // Skip existing output files. If force then skip only if equal
   // and set date and attributes.
   ExtractJob job(*this);
+  if (long_preview_max_output) threads=1;
   int total_files=0, skipped=0;
   for (DTMap::iterator p=dt.begin(); p!=dt.end(); ++p) {
     p->second.data=-1;  // skip
@@ -3411,6 +3461,15 @@ int Jidac::extract() {
     printf("%d =identical files skipped.\n", skipped);
 
   // Repack to new archive
+  if (long_preview_max_output) {
+    uint64_t expanded=0;
+    for (unsigned i=0; i<block.size(); ++i) if (block[i].size>0) {
+      if (block[i].usize<0 || block[i].bsize<0) error("LONG_ZPAQ_PREVIEW: unknown block size");
+      expanded+=block[i].usize;
+      if (expanded>LONG_PREVIEW_BUDGET || uint64_t(block[i].bsize)>LONG_PREVIEW_BUDGET)
+        error("LONG_ZPAQ_PREVIEW: shared block budget exceeded");
+    }
+  }
   if (repack) {
 
     // Get total D block size

@@ -1,0 +1,40 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ ❯ src/components/compression/__tests__/CompressionSettingsPanel.test.ts (38 tests | 1 failed | 37 skipped) 241ms
+     × keeps a native ZPAQ password while clearing unsupported inherited options 237ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/compression/__tests__/CompressionSettingsPanel.test.ts > CompressionSettingsPanel split archive settings > keeps a native ZPAQ password while clearing unsupported inherited options
+AssertionError: expected { format: 'zpaq', level: 6, …(10) } to match object { format: 'zpaq', …(4) }
+(7 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+    "createSolidArchive": false,
+    "encryptFilenames": false,
+    "format": "zpaq",
+    "password": "中文 密码",
+-   "splitArchive": true,
++   "splitArchive": false,
+  }
+
+ ❯ src/components/compression/__tests__/CompressionSettingsPanel.test.ts:66:63
+     64|     const wrapper = mountPanel(settings({ format: 'zpaq', password: '中…
+     65|     await flushPromises()
+     66|     expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchO…
+       |                                                               ^
+     67|     expect(wrapper.get('[data-testid="compression-filename-extension"]…
+     68|   })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 1 passed | 59 skipped (61)
+   Start at  14:35:46
+   Duration  6.72s (transform 2.36s, setup 507ms, import 3.40s, tests 248ms, environment 2.34s)
+

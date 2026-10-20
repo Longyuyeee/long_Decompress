@@ -974,9 +974,9 @@ impl CompressionService {
         let split_requested = options.split_size.is_some_and(|size| size > 0);
         let has_password = options.password.as_deref().is_some_and(|password| !password.is_empty());
         let format = Self::infer_compression_format(output_path, options.format.as_deref());
-        if split_requested && has_password && !matches!(format.as_str(), "zip" | "zipx" | "7z" | "rar") && !(format.ends_with(".aes") && compression_format::has_native_password_container(&format)) {
+        if split_requested && has_password && !matches!(format.as_str(), "zip" | "zipx" | "7z" | "rar" | "zpaq") && !(format.ends_with(".aes") && compression_format::has_native_password_container(&format)) {
             return Err(CompressionError::CompressionFailed(
-                "Encrypted split archive creation is currently supported only for ZIP, 7Z and RAR; choose a supported format or disable splitting".to_string()
+                "当前格式不支持密码分卷，请选择 ZIP、ZIPX、7Z、RAR、ZPAQ 或 Long AES 格式，或关闭分卷".to_string()
             ).into());
         }
 
@@ -2005,7 +2005,8 @@ impl CompressionService {
             return Ok(detected);
         }
 
-        let ext = path.extension().and_then(|value| value.to_str()).unwrap_or("").to_ascii_lowercase();
+        let logical = if crate::services::numeric_volume_reader::ZipInputReader::is_numeric_first(path) { Path::new(path.file_stem().unwrap()) } else { path };
+        let ext = logical.extension().and_then(|value| value.to_str()).unwrap_or("").to_ascii_lowercase();
         Ok(ArchiveFormat::from_password_extension(&ext))
     }
 
@@ -2182,7 +2183,7 @@ impl CompressionService {
             format = ArchiveFormat::from_extension(Path::new(file_stem).extension().and_then(|value| value.to_str()).unwrap_or(""));
         }
         let native_seven_zip = Self::uses_native_seven_zip_volumes(path, &format);
-        let native_stream = matches!(format, ArchiveFormat::AesEncrypted | ArchiveFormat::Tar | ArchiveFormat::Gzip | ArchiveFormat::Bzip2 | ArchiveFormat::Xz | ArchiveFormat::Zstd | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip | ArchiveFormat::Lzma);
+        let native_stream = matches!(format, ArchiveFormat::Zpaq | ArchiveFormat::AesEncrypted | ArchiveFormat::Tar | ArchiveFormat::Gzip | ArchiveFormat::Bzip2 | ArchiveFormat::Xz | ArchiveFormat::Zstd | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip | ArchiveFormat::Lzma);
         if is_split_archive && !native_seven_zip && !native_stream && format != ArchiveFormat::Zip && format != ArchiveFormat::Unknown && format != ArchiveFormat::Universal {
             service.emit_log(&window, &task_id, &format!("检测到分卷压缩包 (后缀: .{})，使用 7z CLI 合并解压", ext), TaskLogSeverity::Info);
             format = ArchiveFormat::Universal;
@@ -3881,6 +3882,15 @@ mod tests {
                 assert!(rar.extract_rar(&parts[0], &temp.path().join(format!("错误密码-{mode}")), Some("wrong-password"), &DecompressOptions::default(), Arc::new(AtomicBool::new(false))).await.is_err());
             }
         }
+    }
+
+    #[test]
+    fn zpaq_1526_public_io_paths_accept_native_password_volumes() {
+        let root = tempfile::tempdir().unwrap();
+        let source = root.path().join("source.txt");
+        std::fs::write(&source, b"data").unwrap();
+        let options = CompressionOptions { format: Some("zpaq".into()), password: Some("native password".into()), split_size: Some(37), ..Default::default() };
+        CompressionService::validate_compression_io_paths(&[source.to_string_lossy().into_owned()], &root.path().join("output.zpaq").to_string_lossy(), &options).unwrap();
     }
 
     #[test]

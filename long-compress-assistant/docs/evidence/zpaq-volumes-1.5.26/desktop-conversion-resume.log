@@ -1,0 +1,40 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+InvalidArgumentError: invalid argument: 'value' must be a string
+  (Session info: MicrosoftEdge=155.0.4283.62)
+    at Object.throwDecodedError (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\error.js:523:15)
+    at parseHttpResponse (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\http.js:527:13)
+    at Executor.execute (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\http.js:459:28)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async WebDriver.execute (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:745:17)
+    at async WebDriver.findElements (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:1073:17)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:1911:22 {
+  remoteStacktrace: '\tmsedgedriver!GetHandleVerifier [0x7ff60af682b5+4f25]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff60aeb7e74]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff60b2f6e0f+393a7f]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff60ac8f7f9]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff60ac900ea]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff60acd02e7]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff60ac860cd]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff60accdef8]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff60ac8590c]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff60ac84b8d]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff60ac85733]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff60adc3121]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff60add3108]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff60b010f0a+adb7a]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff60b017571+b41e1]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff60aec361c]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff60aebe134]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff60aebe25a]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff60aeafbe8]\n' +
+    '\tKERNEL32!BaseThreadInitThunk [0x7ffbb71fdda7+17]\n' +
+    '\tntdll!RtlUserThreadStart [0x7ffbb78dee4c+2c]\n'
+}
+
+Node.js v24.14.0

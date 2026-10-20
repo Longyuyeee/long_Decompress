@@ -8,6 +8,16 @@ vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn(async () => vi.fn()) }))
 vi.mock('@tauri-apps/api/dialog', () => ({ ask: mocks.ask }))
 beforeEach(() => { setActivePinia(createPinia()); mocks.invoke.mockReset(); mocks.ask.mockReset(); mocks.ask.mockResolvedValue(true) })
+it('zpaq1526 changes selected targets while keeping each native password and volume size',async()=>{
+  mocks.invoke.mockImplementation(async command=>command==='detect_split_archive'?{is_split:false,archive_format:'zip'}:undefined)
+  const store=useArchiveConversionStore();store.addSources(['C:/甲.zip','C:/乙.zip'])
+  store.items.forEach((item,index)=>store.updateItem(item.id,{password:`密码-${index}`,sourcePassword:`原包-${index}`,splitMiB:index+1}))
+  expect(await store.applySelected({format:'zpaq'})).toBe('')
+  store.items.forEach((item,index)=>{
+    expect(item.settings).toMatchObject({format:'zpaq',password:`密码-${index}`,sourcePassword:`原包-${index}`,splitMiB:index+1})
+    expect(store.outputFor(item)).toMatch(/\.zpaq$/)
+  })
+})
 function draft() {
   const store = useArchiveConversionStore()
   store.sourcePath = 'C:\\原包.zip'; store.outputPath = 'C:\\新包.7z'

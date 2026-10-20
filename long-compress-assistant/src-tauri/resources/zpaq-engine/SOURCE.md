@@ -16,7 +16,16 @@ The fault-test hook is compiled only by `build-zpaq-engine.ps1 -TestIO`, never
 into the shipped executable. Output files are flushed before closing.
 No password is passed to this adapter in command arguments.
 
+The v1.5.26 read adapter accepts an explicit length-prefixed numeric-member list
+through stdin and reuses upstream cross-file seeking without a joined archive.
+Reading the 32-byte salt spans even very small members; .1000 and non-uniform
+slices use actual member names. Bounded entry previews limit reads/shared
+decoded blocks to 64 MiB, decoder memory to 256 MiB and one worker; unknown
+entry sizes require extraction. Ordinary reads and compression algorithms
+retain their existing behavior.
+
 Build on x64 Windows with Visual Studio C++: `./scripts/build-zpaq-engine.ps1`.
 Uses /O2 /MT /EHsc, advapi32 and reproducible-link /Brepro. No extra runtime DLL.
 Reading and fresh journaling creation are exposed, including native passwords.
-No incremental updates, revision rollback or multipart creation UI is exposed.
+Fixed-size numeric byte slices are exposed by the host; they are not native
+journaling append parts. No incremental updates or revision rollback is exposed.

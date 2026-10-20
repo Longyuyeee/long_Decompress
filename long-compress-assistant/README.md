@@ -19,7 +19,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 工作区 | 用户可以做什么 |
 | --- | --- |
 | 解压中心 | 导入多包、配置目录与子文件夹、使用密码候选、处理文件冲突、查看阶段和结果 |
-| 压缩中心 | 文件/文件夹/组归档、ZIP/7Z/RAR 与十七种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码创建、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
+| 压缩中心 | 文件/文件夹/组归档、ZIP/7Z/RAR 与十七种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码与数字分卷创建、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
 | 特殊压缩 | JPEG/PNG/WebP 图片编码与缩放、视频压缩预设、PDF 分析与结构优化 |
 | 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、文本/图片预览与选择性解压；支持普通压缩流及自有 AES 密码卷组查看 |
 | 密码保险箱 | 本地加密保存常用解压密码，分类、搜索、导入导出与使用统计 |
@@ -92,7 +92,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.5.25 · 从结果生成校验清单**。完成任务、历史和转换结果可带入整组实际产物，主动计算并导出相对路径清单；同名文件保留子目录，中断项不写入，导出后可直接核对。保留单条展开、多选弹窗和等宽/窄窗布局。[中文说明](docs/RELEASE_NOTES_1.5.25.md) · [范围与记录](docs/RESULT_CHECKSUMS_FREEZE_1.5.25.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.25)。本轮三版计划按范围收口，下一阶段 [v1.5.26～v1.5.28](docs/ARCHIVE_ROADMAP_1.5.26_TO_1.5.28.md) 已规划：ZPAQ 数字卷、WIM 数字卷、资源管理器校验入口，均尚未开发。
+**v1.5.26 · ZPAQ 密码数字分卷**。按指定大小拆卷，从任意成员浏览、预览、检查和提取；密码 ZIP 双向转换、补卷新任务和整组结果清单接通。修复继承分卷与多选格式配置，单条展开、多选弹窗和等宽/窄窗布局保持。[中文说明](docs/RELEASE_NOTES_1.5.26.md) · [范围与记录](docs/ZPAQ_VOLUMES_FREEZE_1.5.26.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.26)。下一步按[既定路线](docs/ARCHIVE_ROADMAP_1.5.26_TO_1.5.28.md)推进 WIM 数字卷，再做资源管理器校验入口，两者尚未开发。
+
+**v1.5.25 · 从结果生成校验清单**。完成任务、历史和转换结果可带入整组实际产物，主动计算并导出相对路径清单；同名文件保留子目录，中断项不写入，导出后可直接核对。保留单条展开、多选弹窗和等宽/窄窗布局。[中文说明](docs/RELEASE_NOTES_1.5.25.md) · [范围与记录](docs/RESULT_CHECKSUMS_FREEZE_1.5.25.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.25)。本轮三版计划按范围收口，下一阶段 [v1.5.26～v1.5.28](docs/ARCHIVE_ROADMAP_1.5.26_TO_1.5.28.md) 已规划，ZPAQ 数字卷由 v1.5.26 接续；当前进度以上方最新记录为准。
 
 **v1.5.24 · 多文件 LZMA 与密码组合**。新增 TAR.LZMA、LZMA.AES 和 TAR.LZMA.AES，接通数字分卷、认证后浏览/预览、检查、所选/整包提取及密码 ZIP 互转；多选弹窗保留各条密码与分卷，单条展开和等宽/窄窗布局保持。[中文说明](docs/RELEASE_NOTES_1.5.24.md) · [范围与记录](docs/TAR_LZMA_AES_FREEZE_1.5.24.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.24)。结果生成相对路径校验清单已由 v1.5.25 接续；当前进度以上方最新记录为准。
 
