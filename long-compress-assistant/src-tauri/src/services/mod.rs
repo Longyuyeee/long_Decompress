@@ -117,3 +117,8 @@ mod lzma_1523_tests;
 mod tar_lzma_1524_tests;
 #[cfg(test)]
 mod zpaq_1526_tests;
+
+pub(crate) mod wim_preview;
+
+#[cfg(test)]
+mod wim_1527_tests;

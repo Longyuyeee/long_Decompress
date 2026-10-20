@@ -51,6 +51,14 @@ const mountPanel = (modelValue: CompressionOptions, allowSplitArchive = true) =>
 })
 
 describe('CompressionSettingsPanel split archive settings', () => {
+  it('wim1527 keeps inherited numeric volumes and presents the no-password boundary without editing on open', async () => {
+    const wrapper=mountPanel(settings({format:'wim',splitArchive:true,splitSize:'2'}));await flushPromises()
+    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+    expect(wrapper.get('[data-testid="compression-split-toggle"]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.get('[data-testid="compression-password-input"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('[data-testid="wim-volume-hint"]').text()).toContain('不是原生 SWM')
+    wrapper.unmount()
+  })
   it('zpaq1526 keeps inherited volumes while engine capabilities are loading and does not emit an edit on open', async () => {
     const wrapper=mountPanel(settings({format:'zpaq',password:'原生密码',splitArchive:true,splitSize:'2'}))
     await flushPromises()

@@ -2183,7 +2183,7 @@ impl CompressionService {
             format = ArchiveFormat::from_extension(Path::new(file_stem).extension().and_then(|value| value.to_str()).unwrap_or(""));
         }
         let native_seven_zip = Self::uses_native_seven_zip_volumes(path, &format);
-        let native_stream = matches!(format, ArchiveFormat::Zpaq | ArchiveFormat::AesEncrypted | ArchiveFormat::Tar | ArchiveFormat::Gzip | ArchiveFormat::Bzip2 | ArchiveFormat::Xz | ArchiveFormat::Zstd | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip | ArchiveFormat::Lzma);
+        let native_stream = matches!(format, ArchiveFormat::Wim | ArchiveFormat::Zpaq | ArchiveFormat::AesEncrypted | ArchiveFormat::Tar | ArchiveFormat::Gzip | ArchiveFormat::Bzip2 | ArchiveFormat::Xz | ArchiveFormat::Zstd | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip | ArchiveFormat::Lzma);
         if is_split_archive && !native_seven_zip && !native_stream && format != ArchiveFormat::Zip && format != ArchiveFormat::Unknown && format != ArchiveFormat::Universal {
             service.emit_log(&window, &task_id, &format!("检测到分卷压缩包 (后缀: .{})，使用 7z CLI 合并解压", ext), TaskLogSeverity::Info);
             format = ArchiveFormat::Universal;
@@ -2621,10 +2621,14 @@ impl CompressionService {
                     }
                 }).await?
             },
+            ArchiveFormat::Wim => service.universal_engine.extract_wim_with_progress(
+                Path::new(&file_path), &out_dir, options.overwrite_existing,
+                on_progress.clone(), on_log.clone(), service.cancellation_flag.clone(), &options.selected_entries,
+            ).await,
             // 所有通过 7z CLI 处理的格式
             ArchiveFormat::Iso | ArchiveFormat::Cab |
             ArchiveFormat::Lzh | ArchiveFormat::Arj | ArchiveFormat::Dmg |
-            ArchiveFormat::Wim | ArchiveFormat::Vhd | ArchiveFormat::Chm |
+            ArchiveFormat::Vhd | ArchiveFormat::Chm |
             ArchiveFormat::Deb | ArchiveFormat::Rpm | ArchiveFormat::SquashFs |
             ArchiveFormat::Nsis | ArchiveFormat::Msi | ArchiveFormat::Xar |
             ArchiveFormat::Cpio | ArchiveFormat::Udf | ArchiveFormat::Fat |
@@ -3554,16 +3558,13 @@ impl CompressionService {
         if options.password.as_deref().is_some_and(|password| !password.is_empty()) {
             return Err(CompressionError::UnsupportedEncryption.into());
         }
-        if options.split_size.is_some_and(|size| size > 0) {
-            return Err(CompressionError::CompressionFailed("WIM split creation is not supported yet.".to_string()).into());
-        }
         if !crate::utils::archive_tools::archive_engine_can_create("wim") {
             return Err(CompressionError::CompressionFailed("The active archive engine cannot create WIM files.".to_string()).into());
         }
         if let Some(parent) = Path::new(output).parent() { std::fs::create_dir_all(parent)?; }
         let engine = find_7z_command().ok_or_else(|| CompressionError::CompressionFailed(missing_7z_message()))?;
         let mut command = crate::utils::process::command(engine);
-        command.arg("a").arg("-twim").arg("-y").arg(format!("-mx{}", options.level.clamp(1, 9))).arg(output);
+        command.arg("a").arg("-twim").arg("-y").arg(format!("-mx{}", options.level.clamp(0, 9))).arg(output);
         for source in sources { self.check_cancellation()?; command.arg(source); }
         let result = self.run_command_cancellable(command)?;
         if !result.status.success() {

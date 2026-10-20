@@ -24,6 +24,17 @@ const mockFile = (name: string, size: number): FileObject => ({
 })
 
 describe('Compression Store', () => {
+  it('wim1527 keeps each selected volume size and clears inapplicable flags without changing global settings',()=>{
+    const store=useCompressionStore(),one=mockFile('one',1),two=mockFile('two',1);store.addFile(one);store.addFile(two)
+    for(const [index,file]of[one,two].entries())store.updateFileSettings(file.path,{...defaultOptions(),format:'7z',splitArchive:true,splitSize:String(index+1),createSolidArchive:true})
+    const global=JSON.stringify(store.globalSettings);expect(store.applyBatchConfiguration([one.path,two.path],{format:'wim'})).toBe(2)
+    store.selectedFiles.forEach((file,index)=>expect(file.settings).toMatchObject({format:'wim',splitArchive:true,splitSize:String(index+1),password:'',createSolidArchive:false,encryptFilenames:false}))
+    expect(JSON.stringify(store.globalSettings)).toBe(global)
+  })
+  it('wim1527 rejects a mixed password selection atomically and preserves the users original configuration',()=>{
+    const store=useCompressionStore(),one=mockFile('one',1),two=mockFile('two',1);store.addFile(one);store.addFile(two);store.updateFileSettings(two.path,{...defaultOptions(),password:'keep my password',splitArchive:true,splitSize:'2'})
+    const before=JSON.stringify(store.selectedFiles);expect(()=>store.applyBatchConfiguration([one.path,two.path],{format:'wim'})).toThrow('WIM 不支持原生密码');expect(JSON.stringify(store.selectedFiles)).toBe(before)
+  })
   it('keeps a selected standard volume type when changing ZIP to ZIPX in batch', () => {
     const store = useCompressionStore(), file = mockFile('share.bin', 1700000)
     store.addFile(file)

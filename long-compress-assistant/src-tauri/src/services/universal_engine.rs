@@ -465,7 +465,7 @@ impl UniversalCliEngine {
             .collect())
     }
 
-    fn parse_metadata_listing(stdout: &str, format: String) -> ArchiveBrowseResult {
+    pub(crate) fn parse_metadata_listing(stdout: &str, format: String) -> ArchiveBrowseResult {
         let mut entries = Vec::new();
         let mut current = std::collections::HashMap::<String, String>::new();
         let flush = |current: &mut std::collections::HashMap<String, String>, entries: &mut Vec<ArchiveEntryInfo>| {
@@ -532,6 +532,8 @@ impl UniversalCliEngine {
             "l".to_string(), "-slt".to_string(), "-ba".to_string(), "-p-".to_string(),
             file_path.to_string_lossy().to_string(),
         ];
+        let mut args = args;
+        if format.eq_ignore_ascii_case("wim") { args.push("-sccUTF-8".into()); args.push(super::wim_preview::type_argument(file_path).into()); }
         let executable = Self::get_7z_command()
             .ok_or_else(|| anyhow::anyhow!(missing_7z_message()))?;
         let mut command = crate::utils::process::async_command(executable);
@@ -550,6 +552,9 @@ impl UniversalCliEngine {
         }
         let is_z = is_unix_compress(file_path);
         let mut result = Self::parse_metadata_listing(&String::from_utf8_lossy(&output.stdout), if is_z { "Z".into() } else { format.to_ascii_uppercase() });
+        if format.eq_ignore_ascii_case("wim") {
+            result.total_compressed_size = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(file_path)?.map(|group| group.total_size).unwrap_or(std::fs::metadata(file_path)?.len());
+        }
         // Unix compress stores neither the original file name nor expanded size.
         // Keep browsing instantaneous and show an unknown size, rather than
         // decompressing the whole stream just to populate a file-list row.
@@ -575,6 +580,10 @@ impl UniversalCliEngine {
         let source=crate::services::split_archive_detector::SplitArchiveDetector::complete_source(file_path)?;
         let file_path=source.as_path();
         let format=super::archive_browser::detect_format(file_path)?;
+        if format == super::archive_format::ArchiveFormat::Wim {
+            let result = Self::list_metadata(file_path, "WIM".into()).await?;
+            return Ok((result.total_files + result.total_directories, result.total_uncompressed_size));
+        }
         if let Some(route)=super::tar_compatibility::integrity_route(file_path,&format) {
             let path=file_path.to_path_buf();
             let plan=tokio::task::spawn_blocking(move||super::tar_compatibility::plan(&path,route,&Default::default(),||Ok(()))).await??;
@@ -761,14 +770,27 @@ impl ArchiveEngine for UniversalCliEngine {
     }
 
     async fn extract_with_progress(
-        &self,
-        file_path: &Path,
-        output_dir: &Path,
-        password: Option<&str>,
-        overwrite_existing: bool,
-        on_progress: Arc<dyn Fn(f32) + Send + Sync>,
-        on_log: Arc<dyn Fn(String, TaskLogSeverity) + Send + Sync>,
+        &self, file_path: &Path, output_dir: &Path, password: Option<&str>, overwrite_existing: bool,
+        on_progress: Arc<dyn Fn(f32) + Send + Sync>, on_log: Arc<dyn Fn(String, TaskLogSeverity) + Send + Sync>,
         is_cancelled: Arc<AtomicBool>,
+    ) -> Result<()> {
+        self.extract_selected_with_progress(file_path, output_dir, password, overwrite_existing, on_progress, on_log, is_cancelled, &[], false).await
+    }
+}
+
+impl UniversalCliEngine {
+    pub(crate) async fn extract_wim_with_progress(
+        &self, file_path: &Path, output_dir: &Path, overwrite_existing: bool,
+        on_progress: Arc<dyn Fn(f32) + Send + Sync>, on_log: Arc<dyn Fn(String, TaskLogSeverity) + Send + Sync>,
+        is_cancelled: Arc<AtomicBool>, selected: &[String],
+    ) -> Result<()> {
+        self.extract_selected_with_progress(file_path, output_dir, None, overwrite_existing, on_progress, on_log, is_cancelled, selected, true).await
+    }
+
+    async fn extract_selected_with_progress(
+        &self, file_path: &Path, output_dir: &Path, password: Option<&str>, overwrite_existing: bool,
+        on_progress: Arc<dyn Fn(f32) + Send + Sync>, on_log: Arc<dyn Fn(String, TaskLogSeverity) + Send + Sync>,
+        is_cancelled: Arc<AtomicBool>, selected: &[String], wim: bool,
     ) -> Result<()> {
         if let Some(password) = password {
             if Self::is_zip_password_input(file_path)? {
@@ -790,6 +812,14 @@ impl ArchiveEngine for UniversalCliEngine {
 
         let mut command = crate::utils::process::async_command(cmd);
         command.arg("x"); // extract with full paths
+        if wim { command.arg(crate::services::wim_preview::type_argument(file_path)).arg("-sccUTF-8"); }
+        if !selected.is_empty() {
+            command.arg("-spd");
+            for entry in selected {
+                let entry = super::archive_entry_open::normalize_safe_entry_path(entry.trim_end_matches('/'))?;
+                command.arg(format!("-i!{entry}"));
+            }
+        }
         command.arg("-y"); // yes to all
         command.arg(Self::overwrite_mode_arg(overwrite_existing));
         command.arg("-bb1"); // report each processed file

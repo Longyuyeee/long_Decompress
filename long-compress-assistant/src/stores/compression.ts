@@ -448,6 +448,7 @@ export const useCompressionStore = defineStore('compression', () => {
     let count = 0
     const drafts = [...selectedFiles.value.map(file => ({ id: file.path, draft: file })),
       ...groups.value.map(group => ({ id: group.id, draft: group }))]
+    if (patch.format === 'wim' && drafts.some(({id,draft}) => selected.has(id) && !draft.taskId && (getEffectiveSettings(draft.settings).password || draft.draftPasswordRequired))) throw new Error('WIM 不支持原生密码，所选配置未修改。请保持密码格式，或先在单条配置中明确移除密码。')
     const methodOnly = patch.zipMethod !== undefined && Object.entries(patch).every(([field, value]) => field === 'zipMethod' || value === undefined)
     const zipOptionsOnly = Object.entries(patch).every(([field,value]) => ['zipMethod','zipPasswordEncoding'].includes(field) || value === undefined)
     if (methodOnly && !drafts.some(({ id, draft }) => selected.has(id) && !draft.taskId && getEffectiveSettings(draft.settings).format === 'zip')) throw new Error('所选任务中没有 ZIP 任务，请选择 ZIP 格式或保持各自方法。')
@@ -475,7 +476,7 @@ export const useCompressionStore = defineStore('compression', () => {
         settings.rarRecoveryPercent = 0
         settings.rarRecoveryVolumes = 0
       }
-      if (patch.format === 'zpaq' || patch.format === 'lzma.aes' || patch.format === 'tar.lzma.aes') {
+      if (patch.format === 'wim' || patch.format === 'zpaq' || patch.format === 'lzma.aes' || patch.format === 'tar.lzma.aes') {
         settings.encryptFilenames = false
         settings.createSolidArchive = false
         settings.rarRecoveryPercent = 0
