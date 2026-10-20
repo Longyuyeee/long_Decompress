@@ -49,6 +49,9 @@ export async function runZipPpmd1535Gate({driver,bridge,waitForElement,artifactD
   const independent=(output,label,secret='')=>{
     let file=output.primaryPath
     if(output.split&&output.files.every(f=>/\.\d{3,}$/.test(f.path))){file=owned(path.join(work,'oracle-'+label+'-'+randomUUID()+'.zip'));writeFileSync(file,Buffer.concat(output.files.map(f=>readFileSync(f.path))))}
+    if(output.split&&output.files.every(f=>/\.\d{3,}$/.test(f.path))&&secret){
+      const request=owned(path.join(work,'request-'+randomUUID()+'.json')),result=owned(path.join(work,'result-'+randomUUID()+'.json'));writeFileSync(request,JSON.stringify({file,password:secret,expectedFiles:state.expected,emptyDirectory:'资料/项目/空目录'}));execFileSync('python',[path.join(root,'scripts/verify-zip-ppmd-1535.py'),request,result],{windowsHide:true,maxBuffer:4*1024*1024});return JSON.parse(readFileSync(result,'utf8'))
+    }
     if(output.files.some(f=>/\.z\d+$/i.test(f.path)))file=output.files.find(f=>/\.zip$/i.test(f.path))?.path||file
     const listing=execFileSync(bundledSevenZip,['l','-slt','-sccUTF-8','-p'+(secret||'-'),file],{windowsHide:true,encoding:'utf8',maxBuffer:4*1024*1024});assert.match(listing,/Method = .*PPMD/i)
     const destination=owned(path.join(work,'oracle-'+label+'-'+randomUUID()));execFileSync(bundledSevenZip,['x','-y','-p'+(secret||'-'),file,'-o'+destination],{windowsHide:true,maxBuffer:4*1024*1024});assert.deepEqual(tree(destination),state.expected);assert.ok(existsSync(path.join(destination,'资料/项目/空目录')));return{tool:'independent 7-Zip PPMd decoder',ppmdMethod:true,allIndependentHashes:true,emptyDirectory:true,outputFiles:output.files.length}
