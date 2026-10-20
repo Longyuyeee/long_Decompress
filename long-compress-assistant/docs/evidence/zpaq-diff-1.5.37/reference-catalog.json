@@ -1,0 +1,88 @@
+{
+  "kind": "journaling",
+  "versions": 3,
+  "entries": [
+    {
+      "path": "资料/",
+      "size": 0,
+      "date": 20261020114920,
+      "directory": true,
+      "contentRef": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "资料/后来删除.txt",
+      "size": 33,
+      "date": 20261020110000,
+      "directory": false,
+      "contentRef": "b1af1a80cfb9a041c26539b67bcd496a1cfa6928d0c7cb46564bf0b0534136e8"
+    },
+    {
+      "path": "资料/图标.png",
+      "size": 1713,
+      "date": 20261020110000,
+      "directory": false,
+      "contentRef": "fe09d9b0d7533baae13455cc51d06746a4fed2074fac533b67867db95da78ff0"
+    },
+    {
+      "path": "资料/空文件.txt",
+      "size": 0,
+      "date": 20261020110000,
+      "directory": false,
+      "contentRef": "89687fbdedb747d04ead755afc6305a088fef8f59cd84de80f46bbc85b3827cd"
+    },
+    {
+      "path": "资料/空目录/",
+      "size": 0,
+      "date": 20261020110000,
+      "directory": true,
+      "contentRef": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "资料/说明.txt",
+      "size": 61,
+      "date": 20261020110000,
+      "directory": false,
+      "contentRef": "bdd248c2d6f15be383e4cf69f5fb60277f19f21d5350fb31b96db6ec6caeb464"
+    },
+    {
+      "path": "资料/项目/",
+      "size": 0,
+      "date": 20261020110000,
+      "directory": true,
+      "contentRef": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "资料/项目/数据.bin",
+      "size": 131072,
+      "date": 20261020110000,
+      "directory": false,
+      "contentRef": "9ca3562aafca266496ca2b6acb072f55d269bb8ea9c57c4a0fdebf40c32fb97a"
+    }
+  ],
+  "history": {
+    "selected": {
+      "version": 1,
+      "date": 20261020130000
+    },
+    "snapshots": [
+      {
+        "version": 1,
+        "date": 20261020130000,
+        "updates": 8,
+        "deletes": 0
+      },
+      {
+        "version": 2,
+        "date": 20261020140000,
+        "updates": 8,
+        "deletes": 1
+      },
+      {
+        "version": 3,
+        "date": 20261020150000,
+        "updates": 8,
+        "deletes": 1
+      }
+    ]
+  }
+}

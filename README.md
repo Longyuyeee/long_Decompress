@@ -32,7 +32,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
     </td>
     <td width="50%" valign="top">
       <h3>🧭 先看内容，再决定解压什么</h3>
-      <p>像浏览文件夹一样查看压缩包，搜索、筛选和选择文件。支持部分格式的图片与文本预览，也能进入嵌套压缩包、选择 ZPAQ 历史快照，只取出真正需要的内容。</p>
+      <p>像浏览文件夹一样查看压缩包，搜索、筛选和选择文件。支持部分格式的图片与文本预览，也能进入嵌套压缩包、选择和对比 ZPAQ 历史快照，按版本取出所选变化。</p>
     </td>
   </tr>
   <tr>
@@ -130,7 +130,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | 能力 | 主要格式与说明 |
 | --- | --- |
 | 创建归档 | ZIP（Deflate / Zstandard / BZip2 / PPMd）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码、数字分卷与保留历史的增量更新）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM（存储/XPRESS/LZX/LZMS 压缩与数字分卷） |
-| 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式当前内容/日志式历史快照）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，原生 SWM（Copy/XPRESS/LZX 整组只读），以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
+| 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式当前内容/日志式历史快照、版本对比与变化提取）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，原生 SWM（Copy/XPRESS/LZX 整组只读），以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
 | 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷、ZPAQ 原生密码数字切卷；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM、ZPAQ（含改密与数字分卷）；密码和分卷随目标格式提供 |
 | 清单校验 | SFV/MD5/SHA256 逐文件状态与原因、待补列表、按需复查；匹配表示与清单一致 |
@@ -236,7 +236,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.36 · ZPAQ 增量更新**。往已有备份添加与更新内容，显示归档内位置，保留原件、未选内容与全部历史；普通/密码及数字卷、草稿/重做/失败纠正和新旧快照读取贯通。未变化时明确说明未新增快照，保持原交互与布局。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.36.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_INCREMENTAL_FREEZE_1.5.36.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.36)。下一版 [v1.5.37 快照对比与变化提取](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.37.md)仅规划，尚未开发。
+**v1.5.37 · ZPAQ 快照对比与变化提取**。查看两版之间的新增、候选、元数据和移除，按需核对内容，再按版本创建所选提取任务。密码数字卷、草稿、补卷重试和历史重做保持范围与来源，原交互和布局不变。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.37.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_DIFF_FREEZE_1.5.37.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.37)。下一版 [v1.5.38 ZIP LZMA创建](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.38.md)仅规划，尚未开发。
+
+**v1.5.36 · ZPAQ 增量更新**。往已有备份添加与更新内容，显示归档内位置，保留原件、未选内容与全部历史；普通/密码及数字卷、草稿/重做/失败纠正和新旧快照读取贯通。未变化时明确说明未新增快照，保持原交互与布局。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.36.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_INCREMENTAL_FREEZE_1.5.36.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.36)。下一版 [v1.5.37 快照对比与变化提取](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.37.md)已由 v1.5.37 接续，当前进度以上方最新记录为准。
 
 **v1.5.35 · ZIP PPMd 创建**。为文本资料归档增加可选方法，就近显示内存预算，接通密码、数字/标准卷、转换与补卷后续流程。实际体积分析、暂停恢复、草稿/历史和多选保持方法，原交互与等宽/窄窗布局不变。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.35.md) · [范围与记录](long-compress-assistant/docs/ZIP_PPMD_FREEZE_1.5.35.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.35)。下一版 [v1.5.36 ZPAQ增量更新](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.36.md)已由 v1.5.36 接续，当前进度以上方最新记录为准。
 
