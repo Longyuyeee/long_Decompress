@@ -7,6 +7,14 @@ use sha2::{Digest, Sha256};
 fn fixtures() -> PathBuf { Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/tar-lzma-1524") }
 fn manifest() -> serde_json::Value { serde_json::from_slice(&fs::read(fixtures().join("manifest.json")).unwrap()).unwrap() }
 fn sha(b: &[u8]) -> String { format!("{:x}", Sha256::digest(b)) }
+#[test]
+fn lzma1524_preflight_plans_the_actual_tar_stream_and_selected_bytes() {
+    let m=manifest();let source=fixtures().join("资料.tar.lzma");
+    let options=DecompressOptions{preserve_paths:true,selected_entries:vec!["中文目录/数据.bin".into()],..Default::default()};
+    let plan=super::tar_compatibility::plan(&source,R::TarLzma,&options,||Ok(())).unwrap();
+    assert_eq!(plan.entries,1);assert_eq!(plan.logical_bytes,8117);assert_eq!(plan.payload_bytes,8117);
+    assert_eq!(sha(&fs::read(fixtures().join("原文件/中文目录/数据.bin")).unwrap()),m["expectedFiles"]["中文目录/数据.bin"].as_str().unwrap());
+}
 fn parts(file: &Path, dir: &Path) -> Vec<PathBuf> {
     let bytes=fs::read(file).unwrap(); bytes.chunks(16381).enumerate().map(|(i,b)| {
         let path=dir.join(format!("{}.{:03}",file.file_name().unwrap().to_str().unwrap(),i+1));fs::write(&path,b).unwrap();path

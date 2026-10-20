@@ -10,7 +10,7 @@ export async function runTarLzma1524Gate({driver,bridge,waitForElement,artifactD
   const resultRoot=path.join(root,'test-results/tar-lzma-1524'),progress=path.join(resultRoot,'desktop-progress.json'),binarySha256=sha(application)
   const saved=existsSync(progress)?JSON.parse(readFileSync(progress,'utf8')):null
   if(saved)assert.equal(saved.binarySha256,binarySha256,'Different program: do not reuse earlier results automatically')
-  const state=saved||{version:'1.5.24',binarySha256,work:path.join(resultRoot,'ui-'+randomUUID()),native:[],ui:[],screenshots:[],layouts:[]}
+  const state=saved||{version:'1.5.24',sourceCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8',windowsHide:true}).trim(),binarySha256,work:path.join(resultRoot,'ui-'+randomUUID()),native:[],ui:[],screenshots:[],layouts:[]}
   const work=state.work;assert.ok(path.resolve(work).startsWith(path.resolve(resultRoot)+path.sep));mkdirSync(work,{recursive:true})
   const owned=p=>{assert.ok(path.resolve(p).startsWith(path.resolve(work)+path.sep));return p}
   const fresh=name=>owned(path.join(work,name+'-'+randomUUID()))
@@ -108,7 +108,16 @@ export async function runTarLzma1524Gate({driver,bridge,waitForElement,artifactD
     assert.ok(!readdirSync(work).some(f=>f.startsWith('.long-extract-')))
     state.native.push({kind:'actual-late-failure',reason:failed.error,noPublishedPartial:true});save()
   }
+  if(!state.native.some(r=>r.kind==='plain-tar-tail-failure')){
+    const input=fresh('缺失压缩流尾部')+'.tar.lzma',bytes=readFileSync(path.join(base,'资料.tar.lzma'))
+    writeFileSync(input,bytes.subarray(0,bytes.length-6))
+    const out=fresh('普通流失败不得发布');mkdirSync(out)
+    const failed=await invoke('extract_file',{taskId:randomUUID(),filePath:input,outputPath:out,options})
+    assert.equal(failed.ok,false);assert.match(failed.error,/damaged|尾部|不完整/);assert.deepEqual(readdirSync(out),[])
+    state.native.push({kind:'plain-tar-tail-failure',reason:failed.error,noPublishedPartial:true});save()
+  }
   if(!state.ui.some(r=>r.kind==='creation')){
+    await bridge('clearCompressionWorkspace')
     await click('[data-testid="nav-Compress"]');await bridge('queueDesktopDialogSelections',[[path.join(state.source,'数据.bin')]]);await click('[data-testid="dropzone-file"]')
     if(!(await driver.findElements(By.css('[data-testid="compression-draft-details"]'))).length)await click('[data-testid="compression-draft-row"]')
     await choose('[data-testid="compression-format-select"]','LZMA.AES')
@@ -121,6 +130,25 @@ export async function runTarLzma1524Gate({driver,bridge,waitForElement,artifactD
     const record=await driver.wait(async()=>(await bridge('taskHistory')).find(h=>h.outputPath?.includes('界面创建')&&['completed','failed'].includes(h.status))||false,60000)
     assert.equal(record.status,'completed',JSON.stringify(record))
     state.ui.push({kind:'creation',history:record,realInlineConfiguration:true});save()
+  }
+  if(!state.ui.some(r=>r.kind==='compression-batch')){
+    await bridge('clearCompressionWorkspace');await click('[data-testid="nav-Compress"]')
+    await bridge('queueDesktopDialogSelections',[[path.join(state.source,'数据.bin'),path.join(root,'src-tauri/icons/32x32.png')]])
+    await click('[data-testid="compression-center"] [data-testid="dropzone-file"]')
+    if(!(await driver.findElements(By.css('[data-testid="compression-draft-details"]'))).length)await click('[data-testid="compression-draft-row"]')
+    await choose('[data-testid="compression-format-select"]','LZMA.AES');await fill('[data-testid="compression-password-input"]',password)
+    const toggle=await waitForElement('[data-testid="compression-split-toggle"]');if(!await toggle.isSelected())await click(toggle)
+    await fill('[data-testid="compression-split-size"]','1')
+    for(const c of await driver.findElements(By.css('[data-testid="compression-group-checkbox"]')))if(!await c.isSelected())await click(c)
+    await click('[data-testid="batch-config-bar"] button[aria-haspopup="dialog"]');await choose('[data-testid="batch-format"]','TAR.LZMA.AES')
+    await sizes('compression-batch','[role="dialog"]');const before=(await bridge('taskHistory')).length
+    await click('[data-testid="batch-config-apply"]');await driver.wait(async()=>(await driver.findElements(By.css('[role="dialog"]'))).length===0,10000)
+    const rows=await driver.findElements(By.css('[data-testid="compression-draft-row"]'));assert.equal(rows.length,2)
+    for(const row of rows)assert.match(await row.getText(),/TAR.LZMA.AES/)
+    assert.equal(await(await waitForElement('[data-testid="compression-password-input"]')).getAttribute('value'),password)
+    assert.equal(await(await waitForElement('[data-testid="compression-split-size"]')).getAttribute('value'),'1')
+    assert.equal((await bridge('taskHistory')).length,before)
+    state.ui.push({kind:'compression-batch',twoDrafts:true,passwordAndSplitRetained:true,noImplicitStart:true});save()
   }
   if(!state.ui.some(r=>r.kind==='preview')){
     await click('[data-testid="nav-ArchiveBrowser"]')
