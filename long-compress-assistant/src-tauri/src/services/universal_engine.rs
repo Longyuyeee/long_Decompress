@@ -784,7 +784,8 @@ impl UniversalCliEngine {
         on_progress: Arc<dyn Fn(f32) + Send + Sync>, on_log: Arc<dyn Fn(String, TaskLogSeverity) + Send + Sync>,
         is_cancelled: Arc<AtomicBool>, selected: &[String],
     ) -> Result<()> {
-        self.extract_selected_with_progress(file_path, output_dir, None, overwrite_existing, on_progress, on_log, is_cancelled, selected, true).await
+        let source = super::split_archive_detector::SplitArchiveDetector::complete_source(file_path)?;
+        self.extract_selected_with_progress(&source, output_dir, None, overwrite_existing, on_progress, on_log, is_cancelled, selected, true).await
     }
 
     async fn extract_selected_with_progress(

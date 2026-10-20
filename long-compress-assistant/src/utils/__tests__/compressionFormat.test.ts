@@ -15,6 +15,11 @@ import {
 } from '../compressionFormat'
 
 describe('compression format helpers', () => {
+  it('swm1529 imports first and later native parts without offering creation', () => {
+    for (const name of ['install.swm','install2.swm','镜像202612.SWM']) expect(isDecompressArchivePath('C:/下载/'+name)).toBe(true)
+    expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.swm')
+    expect(COMPRESSIBLE_FORMATS.some(format=>String(format.value)==='swm')).toBe(false)
+  })
   it('imports EGG and native members without offering EGG creation', () => {
     for (const suffix of ['egg','vol1.egg','vol2.egg']) expect(isDecompressArchivePath('资料.'+suffix)).toBe(true)
     expect(COMPRESSIBLE_FORMATS.some(format=>String(format.value)==='egg')).toBe(false)

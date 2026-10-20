@@ -78,6 +78,7 @@ import { runTarLzma1524Gate } from './tar-lzma-1524-gate.mjs'
 import { runResultChecksums1525Gate } from './result-checksums-1525-gate.mjs'
 import { prepareExplorerChecksum1528Startup, runExplorerChecksum1528Gate } from './explorer-checksums-1528-gate.mjs'
 import { runWimVolumes1527Gate } from './wim-volumes-1527-gate.mjs'
+import { runSwm1529Gate } from './native-swm-1529-gate.mjs'
 import { runZpaqVolumes1526Gate } from './zpaq-volumes-1526-gate.mjs'
 import { runLzip1520Gate } from './lzip-1520-gate.mjs'
 import { runChecksum1522Gate } from './checksum-1522-gate.mjs'
@@ -4944,6 +4945,9 @@ try {
     const startupArgs = prepareExplorerChecksum1528Startup(root)
     forwardContextAction(startupArgs[0],startupArgs.slice(1))
     await runExplorerChecksum1528Gate({driver,bridge:callDesktopBridge,waitForElement,artifactDirectory,application,root,forwardContextAction})
+    completedSuccessfully = true
+  } else if (process.argv.includes('--native-swm-1529-only')) {
+    await runSwm1529Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
     completedSuccessfully = true
   } else if (process.argv.includes('--wim-volumes-1527-only')) {
     await runWimVolumes1527Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })

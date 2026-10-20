@@ -316,6 +316,7 @@ pub fn open_pdf_output_with_default_application(path: String) -> Result<(), Stri
 
 /// 注册 Windows 右键上下文菜单
 #[tauri::command]
+#[cfg(not(feature = "desktop-e2e"))]
 pub async fn register_context_menu() -> Result<bool, String> {
     let exe_path = std::env::current_exe().map_err(|e| format!("无法获取应用路径: {}", e))?;
     let app_path = exe_path.to_string_lossy().to_string();
@@ -326,6 +327,7 @@ pub async fn register_context_menu() -> Result<bool, String> {
 
 /// 移除 Windows 右键上下文菜单
 #[tauri::command]
+#[cfg(not(feature = "desktop-e2e"))]
 pub async fn unregister_context_menu() -> Result<bool, String> {
     crate::system_integration::context_menu::unregister_context_menu()
         .map_err(|e| format!("移除右键菜单失败: {}", e))?;
@@ -334,6 +336,7 @@ pub async fn unregister_context_menu() -> Result<bool, String> {
 
 /// 检查右键菜单是否已注册
 #[tauri::command]
+#[cfg(not(feature = "desktop-e2e"))]
 pub async fn is_context_menu_registered() -> Result<bool, String> {
     Ok(crate::system_integration::context_menu::is_context_menu_registered())
 }
@@ -452,3 +455,14 @@ mod desktop_behavior_tests {
         );
     }
 }
+
+// Isolated desktop builds must never replace a user's installed Explorer verbs.
+#[cfg(feature = "desktop-e2e")]
+#[tauri::command]
+pub async fn register_context_menu() -> Result<bool, String> { Err("隔离测试程序不修改系统右键菜单".into()) }
+#[cfg(feature = "desktop-e2e")]
+#[tauri::command]
+pub async fn unregister_context_menu() -> Result<bool, String> { Err("隔离测试程序不修改系统右键菜单".into()) }
+#[cfg(feature = "desktop-e2e")]
+#[tauri::command]
+pub async fn is_context_menu_registered() -> Result<bool, String> { Ok(false) }

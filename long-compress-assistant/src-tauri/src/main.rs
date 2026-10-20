@@ -19,7 +19,7 @@ use window_shadows::set_shadow;
 
 use long_compress_assistant::commands::system_integration::{ContextAction, DesktopBehaviorState};
 
-#[cfg(target_os = "windows")]
+#[cfg(all(target_os = "windows", not(feature = "desktop-e2e")))]
 fn schedule_context_menu_refresh_retries(app_path: String) {
     tauri::async_runtime::spawn(async move {
         // A passive Tauri update can finish the previous uninstaller's registry
@@ -343,6 +343,7 @@ fn main() {
             #[cfg(any(target_os = "windows", target_os = "macos"))]
             let _ = set_shadow(&window, true);
 
+            #[cfg(not(feature = "desktop-e2e"))]
             if let Ok(exe_path) = std::env::current_exe() {
                 let exe_path = exe_path.to_string_lossy().into_owned();
                 if let Err(error) = long_compress_assistant::system_integration::context_menu::refresh_context_menu_if_present(

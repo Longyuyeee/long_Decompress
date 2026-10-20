@@ -1,0 +1,261 @@
+{
+  "generator": "wimlib-imagex 1.14.5 x64",
+  "toolSha256": "34c0c4165591ad1f592837ed99d08273c58d6ed3fe0ed6360cf34e7b0739b353",
+  "packageUrl": "https://wimlib.net/downloads/wimlib-1.14.5-windows-x86_64-bin.zip",
+  "packageSha256": "2f446d6fa3866582175f1a22a7be198eeee0aec7aba5b4e04ad25c99eae2d265",
+  "cases": [
+    {
+      "method": "none",
+      "images": 1,
+      "members": [
+        {
+          "file": "none/install.swm",
+          "sha256": "4a26ad50a7f1b6e0e2ae09016d3a2dd6019c4c591cafb9f9c93c26ae9dcdb112",
+          "bytes": 793094,
+          "number": 1,
+          "total": 6,
+          "guid": "ccac72366214965c75f559c348411cea"
+        },
+        {
+          "file": "none/install2.swm",
+          "sha256": "7f4ecc1577da5ef1e613da3041baaf8e8f95aaa490d5ef7fa1783c44eb41382e",
+          "bytes": 787602,
+          "number": 2,
+          "total": 6,
+          "guid": "ccac72366214965c75f559c348411cea"
+        },
+        {
+          "file": "none/install3.swm",
+          "sha256": "c5b68ddc7b4f48634559dc4e37e42e704c18b05e0d9ab35019b90226358c4655",
+          "bytes": 787602,
+          "number": 3,
+          "total": 6,
+          "guid": "ccac72366214965c75f559c348411cea"
+        },
+        {
+          "file": "none/install4.swm",
+          "sha256": "44c50587e3cd535348c2a8db9eee062bea8a8853cbf4f88eb5792480cc11d116",
+          "bytes": 787602,
+          "number": 4,
+          "total": 6,
+          "guid": "ccac72366214965c75f559c348411cea"
+        },
+        {
+          "file": "none/install5.swm",
+          "sha256": "a1d41eaf616f4420321c8008532d3e6dac90d1137a35c7dc7864ad9b3474311b",
+          "bytes": 787602,
+          "number": 5,
+          "total": 6,
+          "guid": "ccac72366214965c75f559c348411cea"
+        },
+        {
+          "file": "none/install6.swm",
+          "sha256": "d6be08a3997b65a50f34e85831743e68224188e9153707cc610ebc7e78d438f2",
+          "bytes": 787602,
+          "number": 6,
+          "total": 6,
+          "guid": "ccac72366214965c75f559c348411cea"
+        }
+      ],
+      "expected": {
+        "图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+        "空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "说明.txt": "b49571bf57d5bcd547baa88cdb80e84f6739ce8bd99f5310f232d1fe96789c3f",
+        "项目/同名.txt": "bdd295acb9859817b9da544524ed3525a64f61bf5edb16deb0c28b6ae63d378b",
+        "项目/数据00.bin": "9d1f0e5b3bae4a4efa713f8fdffe1402819dafdbc45121dd25c0576e4c312ad2",
+        "项目/数据01.bin": "e27e1575d24d67b19ec3b7363f8666f14bca68bafb235b70bc26e570e6b13e41",
+        "项目/数据02.bin": "51d6a2ed06a40769785ce1ad15c53c7156a15c59e0b4ee64f3783c6db9af90db",
+        "项目/数据03.bin": "61ae548354392db468952959d5280cecd92ee21c9beca08d025a0236d50aa767",
+        "项目/数据04.bin": "ea682f34a0dd1d2dd06e8a28e2cef2e9a2f15f937b834df637cb8647fec7754b",
+        "项目/数据05.bin": "5898f6529427907f40de96c707ee1aeedd0c581479499d0e6fe1bfb06f7a9521",
+        "项目/数据06.bin": "e0242a40ddc9a32ffdfd43f48165a56090fbfdf2b18773013ba9287898e4bd3e",
+        "项目/数据07.bin": "cec3a26fbe42cb17dbd95d657286cb3b32a91e6cd2af2fb8a74fe0627c2567d9",
+        "项目/数据08.bin": "777cec3df131b57f8139ee03da6b31b22bd4c0beed994caf19e7c89e226d1437",
+        "项目/数据09.bin": "cfca0520b72b7870043a9509e3101a3bd56a8c56b607681103da2eee61a9889b",
+        "项目/数据10.bin": "0998bc6595613ee66abb054b5b6cf31d059923e0d4b605c74f28fa4b58c11f23",
+        "项目/数据11.bin": "0b810e259fbe122068dabbcfd4f557e07cd23031c9eb482a6384a2dff90e4384",
+        "项目/数据12.bin": "d96fd5f5513687056f01cc8e831f16efabc9a19fc8e7a0487ae5b57049dd14bc",
+        "项目/数据13.bin": "05f7abbe241a8ef56737aa7272a9fca9792d7464c568756bb189c3e96a4360c1",
+        "项目/数据14.bin": "fef79c0c1b63249a03732e76a02f738c10ef9a8f41a708a65821429e60c777da",
+        "项目/数据15.bin": "c0ae8c9c6fb16a1b919603d216665fad3fcb2f0b97f4fa7f21ba91d8e76c1a08",
+        "项目/数据16.bin": "8ee3bdd833d7bd7dad2b36a96941a2848948126dcccd959a8451b7b430c3023c",
+        "项目/数据17.bin": "067258d7784a22e92126d7ab91c287523bd2c0de9d6698c65952488e98584558"
+      },
+      "directories": [
+        "空目录",
+        "项目"
+      ],
+      "independentApply": true,
+      "compressedResources": 0
+    },
+    {
+      "method": "xpress",
+      "images": 1,
+      "members": [
+        {
+          "file": "xpress/install.swm",
+          "sha256": "abe66aae308971b1541ddc8ce4680892a0cc453ea4c9bc2e513d2204f600f4ad",
+          "bytes": 937432,
+          "number": 1,
+          "total": 3,
+          "guid": "11650a84c1a1a7a8093c5f5ee120118d"
+        },
+        {
+          "file": "xpress/install2.swm",
+          "sha256": "327e3c7fe2e90edd6403998945c51bb2bc48f539f084611c8e12cc84429c0bc7",
+          "bytes": 934172,
+          "number": 2,
+          "total": 3,
+          "guid": "11650a84c1a1a7a8093c5f5ee120118d"
+        },
+        {
+          "file": "xpress/install3.swm",
+          "sha256": "aea757c0637bea14239c00f30c6f4d8d9db92e21787f117e85086f79e52879b1",
+          "bytes": 534244,
+          "number": 3,
+          "total": 3,
+          "guid": "11650a84c1a1a7a8093c5f5ee120118d"
+        }
+      ],
+      "expected": {
+        "图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+        "空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "说明.txt": "b49571bf57d5bcd547baa88cdb80e84f6739ce8bd99f5310f232d1fe96789c3f",
+        "项目/同名.txt": "bdd295acb9859817b9da544524ed3525a64f61bf5edb16deb0c28b6ae63d378b",
+        "项目/数据00.bin": "9d1f0e5b3bae4a4efa713f8fdffe1402819dafdbc45121dd25c0576e4c312ad2",
+        "项目/数据01.bin": "e27e1575d24d67b19ec3b7363f8666f14bca68bafb235b70bc26e570e6b13e41",
+        "项目/数据02.bin": "51d6a2ed06a40769785ce1ad15c53c7156a15c59e0b4ee64f3783c6db9af90db",
+        "项目/数据03.bin": "61ae548354392db468952959d5280cecd92ee21c9beca08d025a0236d50aa767",
+        "项目/数据04.bin": "ea682f34a0dd1d2dd06e8a28e2cef2e9a2f15f937b834df637cb8647fec7754b",
+        "项目/数据05.bin": "5898f6529427907f40de96c707ee1aeedd0c581479499d0e6fe1bfb06f7a9521",
+        "项目/数据06.bin": "e0242a40ddc9a32ffdfd43f48165a56090fbfdf2b18773013ba9287898e4bd3e",
+        "项目/数据07.bin": "cec3a26fbe42cb17dbd95d657286cb3b32a91e6cd2af2fb8a74fe0627c2567d9",
+        "项目/数据08.bin": "777cec3df131b57f8139ee03da6b31b22bd4c0beed994caf19e7c89e226d1437",
+        "项目/数据09.bin": "cfca0520b72b7870043a9509e3101a3bd56a8c56b607681103da2eee61a9889b",
+        "项目/数据10.bin": "0998bc6595613ee66abb054b5b6cf31d059923e0d4b605c74f28fa4b58c11f23",
+        "项目/数据11.bin": "0b810e259fbe122068dabbcfd4f557e07cd23031c9eb482a6384a2dff90e4384",
+        "项目/数据12.bin": "d96fd5f5513687056f01cc8e831f16efabc9a19fc8e7a0487ae5b57049dd14bc",
+        "项目/数据13.bin": "05f7abbe241a8ef56737aa7272a9fca9792d7464c568756bb189c3e96a4360c1",
+        "项目/数据14.bin": "fef79c0c1b63249a03732e76a02f738c10ef9a8f41a708a65821429e60c777da",
+        "项目/数据15.bin": "c0ae8c9c6fb16a1b919603d216665fad3fcb2f0b97f4fa7f21ba91d8e76c1a08",
+        "项目/数据16.bin": "8ee3bdd833d7bd7dad2b36a96941a2848948126dcccd959a8451b7b430c3023c",
+        "项目/数据17.bin": "067258d7784a22e92126d7ab91c287523bd2c0de9d6698c65952488e98584558"
+      },
+      "directories": [
+        "空目录",
+        "项目"
+      ],
+      "independentApply": true,
+      "compressedResources": 18
+    },
+    {
+      "method": "lzx",
+      "images": 2,
+      "members": [
+        {
+          "file": "lzx/install.swm",
+          "sha256": "cced9154d88b6abbc33c6d8833300c0b5e96beaeb2a481f38d8b4463dec4a37e",
+          "bytes": 932792,
+          "number": 1,
+          "total": 6,
+          "guid": "05efea44371c71e617b9497dadee4897"
+        },
+        {
+          "file": "lzx/install2.swm",
+          "sha256": "0b173ee35a6c00d936ccf88f903b56dc6d6a385f33279e6021ff11c9b8d14424",
+          "bytes": 928772,
+          "number": 2,
+          "total": 6,
+          "guid": "05efea44371c71e617b9497dadee4897"
+        },
+        {
+          "file": "lzx/install3.swm",
+          "sha256": "1a26395ee6d324d7436207ef75dcdda688289284a2862792bb9bbe2ba2ed153f",
+          "bytes": 928943,
+          "number": 3,
+          "total": 6,
+          "guid": "05efea44371c71e617b9497dadee4897"
+        },
+        {
+          "file": "lzx/install4.swm",
+          "sha256": "a17d15b3bf2924a8bd5e37e8ebd4bce7a89d2bc158046b58ffc7548297542c66",
+          "bytes": 928758,
+          "number": 4,
+          "total": 6,
+          "guid": "05efea44371c71e617b9497dadee4897"
+        },
+        {
+          "file": "lzx/install5.swm",
+          "sha256": "90c88aafa8aca7dabb0ae851e6d1231afd37499f8d8aef08abe9cfc1c19f1955",
+          "bytes": 928774,
+          "number": 5,
+          "total": 6,
+          "guid": "05efea44371c71e617b9497dadee4897"
+        },
+        {
+          "file": "lzx/install6.swm",
+          "sha256": "63e9765322391a6d2f032093f320a33d701191f236b6e48e01bcd5316a946e8f",
+          "bytes": 134158,
+          "number": 6,
+          "total": 6,
+          "guid": "05efea44371c71e617b9497dadee4897"
+        }
+      ],
+      "expected": {
+        "1/图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+        "1/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "1/说明.txt": "b49571bf57d5bcd547baa88cdb80e84f6739ce8bd99f5310f232d1fe96789c3f",
+        "1/项目/同名.txt": "bdd295acb9859817b9da544524ed3525a64f61bf5edb16deb0c28b6ae63d378b",
+        "1/项目/数据00.bin": "9d1f0e5b3bae4a4efa713f8fdffe1402819dafdbc45121dd25c0576e4c312ad2",
+        "1/项目/数据01.bin": "e27e1575d24d67b19ec3b7363f8666f14bca68bafb235b70bc26e570e6b13e41",
+        "1/项目/数据02.bin": "51d6a2ed06a40769785ce1ad15c53c7156a15c59e0b4ee64f3783c6db9af90db",
+        "1/项目/数据03.bin": "61ae548354392db468952959d5280cecd92ee21c9beca08d025a0236d50aa767",
+        "1/项目/数据04.bin": "ea682f34a0dd1d2dd06e8a28e2cef2e9a2f15f937b834df637cb8647fec7754b",
+        "1/项目/数据05.bin": "5898f6529427907f40de96c707ee1aeedd0c581479499d0e6fe1bfb06f7a9521",
+        "1/项目/数据06.bin": "e0242a40ddc9a32ffdfd43f48165a56090fbfdf2b18773013ba9287898e4bd3e",
+        "1/项目/数据07.bin": "cec3a26fbe42cb17dbd95d657286cb3b32a91e6cd2af2fb8a74fe0627c2567d9",
+        "1/项目/数据08.bin": "777cec3df131b57f8139ee03da6b31b22bd4c0beed994caf19e7c89e226d1437",
+        "1/项目/数据09.bin": "cfca0520b72b7870043a9509e3101a3bd56a8c56b607681103da2eee61a9889b",
+        "1/项目/数据10.bin": "0998bc6595613ee66abb054b5b6cf31d059923e0d4b605c74f28fa4b58c11f23",
+        "1/项目/数据11.bin": "0b810e259fbe122068dabbcfd4f557e07cd23031c9eb482a6384a2dff90e4384",
+        "1/项目/数据12.bin": "d96fd5f5513687056f01cc8e831f16efabc9a19fc8e7a0487ae5b57049dd14bc",
+        "1/项目/数据13.bin": "05f7abbe241a8ef56737aa7272a9fca9792d7464c568756bb189c3e96a4360c1",
+        "1/项目/数据14.bin": "fef79c0c1b63249a03732e76a02f738c10ef9a8f41a708a65821429e60c777da",
+        "1/项目/数据15.bin": "c0ae8c9c6fb16a1b919603d216665fad3fcb2f0b97f4fa7f21ba91d8e76c1a08",
+        "1/项目/数据16.bin": "8ee3bdd833d7bd7dad2b36a96941a2848948126dcccd959a8451b7b430c3023c",
+        "1/项目/数据17.bin": "067258d7784a22e92126d7ab91c287523bd2c0de9d6698c65952488e98584558",
+        "2/图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+        "2/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "2/说明.txt": "1388c510a47002479b7128774b4fa35d5f8de8d476035d4ada69f8007efe6d63",
+        "2/项目/同名.txt": "32708aa33e13cb8601678e3ffe6f522035ce3c0b8278e440299e72b1cfdcd0b9",
+        "2/项目/数据00.bin": "64c6f9f5b6f98ebebe3ef8a41dbea7957e7007249828ea2daadafd86c9557f60",
+        "2/项目/数据01.bin": "3a400e4ed8d8484f071000dd939475f60bd0908c02585a646ed7e6c0c5ca0e50",
+        "2/项目/数据02.bin": "11f8e12f72ec4cbe45903c00728080b85e2ee98c7a1b8a9aa286ad72924e458a",
+        "2/项目/数据03.bin": "987273c185a7adfaf95e452090abd0901659808102872e0498ef3e664ffa73f5",
+        "2/项目/数据04.bin": "022f84d1e399ffddea6603c585cb2e42c25d12909b14f0bffed803a14ac587d2",
+        "2/项目/数据05.bin": "7f57ba9728363d78819ae60a25267c4f48c5d88d96287722eea42d31e8ea340a",
+        "2/项目/数据06.bin": "b6fcfdffd923fe0fd74d981950a9e79f21f694e726f4970385f6364e6991807f",
+        "2/项目/数据07.bin": "e8345f6b0304c1dbdac2177d5f2e7572d8b26fcf3a443d091b8186a5339f62dc",
+        "2/项目/数据08.bin": "dc136ef6a3b09435b4c510b1f13daba1fea8357870ae5a432cf393529e81b138",
+        "2/项目/数据09.bin": "bf44bc3a7fb9841deeecdc8ab1af3d84d25aa080ca43eb105d8519f3c6ea23d3",
+        "2/项目/数据10.bin": "9621512ae4f2956110a083957aeee881c102971e4a5477e275d0ca7ae50af138",
+        "2/项目/数据11.bin": "db6c812fe37aa41fce6a16d8a923f35db53f9941f92876f2cfcc1282f5e383e7",
+        "2/项目/数据12.bin": "a76a235f8d9e674faaa180f460f1de2529620b7ca3b0251c0bd0b76d713028ee",
+        "2/项目/数据13.bin": "a2eb12c8c6968955cb5c05656849ff155a290446781d97068004ace761222da5",
+        "2/项目/数据14.bin": "c92094214c8cafee7038c2be00b91ad13b9ce33ff08d56e10b4f560c992a920c",
+        "2/项目/数据15.bin": "fc9edbc5ba9e3cb1c5d566c7a2c6ab841fba02d7f3039467763723d57f82a0a0",
+        "2/项目/数据16.bin": "6f5d109f9160f2e80bc269ec65d98a7ce1309babba617d9d270da4a14cb16609",
+        "2/项目/数据17.bin": "8f0fb4600f90a81174849ff4c527d2b43fd4b1eac8288ecc8333ed9cd672c8fe",
+        "[1].xml": "4806ec27ddab5f64fac4dd148df8d626d31a8dd2a10b776a3a7c65590df04cad"
+      },
+      "directories": [
+        "1/空目录",
+        "1/项目",
+        "2/空目录",
+        "2/项目"
+      ],
+      "independentApply": true,
+      "compressedResources": 36
+    }
+  ]
+}

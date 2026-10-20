@@ -119,6 +119,9 @@ mod tar_lzma_1524_tests;
 mod zpaq_1526_tests;
 
 pub(crate) mod wim_preview;
+pub(crate) mod swm_volumes;
+#[cfg(test)]
+mod swm_1529_tests;
 
 #[cfg(test)]
 mod wim_1527_tests;

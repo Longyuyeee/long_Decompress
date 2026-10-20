@@ -73,7 +73,7 @@ fn context_menu_package_version() -> String {
 }
 
 const ARCHIVE_EXTENSIONS: &[&str] = &[
-    ".zip", ".zipx", ".7z", ".rar", ".wim", ".tar", ".ova", ".gz", ".gzip", ".tgz",
+    ".zip", ".zipx", ".7z", ".rar", ".wim", ".swm", ".tar", ".ova", ".gz", ".gzip", ".tgz",
     ".tpz", ".bz2", ".bzip2", ".tbz", ".tbz2", ".xz", ".txz", ".zst", ".zstd",
     ".tzst", ".aes", ".lzma", ".lz4", ".br", ".lz", ".tlz", ".jar", ".xpi", ".ipa", ".apk", ".appx", ".iso", ".img",
     ".dmg", ".vhd", ".vhdx", ".qcow", ".qcow2", ".qcow2c", ".vdi", ".vmdk", ".cab",
