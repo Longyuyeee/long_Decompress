@@ -1,0 +1,44 @@
+{
+  "version": "1.5.31",
+  "provenance": "Completed local tool outputs; filtered/skipped old tests are not passes. Failed script attempts are not passes.",
+  "rust": {
+    "command": "cargo test --lib wim1531 --manifest-path src-tauri/Cargo.toml -- --nocapture",
+    "distinctPassed": 6,
+    "oldFiltered": 842,
+    "affectedRecheck": {
+      "command": "cargo test --lib wim1531_true_xpress --manifest-path src-tauri/Cargo.toml -- --nocapture",
+      "passed": 1,
+      "newDistinctTests": 0,
+      "reason": "added actual source-byte total assertion after completed UI showed zero bytes"
+    }
+  },
+  "frontend": {
+    "filter": "wim1531",
+    "distinctPassed": 6,
+    "files": [
+      "compression.test.ts",
+      "archiveConversion.test.ts",
+      "pendingDrafts.test.ts",
+      "CompressionSettingsPanel.test.ts",
+      "CompressionAnalysisCard.test.ts",
+      "useCompressionProfiles.test.ts"
+    ],
+    "attempts": "First two passed, two newly written mocks/assertions corrected; remaining independent cases passed. Panel mock async capability error corrected and only that panel test rerun cleanly."
+  },
+  "builds": {
+    "vueTypesAndFrontend": true,
+    "versionedShell": true,
+    "eightVersionIdentitiesAndEngineLock": true,
+    "desktopE2eRelease": true
+  },
+  "desktop": {
+    "publicNativeChains": 1,
+    "distinctUiChains": 6,
+    "affectedCreationAccountingRecheck": 1,
+    "screenshots": 26,
+    "latestBinarySha256": "6bca3caa354cb1177d9f5e0dfbd471ee4b02f19cc3e1c3a4b241a0c9111f156f",
+    "latestSourceCommit": "a7e02a55dc6f1436fa995f6b13bb5d0266bf6f08",
+    "completedAt": "2026-10-20T13:38:48.731Z"
+  },
+  "reuse": "Old format/password matrix and previously passed real disk-full checks not rerun."
+}
