@@ -1,0 +1,22 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ ✓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > zpaq1536 restores update mapping alongside conversion, excludes passwords and flags missing additional sources without starting 22ms
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > zpaq1530 restores two snapshots of one archive as separate drafts without starting them
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > keeps extraction, compression and separate conversion encodings after reopening without secrets
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > retains the new package password requirement after only the source password was reentered
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > recovers files, groups, extraction and conversion without passwords or automatic execution
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > saves only unstarted drafts and marks missing sources in the recovered item
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > keeps unopened old work while saving new work and discard only drops the recovery offer
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > preserves extraction defaults and avoids adding duplicate sources on recovery
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > wim1531 reopens mixed stored/XPRESS drafts without silently changing the method or starting
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > wim1532 reopens mixed stored/LZX drafts without silently changing the method or starting
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > wim1533 reopens old Store, XPRESS, LZX and new LZMS without changing methods or starting
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > zip1535 restores old Deflate, Zstandard, new PPMd and ZIPX without automatic execution
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > zip1534 restores old Deflate, Zstandard, new BZip2 and ZIPX without automatic execution
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 12 skipped (13)
+   Start at  02:06:50
+   Duration  1.33s (transform 285ms, setup 110ms, import 505ms, tests 24ms, environment 497ms)
+

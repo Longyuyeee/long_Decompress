@@ -1,0 +1,41 @@
+   Compiling long-compress-assistant v1.5.36 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 1m 47s
+     Running unittests src\lib.rs (src-tauri\target\release\deps\long_compress_assistant-368d08da9285952a.exe)
+
+running 5 tests
+test commands::history_execution_config::tests::zpaq1536_history_preserves_update_inputs_and_never_the_password ... ok
+test services::zpaq_update::tests::zpaq1536_copy_cancellation_preserves_original_and_cleans_only_staging ... ok
+test services::zpaq_update::tests::zpaq1536_incomplete_password_and_mapping_failures_keep_existing_results ... ok
+test services::zpaq_update::tests::zpaq1536_incremental_child_cancellation_stops_real_work_and_discards_copy ... ok
+test services::zpaq_update::tests::zpaq1536_incremental_plain_password_single_numeric_retains_history_and_no_change ... ZPAQ update encrypted=false, source numeric=false, target numeric=false: old prefix retained, complete independent latest/old hashes and unchanged copy OK
+ZPAQ update encrypted=false, source numeric=true, target numeric=true: old prefix retained, complete independent latest/old hashes and unchanged copy OK
+ZPAQ update encrypted=true, source numeric=false, target numeric=true: old prefix retained, complete independent latest/old hashes and unchanged copy OK
+ZPAQ update encrypted=true, source numeric=true, target numeric=false: old prefix retained, complete independent latest/old hashes and unchanged copy OK
+ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 874 filtered out; finished in 6.57s
+
