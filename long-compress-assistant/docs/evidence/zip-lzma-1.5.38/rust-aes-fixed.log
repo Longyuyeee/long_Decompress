@@ -1,0 +1,42 @@
+   Compiling zip v8.6.0 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\zip)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling long-compress-assistant v1.5.38 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+    Finished `release` profile [optimized] target(s) in 4m 08s
+     Running unittests src\lib.rs (src-tauri\target\release\deps\long_compress_assistant-04b71037033af96c.exe)
+
+running 1 test
+LZMA None None: 1 parts, independent hashes/empty directories OK
+LZMA None Some(Numeric): 3 parts, independent hashes/empty directories OK
+LZMA None Some(Standard): 3 parts, independent hashes/empty directories OK
+LZMA Some(Aes256) None: 1 parts, independent hashes/empty directories OK
+LZMA Some(Aes256) Some(Numeric): 3 parts, independent hashes/empty directories OK
+LZMA Some(Aes256) Some(Standard): 3 parts, independent hashes/empty directories OK
+LZMA Some(Zipcrypto) None: 1 parts, independent hashes/empty directories OK
+LZMA Some(Zipcrypto) Some(Numeric): 3 parts, independent hashes/empty directories OK
+LZMA Some(Zipcrypto) Some(Standard): 3 parts, independent hashes/empty directories OK
+test services::native_compression::zip::lzma_tests::zip1538_lzma_plain_aes_zipcrypto_numeric_and_standard_independent_complete_readback ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 892 filtered out; finished in 36.32s

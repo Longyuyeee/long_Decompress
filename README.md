@@ -129,7 +129,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 
 | 能力 | 主要格式与说明 |
 | --- | --- |
-| 创建归档 | ZIP（Deflate / Zstandard / BZip2 / PPMd）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码、数字分卷与保留历史的增量更新）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM（存储/XPRESS/LZX/LZMS 压缩与数字分卷） |
+| 创建归档 | ZIP（Deflate / Zstandard / BZip2 / PPMd / LZMA）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码、数字分卷与保留历史的增量更新）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM（存储/XPRESS/LZX/LZMS 压缩与数字分卷） |
 | 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式当前内容/日志式历史快照、版本对比与变化提取）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，原生 SWM（Copy/XPRESS/LZX 整组只读），以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
 | 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷、ZPAQ 原生密码数字切卷；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM、ZPAQ（含改密与数字分卷）；密码和分卷随目标格式提供 |
@@ -147,7 +147,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 - 还可读取已支持的应用包、传统归档、文件系统与安装容器，例如 APK、APPX、JAR、DEB、RPM、MSI、LZH、CPIO、XAR、APFS、EXT、HFS/HFSX。具体能力以应用的实际检测和 [格式支持说明](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)为准。
 - ZIP 默认保留 `.zip.001` 数字切卷，可主动选择标准 `.z01/…/.zip`（入口为 `.zip`）；7Z 创建 `.7z.001`，RAR 创建 `.partN.rar`。解压时把整组放在同一目录。普通 TAR/流格式数字切卷的外部兼容能力不同；密码需求可选择对应 `.aes` 组合或 7Z；普通 TAR.LZMA 无原生密码。`.aes` 属于 Long 自有容器，十七种格式可创建密码数字卷；整组同目录可从任意卷打开，接收方请使用 Long解压。
 - ZIP/ZIPX 已验证常用 Store、Deflate、Deflate64、BZip2、LZMA、XZ、PPMd 及部分 Zstandard 读取组合；不等于支持所有 ZIPX 专有算法。
-- 创建 ZIP 可选 Deflate、Zstandard、BZip2、PPMd，ZIPX 固定 XZ；密码、转换与配置保存保持方法，二者均支持数字卷与标准卷。接收方需支持对应方法、密码编码与卷型，ZIPX 标准卷兼容范围见格式说明。PPMd 字典随等级增长（6级32MiB、9级256MiB），不自动替换默认方法。
+- 创建 ZIP 可选 Deflate、Zstandard、BZip2、PPMd、LZMA，ZIPX 固定 XZ；密码、转换与配置保存保持方法，二者均支持数字卷与标准卷。接收方需支持对应方法、密码编码与卷型，ZIPX 标准卷兼容范围见格式说明。PPMd 与 LZMA 字典随等级增长，界面就近显示；LZMA 6级8MiB、9级64MiB，编码总内存更多，不自动替换默认方法。
 - 可直接浏览、解压和转换 ZIP/7Z/RAR 自解压 EXE；好压论坛 ZIP 分卷按整组读取，支持已核对的明文与 ZipCrypto 密码样本。收到多个分卷时，把整组放在同一目录即可。具体格式范围见[支持说明](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)。
 - LZIP（单文件）与 TAR.LZIP（目录/多文件）支持创建、浏览、解压、检查和转换，兼容 `.lz`、`.tar.lz`、`.tlz`；支持连续多成员 LZIP 与数字切卷创建，普通格式不提供密码；全部卷需放在同一目录，数字切卷不同于原生成员。
 - ZIP 默认 AES-256，可主动选择 ZipCrypto；与 Windows 7-Zip 交换非 ASCII 密码的归档时，可显式选择匹配的 Windows 密码编码。
@@ -236,7 +236,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.37 · ZPAQ 快照对比与变化提取**。查看两版之间的新增、候选、元数据和移除，按需核对内容，再按版本创建所选提取任务。密码数字卷、草稿、补卷重试和历史重做保持范围与来源，原交互和布局不变。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.37.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_DIFF_FREEZE_1.5.37.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.37)。下一版 [v1.5.38 ZIP LZMA创建](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.38.md)仅规划，尚未开发。
+**v1.5.38 · ZIP LZMA 创建**。增加可选方法，按强度显示字典，接通密码、数字/标准卷、转换、浏览提取与补卷流程。真实编码采样、暂停停止、草稿/历史/模板和多选保留方法，原交互与等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.38.md) · [范围与记录](long-compress-assistant/docs/ZIP_LZMA_FREEZE_1.5.38.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.38)。下一版 [v1.5.39 固实 WIM / ESD](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.39.md)仅规划，尚未开发。
+
+**v1.5.37 · ZPAQ 快照对比与变化提取**。查看两版之间的新增、候选、元数据和移除，按需核对内容，再按版本创建所选提取任务。密码数字卷、草稿、补卷重试和历史重做保持范围与来源，原交互和布局不变。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.37.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_DIFF_FREEZE_1.5.37.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.37)。下一版 [v1.5.38 ZIP LZMA创建](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.38.md)已由 v1.5.38 接续，当前进度以上方最新记录为准。
 
 **v1.5.36 · ZPAQ 增量更新**。往已有备份添加与更新内容，显示归档内位置，保留原件、未选内容与全部历史；普通/密码及数字卷、草稿/重做/失败纠正和新旧快照读取贯通。未变化时明确说明未新增快照，保持原交互与布局。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.36.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_INCREMENTAL_FREEZE_1.5.36.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.36)。下一版 [v1.5.37 快照对比与变化提取](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.37.md)已由 v1.5.37 接续，当前进度以上方最新记录为准。
 

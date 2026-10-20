@@ -1,0 +1,36 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling zip v8.6.0 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\zip)
+   Compiling long-compress-assistant v1.5.37 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+    Finished `release` profile [optimized] target(s) in 4m 25s
+     Running unittests src\lib.rs (src-tauri\target\release\deps\long_compress_assistant-c52ad30bd00987a8.exe)
+
+running 1 test
+{"tool": "Python zipfile/liblzma with independent AES HMAC/CTR when needed", "methods": [14, 14, 14, 14, 14], "headerAndEos": true, "allIndependentHashes": true, "emptyDirectory": true}
+
+ZIP LZMA independent Python/liblzma + 7-Zip complete content/empty entries passed
+test services::native_compression::zip::lzma_tests::zip1538_probe_real_method14_header_eos_empty_and_independent_readback ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 889 filtered out; finished in 3.52s

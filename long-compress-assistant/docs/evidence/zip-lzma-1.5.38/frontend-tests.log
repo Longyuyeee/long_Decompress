@@ -1,0 +1,23 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ ❯ src/stores/__tests__/compression.test.ts (34 tests | 1 failed | 33 skipped) 18ms
+   × zip1538 LZMA batch edits ZIP only and preserves other inheritance, passwords and volumes 15ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/stores/__tests__/compression.test.ts > zip1538 LZMA batch edits ZIP only and preserves other inheritance, passwords and volumes
+Error: [🍍]: "getActivePinia()" was called but there was no active Pinia. Are you trying to use a store before calling "app.use(pinia)"?
+See https://pinia.vuejs.org/core-concepts/outside-component-usage.html for help.
+This will fail in production.
+ ❯ useStore node_modules/pinia/dist/pinia.mjs:1735:19
+ ❯ src/stores/__tests__/compression.test.ts:493:17
+
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+ Test Files  1 failed | 5 passed (6)
+      Tests  1 failed | 5 passed | 173 skipped (179)
+   Start at  04:11:26
+   Duration  60.55s (transform 15.74s, setup 3.67s, import 19.58s, tests 550ms, environment 310.48s)

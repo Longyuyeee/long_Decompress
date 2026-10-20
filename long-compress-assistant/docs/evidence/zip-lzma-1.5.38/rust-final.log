@@ -1,0 +1,59 @@
+   Compiling long-compress-assistant v1.5.38 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 4m 01s
+     Running unittests src\lib.rs (src-tauri\target\release\deps\long_compress_assistant-04b71037033af96c.exe)
+
+running 6 tests
+test commands::history_execution_config::tests::zip1538_history_preserves_lzma_in_creation_and_conversion ... ok
+test services::compression_analysis::ppmd_1535_tests::zip1538_analysis_uses_the_real_lzma_writer_and_honors_cancellation ... ok
+test services::task_template::tests::zip1538_template_method_survives_export_import ... ok
+test services::native_compression::zip::lzma_tests::zip1538_lzma_midstream_cancel_never_publishes_and_preserves_existing_output ... ok
+LZMA None None: 1 parts, independent hashes/empty directories OK
+LZMA strength 0: dictionary 1 MiB; independent decoded raw copy
+LZMA None Some(Numeric): 3 parts, independent hashes/empty directories OK
+LZMA strength 6: dictionary 8 MiB; independent decoded raw copy
+LZMA None Some(Standard): 3 parts, independent hashes/empty directories OK
+LZMA strength 9: dictionary 64 MiB; independent decoded raw copy
+test services::native_compression::zip::lzma_tests::zip1538_levels_encode_real_dictionary_and_raw_copy_preserves_eos ... ok
+
+thread 'services::native_compression::zip::lzma_tests::zip1538_lzma_plain_aes_zipcrypto_numeric_and_standard_independent_complete_readback' (40920) panicked at src\services\native_compression\zip_lzma_1538_tests.rs:47:140:
+Traceback (most recent call last):
+  File "E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\scripts/verify-zip-lzma-1538.py", line 9, in <module>
+    assert info.flag_bits&2 and info.extract_version>=63 and struct.unpack_from('<H',data,offset+6)[0]&2
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::native_compression::zip::lzma_tests::zip1538_lzma_plain_aes_zipcrypto_numeric_and_standard_independent_complete_readback ... FAILED
+
+failures:
+
+failures:
+    services::native_compression::zip::lzma_tests::zip1538_lzma_plain_aes_zipcrypto_numeric_and_standard_independent_complete_readback
+
+test result: FAILED. 5 passed; 1 failed; 0 ignored; 0 measured; 887 filtered out; finished in 12.90s
+
+error: test failed, to rerun pass `--lib`

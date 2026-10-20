@@ -53,7 +53,7 @@ export async function runZipLzma1538Gate({driver,bridge,waitForElement,artifactD
       const request=owned(path.join(work,'request-'+randomUUID()+'.json')),result=owned(path.join(work,'result-'+randomUUID()+'.json'));writeFileSync(request,JSON.stringify({file,password:secret,expectedFiles:state.expected,emptyDirectory:'资料/项目/空目录'}));execFileSync('python',[path.join(root,'scripts/verify-zip-lzma-1538.py'),request,result],{windowsHide:true,maxBuffer:4*1024*1024});return JSON.parse(readFileSync(result,'utf8'))
     }
     if(output.files.some(f=>/\.z\d+$/i.test(f.path)))file=output.files.find(f=>/\.zip$/i.test(f.path))?.path||file
-    const listing=execFileSync(bundledSevenZip,['l','-slt','-sccUTF-8','-p'+(secret||'-'),file],{windowsHide:true,encoding:'utf8',maxBuffer:4*1024*1024});assert.match(listing,/Method = .*PPMD/i)
+    const listing=execFileSync(bundledSevenZip,['l','-slt','-sccUTF-8','-p'+(secret||'-'),file],{windowsHide:true,encoding:'utf8',maxBuffer:4*1024*1024});assert.match(listing,/Method = .*LZMA/i)
     const destination=owned(path.join(work,'oracle-'+label+'-'+randomUUID()));execFileSync(bundledSevenZip,['x','-y','-p'+(secret||'-'),file,'-o'+destination],{windowsHide:true,maxBuffer:4*1024*1024});assert.deepEqual(tree(destination),state.expected);assert.ok(existsSync(path.join(destination,'资料/项目/空目录')));return{tool:'independent 7-Zip LZMA decoder',lzmaMethod:true,allIndependentHashes:true,emptyDirectory:true,outputFiles:output.files.length}
   }
 
