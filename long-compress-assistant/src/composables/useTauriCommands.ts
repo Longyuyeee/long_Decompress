@@ -69,7 +69,7 @@ export interface FileInfo {
 export interface CompressOptions {
   fast_pack?: boolean
   zip_password_encoding?: ZipPasswordEncoding
-  wim_method?: 'store' | 'xpress'
+  wim_method?: 'store' | 'xpress' | 'lzx'
   zip_method?: 'deflate' | 'zstd'
   zip_encryption?: 'aes256' | 'zipcrypto'
   zip_split_mode?: 'numeric' | 'standard'

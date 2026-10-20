@@ -37,7 +37,7 @@ export interface CompressionOptions {
   /** Legacy compatibility only. New drafts and execution always disable this retired option. */
   fastPack?: boolean
   zipPasswordEncoding?: ZipPasswordEncoding
-  wimMethod?: 'store' | 'xpress'
+  wimMethod?: 'store' | 'xpress' | 'lzx'
   zipMethod?: 'deflate' | 'zstd'
   zipEncryption?: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
@@ -88,7 +88,7 @@ export interface CompressionHistory {
 }
 
 export interface CompressionAnalysisState {
-  wimMethod?: 'store' | 'xpress'
+  wimMethod?: 'store' | 'xpress' | 'lzx'
   zipMethod?: 'deflate' | 'zstd'
   status: 'idle' | 'running' | 'completed' | 'failed' | 'cancelled'
   analysisId?: string
@@ -454,6 +454,7 @@ export const useCompressionStore = defineStore('compression', () => {
     const wimOnly = patch.wimMethod !== undefined && Object.entries(patch).every(([key,v]) => key === 'wimMethod' || v === undefined)
     if (wimOnly && !drafts.some(({id,draft}) => selected.has(id) && !draft.taskId && getEffectiveSettings(draft.settings).format === 'wim')) throw new Error('所选任务中没有 WIM 任务，请选择 WIM 格式或保持各自方法。')
     const methodOnly = patch.zipMethod !== undefined && Object.entries(patch).every(([field, value]) => field === 'zipMethod' || value === undefined)
+    const formatOptionsOnly = Object.entries(patch).every(([field,value]) => ['wimMethod','zipMethod','zipPasswordEncoding'].includes(field) || value === undefined)
     const zipOptionsOnly = Object.entries(patch).every(([field,value]) => ['zipMethod','zipPasswordEncoding'].includes(field) || value === undefined)
     if (methodOnly && !drafts.some(({ id, draft }) => selected.has(id) && !draft.taskId && getEffectiveSettings(draft.settings).format === 'zip')) throw new Error('所选任务中没有 ZIP 任务，请选择 ZIP 格式或保持各自方法。')
     if (zipOptionsOnly && !drafts.some(({id,draft}) => selected.has(id) && !draft.taskId && ((patch.zipMethod !== undefined && getEffectiveSettings(draft.settings).format === 'zip') || (patch.zipPasswordEncoding !== undefined && ['zip','zipx'].includes(getEffectiveSettings(draft.settings).format))))) throw new Error('所选任务中没有适用的 ZIP/ZIPX 设置。')
@@ -471,6 +472,8 @@ export const useCompressionStore = defineStore('compression', () => {
       if (!selected.has(id) || draft.taskId || (methodOnly && getEffectiveSettings(draft.settings).format !== 'zip')) continue
       if (wimOnly && getEffectiveSettings(draft.settings).format !== 'wim') continue
       if (zipOptionsOnly && !((patch.zipMethod !== undefined && getEffectiveSettings(draft.settings).format === 'zip') || (patch.zipPasswordEncoding !== undefined && ['zip','zipx'].includes(getEffectiveSettings(draft.settings).format)))) continue
+      const currentFormat = getEffectiveSettings(draft.settings).format
+      if (formatOptionsOnly && !((patch.wimMethod !== undefined && currentFormat === 'wim') || (patch.zipMethod !== undefined && currentFormat === 'zip') || (patch.zipPasswordEncoding !== undefined && ['zip','zipx'].includes(currentFormat)))) continue
       const settings = cloneSettings(getEffectiveSettings(draft.settings))
       if (patch.format !== undefined) settings.format = patch.format
       if (patch.format === 'tar.lz' || patch.format === 'lzma' || patch.format === 'tar.lzma') {
