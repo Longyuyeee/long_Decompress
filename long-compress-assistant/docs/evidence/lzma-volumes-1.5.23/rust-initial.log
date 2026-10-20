@@ -1,0 +1,63 @@
+   Compiling long-compress-assistant v1.5.23 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5m 04s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-42f805c36264462a.exe)
+
+running 6 tests
+test services::lzma_1523_tests::lzma1523_split_capability_and_native_route ... ok
+test services::compression_analysis::lzma1523_analysis_uses_alone_framing_from_independent_fixture ... ok
+test services::lzma_1523_tests::lzma1523_cancellation_during_full_verification ... FAILED
+test services::lzma_1523_tests::lzma1523_truncated_trailing_and_missing_are_not_password_failures ... FAILED
+test services::lzma_1523_tests::lzma1523_bounded_browse_text_image_and_public_integrity ... FAILED
+test services::lzma_1523_tests::lzma1523_independent_alone_originals_from_all_members ... ok
+
+failures:
+
+---- services::lzma_1523_tests::lzma1523_cancellation_during_full_verification stdout ----
+
+thread 'services::lzma_1523_tests::lzma1523_cancellation_during_full_verification' (40320) panicked at src\services\lzma_1523_tests.rs:54:5:
+assertion failed: error.to_string().to_lowercase().contains("cancel")
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- services::lzma_1523_tests::lzma1523_truncated_trailing_and_missing_are_not_password_failures stdout ----
+
+thread 'services::lzma_1523_tests::lzma1523_truncated_trailing_and_missing_are_not_password_failures' (89624) panicked at src\services\lzma_1523_tests.rs:45:161:
+assertion failed: !report.integrity_tested
+
+---- services::lzma_1523_tests::lzma1523_bounded_browse_text_image_and_public_integrity stdout ----
+
+thread 'services::lzma_1523_tests::lzma1523_bounded_browse_text_image_and_public_integrity' (78840) panicked at src\services\lzma_1523_tests.rs:31:84:
+called `Result::unwrap()` on an `Err` value: Safe bounded text preview is currently available for ZIP and TAR-family archives only
+
+
+failures:
+    services::lzma_1523_tests::lzma1523_bounded_browse_text_image_and_public_integrity
+    services::lzma_1523_tests::lzma1523_cancellation_during_full_verification
+    services::lzma_1523_tests::lzma1523_truncated_trailing_and_missing_are_not_password_failures
+
+test result: FAILED. 3 passed; 3 failed; 0 ignored; 0 measured; 794 filtered out; finished in 7.39s
+
+error: test failed, to rerun pass `--lib`

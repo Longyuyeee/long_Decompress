@@ -73,6 +73,7 @@ import { runIo1516Gate } from './io-1516-gate.mjs'
 import { runMultistream1517Gate } from './multistream-1517-gate.mjs'
 import { runAes1518Gate } from './aes-1518-gate.mjs'
 import { runAes1521Gate } from './aes-1521-gate.mjs'
+import { runLzma1523Gate } from './lzma-1523-gate.mjs'
 import { runLzip1520Gate } from './lzip-1520-gate.mjs'
 import { runChecksum1522Gate } from './checksum-1522-gate.mjs'
 import { runChecksum1519Gate } from './checksum-1519-gate.mjs'
@@ -4933,6 +4934,9 @@ try {
     completedSuccessfully = true
   } else if (process.argv.includes('--aes-1521-only')) {
     await runAes1521Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
+    completedSuccessfully = true
+  } else if (process.argv.includes('--lzma-1523-only')) {
+    await runLzma1523Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
     completedSuccessfully = true
   } else if (process.argv.includes('--lzip-1520-only')) {
     await runLzip1520Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })

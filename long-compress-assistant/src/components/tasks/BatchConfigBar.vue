@@ -28,7 +28,7 @@ const applying = ref(false)
 const destination = ref<'keep' | 'source' | 'custom'>('keep')
 const outputDirectory = ref('')
 const keep = { value: 'keep', label: '保持各自设置' }
-const formats = [keep, { value: 'zip', label: 'ZIP' }, { value: 'zipx', label: 'ZIPX（XZ）' }, { value: '7z', label: '7Z' }, { value: 'rar', label: 'RAR（需要 WinRAR）' }, { value: 'tar.lz', label: 'TAR.LZIP（无加密）' }]
+const formats = [keep, { value: 'zip', label: 'ZIP' }, { value: 'zipx', label: 'ZIPX（XZ）' }, { value: '7z', label: '7Z' }, { value: 'rar', label: 'RAR（需要 WinRAR）' }, { value: 'tar.lz', label: 'TAR.LZIP（无加密）' }, { value: 'lzma', label: 'LZMA（单文件，无加密）' }]
 const levels = [keep, ...Array.from({ length: 10 }, (_, value) => ({ value: String(value), label: `${value}${value === 0 ? ' · 最低强度（兼容 ZIP 仅存储）' : value === 9 ? ' · 最小体积' : value === 1 ? ' · 更快' : ''}` }))]
 const subfolders = [keep, { value: 'yes', label: '创建同名子文件夹' }, { value: 'no', label: '直接放入输出目录' }]
 const hasChanges = computed(() => destination.value !== 'keep' || (props.mode === 'compression'
@@ -58,7 +58,7 @@ function apply() {
   const patch: BatchConfigPatch = {}
   if (destination.value !== 'keep') patch.outputDirectory = destination.value === 'source' ? '' : outputDirectory.value.trim()
   if (props.mode === 'compression') {
-    if (format.value === 'zip' || format.value === 'zipx' || format.value === '7z' || format.value === 'rar' || format.value === 'tar.lz') patch.format = format.value
+    if (format.value === 'zip' || format.value === 'zipx' || format.value === '7z' || format.value === 'rar' || format.value === 'tar.lz' || format.value === 'lzma') patch.format = format.value
     if (zipMethod.value === 'zstd' || zipMethod.value === 'deflate') patch.zipMethod = zipMethod.value
     if (level.value !== 'keep') patch.level = Number(level.value)
     if (recovery.value !== 'keep') patch.rarRecoveryPercent = Number(recovery.value)
@@ -91,6 +91,7 @@ function apply() {
   <Modal v-model:visible="visible" :title="mode === 'compression' ? '修改所选压缩配置' : '修改所选解压配置'" :description="`已选 ${count} 项任务`" icon="pi pi-sliders-h" size="md" cancel-text="关闭批量配置" :show-close-button="!applying" :close-on-backdrop="!applying" :close-on-escape="!applying">
     <fieldset :disabled="applying" class="space-y-4 min-w-0" data-testid="batch-config-fields">
       <p v-if="format === 'tar.lz'" class="text-xs text-muted">TAR.LZIP 无密码加密；保留各自的数字分卷设置，接收方需集齐全部卷。</p>
+      <p v-if="format === 'lzma'" class="text-xs text-muted" data-testid="batch-lzma-hint">每条任务需是一个普通文件；保留各自分卷，关闭不适用的密码和文件名加密。目录或多文件请选择 TAR 组合。</p>
       <p class="text-xs leading-relaxed text-muted">只修改下面指定的项目，其他配置保持各自原值。</p>
       <div class="grid min-w-0 gap-3 sm:grid-cols-2">
         <label v-if="mode === 'compression'" class="min-w-0 space-y-1.5 text-xs text-muted">压缩格式 <HelpHint v-if="format === 'zipx'" label="ZIPX 分卷说明">ZIPX 使用 XZ，支持数字卷和 .zx01/…/.zipx 标准卷；卷型沿用各自设置。</HelpHint>

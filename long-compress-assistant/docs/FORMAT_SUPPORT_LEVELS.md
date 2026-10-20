@@ -1,5 +1,8 @@
 # 归档格式支持等级（当前权威口径）
 
+v1.5.23：LZMA-alone 单文件原生创建开放数字切卷，任意成员接通浏览、有界文本/图片预览、完整流检查、提取、转换、补卷新任务及结果；非默认属性原件与空文件分别核对。不是 ZIP/7Z 中的 LZMA 方法或 XZ 容器；数字切片需全部成员，LZMA-alone 不带 CRC/密码，不等于摘要校验。保留既有 7Z 密码替代，TAR.LZMA 和 Long AES 组合尚待 v1.5.24。见[范围](LZMA_VOLUMES_1.5.23.md)与[封板](LZMA_VOLUMES_FREEZE_1.5.23.md)。下方均为历史阶段快照。
+
+
 v1.5.21：新增 LZ4.AES / BR.AES / LZIP.AES 与 TAR.LZ4.AES / TAR.BR.AES / TAR.LZIP.AES（含 `.tlz.aes`）六种 Long 自有包装。沿已有 AES V2 支持密码、数字卷、认证后浏览/有界预览、检查、所选/整包、转换和结果；单文件目标只适合一个顶层普通文件，目录和多文件使用 TAR 组合。普通 LZ4/Brotli 接入有界预览，普通 LZIP 公共完整性入口分派修正。接收方需 v1.5.21 或更新的 Long解压，不是内层格式原生密码标准。见[范围](AES_CODECS_1.5.21.md)与[封板](AES_CODECS_FREEZE_1.5.21.md)，旧九种描述按历史范围保留。
 
 

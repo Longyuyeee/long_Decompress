@@ -19,7 +19,7 @@ export const conversionFormats = [
   ['zip', 'ZIP'], ['zipx', 'ZIPX（XZ）'], ['7z', '7Z'], ['rar', 'RAR（需要 WinRAR）'], ['tar', 'TAR'], ['tar.gz', 'TGZ'],
   ['tar.bz2', 'TBZ'], ['tar.xz', 'TXZ'], ['tar.zst', 'TZST'],
   ['tar.lz4', 'TAR.LZ4（快速）'], ['tar.br', 'TAR.BR（Brotli）'],
-  ['tar.lz', 'TAR.LZIP'],
+  ['tar.lz', 'TAR.LZIP'], ['lzma', 'LZMA（单文件）'],
   ['lz4.aes', 'LZ4.AES（单文件加密）'],
   ['br.aes', 'BR.AES（单文件加密）'],
   ['lz.aes', 'LZIP.AES（单文件加密）'],

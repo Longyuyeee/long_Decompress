@@ -1,0 +1,41 @@
+{
+  "producer": "Python stdlib lzma FORMAT_ALONE",
+  "cases": [
+    {
+      "archive": "说明.txt.lzma",
+      "name": "说明.txt",
+      "size": 137216,
+      "sha256": "7778f94b236eca2dbec2f1d3d438ea6aa9213b98a5aef53800916a63be0fa174"
+    },
+    {
+      "archive": "空文件.txt.lzma",
+      "name": "空文件.txt",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "archive": "图标.png.lzma",
+      "name": "图标.png",
+      "size": 1713,
+      "sha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43"
+    },
+    {
+      "archive": "数据.bin.lzma",
+      "name": "数据.bin",
+      "size": 33001,
+      "sha256": "ea0810efa9a0cc745b306d4ec7fd2d1cd64599b321f5f25b70fbc61f96573e4f"
+    },
+    {
+      "archive": "大文本.txt.lzma",
+      "name": "大文本.txt",
+      "size": 9437190,
+      "sha256": "01a3e3bcc672f86f1ca9ded82b7001d8b8b8e96caa8b66a5a3a814eb62fdb7a9"
+    },
+    {
+      "archive": "其他属性.txt.lzma",
+      "name": "其他属性.txt",
+      "size": 137216,
+      "sha256": "7778f94b236eca2dbec2f1d3d438ea6aa9213b98a5aef53800916a63be0fa174"
+    }
+  ]
+}

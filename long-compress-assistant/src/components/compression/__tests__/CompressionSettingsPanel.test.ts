@@ -265,3 +265,12 @@ describe('CompressionSettingsPanel split archive settings', () => {
     expect(wrapper.find('[data-testid="compression-password-vault-menu"]').exists()).toBe(false)
   })
 })
+
+it('lzma1523 retains inherited numeric splitting and shows the sharing hint inline', async () => {
+  const wrapper = mountPanel(settings({format:'lzma',splitArchive:true,splitSize:'64'}))
+  await flushPromises()
+  expect(wrapper.get('[data-testid="compression-split-toggle"]').attributes('disabled')).toBeUndefined()
+  expect(wrapper.get('[data-testid="lzma-volume-hint"]').text()).toContain('.lzma.001')
+  expect((wrapper.get('[data-testid="compression-split-size"]').element as HTMLInputElement).value).toBe('64')
+  expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+})

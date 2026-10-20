@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { useArchiveConversionStore } from '../archiveConversion'
+import { useArchiveConversionStore, conversionFormats } from '../archiveConversion'
 import { useTaskStore } from '../task'
 import { createTaskHistoryRecord } from '@/types/taskHistory'
 const mocks = vi.hoisted(() => ({ invoke: vi.fn(), ask: vi.fn() }))
@@ -449,4 +449,12 @@ describe('archive conversion lifecycle', () => {
     rejectConversion('转换已取消，原包保留'); await pending
     expect(store.task?.status).toBe('cancelled')
   })
+})
+
+it('lzma1523 offers single-file conversion and keeps splitting while clearing unsupported target passwords', async () => {
+  const store=useArchiveConversionStore();store.addSources(['C:/原包.zip'])
+  store.updateItem(store.items[0].id,{splitMiB:64,password:'secret'})
+  store.updateItem(store.items[0].id,{format:'lzma'})
+  expect(conversionFormats.some(f=>f.value==='lzma')).toBe(true)
+  expect(store.items[0].settings).toMatchObject({format:'lzma',splitMiB:64,password:''})
 })

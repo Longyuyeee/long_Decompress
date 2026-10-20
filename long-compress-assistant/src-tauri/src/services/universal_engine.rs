@@ -643,7 +643,7 @@ impl UniversalCliEngine {
         }
         if let Some((codec, _, _)) = super::codec_stream::plain_format(&format) {
             use super::compression_format::CompressionRoute as R;
-            let route = match codec { "gz" => R::Gzip, "bz2" => R::Bzip2, "xz" => R::Xz, "lz" => R::Lzip, "lz4" => R::Lz4, "br" => R::Brotli, _ => R::Zstd };
+            let route = match codec { "gz" => R::Gzip, "bz2" => R::Bzip2, "xz" => R::Xz, "lzma" => R::Lzma, "lz" => R::Lzip, "lz4" => R::Lz4, "br" => R::Brotli, _ => R::Zstd };
             let path = file_path.to_path_buf();
             return tokio::task::spawn_blocking(move || super::compression_verification::verify_native(route, &path, None, || false).map(|_| ())).await?;
         }
