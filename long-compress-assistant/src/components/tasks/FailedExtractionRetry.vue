@@ -33,6 +33,7 @@ const rows = ref(props.taskIds.flatMap(id => {
     password: props.taskIds.length === 1 ? props.suppliedPassword || '' : '',
     extractToSubfolder: task.extractToSubfolder ?? true,
     zipPasswordEncoding: draft ? draft.zipPasswordEncoding : task.zipPasswordEncoding,
+    zpaqSnapshot: draft?.zpaqSnapshot || task.zpaqSnapshot,
     originalSource: task.sourceFiles[0], sourceFormat: task.format,
     createdId: task.retryDraftId || '', error: '', checking: false, missing: [] as string[] }]
 }))
@@ -72,7 +73,7 @@ async function openSourceFolder(row: typeof rows.value[number]) {
 }
 function rescueSource(row: typeof rows.value[number]) {
   if (busy.value || pickerBusy.value || !row.source.trim()) return
-  appStore.openArchiveForDiagnosis({ path: row.source.trim(), taskId: row.id, password: row.password, zipPasswordEncoding: row.zipPasswordEncoding, outputPath: row.output.trim(), extractToSubfolder: row.extractToSubfolder })
+  appStore.openArchiveForDiagnosis({ path: row.source.trim(), taskId: row.id, password: row.password, zpaqSnapshot: row.zpaqSnapshot, zipPasswordEncoding: row.zipPasswordEncoding, outputPath: row.output.trim(), extractToSubfolder: row.extractToSubfolder })
   row.password = ''
   close()
 }
@@ -125,7 +126,7 @@ async function createDrafts() {
           retryOfTaskId: parent.id, sourceFiles: [result.path], outputPath: result.outputPath,
           configurationMode: 'individual', extractToSubfolder: row.extractToSubfolder,
           recycleSourceAfterExtract: false, password: row.password || undefined,
-          zipPasswordEncoding: result.zipPasswordEncoding, format: result.format,
+          zipPasswordEncoding: result.zipPasswordEncoding, format: result.format, zpaqSnapshot: row.zpaqSnapshot,
         })
         parent.retryDraftId = id
         row.source = result.path

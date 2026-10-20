@@ -11,6 +11,9 @@ import { useArchiveBrowserCapabilities } from '@/composables/useArchiveBrowserCa
 import { describeArchiveBrowseError, useArchiveBrowseRequest } from '@/composables/useArchiveBrowseRequest'
 import { useArchiveWorkspaceNavigation } from '@/composables/useArchiveWorkspaceNavigation'
 import ArchiveDirectoryPane from '@/components/archive/ArchiveDirectoryPane.vue'
+import ZpaqSnapshotPicker from '@/components/archive/ZpaqSnapshotPicker.vue'
+import { type ZpaqSnapshot } from '@/types/zpaqSnapshot'
+import { useArchiveConversionStore } from '@/stores/archiveConversion'
 
 interface ArchiveWorkspaceFrame {
   archivePath: string
@@ -41,8 +44,12 @@ const password = ref('')
 const zipPasswordEncoding = ref<ZipPasswordEncoding>()
 const inputEncoding = computed(() => result.value
   ? zipPasswordEncodingForSource(archivePath.value, zipPasswordEncoding.value, result.value.format) : zipPasswordEncoding.value)
-const inputArguments = computed(() => zipPasswordEncodingArguments(inputEncoding.value))
 const result = ref<ArchiveBrowseResult | null>(null)
+const requestedSnapshot = ref<ZpaqSnapshot>()
+const selectedSnapshot = computed(() => result.value?.zpaqHistory?.selected || requestedSnapshot.value)
+const snapshotReadArguments = computed((): [ZipPasswordEncoding?, ZpaqSnapshot?] => selectedSnapshot.value
+  ? [inputEncoding.value, selectedSnapshot.value] : zipPasswordEncodingArguments(inputEncoding.value))
+const conversion = useArchiveConversionStore()
 const selected = ref(new Set<string>())
 const query = ref('')
 const typeFilter = ref('all')
@@ -56,8 +63,9 @@ const {
 } = navigation
 const loading = browseRequest.loading
 const extracting = ref(false)
+const checkingSnapshot = ref(false)
 const openingEntryPath = ref('')
-const inputBusy = computed(() => loading.value || extracting.value || !!openingEntryPath.value)
+const inputBusy = computed(() => loading.value || extracting.value || checkingSnapshot.value || !!openingEntryPath.value)
 const dangerousOpenEntry = ref<ArchiveEntryInfo | null>(null)
 const imagePreview = ref<ArchiveImagePreview | null>(null)
 const textPreview = ref<ArchiveTextPreview | null>(null)
@@ -163,6 +171,7 @@ const openArchivePath = async (path: string, options: ArchiveReadOptions = {}) =
     archivePath.value = path
     password.value = options.password || ''
     zipPasswordEncoding.value = options.zipPasswordEncoding
+    requestedSnapshot.value = options.zpaqSnapshot
     parentFrames.value = []
     currentContentSha256.value = ''
     nestedLoadError.value = ''
@@ -193,7 +202,7 @@ const chooseArchive = async () => {
 }
 
 let lastBrowseError = ''
-const loadArchive = async () => {
+const loadArchive = async (snapshot = requestedSnapshot.value, selectAll = true) => {
   if (!archivePath.value || loading.value) return
   const sequence = ++archiveLoadSequence
   browseRequest.clearNotice()
@@ -202,12 +211,13 @@ const loadArchive = async () => {
   navigation.reset()
   closePreview()
   try {
-    const loaded = await browseRequest.run(archivePath.value, password.value, inputEncoding.value)
+    const loaded = await browseRequest.run(archivePath.value, password.value, inputEncoding.value, snapshot)
     if (sequence !== archiveLoadSequence) return
     if (lastBrowseError && appStore.error === lastBrowseError) appStore.clearError()
     lastBrowseError = ''
     result.value = loaded
-    selected.value = new Set(loaded.entries.filter(entry => !entry.isDir).map(entry => entry.path))
+    requestedSnapshot.value = loaded.zpaqHistory?.selected
+    selected.value = new Set(selectAll ? loaded.entries.filter(entry => !entry.isDir).map(entry => entry.path) : [])
     nestedLoadError.value = ''
     nestedLoadRevision.value = 0
   } catch (error) {
@@ -223,6 +233,22 @@ const loadArchive = async () => {
   }
 }
 
+const changeSnapshot = async (snapshot: ZpaqSnapshot) => {
+  if (inputBusy.value) return
+  requestedSnapshot.value = { ...snapshot }; query.value = ''; typeFilter.value = 'all'
+  closeContextMenu(); detailEntries.value = []; dangerousOpenEntry.value = null
+  await loadArchive(snapshot, false)
+}
+const checkSnapshot = async () => {
+  if (inputBusy.value || !selectedSnapshot.value) return
+  checkingSnapshot.value = true
+  try { await commands.testArchiveIntegrity(archivePath.value, password.value, ...snapshotReadArguments.value); appStore.setSuccess(`快照 ${selectedSnapshot.value.version} 内容检查通过`) }
+  catch (error) { appStore.setError(String(error)) }
+  finally { checkingSnapshot.value = false }
+}
+const convertSnapshot = () => {
+  if (selectedSnapshot.value && !inputBusy.value) conversion.openSnapshot(archivePath.value, selectedSnapshot.value, password.value)
+}
 const closePreview = () => {
   previewSequence++
   imagePreview.value = null
@@ -242,10 +268,10 @@ const openPreview = async (entry: ArchiveEntryInfo) => {
   previewLoading.value = true
   try {
     if (previewKind(entry) === 'image') {
-      const value = await commands.previewArchiveImage(archivePath.value, entry.path, password.value, ...inputArguments.value)
+      const value = await commands.previewArchiveImage(archivePath.value, entry.path, password.value, ...snapshotReadArguments.value)
       if (sequence === previewSequence) imagePreview.value = value
     } else {
-      const value = await commands.previewArchiveText(archivePath.value, entry.path, password.value, ...inputArguments.value)
+      const value = await commands.previewArchiveText(archivePath.value, entry.path, password.value, ...snapshotReadArguments.value)
       if (sequence === previewSequence) textPreview.value = value
     }
   } catch (error) {
@@ -280,7 +306,7 @@ const refreshDirectory = async () => {
   selectionAnchorPath = ''
   closePreview()
   try {
-    const refreshed = await browseRequest.run(archivePath.value, password.value, inputEncoding.value)
+    const refreshed = await browseRequest.run(archivePath.value, password.value, inputEncoding.value, requestedSnapshot.value)
     if (sequence !== archiveLoadSequence) return
     result.value = refreshed
     const availableFiles = new Set(refreshed.entries.filter(entry => !entry.isDir).map(entry => entry.path))
@@ -298,7 +324,7 @@ const openWithDefaultApplication = async (entry: ArchiveEntryInfo, allowDangerou
   closeContextMenu()
   openingEntryPath.value = entry.path
   try {
-    const opened = await commands.openArchiveEntry(archivePath.value, entry.path, password.value, allowDangerous, ...inputArguments.value)
+    const opened = await commands.openArchiveEntry(archivePath.value, entry.path, password.value, allowDangerous, ...snapshotReadArguments.value)
     if (opened.status === 'confirmationRequired') {
       dangerousOpenEntry.value = entry
       return
@@ -350,6 +376,7 @@ const restoreFrame = (index: number) => {
   zipPasswordEncoding.value = frame.zipPasswordEncoding
   outputPath.value = frame.outputPath
   result.value = frame.result
+  requestedSnapshot.value = frame.result.zpaqHistory?.selected
   selected.value = new Set(frame.selected)
   query.value = frame.query
   typeFilter.value = frame.typeFilter
@@ -385,7 +412,7 @@ const enterNestedArchive = async (entry: ArchiveEntryInfo) => {
       password.value,
       archiveDepth.value + 1,
       ancestorHashes,
-      ...inputArguments.value,
+      ...snapshotReadArguments.value,
     )
     const frame = captureCurrentFrame(currentContentSha256.value || materialized.parentSha256)
     if (!frame) throw new Error('外层归档状态不可用')
@@ -393,6 +420,7 @@ const enterNestedArchive = async (entry: ArchiveEntryInfo) => {
     archivePath.value = materialized.cachePath
     password.value = ''
     zipPasswordEncoding.value = undefined
+    requestedSnapshot.value = undefined
     currentContentSha256.value = materialized.contentSha256
     outputPath.value = frame.outputPath
     nestedLoadError.value = ''
@@ -474,7 +502,7 @@ const extractPaths = async (paths: string[], destination: string) => {
   closeContextMenu()
   try {
     await commands.decompressFile(archivePath.value, {
-      sourceFormat: result.value?.format,
+      sourceFormat: result.value?.format, zpaqSnapshot: selectedSnapshot.value,
       outputPath: destination,
       password: password.value || undefined,
       ...(inputEncoding.value !== undefined ? { zipPasswordEncoding: inputEncoding.value } : {}),
@@ -691,6 +719,10 @@ const extractSelected = async () => {
       <span class="archive-depth">{{ archiveDepth }} / 3 层</span>
     </nav>
 
+    <ZpaqSnapshotPicker v-if="result?.zpaqHistory && result.zpaqHistory.snapshots.length > 1" :history="result.zpaqHistory" :disabled="inputBusy" class="shrink-0" @change="changeSnapshot">
+      <button type="button" data-testid="zpaq-snapshot-check" class="browser-secondary" :disabled="inputBusy" @click="checkSnapshot">{{ checkingSnapshot ? '检查中…' : '检查此快照' }}</button>
+      <button type="button" data-testid="zpaq-snapshot-convert" class="browser-secondary" :disabled="inputBusy" @click="convertSnapshot">转换此快照</button>
+    </ZpaqSnapshotPicker>
     <p v-if="result?.format === 'WIM'" data-testid="wim-image-hint" class="text-xs leading-relaxed text-muted">多镜像按 1、2 等编号目录展示，可进入后选择文件；根目录的 [1].xml 为镜像说明。原生 SWM 请将同组 install.swm、install2.swm 等放在同一目录，可从任意一卷进入。提取与转换保留当前目录视图，不修改原镜像。</p>
     <section class="aero-card shrink-0 p-3 grid gap-3 browser-toolbar" :class="{'has-zip-encoding': archivePath && supportsZipPasswordEncoding(archivePath, result?.format)}">
       <div class="min-w-0 browser-field">
@@ -700,8 +732,8 @@ const extractSelected = async () => {
       <div class="min-w-0 browser-field">
         <span class="browser-label">密码</span>
         <div class="flex min-w-0 gap-2">
-          <input v-model="password" :disabled="inputBusy" class="browser-input min-w-0 flex-1" type="password" placeholder="留空则尝试密码保险箱" @keyup.enter="loadArchive">
-          <button class="browser-icon-button" type="button" :disabled="!archivePath || loading" @click="loadArchive" title="重新读取">
+          <input v-model="password" :disabled="inputBusy" class="browser-input min-w-0 flex-1" type="password" placeholder="留空则尝试密码保险箱" @keyup.enter="loadArchive()">
+          <button class="browser-icon-button" type="button" :disabled="!archivePath || loading" @click="loadArchive()" title="重新读取">
             <i :class="loading ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"></i>
           </button>
         </div>
@@ -721,7 +753,7 @@ const extractSelected = async () => {
     </div>
 
     <div v-else-if="!result && parentFrames.length > 0" class="aero-card flex-1 min-h-0 grid place-items-center">
-      <div class="max-w-lg text-center px-6"><i class="pi pi-lock text-amber-500 text-5xl"></i><h2 class="mt-5 text-xl font-black text-content">内层归档尚未打开</h2><p class="mt-2 text-sm text-muted leading-6 break-words" data-testid="archive-nested-error" :data-error-revision="nestedLoadRevision">{{ nestedLoadError || '如果内层归档已加密，请只输入这一层的密码后重试；外层密码不会自动继承。' }}</p><div class="mt-5 flex justify-center gap-3"><button class="browser-primary" data-testid="archive-nested-retry" type="button" @click="loadArchive"><i class="pi pi-refresh"></i><span>使用当前内层密码重试</span></button><button class="browser-icon-button nested-return" type="button" title="返回上一层" @click="restoreFrame(parentFrames.length - 1)"><i class="pi pi-arrow-left"></i></button></div></div>
+      <div class="max-w-lg text-center px-6"><i class="pi pi-lock text-amber-500 text-5xl"></i><h2 class="mt-5 text-xl font-black text-content">内层归档尚未打开</h2><p class="mt-2 text-sm text-muted leading-6 break-words" data-testid="archive-nested-error" :data-error-revision="nestedLoadRevision">{{ nestedLoadError || '如果内层归档已加密，请只输入这一层的密码后重试；外层密码不会自动继承。' }}</p><div class="mt-5 flex justify-center gap-3"><button class="browser-primary" data-testid="archive-nested-retry" type="button" @click="loadArchive()"><i class="pi pi-refresh"></i><span>使用当前内层密码重试</span></button><button class="browser-icon-button nested-return" type="button" title="返回上一层" @click="restoreFrame(parentFrames.length - 1)"><i class="pi pi-arrow-left"></i></button></div></div>
     </div>
 
     <div v-else-if="!result" class="aero-card browser-empty flex-1 min-h-0 grid place-items-center border-dashed" @click="chooseArchive">
@@ -949,6 +981,9 @@ const extractSelected = async () => {
 .browser-cancel-read { width: auto; display: inline-flex; align-items: center; justify-content: center; gap: .5rem; white-space: nowrap; }
 .browser-primary { min-height: 2.85rem; padding: 0 1.15rem; border-radius: .9rem; display: inline-flex; align-items: center; justify-content: center; gap: .55rem; color: white; font-size: .8rem; font-weight: 900; background: var(--dynamic-accent); box-shadow: 0 8px 24px color-mix(in srgb, var(--dynamic-accent) 25%, transparent); }
 .browser-primary:disabled, .browser-icon-button:disabled { opacity: .45; cursor: not-allowed; }
+.browser-secondary { min-height: 2rem; padding: .4rem .75rem; border: 1px solid var(--border-subtle); border-radius: .65rem; background: var(--bg-card); color: var(--dynamic-accent); font-size: .75rem; font-weight: 700; }
+.browser-secondary:hover { background: var(--bg-input); }
+.browser-secondary:disabled { opacity: .45; cursor: not-allowed; }
 .browser-empty { flex: 1 0 auto; padding-block: 1.5rem; overflow-wrap: anywhere; cursor: pointer; transition: border-color .2s ease, background .2s ease, transform .2s ease; }
 .browser-empty:hover { border-color: var(--dynamic-accent); background: color-mix(in srgb, var(--dynamic-accent) 5%, var(--bg-card)); transform: translateY(-1px); }
 .browser-drop-hint { display: inline-flex; margin-top: 1rem; padding: .45rem .75rem; border-radius: 999px; background: color-mix(in srgb, var(--dynamic-accent) 10%, transparent); color: var(--dynamic-accent); font-size: .7rem; font-weight: 800; }

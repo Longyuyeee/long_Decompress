@@ -66,6 +66,8 @@ static bool long_json=false;
 static bool long_streaming=false;
 static bool long_journaling=false;
 static int long_scan_errors=0;
+static unsigned long long long_snapshot=0;
+static long long long_snapshot_date=0;
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1351,6 +1353,13 @@ int Jidac::doCommand(int argc, const char** argv) {
     else if (opt=="-summary" && i<argc-1) summary=atoi(argv[++i]);
     else if (opt[1]=='s') summary=atoi(argv[i]+2);
     else if (opt=="-long-json") long_json=true;
+    else if (opt=="-long-snapshot" && i+2<argc) {
+      long_snapshot=strtoull(argv[++i], 0, 10);
+      long_snapshot_date=strtoll(argv[++i], 0, 10);
+      if (!long_snapshot || long_snapshot>9999999 || long_snapshot_date<19000101000000LL
+          || long_snapshot_date>29991231235959LL)
+        error("LONG_ZPAQ_SNAPSHOT: invalid transaction identity");
+    }
     else if (opt=="-long-volumes") {
       unsigned n=long_input_u32();
       if (n==0 || n>100000) error("Long volume list empty or too large");
@@ -1455,6 +1464,10 @@ int Jidac::doCommand(int argc, const char** argv) {
   }
 
   // Set threads
+  if (long_snapshot && (command!='l' && command!='x'))
+    error("LONG_ZPAQ_SNAPSHOT: history is read-only");
+  if (long_snapshot && (all || repack || version!=DEFAULT_VERSION))
+    error("LONG_ZPAQ_SNAPSHOT: conflicting history options");
   if (threads<1) threads=numberOfProcessors();
 
   // Test date
@@ -1707,7 +1720,10 @@ int64_t Jidac::read_archive(const char* arc, int *errors) {
                 if (len>65535) error("filename too long");
                 string fn=s;  // filename renamed
                 if (all) fn=append_path(itos(ver.size()-1, all), fn);
-                const bool issel=isselected(fn.c_str(), renamed);
+                // Scan every transaction for a complete catalog, but freeze the
+                // current-file map at the selected snapshot. Codecs are unchanged.
+                const bool issel=isselected(fn.c_str(), renamed)
+                  && (!long_snapshot || ver.size()-1<=long_snapshot);
                 s+=len+1;  // skip filename
                 if (s>end) error("filename too long");
                 if (dtr.date) {
@@ -1796,6 +1812,9 @@ endblock:;
   }  // end while !done
   if (in.tell()>32*(password!=0) && !found_data)
     error("archive contains no data");
+  if (long_snapshot && (!long_journaling || long_streaming || long_snapshot>=ver.size()
+      || ver[long_snapshot].date!=long_snapshot_date))
+    error("LONG_ZPAQ_SNAPSHOT: transaction missing or changed; reopen the archive");
   printf("%d versions, %u files, %u fragments, %1.6f MB\n", 
       int(ver.size()-1), files, unsigned(ht.size())-1,
       block_offset/1000000.0);
@@ -3747,7 +3766,18 @@ int Jidac::list() {
         (long long)p->second.size, (long long)p->second.date,
         p->first[p->first.size()-1]=='/' ? "true" : "false");
     }
-    printf("]}\n");
+    printf("]");
+    if (long_journaling && !long_streaming) {
+      const unsigned selected=long_snapshot ? unsigned(long_snapshot) : unsigned(ver.size()-1);
+      printf(",\"history\":{\"selected\":{\"version\":%u,\"date\":%lld},\"snapshots\":[", selected, (long long)ver[selected].date);
+      for (unsigned i=1; i<ver.size(); ++i) {
+        if (i>1) putchar(',');
+        printf("{\"version\":%u,\"date\":%lld,\"updates\":%d,\"deletes\":%d}",
+          i,(long long)ver[i].date,ver[i].updates,ver[i].deletes);
+      }
+      printf("]}");
+    }
+    printf("}\n");
     return 0;
   }
 

@@ -399,17 +399,19 @@ fn preview_archive_image_sync(
     entry_path: &str,
     password: Option<&str>,
     encoding: Option<ZipPasswordEncoding>,
+    snapshot: Option<crate::models::compression::ZpaqSnapshot>,
 ) -> Result<ArchiveImagePreview> {
+    anyhow::ensure!(snapshot.is_none() || super::archive_browser::detect_format(archive_path)? == ArchiveFormat::Zpaq, "所选快照只适用于 ZPAQ 日志归档");
     if super::archive_browser::detect_format(archive_path)? == ArchiveFormat::AesEncrypted {
         let inner = super::aes_container::AuthenticatedInner::open(archive_path, password, || Ok(()))?;
-        return preview_archive_image_sync(&inner.path, entry_path, None, encoding);
+        return preview_archive_image_sync(&inner.path, entry_path, None, encoding, snapshot);
     }
     let entry_path = normalized_entry_path(entry_path)?;
     let format = preview_format(archive_path)?;
     let bytes = match format {
         "ZIP" => read_zip_entry(archive_path, &entry_path, password, encoding)?,
         "WIM" => tauri::async_runtime::block_on(super::wim_preview::preview_entry(archive_path, &entry_path, password, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES, std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false))))?.0,
-        "ZPAQ" => tauri::async_runtime::block_on(super::zpaq_engine::preview_entry(archive_path, &entry_path, password, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES))?.0,
+        "ZPAQ" => tauri::async_runtime::block_on(super::zpaq_engine::preview_entry_at(archive_path, &entry_path, password, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES, snapshot.as_ref()))?.0,
         format if format.starts_with("TAR") => read_tar_family(archive_path, format, &entry_path)?,
         "GZIP" | "BZIP2" | "XZ" | "ZSTD" | "LZMA" | "LZIP" | "LZ4" | "BR" => read_plain_stream(archive_path, format, &entry_path, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES)?.bytes,
         _ => anyhow::bail!(
@@ -444,12 +446,19 @@ pub async fn preview_archive_image_with_encoding(
     password: Option<&str>,
     encoding: Option<ZipPasswordEncoding>,
 ) -> Result<ArchiveImagePreview> {
+    preview_archive_image_at(archive_path, entry_path, password, encoding, None).await
+}
+
+pub async fn preview_archive_image_at(
+    archive_path: &Path, entry_path: &str, password: Option<&str>,
+    encoding: Option<ZipPasswordEncoding>, snapshot: Option<crate::models::compression::ZpaqSnapshot>,
+) -> Result<ArchiveImagePreview> {
     let archive_path = archive_path.to_path_buf();
     let entry_path = entry_path.to_string();
     let password = password.map(str::to_string);
     tauri::async_runtime::spawn_blocking(move || {
         let source = super::split_archive_detector::SplitArchiveDetector::complete_source(&archive_path)?;
-        preview_archive_image_sync(&source, &entry_path, password.as_deref(), encoding)
+        preview_archive_image_sync(&source, &entry_path, password.as_deref(), encoding, snapshot)
     })
     .await
     .context("Archive image preview worker failed")?
@@ -528,10 +537,12 @@ fn preview_archive_text_sync(
     entry_path: &str,
     password: Option<&str>,
     password_encoding: Option<ZipPasswordEncoding>,
+    snapshot: Option<crate::models::compression::ZpaqSnapshot>,
 ) -> Result<ArchiveTextPreview> {
+    anyhow::ensure!(snapshot.is_none() || super::archive_browser::detect_format(archive_path)? == ArchiveFormat::Zpaq, "所选快照只适用于 ZPAQ 日志归档");
     if super::archive_browser::detect_format(archive_path)? == ArchiveFormat::AesEncrypted {
         let inner = super::aes_container::AuthenticatedInner::open(archive_path, password, || Ok(()))?;
-        return preview_archive_text_sync(&inner.path, entry_path, None, password_encoding);
+        return preview_archive_text_sync(&inner.path, entry_path, None, password_encoding, snapshot);
     }
     let entry_path = normalized_entry_path(entry_path)?;
     let format = preview_format(archive_path)?;
@@ -542,7 +553,7 @@ fn preview_archive_text_sync(
             TextBytes { bytes, total_size }
         }
         "ZPAQ" => {
-            let (bytes, total_size) = tauri::async_runtime::block_on(super::zpaq_engine::preview_entry(archive_path, &entry_path, password, MAX_TAR_PREVIEW_SCAN_BYTES, MAX_TEXT_PREVIEW_BYTES))?;
+            let (bytes, total_size) = tauri::async_runtime::block_on(super::zpaq_engine::preview_entry_at(archive_path, &entry_path, password, MAX_TAR_PREVIEW_SCAN_BYTES, MAX_TEXT_PREVIEW_BYTES, snapshot.as_ref()))?;
             TextBytes { bytes, total_size }
         }
         format if format.starts_with("TAR") => {
@@ -585,12 +596,19 @@ pub async fn preview_archive_text_with_encoding(
     password: Option<&str>,
     encoding: Option<ZipPasswordEncoding>,
 ) -> Result<ArchiveTextPreview> {
+    preview_archive_text_at(archive_path, entry_path, password, encoding, None).await
+}
+
+pub async fn preview_archive_text_at(
+    archive_path: &Path, entry_path: &str, password: Option<&str>,
+    encoding: Option<ZipPasswordEncoding>, snapshot: Option<crate::models::compression::ZpaqSnapshot>,
+) -> Result<ArchiveTextPreview> {
     let archive_path = archive_path.to_path_buf();
     let entry_path = entry_path.to_string();
     let password = password.map(str::to_string);
     tauri::async_runtime::spawn_blocking(move || {
         let source = super::split_archive_detector::SplitArchiveDetector::complete_source(&archive_path)?;
-        preview_archive_text_sync(&source, &entry_path, password.as_deref(), encoding)
+        preview_archive_text_sync(&source, &entry_path, password.as_deref(), encoding, snapshot)
     })
     .await
     .context("Archive text preview worker failed")?

@@ -2,7 +2,7 @@
 use anyhow::{Context, Result};
 use serde::Deserialize;
 use std::{io::Read, path::{Path, PathBuf}, sync::{Arc, atomic::AtomicBool}, time::Duration};
-use crate::models::compression::{ArchiveBrowseResult, ArchiveEntryInfo};
+use crate::models::compression::{ArchiveBrowseResult, ArchiveEntryInfo, ZpaqHistory, ZpaqSnapshot};
 
 pub fn command_path() -> Option<PathBuf> {
     let mut roots = vec![PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("resources")];
@@ -43,11 +43,11 @@ fn input(password: Option<&str>, selected: &[String]) -> Result<Vec<u8>> {
     Ok(data)
 }
 
-async fn run(path: &Path, password: Option<&str>, output: Option<&Path>, test: bool, selected: &[String], cancelled: Arc<AtomicBool>) -> Result<Vec<u8>> {
-    run_with_preview(path, password, output, test, selected, cancelled, None).await
+async fn run(path: &Path, password: Option<&str>, output: Option<&Path>, test: bool, selected: &[String], cancelled: Arc<AtomicBool>, snapshot: Option<&ZpaqSnapshot>) -> Result<Vec<u8>> {
+    run_with_preview(path, password, output, test, selected, cancelled, None, snapshot).await
 }
 
-async fn run_with_preview(path: &Path, password: Option<&str>, output: Option<&Path>, test: bool, selected: &[String], cancelled: Arc<AtomicBool>, preview_limit: Option<u64>) -> Result<Vec<u8>> {
+async fn run_with_preview(path: &Path, password: Option<&str>, output: Option<&Path>, test: bool, selected: &[String], cancelled: Arc<AtomicBool>, preview_limit: Option<u64>, snapshot: Option<&ZpaqSnapshot>) -> Result<Vec<u8>> {
     anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Relaxed), "ZPAQ 读取已取消");
     let source = super::split_archive_detector::SplitArchiveDetector::complete_source(path)?;
     let path = source.as_path();
@@ -57,6 +57,11 @@ async fn run_with_preview(path: &Path, password: Option<&str>, output: Option<&P
     let mut command = crate::utils::process::async_command(tool);
     command.arg(if test || output.is_some() { "x" } else { "l" }).arg(path)
         .args(["-long-stdin", "-threads", "2", "-noattributes"]);
+    if let Some(snapshot) = snapshot {
+        anyhow::ensure!(snapshot.version > 0 && snapshot.version <= 9_999_999 && (19000101000000..=29991231235959).contains(&snapshot.date),
+            "[archive-inspection:snapshot-unavailable] ZPAQ 快照标识无效，请重新打开归档选择快照");
+        command.args(["-long-snapshot", &snapshot.version.to_string(), &snapshot.date.to_string()]);
+    }
     let mut data = input(if encrypted { password } else { None }, selected)?;
     if super::numeric_volume_reader::ZipInputReader::is_numeric_first(path) {
         let group = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(path)?.context("没有找到 ZPAQ 数字卷组")?;
@@ -80,6 +85,9 @@ async fn run_with_preview(path: &Path, password: Option<&str>, output: Option<&P
     if !result.status.success() {
         let detail = format!("{}\n{}", String::from_utf8_lossy(&result.stderr), String::from_utf8_lossy(&result.stdout));
         if let Some(error) = io_failure(&detail) { return Err(error); }
+        if detail.contains("LONG_ZPAQ_SNAPSHOT:") {
+            anyhow::bail!("[archive-inspection:snapshot-unavailable] 所选 ZPAQ 快照不存在或来源已变化，请重新打开归档并选择快照；没有改为读取最新版本。");
+        }
         if detail.contains("LONG_ZPAQ_PREVIEW:") {
             anyhow::bail!("此 ZPAQ 条目的大小、共享块或读取量超过内部预览范围，请先解压后打开；未输出部分预览作为完整文件。");
         }
@@ -151,7 +159,7 @@ pub async fn create(sources: &[String], output: &Path, options: &crate::models::
 }
 
 #[derive(Deserialize)]
-struct Directory { kind: String, versions: u64, entries: Vec<Entry> }
+struct Directory { kind: String, versions: u64, entries: Vec<Entry>, #[serde(default)] history: Option<ZpaqHistory> }
 #[derive(Deserialize)]
 struct Entry { path: String, size: i64, date: i64, directory: bool }
 
@@ -178,12 +186,16 @@ fn parse_directory(bytes: &[u8], encrypted: bool) -> Result<ArchiveBrowseResult>
     }
     let total_files = entries.iter().filter(|e| !e.is_dir).count();
     let total_uncompressed_size = entries.iter().filter(|e| !e.is_dir).try_fold(0u64, |sum, e| sum.checked_add(e.size).context("ZPAQ 大小溢出"))?;
-    Ok(ArchiveBrowseResult { format: "ZPAQ".into(), total_files, total_directories: entries.len() - total_files,
+    Ok(ArchiveBrowseResult { zpaq_history: directory.history, format: "ZPAQ".into(), total_files, total_directories: entries.len() - total_files,
         total_uncompressed_size, total_compressed_size: 0, encrypted, entries })
 }
 
 pub async fn browse(path: &Path, password: Option<&str>, cancelled: Arc<AtomicBool>) -> Result<ArchiveBrowseResult> {
-    let bytes = run(path, password, None, false, &[], cancelled).await?;
+    browse_at(path, password, None, cancelled).await
+}
+
+pub async fn browse_at(path: &Path, password: Option<&str>, snapshot: Option<&ZpaqSnapshot>, cancelled: Arc<AtomicBool>) -> Result<ArchiveBrowseResult> {
+    let bytes = run(path, password, None, false, &[], cancelled, snapshot).await?;
     let mut directory = parse_directory(&bytes, requires_password(path)?)?;
     directory.total_compressed_size = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(path)?
         .map(|group| group.total_size).unwrap_or(std::fs::metadata(path)?.len());
@@ -194,15 +206,19 @@ pub async fn browse(path: &Path, password: Option<&str>, cancelled: Arc<AtomicBo
 /// A bounded temporary copy of the selected entry, never of the whole archive.
 /// Unknown streaming sizes are deliberately not treated as known zero.
 pub async fn preview_entry(path: &Path, entry: &str, password: Option<&str>, max_output: u64, keep: u64) -> Result<(Vec<u8>, u64)> {
+    preview_entry_at(path, entry, password, max_output, keep, None).await
+}
+
+pub async fn preview_entry_at(path: &Path, entry: &str, password: Option<&str>, max_output: u64, keep: u64, snapshot: Option<&ZpaqSnapshot>) -> Result<(Vec<u8>, u64)> {
     let entry = super::archive_entry_open::normalize_safe_entry_path(entry)?;
     let flag = Arc::new(AtomicBool::new(false));
-    let listing = run_with_preview(path, password, None, false, &[], flag.clone(), Some(max_output)).await?;
+    let listing = run_with_preview(path, password, None, false, &[], flag.clone(), Some(max_output), snapshot).await?;
     let directory = parse_directory(&listing, requires_password(path)?)?;
     let item = directory.entries.iter().find(|item| item.path == entry && !item.is_dir).context("找不到所选 ZPAQ 文件")?;
     anyhow::ensure!(item.size_known != Some(false) && item.size <= max_output,
         "此 ZPAQ 文件大小未知或超过内部预览范围，请先解压后打开。");
     let temporary = tempfile::Builder::new().prefix("long-zpaq-preview-").tempdir()?;
-    run_with_preview(path, password, Some(temporary.path()), false, &[entry.clone()], flag, Some(max_output)).await?;
+    run_with_preview(path, password, Some(temporary.path()), false, &[entry.clone()], flag, Some(max_output), snapshot).await?;
     let file = std::fs::File::open(temporary.path().join(&entry))?;
     let actual = file.metadata()?.len();
     anyhow::ensure!(actual == item.size && actual <= max_output, "ZPAQ 预览条目大小不一致，请先解压并检查原包。");
@@ -212,8 +228,12 @@ pub async fn preview_entry(path: &Path, entry: &str, password: Option<&str>, max
 }
 
 pub async fn verify(path: &Path, password: Option<&str>, cancelled: Arc<AtomicBool>) -> Result<()> {
-    browse(path, password, cancelled.clone()).await?;
-    run(path, password, None, true, &[], cancelled).await?;
+    verify_at(path, password, None, cancelled).await
+}
+
+pub async fn verify_at(path: &Path, password: Option<&str>, snapshot: Option<&ZpaqSnapshot>, cancelled: Arc<AtomicBool>) -> Result<()> {
+    browse_at(path, password, snapshot, cancelled.clone()).await?;
+    run(path, password, None, true, &[], cancelled, snapshot).await?;
     Ok(())
 }
 
@@ -227,14 +247,18 @@ pub async fn try_password(path: &Path, password: &str, cancelled: Arc<AtomicBool
 }
 
 pub async fn extract(path: &Path, output: &Path, password: Option<&str>, selected: &[String], cancelled: Arc<AtomicBool>) -> Result<()> {
-    let directory = browse(path, password, cancelled.clone()).await?;
+    extract_at(path, output, password, selected, None, cancelled).await
+}
+
+pub async fn extract_at(path: &Path, output: &Path, password: Option<&str>, selected: &[String], snapshot: Option<&ZpaqSnapshot>, cancelled: Arc<AtomicBool>) -> Result<()> {
+    let directory = browse_at(path, password, snapshot, cancelled.clone()).await?;
     let mut exact = Vec::new();
     for name in selected {
         let normalized = super::archive_entry_open::normalize_safe_entry_path(name.trim_end_matches('/'))?;
         let entry = directory.entries.iter().find(|e| e.path == normalized).context("所选 ZPAQ 条目不存在于当前视图")?;
         exact.push(if entry.is_dir { format!("{normalized}/") } else { normalized });
     }
-    run(path, password, Some(output), false, &exact, cancelled).await?;
+    run(path, password, Some(output), false, &exact, cancelled, snapshot).await?;
     Ok(())
 }
 

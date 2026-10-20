@@ -329,7 +329,7 @@ async (tasks, _, onCleanup) => {
                 {{ task.name }}
               </OverflowTooltip>
               <span class="text-dim text-sm uppercase font-black tracking-widest bg-input/50 px-1 py-0 rounded border border-subtle/20 shrink-0">
-                {{ task.format?.toUpperCase() }}
+                {{ task.format?.toUpperCase() }}<template v-if="task.zpaqSnapshot"> · 快照 {{ task.zpaqSnapshot.version }}</template>
               </span>
 
             </div>

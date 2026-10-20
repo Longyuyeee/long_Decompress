@@ -315,6 +315,7 @@ pub async fn convert_archive(
     source_zip_password_encoding: Option<ZipPasswordEncoding>,
     output_path: String,
     options: CompressionOptions,
+    zpaq_snapshot: Option<crate::models::compression::ZpaqSnapshot>,
 ) -> Result<PublishedArchiveOutput, String> {
     validate_conversion_request(&source_path, &output_path, &options)?;
     let _output_guard = CompressionOutputGuard::acquire(&task_id, &output_path)?;
@@ -324,7 +325,8 @@ pub async fn convert_archive(
     let staging = tempfile::Builder::new().prefix(".long-convert-").tempdir_in(parent)
         .map_err(|error| format!("无法创建转换暂存目录：{}", crate::services::archive_io::message(&error.into())))?;
     service.emit_log(&window, &task_id, "转换归档：先解压至临时目录，再校验并发布新包；保留原包。", TaskLogSeverity::Info);
-    let extraction = conversion_extraction_options(source_zip_password_encoding);
+    let mut extraction = conversion_extraction_options(source_zip_password_encoding);
+    extraction.zpaq_snapshot = zpaq_snapshot;
     let _ = window.emit("archive-conversion-phase", serde_json::json!({"taskId": task_id, "phase": "reading"}));
     service.extract(window.clone(), task_id.clone(), source_path,
         Some(staging.path().to_string_lossy().into_owned()), source_password, extraction)
@@ -1221,6 +1223,7 @@ pub async fn diagnose_archive(
     file_path: String,
     password: Option<String>,
     zip_password_encoding: Option<ZipPasswordEncoding>,
+    zpaq_snapshot: Option<crate::models::compression::ZpaqSnapshot>,
 ) -> Result<crate::services::archive_diagnostics::ArchiveDiagnosticReport, String> {
     let cancelled = Arc::new(AtomicBool::new(false));
     match ARCHIVE_DIAGNOSTIC_FLAGS.entry(diagnostic_id.clone()) {
@@ -1234,11 +1237,12 @@ pub async fn diagnose_archive(
         }
     }
     let _guard = ArchiveDiagnosticGuard { diagnostic_id };
-    crate::services::archive_diagnostics::diagnose_archive_with_encoding(
+    crate::services::archive_diagnostics::diagnose_archive_at(
         std::path::Path::new(&file_path),
         password.as_deref(),
         zip_password_encoding,
         cancelled,
+        zpaq_snapshot,
     )
     .await
     .map_err(|error| error.to_string())
@@ -1260,6 +1264,7 @@ pub async fn browse_archive(
     password: Option<String>,
     browse_id: Option<String>,
     zip_password_encoding: Option<ZipPasswordEncoding>,
+    zpaq_snapshot: Option<crate::models::compression::ZpaqSnapshot>,
 ) -> Result<crate::models::compression::ArchiveBrowseResult, String> {
     let resolved_password = match password.filter(|value| !value.is_empty()) {
         Some(password) => Some(password),
@@ -1287,11 +1292,12 @@ pub async fn browse_archive(
         }
     }
     let _guard = ArchiveBrowseGuard { browse_id };
-    crate::services::archive_browser::browse_archive_cancellable_with_encoding(
+    crate::services::archive_browser::browse_archive_cancellable_at(
         std::path::Path::new(&file_path),
         resolved_password.as_deref(),
         cancelled,
         zip_password_encoding,
+        zpaq_snapshot,
     )
     .await
     // anyhow's Display only contains the outer context. Keep the native cause
@@ -1327,6 +1333,7 @@ pub async fn preview_archive_image(
     entry_path: String,
     password: Option<String>,
     zip_password_encoding: Option<ZipPasswordEncoding>,
+    zpaq_snapshot: Option<crate::models::compression::ZpaqSnapshot>,
 ) -> Result<crate::services::archive_preview::ArchiveImagePreview, String> {
     let resolved_password = match password.filter(|value| !value.is_empty()) {
         Some(password) => Some(password),
@@ -1339,11 +1346,12 @@ pub async fn preview_archive_image(
                 .await.map_err(|error| error.to_string())?
         }
     };
-    crate::services::archive_preview::preview_archive_image_with_encoding(
+    crate::services::archive_preview::preview_archive_image_at(
         std::path::Path::new(&file_path),
         &entry_path,
         resolved_password.as_deref(),
         zip_password_encoding,
+        zpaq_snapshot,
     )
     .await
     .map_err(|error| format!("{error:#}"))
@@ -1361,6 +1369,7 @@ impl Drop for ArchiveBrowseGuard {
 
 fn classify_archive_browse_error(error: &str) -> String {
     let lower = error.to_ascii_lowercase();
+    if error.contains("[archive-inspection:snapshot-unavailable]") { return format!("ARCHIVE_BROWSE_FAILED|所选快照不存在或来源已变化，请重新打开归档选择；未改为读取最新版本|{error}"); }
     if error.contains("[alz-encoding]") {
         return format!("ARCHIVE_BROWSE_UNSUPPORTED|ALZ 文件名编码不兼容，请选择原工具代码页后重新读取|{error}");
     }
@@ -1432,6 +1441,7 @@ pub async fn preview_archive_text(
     entry_path: String,
     password: Option<String>,
     zip_password_encoding: Option<ZipPasswordEncoding>,
+    zpaq_snapshot: Option<crate::models::compression::ZpaqSnapshot>,
 ) -> Result<crate::services::archive_preview::ArchiveTextPreview, String> {
     let resolved_password = match password.filter(|value| !value.is_empty()) {
         Some(password) => Some(password),
@@ -1444,11 +1454,12 @@ pub async fn preview_archive_text(
                 .await.map_err(|error| error.to_string())?
         }
     };
-    crate::services::archive_preview::preview_archive_text_with_encoding(
+    crate::services::archive_preview::preview_archive_text_at(
         std::path::Path::new(&file_path),
         &entry_path,
         resolved_password.as_deref(),
         zip_password_encoding,
+        zpaq_snapshot,
     )
     .await
     .map_err(|error| format!("{error:#}"))
@@ -1466,6 +1477,7 @@ pub async fn materialize_nested_archive(
     zip_password_encoding: Option<ZipPasswordEncoding>,
     target_depth: usize,
     ancestor_hashes: Vec<String>,
+    zpaq_snapshot: Option<crate::models::compression::ZpaqSnapshot>,
 ) -> Result<crate::services::archive_entry_open::NestedArchiveMaterializeResult, String> {
     use crate::services::archive_entry_open::{
         normalize_safe_entry_path, validate_extracted_file, validate_nested_archive_identity,
@@ -1486,7 +1498,7 @@ pub async fn materialize_nested_archive(
         }
     };
     let metadata =
-        crate::services::archive_browser::browse_archive_with_encoding(&archive, resolved_password.as_deref(), zip_password_encoding)
+        crate::services::archive_browser::browse_archive_cancellable_at(&archive, resolved_password.as_deref(), Arc::new(AtomicBool::new(false)), zip_password_encoding, zpaq_snapshot)
             .await
             .map_err(|error| error.to_string())?;
     let selected = metadata
@@ -1499,6 +1511,7 @@ pub async fn materialize_nested_archive(
         .create_entry_dir(expected_bytes)
         .map_err(|error| error.to_string())?;
     let options = DecompressOptions {
+        zpaq_snapshot,
         zip_password_encoding,
         parallel_zip: false,
         preserve_paths: true,
@@ -1575,6 +1588,7 @@ pub async fn open_archive_entry(
     password: Option<String>,
     zip_password_encoding: Option<ZipPasswordEncoding>,
     allow_dangerous: bool,
+    zpaq_snapshot: Option<crate::models::compression::ZpaqSnapshot>,
 ) -> Result<crate::services::archive_entry_open::ArchiveEntryOpenResult, String> {
     use crate::services::archive_entry_open::{
         is_dangerous_entry, normalize_safe_entry_path, open_with_default_application,
@@ -1605,7 +1619,7 @@ pub async fn open_archive_entry(
         }
     };
     let metadata =
-        crate::services::archive_browser::browse_archive_with_encoding(archive, resolved_password.as_deref(), zip_password_encoding)
+        crate::services::archive_browser::browse_archive_cancellable_at(archive, resolved_password.as_deref(), Arc::new(AtomicBool::new(false)), zip_password_encoding, zpaq_snapshot)
             .await
             .map_err(|error| error.to_string())?;
     let selected = metadata
@@ -1619,6 +1633,7 @@ pub async fn open_archive_entry(
         .map_err(|error| error.to_string())?;
 
     let options = DecompressOptions {
+        zpaq_snapshot,
         zip_password_encoding,
         parallel_zip: false,
         preserve_paths: true,
@@ -1676,10 +1691,18 @@ pub async fn test_archive_integrity(
     file_path: String,
     password: Option<String>,
     zip_password_encoding: Option<ZipPasswordEncoding>,
+    zpaq_snapshot: Option<crate::models::compression::ZpaqSnapshot>,
 ) -> Result<String, String> {
     use crate::services::universal_engine::UniversalCliEngine;
 
     let path = std::path::Path::new(&file_path);
+    if let Some(snapshot) = zpaq_snapshot {
+        if crate::services::archive_browser::detect_format(path).map_err(|e|format!("{e:#}"))? != crate::services::archive_format::ArchiveFormat::Zpaq {
+            return Err("所选快照只适用于 ZPAQ 日志归档".into());
+        }
+        return crate::services::zpaq_engine::verify_at(path,password.as_deref(),Some(&snapshot),Arc::new(AtomicBool::new(false)))
+            .await.map(|_|format!("快照 {} 内容检查通过",snapshot.version)).map_err(|e|format!("{e:#}"));
+    }
     if crate::services::archive_browser::detect_format(path).map_err(|e| format!("{e:#}"))?
         == crate::services::archive_format::ArchiveFormat::Egg {
         return crate::services::egg_engine::verify(path, password.as_deref(), &DecompressOptions { zip_password_encoding, ..Default::default() }, Arc::new(AtomicBool::new(false)))

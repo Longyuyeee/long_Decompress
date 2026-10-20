@@ -1,6 +1,7 @@
 import type { ZipPasswordEncoding } from './zipPassword'
 
 export interface ConversionSettings {
+  sourceZpaqSnapshot?: import('./zpaqSnapshot').ZpaqSnapshot
   sourceZipPasswordEncoding?: ZipPasswordEncoding
   format: string
   level: number

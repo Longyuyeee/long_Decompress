@@ -9,7 +9,7 @@ export function defaultConversionSettings(): ConversionSettings {
 }
 export function conversionOutputPath(source: string, settings: ConversionSettings, intent = 'convert'): string {
   if (settings.outputPath) return settings.outputPath
-  const stem = archiveSourceStem(source)
+  const stem = archiveSourceStem(source) + (settings.sourceZpaqSnapshot ? `_快照${settings.sourceZpaqSnapshot.version}` : '')
   const directory = settings.outputDirectory || parentDirectory(source)
   return `${directory.replace(/[\\/]$/, '')}/${stem}_${intent === 'reconfigure' ? '调整' : '转换'}.${settings.format}`
 }

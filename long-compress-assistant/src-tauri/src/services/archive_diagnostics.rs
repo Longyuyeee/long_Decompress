@@ -326,6 +326,13 @@ pub async fn diagnose_archive_with_encoding(
     zip_password_encoding: Option<ZipPasswordEncoding>,
     cancelled: Arc<AtomicBool>,
 ) -> Result<ArchiveDiagnosticReport> {
+    diagnose_archive_at(path, password, zip_password_encoding, cancelled, None).await
+}
+
+pub async fn diagnose_archive_at(
+    path: &Path, password: Option<&str>, zip_password_encoding: Option<ZipPasswordEncoding>,
+    cancelled: Arc<AtomicBool>, snapshot: Option<crate::models::compression::ZpaqSnapshot>,
+) -> Result<ArchiveDiagnosticReport> {
     check_cancelled(&cancelled)?;
     if !path.is_file() {
         anyhow::bail!(
@@ -472,7 +479,14 @@ pub async fn diagnose_archive_with_encoding(
         _ => infer_compression_format(logical.to_string_lossy().as_ref(), None),
     };
 
-    let metadata = archive_browser::browse_archive_with_encoding(source, password, zip_password_encoding).await;
+    anyhow::ensure!(snapshot.is_none() || report.actual_format == "ZPAQ", "所选快照只适用于 ZPAQ 日志归档");
+    let metadata = archive_browser::browse_archive_cancellable_at(source, password, cancelled.clone(), zip_password_encoding, snapshot).await;
+    if let Some(error) = metadata.as_ref().err().filter(|e|format!("{e:#}").contains("[archive-inspection:snapshot-unavailable]")) {
+        report.status = "snapshot_unavailable".into();
+        report.issues.push(DiagnosticIssue { code:"snapshot_unavailable".into(), severity:"warning".into(),
+            title:"所选快照不存在或来源已变化".into(), detail:format!("{error:#}") });
+        return Ok(report);
+    }
     if let Ok(metadata) = &metadata {
         if metadata.format != report.actual_format {
             report
@@ -594,8 +608,8 @@ pub async fn diagnose_archive_with_encoding(
         }
         _ if actual_format == "ZPAQ" => {
             report.integrity_tested = true;
-            report.evidence.push("ZPAQ current-file view; format checksums do not authenticate all header attributes".into());
-            super::zpaq_engine::verify(source, password, cancelled.clone()).await
+            report.evidence.push(snapshot.map(|s|format!("ZPAQ snapshot {} ({})",s.version,s.date)).unwrap_or_else(||"ZPAQ current-file view".into()));
+            super::zpaq_engine::verify_at(source, password, snapshot.as_ref(), cancelled.clone()).await
         }
         Some(route)
             if !matches!(

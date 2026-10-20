@@ -28,6 +28,20 @@ const decompressionOptions = {
 } as const
 
 describe('useTauriCommands', () => {
+  it('zpaq1530 binds all read commands and task history to the selected transaction', async () => {
+    const snapshot = { version: 1, date: 20261020130000 }, api = useTauriCommands()
+    await api.browseArchive('C:/old.zpaq','key','browse',undefined,snapshot)
+    await api.previewArchiveText('C:/old.zpaq','资料/说明.txt','key',undefined,snapshot)
+    await api.previewArchiveImage('C:/old.zpaq','资料/图标.png','key',undefined,snapshot)
+    await api.openArchiveEntry('C:/old.zpaq','资料/说明.txt','key',false,undefined,snapshot)
+    await api.materializeNestedArchive('C:/old.zpaq','old.zip','key',2,[],undefined,snapshot)
+    await api.testArchiveIntegrity('C:/old.zpaq','key',undefined,snapshot)
+    await api.diagnoseArchive('diagnosis','C:/old.zpaq','key',undefined,snapshot)
+    for(const name of ['browse_archive','preview_archive_text','preview_archive_image','open_archive_entry','materialize_nested_archive','test_archive_integrity','diagnose_archive']) expect(mocks.invoke).toHaveBeenCalledWith(name,expect.objectContaining({zpaqSnapshot:snapshot}))
+    await api.decompressFile('C:/old.zpaq',{...decompressionOptions,zpaqSnapshot:snapshot,password:'key',selectedEntries:['资料/后来删除.txt']})
+    expect(mocks.invoke).toHaveBeenCalledWith('extract_file',expect.objectContaining({options:expect.objectContaining({zpaq_snapshot:snapshot})}))
+    const task=useTaskStore().tasks[0];expect(task.zpaqSnapshot).toEqual(snapshot);expect(task.executionConfig).toMatchObject({zpaqSnapshot:snapshot});expect(JSON.stringify(task.executionConfig)).not.toContain('"key"')
+  })
   beforeEach(() => {
     localStorage.clear()
     setActivePinia(createPinia())

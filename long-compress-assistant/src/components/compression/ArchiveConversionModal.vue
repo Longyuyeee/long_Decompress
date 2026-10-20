@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import ZpaqSnapshotPicker from '@/components/archive/ZpaqSnapshotPicker.vue'
+import { useTauriCommands } from '@/composables/useTauriCommands'
+import { snapshotDate, type ZpaqHistory, type ZpaqSnapshot } from '@/types/zpaqSnapshot'
 import { open, save } from '@tauri-apps/api/dialog'
 import Modal from '@/components/ui/Modal.vue'
 import HelpHint from '@/components/ui/HelpHint.vue'
@@ -11,6 +14,26 @@ import { useArchiveConversionStore } from '@/stores/archiveConversion'
 import { resultLocation } from '@/utils/resultLocation'
 import { formatProgressPercent } from '@/utils/progress'
 const store = useArchiveConversionStore()
+const commands = useTauriCommands()
+const histories = ref<Record<string, ZpaqHistory>>({})
+const historyBusy = ref('')
+async function loadSnapshots(id: string) {
+  const item = store.items.find(item => item.id === id)
+  if (!item || store.busy || store.preparing || historyBusy.value) return
+  historyBusy.value = id
+  try {
+    const settings = store.effectiveSettings(item)
+    const metadata = await commands.browseArchive(item.sourcePath, settings.sourcePassword, undefined, undefined, settings.sourceZpaqSnapshot)
+    if (!metadata.zpaqHistory) throw new Error('此归档没有可选择的日志快照；流式 ZPAQ 仅有当前内容。')
+    histories.value[id] = metadata.zpaqHistory
+    store.updateItem(id, { sourceZpaqSnapshot: metadata.zpaqHistory.selected })
+  } catch (error) { store.error = String(error) }
+  finally { historyBusy.value = '' }
+}
+function chooseSnapshot(id: string, snapshot: ZpaqSnapshot) {
+  store.updateItem(id, { sourceZpaqSnapshot: snapshot })
+  if (histories.value[id]) histories.value[id] = { ...histories.value[id], selected: snapshot }
+}
 // A temporarily empty edit must stay empty while typing. outputFor supplies
 // an automatic filename, so binding it directly would refill a cleared input.
 const outputEdit = ref<{ id: string; value: string } | null>(null)
@@ -93,6 +116,13 @@ function toggle(id: string) {
               <div v-if="item.sourceIssue" class="flex items-center gap-2"><button type="button" class="conversion-button" @click="chooseSource(item.id)">重新选择来源</button></div>
               <p v-if="item.passwordRequired" class="rounded-lg bg-amber-500/5 p-2 text-xs text-amber-600">密码未保存在草稿中，请在对应输入框重新填写；不再需要时可选择下方的免密码选项。</p>
               <label class="block min-w-0 text-sm">新包保存位置<div class="mt-1 flex min-w-0 gap-2"><input :value="outputEdit?.id === item.id ? outputEdit.value : store.outputFor(item)" data-testid="conversion-output" class="conversion-input min-w-0 flex-1" :disabled="store.busy || store.preparing" @input="editOutput(item.id, $event)" @blur="outputEdit = null" /><button type="button" class="conversion-button" :disabled="store.busy || store.preparing" @click="chooseOutput(item.id)">另存为</button></div></label>
+              <div v-if="item.sourceFormat === 'zpaq' || store.effectiveSettings(item).sourceZpaqSnapshot" class="min-w-0 space-y-2" data-testid="conversion-zpaq-history">
+                <ZpaqSnapshotPicker v-if="histories[item.id]" :history="{ ...histories[item.id], selected: store.effectiveSettings(item).sourceZpaqSnapshot || histories[item.id].selected }" :disabled="store.busy || store.preparing || !!historyBusy" @change="chooseSnapshot(item.id, $event)" />
+                <div class="flex min-w-0 flex-wrap items-center gap-2 text-xs text-muted">
+                  <span v-if="store.effectiveSettings(item).sourceZpaqSnapshot">读取快照 {{ store.effectiveSettings(item).sourceZpaqSnapshot!.version }} · {{ snapshotDate(store.effectiveSettings(item).sourceZpaqSnapshot!.date) }}</span><span v-else>默认读取最新内容，可选择历史快照后转换。</span>
+                  <button type="button" class="conversion-button" data-testid="conversion-load-snapshots" :disabled="store.busy || store.preparing || !!historyBusy" @click="loadSnapshots(item.id)">{{ historyBusy === item.id ? '读取中…' : '读取历史快照' }}</button>
+                </div>
+              </div>
               <ConversionSettingsFields :settings="store.effectiveSettings(item)" :source-path="item.sourcePath" :source-format="item.sourceFormat" :disabled="store.busy || store.preparing"
                 :source-password-required="store.passwordRequirements(item).source" :target-password-required="store.passwordRequirements(item).target"
                 @update="store.updateItem(item.id, $event)" />
@@ -112,7 +142,7 @@ function toggle(id: string) {
     <template #footer>
       <button type="button" class="conversion-button" @click="store.visible = false">{{ store.busy ? '后台继续' : '关闭' }}</button>
       <button v-if="store.busy" type="button" class="conversion-button" data-testid="conversion-cancel" :disabled="store.stopRequested" @click="store.cancel">{{ store.stopRequested ? '正在停止…' : '停止本批次' }}</button>
-      <button v-else type="button" class="conversion-button bg-primary text-white" data-testid="conversion-start" :disabled="!store.selected.length || store.preparing" @click="store.start">{{ store.preparing ? '正在读取卷组…' : '开始转换' }}{{ store.selected.length ? '（' + store.selected.length + ' 项）' : '' }}</button>
+      <button v-else type="button" class="conversion-button bg-primary text-white" data-testid="conversion-start" :disabled="!store.selected.length || store.preparing || !!historyBusy" @click="store.start">{{ store.preparing ? '正在读取卷组…' : '开始转换' }}{{ store.selected.length ? '（' + store.selected.length + ' 项）' : '' }}</button>
     </template>
   </Modal>
 </template>

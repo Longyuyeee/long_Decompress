@@ -27,6 +27,7 @@ fn entry_name(path: &str) -> String {
 
 fn summarize(format: &str, entries: Vec<ArchiveEntryInfo>) -> ArchiveBrowseResult {
     ArchiveBrowseResult {
+        zpaq_history: None,
         format: format.to_string(),
         total_files: entries.iter().filter(|entry| !entry.is_dir).count(),
         total_directories: entries.iter().filter(|entry| entry.is_dir).count(),
@@ -298,6 +299,14 @@ pub async fn browse_archive_cancellable_with_encoding(
     path: &Path, password: Option<&str>, cancelled: Arc<AtomicBool>,
     encoding: Option<super::zip_password::ZipPasswordEncoding>,
 ) -> Result<ArchiveBrowseResult> {
+    browse_archive_cancellable_at(path, password, cancelled, encoding, None).await
+}
+
+pub async fn browse_archive_cancellable_at(
+    path: &Path, password: Option<&str>, cancelled: Arc<AtomicBool>,
+    encoding: Option<super::zip_password::ZipPasswordEncoding>,
+    snapshot: Option<crate::models::compression::ZpaqSnapshot>,
+) -> Result<ArchiveBrowseResult> {
     if !path.is_file() {
         anyhow::bail!(
             "Archive does not exist or is not a file: {}",
@@ -311,6 +320,10 @@ pub async fn browse_archive_cancellable_with_encoding(
     let password = password.map(str::to_string);
     let operation_cancelled = cancelled.clone();
     let operation = async move {
+        if let Some(snapshot) = snapshot {
+            anyhow::ensure!(format == ArchiveFormat::Zpaq, "所选快照只适用于 ZPAQ 日志归档，请重新选择来源");
+            return super::zpaq_engine::browse_at(&path, password.as_deref(), Some(&snapshot), operation_cancelled).await;
+        }
         if format == ArchiveFormat::AesEncrypted {
             let aes_path = path.clone();
             let aes_password = password.clone();

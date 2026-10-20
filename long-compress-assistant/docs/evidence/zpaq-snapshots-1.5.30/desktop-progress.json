@@ -1,0 +1,870 @@
+{
+  "version": "1.5.30",
+  "binarySha256": "09df9dce18cbd6b78395600a024ff2d08fa930dda4af09464136b4bf71c943de",
+  "sourceCommit": "41596d3a44a5d88850ad590f01bac0051466cc82",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276",
+  "native": [
+    {
+      "kind": "original-journal.zpaq",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "files": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal.zpaq\\journal.zpaq.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal.zpaq\\journal.zpaq.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal.zpaq\\journal.zpaq.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal.zpaq\\journal.zpaq.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal.zpaq\\journal.zpaq.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal.zpaq\\journal.zpaq.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal.zpaq\\journal.zpaq.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal.zpaq\\journal.zpaq.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal.zpaq\\journal.zpaq.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal.zpaq\\journal.zpaq.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal.zpaq\\journal.zpaq.011",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal.zpaq\\journal.zpaq.012",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal.zpaq\\journal.zpaq.013",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal.zpaq\\journal.zpaq.014",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal.zpaq\\journal.zpaq.015"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal.zpaq-完整提取",
+      "fullCatalog": true,
+      "independentHashes": true,
+      "noJoinedArchive": true
+    },
+    {
+      "kind": "original-journal-key.zpaq",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "files": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.011",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.012",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.013",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.014",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.015"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq-完整提取",
+      "fullCatalog": true,
+      "independentHashes": true,
+      "noJoinedArchive": true
+    }
+  ],
+  "ui": [
+    {
+      "kind": "old-previews-selected-extraction",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "record": {
+        "archiveOutput": null,
+        "completedAt": "2026-10-20T12:24:00.010Z",
+        "durationMs": 1240,
+        "errorMessage": null,
+        "executionConfig": {
+          "extractToSubfolder": false,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\旧快照所选-924bbcde-9d42-4980-a8a5-2b8cd3ebd7b1",
+          "schemaVersion": 1,
+          "zpaqSnapshot": {
+            "date": 20261020130000,
+            "version": 1
+          }
+        },
+        "failure": null,
+        "format": "zpaq",
+        "id": "1792499038770",
+        "logs": [
+          {
+            "message": "确定解压格式: Zpaq (后缀: 001)",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:23:58.804624400Z"
+          },
+          {
+            "message": "正在检测归档加密状态...",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:23:58.804652Z"
+          },
+          {
+            "message": "已收到手动输入的解压密码「 [已隐藏]",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:23:58.816765700Z"
+          },
+          {
+            "message": "密码验证通过：本次解压使用密码「 [已隐藏]",
+            "severity": "success",
+            "timestamp": "2026-10-20T12:23:59.601731600Z"
+          },
+          {
+            "message": "开始解压：journal-key.zpaq.001",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:23:59.611695300Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 33 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T12:24:00.008758800Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T12:24:00.008769400Z"
+          }
+        ],
+        "metrics": null,
+        "name": "journal-key.zpaq.008（快照 1）",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\旧快照所选-924bbcde-9d42-4980-a8a5-2b8cd3ebd7b1",
+        "processedBytes": 33,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.008"
+        ],
+        "startedAt": "2026-10-20T12:23:58.770Z",
+        "status": "completed",
+        "taskType": "decompression",
+        "totalBytes": 132879,
+        "workloadKind": "archive"
+      },
+      "independentHash": true,
+      "oldImageWidth": 32
+    },
+    {
+      "kind": "history-missing-volume-recovery",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "record": {
+        "archiveOutput": null,
+        "completedAt": "2026-10-20T12:27:44.745Z",
+        "durationMs": 1224,
+        "errorMessage": null,
+        "executionConfig": {
+          "extractToSubfolder": false,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\补齐后快照一-dfb5efac-c807-4928-89e7-2b812b5d45c1",
+          "schemaVersion": 1,
+          "zpaqSnapshot": {
+            "date": 20261020130000,
+            "version": 1
+          }
+        },
+        "failure": null,
+        "format": "zpaq",
+        "id": "9e3izzze6mvgns2oc",
+        "logs": [
+          {
+            "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 143.9 GiB，预计输出 129.8 KiB）",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:27:43.701Z"
+          },
+          {
+            "message": "确定解压格式: Zpaq (后缀: 001)",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:27:43.732709Z"
+          },
+          {
+            "message": "正在检测归档加密状态...",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:27:43.732722700Z"
+          },
+          {
+            "message": "已收到手动输入的解压密码「 [已隐藏]",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:27:43.745402300Z"
+          },
+          {
+            "message": "密码验证通过：本次解压使用密码「 [已隐藏]",
+            "severity": "success",
+            "timestamp": "2026-10-20T12:27:44.322445100Z"
+          },
+          {
+            "message": "开始解压：journal-key.zpaq.001",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:27:44.331788500Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 132879 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T12:27:44.742540400Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T12:27:44.742667200Z"
+          }
+        ],
+        "metrics": null,
+        "name": "journal-key.zpaq.001（快照 1）",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\补齐后快照一-dfb5efac-c807-4928-89e7-2b812b5d45c1",
+        "processedBytes": 132879,
+        "retryOfTaskId": "a43sm4b7emvgnryph",
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.001"
+        ],
+        "startedAt": "2026-10-20T12:27:43.521Z",
+        "status": "completed",
+        "taskType": "decompression",
+        "totalBytes": 132879,
+        "workloadKind": "archive"
+      },
+      "columns": [
+        454.34375,
+        454.3515625
+      ],
+      "newPendingTask": true,
+      "oldFailurePreserved": true,
+      "independentHashes": true
+    },
+    {
+      "kind": "snapshot-1-to-zip",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "record": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 133989,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\快照1转换-30c69449-3bb7-4589-89d5-9b2ffc790285.zip"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\快照1转换-30c69449-3bb7-4589-89d5-9b2ffc790285.zip",
+          "split": false,
+          "totalBytes": 133989
+        },
+        "completedAt": "2026-10-20T12:27:54.562Z",
+        "durationMs": 1127,
+        "errorMessage": null,
+        "executionConfig": {
+          "encryptFilenames": false,
+          "format": "zip",
+          "kind": "archive-conversion",
+          "level": 6,
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\快照1转换-30c69449-3bb7-4589-89d5-9b2ffc790285.zip",
+          "passwordRequired": true,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "schemaVersion": 1,
+          "sourceZpaqSnapshot": {
+            "date": 20261020130000,
+            "version": 1
+          },
+          "splitSize": 0,
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        },
+        "failure": null,
+        "format": "zpaq",
+        "id": "conversion-a3d720ab-3b24-4a80-89e6-7774ae6b4cc7",
+        "logs": [
+          {
+            "message": "转换归档：先解压至临时目录，再校验并发布新包；保留原包。",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:27:53.436937900Z"
+          },
+          {
+            "message": "确定解压格式: Zpaq (后缀: 001)",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:27:53.466020500Z"
+          },
+          {
+            "message": "正在检测归档加密状态...",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:27:53.466062Z"
+          },
+          {
+            "message": "已收到手动输入的解压密码「 [已隐藏]",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:27:53.477200700Z"
+          },
+          {
+            "message": "密码验证通过：本次解压使用密码「 [已隐藏]",
+            "severity": "success",
+            "timestamp": "2026-10-20T12:27:54.066812500Z"
+          },
+          {
+            "message": "开始解压：journal-key.zpaq.001",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:27:54.075752500Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 132879 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T12:27:54.514080Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T12:27:54.514092800Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\快照1转换-30c69449-3bb7-4589-89d5-9b2ffc790285.zip",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:27:54.521680800Z"
+          },
+          {
+            "message": "正在创建 ZIP · Deflate · 密码保护…",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:27:54.522036100Z"
+          },
+          {
+            "message": "ZIP · Deflate 创建完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T12:27:54.534707500Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:27:54.535086100Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-20T12:27:54.557471700Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T12:27:54.558940200Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 132879,
+          "media": null,
+          "outputBytes": 133989,
+          "savingsRatio": -0.00835346443004538,
+          "schemaVersion": 1
+        },
+        "name": "归档转换 · journal-key.zpaq.001",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\快照1转换-30c69449-3bb7-4589-89d5-9b2ffc790285.zip",
+        "processedBytes": 132879,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.001",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.002",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.003",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.004",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.005",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.006",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.007",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.008",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.009",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.010",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.011",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.012",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.013",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.014",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.015"
+        ],
+        "startedAt": "2026-10-20T12:27:53.435Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 132879,
+        "workloadKind": "archive"
+      },
+      "independentDecodedHashes": true
+    },
+    {
+      "kind": "snapshot-2-to-zpaq",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "record": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 65536,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\快照2转换-62ee1385-6f2a-42cc-93e0-2ec1a3188724.zpaq.001"
+            },
+            {
+              "bytes": 65536,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\快照2转换-62ee1385-6f2a-42cc-93e0-2ec1a3188724.zpaq.002"
+            },
+            {
+              "bytes": 15667,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\快照2转换-62ee1385-6f2a-42cc-93e0-2ec1a3188724.zpaq.003"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\快照2转换-62ee1385-6f2a-42cc-93e0-2ec1a3188724.zpaq.001",
+          "split": true,
+          "totalBytes": 146739
+        },
+        "completedAt": "2026-10-20T12:32:40.002Z",
+        "durationMs": 1587,
+        "errorMessage": null,
+        "executionConfig": {
+          "encryptFilenames": false,
+          "format": "zpaq",
+          "kind": "archive-conversion",
+          "level": 6,
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\快照2转换-62ee1385-6f2a-42cc-93e0-2ec1a3188724.zpaq",
+          "passwordRequired": true,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "schemaVersion": 1,
+          "sourceZpaqSnapshot": {
+            "date": 20261020140000,
+            "version": 2
+          },
+          "splitSize": 65536,
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        },
+        "failure": null,
+        "format": "zpaq",
+        "id": "conversion-ab40e459-8009-4237-8b85-64c216f216ad",
+        "logs": [
+          {
+            "message": "转换归档：先解压至临时目录，再校验并发布新包；保留原包。",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:32:38.417171600Z"
+          },
+          {
+            "message": "确定解压格式: Zpaq (后缀: 001)",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:32:38.451545400Z"
+          },
+          {
+            "message": "正在检测归档加密状态...",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:32:38.451563Z"
+          },
+          {
+            "message": "已收到手动输入的解压密码「 [已隐藏]",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:32:38.464061700Z"
+          },
+          {
+            "message": "密码验证通过：本次解压使用密码「 [已隐藏]",
+            "severity": "success",
+            "timestamp": "2026-10-20T12:32:39.043022900Z"
+          },
+          {
+            "message": "开始解压：journal-key.zpaq.001",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:32:39.052256300Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 145626 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T12:32:39.457074200Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T12:32:39.457084400Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\快照2转换-62ee1385-6f2a-42cc-93e0-2ec1a3188724.zpaq",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:32:39.463690900Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-20T12:32:39.612327700Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-20T12:32:39.987929200Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T12:32:39.993191300Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 145626,
+          "media": null,
+          "outputBytes": 146739,
+          "savingsRatio": -0.007642865971735816,
+          "schemaVersion": 1
+        },
+        "name": "归档转换 · journal-key.zpaq.001",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\快照2转换-62ee1385-6f2a-42cc-93e0-2ec1a3188724.zpaq.001",
+        "processedBytes": 145626,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.001",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.002",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.003",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.004",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.005",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.006",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.007",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.008",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.009",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.010",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.011",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.012",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.013",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.014",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-snapshots-1530\\ui-80de54da-efd1-425e-ae8e-39323cb13276\\original-journal-key.zpaq\\journal-key.zpaq.015"
+        ],
+        "startedAt": "2026-10-20T12:32:38.415Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 145626,
+        "workloadKind": "archive"
+      },
+      "independentDecodedHashes": true
+    },
+    {
+      "kind": "bulk-and-draft-snapshots",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "versions": [
+        1,
+        3
+      ],
+      "noImplicitStart": true,
+      "passwordsNotPersisted": true
+    }
+  ],
+  "screenshots": [
+    "zpaq1530-snapshot-browser-1100x700.png",
+    "zpaq1530-snapshot-browser-760x520.png",
+    "zpaq1530-old-text-preview-1100x700.png",
+    "zpaq1530-old-text-preview-760x520.png",
+    "zpaq1530-old-image-preview-1100x700.png",
+    "zpaq1530-old-image-preview-760x520.png",
+    "zpaq1530-retry-snapshot-1100x700.png",
+    "zpaq1530-retry-snapshot-760x520.png",
+    "zpaq1530-extraction-result-1100x700.png",
+    "zpaq1530-extraction-result-760x520.png",
+    "zpaq1530-conversion-zip-config-1100x700.png",
+    "zpaq1530-conversion-zip-config-760x520.png",
+    "zpaq1530-conversion-zip-result-1100x700.png",
+    "zpaq1530-conversion-zip-result-760x520.png",
+    "zpaq1530-conversion-zpaq-config-1100x700.png",
+    "zpaq1530-conversion-zpaq-config-760x520.png",
+    "zpaq1530-conversion-zpaq-result-1100x700.png",
+    "zpaq1530-conversion-zpaq-result-760x520.png",
+    "zpaq1530-batch-snapshots-1100x700.png",
+    "zpaq1530-batch-snapshots-760x520.png",
+    "zpaq1530-restored-snapshots-1100x700.png",
+    "zpaq1530-restored-snapshots-760x520.png",
+    "zpaq1530-snapshot-browser-polish-1100x700.png",
+    "zpaq1530-snapshot-browser-polish-760x520.png",
+    "zpaq1530-snapshot-conversion-polish-1100x700.png",
+    "zpaq1530-snapshot-conversion-polish-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "snapshot-browser",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "snapshot-browser",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "old-text-preview",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "old-text-preview",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "old-image-preview",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "old-image-preview",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "retry-snapshot",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "retry-snapshot",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "extraction-result",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "extraction-result",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "conversion-zip-config",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "conversion-zip-config",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "conversion-zip-result",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "conversion-zip-result",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "conversion-zpaq-config",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "conversion-zpaq-config",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "conversion-zpaq-result",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "conversion-zpaq-result",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "batch-snapshots",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0,
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "batch-snapshots",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0,
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "restored-snapshots",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "restored-snapshots",
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "snapshot-browser-polish",
+      "binarySha256": "09df9dce18cbd6b78395600a024ff2d08fa930dda4af09464136b4bf71c943de",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "snapshot-browser-polish",
+      "binarySha256": "09df9dce18cbd6b78395600a024ff2d08fa930dda4af09464136b4bf71c943de",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "snapshot-conversion-polish",
+      "binarySha256": "09df9dce18cbd6b78395600a024ff2d08fa930dda4af09464136b4bf71c943de",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "snapshot-conversion-polish",
+      "binarySha256": "09df9dce18cbd6b78395600a024ff2d08fa930dda4af09464136b4bf71c943de",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760
+    }
+  ],
+  "completedAt": "2026-10-20T12:33:00.008Z",
+  "previousIdentities": [
+    {
+      "binarySha256": "06355e537d39211331ec403cfd762a978e9489255cff14022568942e8960a564",
+      "sourceCommit": "de012bac473b767ae7841b82d93748b556e713cc"
+    }
+  ],
+  "visualPolish": {
+    "binarySha256": "09df9dce18cbd6b78395600a024ff2d08fa930dda4af09464136b4bf71c943de",
+    "sourceCommit": "41596d3a44a5d88850ad590f01bac0051466cc82",
+    "fractionalMiBTyped": true,
+    "noImplicitStart": true,
+    "completedAt": "2026-10-20T12:36:41.086Z"
+  }
+}

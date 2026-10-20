@@ -8,6 +8,18 @@ vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn(async () => vi.fn()) }))
 vi.mock('@tauri-apps/api/dialog', () => ({ ask: mocks.ask }))
 beforeEach(() => { setActivePinia(createPinia()); mocks.invoke.mockReset(); mocks.ask.mockReset(); mocks.ask.mockResolvedValue(true) })
+it('zpaq1530 keeps distinct snapshots through volume grouping, batch edits, conversion and history rerun',async()=>{
+  mocks.invoke.mockImplementation(async command=>command==='detect_split_archive'?{is_split:true,archive_format:'ZPAQ',first_part:'C:/old.zpaq.001',parts:['C:/old.zpaq.001','C:/old.zpaq.002'],is_complete:true}:command==='convert_archive'?{primaryPath:'D:/new.zip',files:[],totalBytes:8,split:false}:undefined)
+  const store=useArchiveConversionStore(),one={version:1,date:20261020130000},two={version:2,date:20261020140000}
+  store.openSnapshot('C:/old.zpaq.002',one,'key');store.openSnapshot('C:/old.zpaq.002',two,'key');await new Promise(resolve=>setTimeout(resolve,0))
+  expect(store.pending).toHaveLength(2);expect(new Set(store.pending.map(store.outputFor)).size).toBe(2)
+  expect(await store.applySelected({format:'zip',password:'new-key'})).toBe('')
+  expect(store.pending.map(item=>store.effectiveSettings(item).sourceZpaqSnapshot)).toEqual([one,two])
+  await store.start()
+  expect(mocks.invoke).toHaveBeenCalledWith('convert_archive',expect.objectContaining({zpaqSnapshot:one}))
+  const record=createTaskHistoryRecord(useTaskStore().tasks[0]);expect(record.executionConfig).toMatchObject({sourceZpaqSnapshot:one})
+  store.restore(record);expect(store.effectiveSettings(store.pending.at(-1)!).sourceZpaqSnapshot).toEqual(one)
+})
 it('wim1527 retains each source password and volume size while explicitly choosing a WIM target',async()=>{
   mocks.invoke.mockImplementation(async command=>command==='detect_split_archive'?{is_split:false,archive_format:'zip'}:undefined)
   const store=useArchiveConversionStore();store.addSources(['C:/甲.zip','C:/乙.zip']);store.items.forEach((item,index)=>store.updateItem(item.id,{sourcePassword:`原包-${index}`,splitMiB:index+1}))

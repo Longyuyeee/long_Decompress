@@ -28,4 +28,11 @@ Build on x64 Windows with Visual Studio C++: `./scripts/build-zpaq-engine.ps1`.
 Uses /O2 /MT /EHsc, advapi32 and reproducible-link /Brepro. No extra runtime DLL.
 Reading and fresh journaling creation are exposed, including native passwords.
 Fixed-size numeric byte slices are exposed by the host; they are not native
-journaling append parts. No incremental updates or revision rollback is exposed.
+journaling append parts. No incremental update creation or in-place revision rollback is exposed.
+
+The v1.5.30 read adapter lists complete journaling transaction identities and
+freezes the file map at an explicit version/date pair while scanning the full
+metadata catalog. Missing or changed identities and streaming/mixed history
+requests fail explicitly; no silent latest-version fallback. Preview, selected
+extraction, conversion and task history share this identity. Codecs and native
+cryptography are unchanged.

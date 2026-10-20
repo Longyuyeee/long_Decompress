@@ -242,17 +242,19 @@ pub async fn preflight_operation_resources(
     password: Option<String>,
     estimated_output_bytes: Option<u64>,
     estimate_reliable: Option<bool>,
+    zpaq_snapshot: Option<crate::models::compression::ZpaqSnapshot>,
 ) -> Result<crate::services::storage_preflight::ResourcePreflightReport, String> {
     if source_paths.len() > 1_000 {
         return Err("Resource preflight accepts at most 1000 explicit source paths".to_string());
     }
-    crate::services::storage_preflight::preflight_operation_resources(
+    crate::services::storage_preflight::preflight_operation_resources_at(
         &operation,
         &output_path,
         &source_paths,
         password.as_deref(),
         estimated_output_bytes,
         estimate_reliable.unwrap_or(false),
+        zpaq_snapshot,
     )
     .await
     .map_err(|error| error.to_string())

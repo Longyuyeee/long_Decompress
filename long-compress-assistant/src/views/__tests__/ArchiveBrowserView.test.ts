@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => ({
   materializeNestedArchive: vi.fn(),
   openArchiveEntry: vi.fn(),
   decompressFile: vi.fn(),
+  testArchiveIntegrity: vi.fn(),
+  convertSnapshot: vi.fn(),
   clipboardWrite: vi.fn(),
   setError: vi.fn(),
   clearError: vi.fn(),
@@ -22,6 +24,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/stores/app', () => ({
   useAppStore: () => ({ setError: mocks.setError, clearError: mocks.clearError, get error() { return mocks.currentError }, setSuccess: mocks.setSuccess })
 }))
+vi.mock('@/stores/archiveConversion', () => ({ useArchiveConversionStore: () => ({ openSnapshot: mocks.convertSnapshot }) }))
 
 vi.mock('@/composables/useArchiveEngine', () => ({
   useArchiveEngine: () => ({
@@ -31,7 +34,7 @@ vi.mock('@/composables/useArchiveEngine', () => ({
       formats: [],
       browseExtensions: ['zip', '7z', 'rar', 'tar', 'zst'],
       nestedExtensions: ['zip', '7z', 'rar', 'tar', 'zst'],
-      boundedPreviewFormats: ['ZIP', 'TAR'],
+      boundedPreviewFormats: ['ZIP', 'TAR', 'ZPAQ'],
       imagePreviewExtensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'],
       textPreviewExtensions: ['txt', 'md', 'log'],
       message: 'ready',
@@ -52,10 +55,34 @@ vi.mock('@/composables/useTauriCommands', () => ({
     materializeNestedArchive: mocks.materializeNestedArchive,
     openArchiveEntry: mocks.openArchiveEntry,
     decompressFile: mocks.decompressFile,
+    testArchiveIntegrity: mocks.testArchiveIntegrity,
   })
 }))
 
 describe('ArchiveBrowserView', () => {
+  it('zpaq1530 switches snapshots with empty selection and keeps preview, refresh, extraction and conversion bound', async () => {
+    const one={version:1,date:20261020130000},latest={version:3,date:20261020150000}
+    const entry=(path:string)=>({path,name:path,size:8,modified:null,compressedSize:null,crc:null,encrypted:false,isDir:false})
+    const view=(selected:typeof one)=>({format:'ZPAQ',totalFiles:2,totalDirectories:0,totalUncompressedSize:16,totalCompressedSize:12,encrypted:false,
+      entries:[entry('说明.txt'),entry(selected.version===1?'后来删除.txt':'新增.txt')],zpaqHistory:{selected,snapshots:[{...one,updates:2,deletes:0},{...latest,updates:1,deletes:1}]}})
+    mocks.browseArchive.mockResolvedValueOnce(view(latest)).mockResolvedValueOnce(view(one)).mockResolvedValueOnce(view(one))
+    const wrapper=mount(ArchiveBrowserView,{attachTo:document.body})
+    await wrapper.get('header .browser-primary').trigger('click');await flushPromises()
+    await wrapper.get('[data-testid="zpaq-snapshot-select"]').setValue('1');await flushPromises()
+    expect(wrapper.get('footer').text()).toContain('已选择 0 / 2')
+    expect(wrapper.find('[data-entry-path="新增.txt"]').exists()).toBe(false)
+    mocks.previewArchiveText.mockResolvedValue({entryPath:'说明.txt',content:'old snapshot',encoding:'UTF-8',byteSize:8,totalSize:8,truncated:false,lineCount:1})
+    await wrapper.get('[data-entry-path="说明.txt"] .preview-trigger').trigger('click');await flushPromises()
+    expect(mocks.previewArchiveText).toHaveBeenLastCalledWith('C:/archives/demo.zip','说明.txt','',undefined,one)
+    ;(document.querySelector('.preview-close') as HTMLButtonElement).click();await flushPromises()
+    await wrapper.get('[data-testid="archive-nav-refresh"]').trigger('click');await flushPromises()
+    expect(mocks.browseArchive).toHaveBeenLastCalledWith('C:/archives/demo.zip','',expect.any(String),undefined,one)
+    await wrapper.get('[data-entry-path="后来删除.txt"] .browser-checkbox').trigger('click')
+    await wrapper.get('footer .browser-primary').trigger('click');await flushPromises()
+    expect(mocks.decompressFile).toHaveBeenLastCalledWith('C:/archives/demo.zip',expect.objectContaining({zpaqSnapshot:one,selectedEntries:['后来删除.txt']}))
+    await wrapper.get('[data-testid="zpaq-snapshot-convert"]').trigger('click');expect(mocks.convertSnapshot).toHaveBeenCalledWith('C:/archives/demo.zip',one,'')
+    wrapper.unmount()
+  })
   it.each([false,true])('clears only its own failed-browse message after successful password correction; unrelated=%s', async unrelated => {
     const wrapper=mount(ArchiveBrowserView)
     mocks.browseArchive.mockRejectedValueOnce(new Error('ARCHIVE_BROWSE_PASSWORD|密码不正确，请修改密码'))

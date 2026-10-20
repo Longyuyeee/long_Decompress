@@ -32,7 +32,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
     </td>
     <td width="50%" valign="top">
       <h3>🧭 先看内容，再决定解压什么</h3>
-      <p>像浏览文件夹一样查看压缩包，搜索、筛选和选择文件。支持部分格式的图片与文本预览，也能进入嵌套压缩包，只取出真正需要的内容。</p>
+      <p>像浏览文件夹一样查看压缩包，搜索、筛选和选择文件。支持部分格式的图片与文本预览，也能进入嵌套压缩包、选择 ZPAQ 历史快照，只取出真正需要的内容。</p>
     </td>
   </tr>
   <tr>
@@ -130,11 +130,11 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | 能力 | 主要格式与说明 |
 | --- | --- |
 | 创建归档 | ZIP（Deflate / Zstandard）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码与数字分卷）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM（存储/去重与数字分卷） |
-| 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式/日志式当前文件）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，原生 SWM（Copy/XPRESS/LZX 整组只读），以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
+| 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式当前内容/日志式历史快照）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，原生 SWM（Copy/XPRESS/LZX 整组只读），以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
 | 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷、ZPAQ 原生密码数字切卷；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM、ZPAQ（含改密与数字分卷）；密码和分卷随目标格式提供 |
 | 清单校验 | SFV/MD5/SHA256 逐文件状态与原因、待补列表、按需复查；匹配表示与清单一致 |
-| 内部预览 | ZIP/TAR 系列及普通 GZIP/BZIP2/XZ/Zstandard 流、ZPAQ 日志式当前文件中的受支持图片与文本；预览超出读取范围时可先提取后打开 |
+| 内部预览 | ZIP/TAR 系列及普通 GZIP/BZIP2/XZ/Zstandard 流、ZPAQ 日志式所选快照中的受支持图片与文本；预览超出读取范围时可先提取后打开 |
 | 图片压缩 | JPEG、PNG、WebP；质量、尺寸与格式按对应编码能力调整 |
 | 视频压缩 | MP4、MOV、AVI、WMV、WebM、MKV、M4V 等受支持输入，输出 MP4 / H.264 |
 | PDF 优化 | 分析结构、优化体积；是否适合处理会在分析后显示 |
@@ -236,7 +236,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.29 · 原生 SWM 只读**。从 install.swm、install2.swm 等任意成员浏览多镜像、预览、检查和提取；Copy/XPRESS/LZX 直接跨卷读取。缺首/中/尾卷显示具体文件名，补齐后建新任务，内容可转换为密码 ZIP。保留单条展开、多选弹窗与等宽/窄窗布局，不新增 SWM 创建、WIM 密码或系统部署。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.29.md) · [范围与记录](long-compress-assistant/docs/NATIVE_SWM_FREEZE_1.5.29.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.29)。下一版 [v1.5.30 ZPAQ 历史快照读取](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.30.md)已规划，尚未开发。
+**v1.5.30 · ZPAQ 历史快照**。按时间选择旧版，预览、检查和取回后来删除的文件；密码数字卷、转换、草稿和失败重试保留各自快照，来源变化明确提示。单条展开、多选弹窗与等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.30.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_SNAPSHOTS_FREEZE_1.5.30.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.30)。下一版 [v1.5.31 WIM XPRESS创建](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.31.md)仅规划，尚未开发。
+
+**v1.5.29 · 原生 SWM 只读**。从 install.swm、install2.swm 等任意成员浏览多镜像、预览、检查和提取；Copy/XPRESS/LZX 直接跨卷读取。缺首/中/尾卷显示具体文件名，补齐后建新任务，内容可转换为密码 ZIP。保留单条展开、多选弹窗与等宽/窄窗布局，不新增 SWM 创建、WIM 密码或系统部署。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.29.md) · [范围与记录](long-compress-assistant/docs/NATIVE_SWM_FREEZE_1.5.29.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.29)。下一版 [v1.5.30 ZPAQ 历史快照读取](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.30.md)已由 v1.5.30 接续，当前进度以上方最新记录为准。
 
 **v1.5.28 · 资源管理器校验入口**。从经典右键带入文件生成清单，或带入 SFV/MD5/SHA256 逐份核对；确认后才读取，已有工作可保留、替换或合并。长路径优先显示清单名称，文件读取失败不再提示绿色成功。保留原有交互与窄窗滚动。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.28.md) · [范围与记录](long-compress-assistant/docs/EXPLORER_CHECKSUMS_FREEZE_1.5.28.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.28)。本轮三版按范围收口；[v1.5.29 原生 SWM 只读计划](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.29.md)已由 v1.5.29 接续，当前进度以上方最新记录为准。
 
