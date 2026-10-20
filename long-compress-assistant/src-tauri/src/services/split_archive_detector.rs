@@ -8,6 +8,7 @@ pub struct SplitArchiveDetector;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum SplitFormat {
+    WimSplit,
     AlzSplit,
     EggSplit,
     ZipSplit,
@@ -60,7 +61,8 @@ impl SplitArchiveDetector {
         let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
             return false;
         };
-        Self::is_zip_split(name)
+        path.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("swm"))
+            || Self::is_zip_split(name)
             || Self::is_rar_split(name)
             || Self::is_7z_split(name)
             || Self::is_haozip_seven_zip(path)
@@ -70,6 +72,7 @@ impl SplitArchiveDetector {
 
     pub fn detect_split_archive(path: &Path) -> Result<Option<SplitArchiveInfo>> {
         if path.is_file() { if let Some(group) = super::sfx_volumes::inspect(path)? { return Ok(Some(group)); } }
+        if let Some(group) = super::swm_volumes::inspect(path)? { return Ok(Some(group)); }
         if let Some(group) = super::egg_volumes::inspect(path)? {
             return Ok((group.parts.len() > 1 || !group.missing.is_empty()).then(|| SplitArchiveInfo {
                 format: SplitFormat::EggSplit, base_name: group.stem, parts: group.parts,
