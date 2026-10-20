@@ -1,0 +1,88 @@
+{
+  "tool": {
+    "python": "3.12.10",
+    "cryptography": "49.0.0",
+    "lz4": "4.4.5",
+    "brotli": "1.2.0",
+    "gnuLzipSha256": "fb52c41132a98d22ea2b7969b268407ab5c272e7654ff78bf975f573357d48fd"
+  },
+  "password": "Long 新内层-1521",
+  "layout": "Existing AESENC02; Argon2id 65536KiB/3/1; AES-256-GCM; 64KiB original chunks; header/index AAD; no application encoder",
+  "expectedFiles": {
+    "大文本.txt": "969003b3870b8746bd248832a7494f7eda3bbd2896f86e223d5ddb2534e454ad",
+    "说明.txt": "a6beaf021eaa3d377df7b59f777c4bcb6e134841953054febde55b21d7181027",
+    "中文目录/数据.bin": "aec0063377e18cdacb4d11b1b36f95a82ebee275caa99ae76b7040a6ba85fd89",
+    "空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43"
+  },
+  "emptyDirectory": "中文目录/空目录",
+  "plainName": "大文本.txt",
+  "cases": [
+    {
+      "format": "lz4.aes",
+      "archive": "大文本.txt.lz4.aes",
+      "sha256": "2863370d9cbc0587f9135ef5c36c8def97b8d29302b02b3918e370dc97ff2ffd",
+      "bytes": 98480,
+      "innerSha256": "c1a2f9eda6b5aa48f375004a80a1ac68e24a22b6c914c7e7f157866d216eebff",
+      "decodedSha256": "969003b3870b8746bd248832a7494f7eda3bbd2896f86e223d5ddb2534e454ad",
+      "tar": false,
+      "kind": "plain",
+      "codec": "lz4"
+    },
+    {
+      "format": "br.aes",
+      "archive": "大文本.txt.br.aes",
+      "sha256": "c18c3cf90e2953ce47f692b17d88e505d32495942a0c71136958ef7c87efc697",
+      "bytes": 81762,
+      "innerSha256": "e0f14c54666c1f5f9eb547fceeb4da78c41069f359c1b74e5410beaad8e0d55b",
+      "decodedSha256": "969003b3870b8746bd248832a7494f7eda3bbd2896f86e223d5ddb2534e454ad",
+      "tar": false,
+      "kind": "plain",
+      "codec": "br"
+    },
+    {
+      "format": "lz.aes",
+      "archive": "大文本.txt.lz.aes",
+      "sha256": "a1da81b383dbcc18c3d7395c839393105ca22e90e5e146f14efafd7be8a0e5bf",
+      "bytes": 82493,
+      "innerSha256": "991e236d1b8b3324a6f92fd8f7924560d4627eb184cb19d8186c08231791fb00",
+      "decodedSha256": "969003b3870b8746bd248832a7494f7eda3bbd2896f86e223d5ddb2534e454ad",
+      "tar": false,
+      "kind": "plain",
+      "codec": "lz"
+    },
+    {
+      "format": "tar.lz4.aes",
+      "archive": "资料.tar.lz4.aes",
+      "sha256": "7fea9590bbc200359d1b5d6d77f97151839b99ea6260cec21b432e5186af2bc5",
+      "bytes": 104405,
+      "innerSha256": "3b4035812117efb92935d4c044ba45a140bbf6d33943365b1d1ec01a45b4faae",
+      "decodedSha256": "09fe272cbac11277e6cdb7a51f40e5d01f06499f3436889bff2b0e84ce15246d",
+      "tar": true,
+      "kind": "tar",
+      "codec": "lz4"
+    },
+    {
+      "format": "tar.br.aes",
+      "archive": "资料.tar.br.aes",
+      "sha256": "371b09013a6817a1abab5e08c562d063508a82cd15cdc0c8c6f44c2abf2a0ba4",
+      "bytes": 87324,
+      "innerSha256": "a24cbdf4adc7e6d1eb079d714e2842da482a9acae0f3d6e13c123c2bfc2f1168",
+      "decodedSha256": "09fe272cbac11277e6cdb7a51f40e5d01f06499f3436889bff2b0e84ce15246d",
+      "tar": true,
+      "kind": "tar",
+      "codec": "br"
+    },
+    {
+      "format": "tar.lz.aes",
+      "archive": "资料.tar.lz.aes",
+      "sha256": "b59ff40969d956c76172e3b287709209e622f9101cade734294ad6758934c518",
+      "bytes": 87915,
+      "innerSha256": "0d2432934b12d896badebe5e42271b512907ce22418e965d7df66c45b02093b0",
+      "decodedSha256": "09fe272cbac11277e6cdb7a51f40e5d01f06499f3436889bff2b0e84ce15246d",
+      "tar": true,
+      "kind": "tar",
+      "codec": "lz"
+    }
+  ]
+}

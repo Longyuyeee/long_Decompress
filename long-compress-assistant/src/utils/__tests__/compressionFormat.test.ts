@@ -53,6 +53,14 @@ describe('compression format helpers', () => {
     expect(FORMAT_CAPABILITIES.some(format=>format.extensions.includes('exe'))).toBe(false)
     expect(DECOMPRESS_ARCHIVE_ACCEPT).toContain('.exe')
   })
+  it.each(['lz4.aes','br.aes','lz.aes','tar.lz4.aes','tar.br.aes','tar.lz.aes'])('keeps %s password and numeric split settings without falling back to 7Z', format => {
+    expect(effectiveFormatForPassword(format, '中文密码')).toBe(format)
+    expect(extensionForFormat(format, '中文密码')).toBe(format)
+    expect(supportsArchiveSplit(format)).toBe(true)
+    expect(isPasswordSupportedFormat(format)).toBe(true)
+    expect(isSingleFileStreamFormat(format)).toBe(!format.startsWith('tar.'))
+    expect(isDecompressArchivePath('C:/下载/资料.' + format.toUpperCase())).toBe(true)
+  })
   it('keeps native password formats unchanged', () => {
     expect(extensionForFormat('zip', 'secret')).toBe('zip')
     expect(extensionForFormat('7z', 'secret')).toBe('7z')

@@ -22,6 +22,12 @@ pub struct CompressionFormatCapability {
 
 pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
     CompressionFormatCapability { format: "zpaq", extensions: &["zpaq"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "tar.lz4.aes", extensions: &["tar.lz4.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "tar.br.aes", extensions: &["tar.br.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "tar.lz.aes", extensions: &["tar.lz.aes", "tlz.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "lz4.aes", extensions: &["lz4.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: true, supports_split: true, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "br.aes", extensions: &["br.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: true, supports_split: true, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "lz.aes", extensions: &["lz.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: true, supports_split: true, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability {
         format: "tar.aes",
         extensions: &["tar.aes"],
@@ -314,6 +320,12 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum CompressionRoute {
     Zpaq,
+    Lz4Aes,
+    BrotliAes,
+    LzipAes,
+    TarLz4Aes,
+    TarBrotliAes,
+    TarLzipAes,
     TarAes,
     TarGzipAes,
     TarBzip2Aes,
@@ -402,6 +414,12 @@ pub fn has_native_password_container(format: &str) -> bool {
             | "zipx"
             | "7z"
             | "rar"
+            | "lz4.aes"
+            | "br.aes"
+            | "lz.aes"
+            | "tar.lz4.aes"
+            | "tar.br.aes"
+            | "tar.lz.aes"
             | "tar.aes"
             | "tar.gz.aes"
             | "tar.bz2.aes"
@@ -480,6 +498,12 @@ pub fn validate_compression_request(
 pub(crate) fn compression_route(format: &str) -> Option<CompressionRoute> {
     match normalize_compression_format(format).as_str() {
         "zpaq" => Some(CompressionRoute::Zpaq),
+        "lz4.aes" => Some(CompressionRoute::Lz4Aes),
+        "br.aes" => Some(CompressionRoute::BrotliAes),
+        "lz.aes" => Some(CompressionRoute::LzipAes),
+        "tar.lz4.aes" => Some(CompressionRoute::TarLz4Aes),
+        "tar.br.aes" => Some(CompressionRoute::TarBrotliAes),
+        "tar.lz.aes" => Some(CompressionRoute::TarLzipAes),
         "tar.aes" => Some(CompressionRoute::TarAes),
         "tar.gz.aes" => Some(CompressionRoute::TarGzipAes),
         "tar.bz2.aes" => Some(CompressionRoute::TarBzip2Aes),

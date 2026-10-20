@@ -12,7 +12,7 @@ import { useCompressionProfileStore } from '@/stores/compressionProfile'
 import { usePasswordStore, type PasswordEntry } from '@/stores/password'
 import type { CompressionOptions } from '@/stores/compression'
 import type { CompressionProfile } from '@/types/profile'
-import { COMPRESSIBLE_FORMATS, effectiveFormatForPassword, isPasswordSupportedFormat, supportsNativePassword, supportsFilenameEncryption, supportsSolidCompression } from '@/utils/compressionFormat'
+import { isLz4Format, COMPRESSIBLE_FORMATS, effectiveFormatForPassword, isPasswordSupportedFormat, supportsNativePassword, supportsFilenameEncryption, supportsSolidCompression } from '@/utils/compressionFormat'
 import ProfileSelector from '@/components/profiles/ProfileSelector.vue'
 import ProfileManager from '@/components/profiles/ProfileManager.vue'
 import PasswordGeneratorDialog from '@/components/password/PasswordGeneratorDialog.vue'
@@ -357,10 +357,10 @@ const closeVaultPasswordsAfterFocus = () => {
       <div class="flex flex-col gap-1.5 min-w-0">
         <div class="flex justify-between items-center px-1">
           <label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.level') }}</label>
-          <span class="text-xs font-mono text-primary font-black">{{ compressionOptions.format.endsWith('lz4') ? '快速模式' : `${compressionOptions.level} / 9` }}</span>
+          <span class="text-xs font-mono text-primary font-black">{{ isLz4Format(compressionOptions.format) ? '快速模式' : `${compressionOptions.level} / 9` }}</span>
         </div>
         <input
-          type="range" :disabled="compressionOptions.format.endsWith('lz4')" v-model.number="compressionOptions.level" min="1" max="9" step="1"
+          type="range" :disabled="isLz4Format(compressionOptions.format)" v-model.number="compressionOptions.level" min="1" max="9" step="1"
           class="w-full h-1 bg-input border border-subtle rounded-full appearance-none cursor-pointer accent-primary"
         />
       </div>

@@ -262,6 +262,8 @@ pub(crate) fn plain_format(format: &super::archive_format::ArchiveFormat)
     -> Option<(&'static str, &'static str, &'static [&'static str])> {
     use super::archive_format::ArchiveFormat as F;
     match format {
+        F::Lz4 => Some(("lz4", "LZ4", &[".lz4"])),
+        F::Brotli => Some(("br", "BR", &[".br"])),
         F::Lzip => Some(("lz", "LZIP", &[".lz"])),
         F::Gzip => Some(("gz", "GZIP", &[".gz", ".gzip"])),
         F::Bzip2 => Some(("bz2", "BZIP2", &[".bz2", ".bzip2"])),
