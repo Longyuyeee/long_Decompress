@@ -60,3 +60,15 @@ async fn zpaq1536_incomplete_password_and_mapping_failures_keep_existing_results
     let prefix=t.path().join("split.zpaq");let group=super::super::split_compression::SplitCompressionService::split_archive_file(&source,&prefix,16384,||Ok(())).unwrap();fs::remove_file(&group.part_files[1]).unwrap();
     assert!(update(&group.part_files[0],&[input.to_string_lossy().into_owned()],"",&output2,Some(manifest()["password"].as_str().unwrap()),1,None,flag(),quiet()).await.is_err());assert!(!output2.exists());assert_eq!(fs::read(&source).unwrap(),original);
 }
+
+#[tokio::test]
+async fn zpaq1536_implicit_parent_case_and_implicit_directory_conflicts_are_actionable() {
+    let original=zpaq_engine::browse(&fixtures().join("journal.zpaq"),None,flag()).await.unwrap();
+    let t=tempfile::tempdir().unwrap();let source=t.path().join("new.txt");fs::write(&source,b"new").unwrap();
+    let mut directory=original.entries.iter().find(|e|e.is_dir).unwrap().clone();directory.path="Case/".into();
+    let entries=collect(&[source.to_string_lossy().into_owned()],"case",&HashSet::new()).unwrap();
+    assert!(validate_mapping(&entries,&[directory.clone()]).unwrap_err().to_string().contains("大小写"));
+    let entries=collect(&[source.to_string_lossy().into_owned()],"Case",&HashSet::new()).unwrap();assert!(validate_mapping(&entries,&[directory]).is_ok());
+    let mut child=original.entries.iter().find(|e|!e.is_dir).unwrap().clone();child.path="new.txt/child.txt".into();
+    let entries=collect(&[source.to_string_lossy().into_owned()],"",&HashSet::new()).unwrap();assert!(validate_mapping(&entries,&[child]).unwrap_err().to_string().contains("子目录"));
+}

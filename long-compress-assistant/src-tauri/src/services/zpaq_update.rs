@@ -1,7 +1,7 @@
 //! Incremental additions to a private copy. Existing journals and their slices are inputs only.
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use std::{collections::{HashMap, HashSet}, fs, io::{Read, Write}, path::{Path, PathBuf}, sync::{Arc, Mutex, atomic::{AtomicBool, Ordering}}, time::Duration};
+use std::{collections::{BTreeMap, HashSet}, fs, io::{Read, Write}, path::{Path, PathBuf}, sync::{Arc, Mutex, atomic::{AtomicBool, Ordering}}, time::Duration};
 use super::{compression_entries::{self, CompressionEntry}, output_publish_transaction as publish, zpaq_engine};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -48,7 +48,7 @@ fn collect(sources: &[String], prefix: &str, excluded: &HashSet<PathBuf>) -> Res
     anyhow::ensure!(!entries.is_empty(), "请选择需要添加或更新的文件/文件夹"); Ok(entries)
 }
 fn validate_mapping(entries: &[CompressionEntry], old: &[crate::models::compression::ArchiveEntryInfo]) -> Result<()> {
-    let old: HashMap<_,_> = old.iter().map(|e|(e.path.trim_end_matches('/').to_lowercase(),e)).collect();
+    let old: BTreeMap<_,_> = old.iter().map(|e|(e.path.trim_end_matches('/').to_lowercase(),e)).collect();
     for entry in entries {
         let name=&entry.archive_name; let lower=name.to_lowercase();
         if let Some(previous)=old.get(&lower) {
@@ -56,8 +56,15 @@ fn validate_mapping(entries: &[CompressionEntry], old: &[crate::models::compress
                 "备份路径大小写或文件/文件夹类型冲突：{name}；请调整归档内位置");
         }
         let mut parent=Path::new(name).parent();
-        while let Some(p)=parent { if let Some(e)=old.get(&p.to_string_lossy().replace('\\',"/").to_lowercase()) { anyhow::ensure!(e.is_dir,"备份中已有同名文件，不能作为目录：{}",e.path); } parent=p.parent(); }
-        if !entry.is_dir { anyhow::ensure!(!old.keys().any(|p|p.starts_with(&(lower.clone()+"/"))),"备份中此位置已有子目录内容：{name}"); }
+        while let Some(p)=parent {
+            let path=p.to_string_lossy().replace('\\',"/");
+            if let Some(e)=old.get(&path.to_lowercase()) {
+                anyhow::ensure!(e.is_dir,"备份中已有同名文件，不能作为目录：{}",e.path);
+                anyhow::ensure!(e.path.trim_end_matches('/')==path,"备份目录大小写冲突：{path}；请使用原目录名称 {}",e.path);
+            }
+            parent=p.parent();
+        }
+        if !entry.is_dir { let prefix=lower+"/";anyhow::ensure!(!old.range(prefix.clone()..).next().is_some_and(|(p,_)|p.starts_with(&prefix)),"备份中此位置已有子目录内容：{name}"); }
     }
     Ok(())
 }
