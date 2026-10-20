@@ -86,7 +86,8 @@ defineExpose({ verify, stage, hasWorkspace: () => !!report.value || stagedManife
     <section v-if="stagedManifests.length" class="checksum-panel" data-testid="checksum-explorer-manifests">
       <h2 class="text-sm font-bold text-content">从资源管理器收到 {{ stagedManifests.length }} 份校验清单</h2>
       <p class="checksum-note">选择一份后主动开始核对。其余清单保留在这里，打开入口不会自动读取文件。</p>
-      <label class="checksum-staged-label">本次清单<select v-model="stagedPath" :disabled="busy" data-testid="checksum-staged-path"><option v-for="path in stagedManifests" :key="path" :value="path">{{ path }}</option></select></label>
+      <label class="checksum-staged-label">本次清单<select v-model="stagedPath" :disabled="busy" data-testid="checksum-staged-path"><option v-for="path in stagedManifests" :key="path" :value="path">{{ path.split(/[\\/]/).pop() }} · {{ path }}</option></select></label>
+      <p class="checksum-note" :title="stagedPath" data-testid="checksum-staged-location">本次位置：{{ stagedPath }}</p>
       <div class="checksum-actions"><button :disabled="busy || !stagedPath" data-testid="checksum-staged-start" @click="verify(stagedPath)"><i class="pi pi-play"></i>开始核对这份清单</button></div>
     </section>
     <section class="checksum-panel">

@@ -594,7 +594,7 @@ onUnmounted(() => {
             </button>
 
             <div v-if="selectedFiles.length" class="checksum-source-summary" data-testid="checksum-source-summary">
-              <p v-if="sourceLabel" class="break-words">来自结果：{{ sourceLabel }} · 已带入整组 {{ selectedFiles.length }} 个文件</p>
+              <p v-if="sourceLabel" class="break-words">来源：{{ sourceLabel }} · 已带入整组 {{ selectedFiles.length }} 个文件</p>
               <p>点击开始计算后读取文件；导出仅使用已完成摘要。清单请保存到这些文件的共同上级目录。</p>
               <button class="checksum-source-toggle" :aria-expanded="showSources" data-testid="checksum-source-toggle" @click="showSources = !showSources">{{ showSources ? '收起' : '查看' }}文件路径 <i :class="showSources ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i></button>
               <ul v-if="showSources" class="checksum-source-paths custom-scrollbar"><li v-for="path in selectedFiles" :key="path">{{ path }}</li></ul>

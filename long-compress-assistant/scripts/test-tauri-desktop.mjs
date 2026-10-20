@@ -2284,7 +2284,6 @@ async function runArchiveFlowDesktopGate() {
   mkdirSync(fallbackOutput, { recursive: true })
   await callDesktopBridge('seedPasswordFallbackWorkspace', fallbackSource, fallbackOutput)
   await callDesktopBridge('queueDesktopConfirmations', [false])
-  if (process.argv.includes('--explorer-checksums-1528-only')) await driver.wait(async()=>(await driver.getCurrentUrl()).includes('#/integrity'),15000)
   let navigation = await driver.findElements(By.css('aside nav > button'))
   await navigation[1].click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
@@ -4722,7 +4721,7 @@ try {
     autoStartRegistryOwnedByTest = true
   }
   mkdirSync(webviewUserDataDirectory, { recursive: true })
-  driver = await createDesktopSessionWithDriverFallback(process.argv.includes('--explorer-checksums-1528-only') ? prepareExplorerChecksum1528Startup(root) : [])
+  driver = await createDesktopSessionWithDriverFallback()
   await waitForDesktopReady()
 
   let navigation = await driver.findElements(By.css('aside nav > button'))
@@ -4741,7 +4740,7 @@ try {
     )
   }
   assert.equal(
-    await navigation[process.argv.includes('--explorer-checksums-1528-only') ? 5 : 0].getAttribute('aria-current'),
+    await navigation[0].getAttribute('aria-current'),
     'page',
     'the expected startup workspace must be selected',
   )
@@ -4941,7 +4940,9 @@ try {
   } else if (process.argv.includes('--aes-1521-only')) {
     await runAes1521Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
     completedSuccessfully = true
-  } else if (process.argv.includes('--explorer-checksums-1528-only')) {
+  } else if ((process.argv.includes('--explorer-checksums-1528-only') || process.argv.includes('--explorer-checksums-1528-polish-only'))) {
+    const startupArgs = prepareExplorerChecksum1528Startup(root)
+    forwardContextAction(startupArgs[0],startupArgs.slice(1))
     await runExplorerChecksum1528Gate({driver,bridge:callDesktopBridge,waitForElement,artifactDirectory,application,root,forwardContextAction})
     completedSuccessfully = true
   } else if (process.argv.includes('--wim-volumes-1527-only')) {
