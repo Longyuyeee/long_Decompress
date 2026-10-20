@@ -193,7 +193,7 @@ const formatDateTime = (value?: string | null) => {
   }).format(time) : '—'
 }
 
-const typeLabel = (record: TaskHistoryRecord) => isConversion(record) ? '归档转换' : appStore.t(`history.type.${record.taskType}`)
+const typeLabel = (record: TaskHistoryRecord) => isConversion(record) ? (record.executionConfig?.kind === 'archive-conversion' && record.executionConfig.operation === 'zpaq-update' ? 'ZPAQ 增量更新' : '归档转换') : appStore.t(`history.type.${record.taskType}`)
 const statusLabel = (record: TaskHistoryRecord) => appStore.t(`history.status.${record.status}`)
 
 const refresh = async () => {
@@ -380,7 +380,7 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
                 <div class="min-w-0"><h3 class="font-black text-content truncate">{{ record.name }}</h3><p class="text-xs text-muted truncate mt-0.5">{{ record.outputPath || record.sourcePaths[0] }}</p>
                   <ResultActions v-if="resultLocation(record)" class="mt-2" :path="record.archiveOutput?.primaryPath || record.outputPath" :directory="record.taskType === 'decompression'" :split="record.archiveOutput?.split" :output="record.archiveOutput" @keydown.enter.stop />
                   <button v-if="record.taskType === 'decompression' && (!record.workloadKind || record.workloadKind === 'archive')" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-retry" @click.stop="openRetry(record)" @keydown.enter.stop>再次解压</button>
-                  <button v-if="isConversion(record)" :disabled="conversion.busy" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-conversion-retry" @click.stop="retryConversion(record)">再次转换</button>
+                  <button v-if="isConversion(record)" :disabled="conversion.busy" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-conversion-retry" @click.stop="retryConversion(record)">{{ record.executionConfig?.kind === 'archive-conversion' && record.executionConfig.operation === 'zpaq-update' ? '再次更新' : '再次转换' }}</button>
                   <button v-else-if="record.taskType === 'compression' && (!record.workloadKind || record.workloadKind === 'archive')" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-compression-retry" @click.stop="openRetry(record)" @keydown.enter.stop>再次压缩</button>
                   <button v-if="record.taskType === 'compression' && ['image', 'video', 'pdf'].includes(record.workloadKind)" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-media-retry" @click.stop="openRetry(record)" @keydown.enter.stop>再次处理</button>
                 </div>
@@ -432,7 +432,7 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
               <p class="text-xs text-muted mt-2">报告包含此任务已保存的文件路径、错误和日志；旧记录缺失的信息不会补写。</p>
             </section>
             <HistoryExtractionDraft v-if="selectedRecord.taskType === 'decompression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" :record="selectedRecord" />
-            <button v-if="isConversion(selectedRecord)" :disabled="conversion.busy" class="history-chip text-primary" @click="retryConversion(selectedRecord)">再次转换</button>
+            <button v-if="isConversion(selectedRecord)" :disabled="conversion.busy" class="history-chip text-primary" @click="retryConversion(selectedRecord)">{{ selectedRecord.executionConfig?.kind === 'archive-conversion' && selectedRecord.executionConfig.operation === 'zpaq-update' ? '再次更新' : '再次转换' }}</button>
             <HistoryCompressionDraft v-else-if="selectedRecord.taskType === 'compression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" :record="selectedRecord" />
             <HistoryMediaDraft v-if="selectedRecord.taskType === 'compression' && ['image', 'video', 'pdf'].includes(selectedRecord.workloadKind)" :record="selectedRecord" />
             <section class="detail-section" data-testid="history-logs">

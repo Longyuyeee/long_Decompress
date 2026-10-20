@@ -37,6 +37,7 @@ const pathKey = (path: string) => path.replace(/\\/g, '/').toLowerCase()
 export const useArchiveConversionStore = defineStore('archiveConversion', () => {
   const tasks = useTaskStore()
   const visible = ref(false)
+  const addingIntent = ref<ConversionDraft['intent']>('convert')
   const items = ref<ConversionDraft[]>([])
   const defaults = ref(defaultConversionSettings())
   const activeId = ref('')
@@ -61,6 +62,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   const active = computed(() => items.value.find(item => item.id === activeId.value))
   function effectiveSettings(item: ConversionDraft): ConversionSettings {
     const settings = item.settings || defaults.value
+    if (item.intent === 'zpaq-update') return { ...settings, format: 'zpaq', password: '', encryptFilenames: false, sourceZpaqSnapshot: undefined }
     return !item.settings && item.defaultFormat ? { ...settings, format: item.defaultFormat } : { ...settings }
   }
   function outputFor(item: ConversionDraft) { return conversionOutputPath(item.sourcePath, effectiveSettings(item), item.intent) }
@@ -71,13 +73,17 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   }
   const task = computed(() => active.value ? taskFor(active.value) : undefined)
   const contextSources = computed(() => items.value.map(item => item.sourcePath))
-  const contextIntent = computed(() => active.value?.intent || 'convert')
+  const contextIntent = computed(() => addingIntent.value)
   const pending = computed(() => items.value.filter(item => !item.taskId))
   const selected = computed(() => pending.value.filter(item => item.selected))
   const currentSettings = computed(() => active.value ? effectiveSettings(active.value) : defaults.value)
   function updateItem(id: string, patch: ConversionPatch) {
     const item = items.value.find(item => item.id === id)
     if (!item || item.taskId || busy.value || preparing.value) return
+    if (item.intent === 'zpaq-update') {
+      patch = Object.fromEntries(Object.entries(patch).filter(([key]) => ['level','splitMiB','outputPath','outputDirectory','sourcePassword','updateSources','archivePrefix'].includes(key))) as ConversionPatch
+      if (!Object.keys(patch).length) return
+    }
     item.settings = normalizeConversionSettings(effectiveSettings(item), patch)
     if (patch.outputDirectory !== undefined && item.settings.outputPath) {
       const filename = item.settings.outputPath.split(/[\\/]/).pop()
@@ -89,6 +95,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     item.targetPasswordRequired = patch.password !== undefined || !supportsNativePassword(item.settings.format) ? false : requirements.target
     item.passwordRequired = item.sourcePasswordRequired || item.targetPasswordRequired
     item.error = undefined
+    if (item.intent === 'zpaq-update' && patch.updateSources !== undefined) { item.sourceIssue = undefined; queueSourceResolution(item) }
   }
   function field<K extends keyof ConversionSettings>(key: K) {
     return computed({ get: () => key === 'outputPath' && active.value ? outputFor(active.value) as ConversionSettings[K] : currentSettings.value[key],
@@ -106,12 +113,12 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   function addSources(paths: string[], intent: ConversionDraft['intent'] = 'convert') {
     const added: ConversionDraft[] = []
     for (const path of paths.map(path => path.trim()).filter(Boolean)) {
-      const existing = items.value.find(item => archiveGroupKey(item.sourcePath) === archiveGroupKey(path) && !item.taskId)
+      const existing = items.value.find(item => (item.intent === 'zpaq-update') === (intent === 'zpaq-update') && archiveGroupKey(item.sourcePath) === archiveGroupKey(path) && !item.taskId)
       if (existing) { existing.selected = true; queueSourceResolution(existing, path); continue }
       const sourceFormat = archiveSourceFormat(path)
       const item: ConversionDraft = { id: 'conversion-draft-' + crypto.randomUUID(), sourcePath: path, intent,
         defaultFormat: intent === 'reconfigure' ? conversionFormats.some(option => option.value === sourceFormat) ? sourceFormat : '7z' : undefined,
-        expanded: false, selected: true }
+        expanded: intent === 'zpaq-update', selected: true }
       items.value.push(item); added.push(item)
       queueSourceResolution(item, path)
     }
@@ -130,6 +137,9 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
         // Undefined is only possible in browser previews without native IPC.
         if (!group) return
         item.sourceFormat = group.archive_format?.toLowerCase() || undefined
+        if (item.intent === 'zpaq-update') {
+          try { item.sourceBytes = group.is_split ? group.total_size : (await invoke<{ size: number }>('get_file_info', { path: item.sourcePath }))?.size } catch { item.sourceBytes = undefined }
+        }
         if (!group.is_split) {
           if (isPotentialSplitArchivePath(reference)) throw new Error('没有找到完整卷组，请重新选择来源。')
           item.sourceIssue = undefined
@@ -145,6 +155,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
           if (format && conversionFormats.some(option => option.value === format)) item.defaultFormat = format
         }
         const duplicate = items.value.find(current => current.id !== item.id && !current.taskId
+          && (current.intent === 'zpaq-update') === (item.intent === 'zpaq-update')
           && archiveGroupKey(current.sourcePath) === archiveGroupKey(item.sourcePath)
           && snapshotKey(effectiveSettings(current).sourceZpaqSnapshot) === snapshotKey(effectiveSettings(item).sourceZpaqSnapshot))
         if (duplicate) {
@@ -165,7 +176,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   }
   function chooseContextSource(path: string) {
     if (busy.value) return
-    const item = items.value.find(item => archiveGroupKey(item.sourcePath) === archiveGroupKey(path))
+    const item = items.value.find(item => (item.intent === 'zpaq-update') === (addingIntent.value === 'zpaq-update') && archiveGroupKey(item.sourcePath) === archiveGroupKey(path) && !item.taskId)
     if (item) { activeId.value = item.id; item.expanded = true }
   }
   function selectSource(path: string) {
@@ -174,12 +185,24 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     chooseContextSource(path)
   }
   function openFromExplorer(paths: string[], intent: ConversionDraft['intent']) {
-    addSources(paths, intent)
+    addingIntent.value = intent; addSources(paths, intent)
     visible.value = true
   }
-  function show() { visible.value = true }
+  function show() { addingIntent.value = 'convert'; visible.value = true }
+  function showUpdate(paths: string[] = []) {
+    addingIntent.value = 'zpaq-update'
+    const added = addSources(paths, 'zpaq-update')
+    if (added[0]) activeId.value = added[0].id
+    visible.value = true
+  }
+  async function togglePause() {
+    const current = tasks.tasks.find(task => task.id === runningTaskId.value)
+    if (current?.status === 'paused') await tasks.resumeTask(current.id)
+    else if (current?.status === 'running') await tasks.pauseTask(current.id)
+  }
   function openSnapshot(path: string, snapshot: ZpaqSnapshot, sourcePassword = '') {
-    const existing = pending.value.find(item => archiveGroupKey(item.sourcePath) === archiveGroupKey(path)
+    addingIntent.value = 'convert'
+    const existing = pending.value.find(item => item.intent !== 'zpaq-update' && archiveGroupKey(item.sourcePath) === archiveGroupKey(path)
       && snapshotKey(effectiveSettings(item).sourceZpaqSnapshot) === snapshotKey(snapshot))
     if (existing) { existing.expanded = true; existing.selected = true; activeId.value = existing.id; visible.value = true; return }
     const item: ConversionDraft = { id: 'conversion-draft-' + crypto.randomUUID(), sourcePath: path,
@@ -217,6 +240,9 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       if (filtered.zipMethod !== undefined && format !== 'zip') delete filtered.zipMethod
       if (filtered.zipPasswordEncoding !== undefined && !['zip','zipx'].includes(format)) { delete filtered.zipPasswordEncoding; skippedTarget++ }
       if (sourceEncodingChanged && (!item.sourceFormat || !supportsZipPasswordEncoding(item.sourcePath, item.sourceFormat))) { delete filtered.sourceZipPasswordEncoding; skippedSource++ }
+      if (item.intent === 'zpaq-update') {
+        for (const key of Object.keys(filtered)) if (!['level','splitMiB','outputPath','outputDirectory','sourcePassword','updateSources','archivePrefix'].includes(key)) delete filtered[key as keyof ConversionPatch]
+      }
       if (!Object.keys(filtered).length) continue
       updateItem(item.id, filtered); applied++
     }
@@ -246,19 +272,22 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   }
   function restore(record: TaskHistoryRecord) {
     if (busy.value || record.executionConfig?.kind !== 'archive-conversion') return
+    addingIntent.value = record.executionConfig.operation === 'zpaq-update' ? 'zpaq-update' : 'convert'
     const existing = pending.value.find(item => item.retryOfTaskId === record.id)
     if (existing) {
       existing.expanded = existing.selected = true; activeId.value = existing.id; visible.value = true
       return
     }
     const config = record.executionConfig
+    const updating = config.operation === 'zpaq-update'
+    addingIntent.value = updating ? 'zpaq-update' : 'convert'
     const source = record.sourcePaths[0]
     if (!source) return
     const item: ConversionDraft = { id: 'conversion-draft-' + crypto.randomUUID(), sourcePath: source,
       sourceParts: record.sourcePaths.length > 1 ? [...record.sourcePaths] : undefined,
-      intent: 'convert', expanded: true, selected: true, retryOfTaskId: record.id,
-      targetPasswordRequired: config.passwordRequired, sourcePasswordRequired: false, passwordRequired: config.passwordRequired,
-      settings: { ...defaultConversionSettings(), sourceZpaqSnapshot: config.sourceZpaqSnapshot, outputPath: '', format: config.format,
+      intent: updating ? 'zpaq-update' : 'convert', expanded: true, selected: true, retryOfTaskId: record.id,
+      targetPasswordRequired: !updating && config.passwordRequired, sourcePasswordRequired: updating && config.passwordRequired, passwordRequired: config.passwordRequired,
+      settings: { ...defaultConversionSettings(), ...(updating ? { updateSources: [...(config.updateSources || [])], archivePrefix: config.archivePrefix || '' } : {}), sourceZpaqSnapshot: config.sourceZpaqSnapshot, outputPath: '', format: config.format,
       ...(config.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: config.sourceZipPasswordEncoding } : {}),
       ...(config.wimMethod ? { wimMethod: config.wimMethod } : {}),
       zipMethod: config.zipMethod ?? 'deflate',
@@ -278,6 +307,11 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   function validate(item: ConversionDraft) {
     const settings = effectiveSettings(item), output = outputFor(item)
     if (item.sourceIssue) return item.sourceIssue
+    if (item.intent === 'zpaq-update') {
+      if (item.sourceFormat && item.sourceFormat !== 'zpaq') return '请选择日志式 ZPAQ 备份，其他格式请使用转换。'
+      if (!settings.updateSources?.length) return '请选择本次需要添加或更新的文件/文件夹。'
+      if (settings.updateSources.length > 1000 || JSON.stringify(settings.updateSources).length > 240000) return '本次入口过多，请选择文件夹或分批添加。'
+    }
     if (settings.sourceZpaqSnapshot && !isZpaqSnapshot(settings.sourceZpaqSnapshot)) return '快照标识无效，请重新读取来源的历史快照。'
     const passwords = passwordRequirements(item)
     if (passwords.source) return '请重新填写原包密码，或明确选择原包无需密码。'
@@ -299,8 +333,10 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   async function execute(item: ConversionDraft, settings: ConversionSettings, outputPath: string, allowRarPasswordCli = false) {
     let unlisten: UnlistenFn | undefined
     const id = 'conversion-' + crypto.randomUUID()
+    const updating = item.intent === 'zpaq-update'
     const sourceEncoding = item.sourceFormat ? zipPasswordEncodingForSource(item.sourcePath, settings.sourceZipPasswordEncoding, item.sourceFormat) : settings.sourceZipPasswordEncoding
     const config: ArchiveConversionConfigV1 = { schemaVersion: 1, kind: 'archive-conversion',
+      ...(updating ? { operation: 'zpaq-update', updateSources: [...(settings.updateSources || [])], archivePrefix: settings.archivePrefix || '' } : {}),
       ...(settings.sourceZpaqSnapshot ? { sourceZpaqSnapshot: { ...settings.sourceZpaqSnapshot } } : {}),
       ...(sourceEncoding ? { sourceZipPasswordEncoding: sourceEncoding } : {}),
       ...(settings.wimMethod ? { wimMethod: settings.wimMethod } : {}),
@@ -310,18 +346,25 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       outputPath, format: settings.format, level: settings.level, splitSize: settings.splitMiB * 1048576,
       rarRecoveryPercent: settings.format === 'rar' ? (settings.rarRecoveryPercent ?? 0) : 0,
       rarRecoveryVolumes: settings.format === 'rar' ? (settings.rarRecoveryVolumes ?? 0) : 0,
-      encryptFilenames: settings.encryptFilenames, passwordRequired: !!settings.password }
+      encryptFilenames: settings.encryptFilenames, passwordRequired: updating ? !!settings.sourcePassword : !!settings.password }
     try {
       phase.value = '步骤 1/2：读取原包'
-      unlisten = await listen<{ taskId: string; phase: string }>('archive-conversion-phase', ({ payload }) => {
-        if (payload.taskId === id) phase.value = payload.phase === 'writing' ? '步骤 2/2：生成新包' : '步骤 1/2：读取原包'
+      unlisten = await listen<{ taskId: string; phase: string; processedBytes?: number; totalBytes?: number }>('archive-conversion-phase', ({ payload }) => {
+        if (payload.taskId !== id) return
+        if (!updating) { phase.value = payload.phase === 'writing' ? '步骤 2/2：生成新包' : '步骤 1/2：读取原包'; return }
+        phase.value = ({ reading:'读取原备份', copying:'复制原备份', updating:'比较内容并生成增量', verifying:'检查完整更新包', splitting:'生成新分卷', publishing:'提交新备份', completed:'更新完成' } as Record<string,string>)[payload.phase] || payload.phase
+        const current = tasks.tasks.find(task => task.id === id)
+        if (current) {
+          current.progress = payload.totalBytes ? Math.min(99, (payload.processedBytes || 0) / payload.totalBytes * 100) : 0
+          if (payload.phase === 'updating') { current.processedBytes = payload.processedBytes || 0; current.totalBytes = payload.totalBytes || 0 }
+        }
       })
       item.taskId = id; runningTaskId.value = id
-      tasks.addTask({ id, name: '归档转换 · ' + item.sourcePath.split(/[\\/]/).pop(), type: 'compression', workloadKind: 'archive',
+      tasks.addTask({ id, name: (updating ? 'ZPAQ 增量更新 · ' : '归档转换 · ') + item.sourcePath.split(/[\\/]/).pop(), type: 'compression', workloadKind: 'archive',
         sourceFiles: [item.sourcePath, ...(item.sourceParts || []).filter(path => pathKey(path) !== pathKey(item.sourcePath))], outputPath, format: config.format, executionConfig: config, retryOfTaskId: item.retryOfTaskId })
       tasks.updateTaskStatus(id, 'running')
       try {
-        const output = await invoke<PublishedArchiveOutput>('convert_archive', { taskId: id, sourcePath: item.sourcePath,
+        const output = updating ? await invoke<PublishedArchiveOutput>('update_zpaq_archive', { taskId: id, sourcePath: item.sourcePath, sources: config.updateSources, archivePrefix: config.archivePrefix || '', outputPath, sourcePassword: settings.sourcePassword || null, level: settings.level, splitSize: config.splitSize || null }) : await invoke<PublishedArchiveOutput>('convert_archive', { taskId: id, sourcePath: item.sourcePath,
           ...(config.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: config.sourceZipPasswordEncoding } : {}),
           sourcePassword: settings.sourcePassword || null, outputPath, ...snapshotArguments(settings.sourceZpaqSnapshot),
           options: { format: config.format, level: config.level, password: settings.password || null,
@@ -332,7 +375,8 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
             split_size: config.splitSize || null, encrypt_filenames: config.encryptFilenames,
             preserve_paths: true, delete_after: false, verify_after: true, allow_insecure_password_cli: allowRarPasswordCli } })
         const current = taskFor(item)!
-        current.archiveOutput = output; current.outputBytes = output.totalBytes; current.outputBytesEstimated = false
+        current.archiveOutput = output; if (updating) { current.processedBytes = output.updateSummary?.inputBytes || 0; current.totalBytes = output.updateSummary?.inputBytes || 0 }
+        current.outputBytes = output.totalBytes; current.outputBytesEstimated = false
         tasks.updateTaskStatus(id, 'completed')
       } catch (failure) {
         const message = String(failure)
@@ -414,7 +458,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       if (!['completed', 'failed', 'cancelled'].includes(current.status)) tasks.updateTaskStatus(id, 'cancelling')
     } catch (failure) { stopRequested.value = false; error.value = '取消请求失败：' + String(failure) }
   }
-  return { openSnapshot, visible, items, defaults, pending, selected, activeId, sourcePath, sourcePassword, password, outputPath,
+  return { showUpdate, togglePause, openSnapshot, visible, items, defaults, pending, selected, activeId, sourcePath, sourcePassword, password, outputPath,
     format, zipEncryption, zipPasswordEncoding, sourceZipPasswordEncoding, level, splitMiB, encryptFilenames, error, busy, task, phase,
     supportsPassword, contextIntent, contextSources, stopRequested, preparing, batchNotice, rarSupport, refreshRarSupport, effectiveSettings, outputFor, taskFor, passwordRequirements,
     addSources, chooseContextSource, selectSource, openFromExplorer, show, restore, start, cancel,

@@ -26,7 +26,7 @@ pub fn requires_password(path: &Path) -> Result<bool> {
     Ok(true)
 }
 
-fn input(password: Option<&str>, selected: &[String]) -> Result<Vec<u8>> {
+pub(crate) fn input(password: Option<&str>, selected: &[String]) -> Result<Vec<u8>> {
     let mut data = Vec::new();
     if let Some(password) = password {
         anyhow::ensure!(password.len() <= 65536, "ZPAQ 密码过长");
@@ -100,7 +100,7 @@ async fn run_with_preview(path: &Path, password: Option<&str>, output: Option<&P
     Ok(result.stdout)
 }
 
-fn io_failure(detail: &str) -> Option<anyhow::Error> {
+pub(crate) fn io_failure(detail: &str) -> Option<anyhow::Error> {
     let line = detail.lines().find_map(|line| line.strip_prefix("LONG_ZPAQ_IO:"))?;
     let (operation, code) = line.split_once(':')?;
     let code = code.trim().parse::<i32>().ok()?;

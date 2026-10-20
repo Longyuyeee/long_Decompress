@@ -77,7 +77,7 @@ const runningTask = computed(() => taskStats.value.runningTask)
 const currentTaskName = computed(() => runningTask.value?.name || '')
 
 const taskTypeLabel = (task: Task) => {
-  if (task.executionConfig?.kind === 'archive-conversion') return '压缩包转换'
+  if (task.executionConfig?.kind === 'archive-conversion') return task.executionConfig.operation === 'zpaq-update' ? 'ZPAQ 增量更新' : '压缩包转换'
   if (task.type === 'decompression') return appStore.t('tasks.type.decompress')
   if (task.workloadKind === 'image') return '图片压缩'
   if (task.workloadKind === 'video') return '视频压缩'

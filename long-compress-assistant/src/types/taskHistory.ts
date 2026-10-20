@@ -64,6 +64,7 @@ export const createTaskHistoryRecord = (task: Task): TaskHistoryRecord => {
   const discardedSplitOutput = Boolean(sourceProgress && task.status !== 'completed')
   const measuredMetrics = task.metrics || (
     task.type === 'compression'
+    && !(task.executionConfig?.kind === 'archive-conversion' && task.executionConfig.operation === 'zpaq-update')
     && !discardedSplitOutput
     && task.outputBytes !== undefined
     && !task.outputBytesEstimated

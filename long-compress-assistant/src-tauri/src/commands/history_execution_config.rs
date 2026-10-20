@@ -3,7 +3,7 @@ use serde_json::{Map, Value};
 // Persist only the supported snapshot schema. A bad/unknown snapshot must not
 // prevent saving the task's final error and logs.
 pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<Value> {
-    if value.get("schemaVersion")?.as_u64()? != 1 || value.to_string().len() > 16_384 { return None; }
+    if value.get("schemaVersion")?.as_u64()? != 1 || value.to_string().len() > if value.get("operation").and_then(Value::as_str)==Some("zpaq-update") {262_144} else {16_384} { return None; }
     let kind = value.get("kind")?.as_str()?;
     let expected = match kind {
         "archive-extraction" => ("decompression", "archive"),
@@ -47,6 +47,13 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
         }
     }
     if kind == "archive-conversion" {
+        if let Some(operation)=value.get("operation") {
+            if operation.as_str()!=Some("zpaq-update") || value.get("format")?.as_str()? != "zpaq" || value.get("sourceZpaqSnapshot").is_some() { return None; }
+            let sources=value.get("updateSources")?.as_array()?;
+            if sources.is_empty() || sources.len()>1000 || !sources.iter().all(|p|p.as_str().is_some_and(|s|!s.is_empty()&&s.len()<=32768)) {return None}
+            let prefix=value.get("archivePrefix").and_then(Value::as_str).unwrap_or("");if prefix.len()>32768{return None}
+            output.insert("operation".into(),operation.clone());output.insert("updateSources".into(),Value::Array(sources.clone()));output.insert("archivePrefix".into(),prefix.into());
+        }
         if let Some(method) = value.get("wimMethod") {
             if !matches!(method.as_str(), Some("store" | "xpress" | "lzx" | "lzms")) { return None; }
             output.insert("wimMethod".into(), method.clone());
@@ -135,6 +142,11 @@ fn project(value: &Value, fields: &[(&str, char)]) -> Option<Map<String, Value>>
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn zpaq1536_history_preserves_update_inputs_and_never_the_password() {
+        let value=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","operation":"zpaq-update","updateSources":["D:/资料"],"archivePrefix":"备份","outputPath":"D:/new.zpaq","format":"zpaq","level":6,"splitSize":65536,"encryptFilenames":false,"passwordRequired":true,"sourcePassword":"do not persist"});
+        let saved=super::sanitize(value,"compression","archive").unwrap();assert_eq!(saved["operation"],"zpaq-update");assert_eq!(saved["updateSources"][0],"D:/资料");assert_eq!(saved["archivePrefix"],"备份");assert!(saved.get("sourcePassword").is_none());
+    }
     #[test]
     fn zip1535_history_preserves_ppmd_in_creation_and_conversion() {
         let conversion=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","format":"zip","level":0,"outputPath":"D:/out.zip","splitSize":65536,"encryptFilenames":false,"passwordRequired":true,"zipMethod":"ppmd","password":"secret"});

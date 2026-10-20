@@ -297,6 +297,8 @@ pub async fn compress_files(
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PublishedArchiveOutput {
+    #[serde(default, skip_serializing_if="Option::is_none")]
+    update_summary: Option<crate::services::zpaq_update::UpdateSummary>,
     primary_path: String,
     files: Vec<PublishedArchiveFile>,
     total_bytes: u64,
@@ -349,6 +351,35 @@ pub async fn convert_archive(
     service.compress(window, task_id, files, output_path.clone(), options)
         .await.map_err(|error| format!("转换写入新包失败：{}", compression_command_error(&error)))?;
     published_archive_output(Path::new(&output_path), split).map_err(|error| error.to_string())
+}
+
+#[command]
+pub async fn update_zpaq_archive(window: Window, task_id: String, source_path: String, sources: Vec<String>, archive_prefix: String,
+    output_path: String, source_password: Option<String>, level: u32, split_size: Option<u64>) -> Result<PublishedArchiveOutput,String> {
+    let _output_guard=CompressionOutputGuard::acquire(&task_id,&output_path)?;
+    let service=service_for_task(&task_id).await?;let _task_guard=TaskCancellationGuard::new(&task_id);
+    let (event_window,event_service,event_id)=(window.clone(),service.clone(),task_id.clone());
+    let last=std::sync::Mutex::new(("",crate::services::progress_gate::ProgressGate::new()));
+    let progress=Arc::new(move|event:crate::services::zpaq_update::UpdateProgress|{
+        let mut last=last.lock().unwrap_or_else(|e|e.into_inner());
+        let changed=last.0!=event.phase;
+        if changed {
+            last.0=event.phase;
+            let message=match event.phase {"copying"=>format!("复制完整原备份：{} 字节；原件保留，新增内容还需要额外空间。",event.total_bytes),
+                "updating"=>"按内容比较并追加新增/变化数据；保留未选旧条目与全部历史。".into(),
+                "verifying"=>"检查完整更新包，包括原有内容。".into(),"splitting"=>"正在生成新的数字分卷。".into(),
+                "publishing"=>"正在提交新备份。".into(),"completed"=>"新备份已完成。".into(),_=>"读取原备份及历史信息。".into()};
+            event_service.emit_log(&event_window,&event_id,&message,TaskLogSeverity::Info);
+        }
+        if changed||last.1.allow(event.total_bytes>0&&event.processed_bytes==event.total_bytes) {
+            let _=event_window.emit("archive-conversion-phase",serde_json::json!({"taskId":event_id,"phase":event.phase,"processedBytes":event.processed_bytes,"totalBytes":event.total_bytes}));
+        }
+    });
+    let summary=crate::services::zpaq_update::update(Path::new(&source_path),&sources,&archive_prefix,Path::new(&output_path),source_password.as_deref().filter(|p|!p.is_empty()),level,split_size,service.cancellation_flag.clone(),progress)
+        .await.map_err(|e|crate::services::archive_io::message(&e))?;
+    let mut output=published_archive_output(Path::new(&output_path),split_size.is_some_and(|n|n>0)).map_err(|e|e.to_string())?;
+    service.emit_log(&window,&task_id,&if summary.unchanged {"所选内容和时间未变化，已另存同内容副本；未新增快照。".into()}else{format!("已添加/更新 {} 项，历史快照 {} → {}；未选内容保留。",summary.updated_entries,summary.base_snapshots,summary.snapshots)},TaskLogSeverity::Success);
+    output.update_summary=Some(summary);Ok(output)
 }
 
 fn conversion_extraction_options(encoding: Option<ZipPasswordEncoding>) -> DecompressOptions {
@@ -440,7 +471,7 @@ fn published_archive_output(output: &Path, split: bool) -> anyhow::Result<Publis
     }
     let primary_path = files.first().ok_or_else(|| anyhow::anyhow!("产物清单为空"))?.path.clone();
     let split = split && (files.len() > 1 || primary_path != output.to_string_lossy());
-    Ok(PublishedArchiveOutput { primary_path, files, total_bytes, split })
+    Ok(PublishedArchiveOutput { primary_path, files, total_bytes, split, update_summary: None })
 }
 
 #[cfg(test)]

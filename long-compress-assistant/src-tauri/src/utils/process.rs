@@ -36,7 +36,7 @@ pub async fn cancellable_output_with_stdin(
     timeout: std::time::Duration,
     input: Option<Vec<u8>>,
 ) -> std::io::Result<std::process::Output> {
-    output_with_stdin_mode(command, cancelled, timeout, input, 0, None).await
+    output_with_stdin_mode(command, cancelled, timeout, input, 0, None, None).await
 }
 
 /// Archive children must stop actual work when their registered task is paused,
@@ -48,7 +48,7 @@ pub async fn cancellable_archive_output_with_stdin(
     timeout: std::time::Duration,
     input: Option<Vec<u8>>,
 ) -> std::io::Result<std::process::Output> {
-    output_with_stdin_mode(command, cancelled, timeout, input, 0, Some(cancelled.clone())).await
+    output_with_stdin_mode(command, cancelled, timeout, input, 0, Some(cancelled.clone()), None).await
 }
 
 /// RAR4 rc opens each surviving volume with a separate password prompt.
@@ -62,7 +62,17 @@ pub async fn cancellable_output_with_rar_prompts(
     input: Option<Vec<u8>>,
     max_prompts: usize,
 ) -> std::io::Result<std::process::Output> {
-    output_with_stdin_mode(command, cancelled, timeout, input, max_prompts.clamp(1, 512), None).await
+    output_with_stdin_mode(command, cancelled, timeout, input, max_prompts.clamp(1, 512), None, None).await
+}
+
+pub async fn cancellable_archive_output_with_progress(
+    command: &mut tokio::process::Command,
+    cancelled: &std::sync::Arc<std::sync::atomic::AtomicBool>,
+    timeout: std::time::Duration,
+    input: Vec<u8>,
+    progress: std::sync::Arc<dyn Fn(&[u8]) + Send + Sync>,
+) -> std::io::Result<std::process::Output> {
+    output_with_stdin_mode(command, cancelled, timeout, Some(input), 0, Some(cancelled.clone()), Some(progress)).await
 }
 
 async fn output_with_stdin_mode(
@@ -72,6 +82,7 @@ async fn output_with_stdin_mode(
     mut input: Option<Vec<u8>>,
     max_prompts: usize,
     pause_flag: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
+    progress: Option<std::sync::Arc<dyn Fn(&[u8]) + Send + Sync>>,
 ) -> std::io::Result<std::process::Output> {
     use std::{io, process::Stdio, sync::atomic::Ordering};
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -116,6 +127,7 @@ async fn output_with_stdin_mode(
                 let count = stderr.read(&mut buffer).await?;
                 if count == 0 { break; }
                 bytes.extend_from_slice(&buffer[..count]);
+                if let Some(progress) = &progress { progress(&buffer[..count]); }
                 if max_prompts == 0 { continue; }
                 while let Some(offset) = bytes[scan_from..].windows(prompt.len()).position(|w| w == prompt) {
                     scan_from += offset + prompt.len();

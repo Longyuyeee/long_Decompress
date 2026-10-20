@@ -39,6 +39,9 @@ export interface PdfConfigV1 {
   allowLargerOutput: boolean
 }
 export interface ArchiveConversionConfigV1 {
+  operation?: 'zpaq-update'
+  updateSources?: string[]
+  archivePrefix?: string
   sourceZpaqSnapshot?: ZpaqSnapshot
   sourceZipPasswordEncoding?: ZipPasswordEncoding
   wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms'
@@ -62,6 +65,12 @@ export type ExecutionConfigV1 = ExtractionConfigV1 | ArchiveCompressionConfigV1 
 /** Explicit fields only: never serialize passwords, deletion or transient consent. */
 export function copyExecutionConfig(config?: ExecutionConfigV1 | null): ExecutionConfigV1 | null {
   if (!config || config.schemaVersion !== 1) return null
+  if (config.kind === 'archive-conversion' && config.operation !== undefined) {
+    if (config.operation !== 'zpaq-update' || config.format !== 'zpaq' || config.sourceZpaqSnapshot
+        || !Array.isArray(config.updateSources) || !config.updateSources.length || config.updateSources.length > 1000
+        || !config.updateSources.every(path => typeof path === 'string' && path.trim().length > 0 && path.length <= 32768)
+        || (config.archivePrefix !== undefined && (typeof config.archivePrefix !== 'string' || config.archivePrefix.length > 32768))) return null
+  }
   if (config.kind === 'archive-extraction' && config.zpaqSnapshot != null && !isZpaqSnapshot(config.zpaqSnapshot)) return null
   if (config.kind === 'archive-conversion' && config.sourceZpaqSnapshot != null && !isZpaqSnapshot(config.sourceZpaqSnapshot)) return null
   if (config.kind === 'archive-extraction' && config.zipPasswordEncoding != null
@@ -76,6 +85,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
   if (method !== undefined && method !== 'store' && method !== 'xpress' && method !== 'lzx' && method !== 'lzms') return null
   switch (config.kind) {
     case 'archive-conversion': return { schemaVersion: 1, kind: config.kind,
+      ...(config.operation === 'zpaq-update' ? { operation: config.operation, updateSources: [...(config.updateSources || [])], archivePrefix: config.archivePrefix || '' } : {}),
       ...(config.sourceZpaqSnapshot ? { sourceZpaqSnapshot: { ...config.sourceZpaqSnapshot } } : {}),
       ...(config.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: config.sourceZipPasswordEncoding } : {}),
       ...(config.wimMethod ? { wimMethod: config.wimMethod } : {}),

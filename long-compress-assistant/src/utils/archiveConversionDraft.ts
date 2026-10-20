@@ -11,7 +11,7 @@ export function conversionOutputPath(source: string, settings: ConversionSetting
   if (settings.outputPath) return settings.outputPath
   const stem = archiveSourceStem(source) + (settings.sourceZpaqSnapshot ? `_快照${settings.sourceZpaqSnapshot.version}` : '')
   const directory = settings.outputDirectory || parentDirectory(source)
-  return `${directory.replace(/[\\/]$/, '')}/${stem}_${intent === 'reconfigure' ? '调整' : '转换'}.${settings.format}`
+  return `${directory.replace(/[\\/]$/, '')}/${stem}_${intent === 'zpaq-update' ? '更新' : intent === 'reconfigure' ? '调整' : '转换'}.${settings.format}`
 }
 export function normalizeConversionSettings(settings: ConversionSettings, patch: Partial<ConversionSettings>): ConversionSettings {
   const next = { ...settings, ...patch }

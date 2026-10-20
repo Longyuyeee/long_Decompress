@@ -136,7 +136,7 @@ export const usePendingDraftStore = defineStore('pendingDrafts', () => {
     try {
       const paths = [...new Set([...saved.compression.files.map(file => file.path),
         ...saved.compression.groups.flatMap(group => group.files.map(file => file.path)),
-        ...saved.extraction.items.flatMap(item => item.sourceFiles), ...saved.conversion.items.map(item => item.sourcePath)])]
+        ...saved.extraction.items.flatMap(item => item.sourceFiles), ...saved.conversion.items.flatMap(item => [item.sourcePath,...(item.settings?.updateSources || [])])])]
       const missing = new Set<string>()
       let next = 0
       await Promise.all(Array.from({ length: Math.min(4, paths.length) }, async () => {
@@ -180,10 +180,10 @@ export const usePendingDraftStore = defineStore('pendingDrafts', () => {
         extractSources.add(sourceKey); restored++
       }
       for (const item of saved.conversion.items) {
-        if (conversion.pending.some(current => archiveGroupKey(current.sourcePath) === archiveGroupKey(item.sourcePath) && snapshotKey(conversion.effectiveSettings(current).sourceZpaqSnapshot) === snapshotKey((item.settings || saved.conversion.defaults).sourceZpaqSnapshot))) continue
+        if (conversion.pending.some(current => (current.intent === 'zpaq-update') === (item.intent === 'zpaq-update') && archiveGroupKey(current.sourcePath) === archiveGroupKey(item.sourcePath) && snapshotKey(conversion.effectiveSettings(current).sourceZpaqSnapshot) === snapshotKey((item.settings || saved.conversion.defaults).sourceZpaqSnapshot))) continue
         conversion.items.push({ ...item, id: 'recovered-' + crypto.randomUUID(), taskId: undefined,
           settings: item.settings ? cleanConversion(item.settings) : hadConversion ? { ...cleanConversion(saved.conversion.defaults), format: item.defaultFormat || saved.conversion.defaults.format } : undefined,
-          sourceIssue: missing.has(item.sourcePath) ? '来源不存在或无法访问，请重新选择。' : undefined })
+          sourceIssue: [item.sourcePath,...(item.settings?.updateSources || [])].some(path => missing.has(path)) ? '来源不存在或无法访问，请重新选择：' + [item.sourcePath,...(item.settings?.updateSources || [])].filter(path => missing.has(path)).map(path => path.split(/[\\/]/).pop()).join('、') : undefined })
         restored++
       }
       // Never restore the Explorer auto-start flag or resume an operation.

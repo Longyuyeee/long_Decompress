@@ -28,7 +28,7 @@ Build on x64 Windows with Visual Studio C++: `./scripts/build-zpaq-engine.ps1`.
 Uses /O2 /MT /EHsc, advapi32 and reproducible-link /Brepro. No extra runtime DLL.
 Reading and fresh journaling creation are exposed, including native passwords.
 Fixed-size numeric byte slices are exposed by the host; they are not native
-journaling append parts. No incremental update creation or in-place revision rollback is exposed.
+journaling append parts. In-place revision rollback is not exposed.
 
 The v1.5.30 read adapter lists complete journaling transaction identities and
 freezes the file map at an explicit version/date pair while scanning the full
@@ -36,3 +36,13 @@ metadata catalog. Missing or changed identities and streaming/mixed history
 requests fail explicitly; no silent latest-version fallback. Preview, selected
 extraction, conversion and task history share this identity. Codecs and native
 cryptography are unchanged.
+
+The v1.5.36 adapter exposes `-long-update` on a host-owned full archive copy.
+It loads the entire old file map (including unselected paths), preserves those
+entries, and forces content comparison before appending changed/new fragments.
+No-change updates truncate the empty transaction as upstream does and keep the
+copy byte-identical. A JSON summary reports updated entries/new fragments;
+stderr reports actual processed input bytes for pause/cancellation and progress.
+The host verifies the complete updated archive before publishing another file
+or fresh numeric slices. Fresh `-long-create` still refuses an existing file.
+The user original is never an append target. Codec and cryptography are unchanged.
