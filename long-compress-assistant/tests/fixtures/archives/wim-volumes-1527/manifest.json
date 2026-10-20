@@ -1,0 +1,88 @@
+{
+  "generator": "wimlib-imagex 1.14.5 x64",
+  "toolSha256": "34c0c4165591ad1f592837ed99d08273c58d6ed3fe0ed6360cf34e7b0739b353",
+  "packageUrl": "https://wimlib.net/downloads/wimlib-1.14.5-windows-x86_64-bin.zip",
+  "packageSha256": "2f446d6fa3866582175f1a22a7be198eeee0aec7aba5b4e04ad25c99eae2d265",
+  "cases": [
+    {
+      "file": "none.wim",
+      "sha256": "68ee722fe4ba65e6ce2c858a80097545f1bb2515f41379b421967cafe52aabfd",
+      "method": "none",
+      "images": 1,
+      "expected": {
+        "图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+        "数据.bin": "276e505b47c3bf67efda0be9aed8e22e0d122375cb79a11b72d8ee71e8e2e2ca",
+        "空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "说明.txt": "a29be824c72dffd04385d55d9e3dd4cf9d0e9d9bbe1069ab8fa917151557a012",
+        "项目/同名.txt": "bdd295acb9859817b9da544524ed3525a64f61bf5edb16deb0c28b6ae63d378b"
+      },
+      "directories": [
+        "空目录",
+        "项目"
+      ],
+      "independentApply": true
+    },
+    {
+      "file": "xpress.wim",
+      "sha256": "6670dc59293f4d582783daab1c98a1b804b00cc656d82245ddac7561c97d5d15",
+      "method": "xpress",
+      "images": 1,
+      "expected": {
+        "图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+        "数据.bin": "276e505b47c3bf67efda0be9aed8e22e0d122375cb79a11b72d8ee71e8e2e2ca",
+        "空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "说明.txt": "a29be824c72dffd04385d55d9e3dd4cf9d0e9d9bbe1069ab8fa917151557a012",
+        "项目/同名.txt": "bdd295acb9859817b9da544524ed3525a64f61bf5edb16deb0c28b6ae63d378b"
+      },
+      "directories": [
+        "空目录",
+        "项目"
+      ],
+      "independentApply": true
+    },
+    {
+      "file": "lzx.wim",
+      "sha256": "52a5d54504fe208595d514e47482f603aad81f74422c27a7beb101071e1100a7",
+      "method": "lzx",
+      "images": 2,
+      "expected": {
+        "1/图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+        "1/数据.bin": "276e505b47c3bf67efda0be9aed8e22e0d122375cb79a11b72d8ee71e8e2e2ca",
+        "1/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "1/说明.txt": "a29be824c72dffd04385d55d9e3dd4cf9d0e9d9bbe1069ab8fa917151557a012",
+        "1/项目/同名.txt": "bdd295acb9859817b9da544524ed3525a64f61bf5edb16deb0c28b6ae63d378b",
+        "2/图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+        "2/数据.bin": "526757821ee8caa221298046ed50402c16cc2508289d024f3b1386ab0eece4f1",
+        "2/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "2/说明.txt": "fc049c27039c54d7d007574629f152a54ca575ff26b86895a0feb0548876b6df",
+        "2/项目/同名.txt": "32708aa33e13cb8601678e3ffe6f522035ce3c0b8278e440299e72b1cfdcd0b9",
+        "[1].xml": "0c68ed8ffa2e62846597f9b2f9367d9d14ddba24a4a574f14efeebac79ff5f2b"
+      },
+      "directories": [
+        "1/空目录",
+        "1/项目",
+        "2/空目录",
+        "2/项目"
+      ],
+      "independentApply": true
+    },
+    {
+      "file": "lzms.wim",
+      "sha256": "204077a6b91f4c97aa85a646531a1c846ef4c922959ffef44eb94c1642af168c",
+      "method": "lzms",
+      "images": 1,
+      "expected": {
+        "图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+        "数据.bin": "276e505b47c3bf67efda0be9aed8e22e0d122375cb79a11b72d8ee71e8e2e2ca",
+        "空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "说明.txt": "a29be824c72dffd04385d55d9e3dd4cf9d0e9d9bbe1069ab8fa917151557a012",
+        "项目/同名.txt": "bdd295acb9859817b9da544524ed3525a64f61bf5edb16deb0c28b6ae63d378b"
+      },
+      "directories": [
+        "空目录",
+        "项目"
+      ],
+      "independentApply": true
+    }
+  ]
+}

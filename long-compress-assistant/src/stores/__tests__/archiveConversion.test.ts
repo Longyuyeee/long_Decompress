@@ -8,6 +8,12 @@ vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn(async () => vi.fn()) }))
 vi.mock('@tauri-apps/api/dialog', () => ({ ask: mocks.ask }))
 beforeEach(() => { setActivePinia(createPinia()); mocks.invoke.mockReset(); mocks.ask.mockReset(); mocks.ask.mockResolvedValue(true) })
+it('wim1527 retains each source password and volume size while explicitly choosing a WIM target',async()=>{
+  mocks.invoke.mockImplementation(async command=>command==='detect_split_archive'?{is_split:false,archive_format:'zip'}:undefined)
+  const store=useArchiveConversionStore();store.addSources(['C:/甲.zip','C:/乙.zip']);store.items.forEach((item,index)=>store.updateItem(item.id,{sourcePassword:`原包-${index}`,splitMiB:index+1}))
+  expect(await store.applySelected({format:'wim'})).toBe('')
+  store.items.forEach((item,index)=>{expect(item.settings).toMatchObject({format:'wim',password:'',sourcePassword:`原包-${index}`,splitMiB:index+1});expect(store.outputFor(item)).toMatch(/\.wim$/)})
+})
 it('zpaq1526 changes selected targets while keeping each native password and volume size',async()=>{
   mocks.invoke.mockImplementation(async command=>command==='detect_split_archive'?{is_split:false,archive_format:'zip'}:undefined)
   const store=useArchiveConversionStore();store.addSources(['C:/甲.zip','C:/乙.zip'])

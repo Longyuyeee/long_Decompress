@@ -159,3 +159,7 @@ it.each(['tar.lzma','lzma.aes','tar.lzma.aes'])('lzma1524 keeps the requested fo
   expect(extensionForFormat(format,'secret')).toBe(format)
   expect(isSingleFileStreamFormat(format)).toBe(format==='lzma.aes')
 })
+
+it('wim1527 exposes numeric splitting without inventing a native password capability',()=>{
+  const wim=COMPRESSIBLE_FORMATS.find(format=>format.value==='wim')!;expect(wim.supportsSplit).toBe(true);expect(isPasswordSupportedFormat('wim')).toBe(false)
+})

@@ -691,6 +691,7 @@ const extractSelected = async () => {
       <span class="archive-depth">{{ archiveDepth }} / 3 层</span>
     </nav>
 
+    <p v-if="result?.format === 'WIM'" data-testid="wim-image-hint" class="text-xs leading-relaxed text-muted">多镜像按 1、2 等编号目录展示，可进入后选择文件；根目录可能显示的 [1].xml 为镜像说明。转换保留当前目录视图，不修改原镜像，也不生成可部署的 SWM 分卷。</p>
     <section class="aero-card shrink-0 p-3 grid gap-3 browser-toolbar" :class="{'has-zip-encoding': archivePath && supportsZipPasswordEncoding(archivePath, result?.format)}">
       <div class="min-w-0 browser-field">
         <span class="browser-label">当前压缩包</span>

@@ -1,0 +1,9 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+wim-1527: ui images-previews-selected-extraction
+wim-1527: ui missing-volume-recovery
+wim-1527: ui conversion-zip
+
+[WARNING] "E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\wim-volumes-1527\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\????-????-7c3c600e-fab3-4fb9-81d0-3ff62f15946c.wim" does not contain integrity information.  Skipping integrity check.
+wim-1527: ui conversion-wim

@@ -362,6 +362,15 @@ impl WindowsJobObject {
         Ok(Self { handle })
     }
 
+    pub(crate) fn limit_memory(&self, bytes: usize) -> Result<(), VideoEncodingError> {
+        use windows_sys::Win32::System::JobObjects::{SetInformationJobObject, JobObjectExtendedLimitInformation, JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE, JOB_OBJECT_LIMIT_PROCESS_MEMORY};
+        let mut information: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = unsafe { std::mem::zeroed() };
+        information.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE | JOB_OBJECT_LIMIT_PROCESS_MEMORY;
+        information.ProcessMemoryLimit = bytes;
+        if unsafe { SetInformationJobObject(self.handle, JobObjectExtendedLimitInformation, std::ptr::addr_of!(information).cast(), std::mem::size_of_val(&information) as u32) } == 0 { return Err(last_job_error("memory-limit")); }
+        Ok(())
+    }
+
     pub fn assign(&self, child: &std::process::Child) -> Result<(), VideoEncodingError> {
         use std::os::windows::io::AsRawHandle;
         self.assign_raw_handle(child.as_raw_handle())

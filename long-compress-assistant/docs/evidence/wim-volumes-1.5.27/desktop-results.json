@@ -1,0 +1,1217 @@
+{
+  "version": "1.5.27",
+  "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+  "sourceCommit": "7bcf94f544e6d083323266a776819f58187ea7c6",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74",
+  "native": [
+    {
+      "kind": "original-none",
+      "binarySha256": "15aa59e94cc48487dd5107cb3d868ac2e9cf4f2b5177fa091828bf0b0fa8cf88",
+      "files": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.011",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.012",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.013",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.014",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.015",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.016",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.017",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.018",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.019",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.020",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.021",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.022",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.023",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.024",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.025",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.026",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.027",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.028",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.029",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.030",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.031",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.032",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.033",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.034",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.035",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.036",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.037",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.038",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.039",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.040",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.041",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.042",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.043",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.044",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.045",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.046",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.047",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.048",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.049",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.050",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.051",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.052",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.053",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.054",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.055",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.056",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.057",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.058",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.059",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.060",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.061",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.062",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.063",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.064",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.065",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.066",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.067",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.068",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.069",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.070",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.071",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.072",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.073",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.074",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.075",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.076",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.077",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.078",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.079",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.080",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.081",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.082",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.083",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.084",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.085",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.086",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.087",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.088",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.089",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.090",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.091",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.092",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.093",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.094",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none\\镜像.wim.095"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-none-实际提取",
+      "allIndependentHashes": true
+    },
+    {
+      "kind": "original-xpress",
+      "binarySha256": "15aa59e94cc48487dd5107cb3d868ac2e9cf4f2b5177fa091828bf0b0fa8cf88",
+      "files": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.011",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.012",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.013",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.014",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.015",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.016",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.017",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.018",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.019",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.020",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.021",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.022",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.023",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.024",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.025",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.026",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.027",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress\\镜像.wim.028"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-xpress-实际提取",
+      "allIndependentHashes": true
+    },
+    {
+      "kind": "original-lzx",
+      "binarySha256": "15aa59e94cc48487dd5107cb3d868ac2e9cf4f2b5177fa091828bf0b0fa8cf88",
+      "files": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.011",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.012",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.013",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.014",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.015",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.016",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.017",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.018",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.019",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.020",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.021",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.022",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.023",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.024",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.025",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.026",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.027",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.028",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.029",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.030",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.031",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.032",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.033",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.034",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.035",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.036",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.037",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.038",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.039",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.040",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.041",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.042",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.043",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.044",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.045",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.046",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.047",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.048",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.049",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.050",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.051",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.052",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.053"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx-实际提取",
+      "allIndependentHashes": true
+    },
+    {
+      "kind": "original-lzms",
+      "binarySha256": "15aa59e94cc48487dd5107cb3d868ac2e9cf4f2b5177fa091828bf0b0fa8cf88",
+      "files": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzms\\镜像.wim.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzms\\镜像.wim.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzms\\镜像.wim.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzms\\镜像.wim.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzms\\镜像.wim.005"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzms-实际提取",
+      "allIndependentHashes": true
+    },
+    {
+      "kind": "created-level-0",
+      "binarySha256": "15aa59e94cc48487dd5107cb3d868ac2e9cf4f2b5177fa091828bf0b0fa8cf88",
+      "published": {
+        "files": [
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.001"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.002"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.003"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.004"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.005"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.006"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.007"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.008"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.009"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.010"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.011"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.012"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.013"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.014"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.015"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.016"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.017"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.018"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.019"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.020"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.021"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.022"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.023"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.024"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.025"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.026"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.027"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.028"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.029"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.030"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.031"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.032"
+          },
+          {
+            "bytes": 3948,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.033"
+          }
+        ],
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0.wim.001",
+        "split": true,
+        "totalBytes": 2101132
+      },
+      "recovered": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0-中卷提取",
+      "independent": {
+        "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-0-wimlib-990a7593-c308-445d-9a7f-6f159875c973",
+        "toolSha256": "34c0c4165591ad1f592837ed99d08273c58d6ed3fe0ed6360cf34e7b0739b353",
+        "allIndependentHashes": true,
+        "emptyDirectory": true
+      }
+    },
+    {
+      "kind": "created-level-6",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "published": {
+        "files": [
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.001"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.002"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.003"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.004"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.005"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.006"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.007"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.008"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.009"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.010"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.011"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.012"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.013"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.014"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.015"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.016"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.017"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.018"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.019"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.020"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.021"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.022"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.023"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.024"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.025"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.026"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.027"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.028"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.029"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.030"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.031"
+          },
+          {
+            "bytes": 65537,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.032"
+          },
+          {
+            "bytes": 3948,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.033"
+          }
+        ],
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-ebee1e25-c5e8-43a1-ac46-5d5443bc6723.wim.001",
+        "split": true,
+        "totalBytes": 2101132
+      },
+      "recovered": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-中卷提取-da139bb5-8c22-49aa-8fab-304ddc5698ca",
+      "independent": {
+        "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\created-level-6-wimlib-d00219bd-50d3-42e4-add3-521739d8868b",
+        "toolSha256": "34c0c4165591ad1f592837ed99d08273c58d6ed3fe0ed6360cf34e7b0739b353",
+        "allIndependentHashes": true,
+        "emptyDirectory": true
+      }
+    }
+  ],
+  "ui": [
+    {
+      "kind": "creation-and-result-checksums",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "record": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\界面镜像-098ac135-4b3c-4f44-98e9-fe2e9e7ccace.wim.001"
+            },
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\界面镜像-098ac135-4b3c-4f44-98e9-fe2e9e7ccace.wim.002"
+            },
+            {
+              "bytes": 1523,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\界面镜像-098ac135-4b3c-4f44-98e9-fe2e9e7ccace.wim.003"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\界面镜像-098ac135-4b3c-4f44-98e9-fe2e9e7ccace.wim.001",
+          "split": true,
+          "totalBytes": 2098675
+        },
+        "completedAt": "2026-10-20T09:00:56.842Z",
+        "durationMs": 461,
+        "errorMessage": null,
+        "executionConfig": {
+          "kind": "archive-compression",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74",
+          "passwordRequired": false,
+          "schemaVersion": 1,
+          "settings": {
+            "createSolidArchive": false,
+            "encryptFilenames": false,
+            "fastPack": false,
+            "filename": "界面镜像-098ac135-4b3c-4f44-98e9-fe2e9e7ccace",
+            "format": "wim",
+            "keepStructure": true,
+            "level": 6,
+            "rarRecoveryPercent": 0,
+            "rarRecoveryVolumes": 0,
+            "splitArchive": true,
+            "splitSize": "1",
+            "verifyAfter": true,
+            "zipEncryption": "aes256",
+            "zipMethod": "deflate",
+            "zipPasswordEncoding": "utf8",
+            "zipSplitMode": "numeric"
+          }
+        },
+        "failure": null,
+        "format": "wim",
+        "id": "ijf65o16emvgge65q",
+        "logs": [
+          {
+            "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 158.5 GiB，预计输出 2.10 MiB）",
+            "severity": "info",
+            "timestamp": "2026-10-20T09:00:56.400Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\界面镜像-098ac135-4b3c-4f44-98e9-fe2e9e7ccace.wim",
+            "severity": "info",
+            "timestamp": "2026-10-20T09:00:56.511963900Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-20T09:00:56.712842100Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-20T09:00:56.830934100Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T09:00:56.837750500Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 0,
+          "media": null,
+          "outputBytes": 2098675,
+          "savingsRatio": 0,
+          "schemaVersion": 1
+        },
+        "name": "数据.bin",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\界面镜像-098ac135-4b3c-4f44-98e9-fe2e9e7ccace.wim.001",
+        "processedBytes": 0,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\资料\\数据.bin"
+        ],
+        "startedAt": "2026-10-20T09:00:56.381Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 0,
+        "workloadKind": "archive"
+      },
+      "allVolumes": true,
+      "independentDigests": true
+    },
+    {
+      "kind": "compression-batch",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "originalModal": true,
+      "perRowSplitRetained": true,
+      "passwordRejectedAtomically": true,
+      "noImplicitStart": true
+    },
+    {
+      "kind": "images-previews-selected-extraction",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "middleMember": true,
+      "image2Only": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\只取镜像二的说明-e05a05f8-f4ca-4037-a910-eb1d0fa19284",
+      "independentHash": true
+    },
+    {
+      "kind": "missing-volume-recovery",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "oldFailurePreserved": true,
+      "newPendingTask": true,
+      "independentHashes": true
+    },
+    {
+      "kind": "conversion-zip",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\互转-zip-94afa85a-4edc-4f41-9901-68c60698a6d6.zip",
+      "record": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 27887,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\互转-zip-94afa85a-4edc-4f41-9901-68c60698a6d6.zip"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\互转-zip-94afa85a-4edc-4f41-9901-68c60698a6d6.zip",
+          "split": false,
+          "totalBytes": 27887
+        },
+        "completedAt": "2026-10-20T09:19:24.034Z",
+        "durationMs": 1933,
+        "errorMessage": null,
+        "executionConfig": {
+          "encryptFilenames": false,
+          "format": "zip",
+          "kind": "archive-conversion",
+          "level": 6,
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\互转-zip-94afa85a-4edc-4f41-9901-68c60698a6d6.zip",
+          "passwordRequired": true,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "schemaVersion": 1,
+          "splitSize": 0,
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        },
+        "failure": null,
+        "format": "wim",
+        "id": "conversion-aaca2dcc-c089-4f66-9087-cc831d1a1d2f",
+        "logs": [
+          {
+            "message": "转换归档：先解压至临时目录，再校验并发布新包；保留原包。",
+            "severity": "info",
+            "timestamp": "2026-10-20T09:19:22.106282300Z"
+          },
+          {
+            "message": "确定解压格式: Wim (后缀: 001)",
+            "severity": "info",
+            "timestamp": "2026-10-20T09:19:22.215135300Z"
+          },
+          {
+            "message": "开始解压：镜像.wim.001",
+            "severity": "info",
+            "timestamp": "2026-10-20T09:19:22.551007300Z"
+          },
+          {
+            "message": "正在解压：archive: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.001",
+            "severity": "info",
+            "timestamp": "2026-10-20T09:19:22.835048700Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 750484 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T09:19:23.642670600Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T09:19:23.642687500Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\互转-zip-94afa85a-4edc-4f41-9901-68c60698a6d6.zip",
+            "severity": "info",
+            "timestamp": "2026-10-20T09:19:23.823793100Z"
+          },
+          {
+            "message": "正在创建 ZIP · Deflate · 密码保护…",
+            "severity": "info",
+            "timestamp": "2026-10-20T09:19:23.824393800Z"
+          },
+          {
+            "message": "ZIP · Deflate 创建完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T09:19:23.896050500Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-20T09:19:23.897550800Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-20T09:19:23.956384800Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T09:19:23.959637600Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 750484,
+          "media": null,
+          "outputBytes": 27887,
+          "savingsRatio": 0.9628413130726304,
+          "schemaVersion": 1
+        },
+        "name": "归档转换 · 镜像.wim.001",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\互转-zip-94afa85a-4edc-4f41-9901-68c60698a6d6.zip",
+        "processedBytes": 750484,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.001",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.002",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.003",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.004",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.005",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.006",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.007",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.008",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.009",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.010",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.011",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.012",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.013",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.014",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.015",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.016",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.017",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.018",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.019",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.020",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.021",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.022",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.023",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.024",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.025",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.026",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.027",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.028",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.029",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.030",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.031",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.032",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.033",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.034",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.035",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.036",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.037",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.038",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.039",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.040",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.041",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.042",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.043",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.044",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.045",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.046",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.047",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.048",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.049",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.050",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.051",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.052",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\original-lzx\\镜像.wim.053"
+        ],
+        "startedAt": "2026-10-20T09:19:22.101Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 750484,
+        "workloadKind": "archive"
+      },
+      "independentDecodedHashes": true,
+      "preservedImageDirectories": true
+    },
+    {
+      "kind": "conversion-wim",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\互转-wim-ce8a1369-ce7b-4b4b-a43d-5441cbaf6211.wim",
+      "record": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 752305,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\互转-wim-ce8a1369-ce7b-4b4b-a43d-5441cbaf6211.wim.001"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\互转-wim-ce8a1369-ce7b-4b4b-a43d-5441cbaf6211.wim.001",
+          "split": true,
+          "totalBytes": 752305
+        },
+        "completedAt": "2026-10-20T09:20:34.530Z",
+        "durationMs": 4753,
+        "errorMessage": null,
+        "executionConfig": {
+          "encryptFilenames": false,
+          "format": "wim",
+          "kind": "archive-conversion",
+          "level": 6,
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\互转-wim-ce8a1369-ce7b-4b4b-a43d-5441cbaf6211.wim",
+          "passwordRequired": false,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "schemaVersion": 1,
+          "splitSize": 1048576,
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        },
+        "failure": null,
+        "format": "zip",
+        "id": "conversion-9de0444d-13c0-42a0-a342-1487029f1de5",
+        "logs": [
+          {
+            "message": "转换归档：先解压至临时目录，再校验并发布新包；保留原包。",
+            "severity": "info",
+            "timestamp": "2026-10-20T09:20:29.782423800Z"
+          },
+          {
+            "message": "确定解压格式: Zip (后缀: zip)",
+            "severity": "info",
+            "timestamp": "2026-10-20T09:20:29.849908800Z"
+          },
+          {
+            "message": "正在检测归档加密状态...",
+            "severity": "info",
+            "timestamp": "2026-10-20T09:20:29.850400400Z"
+          },
+          {
+            "message": "已收到手动输入的解压密码「 [已隐藏]",
+            "severity": "info",
+            "timestamp": "2026-10-20T09:20:29.865106700Z"
+          },
+          {
+            "message": "密码验证通过：本次解压使用密码「 [已隐藏]",
+            "severity": "success",
+            "timestamp": "2026-10-20T09:20:30.047837900Z"
+          },
+          {
+            "message": "开始解压：互转-zip-94afa85a-4edc-4f41-9901-68c60698a6d6.zip",
+            "severity": "info",
+            "timestamp": "2026-10-20T09:20:30.061178300Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 750484 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T09:20:31.344945800Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T09:20:31.344969Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\互转-wim-ce8a1369-ce7b-4b4b-a43d-5441cbaf6211.wim",
+            "severity": "info",
+            "timestamp": "2026-10-20T09:20:31.385996900Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-20T09:20:32.598917300Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-20T09:20:34.275867Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T09:20:34.367403400Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 750484,
+          "media": null,
+          "outputBytes": 752305,
+          "savingsRatio": -0.0024264341411675667,
+          "schemaVersion": 1
+        },
+        "name": "归档转换 · 互转-zip-94afa85a-4edc-4f41-9901-68c60698a6d6.zip",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\互转-wim-ce8a1369-ce7b-4b4b-a43d-5441cbaf6211.wim.001",
+        "processedBytes": 750484,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\互转-zip-94afa85a-4edc-4f41-9901-68c60698a6d6.zip"
+        ],
+        "startedAt": "2026-10-20T09:20:29.777Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 750484,
+        "workloadKind": "archive"
+      },
+      "independentDecodedHashes": true,
+      "preservedImageDirectories": true
+    }
+  ],
+  "screenshots": [
+    "wim1527-inline-config-1100x700.png",
+    "wim1527-inline-config-760x520.png",
+    "wim1527-result-checksums-1100x700.png",
+    "wim1527-result-checksums-760x520.png",
+    "wim1527-batch-password-kept-1100x700.png",
+    "wim1527-batch-password-kept-760x520.png",
+    "wim1527-compression-batch-1100x700.png",
+    "wim1527-compression-batch-760x520.png",
+    "wim1527-text-preview-1100x700.png",
+    "wim1527-text-preview-760x520.png",
+    "wim1527-image-preview-1100x700.png",
+    "wim1527-image-preview-760x520.png",
+    "wim1527-selected-image-1100x700.png",
+    "wim1527-selected-image-760x520.png",
+    "wim1527-missing-recovery-1100x700.png",
+    "wim1527-missing-recovery-760x520.png",
+    "wim1527-conversion-zip-1100x700.png",
+    "wim1527-conversion-zip-760x520.png",
+    "wim1527-conversion-wim-1100x700.png",
+    "wim1527-conversion-wim-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "inline-config",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [
+        378,
+        378
+      ],
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "inline-config",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [
+        286,
+        286
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "result-checksums",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "result-checksums",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "batch-password-kept",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "batch-password-kept",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "compression-batch",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "compression-batch",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "text-preview",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "text-preview",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "image-preview",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "image-preview",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "selected-image",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "selected-image",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "missing-recovery",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "missing-recovery",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "conversion-zip",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "conversion-zip",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "conversion-wim",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "conversion-wim",
+      "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    }
+  ],
+  "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-volumes-1527\\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\\资料",
+  "expected": {
+    "资料/图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+    "资料/数据.bin": "f926aa19f0b75dd17c831a6eca25dc6193eb6f9a5145abbbdbd7e14562507e2d",
+    "资料/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "资料/说明.txt": "b87b8ab8cbfc0453f63ae4aaa55d92abeb2a6ee62cca18124bbe0e063759e26a"
+  },
+  "previousIdentities": [
+    {
+      "binarySha256": "15aa59e94cc48487dd5107cb3d868ac2e9cf4f2b5177fa091828bf0b0fa8cf88",
+      "sourceCommit": "e74712305b83a5524c2070bc399907ac30a37849"
+    }
+  ],
+  "previewCompleted": {
+    "binarySha256": "64753b4b6134cefbefe403fa4d415e5cacba90def54d985a780459904af78263",
+    "completedAt": "2026-10-20T09:18:39.143Z"
+  },
+  "zipIndependent": {
+    "tool": "Python zipfile metadata + cryptography AES-CTR + PBKDF2/HMAC-SHA1; explicit UTF-8 password bytes",
+    "fullContentMatches": true,
+    "authenticatedFiles": 11,
+    "emptyDirectoryPreserved": true
+  },
+  "completedAt": "2026-10-20T09:20:42.266Z"
+}

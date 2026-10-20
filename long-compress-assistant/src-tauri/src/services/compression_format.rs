@@ -236,7 +236,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
         supports_password_compress: false,
         supports_password_extract: false,
         single_file_only: false,
-        supports_split: false,
+        supports_split: true,
         requires_7za: true,
         requires_winrar: false,
     },
