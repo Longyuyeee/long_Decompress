@@ -3,7 +3,8 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import Panel from '../ChecksumVerificationPanel.vue'
 import type { ChecksumEntryStatus, ChecksumVerificationReport } from '@/types/checksum'
-const mocks=vi.hoisted(()=>({open:vi.fn(),invoke:vi.fn(),copy:vi.fn()}))
+const mocks=vi.hoisted(()=>({open:vi.fn(),invoke:vi.fn(),copy:vi.fn(),listen:vi.fn()}))
+vi.mock('@tauri-apps/api/event',()=>({listen:mocks.listen}))
 vi.mock('@tauri-apps/api/dialog',()=>({open:mocks.open}))
 vi.mock('@/composables/useTauriCommands',()=>({useTauriCommands:()=>({invoke:mocks.invoke})}))
 const result=(statuses:ChecksumEntryStatus[],id='fixed'):ChecksumVerificationReport=>({
@@ -15,7 +16,7 @@ const start=async(statuses:ChecksumEntryStatus[])=>{
   const wrapper=mount(Panel,{global:{plugins:[createPinia()]}})
   await wrapper.get('[data-testid="checksum-choose"]').trigger('click');await flushPromises();return wrapper
 }
-beforeEach(()=>{vi.clearAllMocks();Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:mocks.copy}});mocks.copy.mockResolvedValue(undefined)})
+beforeEach(()=>{vi.clearAllMocks();mocks.listen.mockResolvedValue(vi.fn());Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:mocks.copy}});mocks.copy.mockResolvedValue(undefined)})
 describe('per-file checksum workspace',()=>{
   it('shows distinct causes and opens one inline row with equal digest columns',async()=>{
     const w=await start(['matched','missing','mismatch','unreadable'])
@@ -29,7 +30,7 @@ describe('per-file checksum workspace',()=>{
     const w=await start(['matched','missing','unreadable'])
     mocks.invoke.mockResolvedValueOnce(result(['not_checked','matched','matched']))
     await w.get('[data-testid="checksum-recheck-problems"]').trigger('click');await flushPromises()
-    expect(mocks.invoke).toHaveBeenLastCalledWith('verify_checksum_file',{checksumPath:'C:/校验.sha256',entryLines:[2,3]})
+    expect(mocks.invoke).toHaveBeenLastCalledWith('verify_checksum_file',expect.objectContaining({checksumPath:'C:/校验.sha256',entryLines:[2,3],expectedManifestId:'fixed',operationId:expect.any(String)}))
     expect(w.get('[data-testid="checksum-heading"]').text()).toBe('清单项目均匹配')
     expect(w.get('[data-testid="checksum-notice"]').text()).toContain('未重复读取');w.unmount()
   })
@@ -38,7 +39,7 @@ describe('per-file checksum workspace',()=>{
     await w.findAll('input[type="checkbox"]')[1].setValue(true)
     mocks.invoke.mockResolvedValueOnce(result(['not_checked','matched']))
     await w.get('[data-testid="checksum-recheck-selected"]').trigger('click');await flushPromises()
-    expect(mocks.invoke).toHaveBeenLastCalledWith('verify_checksum_file',{checksumPath:'C:/校验.sha256',entryLines:[2]})
+    expect(mocks.invoke).toHaveBeenLastCalledWith('verify_checksum_file',expect.objectContaining({checksumPath:'C:/校验.sha256',entryLines:[2],expectedManifestId:'fixed',operationId:expect.any(String)}))
     expect(w.get('[data-testid="checksum-heading"]').text()).toBe('还有文件需要处理');w.unmount()
   })
   it('invalidates old matches when a manifest changes instead of merging unchecked rows',async()=>{
@@ -64,5 +65,23 @@ describe('per-file checksum workspace',()=>{
     expect(w.get('[data-testid="checksum-heading"]').text()).toBe('本次检查未完成')
     expect(w.get('[data-testid="checksum-error"]').text()).toContain('上次结果')
     expect(w.get('.checksum-summary').attributes('data-valid')).toBe('false');w.unmount()
+  })
+})
+
+describe('checksum1522 continuation',()=>{
+  it('continues interrupted and unchecked rows only, preserving finished observations',async()=>{
+    const w=await start(['matched','interrupted','not_checked','missing'])
+    mocks.invoke.mockResolvedValueOnce(result(['not_checked','matched','matched','not_checked']))
+    await w.get('[data-testid="checksum-continue"]').trigger('click');await flushPromises()
+    expect(mocks.invoke).toHaveBeenLastCalledWith('verify_checksum_file',expect.objectContaining({entryLines:[2,3],expectedManifestId:'fixed'}))
+    expect(w.findAll('[data-testid="checksum-entry"]').map(e=>e.attributes('data-status'))).toEqual(['matched','matched','matched','missing']);w.unmount()
+  })
+  it('does not restore an old match after interrupting a selected recheck',async()=>{
+    const w=await start(['matched','matched'])
+    await w.findAll('input[type="checkbox"]')[0].setValue(true)
+    mocks.invoke.mockResolvedValueOnce({...result(['interrupted','not_checked']),cancelled:true})
+    await w.get('[data-testid="checksum-recheck-selected"]').trigger('click');await flushPromises()
+    expect(w.findAll('[data-testid="checksum-entry"]').map(e=>e.attributes('data-status'))).toEqual(['interrupted','matched'])
+    expect(w.get('[data-testid="checksum-notice"]').text()).toContain('从头读取');w.unmount()
   })
 })

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useChecksumOperation } from '@/composables/useChecksumOperation'
+import ChecksumProgressCard from '@/components/integrity/ChecksumProgressCard.vue'
+import type { ChecksumCalculationEntry } from '@/types/checksum'
 import ChecksumVerificationPanel from '@/components/integrity/ChecksumVerificationPanel.vue'
 import ArchiveRecoveryDetails from '@/components/compression/ArchiveRecoveryDetails.vue'
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
@@ -35,19 +38,13 @@ const sourceEncoding = computed(() => sourceFormat.value
   ? zipPasswordEncodingForSource(archivePath.value, archiveZipPasswordEncoding.value, sourceFormat.value) : archiveZipPasswordEncoding.value)
 const recoveryOptions = ref<{ outputPath?: string; extractToSubfolder?: boolean }>({})
 
-interface ChecksumResult {
-  path: string
-  fileName: string
-  algorithm: string
-  checksum: string
-  status: 'success' | 'pending' | 'error'
-  error?: string
-}
-
+const { progress: checksumProgress, stopping: stoppingChecksum, run: runChecksum, stop: stopChecksum } = useChecksumOperation()
 const selectedFiles = ref<string[]>([])
 const selectedAlgorithm = ref<'crc32' | 'md5' | 'sha256'>('sha256')
-const checksumResults = ref<ChecksumResult[]>([])
+const checksumResults = ref<ChecksumCalculationEntry[]>([])
 const isCalculating = ref(false)
+const calculationUnfinished = computed(() => checksumResults.value.filter(row => ['pending', 'interrupted'].includes(row.status)))
+watch(selectedAlgorithm, () => { checksumResults.value = [] })
 const recoveryWorkspace = useArchiveRecoveryStore()
 const activeMode = ref<'calculate' | 'verify' | 'archive'>(recoveryWorkspace.rows.length ? 'archive' : 'calculate')
 const isVerifying = ref(false)
@@ -87,7 +84,8 @@ const algorithms = [
 
 const selectFiles = async () => {
   try {
-    const files = await open({
+    const queued = import.meta.env.VITE_DESKTOP_E2E === '1' ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection() : undefined
+    const files = queued !== undefined ? queued : await open({
       multiple: true,
       title: appStore.t('integrity.select_files', '选择文件')
     })
@@ -100,43 +98,25 @@ const selectFiles = async () => {
   }
 }
 
-const calculateChecksums = async () => {
-  if (selectedFiles.value.length === 0) {
-    appStore.setError(appStore.t('integrity.no_files', '请先选择文件'))
-    return
-  }
-
+let calculationActive = true
+const calculateChecksums = async (resume = false) => {
+  if (isCalculating.value || !selectedFiles.value.length) return
+  const paths = resume ? calculationUnfinished.value.map(row => row.path) : [...selectedFiles.value]
+  if (!paths.length) return
   isCalculating.value = true
-  checksumResults.value = selectedFiles.value.map(path => ({
-    path,
-    fileName: path.split(/[\\/]/).pop() || path,
-    algorithm: selectedAlgorithm.value.toUpperCase(),
-    checksum: '',
-    status: 'pending'
-  }))
-
-  for (let i = 0; i < selectedFiles.value.length; i++) {
-    const path = selectedFiles.value[i]
-    try {
-      const checksum = await tauriCommands.invoke<string>('calculate_checksum', {
-        path,
-        algorithm: selectedAlgorithm.value
-      })
-      checksumResults.value[i].checksum = checksum
-      checksumResults.value[i].status = 'success'
-    } catch (error: any) {
-      checksumResults.value[i].status = 'error'
-      checksumResults.value[i].error = String(error)
-    }
+  if (!resume) checksumResults.value = paths.map(path => ({ path, fileName: path.split(/[\\/]/).pop() || path, algorithm: selectedAlgorithm.value.toUpperCase(), checksum: '', status: 'pending' }))
+  const accept = (rows: ChecksumCalculationEntry[]) => {
+    if (!calculationActive) return
+    const updates = new Map(rows.map(row => [row.path, row]))
+    checksumResults.value = checksumResults.value.map(row => updates.get(row.path) || row)
   }
-
-  isCalculating.value = false
-  const successCount = checksumResults.value.filter(result => result.status === 'success').length
-  if (successCount > 0) {
-    appStore.setSuccess(appStore.t('integrity.calc_complete', '校验和计算完成'))
-  } else {
-    appStore.setError(appStore.t('integrity.verify_error', '校验出错'))
-  }
+  try {
+    accept(await runChecksum<ChecksumCalculationEntry[]>('calculate_checksum_batch', { paths, algorithm: selectedAlgorithm.value }, event => {
+      if (event.calculationResults) accept(event.calculationResults)
+    }))
+    if (calculationActive) appStore.setSuccess(calculationUnfinished.value.length ? '已停止，已完成的摘要已保留，可继续未完成项' : '本次文件已处理，请查看逐项结果')
+  } catch (error) { if (calculationActive) appStore.setError(`本次计算未完成：${String(error)}`) }
+  finally { if (calculationActive) isCalculating.value = false }
 }
 
 const copyChecksum = async (checksum: string) => {
@@ -185,8 +165,6 @@ const exportChecksumFile = async () => {
 }
 
 const clearResults = () => {
-  selectedFiles.value = []
-  checksumResults.value = []
   archivePath.value = ''
   diagnosticSources.value = []
   batchDetailOpen.value = false
@@ -212,7 +190,6 @@ function resumeRecoveryWorkspace() {
   restoreSingleResult()
 }
 function openArchiveMode() {
-  clearResults()
   activeMode.value = 'archive'
   diagnosticSources.value = [...recoveryWorkspace.sourcePaths]
   archivePath.value = diagnosticSources.value[0] || ''
@@ -455,6 +432,7 @@ restoreSingleResult()
 watch([archivePassword, archiveZipPasswordEncoding, recoveredPassword], rememberSingleResult, {flush:'post'})
 
 onUnmounted(() => {
+  calculationActive = false
   void cancelDiagnosis()
   void cancelRepair()
   archivePassword.value = ''
@@ -483,7 +461,7 @@ onUnmounted(() => {
         <!-- 模式切换 -->
         <nav class="integrity-mode-switch" aria-label="文件完整性工具">
           <button
-            @click="activeMode = 'calculate'; clearResults()"
+            @click="activeMode = 'calculate'"
             :disabled="isDiagnosing || isRepairing || isCalculating || isVerifying"
             :class="{ active: activeMode === 'calculate' }"
           >
@@ -493,7 +471,7 @@ onUnmounted(() => {
           </button>
           <button
             data-testid="checksum-verify-mode"
-            @click="activeMode = 'verify'; clearResults()"
+            @click="activeMode = 'verify'"
             :disabled="isDiagnosing || isRepairing || isCalculating || isVerifying"
             :class="{ active: activeMode === 'verify' }"
           >
@@ -523,6 +501,7 @@ onUnmounted(() => {
                 v-for="algo in algorithms"
                 :key="algo.value"
                 @click="selectedAlgorithm = algo.value as any"
+                :disabled="isCalculating"
                 :class="{ active: selectedAlgorithm === algo.value }"
               >
                 <span><strong>{{ algo.label }}</strong><small>{{ algo.description }}</small></span>
@@ -536,6 +515,8 @@ onUnmounted(() => {
             <header class="panel-heading"><span><i class="pi pi-file"></i>{{ appStore.t('integrity.files') }}</span><small>{{ selectedFiles.length ? `${selectedFiles.length} 个文件待处理` : '支持批量选择' }}</small></header>
             <button
               @click="selectFiles"
+              :disabled="isCalculating"
+              data-testid="checksum-calculate-choose"
               class="integrity-dropzone"
             >
               <span class="dropzone-icon"><i class="pi pi-folder-open"></i></span>
@@ -550,10 +531,13 @@ onUnmounted(() => {
               <i class="pi pi-plus"></i>
             </button>
 
+            <ChecksumProgressCard v-if="isCalculating" :progress="checksumProgress" :stopping="stoppingChecksum" @stop="stopChecksum" />
             <!-- 操作按钮 -->
             <div class="integrity-actions">
+              <button v-if="calculationUnfinished.length" :disabled="isCalculating" class="integrity-secondary" data-testid="checksum-calculate-continue" @click="calculateChecksums(true)">继续未完成项（{{ calculationUnfinished.length }}）</button>
               <button
-                @click="calculateChecksums"
+                @click="calculateChecksums(false)"
+                data-testid="checksum-calculate-start"
                 :disabled="selectedFiles.length === 0 || isCalculating"
                 class="integrity-primary"
               >
@@ -561,7 +545,8 @@ onUnmounted(() => {
                 {{ isCalculating ? appStore.t('integrity.calculating') : appStore.t('integrity.calculate') }}
               </button>
               <button
-                v-if="checksumResults.length > 0"
+                v-if="checksumResults.some(row => row.status === 'success')"
+                :disabled="isCalculating"
                 @click="exportChecksumFile"
                 class="integrity-secondary"
               >
@@ -578,10 +563,11 @@ onUnmounted(() => {
               <div
                 v-for="result in checksumResults"
                 :key="result.path"
+                :data-status="result.status" data-testid="checksum-calculation-entry"
                 class="checksum-row"
               >
-                <span class="checksum-status" :data-status="result.status"><i :class="result.status === 'success' ? 'pi pi-check' : result.status === 'error' ? 'pi pi-times' : 'pi pi-spinner pi-spin'"></i></span>
-                <div class="checksum-main"><strong :title="result.fileName">{{ result.fileName }}</strong><code :title="result.checksum">{{ result.error || result.checksum || '计算中...' }}</code></div>
+                <span class="checksum-status" :data-status="result.status"><i :class="result.status === 'success' ? 'pi pi-check' : result.status === 'error' ? 'pi pi-times' : 'pi pi-pause'"></i></span>
+                <div class="checksum-main"><strong :title="result.fileName">{{ result.fileName }}</strong><code :title="result.checksum">{{ result.error || result.checksum || '尚未读取' }}</code></div>
                 <span class="checksum-algorithm">{{ result.algorithm }}</span>
                     <button
                       v-if="result.status === 'success'"
@@ -756,6 +742,7 @@ onUnmounted(() => {
 .checksum-algorithm { border-radius: 999px; background: color-mix(in srgb,var(--dynamic-accent) 9%,transparent); padding: .2rem .42rem; color: var(--dynamic-accent); font-size: .5rem; font-weight: 900; }
 .checksum-copy { display: grid; width: 1.75rem; height: 1.75rem; place-items: center; border-radius: .5rem; color: var(--text-muted); font-size: .55rem; }
 .checksum-copy:hover { background: color-mix(in srgb,var(--dynamic-accent) 10%,transparent); color: var(--dynamic-accent); }
+.algorithm-options button:disabled,.integrity-dropzone:disabled { opacity:.55; cursor:wait; }
 .integrity-single-column { display: grid; min-width: 0; gap: .85rem; }
 .integrity-verify-dropzone { min-height: 5.4rem; padding-right: 1rem; }
 .verify-result { border-width: 1px; }

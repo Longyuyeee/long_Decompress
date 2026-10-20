@@ -1,9 +1,10 @@
 import type { ChecksumEntryStatus, ChecksumVerificationEntry, ChecksumVerificationReport } from '@/types/checksum'
 
 export const checksumStatusLabels: Record<ChecksumEntryStatus, string> = {
-  matched: '匹配', missing: '缺失', mismatch: '内容不符', unreadable: '无法读取', invalid_entry: '清单项有误', not_checked: '未检查',
+  matched: '匹配', missing: '缺失', mismatch: '内容不符', unreadable: '无法读取', invalid_entry: '清单项有误', not_checked: '未检查', interrupted: '已停止',
 }
-export const checksumProblem = (entry: ChecksumVerificationEntry) => !['matched', 'not_checked'].includes(entry.status)
+export const checksumUnfinished = (entry: ChecksumVerificationEntry) => ['not_checked', 'interrupted'].includes(entry.status)
+export const checksumProblem = (entry: ChecksumVerificationEntry) => !['matched', 'not_checked', 'interrupted'].includes(entry.status)
 
 /** Retain earlier observations only for the exact same manifest, never infer unchecked success. */
 export function mergeChecksumVerification(previous: ChecksumVerificationReport | null, next: ChecksumVerificationReport): ChecksumVerificationReport {
