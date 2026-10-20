@@ -13,6 +13,7 @@ export interface ConversionSettings {
   encryptFilenames: boolean
   rarRecoveryPercent?: number
   rarRecoveryVolumes?: number
+  wimMethod?: 'store' | 'xpress'
   zipMethod?: 'deflate' | 'zstd'
   zipEncryption: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'

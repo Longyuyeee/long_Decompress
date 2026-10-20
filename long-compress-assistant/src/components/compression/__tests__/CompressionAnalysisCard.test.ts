@@ -133,3 +133,8 @@ describe('CompressionAnalysisCard', () => {
     })
   })
 })
+
+it('wim1531 does not show the old store-size estimate as an XPRESS prediction',()=>{
+  mocks.analyze.mockClear()
+  const wrapper=mountCard({...options,format:'wim',wimMethod:'xpress'});expect(wrapper.find('[data-testid="compression-analysis"]').exists()).toBe(false);expect(mocks.analyze).not.toHaveBeenCalled();wrapper.unmount()
+})

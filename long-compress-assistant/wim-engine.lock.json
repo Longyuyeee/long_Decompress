@@ -1,0 +1,18 @@
+{
+  "upstream": "wimlib 1.14.5 official Windows x64 (unmodified)",
+  "binaryUrl": "https://wimlib.net/downloads/wimlib-1.14.5-windows-x86_64-bin.zip",
+  "binaryPackageSha256": "2f446d6fa3866582175f1a22a7be198eeee0aec7aba5b4e04ad25c99eae2d265",
+  "sourceUrl": "https://wimlib.net/downloads/wimlib-1.14.5.tar.gz",
+  "files": {
+    "src-tauri/resources/wim-engine/COPYING.GPLv3.txt": "230184f60bae2feaf244f10a8bac053c8ff33a183bcc365b4d8b876d2b7f4809",
+    "src-tauri/resources/wim-engine/COPYING.LGPL.txt": "b14c366c41cc9f62dc20ec1a0885f278cf9681076d98027012a910fca5e89639",
+    "src-tauri/resources/wim-engine/COPYING.libdivsufsort-lite.txt": "6783c2be541a8871bccfd0e9a26253def3a32922fb1da5344b6bbd43cbab851f",
+    "src-tauri/resources/wim-engine/COPYING.txt": "ed5cc16630b6aa5edaf9cfd440dbf5eda8e2257471752ead93634ac8eb102583",
+    "src-tauri/resources/wim-engine/libwim-15.dll": "ba853ee1e3fc5f5798581f02e8e066ba07a0a2375f0bf444fe981431fd508495",
+    "src-tauri/resources/wim-engine/README.txt": "43854a34db76ef7eb373e290179adcc3bb11377b5ebb481e166facdd2c9cdf78",
+    "src-tauri/resources/wim-engine/README.WINDOWS.txt": "912314e6258926ab9ebae5cae5d30af515959dfeb6bf6d8c538a1d3748fabe32",
+    "src-tauri/resources/wim-engine/SOURCE.md": "43726a45b0e0979f1e5f22d11873040e074d8929dce82929c6205d70f030767c",
+    "src-tauri/resources/wim-engine/wimlib-1.14.5.tar.gz": "84221a3abd5b91228f15f8e6065c335a336237b5738197b75bf419eea561a194",
+    "src-tauri/resources/wim-engine/wimlib-imagex.exe": "34c0c4165591ad1f592837ed99d08273c58d6ed3fe0ed6360cf34e7b0739b353"
+  }
+}

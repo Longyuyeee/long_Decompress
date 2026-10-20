@@ -423,3 +423,10 @@ describe('useCompressionProfiles', () => {
     expect(consoleWarn).toHaveBeenCalledOnce()
   })
 })
+
+it('wim1531 profile loading and saving preserve encoder method and old profile default',async()=>{
+  const raw=rawProfile(),api=useCompressionProfiles();raw.config.format='wim';raw.config.extra_params={...raw.config.extra_params,wim_method:'xpress'} as typeof raw.config.extra_params
+  mocks.invoke.mockResolvedValueOnce(raw);const loaded=await api.getProfileById(raw.id);expect(loaded?.config.wimMethod).toBe('xpress');mocks.invoke.mockResolvedValueOnce(undefined);await api.updateProfile(loaded!)
+  expect(mocks.invoke).toHaveBeenLastCalledWith('update_compression_profile',expect.objectContaining({profile:expect.objectContaining({config:expect.objectContaining({extra_params:expect.objectContaining({wim_method:'xpress'})})})}))
+  const old=rawProfile();old.config.format='wim';mocks.invoke.mockResolvedValueOnce(old);expect((await api.getProfileById(old.id))?.config.wimMethod).toBeUndefined()
+})
