@@ -9,11 +9,17 @@ export async function runResultChecksums1525Gate({driver,bridge,waitForElement,a
   const base=path.join(root,'test-results/result-checksums-1525');mkdirSync(base,{recursive:true})
   const hash=b=>createHash('sha256').update(b).digest('hex'),sha=p=>hash(readFileSync(p)),progress=path.join(base,'desktop-progress.json'),binarySha256=sha(application)
   const state=existsSync(progress)?JSON.parse(readFileSync(progress,'utf8')):{version:'1.5.25',binarySha256,sourceCommit:execFileSync('git',['rev-parse','HEAD'],{encoding:'utf8',windowsHide:true}).trim(),work:path.join(base,'ui-'+randomUUID()),ui:[],native:[],screenshots:[],layouts:[]}
-  assert.equal(state.binarySha256,binarySha256,'Only resume evidence from the same program')
+  const polishOnly=process.argv.includes('--result-checksums-1525-legacy-polish-only')
+  if(polishOnly){
+    assert.equal(state.ui.length,6,'Retain the completed six flows; only missing-member copy changed')
+    state.originalBinarySha256??=state.binarySha256
+    for(const entry of [...state.ui,...state.layouts])entry.binarySha256??=state.originalBinarySha256
+    state.latestBinarySha256=binarySha256;state.resumedScope='Only legacy missing-member copy and busy label; six passed flows retained with their original program identity'
+  }else assert.equal(state.binarySha256,binarySha256,'Only resume evidence from the same program')
   const work=state.work;mkdirSync(work,{recursive:true})
   const owned=p=>{assert.ok(path.resolve(p).startsWith(path.resolve(work)+path.sep));return p}
   const save=()=>writeFileSync(progress,JSON.stringify(state,null,2))
-  const done=(kind,data={})=>{state.ui.push({kind,...data});save();console.log('result-checksums-1525: '+kind)}
+  const done=(kind,data={})=>{state.ui.push({kind,binarySha256,...data});save();console.log('result-checksums-1525: '+kind)}
   const passed=kind=>state.ui.some(row=>row.kind===kind)
   const invoke=(cmd,args)=>driver.executeAsyncScript('const[cmd,args,done]=arguments,ids=crypto.getRandomValues(new Uint32Array(2));const clean=()=>ids.forEach(id=>Reflect.deleteProperty(window,"_"+id));window["_"+ids[0]]=value=>{clean();done({ok:true,value})};window["_"+ids[1]]=error=>{clean();done({ok:false,error:String(error)})};window.__TAURI_IPC__({cmd,...args,callback:ids[0],error:ids[1]});',cmd,args)
   const ipc=async(cmd,args)=>{const result=await invoke(cmd,args);assert.equal(result.ok,true,result.error);return result.value}
@@ -31,7 +37,7 @@ export async function runResultChecksums1525Gate({driver,bridge,waitForElement,a
       await driver.wait(()=>driver.executeScript(()=>document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).every(a=>a.playState!=='running')),10000)
       const geometry=await driver.executeScript(()=>({width:innerWidth,height:innerHeight,overflow:document.documentElement.scrollWidth-innerWidth,details:[...document.querySelectorAll('.checksum-calculation-details,.checksum-export-receipt,.checksum-source-summary')].map(e=>({overflow:e.scrollWidth-e.clientWidth}))}))
       assert.ok(geometry.overflow<=1&&geometry.details.every(row=>row.overflow<=1),JSON.stringify(geometry))
-      const file='checksums1525-'+name+'-'+width+'x'+height+'.png';writeFileSync(path.join(artifactDirectory,file),Buffer.from(await driver.takeScreenshot(),'base64'));state.screenshots.push(file);state.layouts.push({name,...geometry});save()
+      const file='checksums1525-'+name+(polishOnly?'-polished':'')+'-'+width+'x'+height+'.png';writeFileSync(path.join(artifactDirectory,file),Buffer.from(await driver.takeScreenshot(),'base64'));state.screenshots.push(file);state.layouts.push({name,binarySha256,...geometry});save()
     }await driver.manage().window().setRect({width:1100,height:700})
   }
   const statuses=()=>driver.executeScript(()=>[...document.querySelectorAll('[data-testid="checksum-calculation-entry"]')].map(e=>e.dataset.status))
@@ -117,16 +123,29 @@ export async function runResultChecksums1525Gate({driver,bridge,waitForElement,a
     writeFileSync(first,'first completed observation');await click('[data-testid="checksum-verify-exported"]');await verifySettled()
     unlinkSync(large);done('partial-export-and-continue',{live,partialManifest:manifest,completeManifest:complete,completedFileNotReopened:true,interruptedDigestExcluded:true,independentHashesMatched:true})
   }
-  if(!passed('legacy-history-resolves-members')){
+  if(polishOnly||!passed('legacy-history-resolves-members')){
     const legacy={...state.creation,id:'legacy-'+randomUUID(),name:'旧记录整组',archiveOutput:null,completedAt:new Date().toISOString()}
     await bridge('seedHistoryRecords',[legacy])
     await click('[data-testid="nav-History"]')
     const findLegacy=async()=>{for(const row of await driver.findElements(By.css('[data-testid="history-record-row"]'))){if((await row.getText()).includes('旧记录整组'))return row}throw Error('legacy record not shown')}
     const withdrawn=owned(published.files[1].path),backup=owned(withdrawn+'.owned-original');renameSync(withdrawn,backup)
-    try{const row=await driver.wait(()=>findLegacy(),10000);await click(await row.findElement(By.css('[data-testid="result-generate-checksums"]')));assert.match(await row.getText(),/补齐/)}finally{renameSync(backup,withdrawn)}
+    try{const row=await driver.wait(()=>findLegacy(),10000);await click(await row.findElement(By.css('[data-testid="result-generate-checksums"]')));await driver.wait(async()=>(await row.getText()).includes('补齐'),15000);await sizes('legacy-missing-guidance','[data-testid="history-record-row"]')}finally{renameSync(backup,withdrawn)}
     await click(await(await findLegacy()).findElement(By.css('[data-testid="result-generate-checksums"]')))
     assert.match(await(await waitForElement('[data-testid="checksum-source-summary"]')).getText(),new RegExp('整组 '+expected.length+' 个文件'))
-    done('legacy-history-resolves-members',{basedOnActualPublishedRecord:true,missingMemberGuidance:true,allActualMembers:true})
+    done(polishOnly?'legacy-guidance-polished':'legacy-history-resolves-members',{basedOnActualPublishedRecord:true,missingMemberGuidance:true,allActualMembers:true})
+  }
+  if(!passed('conversion-result-closes-dialog')){
+    await click('[data-testid="nav-Compress"]');await click('[data-testid="open-archive-conversion"]')
+    await bridge('queueDesktopDialogSelections',[[published.primaryPath]]);await click('[data-testid="conversion-choose-source"]')
+    const row=await waitForElement('[data-testid="conversion-row"]');if(await row.getAttribute('aria-expanded')!=='true')await click(row)
+    await choose('[data-testid="conversion-format"]','ZIP')
+    const output=owned(path.join(work,'转换后分享.zip'));await fill('[data-testid="conversion-output"]',output);await click('[data-testid="conversion-start"]')
+    const record=await driver.wait(async()=>(await bridge('taskHistory')).find(row=>row.outputPath?.replaceAll('\\','/')===output.replaceAll('\\','/')&&['completed','failed'].includes(row.status))||false,60000)
+    assert.equal(record.status,'completed',JSON.stringify(record));await click('[data-testid="conversion-result"] [data-testid="result-generate-checksums"]')
+    await driver.wait(async()=>(await driver.findElements(By.css('[role="dialog"]'))).length===0,10000)
+    assert.match(await(await waitForElement('[data-testid="checksum-source-summary"]')).getText(),/整组 1 个文件/)
+    assert.equal((await statuses()).length,0);await sizes('conversion-handoff','[data-testid="checksum-source-summary"]')
+    done('conversion-result-closes-dialog',{actualConversion:true,dialogClosed:true,noImplicitCalculation:true})
   }
   state.completedAt=new Date().toISOString();save();writeFileSync(path.join(artifactDirectory,'result-checksums-1525-results.json'),JSON.stringify(state,null,2))
 }

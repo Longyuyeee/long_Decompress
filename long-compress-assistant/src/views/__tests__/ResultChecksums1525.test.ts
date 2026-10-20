@@ -44,8 +44,12 @@ describe('result checksums v1.5.25',()=>{
   it('resolves legacy split results and explains missing members instead of passing only the first',async()=>{
     mocks.invoke.mockResolvedValue({is_split:true,is_complete:true,parts:paths,missing_parts:[]})
     expect(await checksumSources(paths[1])).toEqual(paths)
-    mocks.invoke.mockResolvedValue({is_split:true,is_complete:false,parts:[paths[0]],missing_parts:['同名.zip.002']})
+    mocks.invoke.mockResolvedValue({is_split:true,is_complete:false,parts:[paths[0]],missing_parts:['C:/很长的来源目录/同名.zip.002']})
     await expect(checksumSources(paths[0])).rejects.toThrow('补齐')
+    const w=mount(ResultActions,{props:{path:paths[0]},global:{plugins:[pinia]}})
+    await w.get('[data-testid="result-generate-checksums"]').trigger('click');await flushPromises()
+    const reason=w.get('[role="alert"]').text()
+    expect(reason).toContain('同名.zip.002');expect(reason).not.toContain('C:/很长的来源目录');expect(reason).not.toContain('Error:');w.unmount()
   })
   it('suggests the common parent and handles roots and different disks',()=>{
     expect(checksumBaseDirectory(paths)).toBe('C:/分享')

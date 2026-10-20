@@ -10,12 +10,13 @@ const props = withDefaults(defineProps<{ path: string; directory?: boolean; spli
 const router = useRouter(), app = useAppStore()
 const emit = defineEmits<{ checksum: [] }>()
 const busy = ref(false)
+const preparingChecksum = ref(false)
 const error = ref('')
 const copied = ref(false)
 const label = computed(() => props.directory ? '打开输出目录' : props.split ? '定位首卷' : '打开结果位置')
 let request = 0
 onBeforeUnmount(() => { request++ })
-watch(() => [props.path, props.directory], () => { request++; busy.value = false; error.value = ''; copied.value = false })
+watch(() => [props.path, props.directory, props.output], () => { request++; busy.value = false; preparingChecksum.value = false; error.value = ''; copied.value = false })
 async function openOutput() {
   if (busy.value || !props.path.trim()) return
   const token = ++request
@@ -48,7 +49,7 @@ async function copyPath() {
 async function generateManifest() {
   if (busy.value || !props.path.trim()) return
   const token = ++request
-  busy.value = true; error.value = ''
+  busy.value = true; preparingChecksum.value = true; error.value = ''
   try {
     const paths = await checksumSources(props.path, props.output)
     if (token !== request) return
@@ -56,17 +57,17 @@ async function generateManifest() {
     app.pendingChecksumSources = { paths, label: props.path.split(/[\\/]/).pop() || props.path }
     await router.push('/integrity')
     emit('checksum')
-  } catch (cause) { if (token === request) error.value = `无法带入结果：${String(cause)}` }
-  finally { if (token === request) busy.value = false }
+  } catch (cause) { if (token === request) error.value = `无法带入结果：${cause instanceof Error ? cause.message : String(cause)}` }
+  finally { if (token === request) { busy.value = false; preparingChecksum.value = false } }
 }
 </script>
 <template>
   <div class="min-w-0 space-y-2" data-testid="result-actions">
     <p v-if="showPath" class="select-text break-words text-xs leading-relaxed text-muted [overflow-wrap:anywhere]" :title="path">{{ path || '未记录输出位置' }}</p>
     <div class="flex flex-wrap items-center gap-2">
-      <button type="button" class="result-button bg-primary text-white hover:brightness-110" :disabled="busy || !path.trim()" @click.stop="openOutput"><i class="pi pi-folder-open" aria-hidden="true"></i>{{ busy ? '正在打开…' : label }}</button>
+      <button type="button" class="result-button bg-primary text-white hover:brightness-110" :disabled="busy || !path.trim()" @click.stop="openOutput"><i class="pi pi-folder-open" aria-hidden="true"></i>{{ busy && !preparingChecksum ? '正在打开…' : label }}</button>
       <button type="button" class="result-button border border-subtle text-muted hover:bg-input hover:text-content" :disabled="!path.trim()" @click.stop="copyPath"><i :class="copied ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>{{ copied ? '已复制' : '复制路径' }}</button>
-      <button v-if="!directory" type="button" data-testid="result-generate-checksums" class="result-button border border-subtle text-muted hover:bg-input hover:text-content" :disabled="busy || !path.trim()" @click.stop="generateManifest"><i class="pi pi-hashtag" aria-hidden="true"></i>生成校验清单</button>
+      <button v-if="!directory" type="button" data-testid="result-generate-checksums" class="result-button border border-subtle text-muted hover:bg-input hover:text-content" :disabled="busy || !path.trim()" @click.stop="generateManifest"><i class="pi pi-hashtag" aria-hidden="true"></i>{{ preparingChecksum ? '正在带入…' : '生成校验清单' }}</button>
     </div>
     <p v-if="error" role="alert" class="break-words rounded-lg border border-subtle bg-input/50 px-3 py-2 text-xs leading-relaxed text-content">{{ error }}</p>
   </div>

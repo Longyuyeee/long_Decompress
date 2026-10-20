@@ -9,7 +9,10 @@ export async function checksumSources(path: string, output?: PublishedArchiveOut
   if (!output?.files.length && (isDecompressArchivePath(path) || isPotentialSplitArchivePath(path))) {
     const group = await detectArchiveGroup(path)
     if (group.is_split) {
-      if (!group.is_complete) throw new Error(`原分卷组不完整，请补齐后再生成清单。缺少：${group.missing_parts.join('、') || '部分成员'}`)
+      if (!group.is_complete) {
+        const missing = group.missing_parts.slice(0, 4).map(value => value.split(/[\\/]/).pop() || value).join('、')
+        throw new Error(`原分卷组不完整，请补齐后再生成清单。缺少：${missing || '部分成员'}${group.missing_parts.length > 4 ? ` 等 ${group.missing_parts.length} 卷` : ''}`)
+      }
       if (!group.parts.length) throw new Error('没有找到分卷文件，请确认结果仍在原位置。')
       paths = group.parts
     }
