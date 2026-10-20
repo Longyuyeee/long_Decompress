@@ -1,0 +1,215 @@
+{
+  "version": "1.5.28",
+  "binarySha256": "ab16ce12582199c2f5fb88042570699a8c85729255914503ec9668ff253dd129",
+  "sourceCommit": "8095915e7abd542d78d803075e79f8544f5951a2",
+  "ui": [
+    {
+      "kind": "selection-export",
+      "chineseSpaces": true,
+      "sameNames": true,
+      "explicitStart": true,
+      "independentHashes": true,
+      "manifest": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\explorer-checksums-1528\\实际 文件-3cdff090-b6cd-4e90-9332-37c197dc01f9\\导出的清单-1cb51aba-8614-4af3-8e96-522f2aa892c0.sha256"
+    },
+    {
+      "kind": "single-instance-bursts-and-merge",
+      "priorResultsPreserved": true,
+      "noAutomaticCalculation": true,
+      "uniqueFiles": 3
+    },
+    {
+      "kind": "multiple-manifests-explicit-start",
+      "manifests": 3,
+      "noImplicitReading": true,
+      "allIndependentManifests": true
+    },
+    {
+      "kind": "busy-request-kept-and-causes",
+      "missingSourceRealFailure": true,
+      "noExtractionTask": true
+    }
+  ],
+  "screenshots": [
+    "explorer1528-ready-files-1100x700.png",
+    "explorer1528-ready-files-760x520.png",
+    "explorer1528-pending-files-1100x700.png",
+    "explorer1528-pending-files-760x520.png",
+    "explorer1528-ready-manifests-1100x700.png",
+    "explorer1528-ready-manifests-760x520.png",
+    "explorer1528-verified-details-1100x700.png",
+    "explorer1528-verified-details-760x520.png",
+    "explorer1528-missing-file-1100x700.png",
+    "explorer1528-missing-file-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "ready-files",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100,
+      "binarySha256": "ab16ce12582199c2f5fb88042570699a8c85729255914503ec9668ff253dd129"
+    },
+    {
+      "name": "ready-files",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760,
+      "binarySha256": "ab16ce12582199c2f5fb88042570699a8c85729255914503ec9668ff253dd129"
+    },
+    {
+      "name": "pending-files",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100,
+      "binarySha256": "ab16ce12582199c2f5fb88042570699a8c85729255914503ec9668ff253dd129"
+    },
+    {
+      "name": "pending-files",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760,
+      "binarySha256": "ab16ce12582199c2f5fb88042570699a8c85729255914503ec9668ff253dd129"
+    },
+    {
+      "name": "ready-manifests",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100,
+      "binarySha256": "ab16ce12582199c2f5fb88042570699a8c85729255914503ec9668ff253dd129"
+    },
+    {
+      "name": "ready-manifests",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760,
+      "binarySha256": "ab16ce12582199c2f5fb88042570699a8c85729255914503ec9668ff253dd129"
+    },
+    {
+      "name": "verified-details",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0,
+        0
+      ],
+      "width": 1100,
+      "binarySha256": "ab16ce12582199c2f5fb88042570699a8c85729255914503ec9668ff253dd129"
+    },
+    {
+      "name": "verified-details",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0,
+        0
+      ],
+      "width": 760,
+      "binarySha256": "ab16ce12582199c2f5fb88042570699a8c85729255914503ec9668ff253dd129"
+    },
+    {
+      "name": "missing-file",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100,
+      "binarySha256": "ab16ce12582199c2f5fb88042570699a8c85729255914503ec9668ff253dd129"
+    },
+    {
+      "name": "missing-file",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760,
+      "binarySha256": "ab16ce12582199c2f5fb88042570699a8c85729255914503ec9668ff253dd129"
+    },
+    {
+      "name": "ready-files",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100,
+      "binarySha256": "8e1c23eb9ced74013e57fce2af06c90163d56e6f38478e915dc3285e417bcb46"
+    },
+    {
+      "name": "ready-files",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760,
+      "binarySha256": "8e1c23eb9ced74013e57fce2af06c90163d56e6f38478e915dc3285e417bcb46"
+    },
+    {
+      "name": "ready-manifests",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100,
+      "binarySha256": "8e1c23eb9ced74013e57fce2af06c90163d56e6f38478e915dc3285e417bcb46"
+    },
+    {
+      "name": "ready-manifests",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760,
+      "binarySha256": "8e1c23eb9ced74013e57fce2af06c90163d56e6f38478e915dc3285e417bcb46"
+    },
+    {
+      "name": "missing-file",
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100,
+      "binarySha256": "8e1c23eb9ced74013e57fce2af06c90163d56e6f38478e915dc3285e417bcb46"
+    },
+    {
+      "name": "missing-file",
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760,
+      "binarySha256": "8e1c23eb9ced74013e57fce2af06c90163d56e6f38478e915dc3285e417bcb46"
+    }
+  ],
+  "completedAt": "2026-10-20T10:13:55.530Z",
+  "initialBinarySha256": "ab16ce12582199c2f5fb88042570699a8c85729255914503ec9668ff253dd129",
+  "polishBinarySha256": "8e1c23eb9ced74013e57fce2af06c90163d56e6f38478e915dc3285e417bcb46",
+  "polishCompletedAt": "2026-10-20T10:19:19.019Z",
+  "screenshotIdentities": {
+    "explorer1528-ready-files-1100x700.png": "8e1c23eb9ced74013e57fce2af06c90163d56e6f38478e915dc3285e417bcb46",
+    "explorer1528-ready-files-760x520.png": "8e1c23eb9ced74013e57fce2af06c90163d56e6f38478e915dc3285e417bcb46",
+    "explorer1528-pending-files-1100x700.png": "ab16ce12582199c2f5fb88042570699a8c85729255914503ec9668ff253dd129",
+    "explorer1528-pending-files-760x520.png": "ab16ce12582199c2f5fb88042570699a8c85729255914503ec9668ff253dd129",
+    "explorer1528-ready-manifests-1100x700.png": "8e1c23eb9ced74013e57fce2af06c90163d56e6f38478e915dc3285e417bcb46",
+    "explorer1528-ready-manifests-760x520.png": "8e1c23eb9ced74013e57fce2af06c90163d56e6f38478e915dc3285e417bcb46",
+    "explorer1528-verified-details-1100x700.png": "ab16ce12582199c2f5fb88042570699a8c85729255914503ec9668ff253dd129",
+    "explorer1528-verified-details-760x520.png": "ab16ce12582199c2f5fb88042570699a8c85729255914503ec9668ff253dd129",
+    "explorer1528-missing-file-1100x700.png": "8e1c23eb9ced74013e57fce2af06c90163d56e6f38478e915dc3285e417bcb46",
+    "explorer1528-missing-file-760x520.png": "8e1c23eb9ced74013e57fce2af06c90163d56e6f38478e915dc3285e417bcb46"
+  },
+  "polishSourceCommit": "20a8d7f"
+}
