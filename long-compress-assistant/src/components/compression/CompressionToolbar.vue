@@ -29,6 +29,7 @@ const appStore = useAppStore()
     data-testid="compression-top-actions"
     class="ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-2 md:gap-3"
   >
+    <button type="button" data-testid="open-zpaq-update" class="h-8 md:h-9 px-3 rounded-lg bg-input border border-subtle text-content text-xs font-bold" @click="conversion.showUpdate()">更新 ZPAQ</button>
     <button type="button" data-testid="open-archive-conversion" class="h-8 md:h-9 px-3 rounded-lg bg-input border border-subtle text-content text-xs font-bold" @click="conversion.show">转换压缩包</button>
     <button
       v-if="hasFinished"

@@ -14,6 +14,15 @@ afterEach(() => { session?.dispose(); session = undefined })
 function file(path: string) { return { path, name: path.split('/').pop()!, size: 20, type: 'file', isDirectory: false } }
 function reopen() { session?.dispose(); setActivePinia(createPinia()); session = usePendingDraftStore(); session.initialize(); return session }
 describe('pending archive draft recovery', () => {
+  it('zpaq1536 restores update mapping alongside conversion, excludes passwords and flags missing additional sources without starting',async()=>{
+    mocks.invoke.mockImplementation(async(cmd,args)=>{if(cmd==='detect_split_archive')return{is_split:false,archive_format:'zpaq'};if(cmd==='get_file_info'&&args.path==='C:/missing.txt')throw Error('missing');return{name:'file',size:20,is_dir:false}})
+    session=usePendingDraftStore();session.initialize();const store=useArchiveConversionStore()
+    store.showUpdate(['C:/old.zpaq']);store.updateItem(store.pending[0].id,{updateSources:['C:/missing.txt'],archivePrefix:'资料',sourcePassword:'native-secret-1536',splitMiB:1});store.show();store.addSources(['C:/old.zpaq']);session.flush()
+    expect(localStorage.getItem(PENDING_DRAFTS_KEY)).not.toContain('native-secret-1536')
+    await reopen().restore();const restored=useArchiveConversionStore();expect(restored.pending).toHaveLength(2)
+    const update=restored.pending.find(i=>i.intent==='zpaq-update')!;expect(restored.effectiveSettings(update)).toMatchObject({format:'zpaq',updateSources:['C:/missing.txt'],archivePrefix:'资料',splitMiB:1,sourcePassword:'',password:''});expect(update.sourceIssue).toContain('missing.txt');expect(restored.passwordRequirements(update)).toEqual({source:true,target:false})
+    expect(mocks.invoke.mock.calls.some(([cmd])=>['convert_archive','update_zpaq_archive'].includes(cmd))).toBe(false)
+  })
   it('zpaq1530 restores two snapshots of one archive as separate drafts without starting them', async () => {
     session=usePendingDraftStore();session.initialize()
     const one={version:1,date:20261020130000},two={version:2,date:20261020140000}

@@ -9,7 +9,12 @@ async function restore() {
   if (store.recovery || !saved) return
   if (saved.compression.files.length || saved.compression.groups.length) void router.push('/compress')
   else if (saved.extraction.items.length) void router.push('/decompress')
-  else { void router.push('/compress'); useArchiveConversionStore().show() }
+  else {
+    void router.push('/compress')
+    const conversion = useArchiveConversionStore()
+    if (conversion.pending.length && conversion.pending.every(item => item.intent === 'zpaq-update')) conversion.showUpdate()
+    else conversion.show()
+  }
 }
 </script>
 <template>

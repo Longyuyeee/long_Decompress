@@ -9,6 +9,7 @@ export interface ArchiveVolumeGroup {
   first_part?: string | null
   parts: string[]
   total_parts: number
+  total_size?: number
   is_complete: boolean
   missing_parts: string[]
 }

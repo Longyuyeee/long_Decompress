@@ -1,0 +1,125 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ ✓ src/stores/__tests__/archiveConversion.test.ts > zpaq1536 keeps update and conversion separate, inherits common defaults and only batches effective update fields 12ms
+ ✓ src/stores/__tests__/archiveConversion.test.ts > zpaq1536 runs update IPC and keeps summary, independent redo inputs and source password requirement without secrets or fake ratio 8ms
+ ✓ src/stores/__tests__/archiveConversion.test.ts > zpaq1536 corrects restored input issues and rechecks missing base members before native work 2ms
+ ↓ src/stores/__tests__/archiveConversion.test.ts > zpaq1530 keeps distinct snapshots through volume grouping, batch edits, conversion and history rerun
+ ↓ src/stores/__tests__/archiveConversion.test.ts > wim1527 retains each source password and volume size while explicitly choosing a WIM target
+ ↓ src/stores/__tests__/archiveConversion.test.ts > zpaq1526 changes selected targets while keeping each native password and volume size
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > filters input by detected content and output by target without detaching unrelated drafts
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > does not let a late source probe overwrite a replacement source format
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > omits a ZIP input override from detected non-ZIP execution and keeps non-ZIP output UTF-8 defaults
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > keeps input cp932 separate from target cp950 through execution and history retry
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > keeps input cp950 separate from target cp936 through execution and history retry
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > keeps input cp936 separate from target cp932 through execution and history retry
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > does not detach inherited non-ZIP conversion drafts when only ZIP methods change
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > keeps zip method/password/standard volumes through conversion and history retry
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > keeps zipx method/password/standard volumes through conversion and history retry
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > executes and records the explicitly selected ZIP disk layout
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > keeps my changed defaults when metadata is refreshed and resumes a restored source
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > detects a standard ZIP volume group even when only its .zip member was selected
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > converts to plain numeric TAR volumes without silently changing the requested format: tar.lz4
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > converts to plain numeric TAR volumes without silently changing the requested format: tar.br
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > converts to plain numeric TAR volumes without silently changing the requested format: tar.gz
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > asks for an AES wrapper password before starting conversion and retains the configuration
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > converts to password-protected RAR volumes and records reusable settings without transient consent
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > retains my RAR configuration when the encoder is missing or I cancel the existing password notice
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > treats several selected numeric volumes as one archive and executes from its real first volume
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > keeps ZIP and a clean package name when adjusting a standard ZIP volume
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > lets me add a missing volume and retry the same edited task
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > does not include new Explorer work arriving while the selected volume group is being read
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > requires both restored passwords separately and respects an explicit unencrypted output choice
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > adds history replay without overwriting an edited draft and reuses that replay on a repeated click
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > runs selected items sequentially, keeps individual settings and continues after a failure
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > stops the batch after cancellation and retains unstarted settings
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > shows duplicate output errors before starting any item and retains settings when switching rows
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > keeps each custom filename when changing directories and lets defaults follow actual edits
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > opens Explorer sources as explicit drafts and preserves ZIP for password/split changes
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > keeps an open or running conversion when a new Explorer request arrives
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > does not revive a terminal task when cancellation acknowledgement arrives during history persistence
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > keeps input and output passwords separate and persists only conversion settings
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > blocks incomplete configuration without creating a task
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > persists the real final failure and no output
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > does not declare cancellation complete before the engine settles
+ ↓ src/stores/__tests__/archiveConversion.test.ts > archive conversion lifecycle > also waits for cleanup when cancelled from the global task controls
+ ↓ src/stores/__tests__/archiveConversion.test.ts > lzma1523 offers single-file conversion and keeps splitting while clearing unsupported target passwords
+ ↓ src/stores/__tests__/archiveConversion.test.ts > lzma1524 conversion retains splits and applicable target passwords: tar.lzma
+ ↓ src/stores/__tests__/archiveConversion.test.ts > lzma1524 conversion retains splits and applicable target passwords: lzma.aes
+ ↓ src/stores/__tests__/archiveConversion.test.ts > lzma1524 conversion retains splits and applicable target passwords: tar.lzma.aes
+ ↓ src/stores/__tests__/archiveConversion.test.ts > wim1531 carries XPRESS through conversion, history and independent per-item batch settings
+ ↓ src/stores/__tests__/archiveConversion.test.ts > wim1532 carries LZX through conversion, history and independent per-item batch settings
+ ↓ src/stores/__tests__/archiveConversion.test.ts > wim1533 carries LZMS through conversion, history and independent per-item batch settings
+ ↓ src/stores/__tests__/archiveConversion.test.ts > zip1535 keeps PPMd, passwords and standard volumes through IPC and history retry
+ ↓ src/stores/__tests__/archiveConversion.test.ts > zip1534 keeps BZip2, passwords and standard volumes through IPC and history retry
+ × src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > zpaq1536 restores update mapping alongside conversion, excludes passwords and flags missing additional sources without starting 28ms
+   → expected '来源不存在或无法访问，请重新选择。' to contain 'missing.txt'
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > zpaq1530 restores two snapshots of one archive as separate drafts without starting them
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > keeps extraction, compression and separate conversion encodings after reopening without secrets
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > retains the new package password requirement after only the source password was reentered
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > recovers files, groups, extraction and conversion without passwords or automatic execution
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > saves only unstarted drafts and marks missing sources in the recovered item
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > keeps unopened old work while saving new work and discard only drops the recovery offer
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > preserves extraction defaults and avoids adding duplicate sources on recovery
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > wim1531 reopens mixed stored/XPRESS drafts without silently changing the method or starting
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > wim1532 reopens mixed stored/LZX drafts without silently changing the method or starting
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > wim1533 reopens old Store, XPRESS, LZX and new LZMS without changing methods or starting
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > zip1535 restores old Deflate, Zstandard, new PPMd and ZIPX without automatic execution
+ ↓ src/stores/__tests__/pendingDrafts.test.ts > zip1534 restores old Deflate, Zstandard, new BZip2 and ZIPX without automatic execution
+stderr | src/components/compression/__tests__/ZpaqUpdate1536.test.ts > zpaq1536 result distinguishes unchanged copies and persisted execution config rejects malformed updates
+[Vue warn]: injection "Symbol(router)" not found. 
+  at <ResultActions path="D:/new.zpaq" split=false output= {
+  primaryPath: 'D:/new.zpaq',
+  files: [],
+  split: false,
+  totalBytes: 100,
+  updateSummary: {
+    updatedEntries: 0,
+    newFragments: 0,
+    baseSnapshots: 3,
+    snapshots: 3,
+    unchanged: true,
+    copiedBytes: 100,
+    inputBytes: 20
+  }
+}  ... > 
+  at <ArchiveOutputSummary output= {
+  primaryPath: 'D:/new.zpaq',
+  files: [],
+  split: false,
+  totalBytes: 100,
+  updateSummary: {
+    updatedEntries: 0,
+    newFragments: 0,
+    baseSnapshots: 3,
+    snapshots: 3,
+    unchanged: true,
+    copiedBytes: 100,
+    inputBytes: 20
+  }
+} ref="VTU_COMPONENT" > 
+  at <VTUROOT>
+
+ ✓ src/components/compression/__tests__/ZpaqUpdate1536.test.ts > zpaq1536 shows actual copy cost and exact path mapping, merges choices, and reports selection errors inline 37ms
+ ✓ src/components/compression/__tests__/ZpaqUpdate1536.test.ts > zpaq1536 bulk configuration stays in a modal and hides ineffective format and new-password controls 45ms
+ ✓ src/components/compression/__tests__/ZpaqUpdate1536.test.ts > zpaq1536 result distinguishes unchanged copies and persisted execution config rejects malformed updates 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/stores/__tests__/pendingDrafts.test.ts > pending archive draft recovery > zpaq1536 restores update mapping alongside conversion, excludes passwords and flags missing additional sources without starting
+AssertionError: expected '来源不存在或无法访问，请重新选择。' to contain 'missing.txt'
+
+Expected: "missing.txt"
+Received: "来源不存在或无法访问，请重新选择。"
+
+ ❯ src/stores/__tests__/pendingDrafts.test.ts:23:264
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 6 passed | 60 skipped (67)
+   Start at  02:06:25
+   Duration  2.30s (transform 1.81s, setup 394ms, import 3.14s, tests 144ms, environment 1.80s)
+

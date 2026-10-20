@@ -1,0 +1,36 @@
+{
+  "engineSha256": "83ebc3478374c35f14f24aa4ef8e41605e89edfe394c8818c84e476c981b19b5",
+  "officialSha256": "7a94b4f1d6323a758c7b0b6344036f166bff0fd44f1c3c86f05b3688023496cb",
+  "cases": [
+    {
+      "encrypted": false,
+      "sameSizeAndDateChangeDetected": true,
+      "oldSnapshotCount": 3,
+      "newSnapshotCount": 4,
+      "unselectedPreserved": true,
+      "independentAllSnapshots": true,
+      "originalUnchanged": true,
+      "noChangeByteIdentical": true,
+      "summary": {
+        "updatedEntries": 3,
+        "removedEntries": 0,
+        "newFragments": 2
+      }
+    },
+    {
+      "encrypted": true,
+      "sameSizeAndDateChangeDetected": true,
+      "oldSnapshotCount": 3,
+      "newSnapshotCount": 4,
+      "unselectedPreserved": true,
+      "independentAllSnapshots": true,
+      "originalUnchanged": true,
+      "noChangeByteIdentical": true,
+      "summary": {
+        "updatedEntries": 3,
+        "removedEntries": 0,
+        "newFragments": 2
+      }
+    }
+  ]
+}

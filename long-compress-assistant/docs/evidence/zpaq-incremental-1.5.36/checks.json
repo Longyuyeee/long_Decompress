@@ -1,0 +1,24 @@
+{
+  "version": "1.5.36",
+  "rustDistinctPassed": 6,
+  "frontendDistinctPassed": 7,
+  "frontendInitialSixPassedOneDraftFilenameAssertionFailedThenFixedOnlyThatCase": true,
+  "desktop": {
+    "nativeChains": 2,
+    "uiChains": 5,
+    "completedAt": "2026-10-20T18:18:44.667Z",
+    "initialSource": {
+      "binarySha256": "b3c7dd9c517971b7186abbe1e6cd9588012fc11accb49d9e2807af1dfee0c1d6",
+      "sourceCommit": "fe3e4cf318c5e2f263264c998c2f9027ae34daec"
+    },
+    "draftCompletionSource": {
+      "commit": "39e98f3e9abb75aad6ac3c178d23da322a777e91",
+      "binarySha256": "d9da655bdd951981e74171b8ec9b610ed226918083643c30107e6a9620ccdaf8"
+    },
+    "uniqueScreenshots": 14,
+    "allHorizontalOverflowsAtMostOnePixel": true
+  },
+  "oldFormatMatrixRepeated": false,
+  "realDiskFullRepeated": false,
+  "personalInstallationModified": false
+}

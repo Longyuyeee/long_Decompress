@@ -1,6 +1,8 @@
 import type { ZipPasswordEncoding } from './zipPassword'
 
 export interface ConversionSettings {
+  updateSources?: string[]
+  archivePrefix?: string
   sourceZpaqSnapshot?: import('./zpaqSnapshot').ZpaqSnapshot
   sourceZipPasswordEncoding?: ZipPasswordEncoding
   format: string
@@ -23,10 +25,11 @@ export interface ConversionDraft {
   id: string
   sourcePath: string
   sourceParts?: string[]
+  sourceBytes?: number
   sourceReference?: string
   /** Content detection, never inferred from a filename suffix. Rechecked before execution. */
   sourceFormat?: string
-  intent: 'convert' | 'reconfigure'
+  intent: 'convert' | 'reconfigure' | 'zpaq-update'
   defaultFormat?: string
   expanded: boolean
   selected: boolean

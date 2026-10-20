@@ -132,6 +132,7 @@ static uint64_t long_preview_read_bytes=0;
 static const uint64_t LONG_PREVIEW_BUDGET=64u*1024u*1024u;
 static vector<string> long_selected;
 static bool long_create=false;
+static bool long_update=false;
 static std::map<string, string> long_create_names;
 
 static unsigned long_input_u32() {
@@ -1389,8 +1390,10 @@ int Jidac::doCommand(int argc, const char** argv) {
       if (n>100000) error("Long selection too large");
       for (unsigned j=0; j<n; ++j) long_selected.push_back(long_input_string(long_input_u32()));
     }
-    else if (opt=="-long-create") {
+    else if (opt=="-long-create" || opt=="-long-update") {
       long_create=true;
+      long_update=(opt=="-long-update");
+      if (long_update) force=true; // Hash contents even when size/date agree.
       unsigned n=long_input_u32();
       if (n==0 || n>100000) error("Long source list empty or too large");
       for (unsigned j=0; j<n; ++j) {
@@ -1835,6 +1838,8 @@ endblock:;
 // Test whether filename and attributes are selected by files, -only, and -not
 // If rn then test renamed filename.
 bool Jidac::isselected(const char* filename, bool rn) {
+  // Updating a copied journal must load every old path and fragment list.
+  if (long_update && rn && command=='a') return true;
   if (!long_selected.empty()) {
     bool selected=false;
     for (unsigned i=0; i<long_selected.size(); ++i) {
@@ -2288,7 +2293,8 @@ int Jidac::add() {
   // Product creation is always a fresh staged archive, never an incremental
   // update. Names come from the shared Rust entry policy, not recursive CLI
   // scanning (which would add absolute paths, ADS, or unwanted siblings).
-  if (long_create && exists(archive)) error("Long creation output already exists");
+  if (long_create && !long_update && exists(archive)) error("Long creation output already exists");
+  if (long_update && !exists(archive)) error("Long update requires an existing copied journal");
 
   // Read archive or index into ht, dt, ver.
   int errors=0;
@@ -2298,6 +2304,12 @@ int Jidac::add() {
   int64_t header_pos=0;
   if (exists(subpart(arcname, 1).c_str()))
     header_pos=read_archive(arcname.c_str(), &errors);
+
+  if (long_update) {
+    if (errors || long_scan_errors || !long_journaling || long_streaming)
+      error("Long update requires complete journaling metadata");
+    for (DTMap::iterator p=dt.begin(); p!=dt.end(); ++p) p->second.data=1; // Keep unselected old entries.
+  }
 
   // Set arcname, offset, header_pos, and salt to open out archive
   arcname=archive;  // output file name
@@ -2615,6 +2627,10 @@ int Jidac::add() {
         }
         assert(sz<=MAX_FRAGMENT);
         total_done+=sz;
+        if (long_update && (total_done/1048576!=(total_done-sz)/1048576 || total_done==total_size)) {
+          fprintf(stderr,"LONG_ZPAQ_UPDATE_PROGRESS:%lld:%lld\n",(long long)total_done,(long long)total_size);
+          fflush(stderr);
+        }
 
         // Look for matching fragment
         assert(uint64_t(sz)==sha1.usize());
@@ -2906,6 +2922,8 @@ int Jidac::add() {
   fprintf(stderr, "\n%1.6f + (%1.6f -> %1.6f -> %1.6f) = %1.6f MB\n",
       header_pos/1000000.0, total_size/1000000.0, dedupesize/1000000.0,
       (archive_end-header_pos)/1000000.0, archive_end/1000000.0);
+  if (long_update)
+    printf("\nLONG_ZPAQ_UPDATE\n{\"updatedEntries\":%d,\"removedEntries\":%d,\"newFragments\":%u}\n", added, removed, unsigned(ht.size()-htsize));
   return errors>0;
 }
 

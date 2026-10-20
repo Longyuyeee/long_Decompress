@@ -16,6 +16,7 @@ pub mod compression_analysis;
 pub(crate) mod compression_verification;
 pub mod archive_format;
 pub mod zpaq_engine;
+pub mod zpaq_update;
 pub mod alz_engine;
 pub mod egg_engine;
 pub mod egg_volumes;

@@ -2,8 +2,8 @@
   "upstream": "7.15",
   "platform": "windows-x64",
   "files": {
-    "vendor/zpaq/zpaq.cpp": "5325ad02de6384e79b43dd794b1fe37b431a52f4d053b5238678780c4ac84a92",
-    "src-tauri/resources/zpaq-engine/long-zpaq.exe": "440d6cda42ff61aae5588647f7455c3b175e0e3f33fff5e8e9c73cfd5d4474bf",
+    "vendor/zpaq/zpaq.cpp": "01edeaa157ba7853f5eae8246366a89d5c478eaa4df9f3c696e6590714dfcbd7",
+    "src-tauri/resources/zpaq-engine/long-zpaq.exe": "d72d03fae729db135f508cd494045e11a25777e878cb0d3433f62c0795b95c89",
     "src-tauri/resources/zpaq-engine/COPYING": "927b5feda84f7a7f2063998b124829182967f54b954db2c3569e8bd07958bf07",
     "vendor/zpaq/libzpaq.h": "08bd9ce17ce018468e35721e2c6a8bd13c0c5e397ce4e9c90c52aec389662f79",
     "vendor/zpaq/libzpaq.cpp": "151eb6bd83cb6c6f5261d64b1db49358710f844ee1a2aa4b9cb63e17319df122"

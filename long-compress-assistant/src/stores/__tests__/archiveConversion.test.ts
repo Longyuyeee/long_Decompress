@@ -8,6 +8,37 @@ vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn(async () => vi.fn()) }))
 vi.mock('@tauri-apps/api/dialog', () => ({ ask: mocks.ask }))
 beforeEach(() => { setActivePinia(createPinia()); mocks.invoke.mockReset(); mocks.ask.mockReset(); mocks.ask.mockResolvedValue(true) })
+it('zpaq1536 keeps update and conversion separate, inherits common defaults and only batches effective update fields',async()=>{
+  mocks.invoke.mockImplementation(async cmd=>cmd==='detect_split_archive'?{is_split:false,archive_format:'zpaq'}:undefined)
+  const store=useArchiveConversionStore();store.defaults.level=3;store.showUpdate(['C:/old.zpaq']);const update=store.pending[0]
+  expect(update.settings).toBeUndefined();expect(store.effectiveSettings(update)).toMatchObject({format:'zpaq',level:3,password:'',encryptFilenames:false})
+  store.updateItem(update.id,{format:'zip',password:'ignored'});expect(update.settings).toBeUndefined()
+  store.show();store.sourcePath='C:/old.zpaq';expect(store.pending).toHaveLength(2);expect(store.activeId).not.toBe(update.id)
+  await store.applySelected({format:'zip',password:'conversion-only',level:2,splitMiB:1})
+  expect(store.effectiveSettings(update)).toMatchObject({format:'zpaq',password:'',level:2,splitMiB:1})
+  expect(store.effectiveSettings(store.pending[1])).toMatchObject({format:'zip',password:'conversion-only',level:2})
+  store.showUpdate();store.sourcePath='C:/old.zpaq';expect(store.activeId).toBe(update.id)
+  store.openSnapshot('C:/old.zpaq',{version:1,date:20261020130000});expect(store.contextIntent).toBe('convert')
+})
+it('zpaq1536 runs update IPC and keeps summary, independent redo inputs and source password requirement without secrets or fake ratio',async()=>{
+  const summary={updatedEntries:3,newFragments:1,baseSnapshots:3,snapshots:4,unchanged:false,copiedBytes:100,inputBytes:40}
+  mocks.invoke.mockImplementation(async cmd=>cmd==='detect_split_archive'?{is_split:false,archive_format:'zpaq'}:cmd==='get_file_info'?{size:100}:cmd==='update_zpaq_archive'?{primaryPath:'D:/new.zpaq',files:[{path:'D:/new.zpaq',size:120}],totalBytes:120,split:false,updateSummary:summary}:undefined)
+  const store=useArchiveConversionStore();store.showUpdate(['C:/old.zpaq']);const item=store.pending[0]
+  store.updateItem(item.id,{sourcePassword:'source-secret-1536',updateSources:['C:/说明.txt'],archivePrefix:'资料',outputPath:'D:/new.zpaq'})
+  await store.start();expect(mocks.invoke).toHaveBeenCalledWith('update_zpaq_archive',expect.objectContaining({sources:['C:/说明.txt'],archivePrefix:'资料',sourcePassword:'source-secret-1536',splitSize:null}))
+  expect(mocks.invoke.mock.calls.some(([cmd])=>cmd==='convert_archive')).toBe(false)
+  const task=useTaskStore().tasks[0];expect(task.status).toBe('completed');expect(task.archiveOutput?.updateSummary).toEqual(summary)
+  const record=createTaskHistoryRecord(task);expect(record.executionConfig).toMatchObject({operation:'zpaq-update',updateSources:['C:/说明.txt'],archivePrefix:'资料',passwordRequired:true});expect(record.metrics).toBeNull();expect(JSON.stringify(record)).not.toContain('source-secret-1536')
+  store.restore(record);const redo=store.pending[0];expect(redo.intent).toBe('zpaq-update');expect(store.effectiveSettings(redo)).toMatchObject({updateSources:['C:/说明.txt'],archivePrefix:'资料',sourcePassword:'',password:''});expect(store.passwordRequirements(redo)).toEqual({source:true,target:false});expect(store.outputFor(redo)).not.toBe(record.outputPath)
+})
+it('zpaq1536 corrects restored input issues and rechecks missing base members before native work',async()=>{
+  let complete=false
+  mocks.invoke.mockImplementation(async cmd=>cmd==='detect_split_archive'?{is_split:true,archive_format:'zpaq',first_part:'C:/old.zpaq.001',parts:['C:/old.zpaq.001','C:/old.zpaq.002'],is_complete:complete,missing_parts:complete?[]:['C:/old.zpaq.002'],total_size:100}:cmd==='update_zpaq_archive'?{primaryPath:'D:/fixed.zpaq',files:[],totalBytes:100,split:false,updateSummary:{unchanged:true}}:undefined)
+  const store=useArchiveConversionStore();store.showUpdate(['C:/old.zpaq.002']);const item=store.pending[0];store.updateItem(item.id,{updateSources:['C:/now.txt'],outputPath:'D:/fixed.zpaq'})
+  await store.start();expect(item.error).toContain('补齐');expect(mocks.invoke.mock.calls.some(([cmd])=>cmd==='update_zpaq_archive')).toBe(false)
+  complete=true;item.sourceIssue='本次来源不存在';store.updateItem(item.id,{updateSources:['C:/fixed.txt']});await store.start()
+  expect(store.taskFor(item)?.status).toBe('completed');expect(mocks.invoke).toHaveBeenCalledWith('update_zpaq_archive',expect.objectContaining({sourcePath:'C:/old.zpaq.001',sources:['C:/fixed.txt']}))
+})
 it('zpaq1530 keeps distinct snapshots through volume grouping, batch edits, conversion and history rerun',async()=>{
   mocks.invoke.mockImplementation(async command=>command==='detect_split_archive'?{is_split:true,archive_format:'ZPAQ',first_part:'C:/old.zpaq.001',parts:['C:/old.zpaq.001','C:/old.zpaq.002'],is_complete:true}:command==='convert_archive'?{primaryPath:'D:/new.zip',files:[],totalBytes:8,split:false}:undefined)
   const store=useArchiveConversionStore(),one={version:1,date:20261020130000},two={version:2,date:20261020140000}
