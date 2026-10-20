@@ -124,7 +124,11 @@ const calculateChecksums = async (resume = false) => {
     accept(await runChecksum<ChecksumCalculationEntry[]>('calculate_checksum_batch', { paths, algorithm: selectedAlgorithm.value }, event => {
       if (event.calculationResults) accept(event.calculationResults)
     }))
-    if (calculationActive) appStore.setSuccess(calculationUnfinished.value.length ? '已停止，已完成的摘要已保留，可继续未完成项' : '本次文件已处理，请查看逐项结果')
+    if (calculationActive) {
+      const failed = checksumResults.value.filter(row => row.status === 'error').length
+      if (failed) appStore.setError(`${failed} 个文件未能计算，请查看逐项原因；已完成的摘要已保留。`)
+      else appStore.setSuccess(calculationUnfinished.value.length ? '已停止，已完成的摘要已保留，可继续未完成项' : '本次文件已处理，请查看逐项结果')
+    }
   } catch (error) { if (calculationActive) appStore.setError(`本次计算未完成：${String(error)}`) }
   finally { if (calculationActive) isCalculating.value = false }
 }

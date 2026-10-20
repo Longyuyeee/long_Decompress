@@ -30,6 +30,7 @@ export async function runExplorerChecksum1528Gate({driver,bridge,waitForElement,
  if(polish){
   await waitForElement('[data-testid="checksum-source-summary"]');await sizes('ready-files','[data-testid="checksum-source-summary"]')
   forwardContextAction('--checksum-verify',[fixture.manifests.sha256,fixture.manifests.md5,fixture.manifests.sfv]);await click('[data-testid="checksum-explorer-use"]');await waitForElement('[data-testid="checksum-staged-location"]');await sizes('ready-manifests','[data-testid="checksum-explorer-manifests"]')
+  forwardContextAction('--checksum-create',[path.join(fixture.work,'已经移动.bin')]);await click('[data-testid="checksum-explorer-use"]');await click('[data-testid="checksum-calculate-start"]');await driver.wait(async()=>(await(await waitForElement('.toast-item')).getText()).includes('1 个文件未能计算'),15000);await sizes('missing-file','[data-testid="checksum-calculation-entry"]')
   state.polishCompletedAt=new Date().toISOString();save();return
  }
  if(!passed('selection-export')){

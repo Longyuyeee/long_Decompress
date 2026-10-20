@@ -14,6 +14,13 @@ let pinia:ReturnType<typeof createPinia>
 const report=(path:string)=>({checksumPath:path,manifestId:path,valid:true,message:'一致',entries:[],cancelled:false})
 beforeEach(()=>{vi.clearAllMocks();localStorage.clear();pinia=createPinia();setActivePinia(pinia);mocks.listen.mockResolvedValue(()=>{});mocks.invoke.mockImplementation(async(cmd:string,args:any)=>cmd==='verify_checksum_file'?report(args.checksumPath):[])})
 describe('explorer checksum 1528',()=>{
+  it('reports an actual read failure without a green success notification',async()=>{
+    const app=useAppStore();app.enqueueExplorerChecksums({kind:'calculate',paths:['C:/已移动.bin']})
+    mocks.invoke.mockImplementation(async(cmd:string)=>cmd==='calculate_checksum_batch'?[{path:'C:/已移动.bin',fileName:'已移动.bin',algorithm:'SHA256',checksum:'',status:'error',error:'找不到文件'}]:undefined)
+    const w=mount(View,{global:{plugins:[pinia]}});await flushPromises();await w.get('[data-testid="checksum-calculate-start"]').trigger('click');await flushPromises()
+    expect(app.error).toContain('1 个文件未能计算');expect(app.successMessage).toBeNull();expect(w.get('[data-status="error"]').text()).toContain('找不到文件');w.unmount()
+  })
+
   it('stages multiple manifests on first navigation and reads only the explicitly chosen one',async()=>{
     const app=useAppStore();app.enqueueExplorerChecksums({kind:'verify',paths:['C:/甲.sha256','D:/乙.md5']})
     const w=mount(View,{global:{plugins:[pinia]}});await flushPromises()
