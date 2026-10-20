@@ -156,3 +156,7 @@ it('zip1535 samples PPMd instead of the default Deflate and invalidates an old m
 it('zip1534 samples BZip2 instead of the default Deflate and invalidates an old method estimate',async()=>{
  mocks.analyze.mockResolvedValue(result);const wrapper=mountCard({...options,format:'zip',zipMethod:'bzip2',level:0});await wrapper.get('.analysis-button').trigger('click');await flushPromises();expect(mocks.analyze).toHaveBeenCalledWith(expect.any(String),['C:/input'],'bz2',0);await wrapper.setProps({modelValue:{...options,zipMethod:'deflate'}});expect(wrapper.find('.analysis-stale').exists()).toBe(true);wrapper.unmount()
 })
+
+it('zip1538 samples LZMA instead of the default Deflate and invalidates an old method estimate',async()=>{
+ mocks.analyze.mockResolvedValue(result);const wrapper=mountCard({...options,format:'zip',zipMethod:'lzma',level:0});await wrapper.get('.analysis-button').trigger('click');await flushPromises();expect(mocks.analyze).toHaveBeenCalledWith(expect.any(String),['C:/input'],'zip-lzma',0);await wrapper.setProps({modelValue:{...options,zipMethod:'deflate'}});expect(wrapper.find('.analysis-stale').exists()).toBe(true);wrapper.unmount()
+})

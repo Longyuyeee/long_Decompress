@@ -20,3 +20,16 @@ full content validation before accepting credentials, and never sets
 Modified upstream source files: `src/read.rs`, `src/read/zip_archive.rs`,
 `src/read/readers.rs`, `src/read/stream.rs`, and `src/zipcrypto.rs`. The stream
 reader explicitly retains strict behavior. No extra dependency was introduced.
+
+## ZIP LZMA writing (v1.5.38)
+
+Added optional method-14 writing using the existing encoder-enabled lzma-rust2
+0.16.2 dependency: ZIP SDK/version and five-byte property header, raw LZMA1
+stream with EOS, and matching bit 1 in local/central headers. Writer lifecycle,
+AES/ZipCrypto wrapping, stream finalization and raw-copy codec flags are kept
+consistent. Default codecs and strict CRC/password reading remain unchanged.
+Modified additional upstream files: `src/write.rs` and `src/types.rs`.
+No new product dependency or executable is added.
+
+Format references: [PKWARE APPNOTE 5.8.8 and 4.4.4](https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT),
+[CPython ZIP LZMA framing](https://github.com/python/cpython/blob/3.13/Lib/zipfile/__init__.py).

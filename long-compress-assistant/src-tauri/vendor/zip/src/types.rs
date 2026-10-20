@@ -28,6 +28,7 @@ pub(crate) mod ffi {
 }
 
 pub(crate) struct ZipRawValues {
+    pub(crate) codec_flags: u16,
     pub(crate) crc32: u32,
     pub(crate) compressed_size: u64,
     pub(crate) uncompressed_size: u64,
@@ -347,6 +348,12 @@ impl ZipFileData {
         }
     }
 
+    #[cfg(feature = "lzma")]
+    fn uses_lzma(&self) -> bool {
+        self.compression_method == CompressionMethod::Lzma
+            || self.aes_mode.is_some_and(|(_, _, method)| method == CompressionMethod::Lzma)
+    }
+
     /// PKZIP version needed to open this file (from APPNOTE 4.4.3.2).
     pub fn version_needed(&self) -> u16 {
         let compression_version: u16 = match self.compression_method {
@@ -364,6 +371,9 @@ impl ZipFileData {
             // APPNOTE doesn't specify a version for Zstandard
             _ => u16::from(DEFAULT_VERSION),
         };
+        // AES stores method 99 in the outer header; retain method 14's requirements.
+        #[cfg(feature = "lzma")]
+        let compression_version = compression_version.max(if self.uses_lzma() { 63 } else { 0 });
         let crypto_version: u16 = if self.aes_mode.is_some() {
             51
         } else if self.encrypted {
@@ -604,7 +614,11 @@ impl ZipFileData {
 
         let encrypted_bit: u16 = if self.encrypted { 1u16 << 0 } else { 0 };
 
-        utf8_bit | using_data_descriptor_bit | encrypted_bit
+        #[cfg(feature = "lzma")]
+        let codec_bits = if self.uses_lzma() { self.flags & (1 << 1) } else { 0 };
+        #[cfg(not(feature = "lzma"))]
+        let codec_bits = 0;
+        utf8_bit | using_data_descriptor_bit | encrypted_bit | codec_bits
     }
     fn clamp_size_field(&self, field: u64) -> Result<u32, std::io::Error> {
         if self.large_file {

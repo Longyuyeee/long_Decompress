@@ -488,3 +488,12 @@ it('lzma1524 single-file encrypted batch refuses directories atomically',()=>{
   expect(()=>store.applyBatchConfiguration([first.path,folder.path],{format:'lzma.aes',level:9})).toThrow('配置未修改')
   expect(JSON.stringify(store.selectedFiles)).toBe(snapshot)
 })
+
+  it('zip1538 LZMA batch edits ZIP only and preserves other inheritance, passwords and volumes',()=>{
+    setActivePinia(createPinia())
+    const store=useCompressionStore();store.globalSettings.format='7z';const files=['zip','zipx','other'].map(n=>mockFile(n,1));files.forEach(f=>store.addFile(f))
+    store.updateFileSettings(files[0].path,{...defaultOptions(),password:'keep',splitArchive:true,splitSize:'2',zipMethod:'zstd'});store.updateFileSettings(files[1].path,{...defaultOptions(),format:'zipx'})
+    const other=JSON.stringify(store.selectedFiles.slice(1)),global=JSON.stringify(store.globalSettings)
+    expect(store.applyBatchConfiguration(files.map(f=>f.path),{zipMethod:'lzma'})).toBe(1);expect(store.selectedFiles[0].settings).toMatchObject({format:'zip',zipMethod:'lzma',password:'keep',splitSize:'2'})
+    expect(JSON.stringify(store.selectedFiles.slice(1))).toBe(other);expect(JSON.stringify(store.globalSettings)).toBe(global)
+  })

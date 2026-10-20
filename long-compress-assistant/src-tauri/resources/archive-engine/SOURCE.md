@@ -25,3 +25,7 @@ v1.5.9 在 Rust 包装中保留原生 Unicode 换卷请求/通知及失败时状
 ## LZIP 原生编解码
 
 v1.4.12 开发接入 [lzma-rust2 0.22.0](https://github.com/hasenbanck/lzma-rust2/)，使用 `std`、`encoder`、`optimization` 和 `lzip` 特性，固定版本并静态链接，不调用外部 LZIP 程序。Apache-2.0 原文随包保存在 `licenses/lzma-rust2-Apache-2.0.txt`。独立 GNU lzip 仅生成测试样本和回解，不随软件分发。
+
+## ZIP LZMA 原生创建
+
+v1.5.38 为现有本地 zip 8.6.0 增加方法14写入，复用其已锁定且启用编码的 lzma-rust2 0.16.2（Apache-2.0），不新增外部引擎或依赖。写入 ZIP 专用属性头、原始 LZMA1 与 EOS，并保留普通、AES、ZipCrypto 和分卷流程。修改文件与原始来源见 `vendor/zip/LONG_COMPATIBILITY_PATCH.md`；既有 lzma-rust2 许可随包保留。独立 Python/liblzma 与 7-Zip 仅用于回解检查。

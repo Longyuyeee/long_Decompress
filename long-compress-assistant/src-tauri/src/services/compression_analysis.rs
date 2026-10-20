@@ -183,11 +183,11 @@ fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usi
 }
 
 fn compressed_sample_size_with_cancel(sample: &[u8], format: &str, level: u32, cancelled: &AtomicBool) -> Result<usize> {
-    if format == "zip-ppmd" {
-        // Use the real ZIP writer, including method-98 parameters and stream finalization.
+    if format == "zip-ppmd" || format == "zip-lzma" {
+        // Use the selected real ZIP writer, including method parameters and stream finalization.
         let mut archive = zip_aes::ZipWriter::new(std::io::Cursor::new(Vec::new()));
         check_cancelled(cancelled)?;
-        archive.start_file("sample", crate::services::zip_method::file_options(false, crate::services::zip_method::ZipMethod::Ppmd, level))?;
+        archive.start_file("sample", crate::services::zip_method::file_options(false, if format == "zip-lzma" { crate::services::zip_method::ZipMethod::Lzma } else { crate::services::zip_method::ZipMethod::Ppmd }, level))?;
         for chunk in sample.chunks(SAMPLE_CHUNK_BYTES) {
             check_cancelled(cancelled)?;
             archive.write_all(chunk)?;
@@ -250,7 +250,7 @@ fn compressed_sample_size_with_cancel(sample: &[u8], format: &str, level: u32, c
 fn duration_range(total_size: u64, format: &str, level: u32, file_count: usize) -> (u64, u64) {
     let format = format.strip_suffix(".aes").unwrap_or(format);
     let base_mib_per_second = match format {
-        "7z" | "xz" | "tar.xz" | "lzma" | "tar.lzma" | "lz" | "tar.lz" => 45.0,
+        "7z" | "xz" | "tar.xz" | "lzma" | "tar.lzma" | "zip-lzma" | "lz" | "tar.lz" => 45.0,
         "bz2" | "tar.bz2" => 35.0,
         "zip-ppmd" => 12.0,
         "zst" | "zstd" | "tar.zst" => 180.0,
@@ -475,5 +475,14 @@ mod ppmd_1535_tests {
         writer.write_all(data.as_bytes()).unwrap();let expected=writer.finish().unwrap().into_inner();
         assert_eq!(compressed_sample_size(data.as_bytes(),"zip-ppmd",0).unwrap(),expected.len());
         assert!(compressed_sample_size_with_cancel(data.as_bytes(),"zip-ppmd",9,&AtomicBool::new(true)).is_err());
+    }
+    #[test]
+    fn zip1538_analysis_uses_the_real_lzma_writer_and_honors_cancellation() {
+        let data="LZMA 文本样本与真实归档参数。\n".repeat(500);
+        let mut writer=zip_aes::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+        writer.start_file("sample",crate::services::zip_method::file_options(false,crate::services::zip_method::ZipMethod::Lzma,0)).unwrap();
+        writer.write_all(data.as_bytes()).unwrap();let expected=writer.finish().unwrap().into_inner();
+        assert_eq!(compressed_sample_size(data.as_bytes(),"zip-lzma",0).unwrap(),expected.len());
+        assert!(compressed_sample_size_with_cancel(data.as_bytes(),"zip-lzma",9,&AtomicBool::new(true)).is_err());
     }
 }
