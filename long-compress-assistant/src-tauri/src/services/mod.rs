@@ -115,3 +115,5 @@ mod lzma_1523_tests;
 
 #[cfg(test)]
 mod tar_lzma_1524_tests;
+#[cfg(test)]
+mod zpaq_1526_tests;

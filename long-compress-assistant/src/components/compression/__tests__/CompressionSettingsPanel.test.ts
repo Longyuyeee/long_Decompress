@@ -51,6 +51,14 @@ const mountPanel = (modelValue: CompressionOptions, allowSplitArchive = true) =>
 })
 
 describe('CompressionSettingsPanel split archive settings', () => {
+  it('zpaq1526 keeps inherited volumes while engine capabilities are loading and does not emit an edit on open', async () => {
+    const wrapper=mountPanel(settings({format:'zpaq',password:'原生密码',splitArchive:true,splitSize:'2'}))
+    await flushPromises()
+    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+    expect(wrapper.get('[data-testid="compression-split-toggle"]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.get('[data-testid="zpaq-volume-hint"]').text()).toContain('任意一卷')
+    wrapper.unmount()
+  })
   it.each(['lz4.aes','br.aes','lz.aes','tar.lz4.aes','tar.br.aes','tar.lz.aes'])('keeps inherited %s password and volumes when opening a row', async format => {
     const wrapper = mountPanel(settings({ format, password: '中文 密码', splitArchive: true }))
     await flushPromises()
@@ -63,7 +71,7 @@ describe('CompressionSettingsPanel split archive settings', () => {
   it('keeps a native ZPAQ password while clearing unsupported inherited options', async () => {
     const wrapper = mountPanel(settings({ format: 'zpaq', password: '中文 密码', splitArchive: true, createSolidArchive: true, encryptFilenames: true }))
     await flushPromises()
-    expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({ format: 'zpaq', password: '中文 密码', splitArchive: false, createSolidArchive: false, encryptFilenames: false })
+    expect(wrapper.emitted('update:modelValue')?.at(-1)?.[0]).toMatchObject({ format: 'zpaq', password: '中文 密码', splitArchive: true, createSolidArchive: false, encryptFilenames: false })
     expect(wrapper.get('[data-testid="compression-filename-extension"]').text()).toBe('.zpaq')
   })
   it.each(['cp932','cp936','cp950'] as const)('keeps %s through the real output encoding select without resetting password or split settings', async encoding => {

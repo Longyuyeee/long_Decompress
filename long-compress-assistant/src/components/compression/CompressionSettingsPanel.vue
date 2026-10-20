@@ -88,7 +88,8 @@ const newProfileIcon = ref('📦')
 const newProfileDescription = ref('')
 
 const compressionFormats = computed(() => COMPRESSIBLE_FORMATS.filter(format => archiveEngine.canCreate(format.engineFormat)))
-const selectedFormat = computed(() => compressionFormats.value.find(format => format.value === compressionOptions.value.format))
+// Capability loading must not erase an inherited password/split configuration.
+const selectedFormat = computed(() => COMPRESSIBLE_FORMATS.find(format => format.value === compressionOptions.value.format))
 const canCreateSplitArchive = computed(() =>
   Boolean(selectedFormat.value?.supportsSplit && props.allowSplitArchive &&
     (!compressionOptions.value.password || supportsNativePassword(compressionOptions.value.format)))
@@ -530,6 +531,7 @@ const closeVaultPasswordsAfterFocus = () => {
       </label>
       <span v-else-if="canCreateSplitArchive" class="split-settings-state">关闭</span>
       <p v-if="['lzma', 'tar.lzma'].includes(compressionOptions.format) && compressionOptions.splitArchive" class="w-full text-xs leading-relaxed text-muted" data-testid="lzma-volume-hint">将生成 .{{ compressionOptions.format }}.001、.002 等数字分卷。请把全部卷放在同一目录；其他软件如不能打开分卷，可按序合并后打开完整 .{{ compressionOptions.format }} 文件。</p>
+      <p v-if="compressionOptions.format === 'zpaq' && compressionOptions.splitArchive" class="w-full text-xs leading-relaxed text-muted" data-testid="zpaq-volume-hint">数字分卷需整组保留，可选择任意一卷打开；密码沿用 ZPAQ 原生方式。其他软件如不能识别，可按序合并为完整 .zpaq 后打开。</p>
       <p v-if="['lz', 'tar.lz'].includes(compressionOptions.format) && compressionOptions.splitArchive" class="w-full text-xs leading-relaxed text-muted" data-testid="lzip-volume-hint">数字切卷将生成 .lz.001、.002 等文件，解压时需将全部卷放在同一目录。这与 LZIP 原生成员不同；分享给其他软件时，请先按序合并成完整文件。</p>
       <p v-if="compressionOptions.format.endsWith('.aes')" class="w-full text-xs leading-relaxed text-muted" data-testid="aes-volume-hint">Long 自有加密格式，接收方请使用 Long解压。分卷解压需把全部 .aes.001、.002 等文件放在同一目录。</p>
       <div v-if="compressionOptions.splitArchive && ['zip', 'zipx'].includes(compressionOptions.format)" class="zip-split-kind">

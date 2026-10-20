@@ -28,7 +28,7 @@ const applying = ref(false)
 const destination = ref<'keep' | 'source' | 'custom'>('keep')
 const outputDirectory = ref('')
 const keep = { value: 'keep', label: '保持各自设置' }
-const formats = [keep, { value: 'zip', label: 'ZIP' }, { value: 'zipx', label: 'ZIPX（XZ）' }, { value: '7z', label: '7Z' }, { value: 'rar', label: 'RAR（需要 WinRAR）' }, { value: 'tar.lz', label: 'TAR.LZIP（无加密）' }, { value: 'lzma', label: 'LZMA（单文件，无加密）' }, { value: 'tar.lzma', label: 'TAR.LZMA（多文件，无加密）' }, { value: 'lzma.aes', label: 'LZMA.AES（单文件加密）' }, { value: 'tar.lzma.aes', label: 'TAR.LZMA.AES（多文件加密）' }]
+const formats = [keep, { value: 'zpaq', label: 'ZPAQ' }, { value: 'zip', label: 'ZIP' }, { value: 'zipx', label: 'ZIPX（XZ）' }, { value: '7z', label: '7Z' }, { value: 'rar', label: 'RAR（需要 WinRAR）' }, { value: 'tar.lz', label: 'TAR.LZIP（无加密）' }, { value: 'lzma', label: 'LZMA（单文件，无加密）' }, { value: 'tar.lzma', label: 'TAR.LZMA（多文件，无加密）' }, { value: 'lzma.aes', label: 'LZMA.AES（单文件加密）' }, { value: 'tar.lzma.aes', label: 'TAR.LZMA.AES（多文件加密）' }]
 const levels = [keep, ...Array.from({ length: 10 }, (_, value) => ({ value: String(value), label: `${value}${value === 0 ? ' · 最低强度（兼容 ZIP 仅存储）' : value === 9 ? ' · 最小体积' : value === 1 ? ' · 更快' : ''}` }))]
 const subfolders = [keep, { value: 'yes', label: '创建同名子文件夹' }, { value: 'no', label: '直接放入输出目录' }]
 const hasChanges = computed(() => destination.value !== 'keep' || (props.mode === 'compression'

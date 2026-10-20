@@ -475,7 +475,7 @@ export const useCompressionStore = defineStore('compression', () => {
         settings.rarRecoveryPercent = 0
         settings.rarRecoveryVolumes = 0
       }
-      if (patch.format === 'lzma.aes' || patch.format === 'tar.lzma.aes') {
+      if (patch.format === 'zpaq' || patch.format === 'lzma.aes' || patch.format === 'tar.lzma.aes') {
         settings.encryptFilenames = false
         settings.createSolidArchive = false
         settings.rarRecoveryPercent = 0

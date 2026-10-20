@@ -197,6 +197,7 @@ fn preview_format(path: &Path) -> Result<&'static str> {
     use super::compression_format::CompressionRoute as Route;
     let format = super::archive_browser::detect_format(path)?;
     if format == ArchiveFormat::Zip { return Ok("ZIP"); }
+    if format == ArchiveFormat::Zpaq { return Ok("ZPAQ"); }
     match super::tar_compatibility::integrity_route(path, &format) {
         Some(Route::Tar) => Ok("TAR"),
         Some(Route::TarGzip) => Ok("TAR.GZ"),
@@ -406,6 +407,7 @@ fn preview_archive_image_sync(
     let format = preview_format(archive_path)?;
     let bytes = match format {
         "ZIP" => read_zip_entry(archive_path, &entry_path, password, encoding)?,
+        "ZPAQ" => tauri::async_runtime::block_on(super::zpaq_engine::preview_entry(archive_path, &entry_path, password, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES))?.0,
         format if format.starts_with("TAR") => read_tar_family(archive_path, format, &entry_path)?,
         "GZIP" | "BZIP2" | "XZ" | "ZSTD" | "LZMA" | "LZIP" | "LZ4" | "BR" => read_plain_stream(archive_path, format, &entry_path, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES)?.bytes,
         _ => anyhow::bail!(
@@ -533,6 +535,10 @@ fn preview_archive_text_sync(
     let format = preview_format(archive_path)?;
     let text_bytes = match format {
         "ZIP" => read_zip_text_entry(archive_path, &entry_path, password, password_encoding)?,
+        "ZPAQ" => {
+            let (bytes, total_size) = tauri::async_runtime::block_on(super::zpaq_engine::preview_entry(archive_path, &entry_path, password, MAX_TAR_PREVIEW_SCAN_BYTES, MAX_TEXT_PREVIEW_BYTES))?;
+            TextBytes { bytes, total_size }
+        }
         format if format.starts_with("TAR") => {
             read_tar_family_text(archive_path, format, &entry_path)?
         }
