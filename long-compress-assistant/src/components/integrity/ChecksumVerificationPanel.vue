@@ -72,6 +72,7 @@ async function locate(path: string) {
   try { await commands.invoke('open_in_explorer', { path: parentDirectory(path) }) }
   catch (cause) { app.setError(`打开目录失败：${String(cause)}`) }
 }
+defineExpose({ verify })
 </script>
 
 <template>

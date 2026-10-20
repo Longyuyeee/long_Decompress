@@ -52,7 +52,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
     </td>
     <td width="50%" valign="top">
       <h3>📂 做完之后，马上找到结果</h3>
-      <p>从任务、历史或全局面板直接打开输出目录、定位文件或复制路径。分卷产物集中查看，批量打开相同目录只打开一次，失败项也有后续处理入口。</p>
+      <p>从任务、历史或全局面板直接打开输出目录、定位文件或复制路径。分卷产物集中查看，也能带入整组生成校验清单；批量打开相同目录只打开一次，失败项也有后续处理入口。</p>
     </td>
   </tr>
 </table>
@@ -236,7 +236,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.24 · 多文件 LZMA 与密码组合**。新增 TAR.LZMA、LZMA.AES 和 TAR.LZMA.AES，接通数字分卷、认证后浏览/预览、检查、所选/整包提取及密码 ZIP 互转；多选弹窗保留各条密码与分卷，单条展开和等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.24.md) · [范围与记录](long-compress-assistant/docs/TAR_LZMA_AES_FREEZE_1.5.24.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.24)。下一步按[既定路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.23_TO_1.5.25.md)推进 v1.5.25 结果生成相对路径校验清单，尚未开发。
+**v1.5.25 · 从结果生成校验清单**。完成任务、历史和转换结果可带入整组实际产物，主动计算并导出相对路径清单；同名文件保留子目录，中断项不写入，导出后可直接核对。保留单条展开、多选弹窗和等宽/窄窗布局。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.25.md) · [范围与记录](long-compress-assistant/docs/RESULT_CHECKSUMS_FREEZE_1.5.25.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.25)。本轮三版计划按范围收口，下一阶段 [v1.5.26～v1.5.28](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.26_TO_1.5.28.md) 已规划：ZPAQ 数字卷、WIM 数字卷、资源管理器校验入口，均尚未开发。
+
+**v1.5.24 · 多文件 LZMA 与密码组合**。新增 TAR.LZMA、LZMA.AES 和 TAR.LZMA.AES，接通数字分卷、认证后浏览/预览、检查、所选/整包提取及密码 ZIP 互转；多选弹窗保留各条密码与分卷，单条展开和等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.24.md) · [范围与记录](long-compress-assistant/docs/TAR_LZMA_AES_FREEZE_1.5.24.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.24)。结果生成相对路径校验清单已由 v1.5.25 接续；当前进度以上方最新记录为准。
 
 **v1.5.23 · LZMA 数字分卷**。LZMA 单文件支持数字切卷创建，从任意成员浏览、有界预览、检查和提取；密码 ZIP 与单文件 LZMA 分卷转换、补卷新任务及结果接通。保留单条展开、多选弹窗、自然继承、等宽与窄窗布局。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.23.md) · [范围与记录](long-compress-assistant/docs/LZMA_VOLUMES_FREEZE_1.5.23.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.23)。下一步按[既定路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.23_TO_1.5.25.md)推进 TAR.LZMA 与 Long AES 组合，已由 v1.5.24 接续；v1.5.25 结果生成校验清单尚未开发，当前进度以上方最新记录为准。
 

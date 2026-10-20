@@ -18,6 +18,7 @@ import { useTaskStore } from '@/stores/task'
 import { generateId } from '@/utils'
 import { archiveInspectionMessageForDisplay } from '@/utils/taskFailure'
 import { parentDirectory } from '@/utils/resultLocation'
+import { checksumBaseDirectory } from '@/utils/checksumSources'
 import ZipPasswordEncodingField from '@/components/ui/ZipPasswordEncodingField.vue'
 import { zipPasswordEncodingArguments, zipPasswordEncodingLabel, type ZipPasswordEncoding } from '@/types/zipPassword'
 import { supportsZipPasswordEncoding, zipPasswordEncodingForSource } from '@/utils/zipPasswordSource'
@@ -43,8 +44,13 @@ const selectedFiles = ref<string[]>([])
 const selectedAlgorithm = ref<'crc32' | 'md5' | 'sha256'>('sha256')
 const checksumResults = ref<ChecksumCalculationEntry[]>([])
 const isCalculating = ref(false)
+const isExporting = ref(false), exportError = ref(''), exportedManifest = ref(''), exportedCount = ref(0)
+const sourceLabel = ref(''), expandedCalculation = ref<string[]>([]), showSources = ref(false)
+const verificationPanel = ref<InstanceType<typeof ChecksumVerificationPanel> | null>(null)
+function resetExport() { exportError.value = ''; exportedManifest.value = ''; exportedCount.value = 0 }
 const calculationUnfinished = computed(() => checksumResults.value.filter(row => ['pending', 'interrupted'].includes(row.status)))
-watch(selectedAlgorithm, () => { checksumResults.value = [] })
+const successfulChecksums = computed(() => checksumResults.value.filter(row => row.status === 'success'))
+watch(selectedAlgorithm, () => { checksumResults.value = []; resetExport() })
 const recoveryWorkspace = useArchiveRecoveryStore()
 const activeMode = ref<'calculate' | 'verify' | 'archive'>(recoveryWorkspace.rows.length ? 'archive' : 'calculate')
 const isVerifying = ref(false)
@@ -83,6 +89,7 @@ const algorithms = [
 ]
 
 const selectFiles = async () => {
+  if (isCalculating.value || isExporting.value) return
   try {
     const queued = import.meta.env.VITE_DESKTOP_E2E === '1' ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection() : undefined
     const files = queued !== undefined ? queued : await open({
@@ -92,6 +99,7 @@ const selectFiles = async () => {
     if (files) {
       selectedFiles.value = Array.isArray(files) ? files : [files]
       checksumResults.value = []
+      sourceLabel.value = ''; expandedCalculation.value = []; resetExport()
     }
   } catch (error) {
     appStore.setError(appStore.t('common.error'))
@@ -100,10 +108,11 @@ const selectFiles = async () => {
 
 let calculationActive = true
 const calculateChecksums = async (resume = false) => {
-  if (isCalculating.value || !selectedFiles.value.length) return
+  if (isCalculating.value || isExporting.value || !selectedFiles.value.length) return
   const paths = resume ? calculationUnfinished.value.map(row => row.path) : [...selectedFiles.value]
   if (!paths.length) return
   isCalculating.value = true
+  resetExport()
   if (!resume) checksumResults.value = paths.map(path => ({ path, fileName: path.split(/[\\/]/).pop() || path, algorithm: selectedAlgorithm.value.toUpperCase(), checksum: '', status: 'pending' }))
   const accept = (rows: ChecksumCalculationEntry[]) => {
     if (!calculationActive) return
@@ -129,39 +138,56 @@ const copyChecksum = async (checksum: string) => {
 }
 
 const exportChecksumFile = async () => {
-  if (checksumResults.value.length === 0) {
+  if (isCalculating.value || isExporting.value) return
+  if (!successfulChecksums.value.length) {
     appStore.setError(appStore.t('integrity.no_results', '没有可导出的结果'))
     return
   }
 
+  isExporting.value = true; exportError.value = ''
   try {
-    const firstFile = selectedFiles.value[0]
-    const dir = firstFile.substring(0, Math.max(firstFile.lastIndexOf('/'), firstFile.lastIndexOf('\\')))
+    const rows = successfulChecksums.value.map(row => ({ path: row.path, checksum: row.checksum, status: row.status }))
+    const dir = checksumBaseDirectory(selectedFiles.value)
     const ext = selectedAlgorithm.value === 'crc32' ? '.sfv' : `.${selectedAlgorithm.value}`
 
-    const savePath = await save({
+    const queued = import.meta.env.VITE_DESKTOP_E2E === '1' ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection() : undefined
+    const savePath = queued !== undefined ? queued : await save({
       title: appStore.t('integrity.export', '导出校验文件'),
-      defaultPath: `${dir}/checksums${ext}`,
+      defaultPath: `${dir ? dir.replace(/[\\/]$/, '') + '/' : ''}checksums${ext}`,
       filters: [{
         name: `${selectedAlgorithm.value.toUpperCase()} Checksum File`,
         extensions: [ext.slice(1)]
       }]
-    }) as string | null
+    })
 
-    if (savePath) {
+    if (typeof savePath === 'string' && savePath && calculationActive) {
       await tauriCommands.invoke('export_checksum_file', {
         path: savePath,
-        results: checksumResults.value.filter(r => r.status === 'success').map(r => ({
-          file_name: r.fileName,
-          checksum: r.checksum
-        })),
+        results: rows,
         algorithm: selectedAlgorithm.value
       })
+      if (!calculationActive) return
+      exportedManifest.value = savePath; exportedCount.value = rows.length
       appStore.setSuccess(appStore.t('integrity.exported', '校验文件已导出'))
     }
   } catch (error) {
-    appStore.setError(appStore.t('integrity.export_failed', '导出失败'))
-  }
+    if (calculationActive) exportError.value = `导出未完成：${String(error)}`
+  } finally { if (calculationActive) isExporting.value = false }
+}
+
+async function verifyExportedManifest() {
+  if (!exportedManifest.value || isCalculating.value || isVerifying.value || isExporting.value) return
+  activeMode.value = 'verify'
+  await nextTick()
+  await verificationPanel.value?.verify(exportedManifest.value)
+}
+
+function acceptChecksumSources() {
+  const request = appStore.pendingChecksumSources
+  if (!request || isCalculating.value || isExporting.value || isVerifying.value || isDiagnosing.value || isRepairing.value || batchBusy.value) return
+  selectedFiles.value = [...request.paths]; sourceLabel.value = request.label
+  checksumResults.value = []; expandedCalculation.value = []; showSources.value = false; resetExport()
+  activeMode.value = 'calculate'; appStore.pendingChecksumSources = null
 }
 
 const clearResults = () => {
@@ -356,7 +382,7 @@ const copyDiagnosticReport = async () => {
   }
 }
 
-watch(() => isDiagnosing.value || isRepairing.value || batchBusy.value ? null : appStore.pendingArchiveDiagnosis, request => {
+watch(() => isDiagnosing.value || isRepairing.value || isCalculating.value || isExporting.value || isVerifying.value || batchBusy.value ? null : appStore.pendingArchiveDiagnosis, request => {
   if (!request || isDiagnosing.value || isRepairing.value || batchBusy.value) return
   appStore.pendingArchiveDiagnosis = null
   clearResults()
@@ -369,6 +395,11 @@ watch(() => isDiagnosing.value || isRepairing.value || batchBusy.value ? null : 
   recoveryTaskId.value = request.taskId || ''
   recoveryOptions.value = { outputPath: request.outputPath, extractToSubfolder: request.extractToSubfolder }
   if (diagnosticSources.value.length < 2) void diagnoseArchive()
+}, { immediate: true })
+
+watch(() => appStore.pendingChecksumSources, request => {
+  // Never replace an existing workspace silently, even when its current pass ends.
+  if (request && !selectedFiles.value.length && !isCalculating.value && !isVerifying.value && !isDiagnosing.value && !isRepairing.value && !batchBusy.value) acceptChecksumSources()
 }, { immediate: true })
 
 const queueRecoveredArchive = async () => {
@@ -453,6 +484,11 @@ onUnmounted(() => {
     <!-- 主内容区 -->
     <div class="integrity-scroll custom-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
       <div class="integrity-workspace">
+        <div v-if="appStore.pendingChecksumSources" class="checksum-handoff" data-testid="checksum-pending-sources">
+          <span>已收到 {{ appStore.pendingChecksumSources.paths.length }} 个结果文件。使用后会替换当前计算列表。</span>
+          <button class="integrity-secondary" :disabled="isCalculating || isExporting || isVerifying || isDiagnosing || isRepairing || batchBusy" @click="acceptChecksumSources">使用这组文件</button>
+          <button class="integrity-secondary" @click="appStore.pendingChecksumSources = null">保留当前列表</button>
+        </div>
         <div v-if="recoveryWorkspace.recoveryCount || recoveryWorkspace.saveError" class="flex min-w-0 flex-wrap items-center gap-2 rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs" data-testid="archive-recovery-resume">
           <span class="min-w-0 flex-1 text-content">{{ recoveryWorkspace.saveError || `上次还有 ${recoveryWorkspace.recoveryCount} 组检查修复记录` }}</span>
           <button v-if="recoveryWorkspace.recoveryCount" class="archive-secondary" :disabled="recoveryWorkspace.busy || recoveryWorkspace.preparing || isDiagnosing || isRepairing" data-testid="archive-recovery-restore" @click="resumeRecoveryWorkspace">恢复工作区</button>
@@ -462,7 +498,7 @@ onUnmounted(() => {
         <nav class="integrity-mode-switch" aria-label="文件完整性工具">
           <button
             @click="activeMode = 'calculate'"
-            :disabled="isDiagnosing || isRepairing || isCalculating || isVerifying"
+            :disabled="isDiagnosing || isRepairing || isCalculating || isExporting || isVerifying"
             :class="{ active: activeMode === 'calculate' }"
           >
             <span class="mode-icon"><i class="pi pi-hashtag"></i></span>
@@ -472,7 +508,7 @@ onUnmounted(() => {
           <button
             data-testid="checksum-verify-mode"
             @click="activeMode = 'verify'"
-            :disabled="isDiagnosing || isRepairing || isCalculating || isVerifying"
+            :disabled="isDiagnosing || isRepairing || isCalculating || isExporting || isVerifying"
             :class="{ active: activeMode === 'verify' }"
           >
             <span class="mode-icon"><i class="pi pi-check-circle"></i></span>
@@ -482,7 +518,7 @@ onUnmounted(() => {
           <button
             data-testid="archive-diagnostic-mode"
             @click="openArchiveMode"
-            :disabled="isDiagnosing || isRepairing || isCalculating || isVerifying"
+            :disabled="isDiagnosing || isRepairing || isCalculating || isExporting || isVerifying"
             :class="{ active: activeMode === 'archive' }"
           >
             <span class="mode-icon"><i class="pi pi-search"></i></span>
@@ -501,7 +537,7 @@ onUnmounted(() => {
                 v-for="algo in algorithms"
                 :key="algo.value"
                 @click="selectedAlgorithm = algo.value as any"
-                :disabled="isCalculating"
+                :disabled="isCalculating || isExporting"
                 :class="{ active: selectedAlgorithm === algo.value }"
               >
                 <span><strong>{{ algo.label }}</strong><small>{{ algo.description }}</small></span>
@@ -515,7 +551,7 @@ onUnmounted(() => {
             <header class="panel-heading"><span><i class="pi pi-file"></i>{{ appStore.t('integrity.files') }}</span><small>{{ selectedFiles.length ? `${selectedFiles.length} 个文件待处理` : '支持批量选择' }}</small></header>
             <button
               @click="selectFiles"
-              :disabled="isCalculating"
+              :disabled="isCalculating || isExporting"
               data-testid="checksum-calculate-choose"
               class="integrity-dropzone"
             >
@@ -531,28 +567,42 @@ onUnmounted(() => {
               <i class="pi pi-plus"></i>
             </button>
 
+            <div v-if="selectedFiles.length" class="checksum-source-summary" data-testid="checksum-source-summary">
+              <p v-if="sourceLabel" class="break-words">来自结果：{{ sourceLabel }} · 已带入整组 {{ selectedFiles.length }} 个文件</p>
+              <p>点击开始计算后读取文件；导出仅使用已完成摘要。清单请保存到这些文件的共同上级目录。</p>
+              <button class="checksum-source-toggle" :aria-expanded="showSources" data-testid="checksum-source-toggle" @click="showSources = !showSources">{{ showSources ? '收起' : '查看' }}文件路径 <i :class="showSources ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i></button>
+              <ul v-if="showSources" class="checksum-source-paths custom-scrollbar"><li v-for="path in selectedFiles" :key="path">{{ path }}</li></ul>
+            </div>
             <ChecksumProgressCard v-if="isCalculating" :progress="checksumProgress" :stopping="stoppingChecksum" @stop="stopChecksum" />
             <!-- 操作按钮 -->
             <div class="integrity-actions">
-              <button v-if="calculationUnfinished.length" :disabled="isCalculating" class="integrity-secondary" data-testid="checksum-calculate-continue" @click="calculateChecksums(true)">继续未完成项（{{ calculationUnfinished.length }}）</button>
+              <button v-if="calculationUnfinished.length" :disabled="isCalculating || isExporting" class="integrity-secondary" data-testid="checksum-calculate-continue" @click="calculateChecksums(true)">继续未完成项（{{ calculationUnfinished.length }}）</button>
               <button
                 @click="calculateChecksums(false)"
                 data-testid="checksum-calculate-start"
-                :disabled="selectedFiles.length === 0 || isCalculating"
+                :disabled="selectedFiles.length === 0 || isCalculating || isExporting"
                 class="integrity-primary"
               >
                 <i :class="isCalculating ? 'pi pi-spinner pi-spin' : 'pi pi-play'"></i>
                 {{ isCalculating ? appStore.t('integrity.calculating') : appStore.t('integrity.calculate') }}
               </button>
               <button
-                v-if="checksumResults.some(row => row.status === 'success')"
-                :disabled="isCalculating"
+                v-if="successfulChecksums.length"
+                :disabled="isCalculating || isExporting"
+                data-testid="checksum-export"
                 @click="exportChecksumFile"
                 class="integrity-secondary"
               >
                 <i class="pi pi-download"></i>
-                {{ appStore.t('integrity.export') }}
+                {{ isExporting ? '正在导出…' : `导出已完成项（${successfulChecksums.length}）` }}
               </button>
+            </div>
+            <p v-if="exportError" role="alert" class="checksum-export-error" data-testid="checksum-export-error">{{ exportError }}</p>
+            <div v-if="exportedManifest" class="checksum-export-receipt" data-testid="checksum-export-receipt">
+              <strong><i class="pi pi-check-circle"></i> 已保存 {{ exportedCount }} 项{{ exportedCount < selectedFiles.length ? `，其余 ${selectedFiles.length - exportedCount} 项未写入` : '' }}</strong>
+              <code>{{ exportedManifest }}</code>
+              <small>路径相对于清单所在目录。分享时请保留文件与清单的目录结构。</small>
+              <button class="integrity-secondary" data-testid="checksum-verify-exported" @click="verifyExportedManifest">核对这份清单</button>
             </div>
           </section>
 
@@ -567,7 +617,7 @@ onUnmounted(() => {
                 class="checksum-row"
               >
                 <span class="checksum-status" :data-status="result.status"><i :class="result.status === 'success' ? 'pi pi-check' : result.status === 'error' ? 'pi pi-times' : 'pi pi-pause'"></i></span>
-                <div class="checksum-main"><strong :title="result.fileName">{{ result.fileName }}</strong><code :title="result.checksum">{{ result.error || result.checksum || '尚未读取' }}</code></div>
+                <div class="checksum-main"><button class="checksum-calculation-toggle" :aria-expanded="expandedCalculation.includes(result.path)" data-testid="checksum-calculation-toggle" @click="expandedCalculation = expandedCalculation.includes(result.path) ? expandedCalculation.filter(path => path !== result.path) : [...expandedCalculation, result.path]"><strong :title="result.path">{{ result.fileName }}</strong><i :class="expandedCalculation.includes(result.path) ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i></button><small :title="result.path">{{ result.path }}</small><code :title="result.checksum">{{ result.error || result.checksum || '尚未读取' }}</code></div>
                 <span class="checksum-algorithm">{{ result.algorithm }}</span>
                     <button
                       v-if="result.status === 'success'"
@@ -577,13 +627,14 @@ onUnmounted(() => {
                     >
                   <i class="pi pi-copy"></i><span class="sr-only">{{ appStore.t('integrity.copy') }}</span>
                     </button>
+                <div v-if="expandedCalculation.includes(result.path)" class="checksum-calculation-details" data-testid="checksum-calculation-details"><span>来源路径</span><code>{{ result.path }}</code><span>{{ result.algorithm }} · {{ result.status === 'success' ? '已完成' : result.status === 'error' ? '读取失败' : result.status === 'interrupted' ? '已停止，可继续' : '尚未读取' }}</span><code>{{ result.error || result.checksum || '没有完整摘要，不会写入清单' }}</code></div>
               </div>
             </div>
           </section>
         </div>
 
         <div v-show="activeMode === 'verify'" class="integrity-single-column">
-          <ChecksumVerificationPanel @busy="isVerifying = $event" @diagnose="appStore.openArchiveForDiagnosis({path: $event})" @tasks="router.push('/decompress')" />
+          <ChecksumVerificationPanel ref="verificationPanel" @busy="isVerifying = $event" @diagnose="appStore.openArchiveForDiagnosis({path: $event})" @tasks="router.push('/decompress')" />
         </div>
 
         <div v-if="activeMode === 'archive'" class="integrity-single-column min-w-0 overflow-x-hidden" data-testid="archive-diagnostic-panel">
@@ -739,6 +790,24 @@ onUnmounted(() => {
 .checksum-main strong,.checksum-main code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .checksum-main strong { color: var(--text-content); font-size: .61rem; font-weight: 850; }
 .checksum-main code { color: var(--text-muted); font-size: .52rem; }
+.checksum-main small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-muted); font-size:.55rem; }
+.checksum-calculation-toggle { display:flex; min-width:0; align-items:center; justify-content:space-between; gap:.5rem; text-align:left; color:var(--text-muted); }
+.checksum-calculation-toggle strong { min-width:0; }
+.checksum-calculation-toggle i { flex-shrink:0; font-size:.55rem; }
+.checksum-calculation-details { grid-column:1/-1; display:grid; min-width:0; gap:.35rem; border-top:1px solid var(--border-subtle); padding:.65rem .25rem .25rem; font-size:.65rem; }
+.checksum-calculation-details span { color:var(--text-muted); }
+.checksum-calculation-details code { white-space:normal; overflow-wrap:anywhere; user-select:text; }
+.checksum-source-summary { min-width:0; margin-top:.65rem; color:var(--text-muted); font-size:.65rem; line-height:1.7; }
+.checksum-source-toggle { display:inline-flex; align-items:center; gap:.4rem; padding:.35rem 0; color:var(--dynamic-accent); }
+.checksum-source-paths { max-height:8rem; overflow-y:auto; padding:.5rem .65rem; border:1px solid var(--border-subtle); border-radius:.6rem; background:var(--bg-input); }
+.checksum-source-paths li { overflow-wrap:anywhere; user-select:text; padding:.25rem 0; }
+.checksum-export-error { margin-top:.7rem; padding:.7rem; border:1px solid color-mix(in srgb,#ef4444 35%,var(--border-subtle)); border-radius:.65rem; overflow-wrap:anywhere; font-size:.7rem; line-height:1.7; }
+.checksum-export-receipt { display:flex; min-width:0; flex-direction:column; align-items:flex-start; gap:.5rem; margin-top:.7rem; padding:.8rem; border:1px solid color-mix(in srgb,var(--dynamic-accent) 30%,var(--border-subtle)); border-radius:.75rem; background:color-mix(in srgb,var(--dynamic-accent) 5%,var(--bg-input)); font-size:.7rem; }
+.checksum-export-receipt strong { color:var(--dynamic-accent); }
+.checksum-export-receipt code { max-width:100%; overflow-wrap:anywhere; user-select:text; }
+.checksum-export-receipt small { color:var(--text-muted); line-height:1.7; }
+.checksum-handoff { display:flex; min-width:0; align-items:center; flex-wrap:wrap; gap:.5rem; border:1px solid var(--border-subtle); border-radius:.8rem; padding:.75rem; font-size:.7rem; }
+.checksum-handoff span { min-width:0; flex:1 1 14rem; overflow-wrap:anywhere; }
 .checksum-algorithm { border-radius: 999px; background: color-mix(in srgb,var(--dynamic-accent) 9%,transparent); padding: .2rem .42rem; color: var(--dynamic-accent); font-size: .5rem; font-weight: 900; }
 .checksum-copy { display: grid; width: 1.75rem; height: 1.75rem; place-items: center; border-radius: .5rem; color: var(--text-muted); font-size: .55rem; }
 .checksum-copy:hover { background: color-mix(in srgb,var(--dynamic-accent) 10%,transparent); color: var(--dynamic-accent); }

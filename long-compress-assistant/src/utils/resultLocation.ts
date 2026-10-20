@@ -23,7 +23,7 @@ export function parentDirectory(path: string): string {
   if (index === 0) return path.slice(0, 1)
   return index >= 0 ? path.slice(0, index) : '.'
 }
-function pathKey(path: string) {
+export function pathKey(path: string) {
   const windows = /^[a-z]:[/\\]|^[/\\]{2}/i.test(path)
   const key = path.replace(/\\/g, '/').replace(/\/+$/, '')
   return windows ? key.toLowerCase() : key
