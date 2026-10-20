@@ -51,7 +51,15 @@ fn lzma1524_native_creation_streams_tar_and_preserves_content_and_empty_director
     let m=manifest();let runtime=CompressionService::for_testing();
     for format in ["tar.lzma","lzma.aes","tar.lzma.aes"] {
         let temp=tempfile::tempdir().unwrap();let output=temp.path().join(format!("创建.{format}"));
-        let source=fixtures().join(if format=="lzma.aes" {"原文件/大文本.txt"}else{"原文件"});
+        let source=if format=="lzma.aes" {fixtures().join("原文件/大文本.txt")} else {
+            let source=temp.path().join("原文件");
+            for name in m["expectedFiles"].as_object().unwrap().keys() {
+                let target=source.join(name);fs::create_dir_all(target.parent().unwrap()).unwrap();
+                fs::copy(fixtures().join("原文件").join(name),target).unwrap();
+            }
+            // Git does not retain empty directories in the source tree.
+            fs::create_dir_all(source.join(m["emptyDirectory"].as_str().unwrap())).unwrap();source
+        };
         let sources=vec![source.to_string_lossy().into_owned()];let options=CompressionOptions{level:1,password:Some("test".into()),..Default::default()};
         use super::native_compression::aes::{self,AesCompressionKind as K};
         match format {
