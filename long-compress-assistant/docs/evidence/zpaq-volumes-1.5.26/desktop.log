@@ -1,0 +1,28 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+zpaq-1526: native original-journal.zpaq
+zpaq-1526: native original-journal-key.zpaq
+0.078 seconds (all OK)
+zpaq-1526: native created-plain
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: 压缩失败: Encrypted split archive creation is currently supported only for ZIP, 7Z and RAR; choose a supported format or disable splitting
+
+false !== true
+
+    at ipc (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/zpaq-volumes-1526-gate.mjs:19:74)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async runZpaqVolumes1526Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/zpaq-volumes-1526-gate.mjs:61:64)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:4942:5 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

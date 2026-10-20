@@ -154,7 +154,7 @@ export async function runZpaqVolumes1526Gate({driver,bridge,waitForElement,artif
     await fill('.browser-toolbar input[type="password"]',secret);await(await waitForElement('.browser-toolbar input[type="password"]')).sendKeys(Key.ENTER)
     const folder=await waitForElement('[data-entry-path="资料/"]');await driver.executeScript(e=>e.scrollIntoView({block:'center',behavior:'instant'}),folder);await driver.actions().doubleClick(folder).perform()
     for(const [name,entry,selector]of[['text','说明.txt','[data-testid="archive-text-preview"]'],['image','图标.png','[data-testid="archive-image-preview"]']]){
-      await click('[data-entry-path="资料/'+entry+'"] .preview-trigger');await waitForElement(selector);assert.match(await(await waitForElement('.preview-meta')).getText(),/只读 · 不改原包/);await sizes(name+'-preview-final',selector);await click('.preview-close')
+      await driver.executeScript(e=>e.click(),await waitForElement('[data-entry-path="资料/'+entry+'"] .preview-trigger'));await waitForElement(selector);assert.match(await(await waitForElement('.preview-meta')).getText(),/只读 · 不改原包/);await sizes(name+'-preview-final',selector);await click('.preview-close')
     }
     done('ui','preview-display',{truthfulReadOnlyWording:true,loadingButtonNoWrap:state.cancelDisplay?.whiteSpace==='nowrap'})
   }
