@@ -99,7 +99,7 @@ pub(crate) fn compress<R: CompressionRuntime + Sync>(
     let path = Path::new(output);
     let parent = path.parent().unwrap_or(Path::new("."));
     std::fs::create_dir_all(parent)?;
-    if matches!(format, "tar.lz4" | "tar.br") {
+    if matches!(format, "tar.lz4" | "tar.br" | "tar.lzma") {
         // Collect before creating the output; the producer uses the same TAR
         // entry policy as every other TAR route, without a full TAR disk copy.
         let entries = crate::services::compression_entries::collect(sources, options.preserve_paths.unwrap_or(true), true)?;
@@ -161,7 +161,14 @@ fn encode_stream<R: CompressionRuntime, I: Read, W: Write>(
     format: &str,
     total: Option<u64>,
 ) -> Result<W> {
-    if format.ends_with("lz4") {
+    if matches!(format, "lzma" | "tar.lzma") {
+        let settings = xz2::stream::LzmaOptions::new_preset(options.level.clamp(1, 9))?;
+        let stream = xz2::stream::Stream::new_lzma_encoder(&settings)?;
+        let mut encoder = xz2::write::XzEncoder::new_stream(destination, stream);
+        std::io::copy(input, &mut encoder)?;
+        runtime.check_cancellation()?;
+        Ok(encoder.finish()?)
+    } else if format.ends_with("lz4") {
         let mut info = lz4_flex::frame::FrameInfo::new();
         info.content_checksum = true;
         info.content_size = total;
@@ -222,7 +229,7 @@ pub(crate) fn decoder(path: &Path, format: &str) -> Result<Box<dyn Read + Send>>
     let reader: Box<dyn Read + Send> = match format {
         "gz" | "gzip" | "tar.gz" => Box::new(flate2::read::MultiGzDecoder::new(input)),
         "bz2" | "bzip2" | "tar.bz2" => Box::new(bzip2::read::MultiBzDecoder::new(input)),
-        "lzma" => Box::new(xz2::read::XzDecoder::new_stream(input, xz2::stream::Stream::new_lzma_decoder(u64::MAX)?)),
+        "lzma" | "tar.lzma" => Box::new(xz2::read::XzDecoder::new_stream(input, xz2::stream::Stream::new_lzma_decoder(u64::MAX)?)),
         "xz" | "tar.xz" => Box::new(xz2::read::XzDecoder::new_multi_decoder(input)),
         "zst" | "zstd" | "tar.zst" => Box::new(zstd::stream::read::Decoder::new(input)?),
         _ => return Ok(if format.ends_with("lz4") {

@@ -27,3 +27,15 @@ it('lzma1523 configures selected files only inside the existing modal',async()=>
   await wrapper.get('[data-testid="batch-config-apply"]').trigger('click')
   expect(wrapper.emitted('apply')?.[0]?.[0]).toEqual({format:'lzma'});wrapper.unmount()
 })
+
+it.each(['tar.lzma','lzma.aes','tar.lzma.aes'])('lzma1524 configures %s inside the existing batch modal',async format=>{
+  const wrapper=mount(BatchConfigBar,{props:{count:2,mode:'compression'},global:{plugins:[createPinia()],stubs:{Teleport:true,Transition:false}}})
+  expect(wrapper.find('[data-testid="batch-format"]').exists()).toBe(false)
+  await wrapper.get('button[aria-haspopup="dialog"]').trigger('click')
+  await wrapper.get('[data-testid="batch-format"]').trigger('click')
+  const label=format.toUpperCase()
+  await wrapper.findAll('[role="option"]').find(o=>o.find('strong').text().startsWith(label+'（'))!.trigger('click')
+  expect(wrapper.get('[data-testid="batch-lzma-combination-hint"]').text()).toContain(format==='tar.lzma'?'目录':'Long解压')
+  await wrapper.get('[data-testid="batch-config-apply"]').trigger('click')
+  expect(wrapper.emitted('apply')?.[0]?.[0]).toEqual({format});wrapper.unmount()
+})

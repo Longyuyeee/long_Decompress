@@ -347,7 +347,7 @@ const closeVaultPasswordsAfterFocus = () => {
           </span>
         </div>
 
-        <div class="flex items-center gap-2 ml-1"><label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.format') }}</label><HelpHint label="目标格式说明">{{ ['lz', 'tar.lz', 'zpaq'].includes(compressionOptions.format) ? selectedFormat?.knownLimitations : compressionOptions.format === 'zip' ? '兼容性较好，适合分享；加密和编码方式会影响其他软件的支持。' : compressionOptions.format === '7z' ? '压缩率通常较高，适合归档。' : selectedFormat?.singleFileOnly ? '仅支持单个文件；多个文件或目录请使用 TAR 组合或 ZIP、7Z。' : '按用途选择归档格式；可用能力以当前引擎和任务设置为准。' }}</HelpHint></div>
+        <div class="flex items-center gap-2 ml-1"><label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.format') }}</label><HelpHint label="目标格式说明">{{ ['lz', 'tar.lz', 'zpaq', 'tar.lzma', 'lzma.aes', 'tar.lzma.aes'].includes(compressionOptions.format) ? selectedFormat?.knownLimitations : compressionOptions.format === 'zip' ? '兼容性较好，适合分享；加密和编码方式会影响其他软件的支持。' : compressionOptions.format === '7z' ? '压缩率通常较高，适合归档。' : selectedFormat?.singleFileOnly ? '仅支持单个文件；多个文件或目录请使用 TAR 组合或 ZIP、7Z。' : '按用途选择归档格式；可用能力以当前引擎和任务设置为准。' }}</HelpHint></div>
         <ThemedSelect v-model="compressionOptions.format" floating aria-label="目标格式" test-id="compression-format-select"
           :options="compressionFormats.map(fmt => ({ value: fmt.value, label: fmt.name, disabled: isFormatDisabled(fmt), detail: fmt.singleFileOnly ? appStore.t('preset.single_file_only') : undefined }))" />
         <ZipMethodField v-model="compressionOptions.zipMethod" :format="compressionOptions.format" test-id="compression-zip-method" />
@@ -529,7 +529,7 @@ const closeVaultPasswordsAfterFocus = () => {
         <b>MiB</b>
       </label>
       <span v-else-if="canCreateSplitArchive" class="split-settings-state">关闭</span>
-      <p v-if="compressionOptions.format === 'lzma' && compressionOptions.splitArchive" class="w-full text-xs leading-relaxed text-muted" data-testid="lzma-volume-hint">将生成 .lzma.001、.002 等数字分卷。请把全部卷放在同一目录；其他软件如不能打开分卷，可按序合并后打开完整 .lzma 文件。</p>
+      <p v-if="['lzma', 'tar.lzma'].includes(compressionOptions.format) && compressionOptions.splitArchive" class="w-full text-xs leading-relaxed text-muted" data-testid="lzma-volume-hint">将生成 .{{ compressionOptions.format }}.001、.002 等数字分卷。请把全部卷放在同一目录；其他软件如不能打开分卷，可按序合并后打开完整 .{{ compressionOptions.format }} 文件。</p>
       <p v-if="['lz', 'tar.lz'].includes(compressionOptions.format) && compressionOptions.splitArchive" class="w-full text-xs leading-relaxed text-muted" data-testid="lzip-volume-hint">数字切卷将生成 .lz.001、.002 等文件，解压时需将全部卷放在同一目录。这与 LZIP 原生成员不同；分享给其他软件时，请先按序合并成完整文件。</p>
       <p v-if="compressionOptions.format.endsWith('.aes')" class="w-full text-xs leading-relaxed text-muted" data-testid="aes-volume-hint">Long 自有加密格式，接收方请使用 Long解压。分卷解压需把全部 .aes.001、.002 等文件放在同一目录。</p>
       <div v-if="compressionOptions.splitArchive && ['zip', 'zipx'].includes(compressionOptions.format)" class="zip-split-kind">

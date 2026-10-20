@@ -8,6 +8,8 @@ use tauri::Window;
 
 #[derive(Clone, Copy)]
 pub(crate) enum AesCompressionKind {
+    Lzma,
+    TarLzma,
     Lz4,
     Brotli,
     Lzip,
@@ -28,6 +30,8 @@ pub(crate) enum AesCompressionKind {
 impl AesCompressionKind {
     fn label(self) -> &'static str {
         match self {
+            Self::Lzma => "LZMA.AES",
+            Self::TarLzma => "TAR.LZMA.AES",
             Self::Lz4 => "LZ4.AES",
             Self::Brotli => "BR.AES",
             Self::Lzip => "LZIP.AES",
@@ -48,6 +52,8 @@ impl AesCompressionKind {
 
     fn temporary_extension(self) -> Option<&'static str> {
         match self {
+            Self::Lzma => Some("lzma"),
+            Self::TarLzma => Some("tar.lzma"),
             Self::Lz4 => Some("lz4"),
             Self::Brotli => Some("br"),
             Self::Lzip => Some("lz"),
@@ -243,7 +249,7 @@ pub(crate) fn compress<R: CompressionRuntime + Sync>(
                 &temporary_output,
                 plain_options,
             )?,
-            codec @ (AesCompressionKind::Lz4 | AesCompressionKind::Brotli | AesCompressionKind::Lzip
+            codec @ (AesCompressionKind::Lzma | AesCompressionKind::TarLzma | AesCompressionKind::Lz4 | AesCompressionKind::Brotli | AesCompressionKind::Lzip
                 | AesCompressionKind::TarLz4 | AesCompressionKind::TarBrotli | AesCompressionKind::TarLzip) => {
                 crate::services::codec_stream::compress(runtime, window, task_id, sources,
                     &temporary_output, plain_options, codec.temporary_extension().expect("codec extension"))?;

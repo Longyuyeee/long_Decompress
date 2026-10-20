@@ -129,9 +129,9 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 
 | 能力 | 主要格式与说明 |
 | --- | --- |
-| 创建归档 | ZIP（Deflate / Zstandard）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式与原生密码）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM |
+| 创建归档 | ZIP（Deflate / Zstandard）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式与原生密码）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM |
 | 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式/日志式当前文件）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
-| 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷；十五种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
+| 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM、ZPAQ（含输出与改密）；密码和分卷随目标格式提供，ZPAQ 不提供固定大小分卷 |
 | 清单校验 | SFV/MD5/SHA256 逐文件状态与原因、待补列表、按需复查；匹配表示与清单一致 |
 | 内部预览 | ZIP/TAR 系列及普通 GZIP/BZIP2/XZ/Zstandard 流中的受支持图片与文本；预览超出读取范围时可先提取后打开 |
@@ -145,7 +145,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 <summary><strong>更多格式与使用范围</strong></summary>
 
 - 还可读取已支持的应用包、传统归档、文件系统与安装容器，例如 APK、APPX、JAR、DEB、RPM、MSI、LZH、CPIO、XAR、APFS、EXT、HFS/HFSX。具体能力以应用的实际检测和 [格式支持说明](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)为准。
-- ZIP 默认保留 `.zip.001` 数字切卷，可主动选择标准 `.z01/…/.zip`（入口为 `.zip`）；7Z 创建 `.7z.001`，RAR 创建 `.partN.rar`。解压时把整组放在同一目录。普通 TAR/流格式数字切卷的外部兼容能力不同；它们使用密码时可改用 7Z 容器，`.aes` 属于 Long 自有容器，十五种格式可创建密码数字卷；整组同目录可从任意卷打开，接收方请使用 Long解压。
+- ZIP 默认保留 `.zip.001` 数字切卷，可主动选择标准 `.z01/…/.zip`（入口为 `.zip`）；7Z 创建 `.7z.001`，RAR 创建 `.partN.rar`。解压时把整组放在同一目录。普通 TAR/流格式数字切卷的外部兼容能力不同；密码需求可选择对应 `.aes` 组合或 7Z；普通 TAR.LZMA 无原生密码。`.aes` 属于 Long 自有容器，十七种格式可创建密码数字卷；整组同目录可从任意卷打开，接收方请使用 Long解压。
 - ZIP/ZIPX 已验证常用 Store、Deflate、Deflate64、BZip2、LZMA、XZ、PPMd 及部分 Zstandard 读取组合；不等于支持所有 ZIPX 专有算法。
 - 创建 ZIP 时可选 Zstandard，创建 ZIPX 时使用 XZ；密码、转换与配置保存保持所选方法。ZIP Zstandard 支持数字卷与标准卷，ZIPX 暂只提供数字卷；接收方需要支持对应压缩方法。
 - 可直接浏览、解压和转换 ZIP/7Z/RAR 自解压 EXE；好压论坛 ZIP 分卷按整组读取，支持已核对的明文与 ZipCrypto 密码样本。收到多个分卷时，把整组放在同一目录即可。具体格式范围见[支持说明](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)。
@@ -236,7 +236,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.23 · LZMA 数字分卷**。LZMA 单文件支持数字切卷创建，从任意成员浏览、有界预览、检查和提取；密码 ZIP 与单文件 LZMA 分卷转换、补卷新任务及结果接通。保留单条展开、多选弹窗、自然继承、等宽与窄窗布局。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.23.md) · [范围与记录](long-compress-assistant/docs/LZMA_VOLUMES_FREEZE_1.5.23.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.23)。下一步按[既定路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.23_TO_1.5.25.md)推进 v1.5.24 TAR.LZMA 与 Long AES 组合，再 v1.5.25 结果生成校验清单，均尚未开发。
+**v1.5.24 · 多文件 LZMA 与密码组合**。新增 TAR.LZMA、LZMA.AES 和 TAR.LZMA.AES，接通数字分卷、认证后浏览/预览、检查、所选/整包提取及密码 ZIP 互转；多选弹窗保留各条密码与分卷，单条展开和等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.24.md) · [范围与记录](long-compress-assistant/docs/TAR_LZMA_AES_FREEZE_1.5.24.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.24)。下一步按[既定路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.23_TO_1.5.25.md)推进 v1.5.25 结果生成相对路径校验清单，尚未开发。
+
+**v1.5.23 · LZMA 数字分卷**。LZMA 单文件支持数字切卷创建，从任意成员浏览、有界预览、检查和提取；密码 ZIP 与单文件 LZMA 分卷转换、补卷新任务及结果接通。保留单条展开、多选弹窗、自然继承、等宽与窄窗布局。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.23.md) · [范围与记录](long-compress-assistant/docs/LZMA_VOLUMES_FREEZE_1.5.23.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.23)。下一步按[既定路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.23_TO_1.5.25.md)推进 TAR.LZMA 与 Long AES 组合，已由 v1.5.24 接续；v1.5.25 结果生成校验清单尚未开发，当前进度以上方最新记录为准。
 
 **v1.5.22 · 校验进度与继续未完成项**。计算摘要与核对清单显示真实字节和当前文件，可停止后主动继续；完成观察留在工作区，中断项不计匹配，清单变化作废旧结果。保持原有交互和窄窗显示。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.22.md) · [范围与记录](long-compress-assistant/docs/CHECKSUM_PROGRESS_FREEZE_1.5.22.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.22)。后续 [v1.5.23～v1.5.25](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.23_TO_1.5.25.md) 已规划：LZMA 数字卷已由 v1.5.23 接续，TAR/Long AES 组合及结果生成校验清单尚未开发；当前进度以上方最新记录为准。
 

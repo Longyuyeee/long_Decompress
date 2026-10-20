@@ -271,7 +271,7 @@ fn browse_tar_family(
         )
         .map(Some);
     }
-    for codec in ["lz4", "br", "lz"] {
+    for codec in ["lz4", "br", "lz", "lzma"] {
         if super::compression_format::is_tar_wrapped_archive(path, &format!("tar.{codec}")) {
             let label = if codec == "lz" { "TAR.LZIP".to_string() } else { format!("TAR.{}", codec.to_uppercase()) };
             return browse_tar_reader(super::codec_stream::decoder(path, codec)?, &label, cancelled).map(Some);

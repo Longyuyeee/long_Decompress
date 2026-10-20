@@ -19,7 +19,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 工作区 | 用户可以做什么 |
 | --- | --- |
 | 解压中心 | 导入多包、配置目录与子文件夹、使用密码候选、处理文件冲突、查看阶段和结果 |
-| 压缩中心 | 文件/文件夹/组归档、ZIP/7Z/RAR 与十五种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码创建、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
+| 压缩中心 | 文件/文件夹/组归档、ZIP/7Z/RAR 与十七种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码创建、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
 | 特殊压缩 | JPEG/PNG/WebP 图片编码与缩放、视频压缩预设、PDF 分析与结构优化 |
 | 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、文本/图片预览与选择性解压；支持普通压缩流及自有 AES 密码卷组查看 |
 | 密码保险箱 | 本地加密保存常用解压密码，分类、搜索、导入导出与使用统计 |
@@ -92,7 +92,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.5.23 · LZMA 数字分卷**。LZMA 单文件支持数字切卷创建，从任意成员浏览、有界预览、检查和提取；密码 ZIP 与单文件 LZMA 分卷转换、补卷新任务及结果接通。保留单条展开、多选弹窗、自然继承、等宽与窄窗布局。[中文说明](docs/RELEASE_NOTES_1.5.23.md) · [范围与记录](docs/LZMA_VOLUMES_FREEZE_1.5.23.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.23)。下一步按[既定路线](docs/ARCHIVE_ROADMAP_1.5.23_TO_1.5.25.md)推进 v1.5.24 TAR.LZMA 与 Long AES 组合，再 v1.5.25 结果生成校验清单，均尚未开发。
+**v1.5.24 · 多文件 LZMA 与密码组合**。新增 TAR.LZMA、LZMA.AES 和 TAR.LZMA.AES，接通数字分卷、认证后浏览/预览、检查、所选/整包提取及密码 ZIP 互转；多选弹窗保留各条密码与分卷，单条展开和等宽/窄窗布局保持。[中文说明](docs/RELEASE_NOTES_1.5.24.md) · [范围与记录](docs/TAR_LZMA_AES_FREEZE_1.5.24.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.24)。下一步按[既定路线](docs/ARCHIVE_ROADMAP_1.5.23_TO_1.5.25.md)推进 v1.5.25 结果生成相对路径校验清单，尚未开发。
+
+**v1.5.23 · LZMA 数字分卷**。LZMA 单文件支持数字切卷创建，从任意成员浏览、有界预览、检查和提取；密码 ZIP 与单文件 LZMA 分卷转换、补卷新任务及结果接通。保留单条展开、多选弹窗、自然继承、等宽与窄窗布局。[中文说明](docs/RELEASE_NOTES_1.5.23.md) · [范围与记录](docs/LZMA_VOLUMES_FREEZE_1.5.23.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.23)。下一步按[既定路线](docs/ARCHIVE_ROADMAP_1.5.23_TO_1.5.25.md)推进 TAR.LZMA 与 Long AES 组合，已由 v1.5.24 接续；v1.5.25 结果生成校验清单尚未开发，当前进度以上方最新记录为准。
 
 **v1.5.22 · 校验进度与继续未完成项**。计算摘要与核对清单显示真实字节和当前文件，可停止后主动继续；完成观察留在工作区，中断项不计匹配，清单变化作废旧结果。保持原有交互和窄窗显示。[中文说明](docs/RELEASE_NOTES_1.5.22.md) · [范围与记录](docs/CHECKSUM_PROGRESS_FREEZE_1.5.22.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.22)。后续 [v1.5.23～v1.5.25](docs/ARCHIVE_ROADMAP_1.5.23_TO_1.5.25.md) 已规划：LZMA 数字卷已由 v1.5.23 接续，TAR/Long AES 组合及结果生成校验清单尚未开发；当前进度以上方最新记录为准。
 

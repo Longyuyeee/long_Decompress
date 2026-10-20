@@ -1,0 +1,52 @@
+vite v8.2.1 building client environment for production...
+[2K
+transforming...✓ 296 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                      0.55 kB │ gzip:   0.35 kB
+dist/assets/long-jieya-icon-BL7vCFYd.png            14.45 kB
+dist/assets/primeicons-C6QP2o4f.woff2               35.14 kB
+dist/assets/primeicons-MpK4pl85.ttf                 84.98 kB
+dist/assets/primeicons-WjwUDZjB.woff                85.05 kB
+dist/assets/primeicons-DMOk5skT.eot                 85.15 kB
+dist/assets/primeicons-Dr5RGzOO.svg                342.52 kB │ gzip: 108.35 kB
+dist/assets/EnhancedFileDropzone-BZuhFozL.css        1.25 kB │ gzip:   0.53 kB
+dist/assets/BatchConfigBar-DXQ6pnq9.css              4.84 kB │ gzip:   1.24 kB
+dist/assets/HistoryView-C6iOyCXO.css                 6.77 kB │ gzip:   1.57 kB
+dist/assets/SettingsView-DYSf715s.css                8.72 kB │ gzip:   1.80 kB
+dist/assets/DecompressView-Ue4ZP628.css             13.25 kB │ gzip:   3.07 kB
+dist/assets/CompressionSettingsPanel-our4723y.css   13.77 kB │ gzip:   2.76 kB
+dist/assets/CompressionView-DcEVeBwZ.css            14.02 kB │ gzip:   2.86 kB
+dist/assets/PasswordVaultView-Ce8DUtpP.css          17.02 kB │ gzip:   3.42 kB
+dist/assets/FileIntegrityView-DEOU16ho.css          21.96 kB │ gzip:   3.77 kB
+dist/assets/FileBrowserView-y3wH6mxr.css            34.23 kB │ gzip:   5.56 kB
+dist/assets/SpecialCompressionView-CcnVPIV-.css     37.56 kB │ gzip:   5.73 kB
+dist/assets/index-BNQpvg2y.css                     109.66 kB │ gzip:  20.57 kB
+dist/assets/useArchiveEngine-pCRpcq9E.js             0.92 kB │ gzip:   0.49 kB
+dist/assets/pdfOptimizationWorkspace-C_4jShJH.js     1.28 kB │ gzip:   0.88 kB
+dist/assets/password-BNoIf7q_.js                     5.13 kB │ gzip:   2.07 kB
+dist/assets/CompletedExtractionOutput-cIVNMMN4.js    5.22 kB │ gzip:   2.64 kB
+dist/assets/EnhancedFileDropzone-CKDGjFEY.js         5.55 kB │ gzip:   2.40 kB
+dist/assets/taskFailure-ClweQb3I.js                 10.19 kB │ gzip:   4.53 kB
+dist/assets/BatchConfigBar-DihoDIcy.js              19.48 kB │ gzip:   6.97 kB
+dist/assets/SettingsView-Ch8ifqeZ.js                40.11 kB │ gzip:   9.53 kB
+dist/assets/HistoryView-DfYKuJC1.js                 45.07 kB │ gzip:  14.85 kB
+dist/assets/PasswordVaultView-BFITxGB3.js           47.94 kB │ gzip:  12.29 kB
+dist/assets/CompressionView-DqZ2vbS9.js             53.82 kB │ gzip:  15.44 kB
+dist/assets/SpecialCompressionView-BQlsJc96.js      57.35 kB │ gzip:  17.34 kB
+dist/assets/FileBrowserView-5QLUXUfd.js             63.96 kB │ gzip:  20.73 kB
+dist/assets/FileIntegrityView-glMNrR-J.js           69.50 kB │ gzip:  22.06 kB
+dist/assets/DecompressView-f4m3xcyb.js              75.47 kB │ gzip:  22.90 kB
+dist/assets/CompressionSettingsPanel-jiOpROiF.js    88.75 kB │ gzip:  24.00 kB
+dist/assets/useTauriCommands-Dqko37tF.js           209.81 kB │ gzip:  70.05 kB
+dist/assets/index-Omgy-urJ.js                      219.63 kB │ gzip:  67.79 kB
+
+✓ built in 3.89s
+[PLUGIN_TIMINGS] Your build spent 78% of 3.9s inside plugin hooks (3.0s).
+Measured inside the callback, so queue time is excluded and time the callback itself awaited is not:
+  - vite:vue transform (40%, 1.6s, 194 calls)
+Those rows are 40% of the build; the rest of the 78% is below.
+Not measurable — 1 hook whose calls overlap, so elapsed time covers work other calls were doing. Profile with `node --cpu-prof`:
+  - vite:css transform (60 calls)
+See https://rolldown.rs/reference/InputOptions.checks#plugintimings for more details.
+

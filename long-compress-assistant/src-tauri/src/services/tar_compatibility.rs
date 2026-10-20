@@ -43,6 +43,7 @@ pub(crate) fn integrity_route(
     matches!(
         (route, format),
         (Route::TarGzip, F::Gzip)
+            | (Route::TarLzma, F::Lzma)
             | (Route::TarBzip2, F::Bzip2)
             | (Route::TarXz, F::Xz)
             | (Route::TarZstd, F::Zstd)
@@ -366,6 +367,7 @@ pub(crate) fn plan(
             Route::TarLz4 => super::codec_stream::decoder(path, "lz4")?,
             Route::TarBrotli => super::codec_stream::decoder(path, "br")?,
             Route::TarLzip => super::codec_stream::decoder(path, "lz")?,
+            Route::TarLzma => super::codec_stream::decoder(path, "lzma")?,
             _ => anyhow::bail!("Not a native TAR route"),
         };
         struct Cancellable<'a> {

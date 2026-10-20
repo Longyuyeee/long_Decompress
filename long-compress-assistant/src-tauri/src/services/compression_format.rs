@@ -21,6 +21,9 @@ pub struct CompressionFormatCapability {
 }
 
 pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
+    CompressionFormatCapability { format: "tar.lzma.aes", extensions: &["tar.lzma.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "lzma.aes", extensions: &["lzma.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: true, supports_split: true, requires_7za: false, requires_winrar: false },
+    CompressionFormatCapability { format: "tar.lzma", extensions: &["tar.lzma"], can_compress: true, can_extract: true, supports_password_compress: false, supports_password_extract: false, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "zpaq", extensions: &["zpaq"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: false, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "tar.lz4.aes", extensions: &["tar.lz4.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "tar.br.aes", extensions: &["tar.br.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
@@ -319,6 +322,9 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum CompressionRoute {
+    LzmaAes,
+    TarLzmaAes,
+    TarLzma,
     Zpaq,
     Lz4Aes,
     BrotliAes,
@@ -410,6 +416,8 @@ pub fn has_native_password_container(format: &str) -> bool {
     matches!(
         normalize_compression_format(format).as_str(),
         "zip"
+            | "lzma.aes"
+            | "tar.lzma.aes"
             | "zpaq"
             | "zipx"
             | "7z"
@@ -497,6 +505,9 @@ pub fn validate_compression_request(
 
 pub(crate) fn compression_route(format: &str) -> Option<CompressionRoute> {
     match normalize_compression_format(format).as_str() {
+        "lzma.aes" => Some(CompressionRoute::LzmaAes),
+        "tar.lzma.aes" => Some(CompressionRoute::TarLzmaAes),
+        "tar.lzma" => Some(CompressionRoute::TarLzma),
         "zpaq" => Some(CompressionRoute::Zpaq),
         "lz4.aes" => Some(CompressionRoute::Lz4Aes),
         "br.aes" => Some(CompressionRoute::BrotliAes),
@@ -547,6 +558,7 @@ pub fn is_tar_wrapped_archive(path: &Path, format: &str) -> bool {
         if number.len() >= 3 && number.bytes().all(|byte| byte.is_ascii_digit()) { file_name = base.to_string(); }
     }
     let suffixes: &[&str] = match normalize_compression_format(format).as_str() {
+        "tar.lzma" => &[".tar.lzma"],
         "tar.gz" => &[".tar.gz", ".tgz", ".tpz"],
         "tar.bz2" => &[".tar.bz2", ".tbz", ".tbz2"],
         "tar.xz" => &[".tar.xz", ".txz"],

@@ -1,0 +1,4 @@
+*.txt -text
+*.bin -text
+*.aes -text
+*.lzma -text

@@ -152,3 +152,10 @@ it('lzma1523 keeps numeric splitting and the existing explicit 7Z password alter
   expect(effectiveFormatForPassword('lzma','secret')).toBe('7z')
   expect(isSingleFileStreamFormat('lzma')).toBe(true)
 })
+
+it.each(['tar.lzma','lzma.aes','tar.lzma.aes'])('lzma1524 keeps the requested format and numeric volumes: %s',format=>{
+  expect(supportsArchiveSplit(format)).toBe(true)
+  expect(effectiveFormatForPassword(format,'secret')).toBe(format)
+  expect(extensionForFormat(format,'secret')).toBe(format)
+  expect(isSingleFileStreamFormat(format)).toBe(format==='lzma.aes')
+})

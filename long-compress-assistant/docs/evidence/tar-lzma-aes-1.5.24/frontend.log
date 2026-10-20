@@ -1,0 +1,39 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ ❯ src/components/compression/__tests__/CompressionSettingsPanel.test.ts (38 tests | 3 failed | 35 skipped) 29ms
+   × lzma1524 opens inherited tar.lzma in place without detaching settings 22ms
+   × lzma1524 opens inherited lzma.aes in place without detaching settings 3ms
+   × lzma1524 opens inherited tar.lzma.aes in place without detaching settings 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/compression/__tests__/CompressionSettingsPanel.test.ts > lzma1524 opens inherited tar.lzma in place without detaching settings
+ FAIL  src/components/compression/__tests__/CompressionSettingsPanel.test.ts > lzma1524 opens inherited lzma.aes in place without detaching settings
+ FAIL  src/components/compression/__tests__/CompressionSettingsPanel.test.ts > lzma1524 opens inherited tar.lzma.aes in place without detaching settings
+TypeError: Cannot read properties of undefined (reading 'then')
+ ❯ loadSettingsFromStorage src/stores/app.ts:293:42
+    291|     // 如果 localStorage 为空，尝试从后端恢复
+    292|     if (!localStorage.getItem('app-settings')) {
+    293|       invoke<string>('load_app_settings').then(json => {
+       |                                          ^
+    294|         if (json && json !== '{}') {
+    295|           const parsed = JSON.parse(json)
+ ❯ src/stores/app.ts:332:3
+ ❯ node_modules/pinia/dist/pinia.mjs:1474:98
+ ❯ EffectScope.run node_modules/@vue/reactivity/dist/reactivity.cjs.js:96:16
+ ❯ node_modules/pinia/dist/pinia.mjs:1474:88
+ ❯ EffectScope.run node_modules/@vue/reactivity/dist/reactivity.cjs.js:96:16
+ ❯ node_modules/pinia/dist/pinia.mjs:1474:54
+ ❯ runWithContext node_modules/@vue/runtime-core/dist/runtime-core.cjs.js:4333:18
+ ❯ createSetupStore node_modules/pinia/dist/pinia.mjs:1474:24
+ ❯ useStore node_modules/pinia/dist/pinia.mjs:1743:17
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  3 failed | 11 passed | 119 skipped (133)
+   Start at  12:29:54
+   Duration  18.89s (transform 6.54s, setup 1.89s, import 8.49s, tests 254ms, environment 73.49s)
+

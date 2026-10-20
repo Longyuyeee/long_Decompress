@@ -458,3 +458,11 @@ it('lzma1523 offers single-file conversion and keeps splitting while clearing un
   expect(conversionFormats.some(f=>f.value==='lzma')).toBe(true)
   expect(store.items[0].settings).toMatchObject({format:'lzma',splitMiB:64,password:''})
 })
+
+it.each(['tar.lzma','lzma.aes','tar.lzma.aes'])('lzma1524 conversion retains splits and applicable target passwords: %s',format=>{
+  const store=useArchiveConversionStore();store.addSources(['C:/source.zip'])
+  store.updateItem(store.items[0].id,{password:'secret',sourcePassword:'old',splitMiB:64})
+  store.updateItem(store.items[0].id,{format})
+  expect(conversionFormats.some(f=>f.value===format)).toBe(true)
+  expect(store.items[0].settings).toMatchObject({format,splitMiB:64,sourcePassword:'old',password:format==='tar.lzma'?'':'secret'})
+})

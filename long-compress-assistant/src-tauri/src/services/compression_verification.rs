@@ -184,6 +184,8 @@ fn verify_wrapped_aes(
     })?;
     check_cancelled(is_cancelled)?;
     match route {
+        CompressionRoute::LzmaAes => drain_reader(super::codec_stream::decoder(&decrypted, "lzma")?, is_cancelled),
+        CompressionRoute::TarLzmaAes => verify_tar_reader(super::codec_stream::decoder(&decrypted, "lzma")?, is_cancelled),
         CompressionRoute::TarGzipAes => verify_tar_reader(
             super::codec_stream::decoder(&decrypted, "gz")?,
             is_cancelled,
@@ -246,6 +248,10 @@ pub(crate) fn verify_native_with_zip_encoding(
 ) -> Result<bool> {
     check_cancelled(&is_cancelled)?;
     match route {
+        CompressionRoute::TarLzma => {
+            verify_tar_reader(super::codec_stream::decoder(path, "lzma")?, &is_cancelled)?;
+            Ok(true)
+        }
         CompressionRoute::Lz4 | CompressionRoute::Brotli | CompressionRoute::TarLz4 | CompressionRoute::TarBrotli | CompressionRoute::Lzip | CompressionRoute::TarLzip => {
             let codec = match route { CompressionRoute::Lz4 | CompressionRoute::TarLz4 => "lz4", CompressionRoute::Lzip | CompressionRoute::TarLzip => "lz", _ => "br" };
             let reader = super::codec_stream::decoder(path, codec)?;
@@ -334,6 +340,8 @@ pub(crate) fn verify_native_with_zip_encoding(
             Ok(true)
         }
         CompressionRoute::TarGzipAes
+        | CompressionRoute::LzmaAes
+        | CompressionRoute::TarLzmaAes
         | CompressionRoute::TarBzip2Aes
         | CompressionRoute::TarXzAes
         | CompressionRoute::TarZstdAes

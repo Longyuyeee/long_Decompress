@@ -1,0 +1,49 @@
+   Compiling long-compress-assistant v1.5.24 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 21s
+     Running unittests src\lib.rs (target\debug\deps\long_compress_assistant-7dddcb279f1a0385.exe)
+
+running 6 tests
+test services::tar_lzma_1524_tests::lzma1524_history_analysis_and_engine_policy_expose_actual_formats ... ok
+test services::tar_lzma_1524_tests::lzma1524_requests_keep_format_password_and_single_file_boundaries ... ok
+
+thread 'services::tar_lzma_1524_tests::lzma1524_authenticated_tar_image_and_selected_extraction_keep_last_entry' (50784) panicked at src\services\tar_lzma_1524_tests.rs:95:69:
+called `Result::unwrap()` on an `Err` value: Os { code: 3, kind: NotFound, message: "系统找不到指定的路径。" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::tar_lzma_1524_tests::lzma1524_authenticated_tar_image_and_selected_extraction_keep_last_entry ... FAILED
+test services::tar_lzma_1524_tests::lzma1524_wrong_password_tail_auth_and_authenticated_bad_inner_keep_real_causes ... ok
+test services::tar_lzma_1524_tests::lzma1524_native_creation_streams_tar_and_preserves_content_and_empty_directory ... ok
+test services::tar_lzma_1524_tests::lzma1524_external_originals_all_members_browse_preview_and_public_check has been running for over 60 seconds
+test services::tar_lzma_1524_tests::lzma1524_external_originals_all_members_browse_preview_and_public_check ... ok
+
+failures:
+
+failures:
+    services::tar_lzma_1524_tests::lzma1524_authenticated_tar_image_and_selected_extraction_keep_last_entry
+
+test result: FAILED. 5 passed; 1 failed; 0 ignored; 0 measured; 800 filtered out; finished in 69.05s
+
+error: test failed, to rerun pass `--lib`

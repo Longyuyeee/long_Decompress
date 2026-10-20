@@ -1,0 +1,7 @@
+{
+  "recordedAt": "2026-10-20T12:48:03.2549469+08:00",
+  "sourceCommit": "31442f2",
+  "version": "1.5.24",
+  "sha256": "6e0b172313a5d42df11afbedd67625c12751efdd0fc3b795cfbcf708c5278d3c",
+  "outcome": "First native desktop TAR.LZMA extraction refused in resource planning; no passed desktop records; fixed by e761e66"
+}
