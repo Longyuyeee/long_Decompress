@@ -14,21 +14,23 @@ pub fn command_path() -> Option<PathBuf> {
     roots.into_iter().map(|p|p.join("wim-engine/wimlib-imagex.exe")).find(|p|p.is_file() && p.with_file_name("libwim-15.dll").is_file())
 }
 
-fn source_list(sources: &[String], preserve_paths: bool, cancelled: &AtomicBool) -> Result<Vec<u8>> {
+fn source_list(sources: &[String], preserve_paths: bool, cancelled: &AtomicBool) -> Result<(Vec<u8>,u64)> {
     let entries = super::compression_entries::collect(sources,preserve_paths,true)?;
     let mut list = String::from("\u{feff}");
+    let mut input_bytes=0u64;
     for entry in entries {
         ensure!(!cancelled.load(Ordering::Relaxed), CompressionError::Cancelled);
         // File targets create their parent directories. Only list genuinely empty
         // directories; recursively listing populated ones would recapture children.
         if entry.is_dir && std::fs::read_dir(&entry.path)?.next().transpose()?.is_some() { continue; }
+        if !entry.is_dir { input_bytes=input_bytes.checked_add(entry.path.metadata()?.len()).context("WIM 来源大小超过可统计范围")?; }
         let absolute = std::path::absolute(&entry.path)?;
         let source = absolute.to_str().context("WIM 来源路径无法表示为 Unicode")?;
         ensure!(!source.chars().chain(entry.archive_name.chars()).any(|c| matches!(c,'"'|'\r'|'\n'|'\0')), "WIM 来源路径含无法写入列表的字符");
         list.push_str(&format!("\"{source}\" \"/{}\"\n",entry.archive_name));
     }
     ensure!(list.len()>3,"没有可归档的普通文件或空目录");
-    Ok(list.into_bytes())
+    Ok((list.into_bytes(),input_bytes))
 }
 
 fn append_tail(tail: &mut Vec<u8>, bytes: &[u8]) {
@@ -45,13 +47,14 @@ fn progress(line: &[u8]) -> Option<f32> {
     (0.0..=100.0).contains(&percent).then_some(percent/100.0)
 }
 
-pub fn create(sources: &[String], output: &Path, preserve_paths: bool, cancelled: Arc<AtomicBool>, on_progress: impl Fn(f32)) -> Result<()> {
+pub fn create(sources: &[String], output: &Path, preserve_paths: bool, cancelled: Arc<AtomicBool>, on_progress: impl Fn(f32)) -> Result<u64> {
     ensure!(!cancelled.load(Ordering::Relaxed),CompressionError::Cancelled);
     ensure!(!output.exists(),"WIM 临时输出已存在，未覆盖旧文件");
     let tool = command_path().context("缺少随附的 WIM XPRESS 编码器，请修复安装，或选择仅存储方式")?;
     let temporary = tempfile::tempdir()?;
     let list = temporary.path().join("sources.txt");
-    std::fs::File::create(&list)?.write_all(&source_list(sources,preserve_paths,&cancelled)?)?;
+    let (list_bytes,input_bytes)=source_list(sources,preserve_paths,&cancelled)?;
+    std::fs::File::create(&list)?.write_all(&list_bytes)?;
     let config = temporary.path().join("capture.ini");
     std::fs::write(&config,b"[ExclusionList]\n")?;
     if let Some(parent)=output.parent() { std::fs::create_dir_all(parent)?; }
@@ -88,7 +91,7 @@ pub fn create(sources: &[String], output: &Path, preserve_paths: bool, cancelled
         ensure!(output.is_file(),"WIM 编码器未生成输出文件");Ok(())
     });
     if result.is_err() { let _=std::fs::remove_file(output); }
-    result
+    result.map(|_|input_bytes)
 }
 
 #[cfg(test)]

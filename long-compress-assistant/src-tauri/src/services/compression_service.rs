@@ -3562,9 +3562,11 @@ impl CompressionService {
         }
         if options.wim_method == crate::services::wim_writer::WimMethod::Xpress {
             self.emit_log(window, task_id, "使用 XPRESS 压缩创建 WIM", TaskLogSeverity::Info);
-            return crate::services::wim_writer::create(sources, Path::new(output), options.preserve_paths.unwrap_or(true), self.cancellation_flag.clone(), |progress| {
+            let input_bytes = crate::services::wim_writer::create(sources, Path::new(output), options.preserve_paths.unwrap_or(true), self.cancellation_flag.clone(), |progress| {
                 self.emit_progress(window, task_id, progress, None, 0, 0);
-            });
+            })?;
+            self.emit_progress(window, task_id, 0.99, None, input_bytes, input_bytes);
+            return Ok(());
         }
         if !crate::utils::archive_tools::archive_engine_can_create("wim") {
             return Err(CompressionError::CompressionFailed("The active archive engine cannot create WIM files.".to_string()).into());

@@ -18,7 +18,8 @@ fn independent_decode(wim:&Path,output:&Path){let out=crate::utils::process::com
 #[test]
 fn wim1531_true_xpress_resources_independent_complete_content_and_empty_directories(){
     let temp=tempfile::tempdir().unwrap();let source=seed(temp.path());let output=temp.path().join("新包.wim");let mut reported=Vec::new();
-    let progress=std::sync::Mutex::new(&mut reported);create(&[source.to_string_lossy().into_owned()],&output,true,flag(),|p|progress.lock().unwrap().push(p)).unwrap();
+    let progress=std::sync::Mutex::new(&mut reported);let input_bytes=create(&[source.to_string_lossy().into_owned()],&output,true,flag(),|p|progress.lock().unwrap().push(p)).unwrap();
+    assert_eq!(input_bytes,walkdir::WalkDir::new(&source).into_iter().map(|e|e.unwrap()).filter(|e|e.file_type().is_file()).map(|e|e.metadata().unwrap().len()).sum::<u64>());
     let data=fs::read(&output).unwrap();assert_eq!(&data[..8],b"MSWIM\0\0\0");assert_ne!(u32::from_le_bytes(data[16..20].try_into().unwrap())&0x20000,0);assert_eq!(u32::from_le_bytes(data[20..24].try_into().unwrap()),32768);
     let table=u64::from_le_bytes(data[56..64].try_into().unwrap())as usize;let size=u64::from_le_bytes(data[48..56].try_into().unwrap())&0x00ff_ffff_ffff_ffff;assert_eq!(data[55]&4,0);
     assert!((table..table+size as usize).step_by(50).any(|i|data[i+7]&4!=0&&u64::from_le_bytes(data[i..i+8].try_into().unwrap())&0x00ff_ffff_ffff_ffff < u64::from_le_bytes(data[i+16..i+24].try_into().unwrap())));
