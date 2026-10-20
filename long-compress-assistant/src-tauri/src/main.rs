@@ -85,6 +85,8 @@ fn instance_socket_name_value() -> String {
 
 fn parse_context_action(args: &[String]) -> Option<ContextAction> {
     let actions = [
+        ("--checksum-create", "context-checksum-create"),
+        ("--checksum-verify", "context-checksum-verify"),
         ("--extract-here", "context-extract-here"),
         ("--extract-to", "context-extract-to"),
         ("--quick-extract", "context-quick-extract"),
@@ -621,5 +623,19 @@ mod tests {
             "--quick-pack".to_string(),
             "archive".to_string(),
         ]));
+    }
+}
+
+#[cfg(test)]
+mod explorer_checksum_1528_tests {
+    use super::parse_context_action;
+    #[test]
+    fn explorer_checksum_1528_preserves_multiselect_and_chinese_paths() {
+        for (flag, action) in [("--checksum-create", "context-checksum-create"), ("--checksum-verify", "context-checksum-verify")] {
+            let args = vec!["app.exe", flag, r"C:\中文 空格\甲.sha256", r"D:\乙.md5", "%1", "--other"].into_iter().map(String::from).collect::<Vec<_>>();
+            let parsed = parse_context_action(&args).unwrap();
+            assert_eq!(parsed.action, action);
+            assert_eq!(parsed.files, vec![r"C:\中文 空格\甲.sha256", r"D:\乙.md5"]);
+        }
     }
 }

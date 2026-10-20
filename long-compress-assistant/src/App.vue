@@ -53,7 +53,7 @@ import { installDesktopE2EBridge } from '@/testing/desktopE2EBridge'
 import { appWindow, LogicalPosition, LogicalSize } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/tauri'
-import { createContextCompressionEntry, createQuickPackCandidate, createQuickPackPlan, groupContextActions, type ContextAction } from '@/utils/contextActions'
+import { isChecksumManifest, createContextCompressionEntry, createQuickPackCandidate, createQuickPackPlan, groupContextActions, type ContextAction } from '@/utils/contextActions'
 import { buildSafeTemplateDraftSettings, taskTemplateCandidatesToFiles } from '@/utils/taskTemplateDraft'
 
 const router = useRouter()
@@ -252,6 +252,18 @@ onMounted(async () => {
   const handleContextAction = async (request: ContextAction) => {
     const files = request.files.filter(file => file && !file.startsWith('%'))
     if (files.length === 0) return
+
+    if (request.action === 'context-checksum-create' || request.action === 'context-checksum-verify') {
+      const kind = request.action === 'context-checksum-create' ? 'calculate' : 'verify'
+      const metadata = await Promise.all(files.map(path => invoke<{ is_dir: boolean }>('get_file_info', { path }).catch(() => null)))
+      const accepted = files.filter((path, index) => !metadata[index]?.is_dir && (kind === 'calculate' || isChecksumManifest(path)))
+      if (accepted.length) {
+        appStore.enqueueExplorerChecksums({ kind, paths: accepted })
+        void router.push('/integrity')
+      }
+      if (accepted.length !== files.length) appStore.setError(kind === 'verify' ? '请选择 SFV、MD5 或 SHA256 清单文件；目录不会递归读取。' : '只带入所选文件；目录不会递归读取，请选择目录内的文件。')
+      return
+    }
 
     if (request.action === 'context-repair-archive') {
       appStore.openArchiveForDiagnosis({ path: files[0], paths: files })

@@ -18,6 +18,7 @@ import { useTaskStore } from '@/stores/task'
 import { generateId } from '@/utils'
 import { archiveInspectionMessageForDisplay } from '@/utils/taskFailure'
 import { parentDirectory } from '@/utils/resultLocation'
+import { uniqueContextPaths } from '@/utils/contextActions'
 import { checksumBaseDirectory } from '@/utils/checksumSources'
 import ZipPasswordEncodingField from '@/components/ui/ZipPasswordEncodingField.vue'
 import { zipPasswordEncodingArguments, zipPasswordEncodingLabel, type ZipPasswordEncoding } from '@/types/zipPassword'
@@ -189,6 +190,25 @@ function acceptChecksumSources() {
   checksumResults.value = []; expandedCalculation.value = []; showSources.value = false; resetExport()
   activeMode.value = 'calculate'; appStore.pendingChecksumSources = null
 }
+
+const integrityBusy = computed(() => isCalculating.value || isExporting.value || isVerifying.value || isDiagnosing.value || isRepairing.value || batchBusy.value)
+const explorerRequest = computed(() => appStore.pendingExplorerChecksums[0])
+async function acceptExplorerRequest(append = false) {
+  if (integrityBusy.value || !explorerRequest.value) return
+  const request = appStore.pendingExplorerChecksums.shift()!
+  if (request.kind === 'verify') {
+    activeMode.value = 'verify'
+    await nextTick()
+    verificationPanel.value?.stage(request.paths)
+  } else {
+    selectedFiles.value = uniqueContextPaths(append ? [...selectedFiles.value, ...request.paths] : request.paths)
+    sourceLabel.value = '资源管理器所选文件'; checksumResults.value = []; expandedCalculation.value = []; showSources.value = false; resetExport()
+    activeMode.value = 'calculate'
+  }
+}
+watch(() => appStore.pendingExplorerChecksums.length, () => {
+  if (explorerRequest.value && !integrityBusy.value && !selectedFiles.value.length && !appStore.pendingChecksumSources && activeMode.value === 'calculate' && !verificationPanel.value?.hasWorkspace()) void acceptExplorerRequest()
+}, { immediate: true })
 
 const clearResults = () => {
   archivePath.value = ''
@@ -484,6 +504,12 @@ onUnmounted(() => {
     <!-- 主内容区 -->
     <div class="integrity-scroll custom-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
       <div class="integrity-workspace">
+        <div v-if="explorerRequest" class="checksum-handoff" data-testid="checksum-explorer-pending">
+          <span>资源管理器送来 {{ explorerRequest.paths.length }} {{ explorerRequest.kind === 'verify' ? '份清单；当前结果会保留，使用后可逐份核对。' : '个文件；使用后替换计算列表，也可合并后重新计算。' }}</span>
+          <button class="integrity-secondary" :disabled="integrityBusy" data-testid="checksum-explorer-use" @click="acceptExplorerRequest()">{{ explorerRequest.kind === 'verify' ? '使用这些清单' : '使用这组文件' }}</button>
+          <button v-if="explorerRequest.kind === 'calculate' && selectedFiles.length" class="integrity-secondary" :disabled="integrityBusy" data-testid="checksum-explorer-append" @click="acceptExplorerRequest(true)">合并到当前列表</button>
+          <button class="integrity-secondary" @click="appStore.pendingExplorerChecksums.shift()">忽略这次请求</button>
+        </div>
         <div v-if="appStore.pendingChecksumSources" class="checksum-handoff" data-testid="checksum-pending-sources">
           <span>已收到 {{ appStore.pendingChecksumSources.paths.length }} 个结果文件。使用后会替换当前计算列表。</span>
           <button class="integrity-secondary" :disabled="isCalculating || isExporting || isVerifying || isDiagnosing || isRepairing || batchBusy" @click="acceptChecksumSources">使用这组文件</button>

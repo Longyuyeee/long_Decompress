@@ -8,8 +8,14 @@ import { useTauriCommands } from '@/composables/useTauriCommands'
 import { parentDirectory } from '@/utils/resultLocation'
 import { isDecompressArchivePath, isPotentialSplitArchivePath, isPotentialSfxPath } from '@/utils/compressionFormat'
 import { checksumPendingList, checksumProblem, checksumUnfinished, checksumStatusLabels, mergeChecksumVerification } from '@/utils/checksumVerification'
+import { uniqueContextPaths } from '@/utils/contextActions'
 import type { ChecksumVerificationReport } from '@/types/checksum'
 
+const stagedManifests = ref<string[]>([]), stagedPath = ref('')
+function stage(paths: string[]) {
+  stagedManifests.value = uniqueContextPaths([...stagedManifests.value, ...paths])
+  if (!stagedPath.value) stagedPath.value = stagedManifests.value[0] || ''
+}
 const emit = defineEmits<{ busy: [value: boolean]; diagnose: [path: string]; tasks: [] }>()
 const app = useAppStore(), commands = useTauriCommands()
 const { progress, stopping, run, stop } = useChecksumOperation()
@@ -72,11 +78,17 @@ async function locate(path: string) {
   try { await commands.invoke('open_in_explorer', { path: parentDirectory(path) }) }
   catch (cause) { app.setError(`打开目录失败：${String(cause)}`) }
 }
-defineExpose({ verify })
+defineExpose({ verify, stage, hasWorkspace: () => !!report.value || stagedManifests.value.length > 0 })
 </script>
 
 <template>
   <div class="checksum-verification" data-testid="checksum-verification" :aria-busy="busy">
+    <section v-if="stagedManifests.length" class="checksum-panel" data-testid="checksum-explorer-manifests">
+      <h2 class="text-sm font-bold text-content">从资源管理器收到 {{ stagedManifests.length }} 份校验清单</h2>
+      <p class="checksum-note">选择一份后主动开始核对。其余清单保留在这里，打开入口不会自动读取文件。</p>
+      <label class="checksum-staged-label">本次清单<select v-model="stagedPath" :disabled="busy" data-testid="checksum-staged-path"><option v-for="path in stagedManifests" :key="path" :value="path">{{ path }}</option></select></label>
+      <div class="checksum-actions"><button :disabled="busy || !stagedPath" data-testid="checksum-staged-start" @click="verify(stagedPath)"><i class="pi pi-play"></i>开始核对这份清单</button></div>
+    </section>
     <section class="checksum-panel">
       <button class="checksum-picker" :disabled="busy" data-testid="checksum-choose" @click="choose">
         <i class="pi pi-check-circle picker-icon"></i>
@@ -136,6 +148,8 @@ defineExpose({ verify })
 </template>
 
 <style scoped>
+.checksum-staged-label { display:grid; min-width:0; gap:.4rem; color:var(--text-muted); font-size:.7rem; }
+.checksum-staged-label select { width:100%; min-width:0; padding:.65rem; border:1px solid var(--border-subtle); border-radius:.65rem; color:var(--text-content); background:var(--bg-input); text-overflow:ellipsis; }
 .checksum-verification { display:grid; min-width:0; gap:.85rem; }
 .checksum-panel { min-width:0; border:1px solid var(--border-subtle); border-radius:1rem; padding:.9rem; background:var(--bg-card); }
 button { transition:background-color .16s ease,border-color .16s ease; }

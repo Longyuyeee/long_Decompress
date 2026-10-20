@@ -199,6 +199,30 @@ fn verbs() -> Vec<VerbDef> {
     ]
 }
 
+#[cfg(target_os = "windows")]
+fn checksum_menu_entries(root: &str) -> Vec<(String, &'static str, &'static str)> {
+    let mut entries = vec![(format!(r"{}\*\shell\LongDecompressChecksumCreate", root),
+        "Long解压：生成校验清单…", "--checksum-create \"%1\"")];
+    for extension in [".sfv", ".md5", ".sha256"] {
+        entries.push((format!(r"{}\SystemFileAssociations\{}\shell\LongDecompressChecksumVerify", root, extension),
+            "Long解压：核对校验清单…", "--checksum-verify \"%1\""));
+    }
+    entries
+}
+
+#[cfg(target_os = "windows")]
+fn register_checksum_menu(hkcu: &RegKey, root: &str, app_path: &str) -> Result<()> {
+    for (path, label, cli) in checksum_menu_entries(root) {
+        reg_direct_shell_entry(hkcu, &path, label, cli, app_path)?;
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn checksum_menu_is_current(hkcu: &RegKey, root: &str, app_path: &str) -> bool {
+    checksum_menu_entries(root).iter().all(|(path, _, cli)| legacy_direct_entry_is_current(hkcu, path, cli, app_path))
+}
+
 /// 在 Windows 注册表中添加全部级联右键菜单
 #[cfg(target_os = "windows")]
 pub fn register_context_menu(app_path: &str) -> Result<()> {
@@ -249,6 +273,7 @@ pub fn register_context_menu(app_path: &str) -> Result<()> {
         register_legacy_menu(&hkcu, app_path)?;
     }
 
+    register_checksum_menu(&hkcu, r"Software\Classes", app_path)?;
     notify_shell_associations_changed();
     Ok(())
 }
@@ -575,6 +600,7 @@ fn unregister_native_menu(hkcu: &RegKey) -> Result<()> {
 
 #[cfg(target_os = "windows")]
 fn unregister_legacy_menu(hkcu: &RegKey) -> Result<()> {
+    for (path, _, _) in checksum_menu_entries(r"Software\Classes") { delete_tree_if_present(hkcu, &path)?; }
     for extension in recovery_extensions() {
         delete_tree_if_present(hkcu, &format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", extension))?;
     }
@@ -781,6 +807,7 @@ pub fn is_context_menu_registered() -> bool {
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let Ok(exe_path) = std::env::current_exe() else { return false };
     let exe_string = exe_path.to_string_lossy();
+    if !checksum_menu_is_current(&hkcu, r"Software\Classes", &exe_string) { return false; }
 
     if is_windows_11_or_newer() {
         let clsid_path = format!(r"Software\Classes\CLSID\{}", NATIVE_COMMAND_CLSID);
@@ -1338,5 +1365,40 @@ mod tests {
         assert!(IDENTITY_PACKAGE_BUILD_SCRIPT.contains("long_compress_context_menu_extract.msix"));
         assert!(IDENTITY_PACKAGE_BUILD_SCRIPT.contains("long_compress_context_menu_pack.msix"));
         assert!(super::context_menu_package_version().ends_with(".0"));
+    }
+}
+
+#[cfg(all(test, target_os = "windows"))]
+mod explorer_checksum_1528_tests {
+    use super::*;
+    #[test]
+    fn explorer_checksum_1528_registry_roundtrip() {
+        let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+        let root = format!(r"Software\LongDecompressTests\Checksum1528-{}", uuid::Uuid::new_v4());
+        struct Cleanup(String);
+        impl Drop for Cleanup { fn drop(&mut self) { let _ = RegKey::predef(HKEY_CURRENT_USER).delete_subkey_all(&self.0); } }
+        let _cleanup = Cleanup(root.clone());
+        let app = r"C:\中文 路径\Long解压.exe";
+        register_checksum_menu(&hkcu, &root, app).unwrap();
+        assert!(checksum_menu_is_current(&hkcu, &root, app));
+        let entries = checksum_menu_entries(&root);
+        assert_eq!(entries.len(), 4);
+        for (path, label, cli) in &entries {
+            let key = hkcu.open_subkey(path).unwrap();
+            assert_eq!(key.get_value::<String,_>("MUIVerb").unwrap(), *label);
+            assert_eq!(key.get_value::<String,_>("MultiSelectModel").unwrap(), "Document");
+            let command = key.open_subkey("command").unwrap().get_value::<String,_>("").unwrap();
+            assert_eq!(command, format!(r#""{}" {}"#, app, cli));
+            delete_tree_if_present(&hkcu, path).unwrap();
+        }
+        assert!(!checksum_menu_is_current(&hkcu, &root, app));
+        assert!(entries.iter().all(|(path,_,_)| hkcu.open_subkey(path).is_err()));
+    }
+    #[test]
+    fn explorer_checksum_1528_uninstaller_cleans_exact_entries() {
+        let nsis = include_str!("../../installer.nsi");
+        for (path,_,_) in checksum_menu_entries(r"Software\Classes") {
+            assert!(nsis.contains(&format!("DeleteRegKey HKCU \"{}\"", path)), "{}",path);
+        }
     }
 }

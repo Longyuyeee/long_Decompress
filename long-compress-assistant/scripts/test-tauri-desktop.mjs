@@ -76,6 +76,7 @@ import { runAes1521Gate } from './aes-1521-gate.mjs'
 import { runLzma1523Gate } from './lzma-1523-gate.mjs'
 import { runTarLzma1524Gate } from './tar-lzma-1524-gate.mjs'
 import { runResultChecksums1525Gate } from './result-checksums-1525-gate.mjs'
+import { prepareExplorerChecksum1528Startup, runExplorerChecksum1528Gate } from './explorer-checksums-1528-gate.mjs'
 import { runWimVolumes1527Gate } from './wim-volumes-1527-gate.mjs'
 import { runZpaqVolumes1526Gate } from './zpaq-volumes-1526-gate.mjs'
 import { runLzip1520Gate } from './lzip-1520-gate.mjs'
@@ -2283,6 +2284,7 @@ async function runArchiveFlowDesktopGate() {
   mkdirSync(fallbackOutput, { recursive: true })
   await callDesktopBridge('seedPasswordFallbackWorkspace', fallbackSource, fallbackOutput)
   await callDesktopBridge('queueDesktopConfirmations', [false])
+  if (process.argv.includes('--explorer-checksums-1528-only')) await driver.wait(async()=>(await driver.getCurrentUrl()).includes('#/integrity'),15000)
   let navigation = await driver.findElements(By.css('aside nav > button'))
   await navigation[1].click()
   await driver.wait(async () => (await driver.getCurrentUrl()).includes('#/compress'), 30_000)
@@ -4720,7 +4722,7 @@ try {
     autoStartRegistryOwnedByTest = true
   }
   mkdirSync(webviewUserDataDirectory, { recursive: true })
-  driver = await createDesktopSessionWithDriverFallback()
+  driver = await createDesktopSessionWithDriverFallback(process.argv.includes('--explorer-checksums-1528-only') ? prepareExplorerChecksum1528Startup(root) : [])
   await waitForDesktopReady()
 
   let navigation = await driver.findElements(By.css('aside nav > button'))
@@ -4739,9 +4741,9 @@ try {
     )
   }
   assert.equal(
-    await navigation[0].getAttribute('aria-current'),
+    await navigation[process.argv.includes('--explorer-checksums-1528-only') ? 5 : 0].getAttribute('aria-current'),
     'page',
-    'the decompression workspace must be selected by default',
+    'the expected startup workspace must be selected',
   )
 
   fixtureDirectory = mkdtempSync(path.join(tmpdir(), 'long-decompress-desktop-e2e-'))
@@ -4938,6 +4940,9 @@ try {
     completedSuccessfully = true
   } else if (process.argv.includes('--aes-1521-only')) {
     await runAes1521Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
+    completedSuccessfully = true
+  } else if (process.argv.includes('--explorer-checksums-1528-only')) {
+    await runExplorerChecksum1528Gate({driver,bridge:callDesktopBridge,waitForElement,artifactDirectory,application,root,forwardContextAction})
     completedSuccessfully = true
   } else if (process.argv.includes('--wim-volumes-1527-only')) {
     await runWimVolumes1527Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
