@@ -208,8 +208,13 @@ pub(crate) fn transfer_no_replace(source: &Path, target: &Path) -> Result<(), Pu
     #[cfg(windows)]
     let transfer = {
         use std::os::windows::ffi::OsStrExt;
-        let source_wide: Vec<u16> = source.as_os_str().encode_wide().chain(Some(0)).collect();
-        let target_wide: Vec<u16> = target.as_os_str().encode_wide().chain(Some(0)).collect();
+        // canonicalize supplies Windows' extended-length drive/UNC prefix. The
+        // staged name can exceed MAX_PATH even when the final name is short.
+        let source_path = source.canonicalize()?;
+        let parent = target.parent().filter(|path| !path.as_os_str().is_empty()).unwrap_or_else(|| Path::new("."));
+        let target_path = parent.canonicalize()?.join(target.file_name().ok_or_else(|| std::io::Error::new(std::io::ErrorKind::InvalidInput,"output filename is missing"))?);
+        let source_wide: Vec<u16> = source_path.as_os_str().encode_wide().chain(Some(0)).collect();
+        let target_wide: Vec<u16> = target_path.as_os_str().encode_wide().chain(Some(0)).collect();
         // Deliberately omit REPLACE_EXISTING; supports FAT/exFAT too.
         let moved = unsafe { windows_sys::Win32::Storage::FileSystem::MoveFileExW(source_wide.as_ptr(), target_wide.as_ptr(), 0) };
         if moved == 0 { Err(std::io::Error::last_os_error()) } else { Ok(()) }
@@ -398,4 +403,15 @@ mod tests {
         assert_eq!(std::fs::read(&neighbor).unwrap(), b"must survive");
         assert!(!final_output.exists());
     }
+}
+
+#[cfg(all(test,windows))]
+#[test]
+fn zip1534_long_numeric_volume_publication_moves_complete_set_and_preserves_existing_result() {
+    let temp=tempfile::tempdir().unwrap();let parent=temp.path().join("用户资料".repeat(20)).join("归档结果".repeat(20));std::fs::create_dir_all(&parent).unwrap();
+    let target=parent.join("result.zip");let staged=staged_output_path(&target,"archive-compression").unwrap();assert!(staged.to_string_lossy().len()>260);
+    for index in 1..=2 {std::fs::write(format!("{}.{index:03}",staged.display()),format!("part{index}")).unwrap();}
+    publish_verified_volumes(&staged,&target,||false).unwrap();
+    for index in 1..=2 {assert_eq!(std::fs::read(format!("{}.{index:03}",target.display())).unwrap(),format!("part{index}").as_bytes());}
+    let next=staged_output_path(&target,"archive-compression").unwrap();std::fs::write(format!("{}.001",next.display()),b"new").unwrap();assert!(publish_verified_volumes(&next,&target,||false).is_err());assert_eq!(std::fs::read(format!("{}.001",target.display())).unwrap(),b"part1");
 }
