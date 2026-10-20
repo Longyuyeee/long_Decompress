@@ -20,7 +20,7 @@ export const groupContextActions = (actions: ContextAction[]): ContextAction[] =
   })
   return Array.from(grouped, ([key, files]) => ({
     action: key.split('\u0000', 1)[0],
-    files: Array.from(files),
+    files: key.startsWith('context-checksum-') ? uniqueContextPaths(Array.from(files)) : Array.from(files),
   }))
 }
 
@@ -65,3 +65,14 @@ export const createContextCompressionEntry = (
   type: info?.is_dir ? 'folder' : 'file',
   isDirectory: info?.is_dir || false,
 })
+
+export type ExplorerChecksumRequest = { kind: 'calculate' | 'verify'; paths: string[] }
+export const uniqueContextPaths = (paths: string[]) => {
+  const unique = new Map<string, string>()
+  paths.filter(Boolean).forEach(path => {
+    const key = path.replace(/\\/g, '/').toLowerCase()
+    if (!unique.has(key)) unique.set(key, path)
+  })
+  return [...unique.values()]
+}
+export const isChecksumManifest = (path: string) => /\.(sfv|md5|sha256)$/i.test(path)

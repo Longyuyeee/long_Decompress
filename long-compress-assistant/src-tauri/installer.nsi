@@ -707,6 +707,10 @@ FunctionEnd
   context_menu_identity_removed:
 
   ; Remove classic cascade roots and direct high-frequency actions.
+  DeleteRegKey HKCU "Software\Classes\*\shell\LongDecompressChecksumCreate"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.sfv\shell\LongDecompressChecksumVerify"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.md5\shell\LongDecompressChecksumVerify"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.sha256\shell\LongDecompressChecksumVerify"
   DeleteRegKey HKCU "Software\Classes\*\shell\LongDecompress"
   DeleteRegKey HKCU "Software\Classes\*\shell\LongDecompressQuickExtract"
   DeleteRegKey HKCU "Software\Classes\*\shell\LongDecompressQuickPack"

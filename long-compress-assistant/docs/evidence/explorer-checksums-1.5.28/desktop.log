@@ -1,0 +1,26 @@
+[1792490953.692][WARNING]: Ignoring switch with invalid name: E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\explorer-checksums-1528\实际 文件-3cdff090-b6cd-4e90-9332-37c197dc01f9\甲\同名 文件.txt
+[1792490953.693][WARNING]: Ignoring switch with invalid name: E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\explorer-checksums-1528\实际 文件-3cdff090-b6cd-4e90-9332-37c197dc01f9\乙\同名 文件.txt
+[1792490953.693][WARNING]: Ignoring switch with invalid name: E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\explorer-checksums-1528\实际 文件-3cdff090-b6cd-4e90-9332-37c197dc01f9\甲\同名 文件.txt
+[1792490953.693][WARNING]: Ignoring switch with invalid name: E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\explorer-checksums-1528\实际 文件-3cdff090-b6cd-4e90-9332-37c197dc01f9\乙\同名 文件.txt
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: the expected startup workspace must be selected
+
+null !== 'page'
+
+    at file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:4743:10
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: null,
+  expected: 'page',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

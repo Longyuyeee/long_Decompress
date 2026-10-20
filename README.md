@@ -236,7 +236,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.27 · WIM 数字分卷**。按指定大小拆卷，从任意成员浏览多镜像目录、预览文本/图片、检查和提取；支持密码 ZIP 双向转换、补卷新任务和整组结果清单。新建 WIM 明确为存储与去重，停用无效强度选项；WIM 无原生密码，数字卷不是 SWM。保留单条展开、多选弹窗和等宽/窄窗布局。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.27.md) · [范围与记录](long-compress-assistant/docs/WIM_VOLUMES_FREEZE_1.5.27.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.27)。下一步按[既定路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.26_TO_1.5.28.md)推进 v1.5.28 资源管理器校验入口，尚未开发。
+**v1.5.28 · 资源管理器校验入口**。从经典右键带入文件生成清单，或带入 SFV/MD5/SHA256 逐份核对；确认后才读取，已有工作可保留、替换或合并。长路径优先显示清单名称，文件读取失败不再提示绿色成功。保留原有交互与窄窗滚动。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.28.md) · [范围与记录](long-compress-assistant/docs/EXPLORER_CHECKSUMS_FREEZE_1.5.28.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.28)。本轮三版按范围收口；[v1.5.29 原生 SWM 只读计划](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.29.md)已写入路线，尚未开发。
+
+**v1.5.27 · WIM 数字分卷**。按指定大小拆卷，从任意成员浏览多镜像目录、预览文本/图片、检查和提取；支持密码 ZIP 双向转换、补卷新任务和整组结果清单。新建 WIM 明确为存储与去重，停用无效强度选项；WIM 无原生密码，数字卷不是 SWM。保留单条展开、多选弹窗和等宽/窄窗布局。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.27.md) · [范围与记录](long-compress-assistant/docs/WIM_VOLUMES_FREEZE_1.5.27.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.27)。下一步按[既定路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.26_TO_1.5.28.md)推进 v1.5.28 资源管理器校验入口，已由上方版本接续。
 
 **v1.5.26 · ZPAQ 密码数字分卷**。按指定大小拆卷，从任意成员浏览、预览、检查和提取；密码 ZIP 双向转换、补卷新任务和整组结果清单接通。修复继承分卷与多选格式配置，单条展开、多选弹窗和等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.26.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_VOLUMES_FREEZE_1.5.26.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.26)。下一步按[既定路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.26_TO_1.5.28.md)推进 WIM 数字卷；已由 v1.5.27 接续，当前进度以上方最新记录为准。
 

@@ -18,6 +18,7 @@ import { useTaskStore } from '@/stores/task'
 import { generateId } from '@/utils'
 import { archiveInspectionMessageForDisplay } from '@/utils/taskFailure'
 import { parentDirectory } from '@/utils/resultLocation'
+import { uniqueContextPaths } from '@/utils/contextActions'
 import { checksumBaseDirectory } from '@/utils/checksumSources'
 import ZipPasswordEncodingField from '@/components/ui/ZipPasswordEncodingField.vue'
 import { zipPasswordEncodingArguments, zipPasswordEncodingLabel, type ZipPasswordEncoding } from '@/types/zipPassword'
@@ -123,7 +124,11 @@ const calculateChecksums = async (resume = false) => {
     accept(await runChecksum<ChecksumCalculationEntry[]>('calculate_checksum_batch', { paths, algorithm: selectedAlgorithm.value }, event => {
       if (event.calculationResults) accept(event.calculationResults)
     }))
-    if (calculationActive) appStore.setSuccess(calculationUnfinished.value.length ? '已停止，已完成的摘要已保留，可继续未完成项' : '本次文件已处理，请查看逐项结果')
+    if (calculationActive) {
+      const failed = checksumResults.value.filter(row => row.status === 'error').length
+      if (failed) appStore.setError(`${failed} 个文件未能计算，请查看逐项原因；已完成的摘要已保留。`)
+      else appStore.setSuccess(calculationUnfinished.value.length ? '已停止，已完成的摘要已保留，可继续未完成项' : '本次文件已处理，请查看逐项结果')
+    }
   } catch (error) { if (calculationActive) appStore.setError(`本次计算未完成：${String(error)}`) }
   finally { if (calculationActive) isCalculating.value = false }
 }
@@ -189,6 +194,25 @@ function acceptChecksumSources() {
   checksumResults.value = []; expandedCalculation.value = []; showSources.value = false; resetExport()
   activeMode.value = 'calculate'; appStore.pendingChecksumSources = null
 }
+
+const integrityBusy = computed(() => isCalculating.value || isExporting.value || isVerifying.value || isDiagnosing.value || isRepairing.value || batchBusy.value)
+const explorerRequest = computed(() => appStore.pendingExplorerChecksums[0])
+async function acceptExplorerRequest(append = false) {
+  if (integrityBusy.value || !explorerRequest.value) return
+  const request = appStore.pendingExplorerChecksums.shift()!
+  if (request.kind === 'verify') {
+    activeMode.value = 'verify'
+    await nextTick()
+    verificationPanel.value?.stage(request.paths)
+  } else {
+    selectedFiles.value = uniqueContextPaths(append ? [...selectedFiles.value, ...request.paths] : request.paths)
+    sourceLabel.value = '资源管理器所选文件'; checksumResults.value = []; expandedCalculation.value = []; showSources.value = false; resetExport()
+    activeMode.value = 'calculate'
+  }
+}
+watch(() => appStore.pendingExplorerChecksums.length, () => {
+  if (explorerRequest.value && !integrityBusy.value && !selectedFiles.value.length && !appStore.pendingChecksumSources && activeMode.value === 'calculate' && !verificationPanel.value?.hasWorkspace()) void acceptExplorerRequest()
+}, { immediate: true })
 
 const clearResults = () => {
   archivePath.value = ''
@@ -484,6 +508,12 @@ onUnmounted(() => {
     <!-- 主内容区 -->
     <div class="integrity-scroll custom-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
       <div class="integrity-workspace">
+        <div v-if="explorerRequest" class="checksum-handoff" data-testid="checksum-explorer-pending">
+          <span>资源管理器送来 {{ explorerRequest.paths.length }} {{ explorerRequest.kind === 'verify' ? '份清单；当前结果会保留，使用后可逐份核对。' : '个文件；使用后替换计算列表，也可合并后重新计算。' }}</span>
+          <button class="integrity-secondary" :disabled="integrityBusy" data-testid="checksum-explorer-use" @click="acceptExplorerRequest()">{{ explorerRequest.kind === 'verify' ? '使用这些清单' : '使用这组文件' }}</button>
+          <button v-if="explorerRequest.kind === 'calculate' && selectedFiles.length" class="integrity-secondary" :disabled="integrityBusy" data-testid="checksum-explorer-append" @click="acceptExplorerRequest(true)">合并到当前列表</button>
+          <button class="integrity-secondary" @click="appStore.pendingExplorerChecksums.shift()">忽略这次请求</button>
+        </div>
         <div v-if="appStore.pendingChecksumSources" class="checksum-handoff" data-testid="checksum-pending-sources">
           <span>已收到 {{ appStore.pendingChecksumSources.paths.length }} 个结果文件。使用后会替换当前计算列表。</span>
           <button class="integrity-secondary" :disabled="isCalculating || isExporting || isVerifying || isDiagnosing || isRepairing || batchBusy" @click="acceptChecksumSources">使用这组文件</button>
@@ -568,7 +598,7 @@ onUnmounted(() => {
             </button>
 
             <div v-if="selectedFiles.length" class="checksum-source-summary" data-testid="checksum-source-summary">
-              <p v-if="sourceLabel" class="break-words">来自结果：{{ sourceLabel }} · 已带入整组 {{ selectedFiles.length }} 个文件</p>
+              <p v-if="sourceLabel" class="break-words">来源：{{ sourceLabel }} · 已带入整组 {{ selectedFiles.length }} 个文件</p>
               <p>点击开始计算后读取文件；导出仅使用已完成摘要。清单请保存到这些文件的共同上级目录。</p>
               <button class="checksum-source-toggle" :aria-expanded="showSources" data-testid="checksum-source-toggle" @click="showSources = !showSources">{{ showSources ? '收起' : '查看' }}文件路径 <i :class="showSources ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i></button>
               <ul v-if="showSources" class="checksum-source-paths custom-scrollbar"><li v-for="path in selectedFiles" :key="path">{{ path }}</li></ul>

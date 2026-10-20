@@ -76,6 +76,7 @@ import { runAes1521Gate } from './aes-1521-gate.mjs'
 import { runLzma1523Gate } from './lzma-1523-gate.mjs'
 import { runTarLzma1524Gate } from './tar-lzma-1524-gate.mjs'
 import { runResultChecksums1525Gate } from './result-checksums-1525-gate.mjs'
+import { prepareExplorerChecksum1528Startup, runExplorerChecksum1528Gate } from './explorer-checksums-1528-gate.mjs'
 import { runWimVolumes1527Gate } from './wim-volumes-1527-gate.mjs'
 import { runZpaqVolumes1526Gate } from './zpaq-volumes-1526-gate.mjs'
 import { runLzip1520Gate } from './lzip-1520-gate.mjs'
@@ -4741,7 +4742,7 @@ try {
   assert.equal(
     await navigation[0].getAttribute('aria-current'),
     'page',
-    'the decompression workspace must be selected by default',
+    'the expected startup workspace must be selected',
   )
 
   fixtureDirectory = mkdtempSync(path.join(tmpdir(), 'long-decompress-desktop-e2e-'))
@@ -4938,6 +4939,11 @@ try {
     completedSuccessfully = true
   } else if (process.argv.includes('--aes-1521-only')) {
     await runAes1521Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
+    completedSuccessfully = true
+  } else if ((process.argv.includes('--explorer-checksums-1528-only') || process.argv.includes('--explorer-checksums-1528-polish-only'))) {
+    const startupArgs = prepareExplorerChecksum1528Startup(root)
+    forwardContextAction(startupArgs[0],startupArgs.slice(1))
+    await runExplorerChecksum1528Gate({driver,bridge:callDesktopBridge,waitForElement,artifactDirectory,application,root,forwardContextAction})
     completedSuccessfully = true
   } else if (process.argv.includes('--wim-volumes-1527-only')) {
     await runWimVolumes1527Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })

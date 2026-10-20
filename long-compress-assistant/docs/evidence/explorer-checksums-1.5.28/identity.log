@@ -1,0 +1,5 @@
+Media dependency gate passed (6 locked dependencies; real=false).
+ZPAQ 7.15 adapter, sources, license and resource inclusion verified
+ALZ adapter, decoder, native framing and dependency notices verified
+EGG adapter, decoder, native framing and dependency notices verified
+Release identity verified: v1.5.28 (long_compress_shell_extension_1_5_28.dll)

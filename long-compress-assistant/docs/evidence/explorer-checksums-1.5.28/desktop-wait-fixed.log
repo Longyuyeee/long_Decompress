@@ -1,0 +1,18 @@
+[1792491059.459][WARNING]: Ignoring switch with invalid name: E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\explorer-checksums-1528\实际 文件-3cdff090-b6cd-4e90-9332-37c197dc01f9\甲\同名 文件.txt
+[1792491059.459][WARNING]: Ignoring switch with invalid name: E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\explorer-checksums-1528\实际 文件-3cdff090-b6cd-4e90-9332-37c197dc01f9\乙\同名 文件.txt
+[1792491059.459][WARNING]: Ignoring switch with invalid name: E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\explorer-checksums-1528\实际 文件-3cdff090-b6cd-4e90-9332-37c197dc01f9\甲\同名 文件.txt
+[1792491059.459][WARNING]: Ignoring switch with invalid name: E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\explorer-checksums-1528\实际 文件-3cdff090-b6cd-4e90-9332-37c197dc01f9\乙\同名 文件.txt
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+TimeoutError: Wait timed out after 15002ms
+    at E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:929:22
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  remoteStacktrace: ''
+}
+
+Node.js v24.14.0

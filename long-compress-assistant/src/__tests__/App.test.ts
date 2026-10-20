@@ -82,6 +82,30 @@ const modalStub = {
 }
 
 describe('App orchestration', () => {
+  it('explorer checksum 1528 routes and groups multiple create/verify requests without starting work', async () => {
+    mocks.contextActions = [
+      {action:'context-checksum-create',files:['C:/中文 空格/甲.bin','C:/中文 空格/乙.bin']},
+      {action:'context-checksum-create',files:['c:\\中文 空格\\甲.bin']},
+      {action:'context-checksum-verify',files:['C:/清单.SHA256','D:/清单.md5']},
+    ]
+    const pinia=createPinia();setActivePinia(pinia)
+    const w=mount(App,{global:{plugins:[pinia],stubs:{MainLayout:true,ToastContainer:true,UpdateDialog:true,Modal:true}}});await flushPromises()
+    const queue=useAppStore().pendingExplorerChecksums
+    expect(queue).toHaveLength(2);expect(queue[0].kind).toBe('calculate');expect(queue[0].paths).toHaveLength(2)
+    expect(queue[1]).toEqual({kind:'verify',paths:['C:/清单.SHA256','D:/清单.md5']})
+    expect(mocks.routerPush).toHaveBeenCalledWith('/integrity')
+    expect(mocks.invoke.mock.calls.some(([cmd])=>['calculate_checksum_batch','verify_checksum_file'].includes(cmd))).toBe(false);w.unmount()
+  })
+  it('explorer checksum 1528 ignores directories and unrelated manifest inputs explicitly', async () => {
+    mocks.contextActions=[{action:'context-checksum-verify',files:['C:/目录.sha256','C:/说明.txt','C:/有效.sfv']}]
+    const previous=mocks.invoke.getMockImplementation()!
+    mocks.invoke.mockImplementation(async(cmd:string,args:any)=>cmd==='get_file_info'?{is_dir:args.path==='C:/目录.sha256'}:previous(cmd,args))
+    const pinia=createPinia();setActivePinia(pinia)
+    const w=mount(App,{global:{plugins:[pinia],stubs:{MainLayout:true,ToastContainer:true,UpdateDialog:true,Modal:true}}});await flushPromises()
+    expect(useAppStore().pendingExplorerChecksums).toEqual([{kind:'verify',paths:['C:/有效.sfv']}])
+    expect(useAppStore().error).toContain('目录不会递归');w.unmount()
+  })
+
   it('routes a recovered archive handoff to the browser without consuming its credentials', async () => {
     const pinia=createPinia(); setActivePinia(pinia)
     const wrapper=mount(App,{global:{plugins:[pinia],stubs:{MainLayout:true,ToastContainer:true,UpdateDialog:true,Modal:true}}})

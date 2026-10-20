@@ -1,0 +1,64 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ ❯ src/views/__tests__/ExplorerChecksums1528.test.ts (4 tests | 1 failed) 396ms
+     × preserves completed calculation until the user accepts incoming manifests 105ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/views/__tests__/ExplorerChecksums1528.test.ts > explorer checksum 1528 > preserves completed calculation until the user accepts incoming manifests
+Error: Unable to get [data-testid="checksum-source-summary"] within: <div data-v-4c00c2d2="" class="integrity-view flex h-full flex-col overflow-x-hidden transition-colors duration-700">
+  <!-- 顶部标题栏 -->
+  <header data-v-4c00c2d2="" class="integrity-header shrink-0">
+    <div data-v-4c00c2d2="">
+      <h1 data-v-4c00c2d2="">文件完整性校验</h1>
+      <p data-v-4c00c2d2="">计算与验证校验和，诊断归档损坏、缺卷与可恢复性</p>
+    </div>
+  </header><!-- 主内容区 -->
+  <div data-v-4c00c2d2="" class="integrity-scroll custom-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+    <div data-v-4c00c2d2="" class="integrity-workspace">
+      <!--v-if-->
+      <!--v-if-->
+      <!--v-if-->
+      <!-- 模式切换 -->
+      <nav data-v-4c00c2d2="" class="integrity-mode-switch" aria-label="文件完整性工具"><button data-v-4c00c2d2="" class=""><span data-v-4c00c2d2="" class="mode-icon"><i data-v-4c00c2d2="" class="pi pi-hashtag"></i></span><span data-v-4c00c2d2=""><strong data-v-4c00c2d2="">计算校验和</strong><small data-v-4c00c2d2="">生成文件指纹</small></span><i data-v-4c00c2d2="" class="pi pi-chevron-right mode-arrow"></i></button><button data-v-4c00c2d2="" data-testid="checksum-verify-mode" class="active"><span data-v-4c00c2d2="" class="mode-icon"><i data-v-4c00c2d2="" class="pi pi-check-circle"></i></span><span data-v-4c00c2d2=""><strong data-v-4c00c2d2="">验证校验文件</strong><small data-v-4c00c2d2="">核对校验文件</small></span><i data-v-4c00c2d2="" class="pi pi-chevron-right mode-arrow"></i></button><button data-v-4c00c2d2="" data-testid="archive-diagnostic-mode" class=""><span data-v-4c00c2d2="" class="mode-icon"><i data-v-4c00c2d2="" class="pi pi-search"></i></span><span data-v-4c00c2d2=""><strong data-v-4c00c2d2="">归档诊断</strong><small data-v-4c00c2d2="">识别损坏与缺卷</small></span><i data-v-4c00c2d2="" class="pi pi-chevron-right mode-arrow"></i></button></nav><!-- 计算模式 -->
+      <!--v-if-->
+      <div data-v-4c00c2d2="" class="integrity-single-column" style="">
+        <div data-v-9c9dcdf4="" data-v-4c00c2d2="" class="checksum-verification" data-testid="checksum-verification" aria-busy="false">
+          <section data-v-9c9dcdf4="" class="checksum-panel" data-testid="checksum-explorer-manifests">
+            <h2 data-v-9c9dcdf4="" class="text-sm font-bold text-content">从资源管理器收到 1 份校验清单</h2>
+            <p data-v-9c9dcdf4="" class="checksum-note">选择一份后主动开始核对。其余清单保留在这里，打开入口不会自动读取文件。</p><label data-v-9c9dcdf4="" class="checksum-staged-label">本次清单<select data-v-9c9dcdf4="" data-testid="checksum-staged-path">
+                <option data-v-9c9dcdf4="" value="C:/资料.sha256">C:/资料.sha256</option>
+              </select></label>
+            <div data-v-9c9dcdf4="" class="checksum-actions"><button data-v-9c9dcdf4="" data-testid="checksum-staged-start"><i data-v-9c9dcdf4="" class="pi pi-play"></i>开始核对这份清单</button></div>
+          </section>
+          <section data-v-9c9dcdf4="" class="checksum-panel"><button data-v-9c9dcdf4="" class="checksum-picker" data-testid="checksum-choose"><i data-v-9c9dcdf4="" class="pi pi-check-circle picker-icon"></i><span data-v-9c9dcdf4=""><strong data-v-9c9dcdf4="">选择校验清单</strong><small data-v-9c9dcdf4="">SFV · MD5 · SHA256　文件与清单放在同一目录</small></span><i data-v-9c9dcdf4="" class="pi pi-folder-open"></i></button>
+            <!--v-if-->
+            <!--v-if-->
+          </section>
+          <!--v-if-->
+        </div>
+      </div>
+      <!--v-if-->
+    </div>
+  </div>
+</div>
+<!--teleport start-->
+<!--teleport end-->
+ ❯ VueWrapper.get node_modules/@vue/test-utils/dist/vue-test-utils.cjs.js:7182:15
+ ❯ src/views/__tests__/ExplorerChecksums1528.test.ts:34:96
+     32|     expect(mocks.invoke.mock.calls.some(([cmd])=>cmd==='verify_checksu…
+     33|     await w.get('[data-testid="checksum-explorer-use"]').trigger('clic…
+     34|     expect(w.find('[data-testid="checksum-explorer-manifests"]').exist…
+       |                                                                                                ^
+     35|   })
+     36|   it('keeps busy work and merges later selections without duplicate pa…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 5 passed | 6 skipped (12)
+   Start at  18:01:45
+   Duration  8.26s (transform 5.44s, setup 551ms, import 8.23s, tests 479ms, environment 3.06s)
+

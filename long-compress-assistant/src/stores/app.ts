@@ -1,3 +1,4 @@
+import { uniqueContextPaths, type ExplorerChecksumRequest } from '@/utils/contextActions'
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
 import { translations } from '../i18n'
@@ -85,6 +86,7 @@ export const useAppStore = defineStore('app', () => {
   const pendingArchiveBrowserPath = ref('')
   const pendingArchiveBrowserOptions = ref<ArchiveReadOptions>({})
   const pendingArchiveDiagnosis = ref<ArchiveDiagnosisRequest | null>(null)
+  const pendingExplorerChecksums = ref<ExplorerChecksumRequest[]>([])
   const pendingChecksumSources = ref<{ paths: string[]; label: string } | null>(null)
   let errorTimer: ReturnType<typeof setTimeout> | null = null
   let successTimer: ReturnType<typeof setTimeout> | null = null
@@ -337,7 +339,7 @@ export const useAppStore = defineStore('app', () => {
 
   return {
     theme, language, accentColor, error, successMessage, errorMessage, decompressTasks, settings,
-    pendingContextActions, pendingArchiveBrowserPath, pendingArchiveDiagnosis, pendingChecksumSources,
+    pendingContextActions, pendingArchiveBrowserPath, pendingArchiveDiagnosis, pendingChecksumSources, pendingExplorerChecksums,
     recentFiles, addRecentFile,
     compressionPresets, saveCompressionPreset, deleteCompressionPreset,
     currentTheme, activeTasks, completedTasks, totalProgress, t,
@@ -356,6 +358,11 @@ export const useAppStore = defineStore('app', () => {
     takeContextActions: () => pendingContextActions.value.splice(0),
     openArchiveInBrowser: (path: string, options: ArchiveReadOptions = {}) => { pendingArchiveBrowserOptions.value = { ...options }; pendingArchiveBrowserPath.value = path },
     takeArchiveBrowserOptions: () => { const options = pendingArchiveBrowserOptions.value; pendingArchiveBrowserOptions.value = {}; return options },
+    enqueueExplorerChecksums: (request: ExplorerChecksumRequest) => {
+      const previous = pendingExplorerChecksums.value.at(-1)
+      if (previous?.kind === request.kind) previous.paths = uniqueContextPaths([...previous.paths, ...request.paths])
+      else pendingExplorerChecksums.value.push({ ...request, paths: uniqueContextPaths(request.paths) })
+    },
     openArchiveForDiagnosis: (request: ArchiveDiagnosisRequest) => { pendingArchiveDiagnosis.value = request },
     takeArchiveBrowserPath: () => {
       const path = pendingArchiveBrowserPath.value
