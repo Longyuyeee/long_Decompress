@@ -11,14 +11,14 @@ function change(event: Event) {
 </script>
 <template>
   <section class="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-subtle bg-input/40 px-3 py-2" data-testid="zpaq-snapshot-picker">
-    <label class="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-xs font-semibold text-content">
+    <label class="flex min-w-0 basis-full grow flex-wrap items-center gap-2 text-xs font-semibold text-content lg:basis-96">
       <i class="pi pi-history text-primary" aria-hidden="true"></i><span>历史快照</span>
       <select data-testid="zpaq-snapshot-select" :value="history.selected.version" :disabled="disabled" class="min-w-0 max-w-full flex-1 rounded-lg border border-subtle bg-card px-2 py-2 text-content outline-none focus:border-primary" @change="change">
         <option v-for="snapshot in [...history.snapshots].reverse()" :key="snapshot.version" :value="snapshot.version">{{ snapshot.version === history.snapshots.at(-1)?.version ? '最新 · ' : '' }}第 {{ snapshot.version }} 次更新 · {{ snapshotDate(snapshot.date) }}</option>
       </select>
     </label>
-    <span v-if="selected" class="text-xs text-muted">{{ selected.updates }} 项更新 · {{ selected.deletes }} 项删除</span>
-    <span class="text-xs text-muted">读取所选快照 · 原包不改动</span>
+    <span v-if="selected" class="text-xs text-muted">{{ snapshotDate(selected.date) }} · {{ selected.updates }} 项更新 · {{ selected.deletes }} 项删除</span>
+    <span class="text-xs text-muted">原包不改动</span>
     <slot />
   </section>
 </template>

@@ -981,6 +981,9 @@ const extractSelected = async () => {
 .browser-cancel-read { width: auto; display: inline-flex; align-items: center; justify-content: center; gap: .5rem; white-space: nowrap; }
 .browser-primary { min-height: 2.85rem; padding: 0 1.15rem; border-radius: .9rem; display: inline-flex; align-items: center; justify-content: center; gap: .55rem; color: white; font-size: .8rem; font-weight: 900; background: var(--dynamic-accent); box-shadow: 0 8px 24px color-mix(in srgb, var(--dynamic-accent) 25%, transparent); }
 .browser-primary:disabled, .browser-icon-button:disabled { opacity: .45; cursor: not-allowed; }
+.browser-secondary { min-height: 2rem; padding: .4rem .75rem; border: 1px solid var(--border-subtle); border-radius: .65rem; background: var(--bg-card); color: var(--dynamic-accent); font-size: .75rem; font-weight: 700; }
+.browser-secondary:hover { background: var(--bg-input); }
+.browser-secondary:disabled { opacity: .45; cursor: not-allowed; }
 .browser-empty { flex: 1 0 auto; padding-block: 1.5rem; overflow-wrap: anywhere; cursor: pointer; transition: border-color .2s ease, background .2s ease, transform .2s ease; }
 .browser-empty:hover { border-color: var(--dynamic-accent); background: color-mix(in srgb, var(--dynamic-accent) 5%, var(--bg-card)); transform: translateY(-1px); }
 .browser-drop-hint { display: inline-flex; margin-top: 1rem; padding: .45rem .75rem; border-radius: 999px; background: color-mix(in srgb, var(--dynamic-accent) 10%, transparent); color: var(--dynamic-accent); font-size: .7rem; font-weight: 800; }
