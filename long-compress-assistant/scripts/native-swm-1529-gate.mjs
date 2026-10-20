@@ -76,7 +76,7 @@ export async function runSwm1529Gate({driver,bridge,waitForElement,artifactDirec
     const sub=await waitForElement('[data-testid="retry-subfolder"]');if(await sub.isSelected())await click(sub);await sizes('missing-tail-recovery','[role="dialog"]');await click('[data-testid="create-retry-drafts"]');await driver.wait(async()=>(await(await waitForElement('[role="dialog"]')).getText()).includes('已创建新任务'),15000);await click(await driver.findElement(By.xpath('//*[@role="dialog"]//button[contains(.,"返回队列确认并启动")]')))
     const retry=(await bridge('extractionRecoveryTasks')).find(row=>row.retryOfTaskId===task.id);assert.equal(retry.status,'pending');assert.deepEqual(readdirSync(output),[]);await click('[data-testid="start-decompression-queue"]')
     const completed=await driver.wait(async()=>(await bridge('taskHistory')).find(row=>row.id===retry.id&&['completed','failed'].includes(row.status))||false,30000);assert.equal(completed.status,'completed',JSON.stringify(completed));assert.deepEqual(tree(output),original.expected);assert.deepEqual((await bridge('taskHistory')).find(row=>row.id===failed.id),failed)
-    await sizes('extraction-result','[data-testid="decompression-center"]');done('ui','missing-tail-recovery',{oldFailurePreserved:true,newPendingTask:true,independentHashes:true,record:completed})
+    await sizes('extraction-result','[data-testid="decompression-workspace-shell"]');done('ui','missing-tail-recovery',{oldFailurePreserved:true,newPendingTask:true,independentHashes:true,record:completed})
   }
   for(const target of ['zip','wim']){
     const kind='conversion-'+target;if(passed('ui',kind))continue
@@ -93,6 +93,19 @@ export async function runSwm1529Gate({driver,bridge,waitForElement,artifactDirec
       execFileSync(tool,['apply',output,'1',recovered,'--no-acls'],{windowsHide:true,timeout:30000,maxBuffer:4*1024*1024});assert.deepEqual(tree(recovered),original.expected);assert.ok(existsSync(path.join(recovered,'2/空目录')))
     }
     await sizes('conversion-'+target,item);done('ui',kind,{output,record,independentDecodedHashes:true,preservedImageDirectories:true});await click(await driver.findElement(By.xpath('//*[@role="dialog"]//button[normalize-space(.)="关闭"]')))
+  }
+  if(!passed('ui','grouped-import-inline-and-batch')){
+    await bridge('clearTasks');await click('[data-testid="nav-Decompress"]')
+    const all=state.native.filter(row=>row.kind==='original-none'||row.kind==='original-xpress').flatMap(row=>row.files)
+    await bridge('queueDesktopDialogSelections',[all]);await click('[data-testid="dropzone-file"]')
+    const tasks=await driver.wait(async()=>{const t=await bridge('extractionRecoveryTasks');return t.length===2?t:false},15000)
+    const row=await waitForElement('[data-testid="task-row"][data-task-id="'+tasks[0].id+'"]');if(await row.getAttribute('aria-expanded')!=='true')await click(row)
+    await sizes('inline-configuration','[data-testid="decompression-task-details"]')
+    const columns=await driver.executeScript(()=>[...document.querySelector('[data-testid="decompression-task-details"] .task-detail-layout').children].map(e=>e.getBoundingClientRect().width));assert.ok(Math.abs(columns[0]-columns[1])<=1,JSON.stringify(columns))
+    const wide=await driver.executeScript(()=>{const e=document.querySelector('[data-testid="decompression-execution-panel"]');return{scrollable:e.scrollHeight>=e.clientHeight,overflow:e.scrollWidth-e.clientWidth}});assert.ok(wide.scrollable&&wide.overflow<=1)
+    await click(row);for(const task of tasks)await click('[data-testid="task-row"][data-task-id="'+task.id+'"] [data-testid="task-select"]')
+    await click('[data-testid="batch-config-bar"] button[aria-haspopup="dialog"]');await sizes('batch-configuration','[role="dialog"]');await click('[role="dialog"] button[aria-label="关闭批量配置"]')
+    assert.ok((await bridge('extractionRecoveryTasks')).every(task=>task.status==='pending'));done('ui','grouped-import-inline-and-batch',{selectedMembers:all.length,groupedTasks:2,wideColumns:columns,noImplicitStart:true})
   }
   state.completedAt=new Date().toISOString();save();writeFileSync(path.join(artifactDirectory,'native-swm-1529-results.json'),JSON.stringify(state,null,2))
 }

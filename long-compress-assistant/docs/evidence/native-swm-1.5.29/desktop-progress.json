@@ -1,0 +1,616 @@
+{
+  "version": "1.5.29",
+  "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+  "sourceCommit": "c0db9dd8ad75e344523b2c73daf32c4d9c0494d3",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004",
+  "native": [
+    {
+      "kind": "menu-isolation",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "bothMutationsRejected": true
+    },
+    {
+      "kind": "original-none",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "files": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-none\\install.swm",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-none\\install2.swm",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-none\\install3.swm",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-none\\install4.swm",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-none\\install5.swm",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-none\\install6.swm"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-none-完整提取",
+      "allIndependentHashes": true,
+      "noJoinedWim": true
+    },
+    {
+      "kind": "original-xpress",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "files": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-xpress\\install.swm",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-xpress\\install2.swm",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-xpress\\install3.swm"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-xpress-完整提取",
+      "allIndependentHashes": true,
+      "noJoinedWim": true
+    },
+    {
+      "kind": "original-lzx",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "files": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install.swm",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install2.swm",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install3.swm",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install4.swm",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install5.swm",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install6.swm"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx-完整提取",
+      "allIndependentHashes": true,
+      "noJoinedWim": true
+    }
+  ],
+  "ui": [
+    {
+      "kind": "images-previews-selected-extraction",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "middleMember": true,
+      "image2Only": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\只取镜像二-f010681e-4e5d-493d-9189-2abb0ef34ca4",
+      "independentHash": true
+    },
+    {
+      "kind": "missing-tail-recovery",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "oldFailurePreserved": true,
+      "newPendingTask": true,
+      "independentHashes": true,
+      "record": {
+        "archiveOutput": null,
+        "completedAt": "2026-10-20T11:14:21.462Z",
+        "durationMs": 520,
+        "errorMessage": null,
+        "executionConfig": {
+          "extractToSubfolder": false,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\补齐后的原生镜像",
+          "schemaVersion": 1
+        },
+        "failure": null,
+        "format": "wim",
+        "id": "zi8dvd3zdmvgl5pnf",
+        "logs": [
+          {
+            "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 146.4 GiB，预计输出 9.00 MiB）",
+            "severity": "info",
+            "timestamp": "2026-10-20T11:14:21.015Z"
+          },
+          {
+            "message": "确定解压格式: Wim (后缀: swm)",
+            "severity": "info",
+            "timestamp": "2026-10-20T11:14:21.027458Z"
+          },
+          {
+            "message": "开始解压：install.swm",
+            "severity": "info",
+            "timestamp": "2026-10-20T11:14:21.101452900Z"
+          },
+          {
+            "message": "正在解压：archive: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install.swm",
+            "severity": "info",
+            "timestamp": "2026-10-20T11:14:21.156997400Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 9442200 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T11:14:21.458988700Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T11:14:21.459414300Z"
+          }
+        ],
+        "metrics": null,
+        "name": "install.swm",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\补齐后的原生镜像",
+        "processedBytes": 9442200,
+        "retryOfTaskId": "zqgk6lzijmvgl5nlz",
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install.swm"
+        ],
+        "startedAt": "2026-10-20T11:14:20.942Z",
+        "status": "completed",
+        "taskType": "decompression",
+        "totalBytes": 9442200,
+        "workloadKind": "archive"
+      }
+    },
+    {
+      "kind": "conversion-zip",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\原生SWM转换-zip-6d979174-c61a-42c3-8597-9fb4f069ab58.zip",
+      "record": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 4761553,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\原生SWM转换-zip-6d979174-c61a-42c3-8597-9fb4f069ab58.zip"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\原生SWM转换-zip-6d979174-c61a-42c3-8597-9fb4f069ab58.zip",
+          "split": false,
+          "totalBytes": 4761553
+        },
+        "completedAt": "2026-10-20T11:14:31.181Z",
+        "durationMs": 721,
+        "errorMessage": null,
+        "executionConfig": {
+          "encryptFilenames": false,
+          "format": "zip",
+          "kind": "archive-conversion",
+          "level": 6,
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\原生SWM转换-zip-6d979174-c61a-42c3-8597-9fb4f069ab58.zip",
+          "passwordRequired": true,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "schemaVersion": 1,
+          "splitSize": 0,
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        },
+        "failure": null,
+        "format": "wim",
+        "id": "conversion-d567071a-01a1-4a5f-90e7-4af944143049",
+        "logs": [
+          {
+            "message": "转换归档：先解压至临时目录，再校验并发布新包；保留原包。",
+            "severity": "info",
+            "timestamp": "2026-10-20T11:14:30.462053300Z"
+          },
+          {
+            "message": "确定解压格式: Wim (后缀: swm)",
+            "severity": "info",
+            "timestamp": "2026-10-20T11:14:30.473049700Z"
+          },
+          {
+            "message": "开始解压：install.swm",
+            "severity": "info",
+            "timestamp": "2026-10-20T11:14:30.546471Z"
+          },
+          {
+            "message": "正在解压：archive: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install.swm",
+            "severity": "info",
+            "timestamp": "2026-10-20T11:14:30.607583Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 9442200 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T11:14:30.902941600Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T11:14:30.902952Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\原生SWM转换-zip-6d979174-c61a-42c3-8597-9fb4f069ab58.zip",
+            "severity": "info",
+            "timestamp": "2026-10-20T11:14:30.911074700Z"
+          },
+          {
+            "message": "正在创建 ZIP · Deflate · 密码保护…",
+            "severity": "info",
+            "timestamp": "2026-10-20T11:14:30.911422800Z"
+          },
+          {
+            "message": "ZIP · Deflate 创建完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T11:14:31.088762800Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-20T11:14:31.089027300Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-20T11:14:31.164675900Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T11:14:31.165909600Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 9442200,
+          "media": null,
+          "outputBytes": 4761553,
+          "savingsRatio": 0.4957157230306497,
+          "schemaVersion": 1
+        },
+        "name": "归档转换 · install.swm",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\原生SWM转换-zip-6d979174-c61a-42c3-8597-9fb4f069ab58.zip",
+        "processedBytes": 9442200,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install.swm",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install2.swm",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install3.swm",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install4.swm",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install5.swm",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install6.swm"
+        ],
+        "startedAt": "2026-10-20T11:14:30.460Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 9442200,
+        "workloadKind": "archive"
+      },
+      "independentDecodedHashes": true,
+      "preservedImageDirectories": true
+    },
+    {
+      "kind": "conversion-wim",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\原生SWM转换-wim-3138839d-74fe-4425-90fe-ce7f94d3f41c.wim",
+      "record": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 9449805,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\原生SWM转换-wim-3138839d-74fe-4425-90fe-ce7f94d3f41c.wim"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\原生SWM转换-wim-3138839d-74fe-4425-90fe-ce7f94d3f41c.wim",
+          "split": false,
+          "totalBytes": 9449805
+        },
+        "completedAt": "2026-10-20T11:14:43.239Z",
+        "durationMs": 729,
+        "errorMessage": null,
+        "executionConfig": {
+          "encryptFilenames": false,
+          "format": "wim",
+          "kind": "archive-conversion",
+          "level": 6,
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\原生SWM转换-wim-3138839d-74fe-4425-90fe-ce7f94d3f41c.wim",
+          "passwordRequired": false,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "schemaVersion": 1,
+          "splitSize": 0,
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        },
+        "failure": null,
+        "format": "wim",
+        "id": "conversion-fde800f9-1a28-4b07-aec9-8c722a9f1d36",
+        "logs": [
+          {
+            "message": "转换归档：先解压至临时目录，再校验并发布新包；保留原包。",
+            "severity": "info",
+            "timestamp": "2026-10-20T11:14:42.512227Z"
+          },
+          {
+            "message": "确定解压格式: Wim (后缀: swm)",
+            "severity": "info",
+            "timestamp": "2026-10-20T11:14:42.523465900Z"
+          },
+          {
+            "message": "开始解压：install.swm",
+            "severity": "info",
+            "timestamp": "2026-10-20T11:14:42.609014700Z"
+          },
+          {
+            "message": "正在解压：archive: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install.swm",
+            "severity": "info",
+            "timestamp": "2026-10-20T11:14:42.657686500Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 9442200 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T11:14:42.935470200Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T11:14:42.935480100Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\原生SWM转换-wim-3138839d-74fe-4425-90fe-ce7f94d3f41c.wim",
+            "severity": "info",
+            "timestamp": "2026-10-20T11:14:42.943360200Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-20T11:14:43.111260Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-20T11:14:43.222582400Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T11:14:43.224688700Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 9442200,
+          "media": null,
+          "outputBytes": 9449805,
+          "savingsRatio": -0.0008054267014043337,
+          "schemaVersion": 1
+        },
+        "name": "归档转换 · install.swm",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\原生SWM转换-wim-3138839d-74fe-4425-90fe-ce7f94d3f41c.wim",
+        "processedBytes": 9442200,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install.swm",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install2.swm",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install3.swm",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install4.swm",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install5.swm",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\native-swm-1529\\ui-996125d9-936a-4f43-95b1-1afab752a004\\original-lzx\\install6.swm"
+        ],
+        "startedAt": "2026-10-20T11:14:42.510Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 9442200,
+        "workloadKind": "archive"
+      },
+      "independentDecodedHashes": true,
+      "preservedImageDirectories": true
+    },
+    {
+      "kind": "grouped-import-inline-and-batch",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "selectedMembers": 9,
+      "groupedTasks": 2,
+      "wideColumns": [
+        454.34375,
+        454.3515625
+      ],
+      "noImplicitStart": true
+    }
+  ],
+  "screenshots": [
+    "swm1529-text-preview-1100x700.png",
+    "swm1529-text-preview-760x520.png",
+    "swm1529-image-preview-1100x700.png",
+    "swm1529-image-preview-760x520.png",
+    "swm1529-selected-image-1100x700.png",
+    "swm1529-selected-image-760x520.png",
+    "swm1529-missing-tail-recovery-1100x700.png",
+    "swm1529-missing-tail-recovery-760x520.png",
+    "swm1529-extraction-result-1100x700.png",
+    "swm1529-extraction-result-760x520.png",
+    "swm1529-conversion-zip-1100x700.png",
+    "swm1529-conversion-zip-760x520.png",
+    "swm1529-conversion-wim-1100x700.png",
+    "swm1529-conversion-wim-760x520.png",
+    "swm1529-inline-configuration-1100x700.png",
+    "swm1529-inline-configuration-760x520.png",
+    "swm1529-batch-configuration-1100x700.png",
+    "swm1529-batch-configuration-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "text-preview",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "text-preview",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "image-preview",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "image-preview",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "selected-image",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "selected-image",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "missing-tail-recovery",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "missing-tail-recovery",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "extraction-result",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "extraction-result",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "conversion-zip",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "conversion-zip",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "conversion-wim",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "conversion-wim",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "inline-configuration",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "inline-configuration",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "batch-configuration",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "batch-configuration",
+      "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    }
+  ],
+  "previewCompleted": {
+    "binarySha256": "fd8f03fb9439bbbedc2a3bac5e51cfb21ea6468dd9b047b4c4fa59a361361478",
+    "completedAt": "2026-10-20T11:14:11.322Z"
+  },
+  "zipIndependent": {
+    "tool": "Python zipfile metadata + cryptography AES-CTR + PBKDF2/HMAC-SHA1; explicit UTF-8 password bytes",
+    "fullContentMatches": true,
+    "authenticatedFiles": 45,
+    "emptyDirectoryPreserved": true
+  },
+  "completedAt": "2026-10-20T11:16:05.037Z"
+}

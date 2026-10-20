@@ -1,0 +1,32 @@
+{
+  "version": "1.5.29",
+  "checks": [
+    {
+      "command": "cargo test --lib swm_1529 -- --nocapture",
+      "result": "passed",
+      "distinctTests": 6,
+      "filteredExistingTests": 830,
+      "notes": "Initial test sum type ambiguity fixed before this successful run."
+    },
+    {
+      "command": "npx vitest run src/utils/__tests__/compressionFormat.test.ts -t swm1529",
+      "result": "passed",
+      "distinctTests": 1,
+      "skippedExistingTests": 24
+    },
+    {
+      "command": "VITE_DESKTOP_E2E=1 npm run build",
+      "result": "passed",
+      "notes": "Type check and test-bridge frontend; required CI builds ordinary production frontend."
+    },
+    {
+      "command": "npm run build:shell-extension",
+      "result": "passed"
+    },
+    {
+      "command": "npm run test:release-identity",
+      "result": "passed",
+      "versionSources": 8
+    }
+  ]
+}

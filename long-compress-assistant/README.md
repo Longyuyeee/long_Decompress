@@ -21,7 +21,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 解压中心 | 导入多包、配置目录与子文件夹、使用密码候选、处理文件冲突、查看阶段和结果 |
 | 压缩中心 | 文件/文件夹/组归档、ZIP/7Z/RAR 与十七种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码与数字分卷创建、WIM 存储/去重与数字分卷、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
 | 特殊压缩 | JPEG/PNG/WebP 图片编码与缩放、视频压缩预设、PDF 分析与结构优化 |
-| 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、文本/图片预览与选择性解压；支持普通压缩流及自有 AES 密码卷组查看 |
+| 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、文本/图片预览与选择性解压；支持普通压缩流、自有 AES 密码卷组及原生 SWM 多镜像查看 |
 | 密码保险箱 | 本地加密保存常用解压密码，分类、搜索、导入导出与使用统计 |
 | 文件完整性 | 从完成结果生成整组相对路径清单、CRC32/MD5/SHA256 校验、清单逐文件原因与待补列表/按需复查、真实进度/停止与继续、归档诊断、RAR4/RAR5 副本修复与恢复卷（需本机 Rar.exe），以及密码 ZIP 与目录可读的标准卷完整文件救援 |
 | 历史与系统集成 | 搜索和再次执行、统一结果操作、托盘、资源管理器经典菜单（压缩/解压/校验清单）与应用内更新 |
@@ -92,7 +92,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.5.28 · 资源管理器校验入口**。从经典右键带入文件生成清单，或带入 SFV/MD5/SHA256 逐份核对；确认后才读取，已有工作可保留、替换或合并。长路径优先显示清单名称，文件读取失败不再提示绿色成功。保留原有交互与窄窗滚动。[中文说明](docs/RELEASE_NOTES_1.5.28.md) · [范围与记录](docs/EXPLORER_CHECKSUMS_FREEZE_1.5.28.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.28)。本轮三版按范围收口；[v1.5.29 原生 SWM 只读计划](docs/ARCHIVE_ROADMAP_1.5.29.md)已写入路线，尚未开发。
+**v1.5.29 · 原生 SWM 只读**。从 install.swm、install2.swm 等任意成员浏览多镜像、预览、检查和提取；Copy/XPRESS/LZX 直接跨卷读取。缺首/中/尾卷显示具体文件名，补齐后建新任务，内容可转换为密码 ZIP。保留单条展开、多选弹窗与等宽/窄窗布局，不新增 SWM 创建、WIM 密码或系统部署。[中文说明](docs/RELEASE_NOTES_1.5.29.md) · [范围与记录](docs/NATIVE_SWM_FREEZE_1.5.29.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.29)。下一版 [v1.5.30 ZPAQ 历史快照读取](docs/ARCHIVE_ROADMAP_1.5.30.md)已规划，尚未开发。
+
+**v1.5.28 · 资源管理器校验入口**。从经典右键带入文件生成清单，或带入 SFV/MD5/SHA256 逐份核对；确认后才读取，已有工作可保留、替换或合并。长路径优先显示清单名称，文件读取失败不再提示绿色成功。保留原有交互与窄窗滚动。[中文说明](docs/RELEASE_NOTES_1.5.28.md) · [范围与记录](docs/EXPLORER_CHECKSUMS_FREEZE_1.5.28.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.28)。本轮三版按范围收口；[v1.5.29 原生 SWM 只读计划](docs/ARCHIVE_ROADMAP_1.5.29.md)已由 v1.5.29 接续，当前进度以上方最新记录为准。
 
 **v1.5.27 · WIM 数字分卷**。按指定大小拆卷，从任意成员浏览多镜像目录、预览文本/图片、检查和提取；支持密码 ZIP 双向转换、补卷新任务和整组结果清单。新建 WIM 明确为存储与去重，停用无效强度选项；WIM 无原生密码，数字卷不是 SWM。保留单条展开、多选弹窗和等宽/窄窗布局。[中文说明](docs/RELEASE_NOTES_1.5.27.md) · [范围与记录](docs/WIM_VOLUMES_FREEZE_1.5.27.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.27)。下一步按[既定路线](docs/ARCHIVE_ROADMAP_1.5.26_TO_1.5.28.md)推进 v1.5.28 资源管理器校验入口，已由上方版本接续。
 
