@@ -1,0 +1,1019 @@
+{
+  "version": "1.5.39",
+  "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+  "sourceCommit": "867da7c3af08f6b831dad7aa9e7e53b36b1e6a92",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5",
+  "native": [
+    {
+      "kind": "solid-public-complete-chain",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "published": {
+        "files": [
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.001"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.002"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.003"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.004"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.005"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.006"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.007"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.008"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.009"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.010"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.011"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.012"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.013"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.014"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.015"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.016"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.017"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.018"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.019"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.020"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.021"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.022"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.023"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.024"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.025"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.026"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.027"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.028"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.029"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.030"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.031"
+          },
+          {
+            "bytes": 65536,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.032"
+          },
+          {
+            "bytes": 21684,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.033"
+          }
+        ],
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.001",
+        "split": true,
+        "totalBytes": 2118836
+      },
+      "evidence": {
+        "compressedResources": 5,
+        "allIndependentHashes": true,
+        "outputFiles": 33
+      },
+      "directory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共完整提取"
+    },
+    {
+      "kind": "independent-multiple-images",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "allHashes": true,
+      "imageNumbersPreserved": true,
+      "xmlPreserved": true
+    }
+  ],
+  "ui": [
+    {
+      "kind": "create-solid-and-results",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "record": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面LZMS-886056bc-59c7-4597-959e-4bc1ffe58061.wim.001"
+            },
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面LZMS-886056bc-59c7-4597-959e-4bc1ffe58061.wim.002"
+            },
+            {
+              "bytes": 21678,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面LZMS-886056bc-59c7-4597-959e-4bc1ffe58061.wim.003"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面LZMS-886056bc-59c7-4597-959e-4bc1ffe58061.wim.001",
+          "split": true,
+          "totalBytes": 2118830
+        },
+        "completedAt": "2026-10-20T21:24:27.448Z",
+        "durationMs": 1302,
+        "errorMessage": null,
+        "executionConfig": {
+          "kind": "archive-compression",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5",
+          "passwordRequired": false,
+          "schemaVersion": 1,
+          "settings": {
+            "createSolidArchive": false,
+            "encryptFilenames": false,
+            "fastPack": false,
+            "filename": "界面LZMS-886056bc-59c7-4597-959e-4bc1ffe58061",
+            "format": "wim",
+            "keepStructure": true,
+            "level": 6,
+            "rarRecoveryPercent": 0,
+            "rarRecoveryVolumes": 0,
+            "splitArchive": true,
+            "splitSize": "1",
+            "verifyAfter": true,
+            "wimMethod": "solid",
+            "zipEncryption": "aes256",
+            "zipMethod": "deflate",
+            "zipPasswordEncoding": "utf8",
+            "zipSplitMode": "numeric"
+          }
+        },
+        "failure": null,
+        "format": "wim",
+        "id": "hw2jnc11vmvh6yba3",
+        "logs": [
+          {
+            "message": "资源预检：已验证目标盘安全预留，但输出体积仍需在运行时确认。（local/ssd，可用 113.0 GiB，预计输出 未知）",
+            "severity": "warning",
+            "timestamp": "2026-10-20T21:24:26.172Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面LZMS-886056bc-59c7-4597-959e-4bc1ffe58061.wim",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:24:26.188461100Z"
+          },
+          {
+            "message": "使用 LZMS 固实 压缩创建 WIM",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:24:26.188616900Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:24:27.253467100Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-20T21:24:27.422524900Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T21:24:27.432698900Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 4196107,
+          "media": null,
+          "outputBytes": 2118830,
+          "savingsRatio": 0.4950486248324936,
+          "schemaVersion": 1
+        },
+        "name": "资料",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面LZMS-886056bc-59c7-4597-959e-4bc1ffe58061.wim.001",
+        "processedBytes": 4196107,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\资料"
+        ],
+        "startedAt": "2026-10-20T21:24:26.146Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 4196107,
+        "workloadKind": "archive"
+      },
+      "evidence": {
+        "compressedResources": 5,
+        "allIndependentHashes": true,
+        "outputFiles": 3
+      },
+      "columns": [
+        441.5078125,
+        441.515625
+      ]
+    },
+    {
+      "kind": "new-archive-previews-and-selection",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "record": {
+        "archiveOutput": null,
+        "completedAt": "2026-10-20T21:24:43.868Z",
+        "durationMs": 487,
+        "errorMessage": null,
+        "executionConfig": {
+          "extractToSubfolder": false,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面所选-2d7e1b14-c170-485a-a337-9c2ffe734158",
+          "schemaVersion": 1
+        },
+        "failure": null,
+        "format": "wim",
+        "id": "1792531483381",
+        "logs": [
+          {
+            "message": "确定解压格式: Wim (后缀: 001)",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:24:43.431004700Z"
+          },
+          {
+            "message": "开始解压：界面LZMS-886056bc-59c7-4597-959e-4bc1ffe58061.wim.001",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:24:43.600984300Z"
+          },
+          {
+            "message": "正在解压：archive: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面LZMS-886056bc-59c7-4597-959e-4bc1ffe58061.wim.001",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:24:43.766262700Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 51 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T21:24:43.864815400Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T21:24:43.864973400Z"
+          }
+        ],
+        "metrics": null,
+        "name": "界面LZMS-886056bc-59c7-4597-959e-4bc1ffe58061.wim.002",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面所选-2d7e1b14-c170-485a-a337-9c2ffe734158",
+        "processedBytes": 51,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面LZMS-886056bc-59c7-4597-959e-4bc1ffe58061.wim.002"
+        ],
+        "startedAt": "2026-10-20T21:24:43.381Z",
+        "status": "completed",
+        "taskType": "decompression",
+        "totalBytes": 4196107,
+        "workloadKind": "archive"
+      },
+      "independentHash": true
+    },
+    {
+      "kind": "new-volume-missing-recovery",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "record": {
+        "archiveOutput": null,
+        "completedAt": "2026-10-20T21:24:49.840Z",
+        "durationMs": 679,
+        "errorMessage": null,
+        "executionConfig": {
+          "extractToSubfolder": false,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\补齐LZMS-59e36835-4139-4149-aa50-c4bc28ebf310",
+          "schemaVersion": 1
+        },
+        "failure": null,
+        "format": "wim",
+        "id": "65cglch2ymvh6ys33",
+        "logs": [
+          {
+            "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 113.0 GiB，预计输出 4.00 MiB）",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:24:49.316Z"
+          },
+          {
+            "message": "确定解压格式: Wim (后缀: 001)",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:24:49.358097900Z"
+          },
+          {
+            "message": "开始解压：界面LZMS-886056bc-59c7-4597-959e-4bc1ffe58061.wim.001",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:24:49.542053500Z"
+          },
+          {
+            "message": "正在解压：archive: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面LZMS-886056bc-59c7-4597-959e-4bc1ffe58061.wim.001",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:24:49.675552400Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 4196107 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T21:24:49.830370700Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T21:24:49.831179500Z"
+          }
+        ],
+        "metrics": null,
+        "name": "界面LZMS-886056bc-59c7-4597-959e-4bc1ffe58061.wim.001",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\补齐LZMS-59e36835-4139-4149-aa50-c4bc28ebf310",
+        "processedBytes": 4196107,
+        "retryOfTaskId": "dz4lizm4fmvh6ypi5",
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面LZMS-886056bc-59c7-4597-959e-4bc1ffe58061.wim.001"
+        ],
+        "startedAt": "2026-10-20T21:24:49.161Z",
+        "status": "completed",
+        "taskType": "decompression",
+        "totalBytes": 4196107,
+        "workloadKind": "archive"
+      },
+      "oldFailurePreserved": true
+    },
+    {
+      "kind": "conversion-esd",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "record": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面转换-474fd0c9-13dd-4caa-b98b-90c109dc2bb4.esd.001"
+            },
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面转换-474fd0c9-13dd-4caa-b98b-90c109dc2bb4.esd.002"
+            },
+            {
+              "bytes": 21684,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面转换-474fd0c9-13dd-4caa-b98b-90c109dc2bb4.esd.003"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面转换-474fd0c9-13dd-4caa-b98b-90c109dc2bb4.esd.001",
+          "split": true,
+          "totalBytes": 2118836
+        },
+        "completedAt": "2026-10-20T21:25:04.147Z",
+        "durationMs": 2299,
+        "errorMessage": null,
+        "executionConfig": {
+          "encryptFilenames": false,
+          "format": "esd",
+          "kind": "archive-conversion",
+          "level": 6,
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面转换-474fd0c9-13dd-4caa-b98b-90c109dc2bb4.esd",
+          "passwordRequired": false,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "schemaVersion": 1,
+          "splitSize": 1048576,
+          "wimMethod": "solid",
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        },
+        "failure": null,
+        "format": "zip",
+        "id": "conversion-6f1e1acf-8b57-41d8-9ec4-c1251e9004cc",
+        "logs": [
+          {
+            "message": "转换归档：先解压至临时目录，再校验并发布新包；保留原包。",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:25:01.850719Z"
+          },
+          {
+            "message": "确定解压格式: Zip (后缀: zip)",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:25:01.880790500Z"
+          },
+          {
+            "message": "正在检测归档加密状态...",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:25:01.880820700Z"
+          },
+          {
+            "message": "已收到手动输入的解压密码「 [已隐藏]",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:25:01.888076800Z"
+          },
+          {
+            "message": "密码验证通过：本次解压使用密码「 [已隐藏]",
+            "severity": "success",
+            "timestamp": "2026-10-20T21:25:01.968091100Z"
+          },
+          {
+            "message": "开始解压：独立密码原包.zip",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:25:01.976212600Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 4196107 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T21:25:02.090162300Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T21:25:02.090658800Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面转换-474fd0c9-13dd-4caa-b98b-90c109dc2bb4.esd",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:25:02.103986200Z"
+          },
+          {
+            "message": "使用 LZMS 固实 压缩创建 WIM",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:25:02.104084Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:25:03.951746500Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-20T21:25:04.125871100Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T21:25:04.135042100Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 4196107,
+          "media": null,
+          "outputBytes": 2118836,
+          "savingsRatio": 0.4950471949356868,
+          "schemaVersion": 1
+        },
+        "name": "归档转换 · 独立密码原包.zip",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面转换-474fd0c9-13dd-4caa-b98b-90c109dc2bb4.esd.001",
+        "processedBytes": 4196107,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\独立密码原包.zip"
+        ],
+        "startedAt": "2026-10-20T21:25:01.848Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 4196107,
+        "workloadKind": "archive"
+      },
+      "evidence": {
+        "compressedResources": 5,
+        "allIndependentHashes": true,
+        "outputFiles": 3
+      }
+    },
+    {
+      "kind": "conversion-zip",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "record": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 2113556,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面转换-0610100f-75aa-470a-9cfb-e5f05964dc09.zip"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面转换-0610100f-75aa-470a-9cfb-e5f05964dc09.zip",
+          "split": false,
+          "totalBytes": 2113556
+        },
+        "completedAt": "2026-10-20T21:25:18.518Z",
+        "durationMs": 792,
+        "errorMessage": null,
+        "executionConfig": {
+          "encryptFilenames": false,
+          "format": "zip",
+          "kind": "archive-conversion",
+          "level": 6,
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面转换-0610100f-75aa-470a-9cfb-e5f05964dc09.zip",
+          "passwordRequired": true,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "schemaVersion": 1,
+          "splitSize": 0,
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        },
+        "failure": null,
+        "format": "wim",
+        "id": "conversion-a1758850-cd90-4eeb-b560-ef9b54fa0c0a",
+        "logs": [
+          {
+            "message": "转换归档：先解压至临时目录，再校验并发布新包；保留原包。",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:25:17.728152600Z"
+          },
+          {
+            "message": "确定解压格式: Wim (后缀: 001)",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:25:17.792536100Z"
+          },
+          {
+            "message": "开始解压：公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.001",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:25:18.011506200Z"
+          },
+          {
+            "message": "正在解压：archive: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.001",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:25:18.137267900Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 4196107 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T21:25:18.336657300Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T21:25:18.336698Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面转换-0610100f-75aa-470a-9cfb-e5f05964dc09.zip",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:25:18.349483900Z"
+          },
+          {
+            "message": "正在创建 ZIP · Deflate · 密码保护…",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:25:18.350108400Z"
+          },
+          {
+            "message": "ZIP · Deflate 创建完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T21:25:18.458761700Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-20T21:25:18.459933300Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-20T21:25:18.503791400Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T21:25:18.506440900Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 4196107,
+          "media": null,
+          "outputBytes": 2113556,
+          "savingsRatio": 0.49630550412560975,
+          "schemaVersion": 1
+        },
+        "name": "归档转换 · 公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.001",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\界面转换-0610100f-75aa-470a-9cfb-e5f05964dc09.zip",
+        "processedBytes": 4196107,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.001",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.002",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.003",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.004",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.005",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.006",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.007",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.008",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.009",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.010",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.011",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.012",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.013",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.014",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.015",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.016",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.017",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.018",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.019",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.020",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.021",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.022",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.023",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.024",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.025",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.026",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.027",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.028",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.029",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.030",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.031",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.032",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\公共LZMS-b8ef4d5e-0387-4b50-8a01-cee08470f83a.esd.033"
+        ],
+        "startedAt": "2026-10-20T21:25:17.726Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 4196107,
+        "workloadKind": "archive"
+      },
+      "evidence": {
+        "tool": "Python zipfile metadata + cryptography AES-CTR + PBKDF2/HMAC-SHA1; explicit UTF-8 password bytes",
+        "fullContentMatches": true,
+        "authenticatedFiles": 5,
+        "emptyDirectoryPreserved": true
+      }
+    },
+    {
+      "kind": "bulk-method-and-draft-recovery",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "methods": [
+        "LZMS · 固实归档\nESD",
+        "LZMS · 固实归档"
+      ],
+      "noImplicitStart": true
+    }
+  ],
+  "screenshots": [
+    "wim1539-inline-config-1100x700.png",
+    "wim1539-inline-config-760x520.png",
+    "wim1539-creation-result-1100x700.png",
+    "wim1539-creation-result-760x520.png",
+    "wim1539-text-preview-1100x700.png",
+    "wim1539-text-preview-760x520.png",
+    "wim1539-image-preview-1100x700.png",
+    "wim1539-image-preview-760x520.png",
+    "wim1539-missing-recovery-1100x700.png",
+    "wim1539-missing-recovery-760x520.png",
+    "wim1539-conversion-esd-config-1100x700.png",
+    "wim1539-conversion-esd-config-760x520.png",
+    "wim1539-conversion-esd-result-1100x700.png",
+    "wim1539-conversion-esd-result-760x520.png",
+    "wim1539-conversion-zip-config-1100x700.png",
+    "wim1539-conversion-zip-config-760x520.png",
+    "wim1539-conversion-zip-result-1100x700.png",
+    "wim1539-conversion-zip-result-760x520.png",
+    "wim1539-batch-method-1100x700.png",
+    "wim1539-batch-method-760x520.png",
+    "wim1539-restored-drafts-1100x700.png",
+    "wim1539-restored-drafts-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "inline-config",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [
+        378,
+        378
+      ],
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "inline-config",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [
+        286,
+        286
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "creation-result",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [
+        378,
+        378
+      ],
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "creation-result",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [
+        286,
+        286
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    },
+    {
+      "name": "text-preview",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "text-preview",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "image-preview",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "image-preview",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0,
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "missing-recovery",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "missing-recovery",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "conversion-esd-config",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [
+        378,
+        378
+      ],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "conversion-esd-config",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [
+        286,
+        286
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "conversion-esd-result",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [
+        378,
+        378
+      ],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "conversion-esd-result",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [
+        286,
+        286
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "conversion-zip-config",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [
+        378,
+        378
+      ],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "conversion-zip-config",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [
+        286,
+        286
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "conversion-zip-result",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [
+        378,
+        378
+      ],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "conversion-zip-result",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [
+        286,
+        286
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "batch-method",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 1100
+    },
+    {
+      "name": "batch-method",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        0
+      ],
+      "width": 760
+    },
+    {
+      "name": "restored-drafts",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "panels": [],
+      "width": 1100
+    },
+    {
+      "name": "restored-drafts",
+      "binarySha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760
+    }
+  ],
+  "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\资料",
+  "expected": {
+    "资料/pagefile.sys": "d28c33a0249bb010cbef7ff2572b4136052bf1de8f6b6aa23d2a3d3643d158f1",
+    "资料/图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+    "资料/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "资料/说明.txt": "0dfc6ca88e40c164b84c498684e0e483f7a4c413b692ff20e86586e19c80039f",
+    "资料/项目/数据.bin": "7dc792507fa2762861bc14f1448219ca46a28107c4fd3c51252255bf1639eac8"
+  },
+  "inputZip": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\ui-e343b7a9-1768-462e-8142-0ec0368caef5\\独立密码原包.zip",
+  "completedAt": "2026-10-20T21:25:51.538Z"
+}

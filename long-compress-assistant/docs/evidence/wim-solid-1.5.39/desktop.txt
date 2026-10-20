@@ -1,0 +1,11 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+wim-1539: native solid-public-complete-chain
+wim-1539: native independent-multiple-images
+wim-1539: ui create-solid-and-results
+wim-1539: ui new-archive-previews-and-selection
+wim-1539: ui new-volume-missing-recovery
+wim-1539: ui conversion-esd
+wim-1539: ui conversion-zip
+wim-1539: ui bulk-method-and-draft-recovery

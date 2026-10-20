@@ -1,0 +1,37 @@
+{
+  "version": "1.5.39",
+  "completedAt": "2026-10-20T21:25:51.538Z",
+  "runtimeSource": "867da7c3af08f6b831dad7aa9e7e53b36b1e6a92",
+  "runtimeSha256": "b4e4c71695a323120b0449635af1cf9b9d0e7249e5389bdf54835347db696f30",
+  "rustDistinctPassed": 8,
+  "frontendDistinctPassed": 11,
+  "frontendPassBatches": [
+    {
+      "files": 5,
+      "passed": 9
+    },
+    {
+      "files": 2,
+      "passed": 2
+    }
+  ],
+  "publicNativeChains": 2,
+  "uiChains": 6,
+  "layoutSnapshots": 22,
+  "maximumHorizontalOverflowPx": 0,
+  "representativeScreenshotsViewedAndRetained": [
+    "inline-config-1100x700",
+    "inline-config-760x520",
+    "creation-result-760x520",
+    "conversion-esd-config-760x520",
+    "batch-method-760x520",
+    "missing-recovery-760x520",
+    "text-preview-760x520"
+  ],
+  "frontendBuild": "passed",
+  "shellBuild": "passed",
+  "releaseIdentity": "passed",
+  "previousFormatMatricesRerun": false,
+  "realDiskFullRerun": false,
+  "personalInstallationChanged": false
+}

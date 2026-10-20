@@ -1,0 +1,59 @@
+   Compiling long-compress-assistant v1.5.39 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+   Compiling zip v8.6.0 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\zip)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+warning: unused import: `File`
+ --> src\services\aes_wrapper.rs:8:15
+  |
+8 | use std::fs::{File, OpenOptions};
+  |               ^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `prepare_staging_layout` is never used
+    --> src\services\compression_service.rs:2991:8
+     |
+ 296 | impl CompressionService {
+     | ----------------------- method in this implementation
+...
+2991 |     fn prepare_staging_layout(
+     |        ^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `prepare_staging_layout` is never used
+   --> src\services\extraction_transaction.rs:428:15
+    |
+428 | pub(crate) fn prepare_staging_layout(
+    |               ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `stats` is never used
+ --> src\services\rar_preflight.rs:7:15
+  |
+7 | pub(crate) fn stats(
+  |               ^^^^^
+
+warning: `long-compress-assistant` (lib) generated 4 warnings (run `cargo fix --lib -p long-compress-assistant` to apply 1 suggestion)
+    Finished `release` profile [optimized] target(s) in 4m 32s

@@ -1,0 +1,49 @@
+{
+  "tool": "wimlib 1.14.5 capture/append; independent 7-Zip 26.04 decode",
+  "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\wim-solid-1539\\source",
+  "expected": {
+    "资料/pagefile.sys": "c06ebe8f5c74b70a677455c05d8e39551c1cd6e70cea92ff015ab608dc3dfcf4",
+    "资料/图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+    "资料/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "资料/说明.txt": "682b85b8fd53cbb977addb13455b98982b19cc9172456a203338068e0c5de160",
+    "资料/项目/数据.bin": "7dc792507fa2762861bc14f1448219ca46a28107c4fd3c51252255bf1639eac8",
+    "资料/项目/说明.txt": "d727379e7bfc2aa0066daa8b3bbe5aa4b3d735195a4987f179329e5407078189"
+  },
+  "multiExpected": {
+    "1/资料/pagefile.sys": "c06ebe8f5c74b70a677455c05d8e39551c1cd6e70cea92ff015ab608dc3dfcf4",
+    "1/资料/图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+    "1/资料/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "1/资料/说明.txt": "682b85b8fd53cbb977addb13455b98982b19cc9172456a203338068e0c5de160",
+    "1/资料/项目/数据.bin": "7dc792507fa2762861bc14f1448219ca46a28107c4fd3c51252255bf1639eac8",
+    "1/资料/项目/说明.txt": "d727379e7bfc2aa0066daa8b3bbe5aa4b3d735195a4987f179329e5407078189",
+    "2/第二镜像/说明.txt": "192824ce967b8721a8ddb7eb815643535d2c5756113b0dc4ff14ec0b1ee9c951",
+    "[1].xml": "37a32ec5d4e61e824b01100bc8642c4ad577d6154cb57baa304917444e9ab0f9"
+  },
+  "cases": [
+    {
+      "extension": "wim",
+      "version": 3584,
+      "solidReferences": 6,
+      "bytes": 2118914,
+      "elapsedSeconds": null,
+      "reusedOutput": true,
+      "independentHashes": true,
+      "emptyDirectory": true,
+      "sha256": "8da9306dd3e3e634d8e47c36a7e3d4c0d9e4bd41492c7dee7a8b55c2e2781305"
+    },
+    {
+      "extension": "esd",
+      "version": 3584,
+      "solidReferences": 6,
+      "bytes": 2118896,
+      "elapsedSeconds": null,
+      "reusedOutput": true,
+      "independentHashes": true,
+      "emptyDirectory": true,
+      "sha256": "18e808e6daa0f7feb4a5a4a62e02a711eac7fb7ea37e7d411b8880feefffd3a3"
+    }
+  ],
+  "multipleImages": true,
+  "solidChunkBytes": 67108864,
+  "threads": 1
+}

@@ -19,7 +19,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 工作区 | 用户可以做什么 |
 | --- | --- |
 | 解压中心 | 导入多包、配置目录与子文件夹、使用密码候选、处理文件冲突、查看阶段和结果 |
-| 压缩中心 | 文件/文件夹/组归档、ZIP 方法选择（Deflate/Zstandard/BZip2/PPMd/LZMA）、ZIP/7Z/RAR 与十七种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码、数字分卷与保留历史的增量更新、WIM 存储/XPRESS/LZX/LZMS 压缩与数字分卷、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
+| 压缩中心 | 文件/文件夹/组归档、ZIP 方法选择（Deflate/Zstandard/BZip2/PPMd/LZMA）、ZIP/7Z/RAR 与十七种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码、数字分卷与保留历史的增量更新、WIM 存储/XPRESS/LZX/LZMS 与固实 ESD、数字分卷、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
 | 特殊压缩 | JPEG/PNG/WebP 图片编码与缩放、视频压缩预设、PDF 分析与结构优化 |
 | 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、文本/图片预览与选择性解压；支持普通压缩流、自有 AES 密码卷组、原生 SWM 多镜像及 ZPAQ 历史快照对比与变化提取 |
 | 密码保险箱 | 本地加密保存常用解压密码，分类、搜索、导入导出与使用统计 |
@@ -92,7 +92,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.5.38 · ZIP LZMA 创建**。增加可选方法，按强度显示字典，接通密码、数字/标准卷、转换、浏览提取与补卷流程。真实编码采样、暂停停止、草稿/历史/模板和多选保留方法，原交互与等宽/窄窗布局保持。[中文说明](docs/RELEASE_NOTES_1.5.38.md) · [范围与记录](docs/ZIP_LZMA_FREEZE_1.5.38.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.38)。下一版 [v1.5.39 固实 WIM / ESD](docs/ARCHIVE_ROADMAP_1.5.39.md)仅规划，尚未开发。
+**v1.5.39 · 固实 WIM / ESD**。WIM 增加 LZMS 固实选择，ESD 固定真实固实归档；数字分卷、密码原包双向转换、浏览预览、提取与补卷接续。方法随配置组、模板、草稿、历史和多选保存，原交互与等宽/窄窗布局保持。[中文说明](docs/RELEASE_NOTES_1.5.39.md) · [范围与记录](docs/WIM_SOLID_FREEZE_1.5.39.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.39)。下一版 [v1.5.40 原生 SWM 创建](docs/ARCHIVE_ROADMAP_1.5.40.md)仅规划，尚未开发。
+
+**v1.5.38 · ZIP LZMA 创建**。增加可选方法，按强度显示字典，接通密码、数字/标准卷、转换、浏览提取与补卷流程。真实编码采样、暂停停止、草稿/历史/模板和多选保留方法，原交互与等宽/窄窗布局保持。[中文说明](docs/RELEASE_NOTES_1.5.38.md) · [范围与记录](docs/ZIP_LZMA_FREEZE_1.5.38.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.38)。下一版 [v1.5.39 固实 WIM / ESD](docs/ARCHIVE_ROADMAP_1.5.39.md)已由 v1.5.39 接续，当前进度以上方最新记录为准。
 
 **v1.5.37 · ZPAQ 快照对比与变化提取**。查看两版之间的新增、候选、元数据和移除，按需核对内容，再按版本创建所选提取任务。密码数字卷、草稿、补卷重试和历史重做保持范围与来源，原交互和布局不变。[中文说明](docs/RELEASE_NOTES_1.5.37.md) · [范围与记录](docs/ZPAQ_DIFF_FREEZE_1.5.37.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.37)。下一版 [v1.5.38 ZIP LZMA创建](docs/ARCHIVE_ROADMAP_1.5.38.md)已由 v1.5.38 接续，当前进度以上方最新记录为准。
 
