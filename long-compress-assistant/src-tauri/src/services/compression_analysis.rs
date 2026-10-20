@@ -184,7 +184,7 @@ fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usi
     }
     let level = level.min(9);
     if format.contains("bz2") {
-        let mut encoder = bzip2::write::BzEncoder::new(Vec::new(), bzip2::Compression::new(level));
+        let mut encoder = bzip2::write::BzEncoder::new(Vec::new(), bzip2::Compression::new(level.clamp(1, 9)));
         encoder.write_all(sample)?;
         return Ok(encoder.finish()?.len());
     }

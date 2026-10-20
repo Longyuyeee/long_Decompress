@@ -524,3 +524,10 @@ it('wim1533 carries LZMS through conversion, history and independent per-item ba
   expect(mocks.invoke).toHaveBeenCalledWith('convert_archive',expect.objectContaining({sourcePassword:'source-secret',options:expect.objectContaining({format:'wim',wim_method:'lzms',split_size:1048576})}))
   const record=createTaskHistoryRecord(useTaskStore().tasks[0]);expect(record.executionConfig).toMatchObject({wimMethod:'lzms'});store.restore(record);expect(store.effectiveSettings(store.pending.at(-1)!)).toMatchObject({wimMethod:'lzms',sourcePassword:'',splitMiB:1})
 })
+
+it('zip1534 keeps BZip2, passwords and standard volumes through IPC and history retry',async()=>{
+  mocks.invoke.mockImplementation(async command=>command==='convert_archive'?{primaryPath:'D:/new.zip',files:[],totalBytes:20,split:true}:undefined)
+  const store=useArchiveConversionStore();store.addSources(['C:/原包.7z']);store.updateItem(store.pending[0].id,{format:'zip',zipMethod:'bzip2',level:0,password:'target-secret',sourcePassword:'old-secret',splitMiB:1,zipSplitMode:'standard',zipEncryption:'aes256'});await store.start()
+  expect(mocks.invoke).toHaveBeenCalledWith('convert_archive',expect.objectContaining({sourcePassword:'old-secret',options:expect.objectContaining({format:'zip',zip_method:'bzip2',level:0,split_size:1048576,zip_split_mode:'standard'})}))
+  const task=useTaskStore().tasks[0];expect(task.executionConfig).toMatchObject({zipMethod:'bzip2'});expect(JSON.stringify(task.executionConfig)).not.toMatch(/old-secret|target-secret/);store.restore(createTaskHistoryRecord(task));expect(store.pending.at(-1)?.settings).toMatchObject({zipMethod:'bzip2',zipSplitMode:'standard',password:''})
+})
