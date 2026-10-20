@@ -1,0 +1,51 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling long-compress-assistant v1.5.27 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 46.97s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-678a74b5873b9901.exe)
+
+running 9 tests
+test services::wim_1527_tests::wim_1527_preview_bounds_cancel_and_password_are_explicit ... ok
+test services::wim_1527_tests::wim_1527_selected_image_and_directory_are_extracted_without_other_images ... ok
+test services::wim_1527_tests::wim_1527_missing_and_truncated_members_keep_actionable_causes ... ok
+test services::wim_1527_tests::wim_1527_preview_lzms_solid ... ok
+test services::wim_1527_tests::wim_1527_preview_xpress ... ok
+
+thread 'services::wim_1527_tests::wim_1527_public_diagnostics_stats_and_creation_capabilities' (69276) panicked at src\services\wim_1527_tests.rs:69:80:
+called `Result::unwrap()` on an `Err` value: Archive contains an invalid expanded-size field
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::wim_1527_tests::wim_1527_public_diagnostics_stats_and_creation_capabilities ... FAILED
+test services::wim_1527_tests::wim_1527_preview_lzx_multi_image ... ok
+test services::wim_1527_tests::wim_1527_preview_copy ... ok
+test services::wim_1527_tests::wim_1527_four_independent_methods_and_images_across_numeric_members ... ok
+
+failures:
+
+failures:
+    services::wim_1527_tests::wim_1527_public_diagnostics_stats_and_creation_capabilities
+
+test result: FAILED. 8 passed; 1 failed; 0 ignored; 0 measured; 819 filtered out; finished in 4.99s
+
+error: test failed, to rerun pass `--lib`

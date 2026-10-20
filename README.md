@@ -129,7 +129,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 
 | 能力 | 主要格式与说明 |
 | --- | --- |
-| 创建归档 | ZIP（Deflate / Zstandard）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码与数字分卷）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM |
+| 创建归档 | ZIP（Deflate / Zstandard）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码与数字分卷）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM（存储/去重与数字分卷） |
 | 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式/日志式当前文件）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
 | 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷、ZPAQ 原生密码数字切卷；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM、ZPAQ（含改密与数字分卷）；密码和分卷随目标格式提供 |
@@ -236,7 +236,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.26 · ZPAQ 密码数字分卷**。按指定大小拆卷，从任意成员浏览、预览、检查和提取；密码 ZIP 双向转换、补卷新任务和整组结果清单接通。修复继承分卷与多选格式配置，单条展开、多选弹窗和等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.26.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_VOLUMES_FREEZE_1.5.26.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.26)。下一步按[既定路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.26_TO_1.5.28.md)推进 WIM 数字卷，再做资源管理器校验入口，两者尚未开发。
+**v1.5.27 · WIM 数字分卷**。按指定大小拆卷，从任意成员浏览多镜像目录、预览文本/图片、检查和提取；支持密码 ZIP 双向转换、补卷新任务和整组结果清单。新建 WIM 明确为存储与去重，停用无效强度选项；WIM 无原生密码，数字卷不是 SWM。保留单条展开、多选弹窗和等宽/窄窗布局。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.27.md) · [范围与记录](long-compress-assistant/docs/WIM_VOLUMES_FREEZE_1.5.27.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.27)。下一步按[既定路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.26_TO_1.5.28.md)推进 v1.5.28 资源管理器校验入口，尚未开发。
+
+**v1.5.26 · ZPAQ 密码数字分卷**。按指定大小拆卷，从任意成员浏览、预览、检查和提取；密码 ZIP 双向转换、补卷新任务和整组结果清单接通。修复继承分卷与多选格式配置，单条展开、多选弹窗和等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.26.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_VOLUMES_FREEZE_1.5.26.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.26)。下一步按[既定路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.26_TO_1.5.28.md)推进 WIM 数字卷；已由 v1.5.27 接续，当前进度以上方最新记录为准。
 
 **v1.5.25 · 从结果生成校验清单**。完成任务、历史和转换结果可带入整组实际产物，主动计算并导出相对路径清单；同名文件保留子目录，中断项不写入，导出后可直接核对。保留单条展开、多选弹窗和等宽/窄窗布局。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.25.md) · [范围与记录](long-compress-assistant/docs/RESULT_CHECKSUMS_FREEZE_1.5.25.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.25)。本轮三版计划按范围收口，下一阶段 [v1.5.26～v1.5.28](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.26_TO_1.5.28.md) 已规划，ZPAQ 数字卷由 v1.5.26 接续；当前进度以上方最新记录为准。
 

@@ -1,0 +1,33 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+wim-1527: native original-none
+wim-1527: native original-xpress
+wim-1527: native original-lzx
+wim-1527: native original-lzms
+
+[WARNING] "E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\wim-volumes-1527\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\created-level-0-????-3bc88a06-b788-4245-9015-9d58faae651e.wim" does not contain integrity information.  Skipping integrity check.
+wim-1527: native created-level-0
+
+[WARNING] "E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\wim-volumes-1527\ui-85a617f5-c6bd-43fd-8092-c4e4cf646f74\created-level-6-????-83355a03-ca54-4e58-be60-fd8218265b12.wim" does not contain integrity information.  Skipping integrity check.
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+false !== true
+
+    at independent (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/wim-volumes-1527-gate.mjs:47:33)
+    at runWimVolumes1527Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/wim-volumes-1527-gate.mjs:74:57)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:4943:5 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

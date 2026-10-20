@@ -24,8 +24,9 @@ export async function runWimVolumes1527Gate({driver,bridge,waitForElement,artifa
   const click=async target=>{
     for(const toast of await driver.findElements(By.css('.toast-item button'))){try{if(await toast.isDisplayed())await toast.click()}catch{}}
     const element=typeof target==='string'?await waitForElement(target):target
-    await driver.wait(()=>driver.executeScript(e=>{e.scrollIntoView({block:'center',behavior:'instant'});const r=e.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !e.disabled&&r.width>0&&r.height>0&&(hit===e||e.contains(hit))},element),15000);await element.click()
+    await driver.wait(()=>driver.executeScript(e=>{e.scrollIntoView({block:'center',behavior:'instant'});const r=e.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !e.disabled&&r.width>0&&r.height>0&&(hit===e||e.contains(hit))},element),15000);await driver.executeScript(e=>e.click(),element)
   }
+  const closeRow=async row=>{await click(await row.findElement(By.css('[data-testid="compression-archive-name"]')));await driver.wait(async()=>(await row.findElements(By.css('[data-testid="compression-draft-details"]'))).length===0,10000)}
   const fill=async(selector,value)=>{const e=await waitForElement(selector);await driver.wait(async()=>await e.isEnabled()&&await e.isDisplayed(),35000);await driver.executeScript(e=>e.scrollIntoView({block:'center',behavior:'instant'}),e);await e.sendKeys(Key.chord(Key.CONTROL,'a'),Key.BACK_SPACE);if(value)await e.sendKeys(value)}
   const choose=async(selector,label)=>{await click(selector);for(const option of await driver.findElements(By.css('[role="option"]'))){const strong=await option.findElements(By.css('strong')),text=(await(strong[0]||option).getAttribute('textContent')).trim();if(text===label||text.startsWith(label+'（')){await click(option);return}}throw Error('Missing option '+label)}
   const sizes=async(name,anchor)=>{
@@ -34,7 +35,7 @@ export async function runWimVolumes1527Gate({driver,bridge,waitForElement,artifa
       await driver.wait(()=>driver.executeScript(()=>document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).every(a=>a.playState!=='running')),10000)
       const layout=await driver.executeScript(()=>{const d=document.querySelector('[data-testid="compression-draft-details"]');return{width:innerWidth,height:innerHeight,overflow:document.documentElement.scrollWidth-innerWidth,columns:d?[...d.children].map(e=>e.getBoundingClientRect().width):[],panels:[...document.querySelectorAll('[role="dialog"],.browser-page')].map(e=>e.scrollWidth-e.clientWidth)}})
       assert.ok(layout.overflow<=1&&layout.panels.every(value=>value<=1),JSON.stringify(layout));if(name==='inline-config'&&width===1100)assert.ok(Math.abs(layout.columns[0]-layout.columns[1])<=1)
-      const file='wim1527-'+name+'-'+width+'x'+height+'.png';writeFileSync(path.join(artifactDirectory,file),Buffer.from(await driver.takeScreenshot(),'base64'));state.screenshots.push(file);state.layouts.push({name,binarySha256,...layout});save()
+      const file='wim1527-'+name+'-'+width+'x'+height+'.png';writeFileSync(path.join(artifactDirectory,file),Buffer.from(await driver.takeScreenshot(),'base64'));state.screenshots=state.screenshots.filter(value=>value!==file);state.screenshots.push(file);state.layouts=state.layouts.filter(value=>!(value.name===name&&value.width===layout.width&&value.height===layout.height&&value.binarySha256===binarySha256));state.layouts.push({name,binarySha256,...layout});save()
     }await driver.manage().window().setRect({width:1100,height:700})
   }
   const fixtures=path.join(root,'tests/fixtures/archives/wim-volumes-1527'),manifest=JSON.parse(readFileSync(path.join(fixtures,'manifest.json'),'utf8'))
@@ -78,29 +79,30 @@ export async function runWimVolumes1527Gate({driver,bridge,waitForElement,artifa
     if(!(await driver.findElements(By.css('[data-testid="compression-draft-details"]'))).length)await click('[data-testid="compression-draft-row"] [data-testid="compression-archive-name"]')
     await choose('[data-testid="compression-format-select"]','WIM');assert.equal(await(await waitForElement('[data-testid="compression-password-input"]')).isEnabled(),false)
     const split=await waitForElement('[data-testid="compression-split-toggle"]');assert.equal(await split.isEnabled(),true);if(!await split.isSelected())await click(split)
-    await fill('[data-testid="compression-split-size"]','1');await fill('[data-testid="compression-output-path"]',work);await fill('[data-testid="compression-filename-input"]','界面镜像')
+    await fill('[data-testid="compression-split-size"]','1');await fill('[data-testid="compression-output-path"]',work);await fill('[data-testid="compression-filename-input"]','界面镜像-'+randomUUID())
     await sizes('inline-config','[data-testid="wim-volume-hint"]');await click('[data-testid="start-compression"]')
     const record=await driver.wait(async()=>(await bridge('taskHistory')).find(row=>row.outputPath?.includes('界面镜像')&&['completed','failed'].includes(row.status))||false,60000);assert.equal(record.status,'completed',JSON.stringify(record));const files=record.archiveOutput.files;assert.equal(files.length,3)
     independent(mergeForOracle(record.archiveOutput,'界面镜像'),{'数据.bin':sha(path.join(state.source,'数据.bin'))},'界面创建')
-    await click('[data-testid="compression-draft-details"] [data-testid="result-generate-checksums"]');assert.match(await(await waitForElement('[data-testid="checksum-source-summary"]')).getText(),/整组 3 个文件/)
+    await click('[data-testid="compression-draft-details"] [data-testid="result-generate-checksums"]');await driver.wait(async()=>/整组 3 个文件/.test(await(await waitForElement('[data-testid="checksum-source-summary"]')).getText()),15000)
     await click('[data-testid="checksum-calculate-start"]');await driver.wait(async()=>await driver.executeScript(()=>document.querySelectorAll('[data-testid="checksum-calculation-entry"][data-status="success"]').length===3),15000)
     assert.deepEqual(await driver.executeScript(()=>[...document.querySelectorAll('.checksum-main>code')].map(e=>e.textContent)),files.map(file=>sha(file.path)));await sizes('result-checksums','.checksum-results');done('ui','creation-and-result-checksums',{record,allVolumes:true,independentDigests:true})
   }
   if(!passed('ui','compression-batch')){
+    console.log('wim-1527: batch begin')
     await bridge('clearCompressionWorkspace');await click('[data-testid="nav-Compress"]');await bridge('queueDesktopDialogSelections',[[path.join(state.source,'数据.bin'),path.join(state.source,'说明.txt')]]);await click('[data-testid="compression-center"] [data-testid="dropzone-file"]')
     for(let index=0;index<2;index++){
       const row=(await driver.findElements(By.css('[data-testid="compression-draft-row"]')))[index];await click(await row.findElement(By.css('[data-testid="compression-archive-name"]')))
       await choose('[data-testid="compression-format-select"]','7Z');if(index===0)await fill('[data-testid="compression-password-input"]','保留这条密码')
-      const split=await waitForElement('[data-testid="compression-split-toggle"]');if(!await split.isSelected())await click(split);await fill('[data-testid="compression-split-size"]',String(index+1));await click(await row.findElement(By.css('[data-testid="compression-archive-name"]')))
+      const split=await waitForElement('[data-testid="compression-split-toggle"]');if(!await split.isSelected())await click(split);await fill('[data-testid="compression-split-size"]',String(index+1));await closeRow(row)
     }
-    for(const box of await driver.findElements(By.css('[data-testid="compression-group-checkbox"]')))await click(box)
+    console.log('wim-1527: batch rows configured');for(const box of await driver.findElements(By.css('[data-testid="compression-group-checkbox"]')))await click(box)
     const before=(await bridge('taskHistory')).length
     await click('[data-testid="batch-config-bar"] button[aria-haspopup="dialog"]');await choose('[data-testid="batch-format"]','WIM');await click('[data-testid="batch-config-apply"]')
-    await driver.wait(async()=>(await(await waitForElement('[role="dialog"]')).getText()).includes('WIM 不支持原生密码'),15000);await sizes('batch-password-kept','[role="dialog"]');await click('[role="dialog"] button[aria-label="关闭批量配置"]')
-    const row=(await driver.findElements(By.css('[data-testid="compression-draft-row"]')))[0];await click(await row.findElement(By.css('[data-testid="compression-archive-name"]')));assert.equal(await(await waitForElement('[data-testid="compression-password-input"]')).getAttribute('value'),'保留这条密码');await fill('[data-testid="compression-password-input"]','');await click(await row.findElement(By.css('[data-testid="compression-archive-name"]')))
+    await driver.wait(async()=>(await(await waitForElement('[role="dialog"]')).getText()).includes('WIM 不支持原生密码'),15000);console.log('wim-1527: password rejection visible');await sizes('batch-password-kept','[role="dialog"]');await click('[role="dialog"] button[aria-label="关闭批量配置"]')
+    const row=(await driver.findElements(By.css('[data-testid="compression-draft-row"]')))[0];await click(await row.findElement(By.css('[data-testid="compression-archive-name"]')));assert.equal(await(await waitForElement('[data-testid="compression-password-input"]')).getAttribute('value'),'保留这条密码');await fill('[data-testid="compression-password-input"]','');await closeRow(row)
     await click('[data-testid="batch-config-bar"] button[aria-haspopup="dialog"]');await choose('[data-testid="batch-format"]','WIM');await sizes('compression-batch','[role="dialog"]');await click('[data-testid="batch-config-apply"]');await driver.wait(async()=>(await driver.findElements(By.css('[role="dialog"]'))).length===0,10000);assert.equal((await bridge('taskHistory')).length,before)
     for(let index=0;index<2;index++){
-      const row=(await driver.findElements(By.css('[data-testid="compression-draft-row"]')))[index];await click(await row.findElement(By.css('[data-testid="compression-archive-name"]')));assert.equal(await(await waitForElement('[data-testid="compression-split-size"]')).getAttribute('value'),String(index+1));assert.equal(await(await waitForElement('[data-testid="compression-password-input"]')).isEnabled(),false);await click(await row.findElement(By.css('[data-testid="compression-archive-name"]')))
+      const row=(await driver.findElements(By.css('[data-testid="compression-draft-row"]')))[index];await click(await row.findElement(By.css('[data-testid="compression-archive-name"]')));assert.equal(await(await row.findElement(By.css('[data-testid="compression-split-size"]'))).getAttribute('value'),String(index+1));assert.equal(await(await row.findElement(By.css('[data-testid="compression-password-input"]'))).isEnabled(),false);await closeRow(row)
     }
     done('ui','compression-batch',{originalModal:true,perRowSplitRetained:true,passwordRejectedAtomically:true,noImplicitStart:true})
   }
@@ -108,13 +110,15 @@ export async function runWimVolumes1527Gate({driver,bridge,waitForElement,artifa
   if(!passed('ui','images-previews-selected-extraction')){
     await click('[data-testid="nav-ArchiveBrowser"]');await bridge('queueDesktopDialogSelections',[[parts[Math.floor(parts.length/2)]]]);await click('[data-testid="file-manager-open-archive"]')
     const folder=await waitForElement('[data-entry-path="2/"],[data-entry-path="2"]');await folder.sendKeys(Key.ENTER);await waitForElement('[data-entry-path="2/说明.txt"]')
-    for(const [kind,name,selector]of[['text','说明.txt','[data-testid="archive-text-preview"]'],['image','图标.png','[data-testid="archive-image-preview"]']]){
+    if(!state.previewCompleted)for(const [kind,name,selector]of[['text','说明.txt','[data-testid="archive-text-preview"]'],['image','图标.png','[data-testid="archive-image-preview"]']]){
       await driver.executeScript(e=>e.click(),await waitForElement('[data-entry-path="2/'+name+'"] .preview-trigger'));await waitForElement(selector);if(kind==='text')assert.match(await(await waitForElement(selector)).getText(),/独立 WIM 镜像 2/);await sizes(kind+'-preview',selector);await click('.preview-close')
     }
-    // Start with no selected files, then choose exactly one from image 2.
+    state.previewCompleted={binarySha256,completedAt:new Date().toISOString()};save()
+    // Search all fixture files before clearing selection across both images.
+    await fill('.browser-search input','.')
     const all=await waitForElement('.browser-table-head .browser-checkbox');if((await all.getAttribute('class')).includes('checked'))await click(all)
-    await click('[data-entry-path="2/说明.txt"] .browser-checkbox');const output=owned(path.join(work,'只取镜像二的说明'));mkdirSync(output)
-    await bridge('queueDesktopDialogSelections',[[output]]);await click('.output-target');await sizes('selected-image','footer .browser-primary');await click('footer .browser-primary')
+    await fill('.browser-search input','2/说明.txt');await click('[data-entry-path="2/说明.txt"] .browser-checkbox');await fill('.browser-search input','');const output=owned(path.join(work,'只取镜像二的说明-'+randomUUID()));mkdirSync(output)
+    await bridge('queueDesktopDialogSelections',[output]);await click('.output-target');await driver.wait(async()=>(await(await waitForElement('.output-target')).getAttribute('title'))===output,5000);await sizes('selected-image','footer .browser-primary');await click('footer .browser-primary')
     await driver.wait(()=>existsSync(path.join(output,'2/说明.txt')),30000);assert.deepEqual(tree(output),{'2/说明.txt':original.expected['2/说明.txt']});done('ui','images-previews-selected-extraction',{middleMember:true,image2Only:true,output,independentHash:true})
   }
   if(!passed('ui','missing-volume-recovery')){

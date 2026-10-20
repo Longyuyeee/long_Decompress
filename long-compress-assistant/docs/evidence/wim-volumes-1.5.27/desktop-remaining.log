@@ -1,0 +1,17 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+wim-1527: batch begin
+wim-1527: batch rows configured
+wim-1527: password rejection visible
+wim-1527: ui compression-batch
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+TimeoutError: Wait timed out after 30144ms
+    at E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:929:22 {
+  remoteStacktrace: ''
+}
+
+Node.js v24.14.0
