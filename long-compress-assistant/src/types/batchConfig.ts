@@ -1,7 +1,7 @@
 import type { ZipPasswordEncoding } from './zipPassword'
 
 export interface BatchConfigPatch {
-  format?: 'zip' | 'zipx' | '7z' | 'rar' | 'tar.lz'
+  format?: 'zip' | 'zipx' | '7z' | 'rar' | 'tar.lz' | 'lzma'
   zipMethod?: 'deflate' | 'zstd'
   level?: number
   rarRecoveryPercent?: number

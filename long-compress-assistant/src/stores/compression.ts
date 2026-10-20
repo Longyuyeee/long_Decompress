@@ -457,12 +457,17 @@ export const useCompressionStore = defineStore('compression', () => {
     if ((patch.format === 'zip' || patch.format === 'zipx') && drafts.some(({ id, draft }) => selected.has(id) && !draft.taskId && getEffectiveSettings(draft.settings).encryptFilenames)) {
       throw new Error('所选任务中有已开启文件名加密的 7Z 任务。请保持 7Z 格式，或先在该条配置中关闭文件名加密。')
     }
+    if (patch.format === 'lzma' && drafts.some(({id,draft}) => {
+      if (!selected.has(id) || draft.taskId) return false
+      const files = 'files' in draft ? draft.files : [draft]
+      return files.length !== 1 || files[0].isDirectory
+    })) throw new Error('LZMA 每条任务只能压缩一个普通文件；目录或多个文件请选择 TAR 组合。所选配置未修改。')
     for (const { id, draft } of drafts) {
       if (!selected.has(id) || draft.taskId || (methodOnly && getEffectiveSettings(draft.settings).format !== 'zip')) continue
       if (zipOptionsOnly && !((patch.zipMethod !== undefined && getEffectiveSettings(draft.settings).format === 'zip') || (patch.zipPasswordEncoding !== undefined && ['zip','zipx'].includes(getEffectiveSettings(draft.settings).format)))) continue
       const settings = cloneSettings(getEffectiveSettings(draft.settings))
       if (patch.format !== undefined) settings.format = patch.format
-      if (patch.format === 'tar.lz') {
+      if (patch.format === 'tar.lz' || patch.format === 'lzma') {
         draft.draftPasswordRequired = false
         settings.password = ''
         settings.encryptFilenames = false
