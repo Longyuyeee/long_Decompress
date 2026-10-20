@@ -599,7 +599,7 @@ pub async fn diagnose_archive_with_encoding(
         Some(route)
             if !matches!(
                 route,
-                CompressionRoute::Rar | CompressionRoute::Wim | CompressionRoute::Lzma
+                CompressionRoute::Rar | CompressionRoute::Wim
             ) =>
         {
             report.integrity_tested = true;

@@ -207,7 +207,14 @@ fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usi
         encoder.write_all(sample)?;
         return Ok(encoder.finish()?.len());
     }
-    if format.contains("xz") || format == "7z" || format == "lzma" {
+    if format == "lzma" {
+        let options = xz2::stream::LzmaOptions::new_preset(level.clamp(1, 9))?;
+        let stream = xz2::stream::Stream::new_lzma_encoder(&options)?;
+        let mut encoder = xz2::write::XzEncoder::new_stream(Vec::new(), stream);
+        encoder.write_all(sample)?;
+        return Ok(encoder.finish()?.len());
+    }
+    if format.contains("xz") || format == "7z" {
         let mut encoder = xz2::write::XzEncoder::new(Vec::new(), level);
         encoder.write_all(sample)?;
         return Ok(encoder.finish()?.len());
@@ -424,4 +431,14 @@ mod aes1521_analysis_tests {
                 super::compressed_sample_size(sample.as_bytes(), &format!("{codec}.aes"), 1).unwrap());
         }
     }
+}
+
+#[cfg(test)]
+#[test]
+fn lzma1523_analysis_uses_alone_framing_from_independent_fixture() {
+    use std::io::Read;
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/lzma-1523/说明.txt.lzma");
+    let mut bytes = vec![];
+    super::codec_stream::decoder(&path, "lzma").unwrap().read_to_end(&mut bytes).unwrap();
+    assert_eq!(compressed_sample_size(&bytes, "lzma", 1).unwrap(), std::fs::metadata(path).unwrap().len() as usize);
 }

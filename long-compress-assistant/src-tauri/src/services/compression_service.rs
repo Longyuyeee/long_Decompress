@@ -2180,7 +2180,7 @@ impl CompressionService {
             format = ArchiveFormat::from_extension(Path::new(file_stem).extension().and_then(|value| value.to_str()).unwrap_or(""));
         }
         let native_seven_zip = Self::uses_native_seven_zip_volumes(path, &format);
-        let native_stream = matches!(format, ArchiveFormat::AesEncrypted | ArchiveFormat::Tar | ArchiveFormat::Gzip | ArchiveFormat::Bzip2 | ArchiveFormat::Xz | ArchiveFormat::Zstd | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip);
+        let native_stream = matches!(format, ArchiveFormat::AesEncrypted | ArchiveFormat::Tar | ArchiveFormat::Gzip | ArchiveFormat::Bzip2 | ArchiveFormat::Xz | ArchiveFormat::Zstd | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip | ArchiveFormat::Lzma);
         if is_split_archive && !native_seven_zip && !native_stream && format != ArchiveFormat::Zip && format != ArchiveFormat::Unknown && format != ArchiveFormat::Universal {
             service.emit_log(&window, &task_id, &format!("检测到分卷压缩包 (后缀: .{})，使用 7z CLI 合并解压", ext), TaskLogSeverity::Info);
             format = ArchiveFormat::Universal;
@@ -2539,14 +2539,14 @@ impl CompressionService {
                 let w = window.clone();
                 tokio::task::spawn_blocking(move || srv.do_extract_tar(&w, &t_id, &f_path, &o_dir, None, &opts)).await?
             },
-            ref codec_format @ (ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip) => {
+            ref codec_format @ (ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip | ArchiveFormat::Lzma) => {
                 let srv = service.clone();
                 let f_path = file_path.clone();
                 let o_dir = out_dir.clone();
                 let opts = options.clone();
                 let t_id = task_id.clone();
                 let w = window.clone();
-                let codec = match codec_format { ArchiveFormat::Lz4 => "lz4", ArchiveFormat::Lzip => "lz", _ => "br" };
+                let codec = match codec_format { ArchiveFormat::Lz4 => "lz4", ArchiveFormat::Lzip => "lz", ArchiveFormat::Lzma => "lzma", _ => "br" };
                 tokio::task::spawn_blocking(move || {
                     let decoder = crate::services::codec_stream::decoder(Path::new(&f_path), codec)?;
                     if compression_format::is_tar_wrapped_archive(Path::new(&f_path), &format!("tar.{codec}")) {
@@ -2619,7 +2619,7 @@ impl CompressionService {
                 }).await?
             },
             // 所有通过 7z CLI 处理的格式
-            ArchiveFormat::Lzma | ArchiveFormat::Iso | ArchiveFormat::Cab |
+            ArchiveFormat::Iso | ArchiveFormat::Cab |
             ArchiveFormat::Lzh | ArchiveFormat::Arj | ArchiveFormat::Dmg |
             ArchiveFormat::Wim | ArchiveFormat::Vhd | ArchiveFormat::Chm |
             ArchiveFormat::Deb | ArchiveFormat::Rpm | ArchiveFormat::SquashFs |
@@ -5696,7 +5696,7 @@ mod tests_continued {
         ).is_ok());
         // RAR and TAR gained splitting in v1.4.3. Keep this rejection test on
         // formats that still genuinely lack the requested password/split mode.
-        for format in ["wim", "lzma"] {
+        for format in ["wim"] {
             let unsupported = CompressionOptions { format: Some(format.into()), ..encrypted_split.clone() };
             assert!(CompressionService::validate_compression_io_paths(
                 &[source.to_string_lossy().to_string()], &output.to_string_lossy(), &unsupported,

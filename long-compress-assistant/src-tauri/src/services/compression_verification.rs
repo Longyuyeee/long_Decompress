@@ -312,6 +312,10 @@ pub(crate) fn verify_native_with_zip_encoding(
             drain_reader(crate::services::codec_stream::decoder(path, "xz")?, &is_cancelled)?;
             Ok(true)
         }
+        CompressionRoute::Lzma => {
+            drain_reader(crate::services::codec_stream::decoder(path, "lzma")?, &is_cancelled)?;
+            Ok(true)
+        }
         CompressionRoute::Zstd => {
             drain_reader(
                 crate::services::codec_stream::decoder(path, "zst")?,
@@ -351,7 +355,7 @@ pub(crate) fn verify_native_with_zip_encoding(
             verify_wrapped_aes(route, path, password, &is_cancelled)?;
             Ok(true)
         }
-        CompressionRoute::Zpaq | CompressionRoute::Rar | CompressionRoute::Wim | CompressionRoute::Lzma => Ok(false),
+        CompressionRoute::Zpaq | CompressionRoute::Rar | CompressionRoute::Wim => Ok(false),
     }
 }
 

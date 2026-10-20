@@ -106,3 +106,6 @@ pub mod checksum_progress;
 
 #[cfg(test)]
 mod checksum_progress_tests;
+
+#[cfg(test)]
+mod lzma_1523_tests;

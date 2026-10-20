@@ -222,6 +222,7 @@ pub(crate) fn decoder(path: &Path, format: &str) -> Result<Box<dyn Read + Send>>
     let reader: Box<dyn Read + Send> = match format {
         "gz" | "gzip" | "tar.gz" => Box::new(flate2::read::MultiGzDecoder::new(input)),
         "bz2" | "bzip2" | "tar.bz2" => Box::new(bzip2::read::MultiBzDecoder::new(input)),
+        "lzma" => Box::new(xz2::read::XzDecoder::new_stream(input, xz2::stream::Stream::new_lzma_decoder(u64::MAX)?)),
         "xz" | "tar.xz" => Box::new(xz2::read::XzDecoder::new_multi_decoder(input)),
         "zst" | "zstd" | "tar.zst" => Box::new(zstd::stream::read::Decoder::new(input)?),
         _ => return Ok(if format.ends_with("lz4") {
@@ -264,6 +265,7 @@ pub(crate) fn plain_format(format: &super::archive_format::ArchiveFormat)
     match format {
         F::Lz4 => Some(("lz4", "LZ4", &[".lz4"])),
         F::Brotli => Some(("br", "BR", &[".br"])),
+        F::Lzma => Some(("lzma", "LZMA", &[".lzma"])),
         F::Lzip => Some(("lz", "LZIP", &[".lz"])),
         F::Gzip => Some(("gz", "GZIP", &[".gz", ".gzip"])),
         F::Bzip2 => Some(("bz2", "BZIP2", &[".bz2", ".bzip2"])),

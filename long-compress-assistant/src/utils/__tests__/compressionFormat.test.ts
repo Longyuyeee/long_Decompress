@@ -99,7 +99,7 @@ describe('compression format helpers', () => {
       compressible.map(format => format.format)
     )
     expect(COMPRESSIBLE_FORMATS.some(format => format.value === 'tar.zst')).toBe(true)
-    expect(COMPRESSIBLE_FORMATS.some(format => format.value === 'lzma' && format.requires7za)).toBe(true)
+    expect(COMPRESSIBLE_FORMATS.some(format => format.value === 'lzma' && !format.requires7za && format.supportsSplit)).toBe(true)
     expect(COMPRESSIBLE_FORMATS.some(format => format.value === 'wim' && format.engineFormat === 'wim')).toBe(true)
     expect(COMPRESSIBLE_FORMATS.find(format => format.value === 'zip')?.supportsSplit).toBe(true)
     expect(COMPRESSIBLE_FORMATS.find(format => format.value === '7z')?.supportsSplit).toBe(true)
@@ -144,4 +144,11 @@ describe('compression format helpers', () => {
     expect(isPotentialSplitArchivePath('C:/downloads/project.part12')).toBe(true)
     expect(isPotentialSplitArchivePath('C:/documents/report.docx')).toBe(false)
   })
+})
+
+it('lzma1523 keeps numeric splitting and the existing explicit 7Z password alternative', () => {
+  expect(supportsArchiveSplit('lzma')).toBe(true)
+  expect(supportsArchiveSplit('lzma')).toBe(true)
+  expect(effectiveFormatForPassword('lzma','secret')).toBe('7z')
+  expect(isSingleFileStreamFormat('lzma')).toBe(true)
 })
