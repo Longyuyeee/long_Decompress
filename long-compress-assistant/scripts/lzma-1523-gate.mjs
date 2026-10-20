@@ -48,9 +48,10 @@ export async function runLzma1523Gate({driver,bridge,waitForElement,artifactDire
   if(!state.native.some(r=>r.kind==='advertised-preview')){
     const caps=await ipc('get_archive_engine_capabilities',{});assert.ok(caps.boundedPreviewFormats.includes('LZMA'));assert.ok(caps.browseExtensions.includes('lzma'));assert.ok(caps.nestedExtensions.includes('lzma'))
     const outer=fresh('嵌套原包')+'.zip';seven(['a','-tzip',outer,'说明.txt.lzma'],fixtures)
-    const nested=await ipc('materialize_nested_archive',{filePath:outer,entryPath:'说明.txt.lzma',password:null,targetDepth:1,ancestorHashes:[]})
-    const nestedPath=nested.path||nested.cachedPath||nested.filePath;assert.ok(nestedPath,JSON.stringify(nested))
-    const preview=await ipc('preview_archive_text',{filePath:nestedPath,entryPath:'说明.txt',password:null});assert.match(preview.content,/收到 LZMA/)
+    const nested=await ipc('materialize_nested_archive',{filePath:outer,entryPath:'说明.txt.lzma',password:null,targetDepth:2,ancestorHashes:[]})
+    const nestedPath=nested.cachePath;assert.ok(nestedPath,JSON.stringify(nested))
+    const listing=await ipc('browse_archive',{filePath:nestedPath,password:null,browseId:randomUUID()});assert.equal(listing.format,'LZMA')
+    const preview=await ipc('preview_archive_text',{filePath:nestedPath,entryPath:listing.entries[0].path,password:null});assert.match(preview.content,/收到 LZMA/)
     state.native.push({kind:'advertised-preview',boundedPreviewEnabled:true,nestedRealPreview:true});save()
   }
   for(const name of ['说明.txt','空文件.txt','其他属性.txt']){
