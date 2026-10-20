@@ -322,7 +322,7 @@ impl CompressionService {
                 .unwrap_or_else(|| "xz".to_string()),
             ArchiveFormat::Zstd => wrapped(&[".tar.zst", ".tzst"], "tar.zst")
                 .unwrap_or_else(|| "zst".to_string()),
-            ArchiveFormat::Lzma => "lzma".to_string(),
+            ArchiveFormat::Lzma => wrapped(&[".tar.lzma"], "tar.lzma").unwrap_or_else(|| "lzma".to_string()),
             ArchiveFormat::Lz4 => wrapped(&[".tar.lz4"], "tar.lz4").unwrap_or_else(|| "lz4".to_string()),
             ArchiveFormat::Brotli => wrapped(&[".tar.br"], "tar.br").unwrap_or_else(|| "br".to_string()),
             ArchiveFormat::Lzip => wrapped(&[".tar.lz", ".tlz"], "tar.lz").unwrap_or_else(|| "lz".to_string()),
@@ -1290,6 +1290,8 @@ impl CompressionService {
             let mut options = options;
             if generic_split { options.split_size = None; }
             let res = match route {
+                CompressionRoute::LzmaAes => native_compression::aes::compress(&service, Some(&window), &task_id, &source_files, &working_output_string, options, native_compression::aes::AesCompressionKind::Lzma),
+                CompressionRoute::TarLzmaAes => native_compression::aes::compress(&service, Some(&window), &task_id, &source_files, &working_output_string, options, native_compression::aes::AesCompressionKind::TarLzma),
                 CompressionRoute::Zpaq => {
                     service.check_cancellation()?;
                     let result = tauri::async_runtime::block_on(crate::services::zpaq_engine::create(&source_files, &working_output, &options, service.cancellation_flag.clone()));
@@ -1324,7 +1326,7 @@ impl CompressionService {
                 CompressionRoute::Zstd => service.do_compress_zstd(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::TarZstd => service.do_compress_tar_zstd(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::Lzma => service.do_compress_lzma(&window, &task_id, &source_files, &working_output_string, options),
-                CompressionRoute::Lz4 | CompressionRoute::Brotli | CompressionRoute::TarLz4 | CompressionRoute::TarBrotli | CompressionRoute::Lzip | CompressionRoute::TarLzip => {
+                CompressionRoute::Lz4 | CompressionRoute::Brotli | CompressionRoute::TarLz4 | CompressionRoute::TarBrotli | CompressionRoute::Lzip | CompressionRoute::TarLzip | CompressionRoute::TarLzma => {
                     crate::services::codec_stream::compress(&service, Some(&window), &task_id, &source_files, &working_output_string, options, &requested_format)
                 },
             };
@@ -3032,7 +3034,7 @@ impl CompressionService {
         }
 
         for suffix in [
-            ".tar.gz", ".tar.bz2", ".tar.xz", ".tar.zst", ".tar.lz4", ".tar.br", ".tar.lz", ".tlz", ".lz4", ".br", ".lz", ".zip", ".zipx", ".7z", ".rar",
+            ".tar.lzma", ".lzma", ".tar.gz", ".tar.bz2", ".tar.xz", ".tar.zst", ".tar.lz4", ".tar.br", ".tar.lz", ".tlz", ".lz4", ".br", ".lz", ".zip", ".zipx", ".7z", ".rar",
             ".tar", ".wim",
         ] {
             if candidate.to_lowercase().ends_with(suffix) {
@@ -3149,8 +3151,8 @@ impl CompressionService {
             self.do_extract_tar_xz(window, task_id, &source, output, options)
         } else if name.ends_with(".tar.zst") || name.ends_with(".tzst") {
             self.do_extract_tar_zstd(window, task_id, &source, output, options)
-        } else if [".lz4", ".br", ".lz", ".tlz"].iter().any(|suffix| name.ends_with(suffix)) {
-            let codec = if name.ends_with(".lz4") { "lz4" } else if name.ends_with(".br") { "br" } else { "lz" };
+        } else if [".lzma", ".lz4", ".br", ".lz", ".tlz"].iter().any(|suffix| name.ends_with(suffix)) {
+            let codec = if name.ends_with(".lzma") { "lzma" } else if name.ends_with(".lz4") { "lz4" } else if name.ends_with(".br") { "br" } else { "lz" };
             let reader = crate::services::codec_stream::decoder(&inner.path, codec)?;
             if compression_format::is_tar_wrapped_archive(&inner.path, &format!("tar.{codec}")) {
                 self.do_extract_tar(window, task_id, &source, output, Some(reader), options)

@@ -207,7 +207,7 @@ fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usi
         encoder.write_all(sample)?;
         return Ok(encoder.finish()?.len());
     }
-    if format == "lzma" {
+    if matches!(format, "lzma" | "tar.lzma") {
         let options = xz2::stream::LzmaOptions::new_preset(level.clamp(1, 9))?;
         let stream = xz2::stream::Stream::new_lzma_encoder(&options)?;
         let mut encoder = xz2::write::XzEncoder::new_stream(Vec::new(), stream);
@@ -231,7 +231,7 @@ fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usi
 fn duration_range(total_size: u64, format: &str, level: u32, file_count: usize) -> (u64, u64) {
     let format = format.strip_suffix(".aes").unwrap_or(format);
     let base_mib_per_second = match format {
-        "7z" | "xz" | "tar.xz" | "lzma" | "lz" | "tar.lz" => 45.0,
+        "7z" | "xz" | "tar.xz" | "lzma" | "tar.lzma" | "lz" | "tar.lz" => 45.0,
         "bz2" | "tar.bz2" => 35.0,
         "zst" | "zstd" | "tar.zst" => 180.0,
         "tar" => 350.0,

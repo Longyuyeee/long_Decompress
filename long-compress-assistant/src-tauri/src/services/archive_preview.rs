@@ -206,6 +206,7 @@ fn preview_format(path: &Path) -> Result<&'static str> {
         Some(Route::TarLz4) => Ok("TAR.LZ4"),
         Some(Route::TarBrotli) => Ok("TAR.BR"),
         Some(Route::TarLzip) => Ok("TAR.LZIP"),
+        Some(Route::TarLzma) => Ok("TAR.LZMA"),
         _ => super::codec_stream::plain_format(&format).map(|(_,label,_)| label)
             .context("此格式暂不支持内部预览，请先提取后打开"),
     }
@@ -216,6 +217,7 @@ fn read_tar_family(path: &Path, format: &str, entry_path: &str) -> Result<Vec<u8
         "TAR.LZ4" => read_tar_entry(super::codec_stream::decoder(path, "lz4")?, entry_path),
         "TAR.BR" => read_tar_entry(super::codec_stream::decoder(path, "br")?, entry_path),
         "TAR.LZIP" => read_tar_entry(super::codec_stream::decoder(path, "lz")?, entry_path),
+        "TAR.LZMA" => read_tar_entry(super::codec_stream::decoder(path, "lzma")?, entry_path),
         "TAR" => read_tar_entry(super::numeric_volume_reader::ZipInputReader::open(path)?, entry_path),
         "TAR.GZ" => read_tar_entry(crate::services::codec_stream::decoder(path, "gz")?, entry_path),
         "TAR.BZ2" => read_tar_entry(crate::services::codec_stream::decoder(path, "bz2")?, entry_path),
@@ -235,6 +237,7 @@ fn read_tar_family_text(path: &Path, format: &str, entry_path: &str) -> Result<T
         "TAR.LZ4" => read_tar_text_entry(super::codec_stream::decoder(path, "lz4")?, entry_path),
         "TAR.BR" => read_tar_text_entry(super::codec_stream::decoder(path, "br")?, entry_path),
         "TAR.LZIP" => read_tar_text_entry(super::codec_stream::decoder(path, "lz")?, entry_path),
+        "TAR.LZMA" => read_tar_text_entry(super::codec_stream::decoder(path, "lzma")?, entry_path),
         "TAR" => read_tar_text_entry(super::numeric_volume_reader::ZipInputReader::open(path)?, entry_path),
         "TAR.GZ" => {
             read_tar_text_entry(crate::services::codec_stream::decoder(path, "gz")?, entry_path)

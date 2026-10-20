@@ -402,3 +402,24 @@ it('lzma1523 batch keeps per-file splits and refuses multi-file groups before ch
   expect(()=>store.applyBatchConfiguration([first.path,groupId],{format:'lzma',level:9})).toThrow('配置未修改')
   expect(JSON.stringify(store.selectedFiles)).toBe(snapshot);expect(store.groups[0].settings).toBeUndefined()
 })
+
+it('lzma1524 batch preserves each password and split while clearing unsupported flags',()=>{
+  setActivePinia(createPinia());const store=useCompressionStore(),first=mockFile('a.bin',10),second=mockFile('b.bin',20)
+  ;[first,second].forEach(f=>store.addFile(f))
+  store.updateFileSettings(first.path,{...defaultOptions(),password:'one',splitArchive:true,splitSize:'64',encryptFilenames:true,createSolidArchive:true})
+  store.updateFileSettings(second.path,{...defaultOptions(),password:'two',splitArchive:true,splitSize:'32'})
+  store.applyBatchConfiguration([first.path,second.path],{format:'tar.lzma.aes'})
+  expect(store.selectedFiles[0].settings).toMatchObject({format:'tar.lzma.aes',password:'one',splitSize:'64',splitArchive:true,encryptFilenames:false,createSolidArchive:false})
+  expect(store.selectedFiles[1].settings).toMatchObject({password:'two',splitSize:'32'})
+  expect(store.globalSettings.format).toBe('zip')
+  store.applyBatchConfiguration([first.path],{format:'tar.lzma'})
+  expect(store.selectedFiles[0].settings).toMatchObject({format:'tar.lzma',password:'',splitArchive:true,splitSize:'64'})
+  expect(store.selectedFiles[1].settings?.format).toBe('tar.lzma.aes')
+})
+it('lzma1524 single-file encrypted batch refuses directories atomically',()=>{
+  setActivePinia(createPinia());const store=useCompressionStore(),first=mockFile('a.bin',10),folder={...mockFile('目录',20),isDirectory:true}
+  ;[first,folder].forEach(f=>store.addFile(f))
+  const snapshot=JSON.stringify(store.selectedFiles)
+  expect(()=>store.applyBatchConfiguration([first.path,folder.path],{format:'lzma.aes',level:9})).toThrow('配置未修改')
+  expect(JSON.stringify(store.selectedFiles)).toBe(snapshot)
+})

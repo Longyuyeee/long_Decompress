@@ -274,3 +274,15 @@ it('lzma1523 retains inherited numeric splitting and shows the sharing hint inli
   expect((wrapper.get('[data-testid="compression-split-size"]').element as HTMLInputElement).value).toBe('64')
   expect(wrapper.emitted('update:modelValue')).toBeUndefined()
 })
+
+it.each(['tar.lzma','lzma.aes','tar.lzma.aes'])('lzma1524 opens inherited %s in place without detaching settings',async format=>{
+  invoke.mockImplementation(async (command: string) => command === 'get_archive_engine_capabilities' ? {available:true,fullEngine:true,formats:[],browseExtensions:[],nestedExtensions:[],boundedPreviewFormats:[],imagePreviewExtensions:[],textPreviewExtensions:[],message:''} : command === 'list_encrypted_passwords' ? [] : '{}')
+  const wrapper=mountPanel(settings({format,password:format==='tar.lzma'?'':'secret',splitArchive:true,splitSize:'64'}))
+  await flushPromises()
+  expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+  expect(wrapper.get('[data-testid="compression-split-toggle"]').attributes('disabled')).toBeUndefined()
+  expect(wrapper.get('[data-testid="compression-filename-extension"]').text()).toBe('.'+format)
+  if(format==='tar.lzma')expect(wrapper.get('[data-testid="lzma-volume-hint"]').text()).toContain('.tar.lzma.001')
+  else expect(wrapper.get('[data-testid="aes-volume-hint"]').text()).toContain('Long解压')
+  wrapper.unmount()
+})

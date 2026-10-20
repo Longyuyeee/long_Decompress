@@ -1,0 +1,49 @@
+{
+  "tool": {
+    "python": "3.12.10",
+    "cryptography": "49.0.0"
+  },
+  "password": "Long 目录密码-1524",
+  "layout": "Python PAX TAR + FORMAT_ALONE LZMA1 lc2/pb1; optional existing AESENC02, Argon2id 65536KiB/3/1 and AES-256-GCM, 64KiB chunks",
+  "expectedFiles": {
+    "大文本.txt": "7e1d486adc19c8f12854deaa2a451a1faea34740719f795dfb7d3da7a97cbad0",
+    "说明.txt": "c2b8c2563d94cb69937bb91b49d631ab007a2c9362381e04e6364edd782804c9",
+    "中文目录/数据.bin": "ccc9663b67d57485697463af5f8b1dbbd2c074829337d5e3f303392009c193fe",
+    "空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43"
+  },
+  "emptyDirectory": "中文目录/空目录",
+  "plainName": "大文本.txt",
+  "cases": [
+    {
+      "format": "tar.lzma",
+      "archive": "资料.tar.lzma",
+      "bytes": 93824,
+      "sha256": "5fdb186183c90ced5d2c8cf48eb97abfef33e0b72f60a0568224d11a731e428f",
+      "innerSha256": "5fdb186183c90ced5d2c8cf48eb97abfef33e0b72f60a0568224d11a731e428f",
+      "decodedSha256": "01bac68c6684130fa32ea717ce7aacd1de1456b43a960701c0310774abdcbf3a",
+      "tar": true,
+      "encrypted": false
+    },
+    {
+      "format": "lzma.aes",
+      "archive": "大文本.txt.lzma.aes",
+      "bytes": 83548,
+      "sha256": "557e98f802db5c25e8e84233e34d6fd56dd76cc696266acd911efa73e0dcd469",
+      "innerSha256": "3ec00fe846122aa14f324320689598befc22f62d245705a0305489f78b756b14",
+      "decodedSha256": "7e1d486adc19c8f12854deaa2a451a1faea34740719f795dfb7d3da7a97cbad0",
+      "tar": false,
+      "encrypted": true
+    },
+    {
+      "format": "tar.lzma.aes",
+      "archive": "资料.tar.lzma.aes",
+      "bytes": 93932,
+      "sha256": "a2674b297a922bc2320bdf375eb8b1d6e732df2f5288a6fb0ae7ef64f0045de4",
+      "innerSha256": "5fdb186183c90ced5d2c8cf48eb97abfef33e0b72f60a0568224d11a731e428f",
+      "decodedSha256": "01bac68c6684130fa32ea717ce7aacd1de1456b43a960701c0310774abdcbf3a",
+      "tar": true,
+      "encrypted": true
+    }
+  ]
+}

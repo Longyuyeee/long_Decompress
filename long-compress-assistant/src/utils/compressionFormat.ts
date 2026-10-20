@@ -1,4 +1,7 @@
 export type CompressionFormatId =
+  | 'tar.lzma'
+  | 'lzma.aes'
+  | 'tar.lzma.aes'
   | 'zpaq'
   | 'zip'
   | 'zipx'
@@ -87,6 +90,9 @@ export const FORMAT_CAPABILITIES: CompressionFormatCapability[] = [
   { format: 'xz.aes', displayName: 'XZ.AES 🔒', extensions: ['xz.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: true, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'Long 自有 AES 容器，需要密码；支持 .aes.001 数字分卷。接收方请使用 Long解压，不是通用 TAR 密码格式。' },
   { format: 'zst.aes', displayName: 'ZST.AES 🔒', extensions: ['zst.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: true, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'Long 自有 AES 容器，需要密码；支持 .aes.001 数字分卷。接收方请使用 Long解压，不是通用 TAR 密码格式。' },
   { format: 'lzma', displayName: 'LZMA', extensions: ['lzma'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
+  { format: 'tar.lzma', displayName: 'TAR.LZMA', extensions: ['tar.lzma'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: '适合目录或多个文件；支持数字分卷。需要密码时请选择 TAR.LZMA.AES；普通 TAR.LZMA 没有原生密码。' },
+  { format: 'lzma.aes', displayName: 'LZMA.AES 🔒', extensions: ['lzma.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: true, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: '单文件 Long 自有加密格式；目录或多文件请选择 TAR.LZMA.AES。接收方需使用 Long解压 v1.5.24 或更新版本，数字分卷需集齐全部卷。' },
+  { format: 'tar.lzma.aes', displayName: 'TAR.LZMA.AES 🔒', extensions: ['tar.lzma.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: '适合目录或多文件的 Long 自有加密格式；接收方需使用 Long解压 v1.5.24 或更新版本。支持数字分卷，不是通用 LZMA 原生密码标准。' },
   { format: 'tar.lz4', displayName: 'TAR.LZ4', extensions: ['tar.lz4'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
   { format: 'tar.br', displayName: 'TAR.BR', extensions: ['tar.br'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
   { format: 'lz4', displayName: 'LZ4', extensions: ['lz4'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
@@ -177,7 +183,7 @@ export const DECOMPRESS_ARCHIVE_ACCEPT = DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS
 
 export const DECOMPRESS_ARCHIVE_HINT = 'ZIP · 7Z · RAR · TAR · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · LZIP · TAR.LZIP · ISO · IMG · DMG · WIM · VHD · CAB · DEB · RPM · MSI · JAR · APK · IPA · LZH · CPIO · XAR + 更多'
 
-export const COMPRESSION_FORMAT_HINT = 'ZIP · ZIPX（XZ） · 7Z · RAR · WIM · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · TAR.Zst · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · TAR.LZ4 · TAR.BR · LZIP · TAR.LZIP · LZMA · TAR.AES 🔒 · TGZ.AES 🔒 · TBZ.AES 🔒 · TXZ.AES 🔒 · TZST.AES 🔒 · GZ.AES 🔒 · BZ2.AES 🔒 · XZ.AES 🔒 · ZST.AES 🔒'
+export const COMPRESSION_FORMAT_HINT = 'ZIP · ZIPX（XZ） · 7Z · RAR · WIM · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · TAR.Zst · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · TAR.LZ4 · TAR.BR · LZIP · TAR.LZIP · LZMA · TAR.LZMA · LZMA.AES 🔒 · TAR.LZMA.AES 🔒 · TAR.AES 🔒 · TGZ.AES 🔒 · TBZ.AES 🔒 · TXZ.AES 🔒 · TZST.AES 🔒 · GZ.AES 🔒 · BZ2.AES 🔒 · XZ.AES 🔒 · ZST.AES 🔒'
 
 const TAR_FORMATS = new Set(
   FORMAT_CAPABILITIES
@@ -186,7 +192,7 @@ const TAR_FORMATS = new Set(
 )
 // RAR stays in this set so a stale RAR+password configuration is rejected as
 // unsupported instead of silently changing the requested output format to 7Z.
-const NATIVE_PASSWORD_FORMATS = new Set(['zip', 'zipx', '7z', 'rar', 'zpaq', 'lz4.aes', 'br.aes', 'lz.aes', 'tar.lz4.aes', 'tar.br.aes', 'tar.lz.aes', 'tar.aes', 'tar.gz.aes', 'tar.bz2.aes', 'tar.xz.aes', 'tar.zst.aes', 'gz.aes', 'bz2.aes', 'xz.aes', 'zst.aes'])
+const NATIVE_PASSWORD_FORMATS = new Set(['zip', 'zipx', '7z', 'rar', 'zpaq', 'lzma.aes', 'tar.lzma.aes', 'lz4.aes', 'br.aes', 'lz.aes', 'tar.lz4.aes', 'tar.br.aes', 'tar.lz.aes', 'tar.aes', 'tar.gz.aes', 'tar.bz2.aes', 'tar.xz.aes', 'tar.zst.aes', 'gz.aes', 'bz2.aes', 'xz.aes', 'zst.aes'])
 const FORMAT_BY_ID = new Map(FORMAT_CAPABILITIES.map(format => [format.format, format]))
 
 const normalizeFormatId = (format: string): CompressionFormatId | null => {

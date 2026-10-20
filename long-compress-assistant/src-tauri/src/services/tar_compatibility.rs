@@ -43,6 +43,7 @@ pub(crate) fn integrity_route(
     matches!(
         (route, format),
         (Route::TarGzip, F::Gzip)
+            | (Route::TarLzma, F::Lzma)
             | (Route::TarBzip2, F::Bzip2)
             | (Route::TarXz, F::Xz)
             | (Route::TarZstd, F::Zstd)
