@@ -41,7 +41,7 @@ export interface PdfConfigV1 {
 export interface ArchiveConversionConfigV1 {
   sourceZpaqSnapshot?: ZpaqSnapshot
   sourceZipPasswordEncoding?: ZipPasswordEncoding
-  wimMethod?: 'store' | 'xpress'
+  wimMethod?: 'store' | 'xpress' | 'lzx'
   zipMethod?: 'deflate' | 'zstd'
   zipEncryption?: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
@@ -73,7 +73,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
   if (config.kind === 'archive-compression' && config.settings.zipPasswordEncoding !== undefined
       && !isZipPasswordEncoding(config.settings.zipPasswordEncoding)) return null
   const method = config.kind === 'archive-compression' ? config.settings.wimMethod : config.kind === 'archive-conversion' ? config.wimMethod : undefined
-  if (method !== undefined && method !== 'store' && method !== 'xpress') return null
+  if (method !== undefined && method !== 'store' && method !== 'xpress' && method !== 'lzx') return null
   switch (config.kind) {
     case 'archive-conversion': return { schemaVersion: 1, kind: config.kind,
       ...(config.sourceZpaqSnapshot ? { sourceZpaqSnapshot: { ...config.sourceZpaqSnapshot } } : {}),

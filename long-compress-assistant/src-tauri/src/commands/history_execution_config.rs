@@ -48,7 +48,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     }
     if kind == "archive-conversion" {
         if let Some(method) = value.get("wimMethod") {
-            if !matches!(method.as_str(), Some("store" | "xpress")) { return None; }
+            if !matches!(method.as_str(), Some("store" | "xpress" | "lzx")) { return None; }
             output.insert("wimMethod".into(), method.clone());
         }
         if let Some(count) = value.get("rarRecoveryVolumes") {
@@ -82,7 +82,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
         let mut settings = project(value.get("settings")?, settings_fields)?;
         if kind == "archive-compression" {
             if let Some(method) = value.get("settings")?.get("wimMethod") {
-                if !matches!(method.as_str(), Some("store" | "xpress")) { return None; }
+                if !matches!(method.as_str(), Some("store" | "xpress" | "lzx")) { return None; }
                 settings.insert("wimMethod".into(), method.clone());
             }
             if let Some(count) = value.get("settings")?.get("rarRecoveryVolumes") {
@@ -135,6 +135,13 @@ fn project(value: &Value, fields: &[(&str, char)]) -> Option<Map<String, Value>>
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn wim1532_history_retains_method_without_secrets() {
+        let config=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","format":"wim","level":6,"outputPath":"D:/new.wim","splitSize":65536,"encryptFilenames":false,"passwordRequired":false,"wimMethod":"lzx","password":"do not save"});
+        let saved=super::sanitize(config.clone(),"compression","archive").unwrap();assert_eq!(saved["wimMethod"],"lzx");assert!(saved.get("password").is_none());
+        let mut bad=config;bad["wimMethod"]="unknown".into();assert!(super::sanitize(bad,"compression","archive").is_none());
+    }
+
     #[test]
     fn wim1531_history_retains_method_without_secrets() {
         let config=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","format":"wim","level":6,"outputPath":"D:/new.wim","splitSize":65536,"encryptFilenames":false,"passwordRequired":false,"wimMethod":"xpress","password":"do not save"});

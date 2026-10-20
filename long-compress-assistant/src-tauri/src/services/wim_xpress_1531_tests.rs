@@ -18,7 +18,7 @@ fn independent_decode(wim:&Path,output:&Path){let out=crate::utils::process::com
 #[test]
 fn wim1531_true_xpress_resources_independent_complete_content_and_empty_directories(){
     let temp=tempfile::tempdir().unwrap();let source=seed(temp.path());let output=temp.path().join("新包.wim");let mut reported=Vec::new();
-    let progress=std::sync::Mutex::new(&mut reported);let input_bytes=create(&[source.to_string_lossy().into_owned()],&output,true,flag(),|p|progress.lock().unwrap().push(p)).unwrap();
+    let progress=std::sync::Mutex::new(&mut reported);let input_bytes=create(&[source.to_string_lossy().into_owned()],&output,true,WimMethod::Xpress,flag(),|p|progress.lock().unwrap().push(p)).unwrap();
     assert_eq!(input_bytes,walkdir::WalkDir::new(&source).into_iter().map(|e|e.unwrap()).filter(|e|e.file_type().is_file()).map(|e|e.metadata().unwrap().len()).sum::<u64>());
     let data=fs::read(&output).unwrap();assert_eq!(&data[..8],b"MSWIM\0\0\0");assert_ne!(u32::from_le_bytes(data[16..20].try_into().unwrap())&0x20000,0);assert_eq!(u32::from_le_bytes(data[20..24].try_into().unwrap()),32768);
     let table=u64::from_le_bytes(data[56..64].try_into().unwrap())as usize;let size=u64::from_le_bytes(data[48..56].try_into().unwrap())&0x00ff_ffff_ffff_ffff;assert_eq!(data[55]&4,0);
@@ -27,7 +27,7 @@ fn wim1531_true_xpress_resources_independent_complete_content_and_empty_director
 }
 #[tokio::test]
 async fn wim1531_created_numeric_members_browse_preview_integrity_and_selected_extract(){
-    let temp=tempfile::tempdir().unwrap();let source=seed(temp.path());let output=temp.path().join("new.wim");create(&[source.to_string_lossy().into_owned()],&output,true,flag(),|_|{}).unwrap();
+    let temp=tempfile::tempdir().unwrap();let source=seed(temp.path());let output=temp.path().join("new.wim");create(&[source.to_string_lossy().into_owned()],&output,true,WimMethod::Xpress,flag(),|_|{}).unwrap();
     let data=fs::read(&output).unwrap();let files:Vec<_>=data.chunks(65536).enumerate().map(|(i,b)|{let file=temp.path().join(format!("parts.wim.{:03}",i+1));fs::write(&file,b).unwrap();file}).collect();assert!(files.len()>2);let member=&files[files.len()/2];
     let browse=archive_browser::browse_archive(member,None).await.unwrap();assert_eq!(browse.format,"WIM");assert_eq!(browse.entries.iter().filter(|e|!e.is_dir).count(),tree(&source).len());
     UniversalCliEngine::test_integrity(member,None).await.unwrap();assert!(archive_preview::preview_archive_text(member,"资料 目录/说明.txt",None).await.unwrap().content.contains("XPRESS"));assert_eq!(archive_preview::preview_archive_image(member,"资料 目录/图标.png",None).await.unwrap().width,32);
@@ -36,11 +36,11 @@ async fn wim1531_created_numeric_members_browse_preview_integrity_and_selected_e
 #[test]
 fn wim1531_flatten_keeps_duplicate_files_and_old_request_defaults(){
     let temp=tempfile::tempdir().unwrap();for folder in ["one","two"]{fs::create_dir(temp.path().join(folder)).unwrap();fs::write(temp.path().join(folder).join("same.txt"),folder).unwrap();}fs::create_dir(temp.path().join("空目录")).unwrap();
-    let sources=["one","two","空目录"].map(|n|temp.path().join(n).to_string_lossy().into_owned());let output=temp.path().join("flat.wim");create(&sources,&output,false,flag(),|_|{}).unwrap();let decoded=temp.path().join("out");independent_decode(&output,&decoded);assert_eq!(fs::read(decoded.join("same.txt")).unwrap(),b"one");assert_eq!(fs::read(decoded.join("same (1).txt")).unwrap(),b"two");assert!(decoded.join("空目录").is_dir());
-    let legacy:crate::models::compression::CompressionOptions=serde_json::from_value(serde_json::json!({"level":6,"password":null,"split_size":null})).unwrap();assert_eq!(legacy.wim_method,WimMethod::Store);assert!(serde_json::from_value::<WimMethod>(serde_json::json!("lzx")).is_err());
+    let sources=["one","two","空目录"].map(|n|temp.path().join(n).to_string_lossy().into_owned());let output=temp.path().join("flat.wim");create(&sources,&output,false,WimMethod::Xpress,flag(),|_|{}).unwrap();let decoded=temp.path().join("out");independent_decode(&output,&decoded);assert_eq!(fs::read(decoded.join("same.txt")).unwrap(),b"one");assert_eq!(fs::read(decoded.join("same (1).txt")).unwrap(),b"two");assert!(decoded.join("空目录").is_dir());
+    let legacy:crate::models::compression::CompressionOptions=serde_json::from_value(serde_json::json!({"level":6,"password":null,"split_size":null})).unwrap();assert_eq!(legacy.wim_method,WimMethod::Store);assert!(serde_json::from_value::<WimMethod>(serde_json::json!("lzms")).is_err());
 }
 #[test]
 fn wim1531_real_encoder_cancel_removes_unpublished_output_and_preserves_existing_file(){
-    let temp=tempfile::tempdir().unwrap();let source=seed(temp.path());let output=temp.path().join("cancel.wim");let cancel=flag();let error=create(&[source.to_string_lossy().into_owned()],&output,true,cancel.clone(),|_|cancel.store(true,Ordering::SeqCst)).unwrap_err();assert!(matches!(error.downcast_ref::<CompressionError>(),Some(CompressionError::Cancelled)),"{error}");assert!(!output.exists());
-    fs::write(&output,b"previous").unwrap();assert!(create(&[source.to_string_lossy().into_owned()],&output,true,flag(),|_|{}).is_err());assert_eq!(fs::read(output).unwrap(),b"previous");
+    let temp=tempfile::tempdir().unwrap();let source=seed(temp.path());let output=temp.path().join("cancel.wim");let cancel=flag();let error=create(&[source.to_string_lossy().into_owned()],&output,true,WimMethod::Xpress,cancel.clone(),|_|cancel.store(true,Ordering::SeqCst)).unwrap_err();assert!(matches!(error.downcast_ref::<CompressionError>(),Some(CompressionError::Cancelled)),"{error}");assert!(!output.exists());
+    fs::write(&output,b"previous").unwrap();assert!(create(&[source.to_string_lossy().into_owned()],&output,true,WimMethod::Xpress,flag(),|_|{}).is_err());assert_eq!(fs::read(output).unwrap(),b"previous");
 }

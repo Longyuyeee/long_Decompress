@@ -504,3 +504,13 @@ it('wim1531 carries XPRESS through conversion, history and independent per-item 
   expect(mocks.invoke).toHaveBeenCalledWith('convert_archive',expect.objectContaining({sourcePassword:'source-secret',options:expect.objectContaining({format:'wim',wim_method:'xpress',split_size:1048576})}))
   const record=createTaskHistoryRecord(useTaskStore().tasks[0]);expect(record.executionConfig).toMatchObject({wimMethod:'xpress'});store.restore(record);expect(store.effectiveSettings(store.pending.at(-1)!)).toMatchObject({wimMethod:'xpress',sourcePassword:'',splitMiB:1})
 })
+
+it('wim1532 carries LZX through conversion, history and independent per-item batch settings',async()=>{
+  mocks.invoke.mockImplementation(async cmd=>cmd==='detect_split_archive'?{is_split:false,archive_format:'ZIP'}:cmd==='convert_archive'?{primaryPath:'C:/new.wim',files:[],totalBytes:50,split:false}:undefined)
+  const store=useArchiveConversionStore();store.addSources(['C:/input.zip','C:/other.zip'])
+  store.updateItem(store.pending[0].id,{format:'wim',sourcePassword:'source-secret',splitMiB:1});store.updateItem(store.pending[1].id,{format:'zip',password:'keep-key'})
+  const other=JSON.stringify(store.pending[1].settings);expect(await store.applySelected({wimMethod:'lzx'})).toBe('');expect(JSON.stringify(store.pending[1].settings)).toBe(other)
+  store.pending[1].selected=false;await store.start()
+  expect(mocks.invoke).toHaveBeenCalledWith('convert_archive',expect.objectContaining({sourcePassword:'source-secret',options:expect.objectContaining({format:'wim',wim_method:'lzx',split_size:1048576})}))
+  const record=createTaskHistoryRecord(useTaskStore().tasks[0]);expect(record.executionConfig).toMatchObject({wimMethod:'lzx'});store.restore(record);expect(store.effectiveSettings(store.pending.at(-1)!)).toMatchObject({wimMethod:'lzx',sourcePassword:'',splitMiB:1})
+})

@@ -3560,9 +3560,9 @@ impl CompressionService {
         if options.password.as_deref().is_some_and(|password| !password.is_empty()) {
             return Err(CompressionError::UnsupportedEncryption.into());
         }
-        if options.wim_method == crate::services::wim_writer::WimMethod::Xpress {
-            self.emit_log(window, task_id, "使用 XPRESS 压缩创建 WIM", TaskLogSeverity::Info);
-            let input_bytes = crate::services::wim_writer::create(sources, Path::new(output), options.preserve_paths.unwrap_or(true), self.cancellation_flag.clone(), |progress| {
+        if options.wim_method != crate::services::wim_writer::WimMethod::Store {
+            self.emit_log(window, task_id, &format!("使用 {} 压缩创建 WIM", options.wim_method.label()), TaskLogSeverity::Info);
+            let input_bytes = crate::services::wim_writer::create(sources, Path::new(output), options.preserve_paths.unwrap_or(true), options.wim_method, self.cancellation_flag.clone(), |progress| {
                 self.emit_progress(window, task_id, progress, None, 0, 0);
             })?;
             self.emit_progress(window, task_id, 0.99, None, input_bytes, input_bytes);
