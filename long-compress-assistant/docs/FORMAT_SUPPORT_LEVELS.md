@@ -1,5 +1,8 @@
 # 归档格式支持等级（当前权威口径）
 
+
+v1.5.35：ZIP新增PPMd方法98，1–9级/旧0→1，普通/AES-256/ZipCrypto与单包/数字/标准卷、配置/历史/转换/任意成员读取/提取/补卷接通。字典显示与真实编码采样同步，最高等级资源/暂停恢复及独立回解已核对；字典预算不等于总内存，接收方需支持方法/密码编码/卷型。旧Deflate/Zstandard/BZip2和ZIPX固定XZ不变，未新增独立PPMd容器。见[实施](ZIP_PPMD_1.5.35.md)、[封板](ZIP_PPMD_FREEZE_1.5.35.md)；[v1.5.36 ZPAQ增量](ARCHIVE_ROADMAP_1.5.36.md)仅规划。下方均为历史状态。
+
 v1.5.34：ZIP新增BZip2方法12，强度1–9（旧0按1），普通/AES-256/ZipCrypto、单包/数字/标准卷与配置/历史/转换/后续提取流程接通；默认Deflate、Zstandard和ZIPX固定XZ不变，不新增单独容器或引擎。修复长路径提交分卷错误，见[实施](ZIP_BZIP2_1.5.34.md)与[封板](ZIP_BZIP2_FREEZE_1.5.34.md)。下一版[ZIP PPMd](ARCHIVE_ROADMAP_1.5.35.md)仅规划，ZIP LZMA仍无编码；下方保留历史状态。
 
 

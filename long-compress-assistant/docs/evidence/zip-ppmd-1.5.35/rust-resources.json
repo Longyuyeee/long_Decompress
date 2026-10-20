@@ -1,0 +1,9 @@
+{
+  "executable": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\target\\release\\deps\\long_compress_assistant-fd59e24ac5a35ab5.exe",
+  "exitCode": 0,
+  "elapsedMilliseconds": 19326,
+  "sampledPeakWorkingSetBytes": 21741568,
+  "samplingMilliseconds": 50,
+  "scope": "Test process including encoder/native decoder; independent 7-Zip child memory excluded",
+  "passedAt": "2026-10-21T00:59:51.7146129+08:00"
+}

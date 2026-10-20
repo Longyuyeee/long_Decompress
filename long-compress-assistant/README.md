@@ -19,7 +19,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 工作区 | 用户可以做什么 |
 | --- | --- |
 | 解压中心 | 导入多包、配置目录与子文件夹、使用密码候选、处理文件冲突、查看阶段和结果 |
-| 压缩中心 | 文件/文件夹/组归档、ZIP/7Z/RAR 与十七种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码与数字分卷创建、WIM 存储/XPRESS/LZX/LZMS 压缩与数字分卷、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
+| 压缩中心 | 文件/文件夹/组归档、ZIP 方法选择（Deflate/Zstandard/BZip2/PPMd）、ZIP/7Z/RAR 与十七种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码与数字分卷创建、WIM 存储/XPRESS/LZX/LZMS 压缩与数字分卷、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
 | 特殊压缩 | JPEG/PNG/WebP 图片编码与缩放、视频压缩预设、PDF 分析与结构优化 |
 | 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、文本/图片预览与选择性解压；支持普通压缩流、自有 AES 密码卷组、原生 SWM 多镜像及 ZPAQ 历史快照查看 |
 | 密码保险箱 | 本地加密保存常用解压密码，分类、搜索、导入导出与使用统计 |
@@ -92,7 +92,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.5.34 · ZIP BZip2 创建**。常用 ZIP 增加 BZip2，接通普通/AES-256/ZipCrypto、数字/标准卷、转换与后续提取/补卷。体积分析和强度显示跟随实际方法，转换方法与格式并排；修复较长路径下分卷结果提交失败。原交互与等宽/窄窗布局保持。[中文说明](docs/RELEASE_NOTES_1.5.34.md) · [范围与记录](docs/ZIP_BZIP2_FREEZE_1.5.34.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.34)。下一版 [v1.5.35 ZIP PPMd创建](docs/ARCHIVE_ROADMAP_1.5.35.md)仅规划，尚未开发。
+**v1.5.35 · ZIP PPMd 创建**。为文本资料归档增加可选方法，就近显示内存预算，接通密码、数字/标准卷、转换与补卷后续流程。实际体积分析、暂停恢复、草稿/历史和多选保持方法，原交互与等宽/窄窗布局不变。[中文说明](docs/RELEASE_NOTES_1.5.35.md) · [范围与记录](docs/ZIP_PPMD_FREEZE_1.5.35.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.35)。下一版 [v1.5.36 ZPAQ增量更新](docs/ARCHIVE_ROADMAP_1.5.36.md)仅规划，尚未开发。
+
+**v1.5.34 · ZIP BZip2 创建**。常用 ZIP 增加 BZip2，接通普通/AES-256/ZipCrypto、数字/标准卷、转换与后续提取/补卷。体积分析和强度显示跟随实际方法，转换方法与格式并排；修复较长路径下分卷结果提交失败。原交互与等宽/窄窗布局保持。[中文说明](docs/RELEASE_NOTES_1.5.34.md) · [范围与记录](docs/ZIP_BZIP2_FREEZE_1.5.34.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.34)。下一版 [v1.5.35 ZIP PPMd创建](docs/ARCHIVE_ROADMAP_1.5.35.md)已由 v1.5.35 接续，当前进度以上方最新记录为准。
 
 **v1.5.33 · WIM LZMS 非固实创建**。现有方法选择增加 LZMS，小块与单线程控制编码资源；文件目录、密码原包转换、数字卷与后续提取/补卷/结果接通。方法跟随配置组、草稿和历史，转换时方法与目标格式并排，减少寻找与滚动。保留原交互和等宽布局。[中文说明](docs/RELEASE_NOTES_1.5.33.md) · [范围与记录](docs/WIM_LZMS_FREEZE_1.5.33.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.33)。下一版 [v1.5.34 ZIP BZip2创建](docs/ARCHIVE_ROADMAP_1.5.34.md)已由 v1.5.34 接续，当前进度以上方最新记录为准。
 
