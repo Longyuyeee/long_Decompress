@@ -379,6 +379,11 @@ const deselectAll = () => {
 const isProcessing = ref(false)
 
 const runDecompressionResourcePreflight = async (task: Task) => {
+  if (task.zpaqCatalogId && task.zpaqSnapshot) task.executionConfig = {
+    schemaVersion: 1, kind: 'archive-extraction', outputDirectory: task.outputPath,
+    extractToSubfolder: task.extractToSubfolder ?? false, zpaqSnapshot: {...task.zpaqSnapshot},
+    zpaqCatalogId: task.zpaqCatalogId, selectedEntries: [...(task.selectedEntries || [])],
+  }
   taskStore.updateTaskStatus(task.id, 'preparing')
   const stopped = () => task.status === 'cancelled' || task.status === 'cancelling'
   // Old/reopened drafts may have an explicit ZIP encoding but no detected

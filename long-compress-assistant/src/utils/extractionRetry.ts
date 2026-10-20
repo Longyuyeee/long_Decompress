@@ -57,7 +57,15 @@ export async function validateExtractionRetry(
     output = await invoke<{ is_dir: boolean }>('get_file_info', { path: outputPath })
   } catch (error) {
     check()
-    throw new Error(`无法读取本次输出目录「${outputPath}」，请创建该目录或选择已存在且可访问的目录。原归档未改动。详情：${String(error)}`)
+    // A comparison draft reserves a new version folder without creating it.
+    // Keep that distinct output after a failure before extraction started.
+    const parent = outputPath.slice(0, Math.max(outputPath.lastIndexOf('/'), outputPath.lastIndexOf('\\')) + 1)
+    let parentExists = false
+    if (input.zpaqCatalogId && parent && parent !== outputPath) {
+      try { parentExists = (await invoke<{ is_dir: boolean }>('get_file_info', { path: parent })).is_dir } catch { /* Show the original directory error. */ }
+    }
+    if (!parentExists) throw new Error(`无法读取本次输出目录「${outputPath}」，请创建该目录或选择已存在且可访问的目录。原归档未改动。详情：${String(error)}`)
+    output = { is_dir: true }
   }
   check()
   if (!output.is_dir) throw new Error('输出位置必须是已存在的目录。')

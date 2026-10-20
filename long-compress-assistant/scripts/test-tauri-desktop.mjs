@@ -82,6 +82,7 @@ import { runSwm1529Gate } from './native-swm-1529-gate.mjs'
 import { runZpaqSnapshots1530Gate } from './zpaq-snapshots-1530-gate.mjs'
 import { runZipPpmd1535Gate } from './zip-ppmd-1535-gate.mjs'
 import { runZpaqIncremental1536Gate } from './zpaq-incremental-1536-gate.mjs'
+import { runZpaqDiff1537Gate } from './zpaq-diff-1537-gate.mjs'
 import { runZipBzip1534Gate } from './zip-bzip2-1534-gate.mjs'
 import { runWimLzms1533Gate } from './wim-lzms-1533-gate.mjs'
 import { runWimLzx1532Gate } from './wim-lzx-1532-gate.mjs'
@@ -4952,6 +4953,9 @@ try {
     const startupArgs = prepareExplorerChecksum1528Startup(root)
     forwardContextAction(startupArgs[0],startupArgs.slice(1))
     await runExplorerChecksum1528Gate({driver,bridge:callDesktopBridge,waitForElement,artifactDirectory,application,root,forwardContextAction})
+    completedSuccessfully = true
+  } else if (process.argv.includes('--zpaq-diff-1537-only')) {
+    await runZpaqDiff1537Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
     completedSuccessfully = true
   } else if (process.argv.includes('--zpaq-incremental-1536-only')) {
     await runZpaqIncremental1536Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
