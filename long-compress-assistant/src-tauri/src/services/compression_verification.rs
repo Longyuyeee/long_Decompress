@@ -216,6 +216,12 @@ fn verify_wrapped_aes(
             super::codec_stream::decoder(&decrypted, "zst")?,
             is_cancelled,
         ),
+        CompressionRoute::Lz4Aes => drain_reader(super::codec_stream::decoder(&decrypted, "lz4")?, is_cancelled),
+        CompressionRoute::BrotliAes => drain_reader(super::codec_stream::decoder(&decrypted, "br")?, is_cancelled),
+        CompressionRoute::LzipAes => drain_reader(super::codec_stream::decoder(&decrypted, "lz")?, is_cancelled),
+        CompressionRoute::TarLz4Aes => verify_tar_reader(super::codec_stream::decoder(&decrypted, "lz4")?, is_cancelled),
+        CompressionRoute::TarBrotliAes => verify_tar_reader(super::codec_stream::decoder(&decrypted, "br")?, is_cancelled),
+        CompressionRoute::TarLzipAes => verify_tar_reader(super::codec_stream::decoder(&decrypted, "lz")?, is_cancelled),
         _ => unreachable!("only wrapped AES routes reach this verifier"),
     }
 }
@@ -330,7 +336,13 @@ pub(crate) fn verify_native_with_zip_encoding(
         | CompressionRoute::GzipAes
         | CompressionRoute::Bzip2Aes
         | CompressionRoute::XzAes
-        | CompressionRoute::ZstdAes => {
+        | CompressionRoute::ZstdAes
+        | CompressionRoute::Lz4Aes
+        | CompressionRoute::BrotliAes
+        | CompressionRoute::LzipAes
+        | CompressionRoute::TarLz4Aes
+        | CompressionRoute::TarBrotliAes
+        | CompressionRoute::TarLzipAes => {
             let password = password.ok_or_else(|| {
                 CompressionError::CompressionFailed(
                     "AES container verification requires the requested password".to_string(),

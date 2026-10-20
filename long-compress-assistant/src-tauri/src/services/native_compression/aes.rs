@@ -8,6 +8,12 @@ use tauri::Window;
 
 #[derive(Clone, Copy)]
 pub(crate) enum AesCompressionKind {
+    Lz4,
+    Brotli,
+    Lzip,
+    TarLz4,
+    TarBrotli,
+    TarLzip,
     Tar,
     TarGzip,
     TarBzip2,
@@ -22,6 +28,12 @@ pub(crate) enum AesCompressionKind {
 impl AesCompressionKind {
     fn label(self) -> &'static str {
         match self {
+            Self::Lz4 => "LZ4.AES",
+            Self::Brotli => "BR.AES",
+            Self::Lzip => "LZIP.AES",
+            Self::TarLz4 => "TAR.LZ4.AES",
+            Self::TarBrotli => "TAR.BR.AES",
+            Self::TarLzip => "TAR.LZIP.AES",
             Self::Tar => "TAR.AES",
             Self::TarGzip => "TAR.GZ.AES",
             Self::TarBzip2 => "TAR.BZ2.AES",
@@ -36,6 +48,12 @@ impl AesCompressionKind {
 
     fn temporary_extension(self) -> Option<&'static str> {
         match self {
+            Self::Lz4 => Some("lz4"),
+            Self::Brotli => Some("br"),
+            Self::Lzip => Some("lz"),
+            Self::TarLz4 => Some("tar.lz4"),
+            Self::TarBrotli => Some("tar.br"),
+            Self::TarLzip => Some("tar.lz"),
             Self::Tar => None,
             Self::TarGzip => Some("tar.gz"),
             Self::TarBzip2 => Some("tar.bz2"),
@@ -91,7 +109,7 @@ fn encrypt_file<R: CompressionRuntime>(
         .map_err(Into::into)
 }
 
-pub(crate) fn compress<R: CompressionRuntime>(
+pub(crate) fn compress<R: CompressionRuntime + Sync>(
     runtime: &R,
     window: Option<&Window>,
     task_id: &str,
@@ -156,6 +174,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
         );
         let plain_options = CompressionOptions {
             password: None,
+            split_size: None,
             ..options
         };
         let temporary_output = temporary.path().to_string_lossy();
@@ -224,6 +243,11 @@ pub(crate) fn compress<R: CompressionRuntime>(
                 &temporary_output,
                 plain_options,
             )?,
+            codec @ (AesCompressionKind::Lz4 | AesCompressionKind::Brotli | AesCompressionKind::Lzip
+                | AesCompressionKind::TarLz4 | AesCompressionKind::TarBrotli | AesCompressionKind::TarLzip) => {
+                crate::services::codec_stream::compress(runtime, window, task_id, sources,
+                    &temporary_output, plain_options, codec.temporary_extension().expect("codec extension"))?;
+            }
             AesCompressionKind::Tar => unreachable!("direct TAR.AES handled above"),
         }
         encrypt_file(runtime, temporary.path(), Path::new(output), &password)?;

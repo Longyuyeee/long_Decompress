@@ -178,6 +178,7 @@ fn sample_files(files: &[SourceFile], cancelled: &AtomicBool) -> Result<(Vec<u8>
 }
 
 fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usize> {
+    let format = format.strip_suffix(".aes").unwrap_or(format);
     if format == "tar" || (format == "wim" && level == 0) {
         return Ok(sample.len());
     }
@@ -186,6 +187,17 @@ fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usi
         let mut encoder = bzip2::write::BzEncoder::new(Vec::new(), bzip2::Compression::new(level));
         encoder.write_all(sample)?;
         return Ok(encoder.finish()?.len());
+    }
+    if format.ends_with("lz4") {
+        let mut encoder = lz4_flex::frame::FrameEncoder::new(Vec::new());
+        encoder.write_all(sample)?;
+        return Ok(encoder.finish()?.len());
+    }
+    if matches!(format, "br" | "tar.br") {
+        let mut output = Vec::new();
+        brotli::BrotliCompress(&mut std::io::Cursor::new(sample), &mut output,
+            &brotli::enc::BrotliEncoderParams { quality: level as i32, ..Default::default() })?;
+        return Ok(output.len());
     }
     if matches!(format, "lz" | "tar.lz") {
         let mut settings = lzma_rust2::LzipOptions::with_preset(level);
@@ -210,6 +222,7 @@ fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usi
 }
 
 fn duration_range(total_size: u64, format: &str, level: u32, file_count: usize) -> (u64, u64) {
+    let format = format.strip_suffix(".aes").unwrap_or(format);
     let base_mib_per_second = match format {
         "7z" | "xz" | "tar.xz" | "lzma" | "lz" | "tar.lz" => 45.0,
         "bz2" | "tar.bz2" => 35.0,
@@ -398,5 +411,17 @@ mod tests {
             .reasons
             .iter()
             .any(|reason| reason.contains("收益有限")));
+    }
+}
+
+#[cfg(test)]
+mod aes1521_analysis_tests {
+    #[test]
+    fn aes1521_analysis_samples_the_actual_codec_under_the_wrapper() {
+        let sample = "真正按内层格式抽样。".repeat(512);
+        for codec in ["lz4", "br", "lz", "tar.lz4", "tar.br", "tar.lz"] {
+            assert_eq!(super::compressed_sample_size(sample.as_bytes(), codec, 1).unwrap(),
+                super::compressed_sample_size(sample.as_bytes(), &format!("{codec}.aes"), 1).unwrap());
+        }
     }
 }

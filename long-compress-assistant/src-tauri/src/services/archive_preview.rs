@@ -404,7 +404,7 @@ fn preview_archive_image_sync(
     let bytes = match format {
         "ZIP" => read_zip_entry(archive_path, &entry_path, password, encoding)?,
         format if format.starts_with("TAR") => read_tar_family(archive_path, format, &entry_path)?,
-        "GZIP" | "BZIP2" | "XZ" | "ZSTD" | "LZIP" => read_plain_stream(archive_path, format, &entry_path, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES)?.bytes,
+        "GZIP" | "BZIP2" | "XZ" | "ZSTD" | "LZIP" | "LZ4" | "BR" => read_plain_stream(archive_path, format, &entry_path, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES)?.bytes,
         _ => anyhow::bail!(
             "Safe bounded preview is currently available for ZIP and TAR-family archives only"
         ),
@@ -533,7 +533,7 @@ fn preview_archive_text_sync(
         format if format.starts_with("TAR") => {
             read_tar_family_text(archive_path, format, &entry_path)?
         }
-        "GZIP" | "BZIP2" | "XZ" | "ZSTD" | "LZIP" => read_plain_stream(archive_path, format, &entry_path, MAX_TAR_PREVIEW_SCAN_BYTES, MAX_TEXT_PREVIEW_BYTES)?,
+        "GZIP" | "BZIP2" | "XZ" | "ZSTD" | "LZIP" | "LZ4" | "BR" => read_plain_stream(archive_path, format, &entry_path, MAX_TAR_PREVIEW_SCAN_BYTES, MAX_TEXT_PREVIEW_BYTES)?,
         _ => anyhow::bail!(
             "Safe bounded text preview is currently available for ZIP and TAR-family archives only"
         ),

@@ -1,0 +1,1715 @@
+{
+  "version": "1.5.21",
+  "binarySha256": "b45fd858a45ba7a0419e0fa93287c25dab5390ccc33fe9d4f140b3ad2fdc56cd",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6",
+  "native": [
+    {
+      "original": "大文本.txt.lz4.aes",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-69691828-3a8e-4c37-85d1-39cf378833bf\\大文本.txt.lz4.aes.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-69691828-3a8e-4c37-85d1-39cf378833bf\\大文本.txt.lz4.aes.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-69691828-3a8e-4c37-85d1-39cf378833bf\\大文本.txt.lz4.aes.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-69691828-3a8e-4c37-85d1-39cf378833bf\\大文本.txt.lz4.aes.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-69691828-3a8e-4c37-85d1-39cf378833bf\\大文本.txt.lz4.aes.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-69691828-3a8e-4c37-85d1-39cf378833bf\\大文本.txt.lz4.aes.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-69691828-3a8e-4c37-85d1-39cf378833bf\\大文本.txt.lz4.aes.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-69691828-3a8e-4c37-85d1-39cf378833bf\\大文本.txt.lz4.aes.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-69691828-3a8e-4c37-85d1-39cf378833bf\\大文本.txt.lz4.aes.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-69691828-3a8e-4c37-85d1-39cf378833bf\\大文本.txt.lz4.aes.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-69691828-3a8e-4c37-85d1-39cf378833bf\\大文本.txt.lz4.aes.011",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-69691828-3a8e-4c37-85d1-39cf378833bf\\大文本.txt.lz4.aes.012",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-69691828-3a8e-4c37-85d1-39cf378833bf\\大文本.txt.lz4.aes.013"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件完整解压-beccbbc4-d1fe-444e-99f0-5118c017a15a",
+      "completeHashes": true,
+      "emptyDirectory": false
+    },
+    {
+      "original": "大文本.txt.br.aes",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-0769db77-36dc-4cb6-9bed-30382b91a5c6\\大文本.txt.br.aes.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-0769db77-36dc-4cb6-9bed-30382b91a5c6\\大文本.txt.br.aes.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-0769db77-36dc-4cb6-9bed-30382b91a5c6\\大文本.txt.br.aes.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-0769db77-36dc-4cb6-9bed-30382b91a5c6\\大文本.txt.br.aes.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-0769db77-36dc-4cb6-9bed-30382b91a5c6\\大文本.txt.br.aes.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-0769db77-36dc-4cb6-9bed-30382b91a5c6\\大文本.txt.br.aes.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-0769db77-36dc-4cb6-9bed-30382b91a5c6\\大文本.txt.br.aes.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-0769db77-36dc-4cb6-9bed-30382b91a5c6\\大文本.txt.br.aes.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-0769db77-36dc-4cb6-9bed-30382b91a5c6\\大文本.txt.br.aes.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-0769db77-36dc-4cb6-9bed-30382b91a5c6\\大文本.txt.br.aes.010"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件完整解压-f697a1e3-23f5-4ff7-9558-8044bd8d85aa",
+      "completeHashes": true,
+      "emptyDirectory": false
+    },
+    {
+      "original": "大文本.txt.lz.aes",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-2d2d6049-bdde-4e86-849b-34447db1c244\\大文本.txt.lz.aes.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-2d2d6049-bdde-4e86-849b-34447db1c244\\大文本.txt.lz.aes.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-2d2d6049-bdde-4e86-849b-34447db1c244\\大文本.txt.lz.aes.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-2d2d6049-bdde-4e86-849b-34447db1c244\\大文本.txt.lz.aes.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-2d2d6049-bdde-4e86-849b-34447db1c244\\大文本.txt.lz.aes.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-2d2d6049-bdde-4e86-849b-34447db1c244\\大文本.txt.lz.aes.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-2d2d6049-bdde-4e86-849b-34447db1c244\\大文本.txt.lz.aes.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-2d2d6049-bdde-4e86-849b-34447db1c244\\大文本.txt.lz.aes.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-2d2d6049-bdde-4e86-849b-34447db1c244\\大文本.txt.lz.aes.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-2d2d6049-bdde-4e86-849b-34447db1c244\\大文本.txt.lz.aes.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-2d2d6049-bdde-4e86-849b-34447db1c244\\大文本.txt.lz.aes.011"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件完整解压-853d79bb-2ca8-4370-8b7e-927c663f14a7",
+      "completeHashes": true,
+      "emptyDirectory": false
+    },
+    {
+      "original": "资料.tar.lz4.aes",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-5fc10b39-21af-4da3-8727-4a9e05547d59\\资料.tar.lz4.aes.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-5fc10b39-21af-4da3-8727-4a9e05547d59\\资料.tar.lz4.aes.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-5fc10b39-21af-4da3-8727-4a9e05547d59\\资料.tar.lz4.aes.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-5fc10b39-21af-4da3-8727-4a9e05547d59\\资料.tar.lz4.aes.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-5fc10b39-21af-4da3-8727-4a9e05547d59\\资料.tar.lz4.aes.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-5fc10b39-21af-4da3-8727-4a9e05547d59\\资料.tar.lz4.aes.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-5fc10b39-21af-4da3-8727-4a9e05547d59\\资料.tar.lz4.aes.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-5fc10b39-21af-4da3-8727-4a9e05547d59\\资料.tar.lz4.aes.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-5fc10b39-21af-4da3-8727-4a9e05547d59\\资料.tar.lz4.aes.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-5fc10b39-21af-4da3-8727-4a9e05547d59\\资料.tar.lz4.aes.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-5fc10b39-21af-4da3-8727-4a9e05547d59\\资料.tar.lz4.aes.011",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-5fc10b39-21af-4da3-8727-4a9e05547d59\\资料.tar.lz4.aes.012",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-5fc10b39-21af-4da3-8727-4a9e05547d59\\资料.tar.lz4.aes.013"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件完整解压-1629957d-2665-44f9-a8a9-d55013d6bb1e",
+      "completeHashes": true,
+      "emptyDirectory": true
+    },
+    {
+      "original": "资料.tar.br.aes",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-4fc09a1c-95f5-45e1-80dc-00604fd4e5ed\\资料.tar.br.aes.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-4fc09a1c-95f5-45e1-80dc-00604fd4e5ed\\资料.tar.br.aes.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-4fc09a1c-95f5-45e1-80dc-00604fd4e5ed\\资料.tar.br.aes.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-4fc09a1c-95f5-45e1-80dc-00604fd4e5ed\\资料.tar.br.aes.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-4fc09a1c-95f5-45e1-80dc-00604fd4e5ed\\资料.tar.br.aes.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-4fc09a1c-95f5-45e1-80dc-00604fd4e5ed\\资料.tar.br.aes.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-4fc09a1c-95f5-45e1-80dc-00604fd4e5ed\\资料.tar.br.aes.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-4fc09a1c-95f5-45e1-80dc-00604fd4e5ed\\资料.tar.br.aes.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-4fc09a1c-95f5-45e1-80dc-00604fd4e5ed\\资料.tar.br.aes.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-4fc09a1c-95f5-45e1-80dc-00604fd4e5ed\\资料.tar.br.aes.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-4fc09a1c-95f5-45e1-80dc-00604fd4e5ed\\资料.tar.br.aes.011"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件完整解压-bdc5a31c-1716-4cc8-9853-87e100a659f5",
+      "completeHashes": true,
+      "emptyDirectory": true
+    },
+    {
+      "original": "资料.tar.lz.aes",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-d1d70f05-becf-4cc7-b7ee-fea6c1ac275d\\资料.tar.lz.aes.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-d1d70f05-becf-4cc7-b7ee-fea6c1ac275d\\资料.tar.lz.aes.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-d1d70f05-becf-4cc7-b7ee-fea6c1ac275d\\资料.tar.lz.aes.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-d1d70f05-becf-4cc7-b7ee-fea6c1ac275d\\资料.tar.lz.aes.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-d1d70f05-becf-4cc7-b7ee-fea6c1ac275d\\资料.tar.lz.aes.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-d1d70f05-becf-4cc7-b7ee-fea6c1ac275d\\资料.tar.lz.aes.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-d1d70f05-becf-4cc7-b7ee-fea6c1ac275d\\资料.tar.lz.aes.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-d1d70f05-becf-4cc7-b7ee-fea6c1ac275d\\资料.tar.lz.aes.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-d1d70f05-becf-4cc7-b7ee-fea6c1ac275d\\资料.tar.lz.aes.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-d1d70f05-becf-4cc7-b7ee-fea6c1ac275d\\资料.tar.lz.aes.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件卷组-d1d70f05-becf-4cc7-b7ee-fea6c1ac275d\\资料.tar.lz.aes.011"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\原件完整解压-ae62c254-a517-4f4a-bec9-c995cbf17f1a",
+      "completeHashes": true,
+      "emptyDirectory": true
+    },
+    {
+      "created": "lz4.aes",
+      "published": {
+        "files": [
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.001"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.002"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.003"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.004"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.005"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.006"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.007"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.008"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.009"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.010"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.011"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.012"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.013"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.014"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.015"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.016"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.017"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.018"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.019"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.020"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.021"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.022"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.023"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.024"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.025"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.026"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.027"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.028"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.029"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.030"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.031"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.032"
+          },
+          {
+            "bytes": 796,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.033"
+          }
+        ],
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-f2a51171-ee4e-4319-aade-b5419d96214b.lz4.aes.001",
+        "split": true,
+        "totalBytes": 2097468
+      },
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建后完整解压-01afbf90-85e4-44e5-8e6d-b66e6610d5d5",
+      "completeHashes": true
+    },
+    {
+      "created": "br.aes",
+      "published": {
+        "files": [
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.001"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.002"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.003"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.004"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.005"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.006"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.007"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.008"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.009"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.010"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.011"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.012"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.013"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.014"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.015"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.016"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.017"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.018"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.019"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.020"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.021"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.022"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.023"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.024"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.025"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.026"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.027"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.028"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.029"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.030"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.031"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.032"
+          },
+          {
+            "bytes": 649,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.033"
+          }
+        ],
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-c92eafee-7f1c-4a80-bab8-a6f97f221589.br.aes.001",
+        "split": true,
+        "totalBytes": 2097321
+      },
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建后完整解压-75d449f3-7d0b-4c9a-8adc-8191566646da",
+      "completeHashes": true
+    },
+    {
+      "created": "lz.aes",
+      "published": {
+        "files": [
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.001"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.002"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.003"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.004"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.005"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.006"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.007"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.008"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.009"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.010"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.011"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.012"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.013"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.014"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.015"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.016"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.017"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.018"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.019"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.020"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.021"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.022"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.023"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.024"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.025"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.026"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.027"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.028"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.029"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.030"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.031"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.032"
+          },
+          {
+            "bytes": 29286,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.033"
+          }
+        ],
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-39f272e5-694d-4109-a516-5e696efb1cb4.lz.aes.001",
+        "split": true,
+        "totalBytes": 2125958
+      },
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建后完整解压-b8411a99-17f4-47a1-9815-f63ee2b103b6",
+      "completeHashes": true
+    },
+    {
+      "created": "tar.lz4.aes",
+      "published": {
+        "files": [
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.001"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.002"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.003"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.004"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.005"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.006"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.007"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.008"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.009"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.010"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.011"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.012"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.013"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.014"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.015"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.016"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.017"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.018"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.019"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.020"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.021"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.022"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.023"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.024"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.025"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.026"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.027"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.028"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.029"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.030"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.031"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.032"
+          },
+          {
+            "bytes": 1409,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.033"
+          }
+        ],
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.001",
+        "split": true,
+        "totalBytes": 2098081
+      },
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建后完整解压-cd81a661-b6f9-4d81-8cc9-8ec799004198",
+      "completeHashes": true
+    },
+    {
+      "created": "tar.br.aes",
+      "published": {
+        "files": [
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.001"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.002"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.003"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.004"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.005"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.006"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.007"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.008"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.009"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.010"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.011"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.012"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.013"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.014"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.015"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.016"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.017"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.018"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.019"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.020"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.021"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.022"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.023"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.024"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.025"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.026"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.027"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.028"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.029"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.030"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.031"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.032"
+          },
+          {
+            "bytes": 5220,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.033"
+          }
+        ],
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-bcf4be40-9ce1-4be6-bbab-2adb6ef7703a.tar.br.aes.001",
+        "split": true,
+        "totalBytes": 2101892
+      },
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建后完整解压-3442c08f-72d4-4b26-a8fd-aa4012e85ddb",
+      "completeHashes": true
+    },
+    {
+      "created": "tar.lz.aes",
+      "published": {
+        "files": [
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.001"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.002"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.003"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.004"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.005"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.006"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.007"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.008"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.009"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.010"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.011"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.012"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.013"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.014"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.015"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.016"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.017"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.018"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.019"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.020"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.021"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.022"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.023"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.024"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.025"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.026"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.027"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.028"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.029"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.030"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.031"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.032"
+          },
+          {
+            "bytes": 29493,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.033"
+          }
+        ],
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-0fb90e5f-f143-4281-b1e5-f8fee5b9fa79.tar.lz.aes.001",
+        "split": true,
+        "totalBytes": 2126165
+      },
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建后完整解压-a663dc4b-9b18-4aa3-9bd9-837fb31d6a7b",
+      "completeHashes": true
+    },
+    {
+      "kind": "image-preview",
+      "lastMember": true,
+      "fullPngHashMatches": true
+    },
+    {
+      "kind": "selected",
+      "format": "tar.lz4.aes",
+      "onlyRequestedFile": true,
+      "fullContentHash": true
+    },
+    {
+      "kind": "selected",
+      "format": "tar.lz.aes",
+      "onlyRequestedFile": true,
+      "fullContentHash": true
+    },
+    {
+      "kind": "actual-late-failure",
+      "reason": "[archive-inspection:damaged] AES v2 后续分块认证失败；前段已通过认证，请重新获取损坏或混入的分卷，不必继续试密码",
+      "noPublishedPartial": true
+    },
+    {
+      "converted": "single-stream",
+      "format": "lz.aes",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.011",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.012",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.013",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.014",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.015",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.016",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.017",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.018",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.019",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.020",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.021",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.022",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.023",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.024",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.025",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.026",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.027",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.028",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.029",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.030",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.031",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.032",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\单文件改格式-5852eb8f-50f8-43d4-bbe5-95feb58afe8e.lz.aes.033"
+      ]
+    },
+    {
+      "kind": "tlz-alias",
+      "completeHashes": true,
+      "lastMemberBrowse": true
+    }
+  ],
+  "ui": [
+    {
+      "kind": "creation",
+      "history": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\界面创建.lz4.aes.001"
+            },
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\界面创建.lz4.aes.002"
+            },
+            {
+              "bytes": 316,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\界面创建.lz4.aes.003"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\界面创建.lz4.aes.001",
+          "split": true,
+          "totalBytes": 2097468
+        },
+        "completedAt": "2026-10-20T01:38:23.049Z",
+        "durationMs": 1395,
+        "errorMessage": null,
+        "executionConfig": {
+          "kind": "archive-compression",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6",
+          "passwordRequired": true,
+          "schemaVersion": 1,
+          "settings": {
+            "createSolidArchive": false,
+            "encryptFilenames": false,
+            "fastPack": false,
+            "filename": "界面创建",
+            "format": "lz4.aes",
+            "keepStructure": true,
+            "level": 6,
+            "rarRecoveryPercent": 0,
+            "rarRecoveryVolumes": 0,
+            "splitArchive": true,
+            "splitSize": "1",
+            "verifyAfter": true,
+            "zipEncryption": "aes256",
+            "zipMethod": "deflate",
+            "zipPasswordEncoding": "utf8",
+            "zipSplitMode": "numeric"
+          }
+        },
+        "failure": null,
+        "format": "lz4.aes",
+        "id": "gmczlybcgmvg0l0ec",
+        "logs": [
+          {
+            "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 8.56 GiB，预计输出 2.10 MiB）",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:38:21.686Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\界面创建.lz4.aes",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:38:21.705321400Z"
+          },
+          {
+            "message": "使用 LZ4.AES 格式压缩",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:38:21.705388600Z"
+          },
+          {
+            "message": "LZ4.AES 压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T01:38:22.742974300Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:38:22.785798600Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-20T01:38:23.027577400Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T01:38:23.035312600Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 2097189,
+          "media": null,
+          "outputBytes": 2097468,
+          "savingsRatio": -0.00013303522000163075,
+          "schemaVersion": 1
+        },
+        "name": "数据.bin",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\界面创建.lz4.aes.001",
+        "processedBytes": 2097189,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建来源\\数据.bin"
+        ],
+        "startedAt": "2026-10-20T01:38:21.654Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 2097189,
+        "workloadKind": "archive"
+      },
+      "realInlineConfiguration": true
+    },
+    {
+      "kind": "preview",
+      "actualMiddleMemberText": true
+    },
+    {
+      "kind": "recovery",
+      "missingVolumeRestored": true,
+      "completeHashes": true,
+      "oldFailureUnchanged": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\补卷新任务-df25462c-9545-42fb-ba4a-548dac663daa"
+    },
+    {
+      "kind": "conversion",
+      "target": "zip",
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\转换-abd1a036-92b4-485a-8b02-f2bbc7e9686e.zip",
+      "history": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 2098142,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\转换-abd1a036-92b4-485a-8b02-f2bbc7e9686e.zip"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\转换-abd1a036-92b4-485a-8b02-f2bbc7e9686e.zip",
+          "split": false,
+          "totalBytes": 2098142
+        },
+        "completedAt": "2026-10-20T01:38:49.703Z",
+        "durationMs": 1597,
+        "errorMessage": null,
+        "executionConfig": {
+          "encryptFilenames": false,
+          "format": "zip",
+          "kind": "archive-conversion",
+          "level": 6,
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\转换-abd1a036-92b4-485a-8b02-f2bbc7e9686e.zip",
+          "passwordRequired": true,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "schemaVersion": 1,
+          "splitSize": 0,
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        },
+        "failure": null,
+        "format": "tar.lz4.aes",
+        "id": "conversion-9f13f533-fac9-4b1c-b864-9a5c77f41edc",
+        "logs": [
+          {
+            "message": "转换归档：先解压至临时目录，再校验并发布新包；保留原包。",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:38:48.111045800Z"
+          },
+          {
+            "message": "确定解压格式: AesEncrypted (后缀: 001)",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:38:48.215791Z"
+          },
+          {
+            "message": "正在检测归档加密状态...",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:38:48.215856800Z"
+          },
+          {
+            "message": "已收到手动输入的解压密码「 [已隐藏]",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:38:48.289809400Z"
+          },
+          {
+            "message": "密码验证通过：本次解压使用密码「 [已隐藏]",
+            "severity": "success",
+            "timestamp": "2026-10-20T01:38:48.946026300Z"
+          },
+          {
+            "message": "开始解压：创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.001",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:38:48.971993200Z"
+          },
+          {
+            "message": "正在认证 AES 完整容器及卷组，完成后读取内层内容",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:38:48.972127400Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 2097242 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T01:38:49.497658600Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T01:38:49.498269300Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\转换-abd1a036-92b4-485a-8b02-f2bbc7e9686e.zip",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:38:49.516048800Z"
+          },
+          {
+            "message": "正在创建 ZIP · Deflate · 密码保护…",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:38:49.516841800Z"
+          },
+          {
+            "message": "ZIP · Deflate 创建完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T01:38:49.643897200Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:38:49.644864800Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-20T01:38:49.687443100Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T01:38:49.689199100Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 2097242,
+          "media": null,
+          "outputBytes": 2098142,
+          "savingsRatio": -0.00042913502590545105,
+          "schemaVersion": 1
+        },
+        "name": "归档转换 · 创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.001",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\转换-abd1a036-92b4-485a-8b02-f2bbc7e9686e.zip",
+        "processedBytes": 2097242,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.001",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.002",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.003",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.004",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.005",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.006",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.007",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.008",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.009",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.010",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.011",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.012",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.013",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.014",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.015",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.016",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.017",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.018",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.019",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.020",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.021",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.022",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.023",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.024",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.025",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.026",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.027",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.028",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.029",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.030",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.031",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.032",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建-fe6f3ed4-e0ec-4ea0-a73c-22c78c0fa117.tar.lz4.aes.033"
+        ],
+        "startedAt": "2026-10-20T01:38:48.106Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 2097242,
+        "workloadKind": "archive"
+      },
+      "independentZipHashes": true
+    },
+    {
+      "kind": "conversion",
+      "target": "tar.br.aes",
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\转换-5c683d83-9d0b-4c7c-89bb-e61387d6c82f.tar.br.aes",
+      "history": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\转换-5c683d83-9d0b-4c7c-89bb-e61387d6c82f.tar.br.aes.001"
+            },
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\转换-5c683d83-9d0b-4c7c-89bb-e61387d6c82f.tar.br.aes.002"
+            },
+            {
+              "bytes": 4740,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\转换-5c683d83-9d0b-4c7c-89bb-e61387d6c82f.tar.br.aes.003"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\转换-5c683d83-9d0b-4c7c-89bb-e61387d6c82f.tar.br.aes.001",
+          "split": true,
+          "totalBytes": 2101892
+        },
+        "completedAt": "2026-10-20T01:39:12.968Z",
+        "durationMs": 1366,
+        "errorMessage": null,
+        "executionConfig": {
+          "encryptFilenames": false,
+          "format": "tar.br.aes",
+          "kind": "archive-conversion",
+          "level": 6,
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\转换-5c683d83-9d0b-4c7c-89bb-e61387d6c82f.tar.br.aes",
+          "passwordRequired": true,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "schemaVersion": 1,
+          "splitSize": 1048576,
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        },
+        "failure": null,
+        "format": "zip",
+        "id": "conversion-1236e539-87f0-4e6a-916b-82659a53192c",
+        "logs": [
+          {
+            "message": "转换归档：先解压至临时目录，再校验并发布新包；保留原包。",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:39:11.603944800Z"
+          },
+          {
+            "message": "确定解压格式: Zip (后缀: zip)",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:39:11.647618700Z"
+          },
+          {
+            "message": "正在检测归档加密状态...",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:39:11.647666700Z"
+          },
+          {
+            "message": "已收到手动输入的解压密码「 [已隐藏]",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:39:11.655076200Z"
+          },
+          {
+            "message": "密码验证通过：本次解压使用密码「 [已隐藏]",
+            "severity": "success",
+            "timestamp": "2026-10-20T01:39:11.758680700Z"
+          },
+          {
+            "message": "开始解压：转换-abd1a036-92b4-485a-8b02-f2bbc7e9686e.zip",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:39:11.768809900Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 2097242 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T01:39:11.890433900Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T01:39:11.890453600Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\转换-5c683d83-9d0b-4c7c-89bb-e61387d6c82f.tar.br.aes",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:39:11.929970900Z"
+          },
+          {
+            "message": "使用 TAR.BR.AES 格式压缩",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:39:11.930045300Z"
+          },
+          {
+            "message": "TAR.BR.AES 压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T01:39:12.499409600Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-20T01:39:12.545622800Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-20T01:39:12.937212200Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T01:39:12.948290200Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 2097242,
+          "media": null,
+          "outputBytes": 2101892,
+          "savingsRatio": -0.0022171976338448305,
+          "schemaVersion": 1
+        },
+        "name": "归档转换 · 转换-abd1a036-92b4-485a-8b02-f2bbc7e9686e.zip",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\转换-5c683d83-9d0b-4c7c-89bb-e61387d6c82f.tar.br.aes.001",
+        "processedBytes": 2097242,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\转换-abd1a036-92b4-485a-8b02-f2bbc7e9686e.zip"
+        ],
+        "startedAt": "2026-10-20T01:39:11.602Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 2097242,
+        "workloadKind": "archive"
+      },
+      "independentZipHashes": false
+    },
+    {
+      "kind": "batch-config",
+      "twoDrafts": true,
+      "encryptedTarAndVolumes": true,
+      "noImplicitStart": true
+    }
+  ],
+  "screenshots": [
+    "aes1521-inline-config-1100x700.png",
+    "aes1521-inline-config-760x520.png",
+    "aes1521-middle-preview-1100x700.png",
+    "aes1521-middle-preview-760x520.png",
+    "aes1521-batch-recovery-1100x700.png",
+    "aes1521-batch-recovery-760x520.png",
+    "aes1521-conversion-zip-1100x700.png",
+    "aes1521-conversion-zip-760x520.png",
+    "aes1521-conversion-aes-1100x700.png",
+    "aes1521-conversion-aes-760x520.png",
+    "aes1521-batch-config-1100x700.png",
+    "aes1521-batch-config-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "inline-config",
+      "columns": [
+        378,
+        378
+      ],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "inline-config",
+      "columns": [
+        286,
+        286
+      ],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "middle-preview",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "middle-preview",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "batch-recovery",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "batch-recovery",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "conversion-zip",
+      "columns": [
+        378,
+        378
+      ],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "conversion-zip",
+      "columns": [
+        286,
+        286
+      ],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "conversion-aes",
+      "columns": [
+        378,
+        378
+      ],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "conversion-aes",
+      "columns": [
+        286,
+        286
+      ],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "batch-config",
+      "columns": [
+        378,
+        378
+      ],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "batch-config",
+      "columns": [
+        286,
+        286
+      ],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\aes-1521\\ui-f581b3ee-4126-4891-8768-63ce4db5d4a6\\创建来源",
+  "expectedFiles": {
+    "开头.txt": "d761f4ca0ef5d289ad99c858fbffd36c3ecd9c7b8be951798b5724b88f103a86",
+    "数据.bin": "54aa5c0b4869da41ecf2168d39eed3ec06ea782e9bf5f2292ad9f2d0fc401781",
+    "末尾.txt": "f6610d2f2effb6d4528705a45c1321fb357eda9981843423c0b6382dd67850f2"
+  },
+  "zipIndependent": {
+    "tool": "Python zipfile metadata + cryptography AES-CTR + PBKDF2/HMAC-SHA1; explicit UTF-8 password bytes",
+    "fullContentMatches": true,
+    "authenticatedFiles": 3,
+    "emptyDirectoryPreserved": true
+  },
+  "independent": {
+    "tool": {
+      "cryptography": "49.0.0",
+      "lz4": "4.4.5",
+      "brotli": "1.2.0",
+      "lzip": "GNU lzip 1.24.1"
+    },
+    "cases": [
+      {
+        "format": "lz4.aes",
+        "volumeCount": 33,
+        "innerSha256": "4cd48cf7e88a63fd7a42db885f4ad2519c540b1937e8024495d6fe0ce5470c14",
+        "fullContentMatches": true,
+        "emptyDirectoryPreserved": false
+      },
+      {
+        "format": "br.aes",
+        "volumeCount": 33,
+        "innerSha256": "0a152129b713ed2410543545c24bc1cb05952d8437f927742261337e51ad0667",
+        "fullContentMatches": true,
+        "emptyDirectoryPreserved": false
+      },
+      {
+        "format": "lz.aes",
+        "volumeCount": 33,
+        "innerSha256": "3790647e9c66431c19ee5846f65cc241644fa4359e2291efaba206ebf2c80628",
+        "fullContentMatches": true,
+        "emptyDirectoryPreserved": false
+      },
+      {
+        "format": "tar.lz4.aes",
+        "volumeCount": 33,
+        "innerSha256": "d61f63562a25c946a6a9a86ee0600bca8a2ebfc9558f034e2a18ba3c5f182cbc",
+        "fullContentMatches": true,
+        "emptyDirectoryPreserved": true
+      },
+      {
+        "format": "tar.br.aes",
+        "volumeCount": 33,
+        "innerSha256": "096148b01605f69fcf5be663c2d030e8720c7637d40c02ac5050b4d49783eef3",
+        "fullContentMatches": true,
+        "emptyDirectoryPreserved": true
+      },
+      {
+        "format": "tar.lz.aes",
+        "volumeCount": 33,
+        "innerSha256": "70717ebc8768923b31cd1e82246c263b3884a65adaf098017cedacc29c40bfc4",
+        "fullContentMatches": true,
+        "emptyDirectoryPreserved": true
+      },
+      {
+        "format": "lz.aes",
+        "volumeCount": 33,
+        "innerSha256": "6660ec17fb6fbd8466d0b4e159659158d2376527ab257abb07cd4593a16dfcc1",
+        "fullContentMatches": true,
+        "emptyDirectoryPreserved": false
+      },
+      {
+        "format": "tar.br.aes",
+        "volumeCount": 3,
+        "innerSha256": "776ec4687abf28e31d11fccb103d0e16042a41fec3ea3dd977a83a0dc2396d6f",
+        "fullContentMatches": true,
+        "emptyDirectoryPreserved": true
+      },
+      {
+        "format": "lz4.aes",
+        "volumeCount": 3,
+        "innerSha256": "4cd48cf7e88a63fd7a42db885f4ad2519c540b1937e8024495d6fe0ce5470c14",
+        "fullContentMatches": true,
+        "emptyDirectoryPreserved": false
+      }
+    ]
+  },
+  "completedAt": "2026-10-20T01:40:40.425Z"
+}

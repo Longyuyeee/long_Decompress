@@ -98,3 +98,6 @@ pub(crate) mod aes_container;
 #[cfg(test)]
 mod checksum_details_tests;
 pub(crate) mod checksum_manifest;
+
+#[cfg(test)]
+mod aes_codecs_1521_tests;

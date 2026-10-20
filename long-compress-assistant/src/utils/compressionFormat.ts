@@ -10,6 +10,12 @@ export type CompressionFormatId =
   | 'tar.bz2'
   | 'tar.xz'
   | 'tar.zst'
+  | 'lz4.aes'
+  | 'br.aes'
+  | 'lz.aes'
+  | 'tar.lz4.aes'
+  | 'tar.br.aes'
+  | 'tar.lz.aes'
   | 'tar.aes'
   | 'tar.gz.aes'
   | 'tar.bz2.aes'
@@ -61,6 +67,12 @@ export const FORMAT_CAPABILITIES: CompressionFormatCapability[] = [
   { format: 'tar.bz2', displayName: 'TBZ', extensions: ['tar.bz2', 'tbz', 'tbz2'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
   { format: 'tar.xz', displayName: 'TXZ', extensions: ['tar.xz', 'txz'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
   { format: 'tar.zst', displayName: 'TZST', extensions: ['tar.zst', 'tzst'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
+  { format: 'tar.lz4.aes', displayName: 'TAR.LZ4.AES 🔒', extensions: ['tar.lz4.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'Long 自有 AES 容器，需要密码；支持数字分卷。接收方请使用 Long解压，不是内层格式的原生密码标准。' },
+  { format: 'tar.br.aes', displayName: 'TAR.BR.AES 🔒', extensions: ['tar.br.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'Long 自有 AES 容器，需要密码；支持数字分卷。接收方请使用 Long解压，不是内层格式的原生密码标准。' },
+  { format: 'tar.lz.aes', displayName: 'TAR.LZIP.AES 🔒', extensions: ['tar.lz.aes', 'tlz.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'Long 自有 AES 容器，需要密码；支持数字分卷。接收方请使用 Long解压，不是内层格式的原生密码标准。' },
+  { format: 'lz4.aes', displayName: 'LZ4.AES 🔒', extensions: ['lz4.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: true, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'Long 自有 AES 容器，需要密码；支持数字分卷。接收方请使用 Long解压，不是内层格式的原生密码标准。' },
+  { format: 'br.aes', displayName: 'BR.AES 🔒', extensions: ['br.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: true, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'Long 自有 AES 容器，需要密码；支持数字分卷。接收方请使用 Long解压，不是内层格式的原生密码标准。' },
+  { format: 'lz.aes', displayName: 'LZIP.AES 🔒', extensions: ['lz.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: true, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'Long 自有 AES 容器，需要密码；支持数字分卷。接收方请使用 Long解压，不是内层格式的原生密码标准。' },
   { format: 'tar.aes', displayName: 'TAR.AES 🔒', extensions: ['tar.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'Long 自有 AES 容器，需要密码；支持 .aes.001 数字分卷。接收方请使用 Long解压，不是通用 TAR 密码格式。' },
   { format: 'tar.gz.aes', displayName: 'TGZ.AES 🔒', extensions: ['tar.gz.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'Long 自有 AES 容器，需要密码；支持 .aes.001 数字分卷。接收方请使用 Long解压，不是通用 TAR 密码格式。' },
   { format: 'tar.bz2.aes', displayName: 'TBZ.AES 🔒', extensions: ['tar.bz2.aes'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: 'Long 自有 AES 容器，需要密码；支持 .aes.001 数字分卷。接收方请使用 Long解压，不是通用 TAR 密码格式。' },
@@ -174,12 +186,13 @@ const TAR_FORMATS = new Set(
 )
 // RAR stays in this set so a stale RAR+password configuration is rejected as
 // unsupported instead of silently changing the requested output format to 7Z.
-const NATIVE_PASSWORD_FORMATS = new Set(['zip', 'zipx', '7z', 'rar', 'zpaq', 'tar.aes', 'tar.gz.aes', 'tar.bz2.aes', 'tar.xz.aes', 'tar.zst.aes', 'gz.aes', 'bz2.aes', 'xz.aes', 'zst.aes'])
+const NATIVE_PASSWORD_FORMATS = new Set(['zip', 'zipx', '7z', 'rar', 'zpaq', 'lz4.aes', 'br.aes', 'lz.aes', 'tar.lz4.aes', 'tar.br.aes', 'tar.lz.aes', 'tar.aes', 'tar.gz.aes', 'tar.bz2.aes', 'tar.xz.aes', 'tar.zst.aes', 'gz.aes', 'bz2.aes', 'xz.aes', 'zst.aes'])
 const FORMAT_BY_ID = new Map(FORMAT_CAPABILITIES.map(format => [format.format, format]))
 
 const normalizeFormatId = (format: string): CompressionFormatId | null => {
   if (format === 'zstd') return 'zst'
   if (format === 'tlz') return 'tar.lz'
+  if (format === 'tlz.aes') return 'tar.lz.aes'
   return FORMAT_BY_ID.has(format as CompressionFormatId) ? format as CompressionFormatId : null
 }
 
@@ -210,3 +223,5 @@ export const supportsNativePassword = (format: string) => NATIVE_PASSWORD_FORMAT
 export const supportsArchiveSplit = (format: string) => FORMAT_BY_ID.get(normalizeFormatId(format)!)?.supportsSplit ?? false
 export const supportsFilenameEncryption = (format: string) => ['7z', 'rar'].includes(format)
 export const supportsSolidCompression = (format: string) => ['7z', 'rar'].includes(format)
+
+export const isLz4Format = (format: string) => /(?:^|\.)lz4(?:\.aes)?$/.test(format)

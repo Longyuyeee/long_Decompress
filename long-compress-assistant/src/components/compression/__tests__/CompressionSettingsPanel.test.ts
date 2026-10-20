@@ -51,6 +51,15 @@ const mountPanel = (modelValue: CompressionOptions, allowSplitArchive = true) =>
 })
 
 describe('CompressionSettingsPanel split archive settings', () => {
+  it.each(['lz4.aes','br.aes','lz.aes','tar.lz4.aes','tar.br.aes','tar.lz.aes'])('keeps inherited %s password and volumes when opening a row', async format => {
+    const wrapper = mountPanel(settings({ format, password: '中文 密码', splitArchive: true }))
+    await flushPromises()
+    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+    expect(wrapper.get('[data-testid="compression-split-toggle"]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.get('[data-testid="compression-password-input"]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.get('[data-testid="compression-filename-extension"]').text()).toBe('.' + format)
+    wrapper.unmount()
+  })
   it('keeps a native ZPAQ password while clearing unsupported inherited options', async () => {
     const wrapper = mountPanel(settings({ format: 'zpaq', password: '中文 密码', splitArchive: true, createSolidArchive: true, encryptFilenames: true }))
     await flushPromises()

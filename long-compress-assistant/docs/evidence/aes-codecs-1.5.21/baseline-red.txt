@@ -1,0 +1,114 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ ❯ src/utils/__tests__/compressionFormat.test.ts (19 tests | 6 failed) 22ms
+     × keeps lz4.aes password and numeric split settings without falling back to 7Z 6ms
+     × keeps br.aes password and numeric split settings without falling back to 7Z 1ms
+     × keeps lz.aes password and numeric split settings without falling back to 7Z 1ms
+     × keeps tar.lz4.aes password and numeric split settings without falling back to 7Z 1ms
+     × keeps tar.br.aes password and numeric split settings without falling back to 7Z 1ms
+     × keeps tar.lz.aes password and numeric split settings without falling back to 7Z 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/utils/__tests__/compressionFormat.test.ts > compression format helpers > keeps lz4.aes password and numeric split settings without falling back to 7Z
+AssertionError: expected '7z' to be 'lz4.aes' // Object.is equality
+
+Expected: "lz4.aes"
+Received: "7z"
+
+ ❯ src/utils/__tests__/compressionFormat.test.ts:57:56
+     55|   })
+     56|   it.each(['lz4.aes','br.aes','lz.aes','tar.lz4.aes','tar.br.aes','tar…
+     57|     expect(effectiveFormatForPassword(format, '中文密码')).toBe(format)
+       |                                                        ^
+     58|     expect(extensionForFormat(format, '中文密码')).toBe(format)
+     59|     expect(supportsArchiveSplit(format)).toBe(true)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  src/utils/__tests__/compressionFormat.test.ts > compression format helpers > keeps br.aes password and numeric split settings without falling back to 7Z
+AssertionError: expected '7z' to be 'br.aes' // Object.is equality
+
+Expected: "br.aes"
+Received: "7z"
+
+ ❯ src/utils/__tests__/compressionFormat.test.ts:57:56
+     55|   })
+     56|   it.each(['lz4.aes','br.aes','lz.aes','tar.lz4.aes','tar.br.aes','tar…
+     57|     expect(effectiveFormatForPassword(format, '中文密码')).toBe(format)
+       |                                                        ^
+     58|     expect(extensionForFormat(format, '中文密码')).toBe(format)
+     59|     expect(supportsArchiveSplit(format)).toBe(true)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  src/utils/__tests__/compressionFormat.test.ts > compression format helpers > keeps lz.aes password and numeric split settings without falling back to 7Z
+AssertionError: expected '7z' to be 'lz.aes' // Object.is equality
+
+Expected: "lz.aes"
+Received: "7z"
+
+ ❯ src/utils/__tests__/compressionFormat.test.ts:57:56
+     55|   })
+     56|   it.each(['lz4.aes','br.aes','lz.aes','tar.lz4.aes','tar.br.aes','tar…
+     57|     expect(effectiveFormatForPassword(format, '中文密码')).toBe(format)
+       |                                                        ^
+     58|     expect(extensionForFormat(format, '中文密码')).toBe(format)
+     59|     expect(supportsArchiveSplit(format)).toBe(true)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  src/utils/__tests__/compressionFormat.test.ts > compression format helpers > keeps tar.lz4.aes password and numeric split settings without falling back to 7Z
+AssertionError: expected '7z' to be 'tar.lz4.aes' // Object.is equality
+
+Expected: "tar.lz4.aes"
+Received: "7z"
+
+ ❯ src/utils/__tests__/compressionFormat.test.ts:57:56
+     55|   })
+     56|   it.each(['lz4.aes','br.aes','lz.aes','tar.lz4.aes','tar.br.aes','tar…
+     57|     expect(effectiveFormatForPassword(format, '中文密码')).toBe(format)
+       |                                                        ^
+     58|     expect(extensionForFormat(format, '中文密码')).toBe(format)
+     59|     expect(supportsArchiveSplit(format)).toBe(true)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  src/utils/__tests__/compressionFormat.test.ts > compression format helpers > keeps tar.br.aes password and numeric split settings without falling back to 7Z
+AssertionError: expected '7z' to be 'tar.br.aes' // Object.is equality
+
+Expected: "tar.br.aes"
+Received: "7z"
+
+ ❯ src/utils/__tests__/compressionFormat.test.ts:57:56
+     55|   })
+     56|   it.each(['lz4.aes','br.aes','lz.aes','tar.lz4.aes','tar.br.aes','tar…
+     57|     expect(effectiveFormatForPassword(format, '中文密码')).toBe(format)
+       |                                                        ^
+     58|     expect(extensionForFormat(format, '中文密码')).toBe(format)
+     59|     expect(supportsArchiveSplit(format)).toBe(true)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  src/utils/__tests__/compressionFormat.test.ts > compression format helpers > keeps tar.lz.aes password and numeric split settings without falling back to 7Z
+AssertionError: expected '7z' to be 'tar.lz.aes' // Object.is equality
+
+Expected: "tar.lz.aes"
+Received: "7z"
+
+ ❯ src/utils/__tests__/compressionFormat.test.ts:57:56
+     55|   })
+     56|   it.each(['lz4.aes','br.aes','lz.aes','tar.lz4.aes','tar.br.aes','tar…
+     57|     expect(effectiveFormatForPassword(format, '中文密码')).toBe(format)
+       |                                                        ^
+     58|     expect(extensionForFormat(format, '中文密码')).toBe(format)
+     59|     expect(supportsArchiveSplit(format)).toBe(true)
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 13 passed (19)
+   Start at  09:16:03
+   Duration  16.13s (transform 141ms, setup 354ms, import 89ms, tests 22ms, environment 14.66s)

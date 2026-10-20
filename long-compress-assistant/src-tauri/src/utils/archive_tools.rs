@@ -33,7 +33,7 @@ const NESTED_ARCHIVE_EXTENSIONS: &[&str] = &[
     "zip", "zipx", "7z", "rar", "r00", "tar", "tgz", "tpz", "gz", "tbz", "tbz2",
     "bz2", "txz", "xz", "tzst", "zst", "lz4", "br", "lz", "tlz", "cab", "iso", "jar", "epub", "apk", "appx", "arj", "z", "udf", "alz", "egg",
 ];
-const BOUNDED_PREVIEW_FORMATS: &[&str] = &["ZIP", "TAR", "GZIP", "BZIP2", "XZ", "ZSTD", "LZIP", "LONG AES"];
+const BOUNDED_PREVIEW_FORMATS: &[&str] = &["ZIP", "TAR", "GZIP", "BZIP2", "XZ", "ZSTD", "LZIP", "LZ4", "BR", "LONG AES"];
 const IMAGE_PREVIEW_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "bmp"];
 const TEXT_PREVIEW_EXTENSIONS: &[&str] = &[
     "txt", "md", "csv", "json", "xml", "yaml", "yml", "toml", "ini", "log", "conf",
@@ -390,7 +390,7 @@ Codecs:"#;
         assert!(workspace.nested_extensions.contains(&"zst".to_string()));
         assert!(workspace.nested_extensions.contains(&"zip".to_string()));
         assert!(!workspace.nested_extensions.contains(&"doc".to_string()));
-        assert_eq!(workspace.bounded_preview_formats, vec!["ZIP", "TAR", "GZIP", "BZIP2", "XZ", "ZSTD", "LZIP", "LONG AES"]);
+        assert_eq!(workspace.bounded_preview_formats, vec!["ZIP", "TAR", "GZIP", "BZIP2", "XZ", "ZSTD", "LZIP", "LZ4", "BR", "LONG AES"]);
         assert!(workspace.image_preview_extensions.contains(&"png".to_string()));
         assert!(workspace.text_preview_extensions.contains(&"txt".to_string()));
     }

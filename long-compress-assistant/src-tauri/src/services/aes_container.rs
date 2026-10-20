@@ -31,7 +31,7 @@ impl AuthenticatedInner {
             anyhow::ensure!(super::aes_wrapper::AesWrapper::is_aes_encrypted(path)?,
                 "[archive-inspection:unsupported] 不是 Long AES 容器");
             let format = super::compression_format::infer_compression_format(&logical.to_string_lossy(), None);
-            anyhow::ensure!(matches!(format.as_str(), "tar.gz.aes" | "tar.bz2.aes" | "tar.xz.aes" | "tar.zst.aes" | "gz.aes" | "bz2.aes" | "xz.aes" | "zst.aes"),
+            anyhow::ensure!(matches!(format.as_str(), "lz4.aes" | "br.aes" | "lz.aes" | "tar.lz4.aes" | "tar.br.aes" | "tar.lz.aes" | "tar.gz.aes" | "tar.bz2.aes" | "tar.xz.aes" | "tar.zst.aes" | "gz.aes" | "bz2.aes" | "xz.aes" | "zst.aes"),
                 "[archive-inspection:unsupported] AES 容器名称缺少可识别的内层格式，请保留原始文件名，例如 .tar.gz.aes");
             super::aes_wrapper::AesWrapper::decrypt_file_cancellable(path, &output, password, &mut check)?;
         }

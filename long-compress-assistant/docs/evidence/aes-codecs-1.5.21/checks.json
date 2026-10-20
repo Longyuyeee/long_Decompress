@@ -1,0 +1,36 @@
+{
+  "runtimeCommit": "dc993e7",
+  "productVersion": "1.5.21",
+  "binarySha256": "b45fd858a45ba7a0419e0fa93287c25dab5390ccc33fe9d4f140b3ad2fdc56cd",
+  "rustDistinctPassed": 8,
+  "frontendDistinctPassed": 89,
+  "frontendFiles": 3,
+  "nativeRecords": 18,
+  "actualUiFlows": 6,
+  "viewedScreenshots": [
+    "aes1521-inline-config-1100x700.png",
+    "aes1521-inline-config-760x520.png",
+    "aes1521-middle-preview-1100x700.png",
+    "aes1521-middle-preview-760x520.png",
+    "aes1521-batch-recovery-1100x700.png",
+    "aes1521-batch-recovery-760x520.png",
+    "aes1521-conversion-zip-1100x700.png",
+    "aes1521-conversion-zip-760x520.png",
+    "aes1521-conversion-aes-1100x700.png",
+    "aes1521-conversion-aes-760x520.png",
+    "aes1521-batch-config-1100x700.png",
+    "aes1521-batch-config-760x520.png"
+  ],
+  "independentAesReadbacks": 9,
+  "independentZipReadback": true,
+  "desktopCompletedAt": "2026-10-20T01:40:40.425Z",
+  "finalHarnessSha256": "5066c65d926b573be8409c5d6db804925ed8ad5a2c980d7036aea0e3db2a3412",
+  "fixtureManifestSha256": "ebf7fd46a5da057a6e5e65d787fa9a74ae7e9735d90b2065cc46b50c5e714568",
+  "personalInstallationChanged": false,
+  "scopeReuse": [
+    "Existing AES algorithms/KDF/defaults unchanged",
+    "v1.5.18 real VHD full-disk pass reused",
+    "Unrelated complete format/checksum matrices not repeated"
+  ],
+  "buildIncident": "Second debug test link met running first test executable (LNK1104). After first five passed, retried only link/history plus new analysis and capability policy; first five not repeated."
+}

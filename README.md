@@ -131,8 +131,8 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | --- | --- |
 | 创建归档 | ZIP（Deflate / Zstandard）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式与原生密码）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM |
 | 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式/日志式当前文件）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
-| 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷；九种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
-| 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及五种自有 AES 密码分卷目标）、WIM、ZPAQ（含输出与改密）；密码和分卷随目标格式提供，ZPAQ 不提供固定大小分卷 |
+| 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷；十五种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
+| 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM、ZPAQ（含输出与改密）；密码和分卷随目标格式提供，ZPAQ 不提供固定大小分卷 |
 | 清单校验 | SFV/MD5/SHA256 逐文件状态与原因、待补列表、按需复查；匹配表示与清单一致 |
 | 内部预览 | ZIP/TAR 系列及普通 GZIP/BZIP2/XZ/Zstandard 流中的受支持图片与文本；预览超出读取范围时可先提取后打开 |
 | 图片压缩 | JPEG、PNG、WebP；质量、尺寸与格式按对应编码能力调整 |
@@ -145,7 +145,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 <summary><strong>更多格式与使用范围</strong></summary>
 
 - 还可读取已支持的应用包、传统归档、文件系统与安装容器，例如 APK、APPX、JAR、DEB、RPM、MSI、LZH、CPIO、XAR、APFS、EXT、HFS/HFSX。具体能力以应用的实际检测和 [格式支持说明](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)为准。
-- ZIP 默认保留 `.zip.001` 数字切卷，可主动选择标准 `.z01/…/.zip`（入口为 `.zip`）；7Z 创建 `.7z.001`，RAR 创建 `.partN.rar`。解压时把整组放在同一目录。普通 TAR/流格式数字切卷的外部兼容能力不同；它们使用密码时可改用 7Z 容器，`.aes` 属于 Long 自有容器，九种格式可创建密码数字卷；整组同目录可从任意卷打开，接收方请使用 Long解压。
+- ZIP 默认保留 `.zip.001` 数字切卷，可主动选择标准 `.z01/…/.zip`（入口为 `.zip`）；7Z 创建 `.7z.001`，RAR 创建 `.partN.rar`。解压时把整组放在同一目录。普通 TAR/流格式数字切卷的外部兼容能力不同；它们使用密码时可改用 7Z 容器，`.aes` 属于 Long 自有容器，十五种格式可创建密码数字卷；整组同目录可从任意卷打开，接收方请使用 Long解压。
 - ZIP/ZIPX 已验证常用 Store、Deflate、Deflate64、BZip2、LZMA、XZ、PPMd 及部分 Zstandard 读取组合；不等于支持所有 ZIPX 专有算法。
 - 创建 ZIP 时可选 Zstandard，创建 ZIPX 时使用 XZ；密码、转换与配置保存保持所选方法。ZIP Zstandard 支持数字卷与标准卷，ZIPX 暂只提供数字卷；接收方需要支持对应压缩方法。
 - 可直接浏览、解压和转换 ZIP/7Z/RAR 自解压 EXE；好压论坛 ZIP 分卷按整组读取，支持已核对的明文与 ZipCrypto 密码样本。收到多个分卷时，把整组放在同一目录即可。具体格式范围见[支持说明](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)。
@@ -236,7 +236,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.20 · LZIP 数字分卷**。LZIP/TAR.LZIP 支持拆卷创建，从任意卷浏览、预览、检查与提取；密码 ZIP 和 TAR.LZIP 分卷转换接通。批量改格式保留分卷设置，补卷后沿原入口创建新任务；单条展开、多选弹窗、左右等宽和窄窗滚动保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.20.md) · [范围与记录](long-compress-assistant/docs/LZIP_VOLUMES_FREEZE_1.5.20.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.20)。下一版按[既定路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)扩展 Long AES 内层，尚未开始。
+**v1.5.21 · 六种新 Long AES 组合**。LZ4/Brotli/LZIP 及对应 TAR 组合支持密码、数字分卷、认证后浏览/预览、检查、提取、转换与结果；批量弹窗与补卷新任务接通，普通 LZIP 完整性分派修正。保持原有交互、等宽及窄窗布局。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.21.md) · [范围与记录](long-compress-assistant/docs/AES_CODECS_FREEZE_1.5.21.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.21)。下一步按[既定路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)推进校验进度、停止与继续，尚未开发。
+
+**v1.5.20 · LZIP 数字分卷**。LZIP/TAR.LZIP 支持拆卷创建，从任意卷浏览、预览、检查与提取；密码 ZIP 和 TAR.LZIP 分卷转换接通。批量改格式保留分卷设置，补卷后沿原入口创建新任务；单条展开、多选弹窗、左右等宽和窄窗滚动保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.20.md) · [范围与记录](long-compress-assistant/docs/LZIP_VOLUMES_FREEZE_1.5.20.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.20)。下一版按[既定路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)Long AES 内层扩展已由 v1.5.21 接续，当前进度以上方最新记录为准。
 
 **v1.5.19 · 看清哪一卷需要补回**。校验清单逐项显示匹配、缺失、内容不符和读取原因；单条展开完整路径及等宽摘要，复制待补列表，按需复查所选或问题项。清单变化会作废旧结果，未检查项不计匹配；可接续原诊断与失败新任务，保留原交互和窄窗滚动。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.19.md) · [范围与记录](long-compress-assistant/docs/CHECKSUM_DETAILS_FREEZE_1.5.19.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.19)。原三项计划按范围收口，下一阶段[v1.5.20～v1.5.22](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)已规划，LZIP 数字分卷已由 v1.5.20 接续，当前进度以上方最新记录为准。
 

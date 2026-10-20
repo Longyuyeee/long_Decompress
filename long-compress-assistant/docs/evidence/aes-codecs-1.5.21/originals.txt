@@ -1,0 +1,1 @@
+{"originals": 6, "tool": {"python": "3.12.10", "cryptography": "49.0.0", "lz4": "4.4.5", "brotli": "1.2.0", "gnuLzipSha256": "fb52c41132a98d22ea2b7969b268407ab5c272e7654ff78bf975f573357d48fd"}}

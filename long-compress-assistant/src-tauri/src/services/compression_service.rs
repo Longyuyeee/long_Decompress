@@ -308,11 +308,11 @@ impl CompressionService {
             ArchiveFormat::SevenZip => "7z".to_string(),
             ArchiveFormat::Rar => "rar".to_string(),
             ArchiveFormat::Zpaq => "zpaq".to_string(),
-            ArchiveFormat::AesEncrypted => [
-                "tar.gz.aes", "tar.bz2.aes", "tar.xz.aes", "tar.zst.aes",
-                "tar.aes", "gz.aes", "bz2.aes", "xz.aes", "zst.aes",
-            ].iter().find(|suffix| name.ends_with(**suffix))
-                .copied().unwrap_or("aes").to_string(),
+            ArchiveFormat::AesEncrypted => {
+                let requested = compression_format::infer_compression_format(&name, None);
+                if requested.ends_with(".aes") && compression_format::has_native_password_container(&requested) { requested }
+                else { "aes".to_string() }
+            },
             ArchiveFormat::Tar => "tar".to_string(),
             ArchiveFormat::Gzip => wrapped(&[".tar.gz", ".tgz", ".tpz"], "tar.gz")
                 .unwrap_or_else(|| "gz".to_string()),
@@ -1295,6 +1295,12 @@ impl CompressionService {
                     let result = tauri::async_runtime::block_on(crate::services::zpaq_engine::create(&source_files, &working_output, &options, service.cancellation_flag.clone()));
                     service.check_cancellation().and(result)
                 },
+                CompressionRoute::Lz4Aes => native_compression::aes::compress(&service, Some(&window), &task_id, &source_files, &working_output_string, options, native_compression::aes::AesCompressionKind::Lz4),
+                CompressionRoute::BrotliAes => native_compression::aes::compress(&service, Some(&window), &task_id, &source_files, &working_output_string, options, native_compression::aes::AesCompressionKind::Brotli),
+                CompressionRoute::LzipAes => native_compression::aes::compress(&service, Some(&window), &task_id, &source_files, &working_output_string, options, native_compression::aes::AesCompressionKind::Lzip),
+                CompressionRoute::TarLz4Aes => native_compression::aes::compress(&service, Some(&window), &task_id, &source_files, &working_output_string, options, native_compression::aes::AesCompressionKind::TarLz4),
+                CompressionRoute::TarBrotliAes => native_compression::aes::compress(&service, Some(&window), &task_id, &source_files, &working_output_string, options, native_compression::aes::AesCompressionKind::TarBrotli),
+                CompressionRoute::TarLzipAes => native_compression::aes::compress(&service, Some(&window), &task_id, &source_files, &working_output_string, options, native_compression::aes::AesCompressionKind::TarLzip),
                 CompressionRoute::TarAes => service.do_compress_tar_aes(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::TarGzipAes => service.do_compress_tar_gz_aes(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::TarBzip2Aes => service.do_compress_tar_bz2_aes(&window, &task_id, &source_files, &working_output_string, options),
@@ -3143,6 +3149,15 @@ impl CompressionService {
             self.do_extract_tar_xz(window, task_id, &source, output, options)
         } else if name.ends_with(".tar.zst") || name.ends_with(".tzst") {
             self.do_extract_tar_zstd(window, task_id, &source, output, options)
+        } else if [".lz4", ".br", ".lz", ".tlz"].iter().any(|suffix| name.ends_with(suffix)) {
+            let codec = if name.ends_with(".lz4") { "lz4" } else if name.ends_with(".br") { "br" } else { "lz" };
+            let reader = crate::services::codec_stream::decoder(&inner.path, codec)?;
+            if compression_format::is_tar_wrapped_archive(&inner.path, &format!("tar.{codec}")) {
+                self.do_extract_tar(window, task_id, &source, output, Some(reader), options)
+            } else {
+                let name = native_extraction::single_stream::output_name(&inner.path, &[&format!(".{codec}")]);
+                native_extraction::single_stream::extract(self, window, task_id, reader, output, name, options)
+            }
         } else if name.ends_with(".gz") || name.ends_with(".gzip") {
             self.do_extract_gz(window, task_id, &source, output, options)
         } else if name.ends_with(".bz2") || name.ends_with(".bzip2") {
