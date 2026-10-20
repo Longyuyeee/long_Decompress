@@ -129,7 +129,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 
 | 能力 | 主要格式与说明 |
 | --- | --- |
-| 创建归档 | ZIP（Deflate / Zstandard）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码与数字分卷）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM（存储/XPRESS/LZX/LZMS 压缩与数字分卷） |
+| 创建归档 | ZIP（Deflate / Zstandard / BZip2）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码与数字分卷）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM（存储/XPRESS/LZX/LZMS 压缩与数字分卷） |
 | 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式当前内容/日志式历史快照）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，原生 SWM（Copy/XPRESS/LZX 整组只读），以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
 | 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷、ZPAQ 原生密码数字切卷；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM、ZPAQ（含改密与数字分卷）；密码和分卷随目标格式提供 |
@@ -236,7 +236,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.33 · WIM LZMS 非固实创建**。现有方法选择增加 LZMS，小块与单线程控制编码资源；文件目录、密码原包转换、数字卷与后续提取/补卷/结果接通。方法跟随配置组、草稿和历史，转换时方法与目标格式并排，减少寻找与滚动。保留原交互和等宽布局。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.33.md) · [范围与记录](long-compress-assistant/docs/WIM_LZMS_FREEZE_1.5.33.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.33)。下一版 [v1.5.34 ZIP BZip2创建](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.34.md)仅规划，尚未开发。
+**v1.5.34 · ZIP BZip2 创建**。常用 ZIP 增加 BZip2，接通普通/AES-256/ZipCrypto、数字/标准卷、转换与后续提取/补卷。体积分析和强度显示跟随实际方法，转换方法与格式并排；修复较长路径下分卷结果提交失败。原交互与等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.34.md) · [范围与记录](long-compress-assistant/docs/ZIP_BZIP2_FREEZE_1.5.34.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.34)。下一版 [v1.5.35 ZIP PPMd创建](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.35.md)仅规划，尚未开发。
+
+**v1.5.33 · WIM LZMS 非固实创建**。现有方法选择增加 LZMS，小块与单线程控制编码资源；文件目录、密码原包转换、数字卷与后续提取/补卷/结果接通。方法跟随配置组、草稿和历史，转换时方法与目标格式并排，减少寻找与滚动。保留原交互和等宽布局。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.33.md) · [范围与记录](long-compress-assistant/docs/WIM_LZMS_FREEZE_1.5.33.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.33)。下一版 [v1.5.34 ZIP BZip2创建](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.34.md)已由 v1.5.34 接续，当前进度以上方最新记录为准。
 
 **v1.5.32 · WIM LZX 体积优先创建**。现有方法选择增加 LZX，接通文件/目录、密码原包转换、数字分卷与后续浏览、预览、检查、提取、补卷和统一结果；配置组/模板、草稿、历史保留方法，混合批量修改不改变无关任务的继承关系。原交互与等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.32.md) · [范围与记录](long-compress-assistant/docs/WIM_LZX_FREEZE_1.5.32.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.32)。下一版 [v1.5.33 LZMS非固实创建](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.33.md)已由 v1.5.33 接续，当前进度以上方最新记录为准。
 

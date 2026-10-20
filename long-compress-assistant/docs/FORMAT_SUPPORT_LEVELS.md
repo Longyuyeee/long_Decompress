@@ -1,5 +1,8 @@
 # 归档格式支持等级（当前权威口径）
 
+v1.5.34：ZIP新增BZip2方法12，强度1–9（旧0按1），普通/AES-256/ZipCrypto、单包/数字/标准卷与配置/历史/转换/后续提取流程接通；默认Deflate、Zstandard和ZIPX固定XZ不变，不新增单独容器或引擎。修复长路径提交分卷错误，见[实施](ZIP_BZIP2_1.5.34.md)与[封板](ZIP_BZIP2_FREEZE_1.5.34.md)。下一版[ZIP PPMd](ARCHIVE_ROADMAP_1.5.35.md)仅规划，ZIP LZMA仍无编码；下方保留历史状态。
+
+
 v1.5.33：WIM新增非固实LZMS创建，32KiB块/单线程，保留Store/XPRESS/LZX；配置、模板、草稿、历史、密码原包转换、数字卷及读取/提取/恢复/结果贯通。真实LZMS资源和独立完整回解有依据；不是固实ESD、SWM或部署，不新增WIM密码和完整权限元数据备份。见[实施](WIM_LZMS_1.5.33.md)、[封板](WIM_LZMS_FREEZE_1.5.33.md)；下一版[ZIP BZip2](ARCHIVE_ROADMAP_1.5.34.md)仅规划。下方保留历史状态。
 
 

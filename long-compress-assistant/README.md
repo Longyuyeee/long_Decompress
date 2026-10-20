@@ -92,7 +92,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.5.33 · WIM LZMS 非固实创建**。现有方法选择增加 LZMS，小块与单线程控制编码资源；文件目录、密码原包转换、数字卷与后续提取/补卷/结果接通。方法跟随配置组、草稿和历史，转换时方法与目标格式并排，减少寻找与滚动。保留原交互和等宽布局。[中文说明](docs/RELEASE_NOTES_1.5.33.md) · [范围与记录](docs/WIM_LZMS_FREEZE_1.5.33.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.33)。下一版 [v1.5.34 ZIP BZip2创建](docs/ARCHIVE_ROADMAP_1.5.34.md)仅规划，尚未开发。
+**v1.5.34 · ZIP BZip2 创建**。常用 ZIP 增加 BZip2，接通普通/AES-256/ZipCrypto、数字/标准卷、转换与后续提取/补卷。体积分析和强度显示跟随实际方法，转换方法与格式并排；修复较长路径下分卷结果提交失败。原交互与等宽/窄窗布局保持。[中文说明](docs/RELEASE_NOTES_1.5.34.md) · [范围与记录](docs/ZIP_BZIP2_FREEZE_1.5.34.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.34)。下一版 [v1.5.35 ZIP PPMd创建](docs/ARCHIVE_ROADMAP_1.5.35.md)仅规划，尚未开发。
+
+**v1.5.33 · WIM LZMS 非固实创建**。现有方法选择增加 LZMS，小块与单线程控制编码资源；文件目录、密码原包转换、数字卷与后续提取/补卷/结果接通。方法跟随配置组、草稿和历史，转换时方法与目标格式并排，减少寻找与滚动。保留原交互和等宽布局。[中文说明](docs/RELEASE_NOTES_1.5.33.md) · [范围与记录](docs/WIM_LZMS_FREEZE_1.5.33.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.33)。下一版 [v1.5.34 ZIP BZip2创建](docs/ARCHIVE_ROADMAP_1.5.34.md)已由 v1.5.34 接续，当前进度以上方最新记录为准。
 
 **v1.5.32 · WIM LZX 体积优先创建**。现有方法选择增加 LZX，接通文件/目录、密码原包转换、数字分卷与后续浏览、预览、检查、提取、补卷和统一结果；配置组/模板、草稿、历史保留方法，混合批量修改不改变无关任务的继承关系。原交互与等宽/窄窗布局保持。[中文说明](docs/RELEASE_NOTES_1.5.32.md) · [范围与记录](docs/WIM_LZX_FREEZE_1.5.32.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.32)。下一版 [v1.5.33 LZMS非固实创建](docs/ARCHIVE_ROADMAP_1.5.33.md)已由 v1.5.33 接续，当前进度以上方最新记录为准。
 
