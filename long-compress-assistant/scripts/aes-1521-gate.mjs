@@ -32,7 +32,7 @@ export async function runAes1521Gate({driver,bridge,waitForElement,artifactDirec
   const choose=async(selector,label)=>{
     await click(selector);let found=false
     for(const option of await driver.findElements(By.css('[role="option"]'))){
-      const strong=await option.findElements(By.css('strong')),text=(await(strong[0]||option).getText()).trim()
+      const strong=await option.findElements(By.css('strong')),text=(await(strong[0]||option).getAttribute('textContent')).trim()
       if(text===label||text.startsWith(label+' ')||text.startsWith(label+'（')){await click(option);found=true;break}
     }assert.ok(found,label+' option missing')
   }
@@ -113,6 +113,13 @@ export async function runAes1521Gate({driver,bridge,waitForElement,artifactDirec
     await bridge('convertArchive',source,password,output,{format:'lz.aes',password,split_size:65521})
     const prefix=path.basename(output),parts=readdirSync(work).filter(f=>f.startsWith(prefix+'.')&&/^\d{3,}$/.test(f.slice(prefix.length+1))).sort().map(f=>path.join(work,f));assert.ok(parts.length>1)
     state.native.push({converted:'single-stream',format:'lz.aes',parts});save()
+  }
+  if(!state.native.some(r=>r.kind==='tlz-alias')){
+    const file=owned(path.join(work,'别名.tlz.aes'));writeFileSync(file,readFileSync(path.join(base,'资料.tar.lz.aes')))
+    const parts=split(file,'别名卷组'),out=fresh('别名完整提取');mkdirSync(out)
+    const listed=await ipc('browse_archive',{filePath:parts.at(-1),password,browseId:randomUUID()});assert.equal(listed.format,'LONG AES.TAR.LZIP')
+    await ipc('extract_file',{taskId:randomUUID(),filePath:parts[1],outputPath:out,password,options});fullOriginal({kind:'tar'},out)
+    state.native.push({kind:'tlz-alias',completeHashes:true,lastMemberBrowse:true});save()
   }
   if(!state.ui.some(r=>r.kind==='creation')){
     await click('[data-testid="nav-Compress"]');await bridge('queueDesktopDialogSelections',[[path.join(state.source,'数据.bin')]]);await click('[data-testid="dropzone-file"]')

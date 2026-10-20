@@ -19,7 +19,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 工作区 | 用户可以做什么 |
 | --- | --- |
 | 解压中心 | 导入多包、配置目录与子文件夹、使用密码候选、处理文件冲突、查看阶段和结果 |
-| 压缩中心 | 文件/文件夹/组归档、ZIP/7Z/RAR 与九种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码创建、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
+| 压缩中心 | 文件/文件夹/组归档、ZIP/7Z/RAR 与十五种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码创建、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
 | 特殊压缩 | JPEG/PNG/WebP 图片编码与缩放、视频压缩预设、PDF 分析与结构优化 |
 | 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、文本/图片预览与选择性解压；支持普通压缩流及自有 AES 密码卷组查看 |
 | 密码保险箱 | 本地加密保存常用解压密码，分类、搜索、导入导出与使用统计 |
@@ -92,7 +92,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.5.20 · LZIP 数字分卷**。LZIP/TAR.LZIP 支持拆卷创建，从任意卷浏览、预览、检查与提取；密码 ZIP 和 TAR.LZIP 分卷转换接通。批量改格式保留分卷设置，补卷后沿原入口创建新任务；单条展开、多选弹窗、左右等宽和窄窗滚动保持。[中文说明](docs/RELEASE_NOTES_1.5.20.md) · [范围与记录](docs/LZIP_VOLUMES_FREEZE_1.5.20.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.20)。下一版按[既定路线](docs/ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)扩展 Long AES 内层，尚未开始。
+**v1.5.21 · 六种新 Long AES 组合**。LZ4/Brotli/LZIP 及对应 TAR 组合支持密码、数字分卷、认证后浏览/预览、检查、提取、转换与结果；批量弹窗与补卷新任务接通，普通 LZIP 完整性分派修正。保持原有交互、等宽及窄窗布局。[中文说明](docs/RELEASE_NOTES_1.5.21.md) · [范围与记录](docs/AES_CODECS_FREEZE_1.5.21.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.21)。下一步按[既定路线](docs/ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)推进校验进度、停止与继续，尚未开发。
+
+**v1.5.20 · LZIP 数字分卷**。LZIP/TAR.LZIP 支持拆卷创建，从任意卷浏览、预览、检查与提取；密码 ZIP 和 TAR.LZIP 分卷转换接通。批量改格式保留分卷设置，补卷后沿原入口创建新任务；单条展开、多选弹窗、左右等宽和窄窗滚动保持。[中文说明](docs/RELEASE_NOTES_1.5.20.md) · [范围与记录](docs/LZIP_VOLUMES_FREEZE_1.5.20.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.20)。下一版按[既定路线](docs/ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)Long AES 内层扩展已由 v1.5.21 接续，当前进度以上方最新记录为准。
 
 **v1.5.19 · 看清哪一卷需要补回**。校验清单逐项显示匹配、缺失、内容不符和读取原因；单条展开完整路径及等宽摘要，复制待补列表，按需复查所选或问题项。清单变化会作废旧结果，未检查项不计匹配；可接续原诊断与失败新任务，保留原交互和窄窗滚动。[中文说明](docs/RELEASE_NOTES_1.5.19.md) · [范围与记录](docs/CHECKSUM_DETAILS_FREEZE_1.5.19.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.19)。原三项计划按范围收口，下一阶段[v1.5.20～v1.5.22](docs/ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)已规划，LZIP 数字分卷已由 v1.5.20 接续，当前进度以上方最新记录为准。
 
