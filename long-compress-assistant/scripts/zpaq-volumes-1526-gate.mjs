@@ -26,11 +26,11 @@ export async function runZpaqVolumes1526Gate({driver,bridge,waitForElement,artif
     const element=typeof target==='string'?await waitForElement(target):target
     await driver.wait(()=>driver.executeScript(e=>{e.scrollIntoView({block:'center',behavior:'instant'});const r=e.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !e.disabled&&r.width>0&&r.height>0&&(hit===e||e.contains(hit))},element),15000);await element.click()
   }
-  const fill=async(selector,value)=>{const e=await waitForElement(selector);await driver.executeScript(e=>e.scrollIntoView({block:'center',behavior:'instant'}),e);await e.sendKeys(Key.chord(Key.CONTROL,'a'),Key.BACK_SPACE);if(value)await e.sendKeys(value)}
+  const fill=async(selector,value)=>{const e=await waitForElement(selector);await driver.wait(async()=>await e.isEnabled()&&await e.isDisplayed(),35000);await driver.executeScript(e=>e.scrollIntoView({block:'center',behavior:'instant'}),e);await e.sendKeys(Key.chord(Key.CONTROL,'a'),Key.BACK_SPACE);if(value)await e.sendKeys(value)}
   const choose=async(selector,label)=>{await click(selector);for(const option of await driver.findElements(By.css('[role="option"]'))){const strong=await option.findElements(By.css('strong')),text=(await(strong[0]||option).getAttribute('textContent')).trim();if(text===label||text.startsWith(label+'（')){await click(option);return}}throw Error('Missing option '+label)}
   const sizes=async(name,anchor)=>{
     for(const[width,height]of[[1100,700],[760,520]]){
-      await driver.manage().window().setRect({width,height});await driver.executeScript(e=>e.scrollIntoView({block:'center',behavior:'instant'}),await waitForElement(anchor))
+      await driver.manage().window().setRect({width,height});await driver.executeScript(e=>e.scrollIntoView({block:'center',behavior:'instant'}),(typeof anchor==='string'?await waitForElement(anchor):anchor))
       await driver.wait(()=>driver.executeScript(()=>document.getAnimations().filter(a=>a.effect?.getTiming().iterations!==Infinity).every(a=>a.playState!=='running')),10000)
       const layout=await driver.executeScript(()=>{const d=document.querySelector('[data-testid="compression-draft-details"]');return{width:innerWidth,height:innerHeight,overflow:document.documentElement.scrollWidth-innerWidth,columns:d?[...d.children].map(e=>e.getBoundingClientRect().width):[],panels:[...document.querySelectorAll('[role="dialog"],.browser-page')].map(e=>e.scrollWidth-e.clientWidth)}})
       assert.ok(layout.overflow<=1&&layout.panels.every(value=>value<=1),JSON.stringify(layout));if(name==='inline-config'&&width===1100)assert.ok(Math.abs(layout.columns[0]-layout.columns[1])<=1)
@@ -107,7 +107,7 @@ export async function runZpaqVolumes1526Gate({driver,bridge,waitForElement,artif
   if(!passed('ui','bounded-previews')){
     await click('[data-testid="nav-ArchiveBrowser"]');await bridge('queueDesktopDialogSelections',[[created.files[1].path]]);await click('[data-testid="file-manager-open-archive"]')
     await fill('.browser-toolbar input[type="password"]',secret);await(await waitForElement('.browser-toolbar input[type="password"]')).sendKeys(Key.ENTER)
-    const folder=await waitForElement('[data-entry-path="资料"]');await driver.actions().doubleClick(folder).perform()
+    const folder=await waitForElement('[data-entry-path="资料/"]');await driver.actions().doubleClick(folder).perform()
     await click('[data-entry-path="资料/说明.txt"] .preview-trigger');assert.match(await(await waitForElement('[data-testid="archive-text-preview"]')).getText(),/数字分卷可从任意成员打开/);await sizes('text-preview','[data-testid="archive-text-preview"]');await click('.preview-close')
     await click('[data-entry-path="资料/图标.png"] .preview-trigger');await waitForElement('[data-testid="archive-image-preview"]');await sizes('image-preview','[data-testid="archive-image-preview"]');await click('.preview-close')
     done('ui','bounded-previews',{middleMember:true,nativePassword:true,text:true,image:true})
@@ -136,12 +136,27 @@ export async function runZpaqVolumes1526Gate({driver,bridge,waitForElement,artif
     await bridge('queueDesktopDialogSelections',[[source]]);await click('[data-testid="conversion-choose-source"]');await driver.wait(async()=>(await driver.findElements(By.css('[data-testid="conversion-item"]'))).length>before,15000)
     const item=(await driver.findElements(By.css('[data-testid="conversion-item"]'))).at(-1),row=await item.findElement(By.css('[data-testid="conversion-row"]'));if(await row.getAttribute('aria-expanded')!=='true')await click(row)
     await fill('[data-testid="conversion-source-password"]',inputPassword);await choose('[data-testid="conversion-format"]',target.toUpperCase());await fill('[data-testid="conversion-password"]',outputPassword)
-    const output=owned(path.join(work,'互转-'+target+'.'+target));await fill('[data-testid="conversion-output"]',output);if(target==='zpaq')await fill('[data-testid="conversion-split"]','1')
+    const output=owned(path.join(work,'互转-'+target+'-'+randomUUID()+'.'+target));await fill('[data-testid="conversion-output"]',output);if(target==='zpaq')await fill('[data-testid="conversion-split"]','1')
     await click('[data-testid="conversion-start"]');const requested=output.replaceAll('\\','/').toLowerCase(),record=await driver.wait(async()=>(await bridge('taskHistory')).find(row=>[requested,requested+'.001'].includes(row.outputPath?.replaceAll('\\','/').toLowerCase())&&['completed','failed'].includes(row.status))||false,60000);assert.equal(record.status,'completed',JSON.stringify(record))
     if(target==='zip'){
-      const recovered=owned(path.join(work,'密码ZIP独立回解'));mkdirSync(recovered);execFileSync(bundledSevenZip,['x','-y','-p'+outputPassword,'-o'+recovered,output],{windowsHide:true,timeout:30000,maxBuffer:4*1024*1024});assert.deepEqual(tree(recovered),state.expected)
+      const request=owned(path.join(work,'zip-independent-request-'+randomUUID()+'.json')),result=request.replace('request','result')
+      writeFileSync(request,JSON.stringify({type:'zip',file:output,password:outputPassword,expectedFiles:state.expected,emptyDirectory:'资料/空目录'}))
+      // Windows CLI argv uses a local codepage; verify explicit UTF-8 AES bytes.
+      execFileSync('python',[path.join(root,'scripts/verify-tar-lzma-1524.py'),request,result],{windowsHide:true,timeout:30000,maxBuffer:4*1024*1024})
+      state.zipIndependent=JSON.parse(readFileSync(result,'utf8'))
     }else assert.ok((await independent(record.archiveOutput,outputPassword,'转换结果')).hashes)
     await sizes('conversion-'+target,item);done('ui',kind,{output,record,independentDecodedHashes:true});await click(await driver.findElement(By.xpath('//*[@role="dialog"]//button[normalize-space(.)="关闭"]')))
+  }
+  if(process.env.ZPAQ_1526_DISPLAY_ONLY==='1'&&!passed('ui','preview-display')){
+    await click('[data-testid="nav-ArchiveBrowser"]');await bridge('queueDesktopDialogSelections',[[created.files[1].path]]);await click('[data-testid="file-manager-open-archive"]')
+    const cancel=await driver.findElements(By.css('[data-testid="archive-browse-cancel"]'))
+    if(cancel.length){const display=await driver.executeScript(e=>({whiteSpace:getComputedStyle(e).whiteSpace,overflow:e.scrollWidth-e.clientWidth}),cancel[0]);assert.equal(display.whiteSpace,'nowrap');assert.ok(display.overflow<=1);state.cancelDisplay=display;save()}
+    await fill('.browser-toolbar input[type="password"]',secret);await(await waitForElement('.browser-toolbar input[type="password"]')).sendKeys(Key.ENTER)
+    const folder=await waitForElement('[data-entry-path="资料/"]');await driver.executeScript(e=>e.scrollIntoView({block:'center',behavior:'instant'}),folder);await driver.actions().doubleClick(folder).perform()
+    for(const [name,entry,selector]of[['text','说明.txt','[data-testid="archive-text-preview"]'],['image','图标.png','[data-testid="archive-image-preview"]']]){
+      await click('[data-entry-path="资料/'+entry+'"] .preview-trigger');await waitForElement(selector);assert.match(await(await waitForElement('.preview-meta')).getText(),/只读 · 不改原包/);await sizes(name+'-preview-final',selector);await click('.preview-close')
+    }
+    done('ui','preview-display',{truthfulReadOnlyWording:true,loadingButtonNoWrap:state.cancelDisplay?.whiteSpace==='nowrap'})
   }
   state.completedAt=new Date().toISOString();save();writeFileSync(path.join(artifactDirectory,'zpaq-volumes-1526-results.json'),JSON.stringify(state,null,2))
 }
