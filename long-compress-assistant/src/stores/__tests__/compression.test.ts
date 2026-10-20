@@ -24,6 +24,13 @@ const mockFile = (name: string, size: number): FileObject => ({
 })
 
 describe('Compression Store', () => {
+  it('zip1534 BZip2 batch edits ZIP only and preserves other inheritance, passwords and volumes',()=>{
+    const store=useCompressionStore();store.globalSettings.format='7z';const files=['zip','zipx','other'].map(n=>mockFile(n,1));files.forEach(f=>store.addFile(f))
+    store.updateFileSettings(files[0].path,{...defaultOptions(),password:'keep',splitArchive:true,splitSize:'2',zipMethod:'zstd'});store.updateFileSettings(files[1].path,{...defaultOptions(),format:'zipx'})
+    const other=JSON.stringify(store.selectedFiles.slice(1)),global=JSON.stringify(store.globalSettings)
+    expect(store.applyBatchConfiguration(files.map(f=>f.path),{zipMethod:'bzip2'})).toBe(1);expect(store.selectedFiles[0].settings).toMatchObject({format:'zip',zipMethod:'bzip2',password:'keep',splitSize:'2'})
+    expect(JSON.stringify(store.selectedFiles.slice(1))).toBe(other);expect(JSON.stringify(store.globalSettings)).toBe(global)
+  })
   it('wim1533 mixed method batch preserves unrelated inherited drafts and each existing split size',()=>{
     const store=useCompressionStore();store.globalSettings.format='7z'
     const files=[mockFile('wim',1),mockFile('zip',1),mockFile('inherited',1)];files.forEach(file=>store.addFile(file))

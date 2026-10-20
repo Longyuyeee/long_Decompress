@@ -263,7 +263,7 @@ const getCompressionEstimate = (
   files: FileObject[],
   format: string,
   level: number,
-  zipMethod?: 'deflate' | 'zstd',
+  zipMethod?: 'deflate' | 'zstd' | 'bzip2',
 ) => {
   const analysis = compressionStore.compressionAnalysis[jobId]
   if (
@@ -284,7 +284,7 @@ const getCompressionEstimate = (
 
 const runCompressionResourcePreflight = async (
   taskId: string,
-  job: { id: string, files: FileObject[], outputPath: string, settings: { format: string, level: number, zipMethod?: 'deflate' | 'zstd', wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' } },
+  job: { id: string, files: FileObject[], outputPath: string, settings: { format: string, level: number, zipMethod?: 'deflate' | 'zstd' | 'bzip2', wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' } },
 ) => {
   const task = taskStore.tasks.find(item => item.id === taskId)
   if (!task) return false

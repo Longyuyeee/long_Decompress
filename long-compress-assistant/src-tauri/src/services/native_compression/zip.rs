@@ -198,7 +198,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
     }
 
     let zipx = output.to_ascii_lowercase().ends_with(".zipx");
-    let method_name = if zipx { "XZ" } else if options.zip_method == crate::services::zip_method::ZipMethod::Zstd { "Zstandard" }
+    let method_name = if zipx { "XZ" } else if options.zip_method == crate::services::zip_method::ZipMethod::Bzip2 { "BZip2" } else if options.zip_method == crate::services::zip_method::ZipMethod::Zstd { "Zstandard" }
         else if options.level == 0 { "Store" } else { "Deflate" };
     if let Some(window) = window {
         runtime.emit_log(window, task_id, &format!("正在创建 {} · {}{}…",
@@ -729,3 +729,7 @@ mod tests {
         assert_eq!(source_total_bytes(&entries).expect("total bytes"), 12_288);
     }
 }
+
+#[cfg(test)]
+#[path = "zip_bzip2_1534_tests.rs"]
+mod bzip2_tests;

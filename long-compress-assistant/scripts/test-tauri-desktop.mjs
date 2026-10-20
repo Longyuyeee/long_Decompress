@@ -80,6 +80,7 @@ import { prepareExplorerChecksum1528Startup, runExplorerChecksum1528Gate } from 
 import { runWimVolumes1527Gate } from './wim-volumes-1527-gate.mjs'
 import { runSwm1529Gate } from './native-swm-1529-gate.mjs'
 import { runZpaqSnapshots1530Gate } from './zpaq-snapshots-1530-gate.mjs'
+import { runZipBzip1534Gate } from './zip-bzip2-1534-gate.mjs'
 import { runWimLzms1533Gate } from './wim-lzms-1533-gate.mjs'
 import { runWimLzx1532Gate } from './wim-lzx-1532-gate.mjs'
 import { runWimXpress1531Gate } from './wim-xpress-1531-gate.mjs'
@@ -4950,6 +4951,8 @@ try {
     forwardContextAction(startupArgs[0],startupArgs.slice(1))
     await runExplorerChecksum1528Gate({driver,bridge:callDesktopBridge,waitForElement,artifactDirectory,application,root,forwardContextAction})
     completedSuccessfully = true
+  } else if (process.argv.includes('--zip-bzip2-1534-only')) {
+    await runZipBzip1534Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
   } else if (process.argv.includes('--wim-lzms-1533-only')) {
     await runWimLzms1533Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
   } else if (process.argv.includes('--wim-lzx-1532-only')) {

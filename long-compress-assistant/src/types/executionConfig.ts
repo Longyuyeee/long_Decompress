@@ -42,7 +42,7 @@ export interface ArchiveConversionConfigV1 {
   sourceZpaqSnapshot?: ZpaqSnapshot
   sourceZipPasswordEncoding?: ZipPasswordEncoding
   wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms'
-  zipMethod?: 'deflate' | 'zstd'
+  zipMethod?: 'deflate' | 'zstd' | 'bzip2'
   zipEncryption?: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
   zipPasswordEncoding?: ZipPasswordEncoding

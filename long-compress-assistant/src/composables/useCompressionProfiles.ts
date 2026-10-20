@@ -60,6 +60,7 @@ const toBackendPasswordStrategy = (strategy: PasswordStrategy) => {
 const normalizeProfile = (raw: any): CompressionProfile => {
   const autoApply = raw.autoApply ?? raw.auto_apply ?? {}
   const zipEncoding = raw.config.zipPasswordEncoding ?? raw.config.extra_params?.zip_password_encoding ?? raw.config.extraParams?.zip_password_encoding
+  const zipMethod = raw.config.zipMethod ?? raw.config.extra_params?.zip_method ?? raw.config.extraParams?.zip_method
   const wimMethod = raw.config.wimMethod ?? raw.config.extra_params?.wim_method ?? raw.config.extraParams?.wim_method
   return ({
   id: raw.id,
@@ -81,7 +82,7 @@ const normalizeProfile = (raw: any): CompressionProfile => {
     ...((raw.config.rarRecoveryVolumes ?? raw.config.extra_params?.rar_recovery_volumes ?? raw.config.extraParams?.rar_recovery_volumes) ? { rarRecoveryVolumes: Number(raw.config.rarRecoveryVolumes ?? raw.config.extra_params?.rar_recovery_volumes ?? raw.config.extraParams?.rar_recovery_volumes) } : {}),
     ...(wimMethod === 'xpress' || wimMethod === 'lzx' || wimMethod === 'lzms' ? { wimMethod } : {}),
     ...(isZipPasswordEncoding(zipEncoding) ? { zipPasswordEncoding: zipEncoding } : {}),
-    ...((raw.config.zipMethod ?? raw.config.extra_params?.zip_method ?? raw.config.extraParams?.zip_method) === 'zstd' ? { zipMethod: 'zstd' as const } : {}),
+    ...(zipMethod === 'zstd' || zipMethod === 'bzip2' ? { zipMethod } : {}),
     ...((raw.config.zipEncryption ?? raw.config.extra_params?.zip_encryption ?? raw.config.extraParams?.zip_encryption) === 'zipcrypto' ? { zipEncryption: 'zipcrypto' as const } : {}),
     ...((raw.config.zipSplitMode ?? raw.config.extra_params?.zip_split_mode ?? raw.config.extraParams?.zip_split_mode) === 'standard' ? { zipSplitMode: 'standard' as const } : {}),
     filenameTemplate: raw.config.filenameTemplate ?? raw.config.filename_template ?? null,

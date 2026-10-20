@@ -157,3 +157,11 @@ it('wim1533 reopens old Store, XPRESS, LZX and new LZMS without changing methods
   const restored=useCompressionStore();expect(restored.selectedFiles.map(item=>restored.getEffectiveSettings(item.settings).wimMethod??'store')).toEqual(['lzms','store','xpress','lzx'])
   expect(useArchiveConversionStore().effectiveSettings(useArchiveConversionStore().pending[0]).wimMethod).toBe('lzms');expect(mocks.invoke.mock.calls.some(([cmd])=>['compress_files','convert_archive'].includes(cmd))).toBe(false)
 })
+
+it('zip1534 restores old Deflate, Zstandard, new BZip2 and ZIPX without automatic execution',async()=>{
+  session=usePendingDraftStore();session.initialize();const compression=useCompressionStore(),conversion=useArchiveConversionStore();compression.globalSettings.format='zip';compression.globalSettings.zipMethod='bzip2'
+  const names=['C:/new.txt','C:/old.txt','C:/zstd.txt','C:/zipx.txt'];names.forEach(n=>compression.addFile(file(n)))
+  compression.updateFileSettings(names[1],{...compression.globalSettings,zipMethod:undefined});compression.updateFileSettings(names[2],{...compression.globalSettings,zipMethod:'zstd'});compression.updateFileSettings(names[3],{...compression.globalSettings,format:'zipx',zipMethod:undefined})
+  conversion.addSources(['C:/source.7z']);conversion.updateItem(conversion.pending[0].id,{format:'zip',zipMethod:'bzip2',sourcePassword:'never-persist'});session.flush();expect(localStorage.getItem(PENDING_DRAFTS_KEY)).not.toContain('never-persist');await reopen().restore()
+  const restored=useCompressionStore();expect(restored.selectedFiles.map(f=>restored.getEffectiveSettings(f.settings).zipMethod??'deflate')).toEqual(['bzip2','deflate','zstd','deflate']);expect(restored.selectedFiles[3].settings?.format).toBe('zipx');expect(useArchiveConversionStore().effectiveSettings(useArchiveConversionStore().pending[0]).zipMethod).toBe('bzip2');expect(mocks.invoke.mock.calls.some(([cmd])=>['compress_files','convert_archive'].includes(cmd))).toBe(false)
+})

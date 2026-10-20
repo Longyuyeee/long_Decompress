@@ -237,7 +237,7 @@ pub fn template_from_profile(profile: &CompressionProfile) -> TaskTemplate {
         compression: TemplateCompression {
             wim_method: profile.config.extra_params.get("wim_method").map(|method| match method.as_str() { "lzms" => super::wim_writer::WimMethod::Lzms, "lzx" => super::wim_writer::WimMethod::Lzx, "xpress" => super::wim_writer::WimMethod::Xpress, _ => super::wim_writer::WimMethod::Store }),
             zip_method: profile.config.extra_params.get("zip_method").map(|value|
-                if value == "zstd" { crate::services::zip_method::ZipMethod::Zstd } else { crate::services::zip_method::ZipMethod::Deflate }),
+                match value.as_str() { "bzip2" => crate::services::zip_method::ZipMethod::Bzip2, "zstd" => crate::services::zip_method::ZipMethod::Zstd, _ => crate::services::zip_method::ZipMethod::Deflate }),
             zip_encryption: if matches!(profile.config.format.to_ascii_lowercase().as_str(), "zip" | "zipx") {
                 profile.config.extra_params.get("zip_encryption").map(|value|
                     if value == "zipcrypto" { crate::services::zip_password::ZipEncryption::Zipcrypto }
@@ -851,7 +851,7 @@ pub fn import_template_profile(path: &Path, expected_sha256: &str) -> Result<Com
                   params.insert("wim_method".into(), match method { super::wim_writer::WimMethod::Lzms => "lzms", super::wim_writer::WimMethod::Lzx => "lzx", super::wim_writer::WimMethod::Xpress => "xpress", super::wim_writer::WimMethod::Store => "store" }.into());
               }
               if let Some(method) = template.compression.zip_method {
-                  params.insert("zip_method".into(), if method == crate::services::zip_method::ZipMethod::Zstd { "zstd" } else { "deflate" }.into());
+                  params.insert("zip_method".into(), match method { crate::services::zip_method::ZipMethod::Bzip2 => "bzip2", crate::services::zip_method::ZipMethod::Zstd => "zstd", crate::services::zip_method::ZipMethod::Deflate => "deflate" }.into());
               }
               if let Some(encryption) = template.compression.zip_encryption {
                   let value = match encryption {
@@ -1022,6 +1022,15 @@ mod tests {
         invalid.compression.split_archive = true;
         invalid.compression.split_size_mib = Some(10);
         assert!(validate_template(&invalid).is_err());
+    }
+
+    #[test]
+    fn zip1534_template_method_survives_export_import() {
+        let temp=tempfile::tempdir().unwrap();let path=temp.path().join("bzip2.longtask.json");
+        let mut original=profile();original.config.format="zip".into();original.config.password=None;original.config.create_solid_archive=false;original.config.encrypt_filenames=false;
+        original.config.extra_params.insert("zip_method".into(),"bzip2".into());
+        export_profile_template(&original,&path).unwrap();let preview=preview_template_file(&path).unwrap();assert_eq!(preview.template.compression.zip_method,Some(super::super::zip_method::ZipMethod::Bzip2));
+        let imported=import_template_profile(&path,&preview.content_sha256).unwrap();assert_eq!(imported.config.extra_params["zip_method"],"bzip2");
     }
 
     #[test]
