@@ -145,7 +145,7 @@ const effectiveOutputExtension = computed(() =>
 
 const presets = computed(() => appStore.compressionPresets)
 
-const applyPreset = (preset: { name: string; format: string; level: number; password?: string; zipMethod?: 'deflate' | 'zstd'; wimMethod?: 'store' | 'xpress' | 'lzx' }) => {
+const applyPreset = (preset: { name: string; format: string; level: number; password?: string; zipMethod?: 'deflate' | 'zstd'; wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' }) => {
   compressionOptions.value.format = preset.format as any
   compressionOptions.value.level = preset.level
   compressionOptions.value.wimMethod = preset.wimMethod ?? 'store'
@@ -363,7 +363,7 @@ const closeVaultPasswordsAfterFocus = () => {
       <div class="flex flex-col gap-1.5 min-w-0">
         <div class="flex justify-between items-center px-1">
           <label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.level') }}</label>
-          <span class="text-xs font-mono text-primary font-black">{{ compressionOptions.format === 'wim' ? (compressionOptions.wimMethod === 'lzx' ? 'LZX · 固定算法' : compressionOptions.wimMethod === 'xpress' ? 'XPRESS · 固定算法' : '仅存储 · 去重') : isLz4Format(compressionOptions.format) ? '快速模式' : `${compressionOptions.level} / 9` }}</span>
+          <span class="text-xs font-mono text-primary font-black">{{ compressionOptions.format === 'wim' ? (compressionOptions.wimMethod === 'lzms' ? 'LZMS · 固定算法' : compressionOptions.wimMethod === 'lzx' ? 'LZX · 固定算法' : compressionOptions.wimMethod === 'xpress' ? 'XPRESS · 固定算法' : '仅存储 · 去重') : isLz4Format(compressionOptions.format) ? '快速模式' : `${compressionOptions.level} / 9` }}</span>
         </div>
         <input
           type="range" :disabled="isLz4Format(compressionOptions.format) || compressionOptions.format === 'wim'" v-model.number="compressionOptions.level" min="1" max="9" step="1"
@@ -536,7 +536,7 @@ const closeVaultPasswordsAfterFocus = () => {
       </label>
       <span v-else-if="canCreateSplitArchive" class="split-settings-state">关闭</span>
       <p v-if="['lzma', 'tar.lzma'].includes(compressionOptions.format) && compressionOptions.splitArchive" class="w-full text-xs leading-relaxed text-muted" data-testid="lzma-volume-hint">将生成 .{{ compressionOptions.format }}.001、.002 等数字分卷。请把全部卷放在同一目录；其他软件如不能打开分卷，可按序合并后打开完整 .{{ compressionOptions.format }} 文件。</p>
-      <p v-if="compressionOptions.format === 'wim' && compressionOptions.splitArchive" class="w-full text-xs leading-relaxed text-muted" data-testid="wim-volume-hint">将生成 .wim.001、.002 等数字切片，需整组保留，可选择任意一卷打开。可选仅存储、XPRESS 快速压缩或 LZX 体积优先压缩，均支持去重，不使用强度滑块。它不是原生 SWM，不用于系统部署；WIM 无原生密码，需要加密时请选择 ZIP 或 7Z。</p>
+      <p v-if="compressionOptions.format === 'wim' && compressionOptions.splitArchive" class="w-full text-xs leading-relaxed text-muted" data-testid="wim-volume-hint">将生成 .wim.001、.002 等数字切片，需整组保留，可选择任意一卷打开。可选仅存储、XPRESS、LZX 或 LZMS 压缩，均支持去重，不使用强度滑块。它不是原生 SWM，不用于系统部署；WIM 无原生密码，需要加密时请选择 ZIP 或 7Z。</p>
       <p v-if="compressionOptions.format === 'zpaq' && compressionOptions.splitArchive" class="w-full text-xs leading-relaxed text-muted" data-testid="zpaq-volume-hint">数字分卷需整组保留，可选择任意一卷打开；密码沿用 ZPAQ 原生方式。其他软件如不能识别，可按序合并为完整 .zpaq 后打开。</p>
       <p v-if="['lz', 'tar.lz'].includes(compressionOptions.format) && compressionOptions.splitArchive" class="w-full text-xs leading-relaxed text-muted" data-testid="lzip-volume-hint">数字切卷将生成 .lz.001、.002 等文件，解压时需将全部卷放在同一目录。这与 LZIP 原生成员不同；分享给其他软件时，请先按序合并成完整文件。</p>
       <p v-if="compressionOptions.format.endsWith('.aes')" class="w-full text-xs leading-relaxed text-muted" data-testid="aes-volume-hint">Long 自有加密格式，接收方请使用 Long解压。分卷解压需把全部 .aes.001、.002 等文件放在同一目录。</p>

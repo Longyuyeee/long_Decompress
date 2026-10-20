@@ -144,3 +144,16 @@ it('wim1532 reopens mixed stored/LZX drafts without silently changing the method
   const restored=useCompressionStore();expect(restored.getEffectiveSettings(restored.selectedFiles[0].settings).wimMethod).toBe('lzx');expect(restored.selectedFiles[1].settings?.wimMethod).toBe('store')
   const converted=useArchiveConversionStore();expect(converted.effectiveSettings(converted.pending[0]).wimMethod).toBe('lzx');expect(mocks.invoke.mock.calls.some(([cmd])=>['compress_files','convert_archive'].includes(cmd))).toBe(false)
 })
+
+it('wim1533 reopens old Store, XPRESS, LZX and new LZMS without changing methods or starting',async()=>{
+  session=usePendingDraftStore();session.initialize();const compression=useCompressionStore(),conversion=useArchiveConversionStore()
+  compression.globalSettings.format='wim';compression.globalSettings.wimMethod='lzms'
+  const names=['C:/new.txt','C:/old-store.txt','C:/old-xpress.txt','C:/old-lzx.txt'];names.forEach(name=>compression.addFile(file(name)))
+  compression.updateFileSettings(names[1],{...compression.globalSettings,wimMethod:undefined})
+  compression.updateFileSettings(names[2],{...compression.globalSettings,wimMethod:'xpress'})
+  compression.updateFileSettings(names[3],{...compression.globalSettings,wimMethod:'lzx'})
+  conversion.addSources(['C:/archive.zip']);conversion.updateItem(conversion.pending[0].id,{format:'wim',wimMethod:'lzms',sourcePassword:'never-persist'});session.flush()
+  expect(localStorage.getItem(PENDING_DRAFTS_KEY)).not.toContain('never-persist');await reopen().restore()
+  const restored=useCompressionStore();expect(restored.selectedFiles.map(item=>restored.getEffectiveSettings(item.settings).wimMethod??'store')).toEqual(['lzms','store','xpress','lzx'])
+  expect(useArchiveConversionStore().effectiveSettings(useArchiveConversionStore().pending[0]).wimMethod).toBe('lzms');expect(mocks.invoke.mock.calls.some(([cmd])=>['compress_files','convert_archive'].includes(cmd))).toBe(false)
+})

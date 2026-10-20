@@ -1,4 +1,4 @@
-//! Optional, unprivileged XPRESS/LZX encoder. Legacy store requests keep their original route.
+//! Optional, unprivileged XPRESS/LZX/LZMS encoder. Legacy store requests keep their original route.
 use anyhow::{ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::{io::{Read, Write}, path::{Path, PathBuf}, sync::{Arc, atomic::{AtomicBool, Ordering}, mpsc}, time::Duration};
@@ -6,10 +6,10 @@ use super::compression_service::CompressionError;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
-pub enum WimMethod { #[default] Store, Xpress, Lzx }
+pub enum WimMethod { #[default] Store, Xpress, Lzx, Lzms }
 
 impl WimMethod {
-    pub fn label(self) -> &'static str { match self { Self::Store => "仅存储", Self::Xpress => "XPRESS", Self::Lzx => "LZX" } }
+    pub fn label(self) -> &'static str { match self { Self::Store => "仅存储", Self::Xpress => "XPRESS", Self::Lzx => "LZX", Self::Lzms => "LZMS" } }
 }
 
 pub fn command_path() -> Option<PathBuf> {
@@ -54,7 +54,8 @@ fn progress(line: &[u8]) -> Option<f32> {
 pub fn create(sources: &[String], output: &Path, preserve_paths: bool, method: WimMethod, cancelled: Arc<AtomicBool>, on_progress: impl Fn(f32)) -> Result<u64> {
     ensure!(!cancelled.load(Ordering::Relaxed),CompressionError::Cancelled);
     ensure!(!output.exists(),"WIM 临时输出已存在，未覆盖旧文件");
-    let compression = match method { WimMethod::Xpress => "--compress=XPRESS", WimMethod::Lzx => "--compress=LZX", WimMethod::Store => anyhow::bail!("仅存储 WIM 应使用原有创建通道") };
+    let compression = match method { WimMethod::Xpress => "--compress=XPRESS", WimMethod::Lzx => "--compress=LZX", WimMethod::Lzms => "--compress=LZMS", WimMethod::Store => anyhow::bail!("仅存储 WIM 应使用原有创建通道") };
+    let threads = if method == WimMethod::Lzms { "--threads=1" } else { "--threads=2" };
     let tool = command_path().context("缺少随附的 WIM 压缩编码器，请修复安装，或选择仅存储方式")?;
     let temporary = tempfile::tempdir()?;
     let list = temporary.path().join("sources.txt");
@@ -65,7 +66,7 @@ pub fn create(sources: &[String], output: &Path, preserve_paths: bool, method: W
     if let Some(parent)=output.parent() { std::fs::create_dir_all(parent)?; }
     let mut command = crate::utils::process::command(tool);
     command.arg("capture").arg(&list).arg(output).arg("Long archive")
-        .args(["--source-list",compression,"--chunk-size=32768","--no-acls","--check","--threads=2"])
+        .args(["--source-list",compression,"--chunk-size=32768","--no-acls","--check",threads])
         .arg(format!("--config={}",config.display()))
         .stdout(std::process::Stdio::piped()).stderr(std::process::Stdio::piped());
     let mut child = command.spawn().context("无法启动 WIM 压缩编码器")?;
@@ -106,3 +107,7 @@ mod tests;
 #[cfg(test)]
 #[path = "wim_lzx_1532_tests.rs"]
 mod lzx_tests;
+
+#[cfg(test)]
+#[path = "wim_lzms_1533_tests.rs"]
+mod lzms_tests;

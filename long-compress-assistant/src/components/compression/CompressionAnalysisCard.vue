@@ -82,7 +82,7 @@ const applyRecommendation = () => {
 </script>
 
 <template>
-  <section v-if="!(modelValue.format === 'wim' && ['xpress', 'lzx'].includes(modelValue.wimMethod || ''))" data-testid="compression-analysis" class="analysis-card" :class="{ 'is-compact': compact }">
+  <section v-if="!(modelValue.format === 'wim' && ['xpress', 'lzx', 'lzms'].includes(modelValue.wimMethod || ''))" data-testid="compression-analysis" class="analysis-card" :class="{ 'is-compact': compact }">
     <div class="analysis-header flex flex-wrap items-center justify-between gap-3">
       <div class="min-w-0">
         <div class="analysis-title flex items-center gap-2 text-sm font-black text-content"><i class="pi pi-sparkles text-primary"></i>智能压缩分析<HelpHint label="智能压缩分析说明">仅读取最多 2 MiB 内容样本；结果不会自动修改设置。</HelpHint></div>

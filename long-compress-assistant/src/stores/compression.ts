@@ -37,7 +37,7 @@ export interface CompressionOptions {
   /** Legacy compatibility only. New drafts and execution always disable this retired option. */
   fastPack?: boolean
   zipPasswordEncoding?: ZipPasswordEncoding
-  wimMethod?: 'store' | 'xpress' | 'lzx'
+  wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms'
   zipMethod?: 'deflate' | 'zstd'
   zipEncryption?: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
@@ -88,7 +88,7 @@ export interface CompressionHistory {
 }
 
 export interface CompressionAnalysisState {
-  wimMethod?: 'store' | 'xpress' | 'lzx'
+  wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms'
   zipMethod?: 'deflate' | 'zstd'
   status: 'idle' | 'running' | 'completed' | 'failed' | 'cancelled'
   analysisId?: string

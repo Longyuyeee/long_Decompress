@@ -143,3 +143,8 @@ it('wim1532 does not show the old store-size estimate as an LZX prediction',()=>
   mocks.analyze.mockClear()
   const wrapper=mountCard({...options,format:'wim',wimMethod:'lzx'});expect(wrapper.find('[data-testid="compression-analysis"]').exists()).toBe(false);expect(mocks.analyze).not.toHaveBeenCalled();wrapper.unmount()
 })
+
+it('wim1533 does not show the old store-size estimate as an LZMS prediction',()=>{
+  mocks.analyze.mockClear()
+  const wrapper=mountCard({...options,format:'wim',wimMethod:'lzms'});expect(wrapper.find('[data-testid="compression-analysis"]').exists()).toBe(false);expect(mocks.analyze).not.toHaveBeenCalled();wrapper.unmount()
+})

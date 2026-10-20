@@ -24,6 +24,16 @@ const mockFile = (name: string, size: number): FileObject => ({
 })
 
 describe('Compression Store', () => {
+  it('wim1533 mixed method batch preserves unrelated inherited drafts and each existing split size',()=>{
+    const store=useCompressionStore();store.globalSettings.format='7z'
+    const files=[mockFile('wim',1),mockFile('zip',1),mockFile('inherited',1)];files.forEach(file=>store.addFile(file))
+    store.updateFileSettings(files[0].path,{...defaultOptions(),format:'wim',wimMethod:'xpress',splitArchive:true,splitSize:'2'})
+    store.updateFileSettings(files[1].path,{...defaultOptions(),format:'zip'})
+    const global=JSON.stringify(store.globalSettings),inherited=JSON.stringify(store.selectedFiles[2])
+    expect(store.applyBatchConfiguration(files.map(file=>file.path),{wimMethod:'lzms',zipMethod:'zstd'})).toBe(2)
+    expect(store.selectedFiles[0].settings).toMatchObject({format:'wim',wimMethod:'lzms',splitArchive:true,splitSize:'2'})
+    expect(store.selectedFiles[1].settings?.zipMethod).toBe('zstd');expect(JSON.stringify(store.selectedFiles[2])).toBe(inherited);expect(JSON.stringify(store.globalSettings)).toBe(global)
+  })
   it('wim1532 mixed method batch preserves unrelated inherited drafts and each existing split size',()=>{
     const store=useCompressionStore();store.globalSettings.format='7z'
     const files=[mockFile('wim',1),mockFile('zip',1),mockFile('inherited',1)];files.forEach(file=>store.addFile(file))
