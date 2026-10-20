@@ -3044,7 +3044,7 @@ impl CompressionService {
 
         for suffix in [
             ".tar.lzma", ".lzma", ".tar.gz", ".tar.bz2", ".tar.xz", ".tar.zst", ".tar.lz4", ".tar.br", ".tar.lz", ".tlz", ".lz4", ".br", ".lz", ".zip", ".zipx", ".7z", ".rar",
-            ".tar", ".wim",
+            ".tar", ".wim", ".esd",
         ] {
             if candidate.to_lowercase().ends_with(suffix) {
                 candidate.truncate(candidate.len() - suffix.len());
@@ -3556,15 +3556,16 @@ impl CompressionService {
     }
 
     fn do_compress_wim(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
-        if !output.to_ascii_lowercase().ends_with(".wim") {
-            return Err(CompressionError::CompressionFailed("WIM compression output path must end with .wim".to_string()).into());
+        if ![".wim", ".esd"].iter().any(|suffix| output.to_ascii_lowercase().ends_with(suffix)) {
+            return Err(CompressionError::CompressionFailed("WIM/ESD 输出路径需要以 .wim 或 .esd 结尾".to_string()).into());
         }
         if options.password.as_deref().is_some_and(|password| !password.is_empty()) {
             return Err(CompressionError::UnsupportedEncryption.into());
         }
-        if options.wim_method != crate::services::wim_writer::WimMethod::Store {
-            self.emit_log(window, task_id, &format!("使用 {} 压缩创建 WIM", options.wim_method.label()), TaskLogSeverity::Info);
-            let input_bytes = crate::services::wim_writer::create(sources, Path::new(output), options.preserve_paths.unwrap_or(true), options.wim_method, self.cancellation_flag.clone(), |progress| {
+        let method = if options.format.as_deref() == Some("esd") || output.to_ascii_lowercase().ends_with(".esd") { crate::services::wim_writer::WimMethod::Solid } else { options.wim_method };
+        if method != crate::services::wim_writer::WimMethod::Store {
+            self.emit_log(window, task_id, &format!("使用 {} 压缩创建 WIM", method.label()), TaskLogSeverity::Info);
+            let input_bytes = crate::services::wim_writer::create(sources, Path::new(output), options.preserve_paths.unwrap_or(true), method, self.cancellation_flag.clone(), |progress| {
                 self.emit_progress(window, task_id, progress, None, 0, 0);
             })?;
             self.emit_progress(window, task_id, 0.99, None, input_bytes, input_bytes);

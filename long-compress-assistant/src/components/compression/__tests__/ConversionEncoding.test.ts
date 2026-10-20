@@ -44,3 +44,7 @@ it('wim1527 store only disables ineffective strength and native password without
   const wrapper=mount(ConversionSettingsFields,{props:{settings:{...defaultConversionSettings(),format:'wim',sourcePassword:'原包密码',level:6,splitMiB:2},sourcePath:'C:/source.zip',sourceFormat:'ZIP'},global:{plugins:[createPinia()],stubs:{Teleport:true}}})
   expect(wrapper.get('input[type="range"]').attributes('disabled')).toBeDefined();expect(wrapper.get('[data-testid="conversion-password"]').attributes('disabled')).toBeDefined();expect(wrapper.get('[data-testid="conversion-source-password"]').element.value).toBe('原包密码');expect(wrapper.text()).toContain('仅存储与去重');expect(wrapper.emitted('update')).toBeUndefined();wrapper.unmount()
 })
+
+it('wim1539 ESD conversion displays fixed solid and keeps the original password input',()=>{
+ const wrapper=mount(ConversionSettingsFields,{props:{settings:{...defaultConversionSettings(),format:'esd',sourcePassword:'source',splitMiB:2},sourcePath:'C:/source.zip',sourceFormat:'ZIP'},global:{plugins:[createPinia()],stubs:{Teleport:true}}});expect(wrapper.get('[data-testid="conversion-wim-method"]').text()).toContain('固实归档');expect(wrapper.get('[data-testid="conversion-password"]').attributes('disabled')).toBeDefined();expect(wrapper.get('[data-testid="conversion-source-password"]').element.value).toBe('source');expect(wrapper.emitted('update')).toBeUndefined();wrapper.unmount()
+})

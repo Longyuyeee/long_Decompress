@@ -31,7 +31,7 @@ export const conversionFormats = [
   ['tar.br.aes', 'TAR.BR.AES（加密）'],
   ['tar.lz.aes', 'TAR.LZIP.AES（加密）'],
   ['tar.aes', 'TAR.AES（加密）'], ['tar.gz.aes', 'TGZ.AES（加密）'],
-  ['tar.bz2.aes', 'TBZ.AES（加密）'], ['tar.xz.aes', 'TXZ.AES（加密）'], ['tar.zst.aes', 'TZST.AES（加密）'], ['wim', 'WIM'],
+  ['tar.bz2.aes', 'TBZ.AES（加密）'], ['tar.xz.aes', 'TXZ.AES（加密）'], ['tar.zst.aes', 'TZST.AES（加密）'], ['wim', 'WIM'], ['esd', 'ESD（固实）'],
 ].map(([value, label]) => ({ value, label }))
 const pathKey = (path: string) => path.replace(/\\/g, '/').toLowerCase()
 export const useArchiveConversionStore = defineStore('archiveConversion', () => {
@@ -63,7 +63,8 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   function effectiveSettings(item: ConversionDraft): ConversionSettings {
     const settings = item.settings || defaults.value
     if (item.intent === 'zpaq-update') return { ...settings, format: 'zpaq', password: '', encryptFilenames: false, sourceZpaqSnapshot: undefined }
-    return !item.settings && item.defaultFormat ? { ...settings, format: item.defaultFormat } : { ...settings }
+    const effective = !item.settings && item.defaultFormat ? { ...settings, format: item.defaultFormat } : { ...settings }
+    return effective.format === 'esd' ? { ...effective, wimMethod: 'solid' } : effective
   }
   function outputFor(item: ConversionDraft) { return conversionOutputPath(item.sourcePath, effectiveSettings(item), item.intent) }
   function taskFor(item: ConversionDraft) { return tasks.tasks.find(task => task.id === item.taskId) }
@@ -368,7 +369,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
           ...(config.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: config.sourceZipPasswordEncoding } : {}),
           sourcePassword: settings.sourcePassword || null, outputPath, ...snapshotArguments(settings.sourceZpaqSnapshot),
           options: { format: config.format, level: config.level, password: settings.password || null,
-            ...(config.format === 'wim' ? { wim_method: settings.wimMethod ?? 'store' } : {}),
+            ...(['wim','esd'].includes(config.format) ? { wim_method: settings.wimMethod ?? 'store' } : {}),
             zip_method: config.zipMethod ?? 'deflate', zip_encryption: config.zipEncryption, zip_password_encoding: config.zipPasswordEncoding,
             zip_split_mode: config.zipSplitMode, rar_recovery_percent: config.rarRecoveryPercent ?? 0,
             rar_recovery_volumes: config.splitSize > 0 ? (config.rarRecoveryVolumes ?? 0) : 0,
