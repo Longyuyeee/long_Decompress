@@ -47,6 +47,10 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
         }
     }
     if kind == "archive-conversion" {
+        if let Some(method) = value.get("wimMethod") {
+            if !matches!(method.as_str(), Some("store" | "xpress")) { return None; }
+            output.insert("wimMethod".into(), method.clone());
+        }
         if let Some(count) = value.get("rarRecoveryVolumes") {
             if !count.as_u64().is_some_and(|n| n <= 10) { return None; }
             output.insert("rarRecoveryVolumes".into(), count.clone());
@@ -77,6 +81,10 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     if !settings_fields.is_empty() {
         let mut settings = project(value.get("settings")?, settings_fields)?;
         if kind == "archive-compression" {
+            if let Some(method) = value.get("settings")?.get("wimMethod") {
+                if !matches!(method.as_str(), Some("store" | "xpress")) { return None; }
+                settings.insert("wimMethod".into(), method.clone());
+            }
             if let Some(count) = value.get("settings")?.get("rarRecoveryVolumes") {
                 if !count.as_u64().is_some_and(|n| n <= 10) { return None; }
                 settings.insert("rarRecoveryVolumes".into(), count.clone());
@@ -127,6 +135,13 @@ fn project(value: &Value, fields: &[(&str, char)]) -> Option<Map<String, Value>>
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn wim1531_history_retains_method_without_secrets() {
+        let config=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","format":"wim","level":6,"outputPath":"D:/new.wim","splitSize":65536,"encryptFilenames":false,"passwordRequired":false,"wimMethod":"xpress","password":"do not save"});
+        let saved=super::sanitize(config.clone(),"compression","archive").unwrap();assert_eq!(saved["wimMethod"],"xpress");assert!(saved.get("password").is_none());
+        let mut bad=config;bad["wimMethod"]="unknown".into();assert!(super::sanitize(bad,"compression","archive").is_none());
+    }
+
     #[test]
     fn zpaq_1530_contract_history_preserves_exact_snapshot_and_rejects_invalid_identity() {
         for (kind,task,key) in [("archive-extraction","decompression","zpaqSnapshot"),("archive-conversion","compression","sourceZpaqSnapshot")] {

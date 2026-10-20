@@ -42,3 +42,7 @@ long-compress-assistant/tests/fixtures/archives/sfx-158/**/License.txt -whitespa
 long-compress-assistant/tests/fixtures/archives/sevenz-157/source/** -whitespace
 long-compress-assistant/src-tauri/resources/archive-engine/licenses/sevenz-rust-Apache-2.0.txt -text -whitespace
 long-compress-assistant/src-tauri/resources/archive-engine/licenses/ppmd-rust-MIT-0.md -text -whitespace
+
+# Preserve exact upstream WIM encoder, source and license bytes.
+long-compress-assistant/src-tauri/resources/wim-engine/** -text
+long-compress-assistant/src-tauri/resources/wim-engine/*.txt -whitespace

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import WimMethodField from '@/components/compression/WimMethodField.vue'
 import ZipMethodField from '@/components/compression/ZipMethodField.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { open, save } from '@tauri-apps/api/dialog'
@@ -628,6 +629,7 @@ const formatDate = (timestamp: number | null) =>
           </label>
         </div>
 
+        <WimMethodField v-model="formData.config.wimMethod" :format="formData.config.format" test-id="profile-wim-method" />
         <ZipMethodField v-model="formData.config.zipMethod" :format="formData.config.format" test-id="profile-zip-method" />
         <label class="block">
           <span class="mb-2 block text-xs font-black text-muted">用途说明（可选）</span>
@@ -672,7 +674,7 @@ const formatDate = (timestamp: number | null) =>
             <div><p class="text-xs font-black text-content">压缩等级</p><p class="mt-0.5 text-xs text-muted">数值越高通常压缩率越高，但耗时更长</p></div>
             <span class="rounded-lg bg-primary/10 px-3 py-1 text-sm font-black text-primary">{{ formData.config.level }}</span>
           </div>
-          <input v-model.number="formData.config.level" type="range" min="0" max="9" class="w-full accent-primary" />
+          <input v-model.number="formData.config.level" :disabled="formData.config.format === 'wim'" type="range" min="0" max="9" class="w-full accent-primary" />
           <div class="mt-1 flex justify-between text-xs text-muted"><span>0 · 仅打包</span><span>9 · 最大压缩</span></div>
         </div>
 
@@ -758,6 +760,7 @@ const formatDate = (timestamp: number | null) =>
               <span v-if="templatePreview.template.compression.createSolidArchive" class="rounded-md bg-emerald-500/10 px-2 py-1 text-emerald-400">固实</span>
             </div>
             <dl class="mt-3 space-y-2 text-xs">
+              <div v-if="templatePreview.template.compression.format === 'wim'" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">WIM 压缩方法</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.wimMethod === 'xpress' ? 'XPRESS · 快速压缩' : '仅存储 · 去重' }}</dd></div>
               <div v-if="['zip', 'zipx'].includes(templatePreview.template.compression.format)" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">压缩方法</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.format === 'zipx' ? 'XZ' : templatePreview.template.compression.zipMethod === 'zstd' ? 'Zstandard' : '兼容 ZIP · Deflate' }}</dd></div>
               <div data-testid="template-filename-encryption" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">文件名加密</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.encryptFilenames ? '开启' : '关闭' }}</dd></div>
               <div v-if="['zip', 'zipx'].includes(templatePreview.template.compression.format)" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">ZIP 加密方式</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.zipEncryption === 'zipcrypto' ? 'ZipCrypto（传统兼容，较弱）' : 'AES-256' }}</dd></div>

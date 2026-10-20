@@ -127,3 +127,5 @@ mod zpaq_1530_tests;
 
 #[cfg(test)]
 mod wim_1527_tests;
+
+pub mod wim_writer;

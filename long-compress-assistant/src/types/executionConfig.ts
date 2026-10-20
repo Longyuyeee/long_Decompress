@@ -41,6 +41,7 @@ export interface PdfConfigV1 {
 export interface ArchiveConversionConfigV1 {
   sourceZpaqSnapshot?: ZpaqSnapshot
   sourceZipPasswordEncoding?: ZipPasswordEncoding
+  wimMethod?: 'store' | 'xpress'
   zipMethod?: 'deflate' | 'zstd'
   zipEncryption?: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
@@ -71,10 +72,13 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
       && !isZipPasswordEncoding(config.sourceZipPasswordEncoding)) return null
   if (config.kind === 'archive-compression' && config.settings.zipPasswordEncoding !== undefined
       && !isZipPasswordEncoding(config.settings.zipPasswordEncoding)) return null
+  const method = config.kind === 'archive-compression' ? config.settings.wimMethod : config.kind === 'archive-conversion' ? config.wimMethod : undefined
+  if (method !== undefined && method !== 'store' && method !== 'xpress') return null
   switch (config.kind) {
     case 'archive-conversion': return { schemaVersion: 1, kind: config.kind,
       ...(config.sourceZpaqSnapshot ? { sourceZpaqSnapshot: { ...config.sourceZpaqSnapshot } } : {}),
       ...(config.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: config.sourceZipPasswordEncoding } : {}),
+      ...(config.wimMethod ? { wimMethod: config.wimMethod } : {}),
       zipMethod: config.zipMethod ?? 'deflate',
       zipEncryption: config.zipEncryption ?? 'aes256', zipPasswordEncoding: config.zipPasswordEncoding ?? 'utf8',
       ...(config.zipSplitMode ? { zipSplitMode: config.zipSplitMode } : {}),
@@ -97,6 +101,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
           ...(s.rarRecoveryVolumes !== undefined ? { rarRecoveryVolumes: s.rarRecoveryVolumes } : {}),
           ...(s.encryptFilenames !== undefined ? { encryptFilenames: s.encryptFilenames } : {}),
           ...(s.zipPasswordEncoding ? { zipPasswordEncoding: s.zipPasswordEncoding } : {}),
+          ...(s.wimMethod ? { wimMethod: s.wimMethod } : {}),
           ...(s.zipMethod ? { zipMethod: s.zipMethod } : {}),
           ...(s.zipEncryption ? { zipEncryption: s.zipEncryption } : {}),
           ...(s.zipSplitMode ? { zipSplitMode: s.zipSplitMode } : {}),

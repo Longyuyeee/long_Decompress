@@ -24,6 +24,15 @@ const mockFile = (name: string, size: number): FileObject => ({
 })
 
 describe('Compression Store', () => {
+  it('wim1531 method-only batch changes WIM without detaching another format or editing other values',()=>{
+    const store=useCompressionStore(),a=mockFile('a',1),b=mockFile('b',2);store.addFile(a);store.addFile(b)
+    store.updateFileSettings(a.path,{...defaultOptions(),format:'wim',splitArchive:true,splitSize:'2'})
+    const other=JSON.stringify(store.selectedFiles[1]),global=JSON.stringify(store.globalSettings)
+    expect(store.applyBatchConfiguration([a.path,b.path],{wimMethod:'xpress'})).toBe(1)
+    expect(store.selectedFiles[0].settings).toMatchObject({format:'wim',wimMethod:'xpress',splitArchive:true,splitSize:'2'})
+    expect(JSON.stringify(store.selectedFiles[1])).toBe(other);expect(JSON.stringify(store.globalSettings)).toBe(global)
+  })
+
   it('wim1527 keeps each selected volume size and clears inapplicable flags without changing global settings',()=>{
     const store=useCompressionStore(),one=mockFile('one',1),two=mockFile('two',1);store.addFile(one);store.addFile(two)
     for(const [index,file]of[one,two].entries())store.updateFileSettings(file.path,{...defaultOptions(),format:'7z',splitArchive:true,splitSize:String(index+1),createSolidArchive:true})

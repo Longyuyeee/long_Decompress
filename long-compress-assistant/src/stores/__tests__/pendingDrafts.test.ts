@@ -126,3 +126,12 @@ describe('pending archive draft recovery', () => {
     restored.flush(); expect(restored.count).toBe(0)
   })
 })
+
+it('wim1531 reopens mixed stored/XPRESS drafts without silently changing the method or starting',async()=>{
+  session=usePendingDraftStore();session.initialize();const compression=useCompressionStore(),conversion=useArchiveConversionStore()
+  compression.globalSettings.format='wim';compression.globalSettings.wimMethod='xpress';compression.addFile(file('C:/folder.txt'));compression.addFile(file('C:/other.txt'));compression.updateFileSettings('C:/other.txt',{...compression.globalSettings,wimMethod:'store'})
+  conversion.addSources(['C:/archive.zip']);conversion.updateItem(conversion.pending[0].id,{format:'wim',wimMethod:'xpress',sourcePassword:'never-persist'});session.flush()
+  expect(localStorage.getItem(PENDING_DRAFTS_KEY)).not.toContain('never-persist');await reopen().restore()
+  const restored=useCompressionStore();expect(restored.getEffectiveSettings(restored.selectedFiles[0].settings).wimMethod).toBe('xpress');expect(restored.selectedFiles[1].settings?.wimMethod).toBe('store')
+  const converted=useArchiveConversionStore();expect(converted.effectiveSettings(converted.pending[0]).wimMethod).toBe('xpress');expect(mocks.invoke.mock.calls.some(([cmd])=>['compress_files','convert_archive'].includes(cmd))).toBe(false)
+})

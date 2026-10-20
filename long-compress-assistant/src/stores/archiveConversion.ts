@@ -202,6 +202,8 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     }
     const targets = chosen.filter(item => items.value.includes(item) && item.selected && !item.taskId)
     const methodOnly = !sourceEncodingChanged && patch.zipMethod !== undefined && Object.entries(patch).every(([field, value]) => field === 'zipMethod' || value === undefined)
+    const wimOnly = patch.wimMethod !== undefined && Object.entries(patch).every(([key,v]) => key === 'wimMethod' || v === undefined)
+    if (wimOnly && !targets.some(item => effectiveSettings(item).format === 'wim')) return '所选任务中没有 WIM 任务，请选择 WIM 格式或保持各自方法。'
     if (methodOnly && !targets.some(item => effectiveSettings(item).format === 'zip')) return '所选任务中没有 ZIP 任务，请选择 ZIP 格式或保持各自方法。'
     if (patch.rarRecoveryPercent && targets.some(item => (patch.format || effectiveSettings(item).format) !== 'rar')) return '恢复保护只适用于 RAR，请调整所选任务的目标格式。'
     if (patch.rarRecoveryVolumes && targets.some(item => (patch.format || effectiveSettings(item).format) !== 'rar')) return '恢复卷只适用于 RAR 分包，请调整所选任务的目标格式。'
@@ -211,6 +213,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     let applied = 0, skippedSource = 0, skippedTarget = 0
     for (const item of targets) {
       const filtered = { ...patch }, format = patch.format || effectiveSettings(item).format
+      if (filtered.wimMethod !== undefined && format !== 'wim') delete filtered.wimMethod
       if (filtered.zipMethod !== undefined && format !== 'zip') delete filtered.zipMethod
       if (filtered.zipPasswordEncoding !== undefined && !['zip','zipx'].includes(format)) { delete filtered.zipPasswordEncoding; skippedTarget++ }
       if (sourceEncodingChanged && (!item.sourceFormat || !supportsZipPasswordEncoding(item.sourcePath, item.sourceFormat))) { delete filtered.sourceZipPasswordEncoding; skippedSource++ }
@@ -257,6 +260,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       targetPasswordRequired: config.passwordRequired, sourcePasswordRequired: false, passwordRequired: config.passwordRequired,
       settings: { ...defaultConversionSettings(), sourceZpaqSnapshot: config.sourceZpaqSnapshot, outputPath: '', format: config.format,
       ...(config.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: config.sourceZipPasswordEncoding } : {}),
+      ...(config.wimMethod ? { wimMethod: config.wimMethod } : {}),
       zipMethod: config.zipMethod ?? 'deflate',
       zipEncryption: config.zipEncryption ?? 'aes256', zipPasswordEncoding: config.zipPasswordEncoding ?? 'utf8',
       zipSplitMode: config.zipSplitMode ?? 'numeric', rarRecoveryPercent: config.rarRecoveryPercent ?? 0,
@@ -299,6 +303,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     const config: ArchiveConversionConfigV1 = { schemaVersion: 1, kind: 'archive-conversion',
       ...(settings.sourceZpaqSnapshot ? { sourceZpaqSnapshot: { ...settings.sourceZpaqSnapshot } } : {}),
       ...(sourceEncoding ? { sourceZipPasswordEncoding: sourceEncoding } : {}),
+      ...(settings.wimMethod ? { wimMethod: settings.wimMethod } : {}),
       zipMethod: settings.zipMethod ?? 'deflate',
       zipEncryption: settings.zipEncryption, zipPasswordEncoding: ['zip','zipx'].includes(settings.format) ? settings.zipPasswordEncoding : 'utf8',
       zipSplitMode: settings.zipSplitMode ?? 'numeric',
@@ -320,6 +325,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
           ...(config.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: config.sourceZipPasswordEncoding } : {}),
           sourcePassword: settings.sourcePassword || null, outputPath, ...snapshotArguments(settings.sourceZpaqSnapshot),
           options: { format: config.format, level: config.level, password: settings.password || null,
+            ...(config.format === 'wim' ? { wim_method: settings.wimMethod ?? 'store' } : {}),
             zip_method: config.zipMethod ?? 'deflate', zip_encryption: config.zipEncryption, zip_password_encoding: config.zipPasswordEncoding,
             zip_split_mode: config.zipSplitMode, rar_recovery_percent: config.rarRecoveryPercent ?? 0,
             rar_recovery_volumes: config.splitSize > 0 ? (config.rarRecoveryVolumes ?? 0) : 0,

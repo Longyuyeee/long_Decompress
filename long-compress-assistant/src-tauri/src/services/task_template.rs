@@ -90,6 +90,8 @@ pub enum TemplateTargetMode {
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TemplateCompression {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub wim_method: Option<super::wim_writer::WimMethod>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zip_method: Option<crate::services::zip_method::ZipMethod>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zip_encryption: Option<crate::services::zip_password::ZipEncryption>,
@@ -233,6 +235,7 @@ pub fn template_from_profile(profile: &CompressionProfile) -> TaskTemplate {
             filename_template: profile.config.filename_template.clone(),
         },
         compression: TemplateCompression {
+            wim_method: profile.config.extra_params.get("wim_method").map(|method| if method == "xpress" { super::wim_writer::WimMethod::Xpress } else { super::wim_writer::WimMethod::Store }),
             zip_method: profile.config.extra_params.get("zip_method").map(|value|
                 if value == "zstd" { crate::services::zip_method::ZipMethod::Zstd } else { crate::services::zip_method::ZipMethod::Deflate }),
             zip_encryption: if matches!(profile.config.format.to_ascii_lowercase().as_str(), "zip" | "zipx") {
@@ -844,6 +847,9 @@ pub fn import_template_profile(path: &Path, expected_sha256: &str) -> Result<Com
                 let value = encoding.as_str();
                 [("zip_password_encoding".to_string(), value.to_string())].into()
               }).unwrap_or_else(std::collections::HashMap::new);
+              if let Some(method) = template.compression.wim_method {
+                  params.insert("wim_method".into(), if method == super::wim_writer::WimMethod::Xpress { "xpress" } else { "store" }.into());
+              }
               if let Some(method) = template.compression.zip_method {
                   params.insert("zip_method".into(), if method == crate::services::zip_method::ZipMethod::Zstd { "zstd" } else { "deflate" }.into());
               }
@@ -1016,6 +1022,15 @@ mod tests {
         invalid.compression.split_archive = true;
         invalid.compression.split_size_mib = Some(10);
         assert!(validate_template(&invalid).is_err());
+    }
+
+    #[test]
+    fn wim1531_template_method_survives_export_import() {
+        let temp=tempfile::tempdir().unwrap();let path=temp.path().join("xpress.longtask.json");
+        let mut original=profile();original.config.format="wim".into();original.config.password=None;original.config.create_solid_archive=false;original.config.encrypt_filenames=false;
+        original.config.extra_params.insert("wim_method".into(),"xpress".into());
+        export_profile_template(&original,&path).unwrap();let preview=preview_template_file(&path).unwrap();assert_eq!(preview.template.compression.wim_method,Some(super::super::wim_writer::WimMethod::Xpress));
+        let imported=import_template_profile(&path,&preview.content_sha256).unwrap();assert_eq!(imported.config.extra_params["wim_method"],"xpress");
     }
 
     #[test]
