@@ -85,6 +85,7 @@ export const useAppStore = defineStore('app', () => {
   const pendingArchiveBrowserPath = ref('')
   const pendingArchiveBrowserOptions = ref<ArchiveReadOptions>({})
   const pendingArchiveDiagnosis = ref<ArchiveDiagnosisRequest | null>(null)
+  const pendingChecksumSources = ref<{ paths: string[]; label: string } | null>(null)
   let errorTimer: ReturnType<typeof setTimeout> | null = null
   let successTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -336,7 +337,7 @@ export const useAppStore = defineStore('app', () => {
 
   return {
     theme, language, accentColor, error, successMessage, errorMessage, decompressTasks, settings,
-    pendingContextActions, pendingArchiveBrowserPath, pendingArchiveDiagnosis,
+    pendingContextActions, pendingArchiveBrowserPath, pendingArchiveDiagnosis, pendingChecksumSources,
     recentFiles, addRecentFile,
     compressionPresets, saveCompressionPreset, deleteCompressionPreset,
     currentTheme, activeTasks, completedTasks, totalProgress, t,

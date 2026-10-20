@@ -4,11 +4,12 @@ import ResultActions from '@/components/tasks/ResultActions.vue'
 import { formatFileSize } from '@/utils'
 import type { PublishedArchiveOutput } from '@/types/archiveOutput'
 defineProps<{ output: PublishedArchiveOutput }>()
+const emit = defineEmits<{ checksum: [] }>()
 const expanded = ref(false)
 </script>
 <template>
   <section class="min-w-0 space-y-3 rounded-xl border border-subtle bg-input/30 p-3 mb-3" data-testid="archive-output-summary">
-    <ResultActions :path="output.primaryPath" :split="output.split" show-path />
+    <ResultActions :path="output.primaryPath" :split="output.split" :output="output" show-path @checksum="emit('checksum')" />
     <button class="flex w-full items-center justify-between gap-2 rounded-lg px-1 py-1 text-xs text-primary text-left" type="button" :aria-expanded="expanded" @click="expanded = !expanded">
       <span>查看产物 · {{ output.files.length }} {{ output.split ? '卷' : '个文件' }} · {{ formatFileSize(output.totalBytes) }}</span><i :class="expanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" aria-hidden="true"></i>
     </button>

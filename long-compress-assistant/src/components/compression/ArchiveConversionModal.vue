@@ -98,7 +98,7 @@ function toggle(id: string) {
                 @update="store.updateItem(item.id, $event)" />
             </template>
             <template v-else>
-              <div v-if="store.taskFor(item)?.status === 'completed' && store.taskFor(item)?.archiveOutput" data-testid="conversion-result" class="space-y-2"><p class="text-sm font-semibold text-emerald-600">转换完成 · 原压缩包已保留</p><ArchiveOutputSummary :output="store.taskFor(item)!.archiveOutput!" /></div>
+              <div v-if="store.taskFor(item)?.status === 'completed' && store.taskFor(item)?.archiveOutput" data-testid="conversion-result" class="space-y-2"><p class="text-sm font-semibold text-emerald-600">转换完成 · 原压缩包已保留</p><ArchiveOutputSummary :output="store.taskFor(item)!.archiveOutput!" @checksum="store.visible = false" /></div>
               <p v-else-if="store.taskFor(item)?.status === 'cancelled'" class="text-xs text-amber-600">转换已取消 · 未开始的条目仍保留</p>
               <div v-else-if="store.taskFor(item) && !['failed', 'completed', 'cancelled'].includes(store.taskFor(item)!.status)" class="space-y-2 text-xs text-primary"><span>{{ store.phase }} · {{ formatProgressPercent(store.taskFor(item)!.progress) }}%</span><progress class="w-full" :value="store.taskFor(item)!.progress" max="100" /></div>
               <p v-if="store.taskFor(item)?.historySaveError" class="text-xs text-red-500">{{ store.taskFor(item)?.historySaveError }}</p>
