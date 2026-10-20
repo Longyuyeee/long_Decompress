@@ -46,7 +46,7 @@ export interface ArchiveConversionConfigV1 {
   archivePrefix?: string
   sourceZpaqSnapshot?: ZpaqSnapshot
   sourceZipPasswordEncoding?: ZipPasswordEncoding
-  wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms'
+  wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
   zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'
   zipEncryption?: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
@@ -88,7 +88,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
   if (config.kind === 'archive-compression' && config.settings.zipPasswordEncoding !== undefined
       && !isZipPasswordEncoding(config.settings.zipPasswordEncoding)) return null
   const method = config.kind === 'archive-compression' ? config.settings.wimMethod : config.kind === 'archive-conversion' ? config.wimMethod : undefined
-  if (method !== undefined && method !== 'store' && method !== 'xpress' && method !== 'lzx' && method !== 'lzms') return null
+  if (method !== undefined && method !== 'store' && method !== 'xpress' && method !== 'lzx' && method !== 'lzms' && method !== 'solid') return null
   switch (config.kind) {
     case 'archive-conversion': return { schemaVersion: 1, kind: config.kind,
       ...(config.operation === 'zpaq-update' ? { operation: config.operation, updateSources: [...(config.updateSources || [])], archivePrefix: config.archivePrefix || '' } : {}),

@@ -39,6 +39,16 @@ describe('Compression Store', () => {
     expect(store.applyBatchConfiguration(files.map(f=>f.path),{zipMethod:'bzip2'})).toBe(1);expect(store.selectedFiles[0].settings).toMatchObject({format:'zip',zipMethod:'bzip2',password:'keep',splitSize:'2'})
     expect(JSON.stringify(store.selectedFiles.slice(1))).toBe(other);expect(JSON.stringify(store.globalSettings)).toBe(global)
   })
+  it('wim1539 mixed method batch preserves unrelated inherited drafts and each existing split size',()=>{
+    const store=useCompressionStore();store.globalSettings.format='7z'
+    const files=[mockFile('wim',1),mockFile('zip',1),mockFile('inherited',1)];files.forEach(file=>store.addFile(file))
+    store.updateFileSettings(files[0].path,{...defaultOptions(),format:'wim',wimMethod:'xpress',splitArchive:true,splitSize:'2'})
+    store.updateFileSettings(files[1].path,{...defaultOptions(),format:'zip'})
+    const global=JSON.stringify(store.globalSettings),inherited=JSON.stringify(store.selectedFiles[2])
+    expect(store.applyBatchConfiguration(files.map(file=>file.path),{wimMethod:'solid',zipMethod:'zstd'})).toBe(2)
+    expect(store.selectedFiles[0].settings).toMatchObject({format:'wim',wimMethod:'solid',splitArchive:true,splitSize:'2'})
+    expect(store.selectedFiles[1].settings?.zipMethod).toBe('zstd');expect(JSON.stringify(store.selectedFiles[2])).toBe(inherited);expect(JSON.stringify(store.globalSettings)).toBe(global)
+  })
   it('wim1533 mixed method batch preserves unrelated inherited drafts and each existing split size',()=>{
     const store=useCompressionStore();store.globalSettings.format='7z'
     const files=[mockFile('wim',1),mockFile('zip',1),mockFile('inherited',1)];files.forEach(file=>store.addFile(file))
@@ -497,3 +507,10 @@ it('lzma1524 single-file encrypted batch refuses directories atomically',()=>{
     expect(store.applyBatchConfiguration(files.map(f=>f.path),{zipMethod:'lzma'})).toBe(1);expect(store.selectedFiles[0].settings).toMatchObject({format:'zip',zipMethod:'lzma',password:'keep',splitSize:'2'})
     expect(JSON.stringify(store.selectedFiles.slice(1))).toBe(other);expect(JSON.stringify(store.globalSettings)).toBe(global)
   })
+
+it('wim1539 inherited ESD is effectively solid and batch rejects losing passwords atomically',()=>{
+ setActivePinia(createPinia());const store=useCompressionStore();store.globalSettings.format='esd';store.globalSettings.wimMethod='store';const first=mockFile('esd',1),second=mockFile('secret',1);store.addFile(first);store.addFile(second)
+ expect(store.getEffectiveSettings(store.selectedFiles[0].settings)).toMatchObject({format:'esd',wimMethod:'solid'});expect(store.selectedFiles[0].settings).toBeUndefined();expect(store.globalSettings.wimMethod).toBe('store')
+ store.updateFileSettings(second.path,{...defaultOptions(),password:'keep'});const before=JSON.stringify(store.selectedFiles);expect(()=>store.applyBatchConfiguration([first.path,second.path],{format:'esd'})).toThrow('ESD 不支持原生密码');expect(JSON.stringify(store.selectedFiles)).toBe(before)
+ store.updateFileSettings(second.path,{...defaultOptions(),password:'',splitArchive:true,splitSize:'2',createSolidArchive:true});expect(store.applyBatchConfiguration([second.path],{format:'esd'})).toBe(1);expect(store.getEffectiveSettings(store.selectedFiles[1].settings)).toMatchObject({format:'esd',wimMethod:'solid',createSolidArchive:false,splitSize:'2'})
+})

@@ -284,14 +284,14 @@ const getCompressionEstimate = (
 
 const runCompressionResourcePreflight = async (
   taskId: string,
-  job: { id: string, files: FileObject[], outputPath: string, settings: { format: string, level: number, zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma', wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' } },
+  job: { id: string, files: FileObject[], outputPath: string, settings: { format: string, level: number, zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma', wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' } },
 ) => {
   const task = taskStore.tasks.find(item => item.id === taskId)
   if (!task) return false
 
   taskStore.updateTaskStatus(taskId, 'preparing')
   try {
-    const estimate = job.settings.format === 'wim' && ['xpress', 'lzx', 'lzms'].includes(job.settings.wimMethod || '') ? undefined : getCompressionEstimate(job.id, job.files, job.settings.format, job.settings.level, job.settings.zipMethod)
+    const estimate = (job.settings.format === 'esd' || (job.settings.format === 'wim' && ['xpress', 'lzx', 'lzms', 'solid'].includes(job.settings.wimMethod || ''))) ? undefined : getCompressionEstimate(job.id, job.files, job.settings.format, job.settings.level, job.settings.zipMethod)
     const report = await tauriCommands.preflightOperationResources({
       operation: 'compression',
       outputPath: job.outputPath,
@@ -481,7 +481,7 @@ const runCompression = async () => {
       compressionOptions: {
         fast_pack: false,
         zip_password_encoding: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipPasswordEncoding ?? 'utf8') : 'utf8',
-        ...(job.settings.format === 'wim' ? { wim_method: job.settings.wimMethod ?? 'store' } : {}),
+        ...(['wim','esd'].includes(job.settings.format) ? { wim_method: job.settings.wimMethod ?? 'store' } : {}),
         zip_method: job.settings.zipMethod ?? 'deflate',
         zip_encryption: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipEncryption ?? 'aes256') : 'aes256',
         zip_split_mode: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipSplitMode ?? 'numeric') : 'numeric',
@@ -530,7 +530,7 @@ const runCompression = async () => {
         {
           fast_pack: false,
           zip_password_encoding: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipPasswordEncoding ?? 'utf8') : 'utf8',
-          ...(job.settings.format === 'wim' ? { wim_method: job.settings.wimMethod ?? 'store' } : {}),
+          ...(['wim','esd'].includes(job.settings.format) ? { wim_method: job.settings.wimMethod ?? 'store' } : {}),
         zip_method: job.settings.zipMethod ?? 'deflate',
           zip_encryption: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipEncryption ?? 'aes256') : 'aes256',
           zip_split_mode: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipSplitMode ?? 'numeric') : 'numeric',

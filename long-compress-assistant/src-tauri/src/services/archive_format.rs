@@ -155,7 +155,7 @@ impl ArchiveFormat {
             "lzh" | "lha" => Self::Lzh,
             "arj" => Self::Arj,
             "dmg" => Self::Dmg,
-            "wim" | "swm" => Self::Wim,
+            "wim" | "esd" | "swm" => Self::Wim,
             "vhd" | "vhdx" => Self::Vhd,
             "chm" => Self::Chm,
             "deb" => Self::Deb,
@@ -175,7 +175,7 @@ impl ArchiveFormat {
             "apfs" => Self::Apfs,
             "ext" | "ext2" | "ext3" | "ext4" => Self::Ext,
             "apm" | "ar" | "a" | "cramfs" | "gpt" | "mbr" | "ihex" | "qcow" | "qcow2"
-            | "qcow2c" | "scap" | "uefif" | "vdi" | "vmdk" | "z" | "taz" | "esd"
+            | "qcow2c" | "scap" | "uefif" | "vdi" | "vmdk" | "z" | "taz"
             | "ppkg" | "msp" | "msm" | "udeb" | "001" | "002" | "003" | "004" | "005" | "006"
             | "007" | "008" | "009" | "z01" | "z02" | "z03" | "z04" | "z05" | "z06" | "z07"
             | "z08" | "z09" => Self::Universal,

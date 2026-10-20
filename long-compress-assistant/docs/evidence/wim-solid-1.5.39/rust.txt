@@ -1,0 +1,40 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling long-compress-assistant v1.5.39 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+    Finished `release` profile [optimized] target(s) in 2m 56s
+     Running unittests src\lib.rs (src-tauri\target\release\deps\long_compress_assistant-6a160d5845f4d10e.exe)
+
+running 8 tests
+test commands::history_execution_config::tests::wim1539_history_retains_method_without_secrets ... ok
+test services::task_template::tests::wim1539_template_method_survives_export_import ... ok
+test services::wim_writer::solid_tests::wim1539_created_numeric_members_browse_preview_integrity_and_selected_extract ... ok
+test services::wim_writer::solid_tests::wim1539_flatten_keeps_duplicate_files_and_old_request_defaults ... ok
+test services::wim_writer::solid_tests::wim1539_independent_multi_image_esd_browse_preview_extract_and_missing_slice ... ok
+test services::wim_writer::solid_tests::wim1539_real_encoder_cancel_removes_unpublished_output_and_preserves_existing_file ... ok
+test services::wim_writer::solid_tests::wim1539_real_solid_pause_resume_keeps_complete_content ... ok
+test services::wim_writer::solid_tests::wim1539_true_solid_resources_independent_complete_content_and_empty_directories ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 893 filtered out; finished in 2.92s
+

@@ -576,3 +576,20 @@ it('zip1538 keeps LZMA, passwords and standard volumes through IPC and history r
   expect(mocks.invoke).toHaveBeenCalledWith('convert_archive',expect.objectContaining({sourcePassword:'old-secret',options:expect.objectContaining({format:'zip',zip_method:'lzma',level:0,split_size:1048576,zip_split_mode:'standard'})}))
   const task=useTaskStore().tasks[0];expect(task.executionConfig).toMatchObject({zipMethod:'lzma'});expect(JSON.stringify(task.executionConfig)).not.toMatch(/old-secret|target-secret/);store.restore(createTaskHistoryRecord(task));expect(store.pending.at(-1)?.settings).toMatchObject({zipMethod:'lzma',zipSplitMode:'standard',password:''})
 })
+
+it('wim1539 carries solid WIM through conversion, history and independent per-item batch settings',async()=>{
+  mocks.invoke.mockImplementation(async cmd=>cmd==='detect_split_archive'?{is_split:false,archive_format:'ZIP'}:cmd==='convert_archive'?{primaryPath:'C:/new.wim',files:[],totalBytes:50,split:false}:undefined)
+  const store=useArchiveConversionStore();store.addSources(['C:/input.zip','C:/other.zip'])
+  store.updateItem(store.pending[0].id,{format:'wim',sourcePassword:'source-secret',splitMiB:1});store.updateItem(store.pending[1].id,{format:'zip',password:'keep-key'})
+  const other=JSON.stringify(store.pending[1].settings);expect(await store.applySelected({wimMethod:'solid'})).toBe('');expect(JSON.stringify(store.pending[1].settings)).toBe(other)
+  store.pending[1].selected=false;await store.start()
+  expect(mocks.invoke).toHaveBeenCalledWith('convert_archive',expect.objectContaining({sourcePassword:'source-secret',options:expect.objectContaining({format:'wim',wim_method:'solid',split_size:1048576})}))
+  const record=createTaskHistoryRecord(useTaskStore().tasks[0]);expect(record.executionConfig).toMatchObject({wimMethod:'solid'});store.restore(record);expect(store.effectiveSettings(store.pending.at(-1)!)).toMatchObject({wimMethod:'solid',sourcePassword:'',splitMiB:1})
+})
+
+it('wim1539 ESD conversion forces solid and keeps source credentials, volume and history retry',async()=>{
+ mocks.invoke.mockImplementation(async cmd=>cmd==='detect_split_archive'?{is_split:false,archive_format:'ZIP'}:cmd==='convert_archive'?{primaryPath:'C:/new.esd.001',files:[],totalBytes:50,split:true}:undefined)
+ const store=useArchiveConversionStore();store.addSources(['C:/input.zip']);store.updateItem(store.pending[0].id,{format:'esd',wimMethod:'store',sourcePassword:'source-secret',splitMiB:1});expect(store.effectiveSettings(store.pending[0])).toMatchObject({format:'esd',wimMethod:'solid',password:''});await store.start()
+ expect(mocks.invoke).toHaveBeenCalledWith('convert_archive',expect.objectContaining({sourcePassword:'source-secret',outputPath:expect.stringMatching(/\.esd$/),options:expect.objectContaining({format:'esd',wim_method:'solid',split_size:1048576})}))
+ const record=createTaskHistoryRecord(useTaskStore().tasks[0]);expect(record.executionConfig).toMatchObject({format:'esd',wimMethod:'solid'});store.restore(record);expect(store.effectiveSettings(store.pending.at(-1)!)).toMatchObject({format:'esd',wimMethod:'solid',sourcePassword:'',splitMiB:1})
+})

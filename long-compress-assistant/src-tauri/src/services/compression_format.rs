@@ -228,6 +228,7 @@ pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
         requires_7za: false,
         requires_winrar: true,
     },
+    CompressionFormatCapability { format: "esd", extensions: &["esd"], can_compress: true, can_extract: true, supports_password_compress: false, supports_password_extract: false, single_file_only: false, supports_split: true, requires_7za: true, requires_winrar: false },
     CompressionFormatCapability {
         format: "wim",
         extensions: &["wim"],
@@ -531,7 +532,7 @@ pub(crate) fn compression_route(format: &str) -> Option<CompressionRoute> {
         "tar.xz" => Some(CompressionRoute::TarXz),
         "7z" => Some(CompressionRoute::SevenZip),
         "rar" => Some(CompressionRoute::Rar),
-        "wim" => Some(CompressionRoute::Wim),
+        "wim" | "esd" => Some(CompressionRoute::Wim),
         "gz" => Some(CompressionRoute::Gzip),
         "bz2" => Some(CompressionRoute::Bzip2),
         "xz" => Some(CompressionRoute::Xz),

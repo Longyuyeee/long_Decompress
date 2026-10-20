@@ -160,3 +160,7 @@ it('zip1534 samples BZip2 instead of the default Deflate and invalidates an old 
 it('zip1538 samples LZMA instead of the default Deflate and invalidates an old method estimate',async()=>{
  mocks.analyze.mockResolvedValue(result);const wrapper=mountCard({...options,format:'zip',zipMethod:'lzma',level:0});await wrapper.get('.analysis-button').trigger('click');await flushPromises();expect(mocks.analyze).toHaveBeenCalledWith(expect.any(String),['C:/input'],'zip-lzma',0);await wrapper.setProps({modelValue:{...options,zipMethod:'deflate'}});expect(wrapper.find('.analysis-stale').exists()).toBe(true);wrapper.unmount()
 })
+
+it.each(['wim','esd'])('wim1539 avoids pretending the old size estimate predicts solid %s',format=>{
+ mocks.analyze.mockClear();const wrapper=mountCard({...options,format,wimMethod:format==='esd'?'store':'solid'});expect(wrapper.find('[data-testid="compression-analysis"]').exists()).toBe(false);expect(mocks.analyze).not.toHaveBeenCalled();wrapper.unmount()
+})

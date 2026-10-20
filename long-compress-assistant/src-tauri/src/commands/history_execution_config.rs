@@ -68,7 +68,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
             output.insert("operation".into(),operation.clone());output.insert("updateSources".into(),Value::Array(sources.clone()));output.insert("archivePrefix".into(),prefix.into());
         }
         if let Some(method) = value.get("wimMethod") {
-            if !matches!(method.as_str(), Some("store" | "xpress" | "lzx" | "lzms")) { return None; }
+            if !matches!(method.as_str(), Some("store" | "xpress" | "lzx" | "lzms" | "solid")) { return None; }
             output.insert("wimMethod".into(), method.clone());
         }
         if let Some(count) = value.get("rarRecoveryVolumes") {
@@ -102,7 +102,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
         let mut settings = project(value.get("settings")?, settings_fields)?;
         if kind == "archive-compression" {
             if let Some(method) = value.get("settings")?.get("wimMethod") {
-                if !matches!(method.as_str(), Some("store" | "xpress" | "lzx" | "lzms")) { return None; }
+                if !matches!(method.as_str(), Some("store" | "xpress" | "lzx" | "lzms" | "solid")) { return None; }
                 settings.insert("wimMethod".into(), method.clone());
             }
             if let Some(count) = value.get("settings")?.get("rarRecoveryVolumes") {
@@ -182,6 +182,13 @@ mod tests {
         let saved=super::sanitize(conversion,"compression","archive").unwrap();assert_eq!(saved["zipMethod"],"bzip2");assert!(saved.get("password").is_none());
         let compression=serde_json::json!({"schemaVersion":1,"kind":"archive-compression","outputDirectory":"D:/out","passwordRequired":true,"settings":{"format":"zip","level":0,"filename":"new","splitArchive":true,"splitSize":"1","keepStructure":true,"verifyAfter":true,"createSolidArchive":false,"zipMethod":"bzip2"}});
         assert_eq!(super::sanitize(compression,"compression","archive").unwrap()["settings"]["zipMethod"],"bzip2");
+    }
+
+    #[test]
+    fn wim1539_history_retains_method_without_secrets() {
+        let config=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","format":"esd","level":6,"outputPath":"D:/new.esd","splitSize":65536,"encryptFilenames":false,"passwordRequired":false,"wimMethod":"solid","password":"do not save"});
+        let saved=super::sanitize(config.clone(),"compression","archive").unwrap();assert_eq!(saved["wimMethod"],"solid");assert!(saved.get("password").is_none());
+        let mut bad=config;bad["wimMethod"]="unknown".into();assert!(super::sanitize(bad,"compression","archive").is_none());
     }
 
     #[test]

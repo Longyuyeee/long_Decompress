@@ -8,6 +8,7 @@ export type CompressionFormatId =
   | '7z'
   | 'rar'
   | 'wim'
+  | 'esd'
   | 'tar'
   | 'tar.gz'
   | 'tar.bz2'
@@ -64,7 +65,8 @@ export const FORMAT_CAPABILITIES: CompressionFormatCapability[] = [
   { format: 'zipx', knownLimitations: '使用 XZ 方法；支持数字卷与 .zx01/…/.zipx 标准卷，接收方需使用支持该卷型及方法的软件。', displayName: 'ZIPX（XZ）', extensions: ['zipx'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
   { format: '7z', displayName: '7Z', extensions: ['7z'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
   { format: 'rar', displayName: 'RAR', extensions: ['rar'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: true, fallbackEngine: 'winrar', knownLimitations: 'RAR creation, including encrypted RAR, requires user-installed WinRAR/RAR command line tools.' },
-  { format: 'wim', displayName: 'WIM', extensions: ['wim'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: true, requiresWinRar: false, fallbackEngine: '7za', engineFormat: 'wim', knownLimitations: '创建可选仅存储、XPRESS、LZX 或 LZMS 压缩，均支持去重，不使用强度滑块；数字切卷不是原生 SWM，需要集齐整组；WIM 不支持原生密码。多镜像按编号目录浏览。' },
+  { format: 'esd', displayName: 'ESD（固实）', extensions: ['esd'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: true, requiresWinRar: false, fallbackEngine: '7za', engineFormat: 'wim', knownLimitations: '使用 LZMS 固实内容归档，单线程；更耗内存和时间，选择性提取也可能需要读取整个固实块。数字切卷需整组保留，不是原生 SWM；不含原生密码，不保证系统部署或 Windows 权限元数据。' },
+  { format: 'wim', displayName: 'WIM', extensions: ['wim'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: true, requiresWinRar: false, fallbackEngine: '7za', engineFormat: 'wim', knownLimitations: '创建可选仅存储、XPRESS、LZX、LZMS 或 LZMS 固实压缩，均支持去重，不使用强度滑块；数字切卷不是原生 SWM，需要集齐整组；WIM 不支持原生密码。多镜像按编号目录浏览。' },
   { format: 'tar', displayName: 'TAR', extensions: ['tar', 'ova'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
   { format: 'tar.gz', displayName: 'TGZ', extensions: ['tar.gz', 'tgz', 'tpz'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
   { format: 'tar.bz2', displayName: 'TBZ', extensions: ['tar.bz2', 'tbz', 'tbz2'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
@@ -184,7 +186,7 @@ export const DECOMPRESS_ARCHIVE_ACCEPT = DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS
 
 export const DECOMPRESS_ARCHIVE_HINT = 'ZIP · 7Z · RAR · TAR · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · LZIP · TAR.LZIP · ISO · IMG · DMG · WIM · SWM · VHD · CAB · DEB · RPM · MSI · JAR · APK · IPA · LZH · CPIO · XAR + 更多'
 
-export const COMPRESSION_FORMAT_HINT = 'ZIP · ZIPX（XZ） · 7Z · RAR · WIM · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · TAR.Zst · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · TAR.LZ4 · TAR.BR · LZIP · TAR.LZIP · LZMA · TAR.LZMA · LZMA.AES 🔒 · TAR.LZMA.AES 🔒 · TAR.AES 🔒 · TGZ.AES 🔒 · TBZ.AES 🔒 · TXZ.AES 🔒 · TZST.AES 🔒 · GZ.AES 🔒 · BZ2.AES 🔒 · XZ.AES 🔒 · ZST.AES 🔒'
+export const COMPRESSION_FORMAT_HINT = 'ZIP · ZIPX（XZ） · 7Z · RAR · WIM · ESD · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · TAR.Zst · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · TAR.LZ4 · TAR.BR · LZIP · TAR.LZIP · LZMA · TAR.LZMA · LZMA.AES 🔒 · TAR.LZMA.AES 🔒 · TAR.AES 🔒 · TGZ.AES 🔒 · TBZ.AES 🔒 · TXZ.AES 🔒 · TZST.AES 🔒 · GZ.AES 🔒 · BZ2.AES 🔒 · XZ.AES 🔒 · ZST.AES 🔒'
 
 const TAR_FORMATS = new Set(
   FORMAT_CAPABILITIES
