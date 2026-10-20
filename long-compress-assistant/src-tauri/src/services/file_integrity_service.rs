@@ -27,21 +27,43 @@ pub struct ChecksumResult {
 impl FileIntegrityService {
     /// 计算文件校验和
     pub fn calculate_checksum(path: &Path, algorithm: ChecksumAlgorithm) -> Result<ChecksumResult> {
+        Self::calculate_checksum_with_progress(path, algorithm, &mut |_, _| true)?
+            .ok_or_else(|| anyhow::anyhow!("校验已停止"))
+    }
+
+    /// Returning false stops before the next read and never finalizes a partial digest.
+    pub fn calculate_checksum_with_progress(path: &Path, algorithm: ChecksumAlgorithm, progress: &mut dyn FnMut(u64, u64) -> bool) -> Result<Option<ChecksumResult>> {
         let file = File::open(path)?;
-        let file_size = file.metadata()?.len();
+        let metadata = file.metadata()?;
+        anyhow::ensure!(metadata.is_file(), "路径不是普通文件");
+        let file_size = metadata.len();
+        let modified = metadata.modified().ok();
         let mut reader = BufReader::new(file);
-
+        let mut crc = crc32fast::Hasher::new();
+        let mut md5 = md5::Context::new();
+        let mut sha = Sha256::new();
+        let mut buffer = [0u8; 64 * 1024];
+        let mut bytes = 0;
+        if !progress(bytes, file_size) { return Ok(None); }
+        loop {
+            let count = reader.read(&mut buffer)?;
+            if count == 0 { break; }
+            match algorithm {
+                ChecksumAlgorithm::CRC32 => crc.update(&buffer[..count]),
+                ChecksumAlgorithm::MD5 => md5.consume(&buffer[..count]),
+                ChecksumAlgorithm::SHA256 => sha.update(&buffer[..count]),
+            }
+            bytes += count as u64;
+            if !progress(bytes, file_size) { return Ok(None); }
+        }
+        let after = reader.get_ref().metadata()?;
+        anyhow::ensure!(bytes == file_size && after.len() == file_size && after.modified().ok() == modified, "读取期间文件发生变化，请重新检查");
         let checksum = match algorithm {
-            ChecksumAlgorithm::CRC32 => Self::calculate_crc32(&mut reader)?,
-            ChecksumAlgorithm::MD5 => Self::calculate_md5(&mut reader)?,
-            ChecksumAlgorithm::SHA256 => Self::calculate_sha256(&mut reader)?,
+            ChecksumAlgorithm::CRC32 => format!("{:08x}", crc.finalize()),
+            ChecksumAlgorithm::MD5 => format!("{:x}", md5.compute()),
+            ChecksumAlgorithm::SHA256 => format!("{:x}", sha.finalize()),
         };
-
-        Ok(ChecksumResult {
-            algorithm,
-            checksum,
-            file_size,
-        })
+        Ok(Some(ChecksumResult { algorithm, checksum, file_size }))
     }
 
     /// 验证文件校验和
@@ -62,54 +84,6 @@ impl FileIntegrityService {
         }
 
         Ok(results)
-    }
-
-    /// 计算 CRC32 校验和
-    fn calculate_crc32<R: Read>(reader: &mut R) -> Result<String> {
-        let mut hasher = crc32fast::Hasher::new();
-        let mut buffer = [0u8; 8192];
-
-        loop {
-            let bytes_read = reader.read(&mut buffer)?;
-            if bytes_read == 0 {
-                break;
-            }
-            hasher.update(&buffer[..bytes_read]);
-        }
-
-        Ok(format!("{:08x}", hasher.finalize()))
-    }
-
-    /// 计算 MD5 校验和
-    fn calculate_md5<R: Read>(reader: &mut R) -> Result<String> {
-        let mut context = md5::Context::new();
-        let mut buffer = [0u8; 8192];
-
-        loop {
-            let bytes_read = reader.read(&mut buffer)?;
-            if bytes_read == 0 {
-                break;
-            }
-            context.consume(&buffer[..bytes_read]);
-        }
-
-        Ok(format!("{:x}", context.compute()))
-    }
-
-    /// 计算 SHA256 校验和
-    fn calculate_sha256<R: Read>(reader: &mut R) -> Result<String> {
-        let mut hasher = Sha256::new();
-        let mut buffer = [0u8; 8192];
-
-        loop {
-            let bytes_read = reader.read(&mut buffer)?;
-            if bytes_read == 0 {
-                break;
-            }
-            hasher.update(&buffer[..bytes_read]);
-        }
-
-        Ok(format!("{:x}", hasher.finalize()))
     }
 
     /// 生成校验文件（类似 md5sum 格式）

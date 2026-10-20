@@ -584,6 +584,8 @@ fn main() {
             long_compress_assistant::commands::decompression_profile::delete_decompression_profile,
             long_compress_assistant::commands::decompression_profile::update_decompression_profile_stats,
             long_compress_assistant::commands::file_integrity::calculate_checksum,
+            long_compress_assistant::commands::file_integrity::calculate_checksum_batch,
+            long_compress_assistant::commands::file_integrity::cancel_checksum_operation,
             long_compress_assistant::commands::file_integrity::export_checksum_file,
             long_compress_assistant::commands::file_integrity::verify_checksum_file,
             long_compress_assistant::commands::password_generator::generate_password,

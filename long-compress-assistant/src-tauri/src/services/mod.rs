@@ -101,3 +101,8 @@ pub(crate) mod checksum_manifest;
 
 #[cfg(test)]
 mod aes_codecs_1521_tests;
+
+pub mod checksum_progress;
+
+#[cfg(test)]
+mod checksum_progress_tests;

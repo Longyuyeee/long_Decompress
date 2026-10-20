@@ -1,15 +1,18 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref } from 'vue'
+import ChecksumProgressCard from './ChecksumProgressCard.vue'
+import { useChecksumOperation } from '@/composables/useChecksumOperation'
 import { open } from '@tauri-apps/api/dialog'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { parentDirectory } from '@/utils/resultLocation'
 import { isDecompressArchivePath, isPotentialSplitArchivePath, isPotentialSfxPath } from '@/utils/compressionFormat'
-import { checksumPendingList, checksumProblem, checksumStatusLabels, mergeChecksumVerification } from '@/utils/checksumVerification'
+import { checksumPendingList, checksumProblem, checksumUnfinished, checksumStatusLabels, mergeChecksumVerification } from '@/utils/checksumVerification'
 import type { ChecksumVerificationReport } from '@/types/checksum'
 
 const emit = defineEmits<{ busy: [value: boolean]; diagnose: [path: string]; tasks: [] }>()
 const app = useAppStore(), commands = useTauriCommands()
+const { progress, stopping, run, stop } = useChecksumOperation()
 const report = ref<ChecksumVerificationReport | null>(null), busy = ref(false), error = ref(''), notice = ref('')
 const selected = ref<number[]>([]), expanded = ref<number[]>([]), filter = ref<'all' | 'problems' | 'unchecked'>('all')
 let active = true
@@ -18,8 +21,8 @@ const entries = computed(() => report.value?.entries || [])
 const problems = computed(() => entries.value.filter(checksumProblem))
 const pending = computed(() => checksumPendingList(entries.value))
 const matched = computed(() => entries.value.filter(row => row.status === 'matched').length)
-const unchecked = computed(() => entries.value.filter(row => row.status === 'not_checked').length)
-const visible = computed(() => entries.value.filter(row => filter.value === 'all' || (filter.value === 'problems' ? checksumProblem(row) : row.status === 'not_checked')))
+const unchecked = computed(() => entries.value.filter(row => checksumUnfinished(row)).length)
+const visible = computed(() => entries.value.filter(row => filter.value === 'all' || (filter.value === 'problems' ? checksumProblem(row) : checksumUnfinished(row))))
 const heading = computed(() => report.value?.valid ? '清单项目均匹配' : problems.value.length ? '还有文件需要处理' : unchecked.value ? '还有项目未检查' : '清单中没有可检查的文件')
 const toggle = (list: number[], line: number) => list.includes(line) ? list.filter(value => value !== line) : [...list, line]
 const archiveCandidate = (path: string) => isDecompressArchivePath(path) || isPotentialSplitArchivePath(path) || isPotentialSfxPath(path)
@@ -28,11 +31,25 @@ async function verify(path: string, lines?: number[]) {
   if (busy.value || (lines && !lines.length)) return
   busy.value = true; emit('busy', true); error.value = ''; notice.value = ''
   try {
-    const next = await commands.invoke<ChecksumVerificationReport>('verify_checksum_file', { checksumPath: path, ...(lines ? { entryLines: lines } : {}) })
+    const previous = report.value
+    const baseline = lines && previous ? { ...previous, entries: previous.entries.filter(row => !lines.includes(row.line)) } : null
+    const accept = (next: ChecksumVerificationReport) => {
+      if (active) report.value = lines ? mergeChecksumVerification(baseline, next) : next
+    }
+    const next = await run<ChecksumVerificationReport>('verify_checksum_file', {
+      checksumPath: path, ...(lines ? { entryLines: lines, expectedManifestId: previous?.manifestId } : {}),
+    }, event => {
+      if (event.report) accept(event.report)
+      if (active && event.entry && report.value) {
+        const index = report.value.entries.findIndex(row => row.line === event.entry!.line)
+        if (index >= 0) report.value.entries[index] = event.entry
+      }
+    })
     if (!active) return
-    const changed = !!lines && report.value?.manifestId !== next.manifestId
-    report.value = lines ? mergeChecksumVerification(report.value, next) : next
-    if (changed) { selected.value = []; expanded.value = []; filter.value = 'all'; notice.value = '校验清单已变化，旧结果已作废；未检查的项目请另行复查。' }
+    accept(next)
+    const changed = !!lines && previous?.manifestId !== next.manifestId
+    if (changed) { selected.value = []; expanded.value = []; filter.value = 'all'; notice.value = '校验清单已变化，旧结果已作废；请点击继续未完成项，检查新清单。' }
+    else if (next.cancelled) notice.value = '已停止读取。完成项已保留，点击继续未完成项；中断的文件会从头读取。'
     else if (lines) notice.value = '所选项目已复查，其他项目保留上次结果，未重复读取。'
     else { selected.value = []; expanded.value = []; filter.value = 'all' }
   } catch (cause) {
@@ -65,7 +82,7 @@ async function locate(path: string) {
         <span><strong>{{ report ? '选择其他校验清单' : '选择校验清单' }}</strong><small>SFV · MD5 · SHA256　文件与清单放在同一目录</small></span>
         <i class="pi pi-folder-open"></i>
       </button>
-      <p v-if="busy" class="checksum-note" role="status"><i class="pi pi-spinner pi-spin"></i>正在读取本次需要检查的文件，请稍候…</p>
+      <ChecksumProgressCard v-if="busy" :progress="progress" :stopping="stopping" @stop="stop" />
       <p v-if="error" class="checksum-error" role="alert" data-testid="checksum-error">{{ error }}</p>
     </section>
 
@@ -80,6 +97,7 @@ async function locate(path: string) {
       <p class="checksum-note">摘要匹配仅表示与这份清单一致。复查所选时，其他项目显示上次结果；如有改动请主动复查。</p>
       <p v-if="notice" class="checksum-notice" role="status" data-testid="checksum-notice">{{ notice }}</p>
       <div class="checksum-actions">
+        <button v-if="unchecked" :disabled="busy" data-testid="checksum-continue" @click="verify(report.checksumPath, entries.filter(checksumUnfinished).map(row => row.line))"><i class="pi pi-play"></i>继续未完成项（{{ unchecked }}）</button>
         <button :disabled="busy || !problems.length" data-testid="checksum-recheck-problems" @click="verify(report.checksumPath, problems.map(row => row.line))"><i class="pi pi-refresh"></i>复查问题项</button>
         <button :disabled="busy || !selected.length" data-testid="checksum-recheck-selected" @click="verify(report.checksumPath, [...selected])">复查所选{{ selected.length ? `（${selected.length}）` : '' }}</button>
         <button :disabled="busy || !pending" data-testid="checksum-copy-pending" @click="copy(pending)"><i class="pi pi-copy"></i>复制待补列表</button>
@@ -87,7 +105,7 @@ async function locate(path: string) {
       </div>
       <p v-if="pending" class="checksum-note">待补列表包含缺失和内容不符的文件；无法读取的文件请先解除占用或恢复访问。</p>
       <div class="checksum-filters" aria-label="筛选校验结果">
-        <button v-for="option in ([['all','全部'],['problems','待处理'],['unchecked','未检查']] as const)" :key="option[0]" :aria-pressed="filter === option[0]" @click="filter = option[0]">{{ option[1] }}</button>
+        <button v-for="option in ([['all','全部'],['problems','待处理'],['unchecked','未完成']] as const)" :key="option[0]" :aria-pressed="filter === option[0]" @click="filter = option[0]">{{ option[1] }}</button>
       </div>
       <div v-if="!visible.length" class="checksum-empty">{{ entries.length ? '没有这类项目' : report.message }}</div>
       <article v-for="row in visible" :key="row.line" class="checksum-entry" :data-status="row.status" :data-line="row.line" data-testid="checksum-entry">
