@@ -44,7 +44,7 @@ export async function runWimVolumes1527Gate({driver,bridge,waitForElement,artifa
     execFileSync(tool,['verify',file],{windowsHide:true,timeout:120000,maxBuffer:4*1024*1024})
     execFileSync(tool,['apply',file,'1',output,'--no-acls'],{windowsHide:true,timeout:120000,maxBuffer:4*1024*1024})
     assert.deepEqual(tree(output),expected);if(emptyDirectory)assert.ok(existsSync(path.join(output,emptyDirectory)))
-    if(level!==undefined)assert.equal(Boolean(readFileSync(file).readUInt32LE(16)&2),level!==0)
+    if(level!==undefined)assert.equal(Boolean(readFileSync(file).readUInt32LE(16)&2),false)
     return{output,toolSha256:sha(tool),allIndependentHashes:true,emptyDirectory:!!emptyDirectory}
   }
   const mergeForOracle=(published,label)=>{const file=owned(path.join(work,label+'-独立合并-'+randomUUID()+'.wim'));writeFileSync(file,Buffer.concat(published.files.map(value=>readFileSync(value.path))));return file}
@@ -67,9 +67,9 @@ export async function runWimVolumes1527Gate({driver,bridge,waitForElement,artifa
   }
   for(const level of [0,6]){
     const kind='created-level-'+level;if(passed('native',kind))continue
-    const output=owned(path.join(work,kind+'.wim')),published=await ipc('compress_files',{taskId:randomUUID(),files:[state.source],outputPath:output,options:{format:'wim',level,split_size:65537,preserve_paths:true,verify_after:true,delete_after:false}})
+    const output=owned(path.join(work,kind+'-'+randomUUID()+'.wim')),published=await ipc('compress_files',{taskId:randomUUID(),files:[state.source],outputPath:output,options:{format:'wim',level,split_size:65537,preserve_paths:true,verify_after:true,delete_after:false}})
     assert.ok(published.split&&published.files.length>2);assert.ok(published.files.every(file=>file.bytes<=65537))
-    const recovered=owned(path.join(work,kind+'-中卷提取'));mkdirSync(recovered)
+    const recovered=owned(path.join(work,kind+'-中卷提取-'+randomUUID()));mkdirSync(recovered)
     await ipc('extract_file',{taskId:randomUUID(),filePath:published.files[Math.floor(published.files.length/2)].path,outputPath:recovered,password:null,options});assert.deepEqual(tree(recovered),state.expected)
     done('native',kind,{published,recovered,independent:independent(mergeForOracle(published,kind),state.expected,kind,{emptyDirectory:'资料/空目录',level})})
   }

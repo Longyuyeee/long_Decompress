@@ -54,3 +54,10 @@ it.each(['tar.lzma','lzma.aes','tar.lzma.aes'])('lzma1524 configures %s inside t
   await wrapper.get('[data-testid="batch-config-apply"]').trigger('click')
   expect(wrapper.emitted('apply')?.[0]?.[0]).toEqual({format});wrapper.unmount()
 })
+
+it('wim1527 store only omits a previously chosen strength instead of applying an ineffective setting',async()=>{
+  const wrapper=mount(BatchConfigBar,{props:{count:2,mode:'compression'},global:{plugins:[createPinia()],stubs:{Teleport:true,Transition:false}}})
+  await wrapper.get('button[aria-haspopup="dialog"]').trigger('click');await wrapper.get('[data-testid="batch-level"]').trigger('click');await wrapper.findAll('[role="option"]').find(option=>option.text().trim().startsWith('9'))!.trigger('click')
+  await wrapper.get('[data-testid="batch-format"]').trigger('click');await wrapper.findAll('[role="option"]').find(option=>option.find('strong').text()==='WIM（无加密）')!.trigger('click');expect(wrapper.get('[data-testid="batch-level"]').attributes('disabled')).toBeDefined()
+  await wrapper.get('[data-testid="batch-config-apply"]').trigger('click');expect(wrapper.emitted('apply')?.[0]?.[0]).toEqual({format:'wim'});wrapper.unmount()
+})

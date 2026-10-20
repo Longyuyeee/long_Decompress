@@ -57,6 +57,7 @@ describe('CompressionSettingsPanel split archive settings', () => {
     expect(wrapper.get('[data-testid="compression-split-toggle"]').attributes('disabled')).toBeUndefined()
     expect(wrapper.get('[data-testid="compression-password-input"]').attributes('disabled')).toBeDefined()
     expect(wrapper.get('[data-testid="wim-volume-hint"]').text()).toContain('不是原生 SWM')
+    expect(wrapper.get('input[type="range"]').attributes('disabled')).toBeDefined();expect(wrapper.text()).toContain('仅存储 · 去重')
     wrapper.unmount()
   })
   it('zpaq1526 keeps inherited volumes while engine capabilities are loading and does not emit an edit on open', async () => {

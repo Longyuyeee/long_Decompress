@@ -3564,7 +3564,7 @@ impl CompressionService {
         if let Some(parent) = Path::new(output).parent() { std::fs::create_dir_all(parent)?; }
         let engine = find_7z_command().ok_or_else(|| CompressionError::CompressionFailed(missing_7z_message()))?;
         let mut command = crate::utils::process::command(engine);
-        command.arg("a").arg("-twim").arg("-y").arg(format!("-mx{}", options.level.clamp(0, 9))).arg(output);
+        command.arg("a").arg("-twim").arg("-y").arg("-mx0").arg(output);
         for source in sources { self.check_cancellation()?; command.arg(source); }
         let result = self.run_command_cancellable(command)?;
         if !result.status.success() {
