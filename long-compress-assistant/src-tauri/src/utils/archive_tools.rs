@@ -27,11 +27,11 @@ pub struct ArchiveEngineCapabilities {
 
 const NATIVE_BROWSE_EXTENSIONS: &[&str] = &[
     "aes", "7z", "rar", "r00", "zip", "zipx", "jar", "epub", "apk", "appx", "tar", "ova",
-    "tgz", "tpz", "tbz", "tbz2", "txz", "tzst", "gz", "gzip", "bz2", "bzip2", "xz", "zst", "zstd", "lz4", "br", "lz", "tlz", "alz", "a00", "egg",
+    "tgz", "tpz", "tbz", "tbz2", "txz", "tzst", "gz", "gzip", "bz2", "bzip2", "xz", "lzma", "zst", "zstd", "lz4", "br", "lz", "tlz", "alz", "a00", "egg",
 ];
 const NESTED_ARCHIVE_EXTENSIONS: &[&str] = &[
     "zip", "zipx", "7z", "rar", "r00", "tar", "tgz", "tpz", "gz", "tbz", "tbz2",
-    "bz2", "txz", "xz", "tzst", "zst", "lz4", "br", "lz", "tlz", "cab", "iso", "jar", "epub", "apk", "appx", "arj", "z", "udf", "alz", "egg",
+    "bz2", "txz", "xz", "lzma", "tzst", "zst", "lz4", "br", "lz", "tlz", "cab", "iso", "jar", "epub", "apk", "appx", "arj", "z", "udf", "alz", "egg",
 ];
 const BOUNDED_PREVIEW_FORMATS: &[&str] = &["ZIP", "TAR", "GZIP", "BZIP2", "XZ", "ZSTD", "LZMA", "LZIP", "LZ4", "BR", "LONG AES"];
 const IMAGE_PREVIEW_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "bmp"];

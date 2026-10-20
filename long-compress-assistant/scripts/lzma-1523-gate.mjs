@@ -10,7 +10,7 @@ export async function runLzma1523Gate({driver,bridge,waitForElement,artifactDire
   const base=path.join(root,'test-results/lzma-1523');mkdirSync(base,{recursive:true})
   const progress=path.join(base,'desktop-progress.json'),binarySha256=sha(application)
   const state=existsSync(progress)?JSON.parse(readFileSync(progress,'utf8')):{version:'1.5.23',binarySha256,work:path.join(base,'work-'+randomUUID()),native:[],ui:[],screenshots:[],layouts:[]}
-  if(state.binarySha256!==binarySha256){
+  if(state.binarySha256!==binarySha256 && state.currentBinarySha256!==binarySha256){
     assert.ok(process.argv.includes('--lzma-1523-continue-only'),'Different program requires explicitly scoped continuation')
     assert.equal(state.native.length,6);assert.deepEqual(state.ui.map(r=>r.kind),['creation','batch']);assert.equal(state.screenshots.length,4)
     for(const r of [...state.native,...state.ui,...state.layouts])r.binarySha256??=state.binarySha256
@@ -44,11 +44,15 @@ export async function runLzma1523Gate({driver,bridge,waitForElement,artifactDire
     const png=`lzma1523-${name}-${width}x${height}.png`;writeFileSync(path.join(artifactDirectory,png),Buffer.from(await driver.takeScreenshot(),'base64'));state.screenshots.push(png);save()
   }await driver.manage().window().setRect({width:1100,height:700})}
   await driver.manage().setTimeouts({script:180000});await driver.manage().window().setRect({width:1100,height:700})
-  if(!state.native.some(r=>r.kind==='advertised-preview')){
-    const caps=await ipc('get_archive_engine_capabilities',{});assert.ok(caps.boundedPreviewFormats.includes('LZMA'))
-    state.native.push({kind:'advertised-preview',boundedPreviewEnabled:true});save()
-  }
   if(!state.source){state.source=owned(path.join(work,'随机来源.bin'));writeFileSync(state.source,randomBytes(2*1024*1024+73));state.expected=sha(state.source);state.encrypted=owned(path.join(work,'密码来源.zip'));seven(['a','-tzip','-mem=AES256','-pLong1523',state.encrypted,path.basename(state.source)],work);save()}
+  if(!state.native.some(r=>r.kind==='advertised-preview')){
+    const caps=await ipc('get_archive_engine_capabilities',{});assert.ok(caps.boundedPreviewFormats.includes('LZMA'));assert.ok(caps.browseExtensions.includes('lzma'));assert.ok(caps.nestedExtensions.includes('lzma'))
+    const outer=fresh('嵌套原包')+'.zip';seven(['a','-tzip',outer,'说明.txt.lzma'],fixtures)
+    const nested=await ipc('materialize_nested_archive',{filePath:outer,entryPath:'说明.txt.lzma',password:null,targetDepth:1,ancestorHashes:[]})
+    const nestedPath=nested.path||nested.cachedPath||nested.filePath;assert.ok(nestedPath,JSON.stringify(nested))
+    const preview=await ipc('preview_archive_text',{filePath:nestedPath,entryPath:'说明.txt',password:null});assert.match(preview.content,/收到 LZMA/)
+    state.native.push({kind:'advertised-preview',boundedPreviewEnabled:true,nestedRealPreview:true});save()
+  }
   for(const name of ['说明.txt','空文件.txt','其他属性.txt']){
     if(state.native.some(r=>r.original===name))continue
     const c=manifest.cases.find(c=>c.name===name),parts=split(path.join(fixtures,c.archive),'独立卷组')
