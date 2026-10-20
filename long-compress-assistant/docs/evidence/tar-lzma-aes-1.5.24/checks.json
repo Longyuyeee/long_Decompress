@@ -1,0 +1,56 @@
+{
+  "runtimeSourceCommit": "e761e66f360f64c1c782e35e2f9f3f46104a9e17",
+  "desktopBinarySha256": "91d6683890ed31d97347fe08aafbdc0778394cce0ef1571b59986512517d6aa7",
+  "version": "1.5.24",
+  "completedAt": "2026-10-20T04:55:28.802Z",
+  "distinctRustPassed": 7,
+  "distinctFrontendPassed": 14,
+  "nativeFlows": 11,
+  "uiFlows": 7,
+  "screenshotsIndividuallyViewed": 14,
+  "maxHorizontalOverflow": 0,
+  "independentLzmaOutputs": {
+    "tool": "Python tarfile/lzma + cryptography authentication",
+    "cases": [
+      {
+        "format": "tar.lzma",
+        "volumeCount": 33,
+        "fullContentMatches": true,
+        "innerSha256": "0050aa887a86fa033c73c18ddeb5708346e92e859628a5b76c81e27a87255180"
+      },
+      {
+        "format": "lzma.aes",
+        "volumeCount": 33,
+        "fullContentMatches": true,
+        "innerSha256": "a9632c848348ae632ecd9c0c7d340cff4b80ec1af20ec190c279d8a9fd7980d5"
+      },
+      {
+        "format": "tar.lzma.aes",
+        "volumeCount": 33,
+        "fullContentMatches": true,
+        "innerSha256": "0050aa887a86fa033c73c18ddeb5708346e92e859628a5b76c81e27a87255180"
+      },
+      {
+        "format": "tar.lzma.aes",
+        "volumeCount": 3,
+        "fullContentMatches": true,
+        "innerSha256": "60a642bd9c00d0506c10d75af185376264ae99efc0b46633e1268816a9450f3e"
+      },
+      {
+        "format": "lzma.aes",
+        "volumeCount": 3,
+        "fullContentMatches": true,
+        "innerSha256": "a9632c848348ae632ecd9c0c7d340cff4b80ec1af20ec190c279d8a9fd7980d5"
+      }
+    ]
+  },
+  "independentPasswordZip": {
+    "tool": "Python zipfile metadata + cryptography AES-CTR + PBKDF2/HMAC-SHA1; explicit UTF-8 password bytes",
+    "fullContentMatches": true,
+    "authenticatedFiles": 3,
+    "emptyDirectoryPreserved": true
+  },
+  "oldMatricesRepeated": false,
+  "personalInstallationModified": false,
+  "candidateAndFormalReceipts": "Continue in this version PR/Release; not yet published at freeze"
+}

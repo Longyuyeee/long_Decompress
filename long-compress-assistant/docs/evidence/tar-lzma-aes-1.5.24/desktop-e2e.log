@@ -1,0 +1,24 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Not a native TAR route
+
+false !== true
+
+    at ipc (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/tar-lzma-1524-gate.mjs:24:69)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async runTarLzma1524Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/tar-lzma-1524-gate.mjs:65:5)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:4940:5 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

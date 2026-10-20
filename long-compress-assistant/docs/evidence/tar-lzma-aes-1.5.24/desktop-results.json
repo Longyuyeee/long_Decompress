@@ -1,0 +1,1179 @@
+{
+  "version": "1.5.24",
+  "sourceCommit": "e761e66f360f64c1c782e35e2f9f3f46104a9e17",
+  "binarySha256": "91d6683890ed31d97347fe08aafbdc0778394cce0ef1571b59986512517d6aa7",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813",
+  "native": [
+    {
+      "original": "资料.tar.lzma",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-0b2e0e8f-0d10-450e-92aa-a5db649369f5\\资料.tar.lzma.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-0b2e0e8f-0d10-450e-92aa-a5db649369f5\\资料.tar.lzma.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-0b2e0e8f-0d10-450e-92aa-a5db649369f5\\资料.tar.lzma.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-0b2e0e8f-0d10-450e-92aa-a5db649369f5\\资料.tar.lzma.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-0b2e0e8f-0d10-450e-92aa-a5db649369f5\\资料.tar.lzma.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-0b2e0e8f-0d10-450e-92aa-a5db649369f5\\资料.tar.lzma.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-0b2e0e8f-0d10-450e-92aa-a5db649369f5\\资料.tar.lzma.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-0b2e0e8f-0d10-450e-92aa-a5db649369f5\\资料.tar.lzma.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-0b2e0e8f-0d10-450e-92aa-a5db649369f5\\资料.tar.lzma.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-0b2e0e8f-0d10-450e-92aa-a5db649369f5\\资料.tar.lzma.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-0b2e0e8f-0d10-450e-92aa-a5db649369f5\\资料.tar.lzma.011",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-0b2e0e8f-0d10-450e-92aa-a5db649369f5\\资料.tar.lzma.012"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件完整解压-3208f49e-1498-4f6a-b902-22df9f932709",
+      "completeHashes": true,
+      "emptyDirectory": true
+    },
+    {
+      "original": "大文本.txt.lzma.aes",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-e0203f04-36ce-4845-bcb9-e5bac1a15329\\大文本.txt.lzma.aes.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-e0203f04-36ce-4845-bcb9-e5bac1a15329\\大文本.txt.lzma.aes.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-e0203f04-36ce-4845-bcb9-e5bac1a15329\\大文本.txt.lzma.aes.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-e0203f04-36ce-4845-bcb9-e5bac1a15329\\大文本.txt.lzma.aes.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-e0203f04-36ce-4845-bcb9-e5bac1a15329\\大文本.txt.lzma.aes.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-e0203f04-36ce-4845-bcb9-e5bac1a15329\\大文本.txt.lzma.aes.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-e0203f04-36ce-4845-bcb9-e5bac1a15329\\大文本.txt.lzma.aes.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-e0203f04-36ce-4845-bcb9-e5bac1a15329\\大文本.txt.lzma.aes.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-e0203f04-36ce-4845-bcb9-e5bac1a15329\\大文本.txt.lzma.aes.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-e0203f04-36ce-4845-bcb9-e5bac1a15329\\大文本.txt.lzma.aes.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-e0203f04-36ce-4845-bcb9-e5bac1a15329\\大文本.txt.lzma.aes.011"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件完整解压-f3950df8-6c05-46b3-81fe-314624609016",
+      "completeHashes": true,
+      "emptyDirectory": false
+    },
+    {
+      "original": "资料.tar.lzma.aes",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-b8c5a364-671a-40a4-9f16-0de6f7f7f98b\\资料.tar.lzma.aes.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-b8c5a364-671a-40a4-9f16-0de6f7f7f98b\\资料.tar.lzma.aes.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-b8c5a364-671a-40a4-9f16-0de6f7f7f98b\\资料.tar.lzma.aes.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-b8c5a364-671a-40a4-9f16-0de6f7f7f98b\\资料.tar.lzma.aes.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-b8c5a364-671a-40a4-9f16-0de6f7f7f98b\\资料.tar.lzma.aes.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-b8c5a364-671a-40a4-9f16-0de6f7f7f98b\\资料.tar.lzma.aes.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-b8c5a364-671a-40a4-9f16-0de6f7f7f98b\\资料.tar.lzma.aes.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-b8c5a364-671a-40a4-9f16-0de6f7f7f98b\\资料.tar.lzma.aes.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-b8c5a364-671a-40a4-9f16-0de6f7f7f98b\\资料.tar.lzma.aes.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-b8c5a364-671a-40a4-9f16-0de6f7f7f98b\\资料.tar.lzma.aes.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-b8c5a364-671a-40a4-9f16-0de6f7f7f98b\\资料.tar.lzma.aes.011",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件卷组-b8c5a364-671a-40a4-9f16-0de6f7f7f98b\\资料.tar.lzma.aes.012"
+      ],
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\原件完整解压-8777777a-1dcf-4e1f-a7ee-d0871b6ad495",
+      "completeHashes": true,
+      "emptyDirectory": true
+    },
+    {
+      "created": "tar.lzma",
+      "published": {
+        "files": [
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.001"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.002"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.003"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.004"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.005"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.006"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.007"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.008"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.009"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.010"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.011"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.012"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.013"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.014"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.015"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.016"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.017"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.018"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.019"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.020"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.021"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.022"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.023"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.024"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.025"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.026"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.027"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.028"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.029"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.030"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.031"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.032"
+          },
+          {
+            "bytes": 29240,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.033"
+          }
+        ],
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-629b3d16-51f9-46f9-8002-1c680ced0c73.tar.lzma.001",
+        "split": true,
+        "totalBytes": 2125912
+      },
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建后完整解压-e2553724-abe9-4aba-bb2a-8f7338f8fc8c",
+      "completeHashes": true
+    },
+    {
+      "created": "lzma.aes",
+      "published": {
+        "files": [
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.001"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.002"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.003"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.004"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.005"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.006"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.007"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.008"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.009"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.010"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.011"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.012"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.013"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.014"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.015"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.016"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.017"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.018"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.019"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.020"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.021"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.022"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.023"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.024"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.025"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.026"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.027"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.028"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.029"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.030"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.031"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.032"
+          },
+          {
+            "bytes": 29158,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.033"
+          }
+        ],
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-311db6c0-5e79-42fe-a47f-2ced188149d8.lzma.aes.001",
+        "split": true,
+        "totalBytes": 2125830
+      },
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建后完整解压-d98aae2e-89b1-4a8b-9c55-ad4b9b662853",
+      "completeHashes": true
+    },
+    {
+      "created": "tar.lzma.aes",
+      "published": {
+        "files": [
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.001"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.002"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.003"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.004"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.005"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.006"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.007"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.008"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.009"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.010"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.011"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.012"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.013"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.014"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.015"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.016"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.017"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.018"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.019"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.020"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.021"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.022"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.023"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.024"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.025"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.026"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.027"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.028"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.029"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.030"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.031"
+          },
+          {
+            "bytes": 65521,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.032"
+          },
+          {
+            "bytes": 29364,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.033"
+          }
+        ],
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.001",
+        "split": true,
+        "totalBytes": 2126036
+      },
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建后完整解压-e5a83de0-83ed-4890-823c-067f0bc85943",
+      "completeHashes": true
+    },
+    {
+      "kind": "image-preview",
+      "lastMember": true,
+      "fullPngHashMatches": true
+    },
+    {
+      "kind": "selected",
+      "format": "tar.lzma",
+      "onlyRequestedFile": true,
+      "fullContentHash": true
+    },
+    {
+      "kind": "selected",
+      "format": "tar.lzma.aes",
+      "onlyRequestedFile": true,
+      "fullContentHash": true
+    },
+    {
+      "kind": "actual-late-failure",
+      "reason": "[archive-inspection:damaged] AES v2 后续分块认证失败；前段已通过认证，请重新获取损坏或混入的分卷，不必继续试密码",
+      "noPublishedPartial": true
+    },
+    {
+      "kind": "plain-tar-tail-failure",
+      "reason": "[archive-inspection:damaged] TAR 压缩流数据或尾部无效，请重新获取完整原包，不必反复尝试密码: [archive-inspection:damaged] 压缩流数据或尾部无效，请重新获取完整原文件，不必反复尝试密码。原始原因：premature eof: premature eof",
+      "noPublishedPartial": true
+    }
+  ],
+  "ui": [
+    {
+      "kind": "creation",
+      "history": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\界面创建.lzma.aes.001"
+            },
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\界面创建.lzma.aes.002"
+            },
+            {
+              "bytes": 28678,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\界面创建.lzma.aes.003"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\界面创建.lzma.aes.001",
+          "split": true,
+          "totalBytes": 2125830
+        },
+        "completedAt": "2026-10-20T04:54:03.445Z",
+        "durationMs": 2479,
+        "errorMessage": null,
+        "executionConfig": {
+          "kind": "archive-compression",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813",
+          "passwordRequired": true,
+          "schemaVersion": 1,
+          "settings": {
+            "createSolidArchive": false,
+            "encryptFilenames": false,
+            "fastPack": false,
+            "filename": "界面创建",
+            "format": "lzma.aes",
+            "keepStructure": true,
+            "level": 6,
+            "rarRecoveryPercent": 0,
+            "rarRecoveryVolumes": 0,
+            "splitArchive": true,
+            "splitSize": "1",
+            "verifyAfter": true,
+            "zipEncryption": "aes256",
+            "zipMethod": "deflate",
+            "zipPasswordEncoding": "utf8",
+            "zipSplitMode": "numeric"
+          }
+        },
+        "failure": null,
+        "format": "lzma.aes",
+        "id": "rv1bz35lvmvg7kmi7",
+        "logs": [
+          {
+            "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 111.8 GiB，预计输出 2.10 MiB）",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:54:00.991Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\界面创建.lzma.aes",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:54:01.008250700Z"
+          },
+          {
+            "message": "使用 LZMA.AES 格式压缩",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:54:01.008322500Z"
+          },
+          {
+            "message": "LZMA.AES 压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T04:54:02.938308400Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:54:02.980536800Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-20T04:54:03.418303200Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T04:54:03.426782900Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 2097189,
+          "media": null,
+          "outputBytes": 2125830,
+          "savingsRatio": -0.013656852100597514,
+          "schemaVersion": 1
+        },
+        "name": "数据.bin",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\界面创建.lzma.aes.001",
+        "processedBytes": 2097189,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建来源\\数据.bin"
+        ],
+        "startedAt": "2026-10-20T04:54:00.966Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 2097189,
+        "workloadKind": "archive"
+      },
+      "realInlineConfiguration": true
+    },
+    {
+      "kind": "compression-batch",
+      "twoDrafts": true,
+      "passwordAndSplitRetained": true,
+      "noImplicitStart": true
+    },
+    {
+      "kind": "preview",
+      "actualMiddleMemberText": true
+    },
+    {
+      "kind": "recovery",
+      "missingVolumeRestored": true,
+      "completeHashes": true,
+      "oldFailureUnchanged": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\补卷新任务-7214749b-0eaf-482b-bc76-8028e22131d7"
+    },
+    {
+      "kind": "conversion",
+      "target": "zip",
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\转换-9c6c1410-78f3-4e31-aab5-fdde11b23fca.zip",
+      "history": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 2098142,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\转换-9c6c1410-78f3-4e31-aab5-fdde11b23fca.zip"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\转换-9c6c1410-78f3-4e31-aab5-fdde11b23fca.zip",
+          "split": false,
+          "totalBytes": 2098142
+        },
+        "completedAt": "2026-10-20T04:54:49.678Z",
+        "durationMs": 1504,
+        "errorMessage": null,
+        "executionConfig": {
+          "encryptFilenames": false,
+          "format": "zip",
+          "kind": "archive-conversion",
+          "level": 6,
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\转换-9c6c1410-78f3-4e31-aab5-fdde11b23fca.zip",
+          "passwordRequired": true,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "schemaVersion": 1,
+          "splitSize": 0,
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        },
+        "failure": null,
+        "format": "tar.lzma.aes",
+        "id": "conversion-13d4cec4-f4ee-436b-b9bd-b1268a405900",
+        "logs": [
+          {
+            "message": "转换归档：先解压至临时目录，再校验并发布新包；保留原包。",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:54:48.176259800Z"
+          },
+          {
+            "message": "确定解压格式: AesEncrypted (后缀: 001)",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:54:48.258296200Z"
+          },
+          {
+            "message": "正在检测归档加密状态...",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:54:48.259101300Z"
+          },
+          {
+            "message": "已收到手动输入的解压密码「 [已隐藏]",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:54:48.307297800Z"
+          },
+          {
+            "message": "密码验证通过：本次解压使用密码「 [已隐藏]",
+            "severity": "success",
+            "timestamp": "2026-10-20T04:54:48.847213700Z"
+          },
+          {
+            "message": "开始解压：创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.001",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:54:48.872169800Z"
+          },
+          {
+            "message": "正在认证 AES 完整容器及卷组，完成后读取内层内容",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:54:48.872318300Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 2097242 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T04:54:49.502228700Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T04:54:49.502247600Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\转换-9c6c1410-78f3-4e31-aab5-fdde11b23fca.zip",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:54:49.517130400Z"
+          },
+          {
+            "message": "正在创建 ZIP · Deflate · 密码保护…",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:54:49.517712Z"
+          },
+          {
+            "message": "ZIP · Deflate 创建完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T04:54:49.627265600Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:54:49.627698900Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-20T04:54:49.667444100Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T04:54:49.671756300Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 2097242,
+          "media": null,
+          "outputBytes": 2098142,
+          "savingsRatio": -0.00042913502590545105,
+          "schemaVersion": 1
+        },
+        "name": "归档转换 · 创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.001",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\转换-9c6c1410-78f3-4e31-aab5-fdde11b23fca.zip",
+        "processedBytes": 2097242,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.001",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.002",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.003",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.004",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.005",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.006",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.007",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.008",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.009",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.010",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.011",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.012",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.013",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.014",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.015",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.016",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.017",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.018",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.019",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.020",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.021",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.022",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.023",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.024",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.025",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.026",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.027",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.028",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.029",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.030",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.031",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.032",
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建-bad6aa91-9663-4a2f-8b95-c8c3af2bfb3c.tar.lzma.aes.033"
+        ],
+        "startedAt": "2026-10-20T04:54:48.174Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 2097242,
+        "workloadKind": "archive"
+      },
+      "independentZipHashes": true
+    },
+    {
+      "kind": "conversion",
+      "target": "tar.lzma.aes",
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\转换-68e9ee44-cd6a-4548-8049-e69c5dc56264.tar.lzma.aes",
+      "history": {
+        "archiveOutput": {
+          "files": [
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\转换-68e9ee44-cd6a-4548-8049-e69c5dc56264.tar.lzma.aes.001"
+            },
+            {
+              "bytes": 1048576,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\转换-68e9ee44-cd6a-4548-8049-e69c5dc56264.tar.lzma.aes.002"
+            },
+            {
+              "bytes": 28874,
+              "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\转换-68e9ee44-cd6a-4548-8049-e69c5dc56264.tar.lzma.aes.003"
+            }
+          ],
+          "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\转换-68e9ee44-cd6a-4548-8049-e69c5dc56264.tar.lzma.aes.001",
+          "split": true,
+          "totalBytes": 2126026
+        },
+        "completedAt": "2026-10-20T04:55:05.879Z",
+        "durationMs": 1762,
+        "errorMessage": null,
+        "executionConfig": {
+          "encryptFilenames": false,
+          "format": "tar.lzma.aes",
+          "kind": "archive-conversion",
+          "level": 6,
+          "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\转换-68e9ee44-cd6a-4548-8049-e69c5dc56264.tar.lzma.aes",
+          "passwordRequired": true,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "schemaVersion": 1,
+          "splitSize": 1048576,
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        },
+        "failure": null,
+        "format": "zip",
+        "id": "conversion-fa6ddf25-314e-4590-b466-3d3de8304d7b",
+        "logs": [
+          {
+            "message": "转换归档：先解压至临时目录，再校验并发布新包；保留原包。",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:55:04.119501700Z"
+          },
+          {
+            "message": "确定解压格式: Zip (后缀: zip)",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:55:04.153016400Z"
+          },
+          {
+            "message": "正在检测归档加密状态...",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:55:04.153885300Z"
+          },
+          {
+            "message": "已收到手动输入的解压密码「 [已隐藏]",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:55:04.161642200Z"
+          },
+          {
+            "message": "密码验证通过：本次解压使用密码「 [已隐藏]",
+            "severity": "success",
+            "timestamp": "2026-10-20T04:55:04.235507100Z"
+          },
+          {
+            "message": "开始解压：转换-9c6c1410-78f3-4e31-aab5-fdde11b23fca.zip",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:55:04.244941300Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 2097242 字节",
+            "severity": "success",
+            "timestamp": "2026-10-20T04:55:04.331717700Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T04:55:04.331733700Z"
+          },
+          {
+            "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\转换-68e9ee44-cd6a-4548-8049-e69c5dc56264.tar.lzma.aes",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:55:04.373068700Z"
+          },
+          {
+            "message": "使用 TAR.LZMA.AES 格式压缩",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:55:04.373135200Z"
+          },
+          {
+            "message": "TAR.LZMA.AES 压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T04:55:05.436178Z"
+          },
+          {
+            "message": "正在校验新压缩包的完整性",
+            "severity": "info",
+            "timestamp": "2026-10-20T04:55:05.471575600Z"
+          },
+          {
+            "message": "压缩包完整性校验通过",
+            "severity": "success",
+            "timestamp": "2026-10-20T04:55:05.862666700Z"
+          },
+          {
+            "message": "压缩完成",
+            "severity": "success",
+            "timestamp": "2026-10-20T04:55:05.869560300Z"
+          }
+        ],
+        "metrics": {
+          "inputBytes": 2097242,
+          "media": null,
+          "outputBytes": 2126026,
+          "savingsRatio": -0.013724691761847228,
+          "schemaVersion": 1
+        },
+        "name": "归档转换 · 转换-9c6c1410-78f3-4e31-aab5-fdde11b23fca.zip",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\转换-68e9ee44-cd6a-4548-8049-e69c5dc56264.tar.lzma.aes.001",
+        "processedBytes": 2097242,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\转换-9c6c1410-78f3-4e31-aab5-fdde11b23fca.zip"
+        ],
+        "startedAt": "2026-10-20T04:55:04.117Z",
+        "status": "completed",
+        "taskType": "compression",
+        "totalBytes": 2097242,
+        "workloadKind": "archive"
+      },
+      "independentZipHashes": false
+    },
+    {
+      "kind": "batch-config",
+      "twoDrafts": true,
+      "encryptedTarAndVolumes": true,
+      "noImplicitStart": true
+    }
+  ],
+  "screenshots": [
+    "lzma1524-inline-config-1100x700.png",
+    "lzma1524-inline-config-760x520.png",
+    "lzma1524-compression-batch-1100x700.png",
+    "lzma1524-compression-batch-760x520.png",
+    "lzma1524-middle-preview-1100x700.png",
+    "lzma1524-middle-preview-760x520.png",
+    "lzma1524-batch-recovery-1100x700.png",
+    "lzma1524-batch-recovery-760x520.png",
+    "lzma1524-conversion-zip-1100x700.png",
+    "lzma1524-conversion-zip-760x520.png",
+    "lzma1524-conversion-aes-1100x700.png",
+    "lzma1524-conversion-aes-760x520.png",
+    "lzma1524-batch-config-1100x700.png",
+    "lzma1524-batch-config-760x520.png"
+  ],
+  "layouts": [
+    {
+      "name": "inline-config",
+      "columns": [
+        378,
+        378
+      ],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "inline-config",
+      "columns": [
+        286,
+        286
+      ],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "compression-batch",
+      "columns": [
+        378,
+        378
+      ],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "compression-batch",
+      "columns": [
+        286,
+        286
+      ],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "middle-preview",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "middle-preview",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "batch-recovery",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "batch-recovery",
+      "columns": [],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "conversion-zip",
+      "columns": [
+        378,
+        378
+      ],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "conversion-zip",
+      "columns": [
+        286,
+        286
+      ],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "conversion-aes",
+      "columns": [
+        378,
+        378
+      ],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "conversion-aes",
+      "columns": [
+        286,
+        286
+      ],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "batch-config",
+      "columns": [
+        378,
+        378
+      ],
+      "detailOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "batch-config",
+      "columns": [
+        286,
+        286
+      ],
+      "detailOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzma-1524\\ui-ec2a6157-7c54-40ee-9d79-6f688ca16813\\创建来源",
+  "expectedFiles": {
+    "开头.txt": "d761f4ca0ef5d289ad99c858fbffd36c3ecd9c7b8be951798b5724b88f103a86",
+    "数据.bin": "94c465e5a748d7439f4c637c77abe664bedd275f8f7eaa3836ad0895338864b3",
+    "末尾.txt": "f6610d2f2effb6d4528705a45c1321fb357eda9981843423c0b6382dd67850f2"
+  },
+  "zipIndependent": {
+    "tool": "Python zipfile metadata + cryptography AES-CTR + PBKDF2/HMAC-SHA1; explicit UTF-8 password bytes",
+    "fullContentMatches": true,
+    "authenticatedFiles": 3,
+    "emptyDirectoryPreserved": true
+  },
+  "independent": {
+    "tool": "Python tarfile/lzma + cryptography authentication",
+    "cases": [
+      {
+        "format": "tar.lzma",
+        "volumeCount": 33,
+        "fullContentMatches": true,
+        "innerSha256": "0050aa887a86fa033c73c18ddeb5708346e92e859628a5b76c81e27a87255180"
+      },
+      {
+        "format": "lzma.aes",
+        "volumeCount": 33,
+        "fullContentMatches": true,
+        "innerSha256": "a9632c848348ae632ecd9c0c7d340cff4b80ec1af20ec190c279d8a9fd7980d5"
+      },
+      {
+        "format": "tar.lzma.aes",
+        "volumeCount": 33,
+        "fullContentMatches": true,
+        "innerSha256": "0050aa887a86fa033c73c18ddeb5708346e92e859628a5b76c81e27a87255180"
+      },
+      {
+        "format": "tar.lzma.aes",
+        "volumeCount": 3,
+        "fullContentMatches": true,
+        "innerSha256": "60a642bd9c00d0506c10d75af185376264ae99efc0b46633e1268816a9450f3e"
+      },
+      {
+        "format": "lzma.aes",
+        "volumeCount": 3,
+        "fullContentMatches": true,
+        "innerSha256": "a9632c848348ae632ecd9c0c7d340cff4b80ec1af20ec190c279d8a9fd7980d5"
+      }
+    ]
+  },
+  "completedAt": "2026-10-20T04:55:28.802Z"
+}

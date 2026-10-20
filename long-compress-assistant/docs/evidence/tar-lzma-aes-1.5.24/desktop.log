@@ -1,0 +1,36 @@
+[desktop-e2e] retrying with compatible EdgeDriver: C:\Users\39633\.cache\selenium\msedgedriver\win64\151.0.4129.72\msedgedriver.exe
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+SessionNotCreatedError: session not created: This version of Microsoft Edge WebDriver only supports Microsoft Edge version 151
+Current browser version is 155.0.4283.62 with binary path E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\target\release\long-compress-assistant.exe
+    at Object.throwDecodedError (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\error.js:523:15)
+    at parseHttpResponse (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\http.js:527:13)
+    at Executor.execute (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\http.js:459:28)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  remoteStacktrace: '\tmsedgedriver!GetHandleVerifier [0x7ff746e5dc65+e3f5]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff746e5dcc4+e454]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff74751cce2+6cd472]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff74685269a]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff746851b57]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff74684d2ee]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff746849aed]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff74688aac3]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff74688a456]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff746855acc]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff746854d26]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7468558f3]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff746aae9fb]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff746aaae14]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff746e8abb5+3b345]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff746e79731+29ec1]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff746e82076+32806]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff746e65624+15db4]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff746e65745+15ed5]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff746e51cb3+2443]\n' +
+    '\tKERNEL32!BaseThreadInitThunk [0x7ffbb71fdda7+17]\n' +
+    '\tntdll!RtlUserThreadStart [0x7ffbb78dee4c+2c]\n'
+}
+
+Node.js v24.14.0
