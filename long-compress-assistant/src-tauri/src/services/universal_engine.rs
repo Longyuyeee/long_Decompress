@@ -503,6 +503,7 @@ impl UniversalCliEngine {
         flush(&mut current, &mut entries);
 
         ArchiveBrowseResult {
+            zpaq_history: None,
             format,
             total_files: entries.iter().filter(|entry| !entry.is_dir).count(),
             total_directories: entries.iter().filter(|entry| entry.is_dir).count(),

@@ -87,7 +87,7 @@ async function createDraft() {
     if (disposed || props.record.id !== recordId) return
     const id = store.addTask({
       id: generateId(), name: file.name, type: 'decompression', workloadKind: 'archive',
-      retryOfTaskId: recordId,
+      retryOfTaskId: recordId, zpaqSnapshot: restoredConfig.value?.zpaqSnapshot,
       sourceFiles: [path], outputPath, configurationMode: 'individual',
       extractToSubfolder: confirmedSubfolder, recycleSourceAfterExtract: false,
       password: confirmedPassword || undefined,
@@ -112,6 +112,7 @@ async function createDraft() {
     <p class="text-xs text-muted my-3">确认下方设置，再添加到队列。新任务不会自动开始。</p>
     <p v-if="restoredConfig" data-testid="history-config-restored" class="text-xs text-primary mb-3">已带入上次的解压设置，可直接使用或修改。</p>
     <p v-else data-testid="history-config-missing" class="text-xs text-muted mb-3">这条历史没有可恢复的设置，请选择输出目录，并确认是否创建同名子目录。</p>
+    <p v-if="restoredConfig?.zpaqSnapshot" class="text-xs text-primary mb-3" data-testid="history-zpaq-snapshot">沿用快照 {{ restoredConfig.zpaqSnapshot.version }}，不会改为最新内容；如需其他版本，请从归档浏览重新选择。</p>
     <p class="text-xs text-muted mb-3">本次解压整个归档并保留源文件，不恢复局部选择。密码可重新填写；留空时按当前密码设置尝试，同名文件按当前冲突设置处理。</p>
     <p v-if="record.sourcePaths.length > 1" class="text-xs text-amber-500 mb-2">原记录包含多个来源，请确认此处为归档或首个分卷；本次只创建一个任务。</p>
     <fieldset :disabled="busy || created" class="space-y-2 min-w-0">

@@ -1,3 +1,4 @@
+import { isZpaqSnapshot, snapshotArguments, snapshotKey, type ZpaqSnapshot } from '@/types/zpaqSnapshot'
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
@@ -144,7 +145,8 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
           if (format && conversionFormats.some(option => option.value === format)) item.defaultFormat = format
         }
         const duplicate = items.value.find(current => current.id !== item.id && !current.taskId
-          && archiveGroupKey(current.sourcePath) === archiveGroupKey(item.sourcePath))
+          && archiveGroupKey(current.sourcePath) === archiveGroupKey(item.sourcePath)
+          && snapshotKey(effectiveSettings(current).sourceZpaqSnapshot) === snapshotKey(effectiveSettings(item).sourceZpaqSnapshot))
         if (duplicate) {
           duplicate.selected ||= item.selected
           duplicate.settings ||= item.settings
@@ -176,6 +178,15 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     visible.value = true
   }
   function show() { visible.value = true }
+  function openSnapshot(path: string, snapshot: ZpaqSnapshot, sourcePassword = '') {
+    const existing = pending.value.find(item => archiveGroupKey(item.sourcePath) === archiveGroupKey(path)
+      && snapshotKey(effectiveSettings(item).sourceZpaqSnapshot) === snapshotKey(snapshot))
+    if (existing) { existing.expanded = true; existing.selected = true; activeId.value = existing.id; visible.value = true; return }
+    const item: ConversionDraft = { id: 'conversion-draft-' + crypto.randomUUID(), sourcePath: path,
+      sourceFormat: 'zpaq', intent: 'convert', expanded: true, selected: true,
+      settings: { ...defaults.value, outputPath: '', sourcePassword, sourceZpaqSnapshot: { ...snapshot } } }
+    items.value.push(item); queueSourceResolution(item); activeId.value = item.id; visible.value = true
+  }
   async function applySelected(patch: ConversionPatch) {
     if (busy.value || preparing.value) return '正在读取或转换，请稍后修改。'
     batchNotice.value = ''
@@ -223,6 +234,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   function replaceSource(id: string, path: string) {
     const item = items.value.find(item => item.id === id)
     if (!item || busy.value || preparing.value || item.taskId) return
+    if (item.settings) item.settings.sourceZpaqSnapshot = undefined
     item.sourcePath = path; item.sourceIssue = undefined; item.error = undefined
     item.sourceParts = undefined
     item.sourceReference = undefined
@@ -243,7 +255,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       sourceParts: record.sourcePaths.length > 1 ? [...record.sourcePaths] : undefined,
       intent: 'convert', expanded: true, selected: true, retryOfTaskId: record.id,
       targetPasswordRequired: config.passwordRequired, sourcePasswordRequired: false, passwordRequired: config.passwordRequired,
-      settings: { ...defaultConversionSettings(), outputPath: '', format: config.format,
+      settings: { ...defaultConversionSettings(), sourceZpaqSnapshot: config.sourceZpaqSnapshot, outputPath: '', format: config.format,
       ...(config.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: config.sourceZipPasswordEncoding } : {}),
       zipMethod: config.zipMethod ?? 'deflate',
       zipEncryption: config.zipEncryption ?? 'aes256', zipPasswordEncoding: config.zipPasswordEncoding ?? 'utf8',
@@ -262,6 +274,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   function validate(item: ConversionDraft) {
     const settings = effectiveSettings(item), output = outputFor(item)
     if (item.sourceIssue) return item.sourceIssue
+    if (settings.sourceZpaqSnapshot && !isZpaqSnapshot(settings.sourceZpaqSnapshot)) return '快照标识无效，请重新读取来源的历史快照。'
     const passwords = passwordRequirements(item)
     if (passwords.source) return '请重新填写原包密码，或明确选择原包无需密码。'
     if (passwords.target) return '请重新填写新包密码，或明确选择新包不加密。'
@@ -284,6 +297,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     const id = 'conversion-' + crypto.randomUUID()
     const sourceEncoding = item.sourceFormat ? zipPasswordEncodingForSource(item.sourcePath, settings.sourceZipPasswordEncoding, item.sourceFormat) : settings.sourceZipPasswordEncoding
     const config: ArchiveConversionConfigV1 = { schemaVersion: 1, kind: 'archive-conversion',
+      ...(settings.sourceZpaqSnapshot ? { sourceZpaqSnapshot: { ...settings.sourceZpaqSnapshot } } : {}),
       ...(sourceEncoding ? { sourceZipPasswordEncoding: sourceEncoding } : {}),
       zipMethod: settings.zipMethod ?? 'deflate',
       zipEncryption: settings.zipEncryption, zipPasswordEncoding: ['zip','zipx'].includes(settings.format) ? settings.zipPasswordEncoding : 'utf8',
@@ -304,7 +318,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       try {
         const output = await invoke<PublishedArchiveOutput>('convert_archive', { taskId: id, sourcePath: item.sourcePath,
           ...(config.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: config.sourceZipPasswordEncoding } : {}),
-          sourcePassword: settings.sourcePassword || null, outputPath,
+          sourcePassword: settings.sourcePassword || null, outputPath, ...snapshotArguments(settings.sourceZpaqSnapshot),
           options: { format: config.format, level: config.level, password: settings.password || null,
             zip_method: config.zipMethod ?? 'deflate', zip_encryption: config.zipEncryption, zip_password_encoding: config.zipPasswordEncoding,
             zip_split_mode: config.zipSplitMode, rar_recovery_percent: config.rarRecoveryPercent ?? 0,
@@ -394,7 +408,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       if (!['completed', 'failed', 'cancelled'].includes(current.status)) tasks.updateTaskStatus(id, 'cancelling')
     } catch (failure) { stopRequested.value = false; error.value = '取消请求失败：' + String(failure) }
   }
-  return { visible, items, defaults, pending, selected, activeId, sourcePath, sourcePassword, password, outputPath,
+  return { openSnapshot, visible, items, defaults, pending, selected, activeId, sourcePath, sourcePassword, password, outputPath,
     format, zipEncryption, zipPasswordEncoding, sourceZipPasswordEncoding, level, splitMiB, encryptFilenames, error, busy, task, phase,
     supportsPassword, contextIntent, contextSources, stopRequested, preparing, batchNotice, rarSupport, refreshRarSupport, effectiveSettings, outputFor, taskFor, passwordRequirements,
     addSources, chooseContextSource, selectSource, openFromExplorer, show, restore, start, cancel,

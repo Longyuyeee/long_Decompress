@@ -2182,6 +2182,8 @@ impl CompressionService {
         if format == ArchiveFormat::Unknown && crate::services::numeric_volume_reader::ZipInputReader::is_numeric_first(path) {
             format = ArchiveFormat::from_extension(Path::new(file_stem).extension().and_then(|value| value.to_str()).unwrap_or(""));
         }
+        anyhow::ensure!(options.zpaq_snapshot.is_none() || format == ArchiveFormat::Zpaq,
+            "所选快照只适用于 ZPAQ 日志归档，请重新选择原归档");
         let native_seven_zip = Self::uses_native_seven_zip_volumes(path, &format);
         let native_stream = matches!(format, ArchiveFormat::Wim | ArchiveFormat::Zpaq | ArchiveFormat::AesEncrypted | ArchiveFormat::Tar | ArchiveFormat::Gzip | ArchiveFormat::Bzip2 | ArchiveFormat::Xz | ArchiveFormat::Zstd | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip | ArchiveFormat::Lzma);
         if is_split_archive && !native_seven_zip && !native_stream && format != ArchiveFormat::Zip && format != ArchiveFormat::Unknown && format != ArchiveFormat::Universal {
@@ -2458,8 +2460,8 @@ impl CompressionService {
                 path, &out_dir, final_password.as_deref(), &options, service.cancellation_flag.clone()).await,
             ArchiveFormat::Alz => crate::services::alz_engine::extract(
                 path, &out_dir, final_password.as_deref(), &options, service.cancellation_flag.clone()).await,
-            ArchiveFormat::Zpaq => crate::services::zpaq_engine::extract(
-                path, &out_dir, final_password.as_deref(), &options.selected_entries, service.cancellation_flag.clone()).await,
+            ArchiveFormat::Zpaq => crate::services::zpaq_engine::extract_at(
+                path, &out_dir, final_password.as_deref(), &options.selected_entries, options.zpaq_snapshot.as_ref(), service.cancellation_flag.clone()).await,
             ArchiveFormat::Zip => {
                 let srv = service.clone();
                 let f_path = file_path.clone();
@@ -2928,7 +2930,7 @@ impl CompressionService {
                 Some((directory.entries.len(), directory.total_uncompressed_size))
             }
             ArchiveFormat::Zpaq => {
-                let directory = crate::services::zpaq_engine::browse(archive_path, password, self.cancellation_flag.clone()).await?;
+                let directory = crate::services::zpaq_engine::browse_at(archive_path, password, options.zpaq_snapshot.as_ref(), self.cancellation_flag.clone()).await?;
                 if directory.entries.iter().all(|e| e.size_known != Some(false)) {
                     Some((directory.entries.len(), directory.total_uncompressed_size))
                 } else { None }

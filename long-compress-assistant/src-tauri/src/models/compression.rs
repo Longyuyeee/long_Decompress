@@ -159,6 +159,8 @@ pub struct CompressionOptions {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecompressOptions {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zpaq_snapshot: Option<ZpaqSnapshot>,
     /// ZIP: None retains automatic password compatibility, filenames unchanged.
     /// ALZ: None means CP949; an explicit source codepage reads names and key.
       /// EGG: None means UTF-8 password; names use their own format marker.
@@ -223,6 +225,7 @@ fn default_true() -> bool {
 impl Default for DecompressOptions {
     fn default() -> Self {
         Self {
+            zpaq_snapshot: None,
             zip_password_encoding: None,
             parallel_zip: false,
             preserve_paths: false,
@@ -260,6 +263,8 @@ pub struct ArchiveEntryInfo {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct ArchiveBrowseResult {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zpaq_history: Option<ZpaqHistory>,
     pub format: String,
     pub entries: Vec<ArchiveEntryInfo>,
     pub total_files: usize,
@@ -268,6 +273,18 @@ pub struct ArchiveBrowseResult {
     pub total_compressed_size: u64,
     pub encrypted: bool,
 }
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ZpaqSnapshot { pub version: u32, pub date: i64 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ZpaqSnapshotInfo {
+    #[serde(flatten)] pub snapshot: ZpaqSnapshot,
+    pub updates: u64, pub deletes: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ZpaqHistory { pub selected: ZpaqSnapshot, pub snapshots: Vec<ZpaqSnapshotInfo> }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum CompressionStatus {

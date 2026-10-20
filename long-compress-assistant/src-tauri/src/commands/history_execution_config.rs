@@ -38,6 +38,14 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
             output.insert(key.into(), encoding.as_str().into());
         }
     }
+    let snapshot_key = match kind { "archive-extraction" => Some("zpaqSnapshot"), "archive-conversion" => Some("sourceZpaqSnapshot"), _ => None };
+    if let Some(key) = snapshot_key {
+        if let Some(value) = value.get(key).filter(|v| !v.is_null()) {
+            let snapshot: crate::models::compression::ZpaqSnapshot = serde_json::from_value(value.clone()).ok()?;
+            if snapshot.version == 0 || snapshot.version > 9_999_999 || !(19000101000000..=29991231235959).contains(&snapshot.date) { return None; }
+            output.insert(key.into(), serde_json::to_value(snapshot).ok()?);
+        }
+    }
     if kind == "archive-conversion" {
         if let Some(count) = value.get("rarRecoveryVolumes") {
             if !count.as_u64().is_some_and(|n| n <= 10) { return None; }
@@ -119,6 +127,14 @@ fn project(value: &Value, fields: &[(&str, char)]) -> Option<Map<String, Value>>
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn zpaq_1530_contract_history_preserves_exact_snapshot_and_rejects_invalid_identity() {
+        for (kind,task,key) in [("archive-extraction","decompression","zpaqSnapshot"),("archive-conversion","compression","sourceZpaqSnapshot")] {
+            let mut input=if task=="decompression" {serde_json::json!({"schemaVersion":1,"kind":kind,"outputDirectory":"D:/out","extractToSubfolder":false})} else {serde_json::json!({"schemaVersion":1,"kind":kind,"outputPath":"D:/out.zip","format":"zip","level":6,"splitSize":0,"encryptFilenames":false,"passwordRequired":false})};
+            input[key]=serde_json::json!({"version":1,"date":20261020130000i64});input["password"]=serde_json::json!("private");let saved=super::sanitize(input.clone(),task,"archive").unwrap();assert_eq!(saved[key],input[key]);assert!(!saved.to_string().contains("private"));
+            input[key]["version"]=serde_json::json!(0);assert!(super::sanitize(input,task,"archive").is_none());
+        }
+    }
     #[test]
     fn input_zip_encoding_snapshots_keep_auto_and_explicit_modes_without_passwords() {
         for (input, task_type, key) in [

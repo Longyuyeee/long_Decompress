@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ZpaqSnapshot } from '@/types/zpaqSnapshot'
 import { useChecksumOperation } from '@/composables/useChecksumOperation'
 import ChecksumProgressCard from '@/components/integrity/ChecksumProgressCard.vue'
 import type { ChecksumCalculationEntry } from '@/types/checksum'
@@ -36,6 +37,7 @@ const recoveredPasswordRequired = ref(false)
 const recoveredZipPasswordEncoding = ref<ZipPasswordEncoding>()
 const archiveZipPasswordEncoding = ref<ZipPasswordEncoding>()
 const sourceFormat = ref<string>()
+const archiveSnapshot = ref<ZpaqSnapshot>()
 const sourceEncoding = computed(() => sourceFormat.value
   ? zipPasswordEncodingForSource(archivePath.value, archiveZipPasswordEncoding.value, sourceFormat.value) : archiveZipPasswordEncoding.value)
 const recoveryOptions = ref<{ outputPath?: string; extractToSubfolder?: boolean }>({})
@@ -220,6 +222,7 @@ const clearResults = () => {
   batchDetailOpen.value = false
   archivePassword.value = ''
   archiveZipPasswordEncoding.value = undefined
+  archiveSnapshot.value = undefined
   sourceFormat.value = undefined
   diagnosticReport.value = null
   repairResult.value = null
@@ -240,6 +243,7 @@ function resumeRecoveryWorkspace() {
   restoreSingleResult()
 }
 function openArchiveMode() {
+  archiveSnapshot.value = undefined
   activeMode.value = 'archive'
   diagnosticSources.value = [...recoveryWorkspace.sourcePaths]
   archivePath.value = diagnosticSources.value[0] || ''
@@ -250,6 +254,7 @@ const selectArchive = async () => {
     ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection() : undefined
   const file = queued === undefined ? await open({ multiple: true, title: '选择要诊断的压缩包，可多选' }) : queued
   const paths = Array.isArray(file) ? file : typeof file === 'string' ? [file] : []
+  if (paths.length) archiveSnapshot.value = undefined
   if (paths.length) {
     if (paths.length === 1) recoveryWorkspace.clear()
     archivePath.value = paths[0]
@@ -274,10 +279,9 @@ const diagnoseArchive = async () => {
   repairResult.value = null
   diagnosticId.value = `diagnostic-${Date.now()}-${Math.random().toString(36).slice(2)}`
   try {
-    diagnosticReport.value = await tauriCommands.diagnoseArchive(
-      diagnosticId.value, archivePath.value, archivePassword.value,
-      ...zipPasswordEncodingArguments(sourceEncoding.value),
-    )
+    diagnosticReport.value = archiveSnapshot.value
+      ? await tauriCommands.diagnoseArchive(diagnosticId.value, archivePath.value, archivePassword.value, sourceEncoding.value, archiveSnapshot.value)
+      : await tauriCommands.diagnoseArchive(diagnosticId.value, archivePath.value, archivePassword.value, ...zipPasswordEncodingArguments(sourceEncoding.value))
     sourceFormat.value = diagnosticReport.value.actualFormat
   } catch (error) {
     if (!String(error).toLocaleLowerCase().includes('cancel')) {
@@ -416,6 +420,7 @@ watch(() => isDiagnosing.value || isRepairing.value || isCalculating.value || is
   if (diagnosticSources.value.length < 2) recoveryWorkspace.clear()
   archivePassword.value = request.password || ''
   archiveZipPasswordEncoding.value = request.zipPasswordEncoding
+  archiveSnapshot.value = request.zpaqSnapshot
   recoveryTaskId.value = request.taskId || ''
   recoveryOptions.value = { outputPath: request.outputPath, extractToSubfolder: request.extractToSubfolder }
   if (diagnosticSources.value.length < 2) void diagnoseArchive()
@@ -472,6 +477,7 @@ function rememberSingleResult() {
     extractToSubfolder:recoveryOptions.value.extractToSubfolder ?? original?.extractToSubfolder ?? true})
 }
 function restoreSingleResult() {
+  archiveSnapshot.value = undefined
   if (diagnosticSources.value.length !== 1 || recoveryWorkspace.rows.length !== 1) return
   const row = recoveryWorkspace.rows[0]!
   if (!row.result) return

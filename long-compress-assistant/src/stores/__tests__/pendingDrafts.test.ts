@@ -14,6 +14,16 @@ afterEach(() => { session?.dispose(); session = undefined })
 function file(path: string) { return { path, name: path.split('/').pop()!, size: 20, type: 'file', isDirectory: false } }
 function reopen() { session?.dispose(); setActivePinia(createPinia()); session = usePendingDraftStore(); session.initialize(); return session }
 describe('pending archive draft recovery', () => {
+  it('zpaq1530 restores two snapshots of one archive as separate drafts without starting them', async () => {
+    session=usePendingDraftStore();session.initialize()
+    const one={version:1,date:20261020130000},two={version:2,date:20261020140000}
+    for(const snapshot of [one,two])useTaskStore().addTask({id:'snapshot-'+snapshot.version,name:'old.zpaq',type:'decompression',sourceFiles:['C:/old.zpaq'],outputPath:'D:/out',zpaqSnapshot:snapshot})
+    const conversion=useArchiveConversionStore();conversion.openSnapshot('C:/old.zpaq',one,'secret');conversion.openSnapshot('C:/old.zpaq',two,'secret');session.flush()
+    await reopen().restore()
+    expect(useTaskStore().tasks.map(t=>t.zpaqSnapshot)).toEqual([one,two])
+    const reopened=useArchiveConversionStore();expect(reopened.pending.map(item=>reopened.effectiveSettings(item).sourceZpaqSnapshot)).toEqual([one,two])
+    expect(mocks.invoke.mock.calls.some(([command])=>['extract_file','convert_archive'].includes(command))).toBe(false)
+  })
   it('keeps extraction, compression and separate conversion encodings after reopening without secrets', async () => {
     session = usePendingDraftStore(); session.initialize()
     const compression = useCompressionStore(), tasks = useTaskStore(), conversion = useArchiveConversionStore()

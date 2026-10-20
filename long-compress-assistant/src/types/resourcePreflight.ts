@@ -24,6 +24,7 @@ export interface ResourcePreflightReport {
 }
 
 export interface ResourcePreflightRequest {
+  zpaqSnapshot?: import('./zpaqSnapshot').ZpaqSnapshot
   operation: 'compression' | 'decompression'
   outputPath: string
   sourcePaths: string[]

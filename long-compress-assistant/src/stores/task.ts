@@ -67,6 +67,7 @@ export interface Task {
   configurationMode?: 'global' | 'individual'
   pausedFromStatus?: TaskStatus
   fileFilter?: string
+  zpaqSnapshot?: import('@/types/zpaqSnapshot').ZpaqSnapshot
   selectedEntries?: string[]
   // 增强字段 [FE-INT-001]
   stage?: 'Pre-checking' | 'Extracting' | 'Splitting' | 'Verifying' | 'Finalizing' | 'password-attempt' | 'Probing' | 'Encoding' | 'Transforming' | 'Validating' | 'Publishing' | 'still-encoding'

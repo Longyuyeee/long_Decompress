@@ -1,3 +1,4 @@
+import { snapshotArguments } from '@/types/zpaqSnapshot'
 import { invoke } from '@tauri-apps/api/tauri'
 import type { Task } from '@/stores/task'
 import type { ArchiveDiagnosticReport } from '@/composables/useTauriCommands'
@@ -18,6 +19,7 @@ export function extractionRetryPolicy(task: Task) {
 }
 
 export interface ExtractionRetryInput {
+  zpaqSnapshot?: import('@/types/zpaqSnapshot').ZpaqSnapshot
   source: string
   output: string
   password: string
@@ -58,9 +60,13 @@ export async function validateExtractionRetry(
   check()
   if (!output.is_dir) throw new Error('输出位置必须是已存在的目录。')
   const zipPasswordEncoding = zipPasswordEncodingForSource(path, input.zipPasswordEncoding, split?.archive_format)
+  if (input.zpaqSnapshot) {
+    await invoke('browse_archive', { filePath: path, password: input.password || null, ...snapshotArguments(input.zpaqSnapshot) })
+    check()
+  }
   if (requireIntegrity) {
     const report = await invoke<ArchiveDiagnosticReport>('diagnose_archive', {
-      diagnosticId, filePath: path, password: input.password || null,
+      diagnosticId, filePath: path, password: input.password || null, ...snapshotArguments(input.zpaqSnapshot),
       ...(zipPasswordEncoding !== undefined ? { zipPasswordEncoding } : {}),
     })
     check()

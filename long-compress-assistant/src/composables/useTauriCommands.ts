@@ -1,3 +1,4 @@
+import { snapshotArguments, type ZpaqSnapshot, type ZpaqHistory } from '@/types/zpaqSnapshot'
 import { invoke } from '@tauri-apps/api/tauri'
 import type { PublishedArchiveOutput } from '@/types/archiveOutput'
 import type { ZipPasswordEncoding } from '@/types/zipPassword'
@@ -33,6 +34,7 @@ import type {
 const zipPasswordArguments = (encoding?: ZipPasswordEncoding) => encoding === undefined ? {} : { zipPasswordEncoding: encoding }
 
 export interface DecompressOptions {
+  zpaqSnapshot?: ZpaqSnapshot
   /** Actual browse format for task/history presentation, not a backend override. */
   sourceFormat?: string
   /** ZIP automatic compatibility; ALZ CP949 default for names and password. */
@@ -141,6 +143,7 @@ export interface ArchiveEntryInfo {
 }
 
 export interface ArchiveBrowseResult {
+  zpaqHistory?: ZpaqHistory
   format: string
   entries: ArchiveEntryInfo[]
   totalFiles: number
@@ -311,7 +314,7 @@ export const useTauriCommands = () => {
     const fileName = filePath.split(/[\\/]/).pop() || 'unknown'
     const taskId = existingTaskId || taskStore.addTask({
       id: Date.now().toString(),
-      name: fileName,
+      name: options.zpaqSnapshot ? `${fileName}（快照 ${options.zpaqSnapshot.version}）` : fileName,
       type: 'decompression',
       sourceFiles: [filePath],
       outputPath: options.outputPath,
@@ -319,6 +322,8 @@ export const useTauriCommands = () => {
     })
     const trackedTask = taskStore.tasks.find(item => item.id === taskId)
     if (trackedTask) {
+      if (options.zpaqSnapshot && !trackedTask.name.includes(`（快照 ${options.zpaqSnapshot.version}）`)) trackedTask.name += `（快照 ${options.zpaqSnapshot.version}）`
+      trackedTask.zpaqSnapshot = options.zpaqSnapshot ? { ...options.zpaqSnapshot } : undefined
       trackedTask.selectedEntries = options.selectedEntries ? [...options.selectedEntries] : undefined
       trackedTask.zipPasswordEncoding = options.zipPasswordEncoding
       // Keep reusable directory/codepage even for a selection: history explicitly
@@ -326,6 +331,7 @@ export const useTauriCommands = () => {
       // Dropping the codepage makes legacy ALZ names/password unreadable on rerun.
       trackedTask.executionConfig = {
         schemaVersion: 1, kind: 'archive-extraction', outputDirectory: options.outputPath,
+        ...(options.zpaqSnapshot ? { zpaqSnapshot: { ...options.zpaqSnapshot } } : {}),
         extractToSubfolder: options.createSubdirectory ?? false,
         ...(options.zipPasswordEncoding ? { zipPasswordEncoding: options.zipPasswordEncoding } : {}),
       }
@@ -341,6 +347,7 @@ export const useTauriCommands = () => {
         outputPath: options.outputPath,
         password: options.password || null,
         options: {
+          ...(options.zpaqSnapshot ? { zpaq_snapshot: options.zpaqSnapshot } : {}),
           ...(options.zipPasswordEncoding === undefined ? {} : { zip_password_encoding: options.zipPasswordEncoding }),
           preserve_paths: options.keepStructure,
           parallel_zip: appStore.settings.parallelZipExtraction === true,
@@ -745,6 +752,7 @@ export const useTauriCommands = () => {
     request: ResourcePreflightRequest
   ): Promise<ResourcePreflightReport> => {
     return await invoke<ResourcePreflightReport>('preflight_operation_resources', {
+      ...snapshotArguments(request.zpaqSnapshot),
       operation: request.operation,
       outputPath: request.outputPath,
       sourcePaths: request.sourcePaths,
@@ -825,12 +833,12 @@ export const useTauriCommands = () => {
     await invoke('cancel_compression_analysis', { analysisId })
   }
 
-  const browseArchive = async (filePath: string, password?: string, browseId?: string, zipPasswordEncoding?: ZipPasswordEncoding) => {
+  const browseArchive = async (filePath: string, password?: string, browseId?: string, zipPasswordEncoding?: ZipPasswordEncoding, zpaqSnapshot?: ZpaqSnapshot) => {
     return await invoke<ArchiveBrowseResult>('browse_archive', {
       filePath,
       password: password || null,
       browseId: browseId || null,
-      ...zipPasswordArguments(zipPasswordEncoding),
+      ...zipPasswordArguments(zipPasswordEncoding), ...snapshotArguments(zpaqSnapshot),
     })
   }
 
@@ -847,21 +855,21 @@ export const useTauriCommands = () => {
     await invoke('cancel_archive_browse', { browseId })
   }
 
-  const previewArchiveImage = async (filePath: string, entryPath: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding) => {
+  const previewArchiveImage = async (filePath: string, entryPath: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding, zpaqSnapshot?: ZpaqSnapshot) => {
     return await invoke<ArchiveImagePreview>('preview_archive_image', {
-      filePath, entryPath, password: password || null, ...zipPasswordArguments(zipPasswordEncoding),
+      filePath, entryPath, password: password || null, ...zipPasswordArguments(zipPasswordEncoding), ...snapshotArguments(zpaqSnapshot),
     })
   }
 
-  const previewArchiveText = async (filePath: string, entryPath: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding) => {
+  const previewArchiveText = async (filePath: string, entryPath: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding, zpaqSnapshot?: ZpaqSnapshot) => {
     return await invoke<ArchiveTextPreview>('preview_archive_text', {
-      filePath, entryPath, password: password || null, ...zipPasswordArguments(zipPasswordEncoding),
+      filePath, entryPath, password: password || null, ...zipPasswordArguments(zipPasswordEncoding), ...snapshotArguments(zpaqSnapshot),
     })
   }
 
-  const openArchiveEntry = async (filePath: string, entryPath: string, password?: string, allowDangerous = false, zipPasswordEncoding?: ZipPasswordEncoding) => {
+  const openArchiveEntry = async (filePath: string, entryPath: string, password?: string, allowDangerous = false, zipPasswordEncoding?: ZipPasswordEncoding, zpaqSnapshot?: ZpaqSnapshot) => {
     return await invoke<ArchiveEntryOpenResult>('open_archive_entry', {
-      filePath, entryPath, password: password || null, allowDangerous, ...zipPasswordArguments(zipPasswordEncoding),
+      filePath, entryPath, password: password || null, allowDangerous, ...zipPasswordArguments(zipPasswordEncoding), ...snapshotArguments(zpaqSnapshot),
     })
   }
 
@@ -872,22 +880,23 @@ export const useTauriCommands = () => {
     targetDepth: number,
     ancestorHashes: string[],
     zipPasswordEncoding?: ZipPasswordEncoding,
+    zpaqSnapshot?: ZpaqSnapshot,
   ) => invoke<NestedArchiveMaterializeResult>('materialize_nested_archive', {
     filePath,
     entryPath,
     password: password || null,
     targetDepth,
     ancestorHashes,
-    ...zipPasswordArguments(zipPasswordEncoding),
+    ...zipPasswordArguments(zipPasswordEncoding), ...snapshotArguments(zpaqSnapshot),
   })
 
-  const testArchiveIntegrity = async (filePath: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding) => {
-    return await invoke<string>('test_archive_integrity', { filePath, password: password || null, ...zipPasswordArguments(zipPasswordEncoding) })
+  const testArchiveIntegrity = async (filePath: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding, zpaqSnapshot?: ZpaqSnapshot) => {
+    return await invoke<string>('test_archive_integrity', { filePath, password: password || null, ...zipPasswordArguments(zipPasswordEncoding), ...snapshotArguments(zpaqSnapshot) })
   }
 
-  const diagnoseArchive = async (diagnosticId: string, filePath: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding) => {
+  const diagnoseArchive = async (diagnosticId: string, filePath: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding, zpaqSnapshot?: ZpaqSnapshot) => {
     return await invoke<ArchiveDiagnosticReport>('diagnose_archive', {
-      diagnosticId, filePath, password: password || null, ...zipPasswordArguments(zipPasswordEncoding),
+      diagnosticId, filePath, password: password || null, ...zipPasswordArguments(zipPasswordEncoding), ...snapshotArguments(zpaqSnapshot),
     })
   }
 

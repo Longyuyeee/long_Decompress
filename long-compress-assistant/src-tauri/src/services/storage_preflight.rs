@@ -370,6 +370,18 @@ pub async fn preflight_operation_resources(
     estimated_output_bytes: Option<u64>,
     estimate_reliable: bool,
 ) -> anyhow::Result<ResourcePreflightReport> {
+    preflight_operation_resources_at(operation, output_path, source_paths, password, estimated_output_bytes, estimate_reliable, None).await
+}
+
+pub async fn preflight_operation_resources_at(
+    operation: &str,
+    output_path: &str,
+    source_paths: &[String],
+    password: Option<&str>,
+    estimated_output_bytes: Option<u64>,
+    estimate_reliable: bool,
+    snapshot: Option<crate::models::compression::ZpaqSnapshot>,
+) -> anyhow::Result<ResourcePreflightReport> {
     if !matches!(operation, "compression" | "decompression") {
         anyhow::bail!("Unsupported resource preflight operation: {operation}");
     }
@@ -382,7 +394,7 @@ pub async fn preflight_operation_resources(
         if operation == "decompression" && estimated_output_bytes.is_none() {
             match source_paths.first() {
                 Some(source) => {
-                    match archive_browser::browse_archive(Path::new(source), password).await {
+                    match archive_browser::browse_archive_cancellable_at(Path::new(source), password, std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), None, snapshot).await {
                         Ok(metadata) if metadata.total_uncompressed_size > 0 => (
                             Some(metadata.total_uncompressed_size),
                             "archive_metadata",
