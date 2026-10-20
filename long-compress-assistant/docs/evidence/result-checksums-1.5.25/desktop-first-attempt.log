@@ -1,0 +1,49 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+result-checksums-1525: completed-result-whole-group
+result-checksums-1525: history-result-whole-group
+result-checksums-1525: nested-same-name-and-save-guidance
+result-checksums-1525: partial-export-and-continue
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: The input did not match the regular expression /补齐/. Input:
+
+'旧记录整组\n' +
+  'E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\result-checksums-1525\\ui-3d58392e-79fe-4c9f-9da3-049dad94cd98\\分享整组.7z.001\n' +
+  '正在打开…\n' +
+  '复制路径\n' +
+  '生成校验清单\n' +
+  '再次压缩\n' +
+  '压缩\n' +
+  '7Z\n' +
+  '2.0 MiB\n' +
+  '1.4 s\n' +
+  '已完成\n' +
+  '10/20 13:43:54'
+
+    at runResultChecksums1525Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/result-checksums-1525-gate.mjs:126:156)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:4941:5 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: '旧记录整组\n' +
+    'E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\result-checksums-1525\\ui-3d58392e-79fe-4c9f-9da3-049dad94cd98\\分享整组.7z.001\n' +
+    '正在打开…\n' +
+    '复制路径\n' +
+    '生成校验清单\n' +
+    '再次压缩\n' +
+    '压缩\n' +
+    '7Z\n' +
+    '2.0 MiB\n' +
+    '1.4 s\n' +
+    '已完成\n' +
+    '10/20 13:43:54',
+  expected: /补齐/,
+  operator: 'match',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

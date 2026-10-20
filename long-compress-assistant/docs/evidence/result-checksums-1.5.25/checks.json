@@ -1,0 +1,137 @@
+{
+  "recordedAt": "2026-10-20T05:53:33.884313+00:00",
+  "rust": {
+    "command": "cargo test --manifest-path src-tauri/Cargo.toml result_checksum_1525 -- --nocapture",
+    "source": "Tool output, no raw log file was captured",
+    "tests": 5,
+    "passed": 5,
+    "cases": [
+      "nested_duplicate_names_roundtrip_all_algorithms",
+      "outside_base_does_not_truncate_manifest",
+      "exports_only_completed_without_reopening",
+      "invalid_digest_and_self_overwrite_preserve_source",
+      "unrepresentable_sfv_and_empty_results_publish_nothing"
+    ]
+  },
+  "frontend": {
+    "distinctTests": 8,
+    "firstRun": {
+      "passed": 7,
+      "failed": 1
+    },
+    "followup": "Common-parent default fixed, only failed test rerun and passed; missing-volume copy changed later, only related test rerun and passed",
+    "productionBuild": "npm run build passed; subsequent E2E frontend builds separate",
+    "types": "npm run type-check passed; final production compilation belongs to required CI"
+  },
+  "shellAndIdentity": "Shell 1.5.25 built; eight version sources passed",
+  "screenshots": [
+    {
+      "name": "checksums1525-whole-group-ready-1100x700.png",
+      "bytes": 494277,
+      "sha256": "cecda85e9170106906d14fd565440b564bb84053560279982209dcbfe756c121",
+      "superseded": false
+    },
+    {
+      "name": "checksums1525-whole-group-ready-760x520.png",
+      "bytes": 286668,
+      "sha256": "8c5cafc5847a931c51f2ed29d297d94feac744edb407ed3dd218fa41e1bd43eb",
+      "superseded": false
+    },
+    {
+      "name": "checksums1525-exported-1100x700.png",
+      "bytes": 449612,
+      "sha256": "07782de125fbbf1b0ab3036949214cbda742fd815eccef5c8066df09a0a1a519",
+      "superseded": false
+    },
+    {
+      "name": "checksums1525-exported-760x520.png",
+      "bytes": 276144,
+      "sha256": "f68fb7d827852703fb994edc9af205c8b65e9bab7036814066a416714ed80acc",
+      "superseded": false
+    },
+    {
+      "name": "checksums1525-same-name-inline-1100x700.png",
+      "bytes": 475645,
+      "sha256": "9745efb912e5b4e340045538eda6b706f627b8c98c10b0495726b4441ff029c3",
+      "superseded": false
+    },
+    {
+      "name": "checksums1525-same-name-inline-760x520.png",
+      "bytes": 189337,
+      "sha256": "6e70b4a37a309900252e9c3e951f1ad5837701ff55bda4e12952c64e76f4d669",
+      "superseded": false
+    },
+    {
+      "name": "checksums1525-save-guidance-1100x700.png",
+      "bytes": 461973,
+      "sha256": "bff36eaf140a570ce77f43b144abbe642685b4f96ef951ad718e46fc0afec055",
+      "superseded": false
+    },
+    {
+      "name": "checksums1525-save-guidance-760x520.png",
+      "bytes": 286561,
+      "sha256": "4471cbf3b776a492df9fe3868cf5367dfa145555cb69a82a9fc3dc177a300561",
+      "superseded": false
+    },
+    {
+      "name": "checksums1525-relative-manifest-verified-1100x700.png",
+      "bytes": 408890,
+      "sha256": "8b4ebe20982583f712718bcaf93ef7731be4815cf04145ae42c5f228dfc1d140",
+      "superseded": false
+    },
+    {
+      "name": "checksums1525-relative-manifest-verified-760x520.png",
+      "bytes": 259117,
+      "sha256": "d3ebc70c2bbd1f8d8f69aaaf4e11b9101633a63d655b4b38672c6985216cfae7",
+      "superseded": false
+    },
+    {
+      "name": "checksums1525-partial-export-1100x700.png",
+      "bytes": 445064,
+      "sha256": "9384ec9322544773aa67bd2f60d2fc358e92d1ab06b5ca5b01f19cf2ca9bd5f0",
+      "superseded": false
+    },
+    {
+      "name": "checksums1525-partial-export-760x520.png",
+      "bytes": 275570,
+      "sha256": "3efc3d7c02f40bd064b2b3bbeaebabf2753e0d2f4e6c57a5bba187d122285bbb",
+      "superseded": false
+    },
+    {
+      "name": "checksums1525-legacy-missing-guidance-1100x700.png",
+      "bytes": 368982,
+      "sha256": "492fedf4a337a9ef20c516db1cdd3db29417befd7fda1f84f6e10e10885603a9",
+      "superseded": true
+    },
+    {
+      "name": "checksums1525-legacy-missing-guidance-760x520.png",
+      "bytes": 172864,
+      "sha256": "69190ef4e1cafce46973d126e3c9fba609a4ced083b0aa3c268cc9530c97b20b",
+      "superseded": true
+    },
+    {
+      "name": "checksums1525-conversion-handoff-1100x700.png",
+      "bytes": 441827,
+      "sha256": "a5b286694d5acc778e9e0de775a4aa3e1673d9a65107d38734bc788b5f9a72b1",
+      "superseded": false
+    },
+    {
+      "name": "checksums1525-conversion-handoff-760x520.png",
+      "bytes": 223487,
+      "sha256": "34caffcde7c21a8ee3dc40ec432ed62b9e511a5f7aa54483244bc5037f361625",
+      "superseded": false
+    },
+    {
+      "name": "checksums1525-legacy-missing-guidance-polished-1100x700.png",
+      "bytes": 339796,
+      "sha256": "0c46b3200672f41a3b469b54ba5af53f515b5ce56dd02e5ed9ec3846f676846f",
+      "superseded": false
+    },
+    {
+      "name": "checksums1525-legacy-missing-guidance-polished-760x520.png",
+      "bytes": 193597,
+      "sha256": "6eb316a02f11488ca7393b1d80b79597e12bfff9470af26218e1895c797e840d",
+      "superseded": false
+    }
+  ]
+}
