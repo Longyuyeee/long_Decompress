@@ -2,7 +2,7 @@
 
 use core::fmt;
 use std::{fmt::Debug, io};
-#[cfg(feature = "lzma")]
+#[cfg(any(feature = "lzma", feature = "ppmd"))]
 use std::io::Read;
 
 #[allow(deprecated)]
@@ -370,8 +370,47 @@ pub(crate) enum Lzma<R: io::BufRead> {
 
 #[cfg(feature = "ppmd")]
 pub(crate) enum Ppmd<R: io::BufRead> {
-    Uninitialized(Option<R>),
-    Initialized(Box<ppmd_rust::Ppmd8Decoder<R>>),
+    Uninitialized { reader: Option<R>, uncompressed_size: u64 },
+    Initialized { decoder: Box<ppmd_rust::Ppmd8Decoder<PpmdInput<R>>>, remaining: u64, finished: bool },
+}
+
+// ppmd-rust treats UnexpectedEof as a sized-stream ending. ZIP method 98
+// requires the actual end marker, so make physical exhaustion a hard error.
+#[cfg(feature = "ppmd")]
+pub(crate) struct PpmdInput<R> { inner: R }
+#[cfg(feature = "ppmd")]
+impl<R: io::Read> io::Read for PpmdInput<R> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        if buf.is_empty() { return Ok(0); }
+        match self.inner.read(buf) {
+            Ok(0) => Err(io::Error::new(io::ErrorKind::InvalidData, "ZIP PPMd 未完整结束；请补齐或重新获取来源后重试")),
+            Err(error) if error.kind() == io::ErrorKind::UnexpectedEof => Err(io::Error::new(io::ErrorKind::InvalidData, format!("ZIP PPMd 未完整结束：{error}"))),
+            result => result,
+        }
+    }
+}
+#[cfg(feature = "ppmd")]
+fn read_zip_ppmd<R: io::BufRead>(decoder: &mut ppmd_rust::Ppmd8Decoder<PpmdInput<R>>, remaining: &mut u64, finished: &mut bool, buf: &mut [u8]) -> io::Result<usize> {
+    if buf.is_empty() || *finished { return Ok(0); }
+    if *remaining == 0 {
+        if decoder.read(&mut [0; 1])? != 0 {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "ZIP PPMd 内容超出目录记录大小，条目未通过完整性检查"));
+        }
+        // Read through the crypto wrapper as well: no trailing payload, and any
+        // final AES authentication error must be observed before reporting EOF.
+        if decoder.get_mut().inner.read(&mut [0; 1])? != 0 {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "ZIP PPMd 结束标记后存在多余压缩数据，条目未通过完整性检查"));
+        }
+        *finished = true;
+        return Ok(0);
+    }
+    let limit = (buf.len() as u64).min(*remaining) as usize;
+    let n = decoder.read(&mut buf[..limit])?;
+    if n == 0 {
+        return Err(io::Error::new(io::ErrorKind::UnexpectedEof, "ZIP PPMd 内容小于目录记录大小，条目未完整读取"));
+    }
+    *remaining -= n as u64;
+    Ok(n)
 }
 
 // Always check the exact decoded size. For EOS streams the final one-byte
@@ -483,7 +522,8 @@ impl<R: io::BufRead> io::Read for Decompressor<R> {
             Decompressor::Xz(r) => r.read(buf),
             #[cfg(feature = "ppmd")]
             Decompressor::Ppmd(r) => match r {
-                Ppmd::Uninitialized(reader) => {
+                Ppmd::Uninitialized { reader, uncompressed_size } => {
+                    if buf.is_empty() { return Ok(0); }
                     let mut reader = reader.take().ok_or_else(|| {
                         io::Error::other("Reader was not set while reading PPMd data")
                     })?;
@@ -496,8 +536,11 @@ impl<R: io::BufRead> io::Read for Decompressor<R> {
                     let memory_size = 1024 * 1024 * u32::from(((parameters >> 4) & 0xFF) + 1);
                     let restoration_method = (parameters >> 12) & 0x0F;
 
+                    if order < 2 || restoration_method > 1 {
+                        return Err(io::Error::new(io::ErrorKind::InvalidInput, format!("ZIP PPMd 参数暂不支持（阶数 {order}，恢复方式 {restoration_method}）；请用原工具重新导出 Restart/CutOff 格式")));
+                    }
                     let mut decompressor = ppmd_rust::Ppmd8Decoder::new(
-                        reader,
+                        PpmdInput { inner: reader },
                         order,
                         memory_size,
                         restoration_method.into(),
@@ -505,24 +548,24 @@ impl<R: io::BufRead> io::Read for Decompressor<R> {
                     .map_err(|error| match error {
                         ppmd_rust::Error::RangeDecoderInitialization => io::Error::new(
                             io::ErrorKind::InvalidData,
-                            "PPMd range coder initialization failed",
+                            "ZIP PPMd 范围解码器初始化失败；请检查来源完整性",
                         ),
                         ppmd_rust::Error::InvalidParameter => {
-                            io::Error::new(io::ErrorKind::InvalidInput, "Invalid PPMd parameter")
+                            io::Error::new(io::ErrorKind::InvalidInput, "ZIP PPMd 参数暂不支持；请用原工具重新导出")
                         }
                         ppmd_rust::Error::IoError(io_error) => io_error,
                         ppmd_rust::Error::MemoryAllocation => {
-                            io::Error::new(io::ErrorKind::OutOfMemory, "Memory allocation failed")
+                            io::Error::new(io::ErrorKind::OutOfMemory, format!("ZIP PPMd 需要 {} MiB 解码内存，当前分配失败；请释放内存或用原工具减小内存参数后重新导出", memory_size / 1024 / 1024))
                         }
                     })?;
 
-                    let read = decompressor.read(buf)?;
-
-                    *r = Ppmd::Initialized(Box::new(decompressor));
-
+                    let mut remaining = *uncompressed_size;
+                    let mut finished = false;
+                    let read = read_zip_ppmd(&mut decompressor, &mut remaining, &mut finished, buf)?;
+                    *r = Ppmd::Initialized { decoder: Box::new(decompressor), remaining, finished };
                     Ok(read)
                 }
-                Ppmd::Initialized(decompressor) => decompressor.read(buf),
+                Ppmd::Initialized { decoder, remaining, finished } => read_zip_ppmd(decoder, remaining, finished, buf),
             },
             #[cfg(feature = "legacy-zip")]
             Decompressor::Shrink(r) => r.read(buf),
@@ -538,7 +581,7 @@ impl<R: io::BufRead> Decompressor<R> {
     pub fn new(
         reader: R,
         compression_method: CompressionMethod,
-        #[cfg_attr(not(any(feature = "lzma", feature = "legacy-zip")), allow(unused))]
+        #[cfg_attr(not(any(feature = "lzma", feature = "ppmd", feature = "legacy-zip")), allow(unused))]
         uncompressed_size: u64,
         #[cfg_attr(not(any(feature = "legacy-zip", feature = "lzma")), allow(unused))] flags: u16,
     ) -> crate::result::ZipResult<Self> {
@@ -567,7 +610,7 @@ impl<R: io::BufRead> Decompressor<R> {
                 Decompressor::Xz(Box::new(lzma_rust2::XzReader::new(reader, false)))
             }
             #[cfg(feature = "ppmd")]
-            CompressionMethod::Ppmd => Decompressor::Ppmd(Ppmd::Uninitialized(Some(reader))),
+            CompressionMethod::Ppmd => Decompressor::Ppmd(Ppmd::Uninitialized { reader: Some(reader), uncompressed_size }),
             #[cfg(feature = "legacy-zip")]
             CompressionMethod::Shrink => Decompressor::Shrink(
                 crate::legacy::shrink::ShrinkDecoder::new(reader, uncompressed_size),
@@ -619,10 +662,10 @@ impl<R: io::BufRead> Decompressor<R> {
             Decompressor::Xz(r) => r.into_inner(),
             #[cfg(feature = "ppmd")]
             Decompressor::Ppmd(r) => match r {
-                Ppmd::Uninitialized(mut reader) => reader
+                Ppmd::Uninitialized { mut reader, .. } => reader
                     .take()
                     .ok_or_else(|| io::Error::other("Reader was not set"))?,
-                Ppmd::Initialized(decoder) => decoder.into_inner(),
+                Ppmd::Initialized { decoder, .. } => decoder.into_inner().inner,
             },
         };
         Ok(inner)

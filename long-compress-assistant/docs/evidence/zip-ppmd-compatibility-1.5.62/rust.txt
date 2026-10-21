@@ -1,0 +1,12 @@
+running 9 tests
+test services::zip_ppmd_compatibility_tests::ppmd1562_stream_empty_read_does_not_initialize_and_full_end_is_checked ... ok
+test services::zip_ppmd_compatibility_tests::ppmd1562_plain_edit_preserves_compressed_bytes_method_comments_and_time ... ok
+test services::zip_ppmd_compatibility_tests::ppmd1562_password_failure_preserves_original_edits_and_existing_output ... ok
+test services::zip_ppmd_compatibility_tests::ppmd1562_late_truncation_unsupported_restore_trailing_bytes_and_forged_size_are_rejected ... ok
+test services::zip_ppmd_compatibility_tests::ppmd1562_independent_restart_cutoff_keep_real_parameters_and_extract_after_raw_copy ... ok
+test services::zip_ppmd_compatibility_tests::ppmd1562_bad_crc_size_and_truncated_stream_never_publish_or_become_content_evidence ... ok
+test services::zip_ppmd_compatibility_tests::ppmd1562_numeric_password_material_uses_exact_range_and_detects_missing_or_changed_members ... ok
+test services::zip_ppmd_compatibility_tests::ppmd1562_folder_and_zip_content_comparison_reads_real_plain_and_password_bytes ... ok
+test services::zip_ppmd_compatibility_tests::ppmd1562_encrypted_edit_keeps_method_and_rekeys_with_explicit_encoding ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 1039 filtered out; finished in 2.50s

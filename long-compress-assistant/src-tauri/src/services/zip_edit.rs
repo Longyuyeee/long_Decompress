@@ -105,7 +105,7 @@ fn open_catalog(path: &Path) -> Result<(ZipArchive<File>,Catalog)> {
     for index in 0..archive.len() {
         let file=archive.by_index_raw(index)?;
         let mode=file.unix_mode().unwrap_or(0)&0o170000;ensure!(mode==0||mode==0o100000||mode==0o040000,"ZIP 含链接或特殊条目，暂不支持编辑：{}",file.name());
-        ensure!(matches!(file.compression(),CompressionMethod::Stored|CompressionMethod::Deflated|CompressionMethod::Bzip2|CompressionMethod::Lzma|CompressionMethod::Zstd),"本阶段编辑支持原方法为 Store/Deflate/Bzip2/LZMA/Zstandard 的独立 ZIP；条目 {} 使用 {:?}，仍可浏览/提取",file.name(),file.compression());
+        ensure!(matches!(file.compression(),CompressionMethod::Stored|CompressionMethod::Deflated|CompressionMethod::Bzip2|CompressionMethod::Lzma|CompressionMethod::Zstd|CompressionMethod::Ppmd),"本阶段编辑支持原方法为 Store/Deflate/Bzip2/LZMA/Zstandard/PPMd 的独立 ZIP；条目 {} 使用 {:?}，仍可浏览/提取",file.name(),file.compression());
         let path=normalized_path(file.name(),file.is_dir())?;ensure!(names.insert(key(&path)),"ZIP 包内同名或大小写冲突：{path}");
         digest.update(format!("{}:{:?}:{}:{}:{}:{:?}:{:?}",path,file.compression(),file.size(),file.compressed_size(),file.crc32(),file.last_modified(),file.unix_mode()).as_bytes());
         encryptions.insert(path.clone(),entry_encryption(&file));methods.insert(format!("{:?}",file.compression()));register_entry(&mut map,Entry{path,is_dir:file.is_dir(),size:file.size()})?;

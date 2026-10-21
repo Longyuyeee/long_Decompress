@@ -2,7 +2,7 @@
 
 ## 当前排期：LZMA ZIP 跨流程兼容（2026-10-22）
 
-v1.5.60 已合入并公开发布，完成 LZMA 的编辑、对比和取材接续。五模块按声明范围完成后，本版 v1.5.61 继续 ZIP 方法 93：独立普通/密码包编辑、真实内容核对、完整卷取材与精确取回，补字典/窗口/截断错误提示。见[实施](ARCHIVE_ROADMAP_1.5.61.md)、[封板](ZIP_ZSTD_COMPATIBILITY_FREEZE_1.5.61.md)与[交接](DEVELOPMENT_HANDOFF.md)。下一步 [v1.5.62 ZIP PPMd 跨流程兼容](ARCHIVE_ROADMAP_1.5.62.md)，仅规划未开发。
+v1.5.61 已合入并公开发布，完成 Zstandard 编辑、对比和取材接续。本版 v1.5.62 继续 ZIP 方法 98：独立普通/密码包编辑、实际内容核对、完整卷取材和精确取回，并修正提前断流与未知参数判断。见[实施](ARCHIVE_ROADMAP_1.5.62.md)、[封板](ZIP_PPMD_COMPATIBILITY_FREEZE_1.5.62.md)与[交接](DEVELOPMENT_HANDOFF.md)。下一步 [v1.5.63 ZIPX（XZ）跨流程兼容](ARCHIVE_ROADMAP_1.5.63.md)，补已有创建方法的工作区断点，之后继续真实来源支持的 ALZ/EGG/ZPAQ 容错兼容；仅规划未开发。
 
 下一版 [v1.5.61 ZIP Zstandard 跨流程兼容](ARCHIVE_ROADMAP_1.5.61.md) 仅规划未开发，优先方法 93，旧方法 20 不未经真实确认冒称支持；之后按有限方法接 PPMd、格式/密码/卷型及容错主线。ALZ 方法 3、EGG 加密固实、ZPAQ 原生多部分/损坏事务依真实正向来源评估，不无限追加大模块完善版。原单条展开、多选弹窗、自然继承、50/50 和窄窗滚动保持。下方旧状态为历史。
 

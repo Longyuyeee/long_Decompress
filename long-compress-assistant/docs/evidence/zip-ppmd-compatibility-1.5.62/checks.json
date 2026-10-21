@@ -1,0 +1,20 @@
+{
+  "version": "1.5.62",
+  "native": "9 passed; 0 failed; 1039 filtered out",
+  "frontend": "vue-tsc + vite: passed",
+  "releaseIdentity": "8 version fields + shell DLL: passed",
+  "desktopBuild": "custom-protocol,desktop-e2e: passed",
+  "desktopBinarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+  "desktop": {
+    "combinations": 4,
+    "layouts": 18,
+    "representativeScreenshotsInspected": 6,
+    "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+    "firstRunPassed": true
+  },
+  "scope": "ZIP method 98 editing/comparison/material/retrieval plus strict PPMd ZIP ending and parameter handling; no new dependency, writer or resource cap.",
+  "unchangedChecksReused": [
+    "v1.5.35 PPMd creation/password/volume/conversion/resource evidence",
+    "other methods/media/disk-full/personal installation not rerun"
+  ]
+}
