@@ -6,6 +6,7 @@ import { useWorkflowStore } from '../workflows';
 import { cleanWorkflowPlan, workflowFilename, workflowTemplate, workflowStep, workflowCompressionOptions } from '@/utils/workflow';
 import WorkflowView from '@/views/WorkflowView.vue';
 const mocks = vi.hoisted(() => ({ invoke: vi.fn(), compress: vi.fn(), extract: vi.fn(), info: vi.fn(), tasks: null as any }));
+vi.mock('@tauri-apps/api/event',()=>({listen:vi.fn(async()=>()=>{})}))
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }));
 vi.mock('@/stores/task', () => ({ useTaskStore: () => mocks.tasks }));
 vi.mock('@/composables/useTauriCommands', () => ({ useTauriCommands: () => ({ compressFiles: mocks.compress, decompressFile: mocks.extract, getFileInfo: mocks.info }) }));

@@ -1,0 +1,47 @@
+{
+  "version": "1.5.51",
+  "frontend": {
+    "distinctTests": 37,
+    "suites": [
+      "workflows1550.test.ts (13)",
+      "workflows1551.test.ts (14)",
+      "App.test.ts (10)"
+    ],
+    "result": "passed",
+    "targetedFinalCheck": "drive-root output directory helper (included in 14)"
+  },
+  "rust": {
+    "distinctTests": 5,
+    "filter": "workflow1551 --lib",
+    "result": "passed"
+  },
+  "build": [
+    "TypeScript/Vite",
+    "Shell extension",
+    "eight release identities",
+    "custom-protocol desktop-e2e Windows binary"
+  ],
+  "desktop": {
+    "flows": 7,
+    "layoutRecords": 18,
+    "representativeImagesViewedAndSaved": 12,
+    "fullFlowBinarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+    "finalDisplayBinarySha256": "c36768c247256d62b277aead704e1bf62e42b9306013640dc1be7bf04a408083",
+    "images": [
+      "workflow1551-failure-receipt-1100x700.png",
+      "workflow1551-failure-receipt-760x520.png",
+      "workflow1551-reused-results-1100x700.png",
+      "workflow1551-reused-results-760x520.png",
+      "workflow1551-cancelled-check-1100x700.png",
+      "workflow1551-cancelled-check-760x520.png",
+      "workflow1551-final-source-and-password-1100x700.png",
+      "workflow1551-final-source-and-password-760x520.png",
+      "workflow1551-final-parameter-settings-1100x700.png",
+      "workflow1551-final-parameter-settings-760x520.png",
+      "workflow1551-final-record-actions-1100x700.png",
+      "workflow1551-final-record-actions-760x520.png"
+    ]
+  },
+  "provenance": "Seven complete native flows on the first identity. Final UI cleanup (remove duplicate step preview and empty password column) and drive-root helper only: targeted helper test plus six affected layouts on final identity; earlier successful functional flows retained. Isolated v1.5.50 test database copied with SQLite backup; no personal data or installation modified.",
+  "scope": "No old format/password matrix, real disk-full, media or personal install checks repeated. Test helper profile selection and normal-close session handling corrected; completed stages retained. Public candidate/merge/tag/formal assets recorded in PR."
+}

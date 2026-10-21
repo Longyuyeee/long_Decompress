@@ -1,26 +1,32 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
+import { listen, type UnlistenFn } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/tauri';
 import { useTaskStore } from './task';
 import { useTauriCommands } from '@/composables/useTauriCommands';
-import { cleanWorkflowPlan, workflowClone, workflowFilename, workflowCompressionOptions, validateWorkflow, workflowTemplate, workflowSettings } from '@/utils/workflow';
+import { cleanWorkflowPlan, workflowClone, workflowFilename, workflowCompressionOptions, validateWorkflow, workflowTemplate, workflowSettings, normalizeWorkflowPlan, workflowResumeFrom, workflowOutputPaths, workflowInputCredential } from '@/utils/workflow';
 import { detectArchiveGroup } from '@/utils/archiveSource';
 import { zipPasswordEncodingForSource } from '@/utils/zipPasswordSource';
-import { workflowKinds, type WorkflowPlan, type WorkflowRun, type WorkflowOutput, type WorkflowRunRequest } from '@/types/workflow';
+import { workflowKinds, type WorkflowPlan, type WorkflowRun, type WorkflowOutput, type WorkflowRunRequest, type WorkflowProof, type WorkflowProofPolicy, type WorkflowProofProgress, type WorkflowReuseIssue } from '@/types/workflow';
 import type { PublishedArchiveOutput } from '@/types/archiveOutput';
 export const useWorkflowStore = defineStore('workflows', () => {
     const tasks = useTaskStore(), commands = useTauriCommands();
     const plans = ref<WorkflowPlan[]>([]), runs = ref<WorkflowRun[]>([]), draft = ref<WorkflowPlan>(workflowTemplate('repack')), selectedRunId = ref('');
     const loading = ref(false), saving = ref(false), busy = ref(false), stopRequested = ref(false), error = ref(''), notice = ref(''), saveError = ref(''), currentTaskId = ref(''), collectorId = ref('');
+    const workspace=ref<'edit'|'runs'>('edit');
+    const phase=ref(''), proofProgress=ref<WorkflowProofProgress>(), resumeIssue=ref<WorkflowReuseIssue>();
     let initialized = false, initializing: Promise<void> | undefined;
     const selectedRun = computed(() => runs.value.find(run => run.id === selectedRunId.value)), currentTask = computed(() => tasks.tasks.find(task => task.id === currentTaskId.value));
-    async function saveRun(run: WorkflowRun) { try {
-        await invoke('workflow_save_run', { run: workflowClone(run) });
-        saveError.value = '';
+    let persistence:Promise<boolean>=Promise.resolve(true);
+    function saveRun(run:WorkflowRun):Promise<boolean>{
+      const snapshot=workflowClone(run);
+      persistence=persistence.then(async()=>{try{await invoke('workflow_save_run',{run:snapshot});saveError.value='';return true}catch(cause){saveError.value='运行记录暂未保存，已完成结果仍保留：'+String(cause);return false}});
+      return persistence;
     }
-    catch (cause) {
-        saveError.value = '运行记录暂未保存，已完成结果仍可在任务历史查看：' + String(cause);
-    } }
+    async function flush(){
+      const active=runs.value.find(run=>run.status==='running');if(active)void saveRun(active);
+      let pending:Promise<boolean>,ok:boolean;do{pending=persistence;ok=await pending}while(pending!==persistence);return ok;
+    }
     async function initialize() { if (initialized)
         return; if (initializing)
         return initializing; initializing = (async () => { loading.value = true; try {
@@ -43,6 +49,7 @@ export const useWorkflowStore = defineStore('workflows', () => {
             draft.value = workflowClone(plans.value[0]);
         if (runs.value[0])
             selectedRunId.value = runs.value[0].id;
+        if(runs.value[0]&&runs.value[0].status!=='completed')workspace.value='runs';
         initialized = true;
     }
     catch (cause) {
@@ -75,6 +82,7 @@ export const useWorkflowStore = defineStore('workflows', () => {
     finally {
         saving.value = false;
     } }
+    async function openRun(id:string){try{if(!runs.value.some(run=>run.id===id)){const run=await invoke<WorkflowRun>('workflow_run',{id});if(run.status==='running'){run.status='interrupted';for(const step of run.steps)if(step.status==='running')step.status='interrupted';await saveRun(run)}runs.value.push(run)}selectedRunId.value=id;workspace.value='runs'}catch(cause){error.value='暂时无法读取原运行记录：'+String(cause)}}
     async function deletePlan(id: string) { if (busy.value)
         return; try {
         await invoke('workflow_delete_plan', { id });
@@ -109,14 +117,23 @@ export const useWorkflowStore = defineStore('workflows', () => {
         }
     } if (result.length > 1000)
         throw Error('此步骤超过 1000 份归档，请缩小来源范围'); return result; }
-    async function start(request: WorkflowRunRequest) {
+    async function start(request: WorkflowRunRequest) {return execute(draft.value,request)}
+    async function resume(runId:string,plan:WorkflowPlan,request:WorkflowRunRequest,requested:number){
+      const parent=runs.value.find(run=>run.id===runId)
+      if(!parent?.plan){error.value='旧记录缺少执行快照，请带入当前方案重新运行';return false}
+      return execute(plan,request,parent,requested)
+    }
+    async function execute(selectedPlan:WorkflowPlan,request:WorkflowRunRequest,parent?:WorkflowRun,requested=0) {
         if (busy.value)
             return false;
         error.value = '';
         notice.value = '';
-        const plan = workflowClone(draft.value), now = new Date();
+        const plan = normalizeWorkflowPlan(selectedPlan), now = new Date();
+        let from=0;resumeIssue.value=undefined;
         try {
-            validateWorkflow(plan, request.paths, request.outputDirectory, request.passwords, now);
+            from=parent?workflowResumeFrom(parent,plan,request.paths,requested):0;
+            if(parent&&workflowInputCredential(parent,plan,from).required&&!request.sourcePassword)throw Error('请提供已有密码产物的读取密码');
+            validateWorkflow(plan, request.paths, request.outputDirectory, request.passwords, now,from);
         }
         catch (cause) {
             error.value = String(cause);
@@ -125,16 +142,34 @@ export const useWorkflowStore = defineStore('workflows', () => {
         busy.value = true;
         stopRequested.value = false;
         let run: WorkflowRun | undefined;
+        let unlisten:UnlistenFn|undefined;
+        async function witness(paths:string[],policy:WorkflowProofPolicy,metadataOnly=false){
+          if(stopRequested.value)throw Error('已停止本次处理');
+          collectorId.value='workflow-proof-'+crypto.randomUUID();proofProgress.value=undefined;
+          try{return await invoke<WorkflowProof>('workflow_witness',{paths,policy,jobId:collectorId.value,metadataOnly})}finally{collectorId.value=''}
+        }
         try {
+            unlisten=await listen<WorkflowProofProgress>('workflow-proof-progress',event=>{if(event.payload.jobId===collectorId.value)proofProgress.value=event.payload})
+            if(parent && from>0){
+              phase.value='正在核对可复用步骤';collectorId.value='workflow-resume-'+crypto.randomUUID();
+              const report=await invoke<{reusable:number;issue?:WorkflowReuseIssue}>('workflow_check_reuse',{runId:parent.id,count:from,jobId:collectorId.value});collectorId.value='';
+              if(report.issue){resumeIssue.value=report.issue;throw Error(report.issue.reason)}
+              if(stopRequested.value)throw Error('已停止核对，尚未创建新的任务')
+            }
+            phase.value='';if(stopRequested.value)throw Error('已停止核对，尚未创建新的任务');
             const id = crypto.randomUUID(), label = plan.name.replace(/[<>:"/\\|?*{}\x00-\x1f]/g, '_').slice(0, 40), directory = await invoke<string>('workflow_begin_directory', { parent: request.outputDirectory, name: `${label}-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}-${id.slice(0, 6)}` });
             run = { id, planId: plan.id, name: plan.name, status: 'running', startedAt: now.toISOString(), directory, inputs: [...request.paths], steps: plan.steps.map(step => ({ id: step.id, name: step.name, kind: step.kind, status: 'pending', inputs: [], outputs: [], taskIds: [], message: '' })) };
+            run.plan=cleanWorkflowPlan({...plan,steps:plan.steps.map(step=>({...step,passwordRequired:step.passwordRequired||!!request.passwords[step.id]}))});run.outputDirectory=request.outputDirectory;run.sourceEncoding=request.sourceEncoding;
+            if(parent){run.parentRunId=parent.id;run.resumeFrom=from;for(let index=0;index<from;index++)run.steps[index]={...workflowClone(parent.steps[index]),name:plan.steps[index].name,reusedFrom:parent.id,message:'已核对内容，沿用原产物；本次未重新执行'};}
+
             runs.value.unshift(run);
             run = runs.value[0];
             selectedRunId.value = id;
             await invoke('workflow_save_run', { run: workflowClone(run) });
             await tasks.initListeners();
             let inputs: WorkflowOutput[] = [], inputPassword = request.sourcePassword, inputEncoding = request.sourceEncoding;
-            for (const path of request.paths) {
+            if(from>0)inputs=workflowClone(run.steps[from-1].outputs);
+            else for (const path of request.paths) {
                 if (stopRequested.value)
                     break;
                 const info = await commands.getFileInfo(path);
@@ -143,20 +178,25 @@ export const useWorkflowStore = defineStore('workflows', () => {
                 inputs.push(item(path, info.isDir));
             }
             for (const [index, definition] of plan.steps.entries()) {
+                if(index<from)continue;
                 if (stopRequested.value)
                     break;
                 const step = run.steps[index];
                 step.status = 'running';
-                step.inputs = inputs.map(row => row.path);
+                step.inputs = workflowOutputPaths(inputs);
                 await saveRun(run);
                 try {
+                    phase.value=`正在记录第 ${index+1} 步的输入`;
+                    const policy:WorkflowProofPolicy={excludes:[directory,...(definition.kind==='filter'?[request.outputDirectory]:[])],filesOnly:definition.kind==='filter',archiveMembers:['extract','convert'].includes(definition.kind),...(definition.kind==='filter'?{extensions:definition.extensions}:{})};
+                    try{step.inputProof=await witness(step.inputs,policy)}catch(cause){if(stopRequested.value)throw cause;step.reuseIssue='本步未能记录输入内容，接续时需从此步重做：'+String(cause)}
+                    phase.value='';if(stopRequested.value)break;
                     if (definition.kind === 'filter') {
                         collectorId.value = 'workflow-filter-' + id;
                         const result = await invoke<{
                             paths: string[];
                             visited: number;
                             bytes: number;
-                        }>('workflow_collect', { paths: inputs.map(row => row.path), extensions: definition.extensions, exclude: directory, outputBase: request.outputDirectory, jobId: collectorId.value });
+                        }>('workflow_collect', { paths: workflowOutputPaths(inputs), extensions: definition.extensions, exclude: directory, outputBase: request.outputDirectory, jobId: collectorId.value });
                         collectorId.value = '';
                         if (stopRequested.value)
                             break;
@@ -166,7 +206,7 @@ export const useWorkflowStore = defineStore('workflows', () => {
                     else {
                         const stepDirectory = await invoke<string>('workflow_begin_directory', { parent: directory, name: `${String(index + 1).padStart(2, '0')}-${workflowKinds[definition.kind].label}` }), password = request.passwords[definition.id] || definition.settings.password;
                         if (definition.kind === 'compress') {
-                            const paths = inputs.length === 1 && inputs[0].directory ? await invoke<string[]>('workflow_children', { path: inputs[0].path }) : inputs.map(row => row.path);
+                            const paths = inputs.length === 1 && inputs[0].directory ? await invoke<string[]>('workflow_children', { path: inputs[0].path }) : workflowOutputPaths(inputs);
                             if (stopRequested.value)
                                 break;
                             const options = workflowCompressionOptions(definition.settings, password), target = stepDirectory + '/' + workflowFilename(definition.settings.filename, run.inputs[0], index + 1, now) + '.' + options.format;
@@ -188,6 +228,7 @@ export const useWorkflowStore = defineStore('workflows', () => {
                                 task.outputBytes = output.totalBytes;
                                 tasks.updateTaskStatus(taskId, 'completed');
                                 step.outputs = [item(output.primaryPath, false, output)];
+                                await saveRun(run);
                             }
                             catch (cause) {
                                 if (!stopRequested.value)
@@ -258,6 +299,15 @@ export const useWorkflowStore = defineStore('workflows', () => {
                     }
                     if (!step.outputs.length)
                         throw Error('此步骤没有产物，后续步骤未开始');
+                    phase.value=`正在记录第 ${index+1} 步的产物`;
+                    if(step.inputProof){
+                      try{
+                        const stable=await witness(step.inputs,step.inputProof.policy,true);
+                        if(stable.metadata!==step.inputProof.metadata)throw Error('处理期间输入发生变化');
+                        step.outputProof=await witness(workflowOutputPaths(step.outputs),{excludes:[],filesOnly:false,archiveMembers:false});
+                      }catch(cause){if(stopRequested.value)throw cause;step.reuseIssue='本步结果保留，但缺少完整接续依据：'+String(cause)}
+                    }
+                    phase.value='';
                     step.status = 'completed';
                     if (definition.kind === 'extract') {
                         inputPassword = '';
@@ -303,9 +353,10 @@ export const useWorkflowStore = defineStore('workflows', () => {
             }
             currentTaskId.value = '';
             collectorId.value = '';
+            phase.value='';proofProgress.value=undefined;unlisten?.();
             busy.value = false;
         }
         return run?.status === 'completed';
     }
-    return { plans, runs, draft, selectedRunId, selectedRun, currentTask, loading, saving, busy, stopRequested, error, notice, saveError, initialize, newPlan, choosePlan, copyPlan, savePlan, deletePlan, start, stop };
+    return { plans, runs, draft, selectedRunId, selectedRun, currentTask, loading, saving, busy, stopRequested, error, notice, saveError, flush,workspace,openRun, phase,proofProgress,resumeIssue, initialize, newPlan, choosePlan, copyPlan, savePlan, deletePlan, start, resume, stop };
 });

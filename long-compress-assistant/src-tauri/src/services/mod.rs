@@ -140,3 +140,5 @@ pub mod archive_library;
 pub mod library_organization;
 
 pub mod workflows;
+
+pub mod workflow_recovery;

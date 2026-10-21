@@ -43,6 +43,7 @@ import Modal from '@/components/ui/Modal.vue'
 import UpdateDialog from '@/components/update/UpdateDialog.vue'
 import { useTaskStore } from '@/stores/task'
 import { useCompressionStore } from '@/stores/compression'
+import { useWorkflowStore } from '@/stores/workflows'
 import { useZipEditStore } from '@/stores/zipEdit'
 import { usePendingDraftStore } from '@/stores/pendingDrafts'
 import { useAppStore } from '@/stores/app'
@@ -62,6 +63,7 @@ const taskStore = useTaskStore()
 const compressionStore = useCompressionStore()
 const pendingDrafts = usePendingDraftStore()
 pendingDrafts.initialize()
+const workflows=useWorkflowStore()
 const zipEdit=useZipEditStore()
 void zipEdit.initialize()
 const appStore = useAppStore()
@@ -104,8 +106,10 @@ const cancelTasksAndExit = async () => {
     task => !['completed', 'failed', 'cancelled'].includes(task.status)
   )
   try {
+    await workflows.stop()
     await invoke('cancel_tasks_and_wait', { taskIds: unfinished.map(task => task.id) })
     unfinished.forEach(task => taskStore.updateTaskStatus(task.id, 'cancelled'))
+    if(!await workflows.flush()){exitInProgress.value=false;appStore.setError(workflows.saveError);return}
     await invoke('exit_app')
   } catch (error) {
     exitInProgress.value = false
@@ -244,6 +248,8 @@ const handleKeydown = (e: KeyboardEvent) => {
 onMounted(async () => {
   keepAppListener(await listen('exit-drafts-requested',async()=>{
     pendingDrafts.flush()
+    await workflows.stop()
+    if(!await workflows.flush()){appStore.setError(workflows.saveError);return}
     if(await zipEdit.flush())await invoke('exit_app')
     else appStore.setError(zipEdit.saveError)
   }))
