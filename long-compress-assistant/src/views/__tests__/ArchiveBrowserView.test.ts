@@ -666,4 +666,19 @@ describe('ArchiveBrowserView', () => {
     expect(wrapper.find('[data-entry-path="late.txt"]').exists()).toBe(false)
     expect(wrapper.get('[data-testid="archive-chain"]').text()).toContain('1 / 3 层')
   })
+  it('reader1557 passes the current source revision to reading and locates without changing selection',async()=>{
+    const entry=(path:string)=>({path,name:path.split('/').pop(),isDir:false,size:10,compressedSize:8,modified:null,crc:null,encrypted:false})
+    mocks.browseArchive.mockResolvedValueOnce({revision:'reader-source-version',format:'ZIP',totalFiles:2,totalDirectories:1,totalUncompressedSize:20,totalCompressedSize:16,encrypted:false,entries:[entry('1.png'),entry('docs/2.png')]})
+    const wrapper=mount(ArchiveBrowserView,{global:{stubs:{ArchiveImageReader:{props:['revision','filePath','entries'],emits:['locate'],template:`<div data-testid="reader-stub" :data-revision="revision"><button @click="$emit('locate','docs/2.png')">locate</button></div>`}}}})
+    await wrapper.get('header .browser-primary').trigger('click');await flushPromises();const before=wrapper.get('footer').text();await wrapper.get('[data-testid="archive-reader-open"]').trigger('click');expect(wrapper.get('[data-testid="reader-stub"]').attributes('data-revision')).toBe('reader-source-version');await wrapper.get('[data-testid="reader-stub"] button').trigger('click');await flushPromises();expect(wrapper.get('[data-entry-path="docs/2.png"]').classes()).toContain('focused');expect(wrapper.get('footer').text()).toBe(before);expect(wrapper.find('[data-testid="reader-stub"]').exists()).toBe(false);wrapper.unmount()
+  })
+
+  it('reader1557 actual reader mounts from the browser and closed readers do not steal password focus',async()=>{
+    vi.stubGlobal('URL',{createObjectURL:vi.fn(()=> 'blob:actual-reader'),revokeObjectURL:vi.fn()})
+    mocks.browseArchive.mockResolvedValueOnce({revision:'reader-source-version',format:'ZIP',totalFiles:1,totalDirectories:0,totalUncompressedSize:10,totalCompressedSize:8,encrypted:false,entries:[{path:'1.png',name:'1.png',isDir:false,size:10,compressedSize:8,modified:null,crc:null,encrypted:false}]})
+    mocks.invoke.mockImplementation(async(command,args)=>command==='read_archive_image'?{entryPath:args.entryPath,dataUrl:'data:image/png;base64,AA==',mimeType:'image/png',byteSize:1,width:1,height:1}:undefined)
+    const wrapper=mount(ArchiveBrowserView,{attachTo:document.body,global:{stubs:{Teleport:true}}})
+    try{await wrapper.get('header .browser-primary').trigger('click');await flushPromises();(wrapper.get('[data-testid="archive-reader-open"]').element as HTMLButtonElement).focus();await wrapper.get('[data-testid="archive-reader-open"]').trigger('click');await flushPromises();expect(wrapper.get('[data-testid="reader-current-path"]').text()).toBe('1.png');expect(wrapper.get('[data-testid="reader-image"]').attributes('src')).toBe('blob:actual-reader');await wrapper.get('[data-testid="reader-close"]').trigger('click');await flushPromises();const input=wrapper.get('.browser-toolbar input[type="password"]');(input.element as HTMLInputElement).focus();await input.setValue('new-source-password');await flushPromises();expect(document.activeElement).toBe(input.element);expect(wrapper.find('[data-testid="archive-image-reader"]').exists()).toBe(false)}finally{wrapper.unmount();vi.unstubAllGlobals()}
+  })
+
 })

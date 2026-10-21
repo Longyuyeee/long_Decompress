@@ -151,6 +151,7 @@ export interface ArchiveEntryInfo {
 }
 
 export interface ArchiveBrowseResult {
+  revision?: string
   zpaqHistory?: ZpaqHistory
   format: string
   entries: ArchiveEntryInfo[]

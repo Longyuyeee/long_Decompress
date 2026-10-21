@@ -1,3 +1,4 @@
+use super::image_reader::Control as ImageControl;
 use crate::services::archive_format::ArchiveFormat;
 use crate::services::zip_password::ZipPasswordEncoding;
 use anyhow::{Context, Result};
@@ -53,6 +54,7 @@ fn normalized_entry_path(value: &str) -> Result<String> {
 struct ScanLimitedReader<R> {
     inner: R,
     remaining: u64,
+    control: Option<(ImageControl,std::sync::Arc<std::sync::atomic::AtomicBool>)>,
 }
 
 impl<R> ScanLimitedReader<R> {
@@ -60,12 +62,14 @@ impl<R> ScanLimitedReader<R> {
         Self {
             inner,
             remaining: max_bytes,
+            control: None,
         }
     }
 }
 
 impl<R: Read> Read for ScanLimitedReader<R> {
     fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
+        if let Some((control,_))=&self.control {control.check().map_err(|e|io::Error::other(e.to_string()))?;}
         if self.remaining == 0 {
             let mut overflow = [0u8; 1];
             return match self.inner.read(&mut overflow)? {
@@ -79,16 +83,20 @@ impl<R: Read> Read for ScanLimitedReader<R> {
             usize::try_from(self.remaining.min(buffer.len() as u64)).unwrap_or(buffer.len());
         let read = self.inner.read(&mut buffer[..capacity])?;
         self.remaining -= read as u64;
+        if let Some((control,scanning))=&self.control {if scanning.load(std::sync::atomic::Ordering::Acquire){control.update("locating",MAX_TAR_PREVIEW_SCAN_BYTES-self.remaining,MAX_TAR_PREVIEW_SCAN_BYTES);}}
         Ok(read)
     }
 }
 
+#[cfg(test)]
 fn read_bounded(reader: &mut dyn Read, expected_bytes: u64) -> Result<Vec<u8>> {
-    let mut bytes = Vec::new();
-    reader
-        .take(MAX_PREVIEW_BYTES + 1)
-        .read_to_end(&mut bytes)
-        .context("Unable to read the selected image entry")?;
+    read_bounded_controlled(reader,expected_bytes,&ImageControl::default())
+}
+fn read_bounded_controlled(reader:&mut dyn Read,expected_bytes:u64,control:&ImageControl)->Result<Vec<u8>>{
+    let mut bytes=Vec::with_capacity(expected_bytes.min(MAX_PREVIEW_BYTES) as usize);let mut buffer=[0u8;65536];
+    loop {control.check()?;let remaining=(MAX_PREVIEW_BYTES+1).saturating_sub(bytes.len() as u64) as usize;if remaining==0{break}
+        let n=reader.read(&mut buffer[..remaining.min(65536)]).context("Unable to read the selected image entry")?;if n==0{break}bytes.extend_from_slice(&buffer[..n]);control.update("reading",bytes.len() as u64,expected_bytes);
+    }
     if bytes.len() as u64 > MAX_PREVIEW_BYTES {
         anyhow::bail!(
             "Image preview is limited to {} MiB after decompression",
@@ -119,7 +127,7 @@ fn read_text_prefix(reader: &mut dyn Read, total_size: u64) -> Result<TextBytes>
     Ok(TextBytes { bytes, total_size })
 }
 
-fn read_zip_entry(path: &Path, entry_path: &str, password: Option<&str>, encoding: Option<ZipPasswordEncoding>) -> Result<Vec<u8>> {
+fn read_zip_entry(path: &Path, entry_path: &str, password: Option<&str>, encoding: Option<ZipPasswordEncoding>,control:&ImageControl) -> Result<Vec<u8>> {
     let mut archive = zip_aes::ZipArchive::new(super::numeric_volume_reader::ZipInputReader::open(path)?)?;
     let mut entry = match password.filter(|value| !value.is_empty()) {
         Some(password) => crate::services::zip_password::open_named_entry_with_encoding(&mut archive, entry_path, password, encoding)?,
@@ -135,7 +143,7 @@ fn read_zip_entry(path: &Path, entry_path: &str, password: Option<&str>, encodin
             MAX_PREVIEW_BYTES / 1024 / 1024
         );
     }
-    read_bounded(&mut entry, expected_bytes)
+    read_bounded_controlled(&mut entry, expected_bytes,control)
 }
 
 fn read_zip_text_entry(path: &Path, entry_path: &str, password: Option<&str>, encoding: Option<ZipPasswordEncoding>) -> Result<TextBytes> {
@@ -151,8 +159,9 @@ fn read_zip_text_entry(path: &Path, entry_path: &str, password: Option<&str>, en
     read_text_prefix(&mut entry, total_size)
 }
 
-fn read_tar_entry<R: Read>(reader: R, entry_path: &str) -> Result<Vec<u8>> {
-    let reader = ScanLimitedReader::new(reader, MAX_TAR_PREVIEW_SCAN_BYTES);
+fn read_tar_entry<R: Read>(reader: R, entry_path: &str,control:&ImageControl) -> Result<Vec<u8>> {
+    let scanning=std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
+    let mut reader = ScanLimitedReader::new(reader, MAX_TAR_PREVIEW_SCAN_BYTES);reader.control=Some((control.clone(),scanning.clone()));
     let mut archive = tar::Archive::new(reader);
     for entry in archive.entries()? {
         let mut entry = super::tar_compatibility::LogicalEntry::new(entry?)?;
@@ -170,7 +179,8 @@ fn read_tar_entry<R: Read>(reader: R, entry_path: &str) -> Result<Vec<u8>> {
                 MAX_PREVIEW_BYTES / 1024 / 1024
             );
         }
-        return read_bounded(&mut entry, expected_bytes);
+        scanning.store(false,std::sync::atomic::Ordering::Release);
+        return read_bounded_controlled(&mut entry, expected_bytes,control);
     }
     anyhow::bail!("The selected image entry was not found in the archive")
 }
@@ -214,19 +224,19 @@ fn preview_format(path: &Path) -> Result<&'static str> {
     }
 }
 
-fn read_tar_family(path: &Path, format: &str, entry_path: &str) -> Result<Vec<u8>> {
+fn read_tar_family(path: &Path, format: &str, entry_path: &str,control:&ImageControl) -> Result<Vec<u8>> {
     match format {
-        "TAR.LZ4" => read_tar_entry(super::codec_stream::decoder(path, "lz4")?, entry_path),
-        "TAR.BR" => read_tar_entry(super::codec_stream::decoder(path, "br")?, entry_path),
-        "TAR.LZIP" => read_tar_entry(super::codec_stream::decoder(path, "lz")?, entry_path),
-        "TAR.LZMA" => read_tar_entry(super::codec_stream::decoder(path, "lzma")?, entry_path),
-        "TAR" => read_tar_entry(super::numeric_volume_reader::ZipInputReader::open(path)?, entry_path),
-        "TAR.GZ" => read_tar_entry(crate::services::codec_stream::decoder(path, "gz")?, entry_path),
-        "TAR.BZ2" => read_tar_entry(crate::services::codec_stream::decoder(path, "bz2")?, entry_path),
-        "TAR.XZ" => read_tar_entry(crate::services::codec_stream::decoder(path, "xz")?, entry_path),
+        "TAR.LZ4" => read_tar_entry(super::codec_stream::decoder(path, "lz4")?, entry_path,control),
+        "TAR.BR" => read_tar_entry(super::codec_stream::decoder(path, "br")?, entry_path,control),
+        "TAR.LZIP" => read_tar_entry(super::codec_stream::decoder(path, "lz")?, entry_path,control),
+        "TAR.LZMA" => read_tar_entry(super::codec_stream::decoder(path, "lzma")?, entry_path,control),
+        "TAR" => read_tar_entry(super::numeric_volume_reader::ZipInputReader::open(path)?, entry_path,control),
+        "TAR.GZ" => read_tar_entry(crate::services::codec_stream::decoder(path, "gz")?, entry_path,control),
+        "TAR.BZ2" => read_tar_entry(crate::services::codec_stream::decoder(path, "bz2")?, entry_path,control),
+        "TAR.XZ" => read_tar_entry(crate::services::codec_stream::decoder(path, "xz")?, entry_path,control),
         "TAR.ZST" => read_tar_entry(
             crate::services::codec_stream::decoder(path, "zst")?,
-            entry_path,
+            entry_path,control,
         ),
         _ => anyhow::bail!(
             "Safe bounded preview is currently available for ZIP and TAR-family archives only"
@@ -261,6 +271,9 @@ fn read_tar_family_text(path: &Path, format: &str, entry_path: &str) -> Result<T
 // Single compressed files have no entry directory or reliable declared total.
 // Scan at most the existing preview budget, retaining only the displayed prefix.
 fn read_plain_stream(path: &Path, format: &str, entry: &str, max_total: u64, keep: u64) -> Result<TextBytes> {
+    read_plain_stream_controlled(path,format,entry,max_total,keep,None)
+}
+fn read_plain_stream_controlled(path: &Path, format: &str, entry: &str, max_total: u64, keep: u64,control:Option<&ImageControl>) -> Result<TextBytes> {
     let detected = if format == "LZIP" { ArchiveFormat::Lzip } else { ArchiveFormat::from_extension(&format.to_ascii_lowercase()) };
     let (codec, _, suffixes) = super::codec_stream::plain_format(&detected).context("Unsupported compressed preview")?;
     let name = super::native_extraction::single_stream::output_name(path, suffixes);
@@ -270,9 +283,11 @@ fn read_plain_stream(path: &Path, format: &str, entry: &str, max_total: u64, kee
     let mut total = 0u64;
     let mut buffer = [0u8; 64 * 1024];
     loop {
+        if let Some(control)=control {control.check()?;}
         let count = reader.read(&mut buffer)?;
         if count == 0 { break; }
         total += count as u64;
+        if let Some(control)=control {control.update("reading",total,0);}
         anyhow::ensure!(total <= max_total, "此压缩流超出内部预览的读取范围，请先解压后打开；未将部分预览当作完整文件");
         let retained = (keep.saturating_sub(bytes.len() as u64) as usize).min(count);
         bytes.extend_from_slice(&buffer[..retained]);
@@ -400,24 +415,26 @@ fn preview_archive_image_sync(
     password: Option<&str>,
     encoding: Option<ZipPasswordEncoding>,
     snapshot: Option<crate::models::compression::ZpaqSnapshot>,
+    control:&ImageControl,
 ) -> Result<ArchiveImagePreview> {
     anyhow::ensure!(snapshot.is_none() || super::archive_browser::detect_format(archive_path)? == ArchiveFormat::Zpaq, "所选快照只适用于 ZPAQ 日志归档");
     if super::archive_browser::detect_format(archive_path)? == ArchiveFormat::AesEncrypted {
-        let inner = super::aes_container::AuthenticatedInner::open(archive_path, password, || Ok(()))?;
-        return preview_archive_image_sync(&inner.path, entry_path, None, encoding, snapshot);
+        let inner = super::aes_container::AuthenticatedInner::open(archive_path, password, || control.check())?;
+        return preview_archive_image_sync(&inner.path, entry_path, None, encoding, snapshot,control);
     }
     let entry_path = normalized_entry_path(entry_path)?;
     let format = preview_format(archive_path)?;
     let bytes = match format {
-        "ZIP" => read_zip_entry(archive_path, &entry_path, password, encoding)?,
-        "WIM" => tauri::async_runtime::block_on(super::wim_preview::preview_entry(archive_path, &entry_path, password, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES, std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false))))?.0,
-        "ZPAQ" => tauri::async_runtime::block_on(super::zpaq_engine::preview_entry_at(archive_path, &entry_path, password, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES, snapshot.as_ref()))?.0,
-        format if format.starts_with("TAR") => read_tar_family(archive_path, format, &entry_path)?,
-        "GZIP" | "BZIP2" | "XZ" | "ZSTD" | "LZMA" | "LZIP" | "LZ4" | "BR" => read_plain_stream(archive_path, format, &entry_path, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES)?.bytes,
+        "ZIP" => read_zip_entry(archive_path, &entry_path, password, encoding,control)?,
+        "WIM" => tauri::async_runtime::block_on(super::wim_preview::preview_entry(archive_path, &entry_path, password, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES, control.flag.clone()))?.0,
+        "ZPAQ" => tauri::async_runtime::block_on(super::zpaq_engine::preview_entry_controlled_at(archive_path, &entry_path, password, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES, snapshot.as_ref(),control.flag.clone()))?.0,
+        format if format.starts_with("TAR") => read_tar_family(archive_path, format, &entry_path,control)?,
+        "GZIP" | "BZIP2" | "XZ" | "ZSTD" | "LZMA" | "LZIP" | "LZ4" | "BR" => read_plain_stream_controlled(archive_path, format, &entry_path, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES,Some(control))?.bytes,
         _ => anyhow::bail!(
             "Safe bounded preview is currently available for ZIP and TAR-family archives only"
         ),
     };
+    control.check()?;control.update("decoding",bytes.len() as u64,bytes.len() as u64);
     let (mime_type, width, height) = image_identity(&bytes)?;
     Ok(ArchiveImagePreview {
         entry_path,
@@ -453,12 +470,16 @@ pub async fn preview_archive_image_at(
     archive_path: &Path, entry_path: &str, password: Option<&str>,
     encoding: Option<ZipPasswordEncoding>, snapshot: Option<crate::models::compression::ZpaqSnapshot>,
 ) -> Result<ArchiveImagePreview> {
+    preview_archive_image_controlled_at(archive_path,entry_path,password,encoding,snapshot,ImageControl::default()).await
+}
+pub async fn preview_archive_image_controlled_at(archive_path:&Path,entry_path:&str,password:Option<&str>,encoding:Option<ZipPasswordEncoding>,snapshot:Option<crate::models::compression::ZpaqSnapshot>,control:ImageControl)->Result<ArchiveImagePreview>{
     let archive_path = archive_path.to_path_buf();
     let entry_path = entry_path.to_string();
     let password = password.map(str::to_string);
     tauri::async_runtime::spawn_blocking(move || {
         let source = super::split_archive_detector::SplitArchiveDetector::complete_source(&archive_path)?;
-        preview_archive_image_sync(&source, &entry_path, password.as_deref(), encoding, snapshot)
+        control.check()?;control.update("opening",0,0);
+        preview_archive_image_sync(&source, &entry_path, password.as_deref(), encoding, snapshot,&control)
     })
     .await
     .context("Archive image preview worker failed")?

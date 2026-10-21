@@ -1355,6 +1355,9 @@ pub async fn cancel_archive_diagnosis(diagnostic_id: String) -> Result<(), Strin
     Ok(())
 }
 
+#[derive(Serialize)]
+#[serde(rename_all="camelCase")]
+pub struct BrowserListing {#[serde(flatten)] pub listing:crate::models::compression::ArchiveBrowseResult,pub revision:String}
 /// Returns structured archive metadata for the archive browser.
 #[command]
 pub async fn browse_archive(
@@ -1363,7 +1366,7 @@ pub async fn browse_archive(
     browse_id: Option<String>,
     zip_password_encoding: Option<ZipPasswordEncoding>,
     zpaq_snapshot: Option<crate::models::compression::ZpaqSnapshot>,
-) -> Result<crate::models::compression::ArchiveBrowseResult, String> {
+) -> Result<BrowserListing, String> {
     let resolved_password = match password.filter(|value| !value.is_empty()) {
         Some(password) => Some(password),
         None if crate::services::archive_browser::detect_format(std::path::Path::new(&file_path))
@@ -1390,7 +1393,8 @@ pub async fn browse_archive(
         }
     }
     let _guard = ArchiveBrowseGuard { browse_id };
-    crate::services::archive_browser::browse_archive_cancellable_at(
+    let revision=crate::services::image_reader::revision(Path::new(&file_path)).map_err(|e|classify_archive_browse_error(&format!("{e:#}")))?;
+    let listing=crate::services::archive_browser::browse_archive_cancellable_at(
         std::path::Path::new(&file_path),
         resolved_password.as_deref(),
         cancelled,
@@ -1400,7 +1404,9 @@ pub async fn browse_archive(
     .await
     // anyhow's Display only contains the outer context. Keep the native cause
     // so a wrong RAR header password is not mislabeled as damaged metadata.
-    .map_err(|error| classify_archive_browse_error(&format!("{error:#}")))
+    .map_err(|error| classify_archive_browse_error(&format!("{error:#}")))?;
+    crate::services::image_reader::check_source(Path::new(&file_path),&revision).map_err(|_|"ARCHIVE_BROWSE_CHANGED|读取期间来源已变化，请重新读取".to_string())?;
+    Ok(BrowserListing{listing,revision})
 }
 
 #[command]
@@ -1476,6 +1482,25 @@ pub async fn preview_archive_image(
     )
     .await
     .map_err(|error| format!("{error:#}"))
+}
+
+#[command]
+pub async fn check_image_reader_source(file_path:String,revision:String)->Result<(),String>{
+ tauri::async_runtime::spawn_blocking(move||crate::services::image_reader::check_source(Path::new(&file_path),&revision)).await.map_err(|e|e.to_string())?.map_err(|e|format!("{e:#}"))
+}
+#[command]
+pub async fn read_archive_image(window:Window,file_path:String,entry_path:String,password:Option<String>,zip_password_encoding:Option<ZipPasswordEncoding>,zpaq_snapshot:Option<crate::models::compression::ZpaqSnapshot>,request_id:String,revision:String)->Result<crate::services::archive_preview::ArchiveImagePreview,String>{
+ let flag=Arc::new(AtomicBool::new(false));
+ match ARCHIVE_BROWSE_FLAGS.entry(request_id.clone()){
+  Entry::Vacant(e)=>{e.insert(flag.clone());},
+  Entry::Occupied(e)=>{if e.get().load(Ordering::Acquire){e.remove();return Err("IMAGE_READER_CANCELLED|已停止读取图片".into())}return Err("图片读取请求重复".into())}
+ }
+ let _guard=ArchiveBrowseGuard{browse_id:request_id.clone()};
+ crate::services::image_reader::check_source(Path::new(&file_path),&revision).map_err(|e|format!("{e:#}"))?;
+ let password=match password.filter(|p|!p.is_empty()){Some(p)=>Some(p),None=>{let mut service=CompressionService::new_with_defaults().await;service.cancellation_flag=flag.clone();service.resolve_archive_password_silent(&file_path,&DecompressOptions{zip_password_encoding,selected_entries:vec![entry_path.clone()],..Default::default()}).await.map_err(|e|format!("{e:#}"))?}};
+ let last=std::sync::Mutex::new(("",crate::services::progress_gate::ProgressGate::new()));
+ let observer=Arc::new(move|event:crate::services::image_reader::Progress|{let mut last=last.lock().unwrap_or_else(|e|e.into_inner());if last.0!=event.phase||last.1.allow(event.phase=="decoding"){last.0=event.phase;let _=window.emit("image-reader-progress",serde_json::json!({"requestId":request_id,"progress":event}));}});
+ crate::services::image_reader::read(Path::new(&file_path),&entry_path,password.as_deref(),zip_password_encoding,zpaq_snapshot,&revision,crate::services::image_reader::Control{flag,observer}).await.map_err(|e|format!("{e:#}"))
 }
 
 struct ArchiveBrowseGuard {
