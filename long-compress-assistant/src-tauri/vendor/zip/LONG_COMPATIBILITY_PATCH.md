@@ -55,3 +55,16 @@ dictionaries, oversized windows and incomplete frames, preserving the I/O kind
 and original detail. Empty reads do not consume input. Method 20 is unchanged;
 no new codec, memory limit or dependency is introduced. Modified source:
 `src/compression.rs`.
+
+## ZIP PPMd complete reading (v1.5.62)
+
+Method 98 now checks the declared output size, real end marker and exact payload
+end through the existing CRC/crypto wrappers. A ZIP-only input adapter prevents
+ppmd-rust's sized-stream UnexpectedEof fallback from accepting truncated input.
+Orders below 2 and unsupported restoration codes (including Freeze) are rejected
+before decoder allocation; Restart/CutOff retain the original 1–256 MiB header
+range. Empty reads do not initialize the decoder. No dependency, writer change
+or new memory cap is introduced. Modified source: `src/compression.rs`.
+
+Reference: [7-Zip PpmdZip full-file decoder](https://github.com/ip7z/7zip/blob/main/CPP/7zip/Compress/PpmdZip.cpp)
+requires the end marker, finished range coder and exact input consumption.

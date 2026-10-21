@@ -1,0 +1,365 @@
+{
+  "version": "1.5.62",
+  "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8",
+  "checks": [
+    {
+      "kind": "plain-ppmd-edit-add-rename-and-independent-result",
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "taskId": "zip-edit-65bbd6ed-ee73-4bb6-81a4-41cf3ca50887",
+      "independentSevenZip": true,
+      "originalPpmdRetained": true,
+      "additionExplicitDeflate": true
+    },
+    {
+      "kind": "encrypted-ppmd-failure-correction-and-method-preserving-rekey",
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "taskId": "zip-edit-53b26463-59c3-47f5-9cd7-099b0347f2b2",
+      "independentSevenZip": true,
+      "originalFailureRetained": true
+    },
+    {
+      "kind": "ppmd-numeric-content-retrieval-normal-restart-and-history",
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "taskId": "recovered-0192acee-b351-4089-a007-e8824b98787e",
+      "historyTaskId": "7tlox8ec5mvikgya5",
+      "sourcePasswordNotRestored": true,
+      "exactRange": true
+    },
+    {
+      "kind": "zipcrypto-ppmd-standard-volumes-and-selected-package",
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "taskId": "zip-edit-7acdd6ee-9b4f-4494-9a9e-ad81bc956425",
+      "nonFirstStandardMember": true,
+      "missingVolumeCorrection": true,
+      "explicitDeflateMaterialization": true,
+      "allOriginalHashesUnchanged": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "plain-method-and-settings",
+      "outerWidth": 1100,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "plain-method-and-settings",
+      "outerWidth": 760,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "plain-result",
+      "outerWidth": 1100,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [
+        878
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "plain-result",
+      "outerWidth": 760,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "wrong-password-edits-kept",
+      "outerWidth": 1100,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "wrong-password-edits-kept",
+      "outerWidth": 760,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "encrypted-result",
+      "outerWidth": 1100,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [
+        878
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "encrypted-result",
+      "outerWidth": 760,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "ppmd-content-verdict",
+      "outerWidth": 1100,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "ppmd-content-verdict",
+      "outerWidth": 760,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "selected-retrieval-dialog",
+      "outerWidth": 1100,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "selected-retrieval-dialog",
+      "outerWidth": 760,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "restored-task-password-and-scope",
+      "outerWidth": 1100,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "restored-task-password-and-scope",
+      "outerWidth": 760,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "missing-volume",
+      "outerWidth": 1100,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "missing-volume",
+      "outerWidth": 760,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "standard-material-package",
+      "outerWidth": 1100,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "standard-material-package",
+      "outerWidth": 760,
+      "binarySha256": "c2f462fc797208698e0377dcbf94064d600fd65b4dc4ff3deab7aea4e043a037",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "ppmd1562-plain-method-and-settings-1100x700.png",
+    "ppmd1562-plain-method-and-settings-760x520.png",
+    "ppmd1562-plain-result-1100x700.png",
+    "ppmd1562-plain-result-760x520.png",
+    "ppmd1562-wrong-password-edits-kept-1100x700.png",
+    "ppmd1562-wrong-password-edits-kept-760x520.png",
+    "ppmd1562-encrypted-result-1100x700.png",
+    "ppmd1562-encrypted-result-760x520.png",
+    "ppmd1562-ppmd-content-verdict-1100x700.png",
+    "ppmd1562-ppmd-content-verdict-760x520.png",
+    "ppmd1562-selected-retrieval-dialog-1100x700.png",
+    "ppmd1562-selected-retrieval-dialog-760x520.png",
+    "ppmd1562-restored-task-password-and-scope-1100x700.png",
+    "ppmd1562-restored-task-password-and-scope-760x520.png",
+    "ppmd1562-missing-volume-1100x700.png",
+    "ppmd1562-missing-volume-760x520.png",
+    "ppmd1562-standard-material-package-1100x700.png",
+    "ppmd1562-standard-material-package-760x520.png"
+  ],
+  "folder": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\source",
+  "plain": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\plain.zip",
+  "aes": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\aes.zip",
+  "crypto": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\crypto.zip",
+  "numeric": [
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.001",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.002",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.003",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.004",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.005",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.006",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.007",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.008",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.009"
+  ],
+  "addition": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\added.txt",
+  "originalHashes": {
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\plain.zip": "b25b4a3719882279198a36aa653cb579b169b470e6d3b3bb1d25d4be2b106f11",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\aes.zip": "4c107ac52ed6e246d9d8126ca6848a60d88d9b580185c2c7e02f149a502a00de",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\crypto.zip": "177212cda4b4a0bf39253640515fa5aa29e8ee20dd3374ec60adae339511c2b8",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.001": "9c58d08454b0297c833b4d21eace435d9b7e101459cc57312f7a9c9f6f37992f",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.002": "65e99ca19d0d706d657ea2efa1c159f310f2f62e3678d77d75e568305b34714a",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.003": "bbf42c2cac38be6056066163e7a41e52c1234a57ad1f538a21ab95e24fb6be30",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.004": "a9f28e52a2fcbfdd9d2327fa19b5e2e5a6505f74840df23338bc3a06be0cf5c0",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.005": "5e64ad103dbfedd32254132a42655e5a7b73897ceb387c9d55c271dc32821111",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.006": "bbf582a5e732946123872a835b4f8b1612c0582a3733bf5fc2aa2203c3ac46b1",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.007": "8b7fbe98fe7b521821b5fec89e13fcc8613725192c870e24dabc680fbe148c14",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.008": "10634a9f686bd47034c7355131ed90103010246a2f732c8dfd2602d773d1784f",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.009": "eff3f9e1a861bb5c02d793f7cf00e632912f95ac18e1d6b3d343efb4cb89be9b",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\standard.z01": "4405cdd03fa3a456b92c9bd1509bcda7cc2cb1834c2d43a27c3cd45924670329",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\standard.z02": "0c4b32ca68ce20d10b32cf9ef5e5ace7025be64013afd12348975bbb52925652",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\standard.z03": "05de69ceef119d8e08d383889940554a2262d2dd7c351618dd7c035404c9cb2d",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\standard.zip": "bb9da9d45fe33fff22e9793aa1a580a1fd085a34dc83a5c4efce7d9444a82e22"
+  },
+  "fixtures": true,
+  "plainOutput": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\plain-edited.zip",
+  "aesOutput": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\aes-edited.zip",
+  "retrieval": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\retrieved",
+  "queued": "7378bad4-94e6-4259-aa27-232b37872e5a",
+  "retrievalRecord": {
+    "archiveOutput": null,
+    "completedAt": "2026-10-21T20:30:35.108Z",
+    "durationMs": 155,
+    "errorMessage": null,
+    "executionConfig": {
+      "comparisonSelection": {
+        "conflictPolicy": "rename",
+        "keepStructure": true,
+        "paths": [
+          "nested/secret.txt"
+        ],
+        "source": {
+          "encrypted": true,
+          "kind": "zip",
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.001",
+          "revision": "1e5e392cc8608a01afbb25b3931d0922ac2bd1b56b00eac0c36ee9e5bca3bbc5"
+        }
+      },
+      "extractToSubfolder": false,
+      "kind": "archive-extraction",
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\retrieved",
+      "schemaVersion": 1
+    },
+    "failure": null,
+    "format": "ZIP",
+    "id": "recovered-0192acee-b351-4089-a007-e8824b98787e",
+    "logs": [
+      {
+        "message": "资料对比取回：精确选择 1 项；原件保留",
+        "severity": "info",
+        "timestamp": "2026-10-21T20:30:34.955962300+00:00"
+      },
+      {
+        "message": "所选范围处理完成，实际提交 8100 字节；同名项按保留/跳过策略处理；结果：E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\retrieved",
+        "severity": "success",
+        "timestamp": "2026-10-21T20:30:35.106293900+00:00"
+      }
+    ],
+    "metrics": null,
+    "name": "右侧 · numeric.zip.001 · 所选 1 项",
+    "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\retrieved",
+    "processedBytes": 8100,
+    "retryOfTaskId": null,
+    "sourcePaths": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\numeric.zip.001"
+    ],
+    "startedAt": "2026-10-21T20:30:34.953Z",
+    "status": "completed",
+    "taskType": "decompression",
+    "totalBytes": 8100,
+    "workloadKind": "archive"
+  },
+  "standard": [
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\standard.z01",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\standard.z02",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\standard.z03",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-ppmd-1562\\ff04bb90-e9a0-4966-8845-b18d93a4dea8\\standard.zip"
+  ]
+}
