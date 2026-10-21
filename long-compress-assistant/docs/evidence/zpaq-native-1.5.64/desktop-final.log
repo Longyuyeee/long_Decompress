@@ -1,0 +1,11 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+zpaq1564: password-old-snapshot-converted-to-independent-zip
+zpaq1564: decompression-import-and-multiselect-dialog
+{
+  "version": "1.5.64",
+  "checks": 6,
+  "layouts": 22,
+  "binarySha256": "c0d1a52acd60992e2b78e8f2f10d37b8204c66a6999c12ee5a634302bfec5567"
+}
