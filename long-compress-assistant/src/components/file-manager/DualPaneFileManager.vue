@@ -363,7 +363,7 @@ const activeSelectionCount = computed(() => (activePane.value === 'left' ? left 
   <div class="file-manager h-full min-w-0 flex flex-col gap-3 p-responsive p-6" data-testid="dual-pane-file-manager">
     <header class="manager-header shrink-0 flex items-center justify-between gap-4">
       <div><h1 class="text-2xl font-black tracking-tight text-content">双栏文件浏览器</h1><p class="mt-1 text-xs font-bold text-muted">浏览电脑中的所有文件；在一栏选择，在另一栏落地</p></div>
-      <div class="manager-actions"><div class="status-pill"><i class="pi pi-shield"></i><span>不覆盖同名项 · 复制后哈希校验 · 删除进入回收站</span></div><button data-testid="file-manager-open-archive" @click="chooseArchive"><i class="pi pi-box"></i><span>打开压缩包</span></button></div>
+      <div class="manager-actions"><slot name="header-actions"/><div class="status-pill"><i class="pi pi-shield"></i><span>不覆盖同名项 · 复制后哈希校验 · 删除进入回收站</span></div><button data-testid="file-manager-open-archive" @click="chooseArchive"><i class="pi pi-box"></i><span>打开压缩包</span></button></div>
     </header>
     <div v-if="notice" class="notice-bar" data-testid="file-manager-notice"><i class="pi pi-info-circle"></i><span>{{ notice }}</span><button @click="notice = ''"><i class="pi pi-times"></i></button></div>
     <p v-if="savedLocations.error.value" role="alert" class="text-sm text-red-500">{{ savedLocations.error.value }}</p>

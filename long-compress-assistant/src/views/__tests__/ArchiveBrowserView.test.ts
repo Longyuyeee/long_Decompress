@@ -1,3 +1,4 @@
+import {createPinia,setActivePinia} from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { DOMWrapper, flushPromises, mount } from '@vue/test-utils'
 import ArchiveBrowserView from '../ArchiveBrowserView.vue'
@@ -186,6 +187,8 @@ describe('ArchiveBrowserView', () => {
     wrapper.unmount()
   })
   beforeEach(() => {
+    localStorage.clear();setActivePinia(createPinia())
+
     vi.clearAllMocks()
     mocks.invoke.mockReset(); mocks.invoke.mockResolvedValue(undefined)
     mocks.capabilityRefresh.mockReset(); mocks.capabilityRefresh.mockResolvedValue(undefined)
@@ -679,6 +682,20 @@ describe('ArchiveBrowserView', () => {
     mocks.invoke.mockImplementation(async(command,args)=>command==='read_archive_image'?{entryPath:args.entryPath,dataUrl:'data:image/png;base64,AA==',mimeType:'image/png',byteSize:1,width:1,height:1}:undefined)
     const wrapper=mount(ArchiveBrowserView,{attachTo:document.body,global:{stubs:{Teleport:true}}})
     try{await wrapper.get('header .browser-primary').trigger('click');await flushPromises();(wrapper.get('[data-testid="archive-reader-open"]').element as HTMLButtonElement).focus();await wrapper.get('[data-testid="archive-reader-open"]').trigger('click');await flushPromises();expect(wrapper.get('[data-testid="reader-current-path"]').text()).toBe('1.png');expect(wrapper.get('[data-testid="reader-image"]').attributes('src')).toBe('blob:actual-reader');await wrapper.get('[data-testid="reader-close"]').trigger('click');await flushPromises();const input=wrapper.get('.browser-toolbar input[type="password"]');(input.element as HTMLInputElement).focus();await input.setValue('new-source-password');await flushPromises();expect(document.activeElement).toBe(input.element);expect(wrapper.find('[data-testid="archive-image-reader"]').exists()).toBe(false)}finally{wrapper.unmount();vi.unstubAllGlobals()}
+  })
+
+  it.each([false,true])('reader1558 recent reading reloads the canonical source and passes path-based resume even if original page is missing=%s',async missing=>{
+    const {useArchiveReadingStore}=await import('@/stores/archiveReading')
+    const revision='a'.repeat(64),canonical='C:/archives/pictures.zip.001',path=missing?'gone.png':'image.png'
+    useArchiveReadingStore().save({filePath:canonical,format:'ZIP',revision,path,directory:'',scope:'archive',fit:false,zoom:1.25,selected:[path],updatedAt:new Date().toISOString()})
+    mocks.browseArchive.mockResolvedValueOnce({revision,sourcePath:canonical,format:'ZIP',totalFiles:1,totalDirectories:0,totalUncompressedSize:10,totalCompressedSize:8,encrypted:false,entries:[{path:'image.png',name:'image.png',size:10,compressedSize:8,modified:null,crc:null,encrypted:false,isDir:false}]})
+    const wrapper=mount(ArchiveBrowserView,{global:{stubs:{ArchiveImageReader:{props:['filePath','resume'],template:'<div data-testid="resume-reader" :data-source="filePath" :data-path="resume.path"/>'}}}})
+    expect(mocks.browseArchive).not.toHaveBeenCalled();await wrapper.get('[data-testid="reading-recent-open"]').trigger('click');await flushPromises();expect(mocks.browseArchive).toHaveBeenCalledWith(canonical,'',expect.any(String));expect(wrapper.get('[data-testid="resume-reader"]').attributes('data-source')).toBe(canonical);expect(wrapper.get('[data-testid="resume-reader"]').attributes('data-path')).toBe(path);expect(mocks.decompressFile).not.toHaveBeenCalled();wrapper.unmount()
+  })
+
+  it('reader1558 current single image keeps its exact reference in the original immediate extraction flow',async()=>{
+    const revision='a'.repeat(64);mocks.browseArchive.mockResolvedValueOnce({revision,format:'ZIP',totalFiles:1,totalDirectories:0,totalUncompressedSize:10,totalCompressedSize:8,encrypted:false,entries:[{path:'image.png',name:'image.png',size:10,compressedSize:8,modified:null,crc:null,encrypted:false,isDir:false}]});mocks.selectDirectory.mockResolvedValue('D:/out')
+    const wrapper=mount(ArchiveBrowserView,{global:{stubs:{ArchiveImageReader:{emits:['extract'],template:`<button data-testid="single-image-take" @click="$emit('extract','image.png')"/>`}}}});await wrapper.get('header .browser-primary').trigger('click');await flushPromises();await wrapper.get('[data-testid="archive-reader-open"]').trigger('click');await wrapper.get('[data-testid="single-image-take"]').trigger('click');await flushPromises();expect(mocks.decompressFile).toHaveBeenCalledWith('C:/archives/demo.zip',expect.objectContaining({selectedEntries:['image.png'],readerSelection:{revision,paths:['image.png'],keepStructure:true,conflictPolicy:'rename'}}));wrapper.unmount()
   })
 
 })

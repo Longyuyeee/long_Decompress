@@ -34,6 +34,7 @@ import type {
 const zipPasswordArguments = (encoding?: ZipPasswordEncoding) => encoding === undefined ? {} : { zipPasswordEncoding: encoding }
 
 export interface DecompressOptions {
+  readerSelection?: import('@/types/archiveReading').ReaderSelection
   comparisonSelection?: import('@/types/sourceComparison').ComparisonSelection
   librarySourceId?: string
   libraryRevision?: string
@@ -151,6 +152,7 @@ export interface ArchiveEntryInfo {
 }
 
 export interface ArchiveBrowseResult {
+  sourcePath?: string
   revision?: string
   zpaqHistory?: ZpaqHistory
   format: string
@@ -334,6 +336,7 @@ export const useTauriCommands = () => {
       if (options.zpaqSnapshot && !trackedTask.name.includes(`（快照 ${options.zpaqSnapshot.version}）`)) trackedTask.name += `（快照 ${options.zpaqSnapshot.version}）`
       trackedTask.zpaqCatalogId = options.zpaqCatalogId
       trackedTask.zpaqSnapshot = options.zpaqSnapshot ? { ...options.zpaqSnapshot } : undefined
+      trackedTask.readerSelection = options.readerSelection
       trackedTask.comparisonSelection = options.comparisonSelection
       trackedTask.librarySourceId = options.librarySourceId
       trackedTask.libraryRevision = options.libraryRevision
@@ -345,6 +348,7 @@ export const useTauriCommands = () => {
       // Older unguarded selections keep the existing whole-archive history policy.
       trackedTask.executionConfig = {
         schemaVersion: 1, kind: 'archive-extraction', outputDirectory: options.outputPath,
+        ...(options.readerSelection?{readerSelection:options.readerSelection}:{}),
         ...(options.comparisonSelection?{comparisonSelection:options.comparisonSelection}:{}),
         ...(options.zpaqCatalogId ? { zpaqCatalogId: options.zpaqCatalogId, selectedEntries: [...(options.selectedEntries || [])] } : {}),
         ...(options.librarySourceId ? {librarySourceId:options.librarySourceId,libraryRevision:options.libraryRevision,libraryKeepStructure:options.libraryKeepStructure??true,libraryConflictPolicy:options.libraryConflictPolicy??'rename',selectedEntries:[...(options.selectedEntries||[])]} : {}),
@@ -367,6 +371,7 @@ export const useTauriCommands = () => {
         outputPath: options.outputPath,
         password: options.password || null,
         options: {
+          ...(options.readerSelection?{reader_selection:options.readerSelection}:{}),
           ...(options.librarySourceId ? {library_source_id:options.librarySourceId,library_revision:options.libraryRevision} : {}),
           ...(options.zpaqCatalogId ? { zpaq_catalog_id: options.zpaqCatalogId } : {}),
           ...(options.zpaqSnapshot ? { zpaq_snapshot: options.zpaqSnapshot } : {}),

@@ -1357,7 +1357,7 @@ pub async fn cancel_archive_diagnosis(diagnostic_id: String) -> Result<(), Strin
 
 #[derive(Serialize)]
 #[serde(rename_all="camelCase")]
-pub struct BrowserListing {#[serde(flatten)] pub listing:crate::models::compression::ArchiveBrowseResult,pub revision:String}
+pub struct BrowserListing {#[serde(flatten)] pub listing:crate::models::compression::ArchiveBrowseResult,pub revision:String,pub source_path:String}
 /// Returns structured archive metadata for the archive browser.
 #[command]
 pub async fn browse_archive(
@@ -1406,7 +1406,8 @@ pub async fn browse_archive(
     // so a wrong RAR header password is not mislabeled as damaged metadata.
     .map_err(|error| classify_archive_browse_error(&format!("{error:#}")))?;
     crate::services::image_reader::check_source(Path::new(&file_path),&revision).map_err(|_|"ARCHIVE_BROWSE_CHANGED|读取期间来源已变化，请重新读取".to_string())?;
-    Ok(BrowserListing{listing,revision})
+    let source_path=crate::services::image_reader::source_path(Path::new(&file_path)).map_err(|e|classify_archive_browse_error(&format!("{e:#}")))?;
+    Ok(BrowserListing{listing,revision,source_path})
 }
 
 #[command]
@@ -1657,6 +1658,7 @@ pub async fn materialize_nested_archive(
         .create_entry_dir(expected_bytes)
         .map_err(|error| error.to_string())?;
     let options = DecompressOptions {
+        reader_selection: None,
         library_source_id: None,
         library_revision: None,
         zpaq_catalog_id: None,
@@ -1782,6 +1784,7 @@ pub async fn open_archive_entry(
         .map_err(|error| error.to_string())?;
 
     let options = DecompressOptions {
+        reader_selection: None,
         library_source_id: None,
         library_revision: None,
         zpaq_catalog_id: None,

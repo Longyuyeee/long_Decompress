@@ -2085,9 +2085,10 @@ impl CompressionService {
         Ok(path.to_string_lossy().into_owned())
     }
 
-    pub async fn extract(&self, window: Window, task_id: String, file_path: String, output_dir: Option<String>, password: Option<String>, options: DecompressOptions) -> Result<String> {
+    pub async fn extract(&self, window: Window, task_id: String, file_path: String, output_dir: Option<String>, password: Option<String>, mut options: DecompressOptions) -> Result<String> {
         let file_path = Self::resolve_extraction_source(Path::new(&file_path))?;
         let snapshot = Self::source_file_snapshot(Path::new(&file_path), "Pre-checking")?;
+        crate::services::image_reader::apply_selection(Path::new(&file_path), &mut options)?;
         let executing = AtomicBool::new(false);
         let result = self.extract_with_source_snapshot(window, task_id, file_path.clone(), output_dir, password, options, snapshot.clone(), &executing).await;
         if let Err(error) = result {

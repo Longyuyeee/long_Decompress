@@ -16,7 +16,7 @@ import Modal from '@/components/ui/Modal.vue'
 
 const library = useArchiveLibraryStore(), app = useAppStore(), router = useRouter()
 const capabilities = useArchiveBrowserCapabilities(); void capabilities.refresh()
-const credentialId = ref(''), pendingHit = ref<{ hit: LibraryHit; action: 'locate' | 'preview' | 'extract' } | null>(null)
+const credentialId = ref(''), pendingHit = ref<{ hit: LibraryHit; action: 'locate' | 'preview' | 'extract' | 'read' } | null>(null)
 const credentialSource = computed(() => library.sources.find(row => row.id === credentialId.value))
 const credentialError = computed(() => credentialSource.value?.note || library.error)
 const { workspace } = storeToRefs(library)
@@ -62,7 +62,7 @@ async function addCandidates() {
 async function removeSource() {
   if (removing.value && await library.remove(removing.value.id)) removing.value = null
 }
-async function openHit(hit: LibraryHit, action: 'locate' | 'preview' | 'extract') {
+async function openHit(hit: LibraryHit, action: 'locate' | 'preview' | 'extract' | 'read') {
   if (opening.value) return
   opening.value = `${hit.sourceId}:${hit.path}`
   try {
@@ -136,7 +136,7 @@ async function resultPage(value: number) { library.page = value; await library.s
           <article v-for="hit in library.hits" :key="`${hit.sourceId}:${hit.path}`" class="library-hit" :data-entry-path="hit.path" :data-hit-source="hit.sourceName">
             <div class="hit-title"><input type="checkbox" data-testid="library-select-hit" :aria-label="'选择 '+hit.sourceName+' / '+hit.path" :checked="retrieval.has(hit)" :disabled="retrieval.busy" @change="retrieval.toggle(hit)"><i :class="['pi', ['png','jpg','jpeg','gif','webp','bmp'].includes(hit.extension) ? 'pi-image' : 'pi-file']" /><button class="hit-name" data-testid="library-locate-hit" :disabled="!!opening" @click="openHit(hit, 'locate')">{{ hit.name }}</button><span class="hit-size">{{ hit.sizeKnown === false ? '大小未统计' : libraryBytes(hit.size) }}</span></div>
             <p class="hit-path">{{ hit.path }}</p><div class="hit-origin"><span class="hit-source"><i class="pi pi-box" />{{ hit.sourceName }}<small>{{ hit.format }}</small></span><time v-if="hit.modified">{{ hit.modified }}</time><span v-if="hit.encrypted" class="text-primary"><i class="pi pi-lock" /> 密码资料</span><span :class="!hit.availability || ['available','unchecked'].includes(hit.availability) ? 'text-muted' : 'source-reason'" data-testid="library-hit-availability">{{ libraryAvailability[hit.availability || 'unchecked'] }}{{ hit.sourceStatus && !['ready','indexing'].includes(hit.sourceStatus) ? ` · ${libraryStatus[hit.sourceStatus as LibrarySource['status']]}` : '' }}</span></div>
-            <div class="hit-bottom"><span class="hit-source-path">{{ hit.sourcePath }}</span><div class="library-actions"><button class="lib-button small" data-testid="library-preview-hit" :disabled="!!opening" @click="openHit(hit, 'preview')"><i class="pi pi-eye" />查看</button><button class="lib-button small primary" data-testid="library-extract-hit" :disabled="!!opening" @click="openHit(hit, 'extract')"><i class="pi pi-download" />取回</button></div></div>
+            <div class="hit-bottom"><span class="hit-source-path">{{ hit.sourcePath }}</span><div class="library-actions"><button v-if="['png','jpg','jpeg','gif','webp','bmp','svg','ico','avif'].includes(hit.extension.toLowerCase())" class="lib-button small" data-testid="library-hit-read" :disabled="!!opening" @click="openHit(hit, 'read')"><i class="pi pi-images"/>连续阅读</button><button class="lib-button small" data-testid="library-preview-hit" :disabled="!!opening" @click="openHit(hit, 'preview')"><i class="pi pi-eye" />查看</button><button class="lib-button small primary" data-testid="library-extract-hit" :disabled="!!opening" @click="openHit(hit, 'extract')"><i class="pi pi-download" />取回</button></div></div>
           </article>
         </div>
         <div v-if="resultPages > 1" class="lib-pagination"><button data-testid="library-prev-page" :disabled="library.page <= 1 || library.searching" @click="resultPage(library.page - 1)">上一页</button><span>{{ library.page }} / {{ resultPages }} · 每页 50 条</span><button data-testid="library-next-page" :disabled="library.page >= resultPages || library.searching" @click="resultPage(library.page + 1)">下一页</button></div>

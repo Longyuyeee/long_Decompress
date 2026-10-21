@@ -5,7 +5,7 @@ import { translations } from '../i18n'
 import { invoke } from '@tauri-apps/api/tauri'
 import type { ZipPasswordEncoding } from '@/types/zipPassword'
 
-export interface ArchiveReadOptions { librarySourceId?: string; focusEntryPath?: string; entryAction?: 'locate' | 'preview' | 'extract'; zpaqSnapshot?: import('@/types/zpaqSnapshot').ZpaqSnapshot; password?: string; zipPasswordEncoding?: ZipPasswordEncoding }
+export interface ArchiveReadOptions { librarySourceId?: string; focusEntryPath?: string; entryAction?: 'locate' | 'preview' | 'extract' | 'read'; resumeReading?: boolean; zpaqSnapshot?: import('@/types/zpaqSnapshot').ZpaqSnapshot; password?: string; zipPasswordEncoding?: ZipPasswordEncoding }
 export interface ArchiveDiagnosisRequest extends ArchiveReadOptions {
   path: string; paths?: string[]; taskId?: string; outputPath?: string; extractToSubfolder?: boolean
 }

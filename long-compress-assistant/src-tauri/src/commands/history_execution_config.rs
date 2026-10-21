@@ -11,7 +11,7 @@ fn zpaq1537_final_history_preserves_guarded_selection_and_rejects_missing_identi
 // Persist only the supported snapshot schema. A bad/unknown snapshot must not
 // prevent saving the task's final error and logs.
 pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<Value> {
-    if value.get("schemaVersion")?.as_u64()? != 1 || value.to_string().len() > if value.get("operation").and_then(Value::as_str)==Some("zpaq-update") || value.get("zpaqCatalogId").is_some() || value.get("librarySourceId").is_some() || value.get("comparisonSelection").is_some() {262_144} else {16_384} { return None; }
+    if value.get("schemaVersion")?.as_u64()? != 1 || value.to_string().len() > if value.get("operation").and_then(Value::as_str)==Some("zpaq-update") || value.get("zpaqCatalogId").is_some() || value.get("librarySourceId").is_some() || value.get("comparisonSelection").is_some() || value.get("readerSelection").is_some() {262_144} else {16_384} { return None; }
     let kind = value.get("kind")?.as_str()?;
     let expected = match kind {
         "archive-extraction" => ("decompression", "archive"),
@@ -55,6 +55,11 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
             output.insert(key.into(), serde_json::to_value(snapshot).ok()?);
         }
     }
+    if kind=="archive-extraction" {if let Some(selection)=value.get("readerSelection") {
+        let selection:crate::services::image_reader::Selection=serde_json::from_value(selection.clone()).ok()?;
+        selection.validate().ok()?;
+        output.insert("readerSelection".into(),serde_json::to_value(selection).ok()?);
+    }}
     if kind=="archive-extraction" {if let Some(selection)=value.get("comparisonSelection") {
         let selection:crate::services::source_comparison::Selection=serde_json::from_value(selection.clone()).ok()?;
         selection.validate().ok()?;
@@ -402,4 +407,19 @@ fn comparison1554_history_keeps_exact_scope_and_drops_extra_fields(){
 fn comparison1555_history_keeps_encoding_and_encryption_marker_without_passwords(){
  let value=serde_json::json!({"schemaVersion":1,"kind":"archive-extraction","outputDirectory":"D:/out","extractToSubfolder":false,"comparisonSelection":{"source":{"path":"C:/group.zip","kind":"zip","revision":"a".repeat(64),"encrypted":true,"password":"source-secret"},"paths":["one.txt"],"keepStructure":true,"conflictPolicy":"rename","zipPasswordEncoding":"cp936","password":"selection-secret"}});
  let result=sanitize(value.clone(),"decompression","archive").unwrap();assert_eq!(result["comparisonSelection"]["zipPasswordEncoding"],"cp936");assert_eq!(result["comparisonSelection"]["source"]["encrypted"],true);assert!(!result.to_string().contains("secret"));let mut bad=value;bad["comparisonSelection"]["zipPasswordEncoding"]="invalid".into();assert!(sanitize(bad,"decompression","archive").is_none());
+}
+
+#[cfg(test)]
+#[test]
+fn reader1558_history_preserves_large_exact_scope_and_excludes_credentials(){
+ let paths:Vec<_>=(0..200).map(|n|format!("pages/{n:04}-{}.png","x".repeat(110))).collect();
+ let value=serde_json::json!({"schemaVersion":1,"kind":"archive-extraction","outputDirectory":"D:/out","extractToSubfolder":false,"readerSelection":{"revision":"a".repeat(64),"paths":paths,"keepStructure":false,"conflictPolicy":"skip","password":"selection-secret"},"password":"source-secret","zipPasswordEncoding":"cp936"});
+ assert!(value.to_string().len()>16384);let result=sanitize(value.clone(),"decompression","archive").unwrap();assert_eq!(result["readerSelection"]["paths"],value["readerSelection"]["paths"]);assert_eq!(result["readerSelection"]["keepStructure"],false);assert_eq!(result["zipPasswordEncoding"],"cp936");assert!(!result.to_string().contains("secret"));
+}
+#[cfg(test)]
+#[test]
+fn reader1558_history_rejects_empty_duplicate_and_unbound_ranges(){
+ let value=serde_json::json!({"schemaVersion":1,"kind":"archive-extraction","outputDirectory":"D:/out","extractToSubfolder":false,"readerSelection":{"revision":"a".repeat(64),"paths":["pages/1.png"],"keepStructure":true,"conflictPolicy":"rename"}});
+ for paths in [serde_json::json!([]),serde_json::json!(["a.png","a.png"])]{let mut invalid=value.clone();invalid["readerSelection"]["paths"]=paths;assert!(sanitize(invalid,"decompression","archive").is_none());}
+ let mut invalid=value;invalid["readerSelection"]["revision"]="".into();assert!(sanitize(invalid,"decompression","archive").is_none());
 }
