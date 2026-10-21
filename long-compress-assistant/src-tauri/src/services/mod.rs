@@ -134,3 +134,5 @@ mod wim_1527_tests;
 pub mod wim_writer;
 
 pub mod zip_edit_drafts;
+
+pub mod archive_library;

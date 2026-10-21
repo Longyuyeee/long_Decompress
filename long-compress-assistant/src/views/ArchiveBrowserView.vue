@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { invoke } from '@tauri-apps/api/tauri'
 import ZipEditBar from '@/components/archive/ZipEditBar.vue'
 import { useZipEditStore } from '@/stores/zipEdit'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
@@ -39,9 +40,11 @@ interface ArchiveWorkspaceFrame {
 const appStore = useAppStore()
 const commands = useTauriCommands()
 const archiveCapabilities = useArchiveBrowserCapabilities()
-void archiveCapabilities.refresh()
+const capabilitiesReady = archiveCapabilities.refresh()
 const browseRequest = useArchiveBrowseRequest(commands.browseArchive, commands.cancelArchiveBrowse)
 const archivePath = ref('')
+const librarySourceId = ref('')
+const libraryEntryPath = ref('')
 const outputPath = ref('')
 const password = ref('')
 const zipPasswordEncoding = ref<ZipPasswordEncoding>()
@@ -177,6 +180,9 @@ const cancelArchiveLoad = () => {
 const openArchivePath = async (path: string, options: ArchiveReadOptions = {}) => {
   if (!path || inputBusy.value) return
   try {
+    if (options.librarySourceId) await invoke('library_check', { sourceId: options.librarySourceId, entryPath: options.focusEntryPath || null })
+    librarySourceId.value = options.librarySourceId || ''
+    libraryEntryPath.value = options.focusEntryPath || ''
     archivePath.value = path
     password.value = options.password || ''
     zipPasswordEncoding.value = options.zipPasswordEncoding
@@ -190,6 +196,20 @@ const openArchivePath = async (path: string, options: ArchiveReadOptions = {}) =
     query.value = ''
     typeFilter.value = 'all'
     await loadArchive()
+    if (options.focusEntryPath && result.value) {
+      const entry = result.value.entries.find(row => row.path === options.focusEntryPath && !row.isDir)
+      if (!entry) { selected.value = new Set(); throw new Error('当前归档已找不到所选条目，请返回资源库刷新索引') }
+      selected.value = new Set([entry.path])
+      navigateToDirectory(entryParent(entry)); focusedEntryPath.value = entry.path
+      if (options.entryAction === 'preview') {
+        await capabilitiesReady
+        if (canPreviewEntry(entry) && previewRouteSupported.value) await openPreview(entry)
+        else browseNotice.value = '已定位所选文件；此类型暂不提供内部预览，可提取后打开'
+      } else if (options.entryAction === 'extract') {
+        const destination = await requestOutputDirectory(outputPath.value)
+        if (destination) { outputPath.value = destination; await extractPaths([entry.path], destination) }
+      }
+    }
   } catch (error) {
     appStore.setError(`无法打开压缩包：${String(error)}`)
   }
@@ -276,6 +296,7 @@ const openPreview = async (entry: ArchiveEntryInfo) => {
   previewError.value = ''
   previewLoading.value = true
   try {
+    if (librarySourceId.value) await invoke('library_check', { sourceId: librarySourceId.value, entryPath: entry.path })
     if (previewKind(entry) === 'image') {
       const value = await commands.previewArchiveImage(archivePath.value, entry.path, password.value, ...snapshotReadArguments.value)
       if (sequence === previewSequence) imagePreview.value = value
@@ -426,6 +447,7 @@ const enterNestedArchive = async (entry: ArchiveEntryInfo) => {
     const frame = captureCurrentFrame(currentContentSha256.value || materialized.parentSha256)
     if (!frame) throw new Error('外层归档状态不可用')
     parentFrames.value = [...parentFrames.value, frame]
+    librarySourceId.value = ''; libraryEntryPath.value = ''
     archivePath.value = materialized.cachePath
     password.value = ''
     zipPasswordEncoding.value = undefined
@@ -510,6 +532,7 @@ const extractPaths = async (paths: string[], destination: string) => {
   extracting.value = true
   closeContextMenu()
   try {
+    if (librarySourceId.value) await invoke('library_check', { sourceId: librarySourceId.value, entryPath: null })
     await commands.decompressFile(archivePath.value, {
       sourceFormat: result.value?.format, zpaqSnapshot: selectedSnapshot.value,
       outputPath: destination,
@@ -719,6 +742,9 @@ const extractSelected = async () => {
         </button>
       </div>
     </header>
+
+    <p v-if="result && browseNotice" class="shrink-0 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-primary" data-testid="archive-result-notice">{{ browseNotice }}</p>
+    <div v-if="librarySourceId" class="shrink-0 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs" data-testid="archive-library-origin"><span class="min-w-0 break-all text-muted">来自归档资源库 · {{ libraryEntryPath }}</span><RouterLink to="/library" class="font-bold text-primary">返回搜索结果</RouterLink></div>
 
     <nav v-if="archivePath" class="archive-chain shrink-0" aria-label="嵌套归档链" data-testid="archive-chain">
       <template v-for="(item, index) in archiveChain" :key="`${item.index}-${item.name}`">

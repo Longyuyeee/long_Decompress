@@ -16,3 +16,5 @@ pub mod task_history;
 mod history_execution_config;
 pub mod video_engine;
 pub mod pdf_engine;
+
+pub mod archive_library;

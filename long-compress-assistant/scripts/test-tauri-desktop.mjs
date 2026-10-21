@@ -85,6 +85,7 @@ import { runZipPpmd1535Gate } from './zip-ppmd-1535-gate.mjs'
 import { runZpaqIncremental1536Gate } from './zpaq-incremental-1536-gate.mjs'
 import { runZpaqDiff1537Gate } from './zpaq-diff-1537-gate.mjs'
 import { runZipBzip1534Gate } from './zip-bzip2-1534-gate.mjs'
+import { runLibrary1547Gate } from './library-1547-gate.mjs'
 import { runZipEdit1546Gate } from './zip-edit-1546-gate.mjs'
 import { runZipEdit1545Gate } from './zip-edit-1545-gate.mjs'
 import { runZipEdit1544Gate } from './zip-edit-1544-gate.mjs'
@@ -4743,7 +4744,7 @@ try {
   await waitForDesktopReady()
 
   let navigation = await driver.findElements(By.css('aside nav > button'))
-  assert.equal(navigation.length, 8, 'the real desktop shell must expose eight navigation buttons')
+  assert.equal(navigation.length, 9, 'the real desktop shell must expose nine navigation buttons')
   const versionBadge = await waitForElement('[data-testid="sidebar-version-badge"]')
   assert.equal(
     (await versionBadge.getAttribute('textContent')).trim(),
@@ -4975,6 +4976,9 @@ try {
     await runZipPpmd1535Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
   } else if (process.argv.includes('--zip-bzip2-1534-only')) {
     await runZipBzip1534Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
+  } else if (process.argv.includes('--library-1547-only')) {
+    await runLibrary1547Gate({ driver, getDriver:()=>driver, restart:restartDesktopSession, bridge:callDesktopBridge, artifactDirectory, application, root })
+    completedSuccessfully = true
   } else if (process.argv.includes('--zip-edit-1546-only')) {
     await runZipEdit1546Gate({ driver, getDriver:()=>driver, restart:restartDesktopSession, bridge:callDesktopBridge, artifactDirectory, application, root, bundledSevenZip, dataDirectory:e2eDataDirectory })
     completedSuccessfully = true

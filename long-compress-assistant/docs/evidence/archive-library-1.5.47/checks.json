@@ -1,0 +1,55 @@
+{
+  "version": "1.5.47",
+  "date": "2026-10-21",
+  "frontend": {
+    "distinctPassed": 51,
+    "library": 11,
+    "newBrowserHandoff": 5,
+    "relatedBrowser": 29,
+    "relatedShell": 6,
+    "execution": "Initial browser/library groups passed. Shell isolation mock and navigation counts corrected; only shell group rerun. After first-open preview timing fix, only five library handoff cases rerun, passed."
+  },
+  "rust": {
+    "distinctPassed": 12,
+    "newLibrary": 7,
+    "affectedMigrations": 5,
+    "ignored": 1,
+    "ignoredReason": "Existing opt-in real personal database snapshot test; no personal database was accessed."
+  },
+  "builds": {
+    "typecheckAndVite": "passed",
+    "shellAndVersionIdentity": "passed",
+    "native": "custom-protocol,desktop-e2e; VITE_DESKTOP_E2E=1",
+    "binarySha256": "ec92a5144c2486b3a4c1ca90079c3ac23ac471cfb1cbca0d5a960a734257f2de",
+    "previousIdentities": [
+      "44a1923b34810004f500a545846e1d8857d29d14b525ce91f74906294a3e6fcd",
+      "c9dcba39d8d33cdeab52857615bd145ad2d8ba042f69c6d9a5732d772b51bb3c"
+    ],
+    "shellSha256": "2ad71d1911328e438cfa6686fb603ca544e19be375d74426380d2658e9a7acef"
+  },
+  "desktop": {
+    "passedStages": 7,
+    "layoutRecords": 20,
+    "finalLayoutOnlyStages": 1,
+    "horizontalOverflow": 0,
+    "representativeScreenshots": 6,
+    "sameProfileNormalRestart": true,
+    "stoppableArchiveEntries": 30000,
+    "receipt": "desktop.json",
+    "continuation": "Discovery retained from first binary. Capability readiness fix verified by original preview and subsequent functional stages. Final source-row flex sizing fix checked only in affected wide/narrow list and search layouts; prior functional stages not repeated."
+  },
+  "files": {
+    "密码资料.zip": "9c8246bab4d494b007ca7a26e5468da3b77a311e5057732c992afd1fd355c9fd",
+    "损坏资料.zip": "a92dddd48bb682a5fefca3307e3122fbc1ad32cc54379025bcbb8070373e328e",
+    "旧资料.tar": "9044f31ec3d2975d259d6c40f327fa88cf0c3f8ac189953bcc9c53390aa4f6ac",
+    "空资料.zip": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85",
+    "项目资料.zip": "a21b179b8bbdc1dd9bd206c5c3239a5e658308ffa4f48534cb321ae3177c236c"
+  },
+  "recoveredContentSha256": "6e99bea2ed44eb2123ea971fb003ae1f99906de523c3b19493771a0efced6301",
+  "notRepeated": [
+    "old unrelated format/password matrices",
+    "real disk-full",
+    "media and personal installation"
+  ],
+  "releaseReceipt": "Candidate CI, normal protected merge, tag and formal assets recorded on the version PR."
+}

@@ -1,0 +1,119 @@
+<script setup lang="ts">
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { useRouter } from 'vue-router'
+import { open } from '@tauri-apps/api/dialog'
+import { useAppStore } from '@/stores/app'
+import { useArchiveLibraryStore } from '@/stores/archiveLibrary'
+import { libraryBytes, libraryStatus, type LibraryHit, type LibrarySource } from '@/types/archiveLibrary'
+import Modal from '@/components/ui/Modal.vue'
+
+const library = useArchiveLibraryStore(), app = useAppStore(), router = useRouter()
+const expanded = ref(''), sourcePage = ref(1), sourceSearch = ref(''), removing = ref<LibrarySource | null>(null)
+const candidatesVisible = ref(false), candidatePage = ref(1), candidateSelection = ref(new Set<string>()), opening = ref('')
+const filteredSources = computed(() => library.sources.filter(row => `${row.name} ${row.path}`.toLowerCase().includes(sourceSearch.value.toLowerCase())))
+const sourcePages = computed(() => Math.max(1, Math.ceil(filteredSources.value.length / 20)))
+const visibleSources = computed(() => filteredSources.value.slice((sourcePage.value - 1) * 20, sourcePage.value * 20))
+const candidates = computed(() => library.scanResult?.candidates || [])
+const candidatePages = computed(() => Math.max(1, Math.ceil(candidates.value.length / 50)))
+const visibleCandidates = computed(() => candidates.value.slice((candidatePage.value - 1) * 50, candidatePage.value * 50))
+const resultPages = computed(() => Math.max(1, Math.ceil(library.total / 50)))
+const busy = computed(() => library.loading || library.indexing || library.scanning)
+let timer: ReturnType<typeof setTimeout> | undefined
+watch([() => library.query, () => library.sourceId, () => library.category], () => {
+  clearTimeout(timer); library.page = 1; timer = setTimeout(() => void library.search(), 220)
+})
+watch(sourceSearch, () => { sourcePage.value = 1 })
+watch(sourcePages, value => { sourcePage.value = Math.min(value, sourcePage.value) })
+onMounted(() => void library.initialize())
+onUnmounted(() => clearTimeout(timer))
+const queuedSelection = () => import.meta.env.VITE_DESKTOP_E2E ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection() : undefined
+async function addFiles() {
+  const queued = queuedSelection()
+  const paths = queued === undefined ? await open({ multiple: true, filters: [{ name: 'ZIP / TAR', extensions: ['zip', 'tar'] }] }) : queued
+  if (paths) await library.add(Array.isArray(paths) ? paths : [paths])
+}
+async function scanFolder() {
+  const queued = queuedSelection()
+  const directory = queued === undefined ? await open({ directory: true }) : queued
+  if (typeof directory !== 'string') return
+  await library.scan(directory)
+  if (library.scanResult) { candidatePage.value = 1; candidateSelection.value = new Set(candidates.value.map(row => row.path)); candidatesVisible.value = true }
+}
+function toggleCandidate(path: string) {
+  const next = new Set(candidateSelection.value); next.has(path) ? next.delete(path) : next.add(path); candidateSelection.value = next
+}
+async function addCandidates() {
+  if (await library.add([...candidateSelection.value])) candidatesVisible.value = false
+}
+async function removeSource() {
+  if (removing.value && await library.remove(removing.value.id)) removing.value = null
+}
+async function openHit(hit: LibraryHit, action: 'locate' | 'preview' | 'extract') {
+  if (opening.value) return
+  opening.value = `${hit.sourceId}:${hit.path}`
+  try {
+    if (!await library.check(hit)) { expanded.value = hit.sourceId; return }
+    app.openArchiveInBrowser(hit.sourcePath, { librarySourceId: hit.sourceId, focusEntryPath: hit.path, entryAction: action })
+    await router.push('/browser')
+  } finally { opening.value = '' }
+}
+async function resultPage(value: number) { library.page = value; await library.search() }
+</script>
+
+<template>
+  <div class="library-page custom-scrollbar" data-testid="archive-library">
+    <header class="library-heading">
+      <div class="min-w-0"><p class="library-eyebrow">ARCHIVE LIBRARY</p><h1>归档资源库</h1><p class="text-muted text-sm mt-2">记不清在哪个包里？搜到文件，再打开或取回。</p></div>
+      <div class="library-actions"><button class="lib-button" data-testid="library-add-files" :disabled="busy" @click="addFiles"><i class="pi pi-plus" />添加压缩包</button><button class="lib-button primary" data-testid="library-scan-folder" :disabled="busy" @click="scanFolder"><i class="pi pi-folder-open" />扫描资料目录</button></div>
+    </header>
+    <div class="library-stats"><span><strong>{{ library.sources.length }}</strong> 份资料</span><span><strong>{{ library.ready.length }}</strong> 份可搜索</span><span><strong>{{ library.ready.reduce((sum, row) => sum + row.entryCount, 0).toLocaleString() }}</strong> 个文件</span><span class="text-muted">本地索引 · ZIP / TAR · 手动更新</span></div>
+    <div v-if="library.error" class="lib-message error" role="alert" data-testid="library-error"><i class="pi pi-exclamation-circle" /><span>{{ library.error }}</span><button class="lib-link" @click="library.error = ''">关闭</button></div>
+    <div v-if="library.notice" class="lib-message" role="status" data-testid="library-notice"><i class="pi pi-info-circle" /><span>{{ library.notice }}</span><button class="lib-link" @click="library.notice = ''">关闭</button></div>
+    <section v-if="library.indexing || library.scanning" class="library-progress" data-testid="library-progress" aria-live="polite">
+      <div class="flex items-center gap-3"><i class="pi pi-spin pi-spinner text-primary" /><div class="min-w-0"><strong>{{ library.scanning ? '正在查找 ZIP / TAR 候选' : `正在建立索引 · ${library.completed} / ${library.planned}` }}</strong><p v-if="library.indexing" class="text-muted text-xs break-all mt-1">{{ library.sources.find(row => row.id === library.activeSource)?.name }}</p><p class="text-muted text-xs mt-1">可以切换页面，已完成来源可继续搜索</p></div></div>
+      <button class="lib-button" data-testid="library-stop" :disabled="library.stopRequested" @click="library.stop">{{ library.stopRequested ? '正在停止…' : '停止' }}</button>
+    </section>
+    <div class="library-workspace">
+      <section class="library-panel library-sources">
+        <div class="lib-panel-heading"><div><h2><i class="pi pi-box" />我的资料</h2><p>点击每份来源，展开状态和操作</p></div><span class="lib-count">{{ library.sources.length }}</span></div>
+        <div class="source-tools"><input v-model="sourceSearch" class="lib-input" placeholder="筛选包名或来源位置" aria-label="筛选资料来源"><button class="lib-button primary" data-testid="library-index-pending" :disabled="busy || !library.pending.length" @click="library.index(library.pending.map(row => row.id))"><i class="pi pi-database" />建立待处理索引<span v-if="library.pending.length">({{ library.pending.length }})</span></button></div>
+        <p v-if="library.loading && !library.sources.length" class="lib-empty">正在读取本地资料库…</p>
+        <div v-else-if="!library.sources.length" class="lib-empty"><i class="pi pi-inbox text-3xl text-primary/60" /><strong>先加入一批资料</strong><span>选择压缩包，或扫描你指定的文件夹。<br>只建立目录索引，原文件保留。</span><button v-if="library.error" class="lib-link" @click="library.initialize">重新读取</button></div>
+        <p v-else-if="!visibleSources.length" class="lib-empty">没有匹配的来源，试试其他包名。</p>
+        <div v-else class="source-list custom-scrollbar" data-testid="library-source-list">
+          <article v-for="row in visibleSources" :key="row.id" class="library-source" :class="{ expanded: expanded === row.id }" :data-source-id="row.id" :data-source-name="row.name" :data-source-status="row.status">
+            <button class="source-summary" :aria-expanded="expanded === row.id" @click="expanded = expanded === row.id ? '' : row.id"><span class="source-icon"><i class="pi pi-box" /></span><span class="min-w-0 flex-1"><strong class="block break-all">{{ row.name }}</strong><span class="source-status" :class="row.status">{{ libraryStatus[row.status] }}</span><span class="text-muted text-xs"> · {{ row.status === 'ready' ? `${row.entryCount.toLocaleString()} 个文件` : row.format }}</span></span><i :class="expanded === row.id ? 'pi pi-chevron-up' : 'pi pi-chevron-down'" /></button>
+            <div v-if="expanded === row.id" class="source-details"><p class="break-all">{{ row.path }}</p><p v-if="row.indexedAt" class="text-xs">上次索引：{{ new Date(row.indexedAt).toLocaleString() }}</p><p v-if="row.note" class="source-reason" data-testid="library-source-reason">{{ row.note }}</p><div class="library-actions"><button class="lib-link" data-testid="library-index-source" :disabled="busy" @click="library.index([row.id])">{{ row.status === 'ready' ? '刷新索引' : '建立 / 重试索引' }}</button><button v-if="row.status === 'ready'" class="lib-link" @click="library.sourceId = row.id">只搜此包</button><button class="lib-link text-muted" data-testid="library-remove-source" :disabled="busy" @click="removing = row">移出资料库</button></div></div>
+          </article>
+        </div>
+        <div v-if="sourcePages > 1" class="lib-pagination"><button :disabled="sourcePage <= 1" @click="sourcePage--">上一页</button><span>{{ sourcePage }} / {{ sourcePages }}</span><button :disabled="sourcePage >= sourcePages" @click="sourcePage++">下一页</button></div>
+        <p class="source-footnote">未建库或失败的来源不计入搜索。索引只记文件名和位置，不保存包内内容或密码。</p>
+      </section>
+      <section class="library-panel library-results">
+        <div class="lib-panel-heading"><div><h2><i class="pi pi-search" />跨包查找</h2><p>按文件名或包内路径查找，保留每条结果的来源</p></div></div>
+        <div class="library-search"><label class="search-box"><i class="pi pi-search" /><input v-model="library.query" data-testid="library-query" aria-label="搜索包内文件名或路径" placeholder="例如：合同、说明.txt、项目/素材" maxlength="512"></label><div class="search-filters"><select v-model="library.sourceId" class="lib-input" data-testid="library-source-filter" aria-label="搜索来源"><option value="">所有已建库来源</option><option v-for="row in library.ready" :key="row.id" :value="row.id">{{ row.name }}</option></select><select v-model="library.category" class="lib-input" data-testid="library-category" aria-label="文件类型"><option value="all">所有文件类型</option><option value="document">文档</option><option value="image">图片</option><option value="audio">音频</option><option value="video">视频</option><option value="archive">压缩包</option></select></div></div>
+        <div class="results-caption"><span>{{ library.searching ? '正在查找…' : `找到 ${library.total.toLocaleString()} 个文件` }}</span><button class="lib-link" :disabled="library.searching" data-testid="library-refresh-search" @click="library.search">刷新结果</button></div>
+        <div v-if="library.searchError" class="lib-empty" role="alert">搜索暂时不可用：{{ library.searchError }}<button class="lib-link" @click="library.search">重新搜索</button></div>
+        <div v-else-if="!library.hits.length" class="lib-empty result-empty"><i class="pi pi-search text-3xl text-primary/50" /><strong>{{ library.ready.length ? '没有匹配的文件' : '建好索引，资料就能找到' }}</strong><span>{{ library.ready.length ? '试试更短的文件名，或更换来源与类型筛选。' : '在左侧手动建立索引，已完成的来源会出现在这里。' }}</span></div>
+        <div v-else class="library-hit-list" data-testid="library-results">
+          <article v-for="hit in library.hits" :key="`${hit.sourceId}:${hit.path}`" class="library-hit" :data-entry-path="hit.path" :data-hit-source="hit.sourceName">
+            <div class="hit-title"><i :class="['pi', ['png','jpg','jpeg','gif','webp','bmp'].includes(hit.extension) ? 'pi-image' : 'pi-file']" /><button class="hit-name" data-testid="library-locate-hit" :disabled="!!opening" @click="openHit(hit, 'locate')">{{ hit.name }}</button><span class="hit-size">{{ libraryBytes(hit.size) }}</span></div>
+            <p class="hit-path">{{ hit.path }}</p><div class="hit-origin"><span class="hit-source"><i class="pi pi-box" />{{ hit.sourceName }}<small>{{ hit.format }}</small></span><time v-if="hit.modified">{{ hit.modified }}</time></div>
+            <div class="hit-bottom"><span class="hit-source-path">{{ hit.sourcePath }}</span><div class="library-actions"><button class="lib-button small" data-testid="library-preview-hit" :disabled="!!opening" @click="openHit(hit, 'preview')"><i class="pi pi-eye" />查看</button><button class="lib-button small primary" data-testid="library-extract-hit" :disabled="!!opening" @click="openHit(hit, 'extract')"><i class="pi pi-download" />取回</button></div></div>
+          </article>
+        </div>
+        <div v-if="resultPages > 1" class="lib-pagination"><button data-testid="library-prev-page" :disabled="library.page <= 1 || library.searching" @click="resultPage(library.page - 1)">上一页</button><span>{{ library.page }} / {{ resultPages }} · 每页 50 条</span><button data-testid="library-next-page" :disabled="library.page >= resultPages || library.searching" @click="resultPage(library.page + 1)">下一页</button></div>
+      </section>
+    </div>
+    <Modal v-model:visible="candidatesVisible" title="选择要加入的资料" icon="pi pi-folder-open" size="lg" :show-footer="true">
+      <div data-testid="library-candidates"><p class="text-muted text-sm">扫描了 {{ library.scanResult?.visited.toLocaleString() }} 个位置，找到 {{ candidates.length.toLocaleString() }} 份 ZIP / TAR 候选。加入后再手动建索引；密码和分卷暂不建库。</p><p v-if="library.scanResult?.inaccessible" class="source-reason mt-2">{{ library.scanResult.inaccessible }} 处无法访问，其他候选保留。</p><p v-if="library.scanResult?.stopped || library.scanResult?.limited" class="source-reason mt-2">{{ library.scanResult.stopped ? '扫描已停止' : '已达到本次扫描上限，请缩小资料目录' }}，以下为已找到的部分。</p><div class="library-actions my-3"><button class="lib-link" @click="candidateSelection = new Set(candidates.map(row => row.path))">全选</button><button class="lib-link" @click="candidateSelection = new Set()">清空选择</button><span class="text-muted text-xs">已选 {{ candidateSelection.size }} 份</span></div><label v-for="row in visibleCandidates" :key="row.path" class="candidate-row"><input type="checkbox" :checked="candidateSelection.has(row.path)" @change="toggleCandidate(row.path)"><span class="min-w-0"><strong class="block break-all">{{ row.name }}</strong><small class="block break-all text-muted">{{ row.path }}</small></span><small class="text-primary">{{ row.format }}</small></label><p v-if="!candidates.length" class="lib-empty">此目录没有找到 ZIP / TAR。可以选择其他资料目录。</p><div v-if="candidatePages > 1" class="lib-pagination"><button :disabled="candidatePage <= 1" @click="candidatePage--">上一页</button><span>{{ candidatePage }} / {{ candidatePages }}</span><button :disabled="candidatePage >= candidatePages" @click="candidatePage++">下一页</button></div></div>
+      <template #footer><button class="lib-button" @click="candidatesVisible = false">返回</button><button class="lib-button primary" data-testid="library-confirm-candidates" :disabled="!candidateSelection.size || library.loading" @click="addCandidates">加入 {{ candidateSelection.size }} 份资料</button></template>
+    </Modal>
+    <Modal :visible="!!removing" title="移出资料库？" icon="pi pi-info-circle" :show-footer="true" @update:visible="removing = null"><p class="break-all">{{ removing?.name }}</p><p class="text-muted text-sm mt-2">只移除这份来源的索引，磁盘上的原包保留。</p><template #footer><button class="lib-button" @click="removing = null">返回</button><button class="lib-button primary" data-testid="library-confirm-remove" @click="removeSource">移出资料库</button></template></Modal>
+  </div>
+</template>
+
+<style scoped>
+.library-page{height:100%;min-width:0;overflow:auto;padding:clamp(16px,3vw,32px);display:flex;flex-direction:column;gap:18px}.library-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.library-heading h1{font-size:clamp(26px,3vw,36px);font-weight:900;letter-spacing:-.05em}.library-eyebrow{font-size:10px;letter-spacing:.18em;font-weight:900;color:var(--dynamic-accent);margin-bottom:5px}.library-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.lib-button{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border:1px solid var(--border-subtle);border-radius:12px;background:var(--bg-card);font-size:12px;font-weight:800;transition:background .18s,transform .18s;min-width:0}.lib-button:hover:enabled{background:var(--bg-input);transform:translateY(-1px)}.lib-button.primary{background:var(--dynamic-accent);color:white;border-color:transparent}.lib-button.small{padding:7px 11px;font-size:11px}.lib-button:disabled,.lib-link:disabled{opacity:.45;cursor:not-allowed}.lib-link{color:var(--dynamic-accent);font-size:12px;font-weight:800}.library-stats{display:flex;gap:12px 22px;flex-wrap:wrap;border:1px solid var(--border-subtle);background:var(--bg-card);padding:14px 18px;border-radius:16px;font-size:12px}.library-stats strong{font-size:17px;color:var(--dynamic-accent);margin-right:4px}.library-workspace{display:grid;grid-template-columns:minmax(250px,.75fr) minmax(0,1.6fr);gap:18px;align-items:start}.library-panel{border:1px solid var(--border-subtle);border-radius:20px;background:var(--bg-card);min-width:0;overflow:hidden}.lib-panel-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 20px 15px;border-bottom:1px solid var(--border-subtle)}.lib-panel-heading h2{font-weight:900;display:flex;gap:9px;align-items:center}.lib-panel-heading h2 i{color:var(--dynamic-accent)}.lib-panel-heading p{font-size:11px;line-height:1.7;margin-top:6px;color:var(--text-muted)}.lib-count{background:var(--bg-input);border-radius:10px;padding:5px 9px;font-size:12px;font-weight:900}.source-tools{padding:16px;display:flex;flex-direction:column;gap:10px}.lib-input{min-width:0;max-width:100%;width:100%;padding:10px 12px;border:1px solid var(--border-subtle);border-radius:11px;background:var(--bg-input);font-size:12px;outline:none}.lib-input:focus,.search-box:focus-within{border-color:var(--dynamic-accent)}.source-list{max-height:600px;overflow:auto;padding:0 12px 12px;display:flex;flex-direction:column;gap:8px}.library-source{flex-shrink:0;border:1px solid var(--border-subtle);border-radius:13px;overflow:hidden}.library-source.expanded{border-color:var(--dynamic-accent)}.source-summary{width:100%;display:flex;align-items:center;gap:10px;text-align:left;padding:12px;font-size:12px}.source-icon{color:var(--dynamic-accent);background:var(--bg-input);border-radius:10px;padding:10px}.source-status{font-size:10px;font-weight:800;color:var(--text-muted)}.source-status.ready{color:#16a34a}.source-status.failed,.source-status.interrupted{color:#d97706}.source-status.indexing{color:var(--dynamic-accent)}.source-details{border-top:1px solid var(--border-subtle);padding:12px;display:flex;flex-direction:column;gap:10px;font-size:11px;color:var(--text-muted)}.source-reason{color:#d97706;overflow-wrap:anywhere;line-height:1.8}.source-footnote{font-size:11px;line-height:1.8;padding:14px 18px;color:var(--text-muted);border-top:1px solid var(--border-subtle)}.library-search{padding:18px;display:flex;flex-direction:column;gap:10px}.search-box{display:flex;align-items:center;gap:10px;border:1px solid var(--border-subtle);border-radius:13px;background:var(--bg-input);padding:12px}.search-box i{color:var(--dynamic-accent)}.search-box input{width:100%;min-width:0;background:transparent;outline:none;font-size:13px}.search-filters{display:grid;grid-template-columns:minmax(0,1fr) minmax(130px,.65fr);gap:10px}.results-caption{display:flex;justify-content:space-between;align-items:center;padding:0 20px 12px;font-size:11px;color:var(--text-muted)}.library-hit-list{padding:0 14px 14px;display:flex;flex-direction:column;gap:10px}.library-hit{padding:14px;border:1px solid var(--border-subtle);border-radius:14px;transition:border-color .2s}.library-hit:hover{border-color:var(--dynamic-accent)}.hit-title{display:flex;align-items:flex-start;gap:9px}.hit-title>i{color:var(--dynamic-accent);margin-top:3px}.hit-name{text-align:left;font-size:13px;font-weight:900;overflow-wrap:anywhere;flex:1;min-width:0}.hit-name:hover{color:var(--dynamic-accent)}.hit-size{font-size:11px;color:var(--text-muted);white-space:nowrap}.hit-path{font-size:11px;color:var(--text-muted);overflow-wrap:anywhere;margin:7px 0 10px}.hit-origin{display:flex;gap:8px 16px;flex-wrap:wrap;align-items:center;font-size:10px;color:var(--text-muted)}.hit-source{display:flex;gap:5px;align-items:center;overflow-wrap:anywhere;min-width:0}.hit-source small{color:var(--dynamic-accent);background:var(--bg-input);padding:2px 5px;border-radius:5px}.hit-bottom{margin-top:12px;padding-top:10px;border-top:1px solid var(--border-subtle);display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}.hit-source-path{font-size:10px;overflow-wrap:anywhere;color:var(--text-muted);min-width:0;flex:1 1 160px}.lib-empty{padding:30px 18px;display:flex;align-items:center;flex-direction:column;gap:12px;text-align:center;font-size:12px;line-height:1.9;color:var(--text-muted)}.lib-empty strong{color:var(--text-base);font-size:14px}.result-empty{min-height:220px;justify-content:center}.lib-pagination{display:flex;justify-content:center;gap:12px;align-items:center;padding:14px;font-size:11px;border-top:1px solid var(--border-subtle);flex-wrap:wrap}.lib-pagination button{padding:6px 10px;border:1px solid var(--border-subtle);border-radius:8px}.lib-pagination button:disabled{opacity:.35}.lib-message,.library-progress{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px;border:1px solid var(--border-subtle);background:var(--bg-card);border-radius:14px;font-size:12px;overflow-wrap:anywhere}.lib-message>span{flex:1;min-width:0}.lib-message>i{color:var(--dynamic-accent)}.lib-message.error{border-color:#ef444466}.lib-message.error>i{color:#ef4444}.candidate-row{display:flex;align-items:center;gap:12px;padding:12px;border-top:1px solid var(--border-subtle);font-size:12px}.candidate-row>span{flex:1}.candidate-row input{accent-color:var(--dynamic-accent);flex-shrink:0}
+@media(max-width:1050px){.library-workspace{grid-template-columns:minmax(0,1fr)}.source-list{max-height:300px}.library-heading{align-items:flex-start}.library-panel{border-radius:16px}}@media(max-width:600px){.library-page{gap:12px}.search-filters{grid-template-columns:minmax(0,1fr)}.library-heading .library-actions{width:100%}.library-heading .lib-button{flex:1}.library-stats{gap:8px 14px}.lib-panel-heading{padding:16px}.library-hit{padding:12px}.hit-size{font-size:10px}.hit-bottom .library-actions{margin-left:auto}}
+</style>

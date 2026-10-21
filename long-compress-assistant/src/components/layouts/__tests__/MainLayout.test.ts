@@ -43,12 +43,15 @@ vi.mock('@/components/tasks/PendingDraftRecovery.vue', () => ({
   default: { template: '<div data-test="pending-draft-recovery" />' }
 }))
 
+vi.mock('@/components/archive/ZipEditRecoveryNotice.vue', () => ({ default: { template: '<div />' } }))
+
 const routes = [
   { path: '/', redirect: { name: 'Decompress' } },
   { path: '/decompress', name: 'Decompress', component: { template: '<div>Decompress</div>' } },
   { path: '/compress', name: 'Compress', component: { template: '<div>Compress</div>' } },
   { path: '/special-compression', name: 'SpecialCompression', component: { template: '<div>Special Compression</div>' } },
   { path: '/browser', name: 'ArchiveBrowser', component: { template: '<div>Browser</div>' } },
+  { path: '/library', name: 'ArchiveLibrary', component: { template: '<div>Library</div>' } },
   { path: '/vault', name: 'Vault', component: { template: '<div>Vault</div>' } },
   { path: '/integrity', name: 'FileIntegrity', component: { template: '<div>Integrity</div>' } },
   { path: '/history', name: 'History', component: { template: '<div>History</div>' } },
@@ -109,7 +112,7 @@ describe('MainLayout', () => {
     expect(mocks.invoke).toHaveBeenCalledTimes(8)
   })
 
-  it('renders the eight product navigation entries with special compression beside the file browser', async () => {
+  it('renders the nine product navigation entries with special compression beside the file browser', async () => {
     const { wrapper } = await mountLayout()
 
     expect(wrapper.find('.pi-folder-open').exists()).toBe(true)
@@ -125,6 +128,7 @@ describe('MainLayout', () => {
     expect(mocks.t).toHaveBeenCalledWith('nav.special_compression')
     expect(wrapper.get('[data-testid="nav-SpecialCompression"]').attributes('aria-label')).toContain('Ctrl+Shift+S')
     expect(mocks.t).toHaveBeenCalledWith('nav.browser')
+    expect(mocks.t).toHaveBeenCalledWith('nav.library')
     expect(mocks.t).toHaveBeenCalledWith('nav.vault')
     expect(mocks.t).toHaveBeenCalledWith('nav.integrity')
     expect(mocks.t).toHaveBeenCalledWith('nav.history')
@@ -135,9 +139,9 @@ describe('MainLayout', () => {
     const { wrapper } = await mountLayout('/compress')
 
     const navButtons = wrapper.findAll('aside nav > button')
-    expect(navButtons).toHaveLength(8)
-    expect(navButtons[6].attributes('data-testid')).toBe('nav-History')
-    expect(navButtons[7].attributes('data-testid')).toBe('nav-Settings')
+    expect(navButtons).toHaveLength(9)
+    expect(navButtons[7].attributes('data-testid')).toBe('nav-History')
+    expect(navButtons[8].attributes('data-testid')).toBe('nav-Settings')
     expect(navButtons[1].classes()).toContain('bg-primary/20')
     expect(navButtons[0].classes()).toContain('hover:bg-primary/8')
     expect(navButtons[1].attributes('aria-current')).toBe('page')
