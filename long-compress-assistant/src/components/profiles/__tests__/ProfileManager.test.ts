@@ -69,6 +69,8 @@ vi.mock('@/stores/app', () => ({
   }),
 }))
 
+vi.mock('@/composables/useArchiveEngine',()=>({useArchiveEngine:()=>({canCreate:()=>true,refresh:async()=>undefined})}))
+
 const mountManager = () => mount(ProfileManager, {
   global: {
     stubs: {
@@ -423,4 +425,10 @@ describe('ProfileManager', () => {
       }),
     }))
   })
+})
+
+it('swm1540 profile native size stays enabled and cannot be disabled',async()=>{
+ const wrapper=mountManager();await flushPromises();await wrapper.findAll('button').find(b=>b.text().includes('新建配置组'))!.trigger('click');await wrapper.get('select').setValue('swm');await flushPromises()
+ const hint=wrapper.get('[data-testid="profile-swm-hint"]');expect(hint.text()).toContain('单个资源可能超过目标大小')
+ const toggle=wrapper.findAll('label').find(l=>l.text().includes('将压缩包拆分为多个文件'))!.get('input');expect((toggle.element as HTMLInputElement).checked).toBe(true);expect(toggle.attributes('disabled')).toBeDefined()
 })

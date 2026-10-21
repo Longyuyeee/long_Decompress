@@ -104,6 +104,11 @@ const dialogTitle = computed(() =>
 )
 
 watch(() => formData.value.config.format, () => {
+  if (formData.value.config.format === 'swm') {
+    formData.value.config.splitArchive = true
+    if (!formData.value.config.splitSize) formData.value.config.splitSize = 1024
+    if (!['store','xpress','lzx'].includes(formData.value.config.wimMethod || '')) formData.value.config.wimMethod = 'store'
+  }
   if (!supportsPassword.value) formData.value.config.password = null
   if (!supportsSplit.value) {
     formData.value.config.splitArchive = false
@@ -690,12 +695,13 @@ const formatDate = (timestamp: number | null) =>
           <label class="profile-option"><input v-model="formData.config.keepStructure" type="checkbox" /><span><strong>保留目录结构</strong><small>归档内保留原始文件夹层级</small></span></label>
           <label class="profile-option"><input v-model="formData.config.deleteAfter" type="checkbox" /><span><strong>完成后删除源文件</strong><small>仅在完整性校验通过后执行</small></span></label>
           <label class="profile-option" :class="{ 'opacity-70': formData.config.deleteAfter }"><input v-model="formData.config.verifyAfter" type="checkbox" :disabled="formData.config.deleteAfter" /><span><strong>压缩完成后校验</strong><small>{{ formData.config.deleteAfter ? '删除源文件时强制开启' : '发布最终文件前读取并验证归档' }}</small></span></label>
-          <label v-if="supportsSplit" class="profile-option"><input v-model="formData.config.splitArchive" type="checkbox" /><span><strong>分卷压缩</strong><small>将压缩包拆分为多个文件</small></span></label>
+          <label v-if="supportsSplit" class="profile-option"><input v-model="formData.config.splitArchive" :disabled="formData.config.format === 'swm'" type="checkbox" /><span><strong>分卷压缩</strong><small>将压缩包拆分为多个文件</small></span></label>
           <RarRecoveryField v-if="formData.config.format === 'rar'" v-model="formData.config.rarRecoveryPercent" v-model:recovery-volumes="formData.config.rarRecoveryVolumes" />
           <label v-if="supportsSolid" class="profile-option"><input v-model="formData.config.createSolidArchive" type="checkbox" /><span><strong>固实压缩</strong><small>提高同类文件压缩率</small></span></label>
           <label v-if="supportsSolid" class="profile-option"><input data-testid="profile-encrypt-filenames" v-model="formData.config.encryptFilenames" type="checkbox" /><span><strong>加密文件名 <HelpHint label="配置组文件名加密说明">查看包内文件名也需要密码。支持 7Z / RAR，运行前请填写密码。</HelpHint></strong></span></label>
         </div>
 
+        <p v-if="formData.config.format === 'swm'" data-testid="profile-swm-hint" class="text-xs leading-relaxed text-muted">SWM 使用原生资源分包，需整组保留；单个资源可能超过目标大小。仅支持非固实的仅存储、XPRESS、LZX，不含原生密码。</p>
         <label v-if="formData.config.splitArchive" class="block">
           <span class="mb-2 block text-xs font-black text-muted">每个分卷大小（MiB）</span>
           <input v-model.number="formData.config.splitSize" type="number" min="1" step="1" class="h-10 w-full rounded-xl border border-subtle bg-input px-3 text-sm text-content outline-none focus:border-primary" />

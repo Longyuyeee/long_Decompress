@@ -48,3 +48,7 @@ it('swm1540 method selector exposes only actual non-solid methods',()=>{
  expect(wrapper.findComponent({name:'ThemedSelect'}).props('options').map((o:{value:string})=>o.value)).toEqual(['store','xpress','lzx'])
  expect(wrapper.text()).toContain('SWM 压缩方法')
 })
+
+it('swm1540 lets a user clear and replace volume size without echoing the default during typing',()=>{
+ const s=useCompressionStore();s.globalSettings.format='swm';s.globalSettings.splitSize='';expect(s.getEffectiveSettings().splitSize).toBe('');s.globalSettings.splitSize='1';expect(s.getEffectiveSettings().splitSize).toBe('1')
+})

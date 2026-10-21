@@ -118,6 +118,8 @@ pub fn create_swm(sources: &[String], output: &Path, preserve_paths: bool, metho
     ensure!(matches!(method, WimMethod::Store | WimMethod::Xpress | WimMethod::Lzx), "原生 SWM 仅支持非固实的仅存储、XPRESS 或 LZX；请明确选择方法");
     ensure!(split_size >= 65536, "SWM 目标卷大小至少需要 64 KiB");
     ensure!(output.extension().is_some_and(|e| e.eq_ignore_ascii_case("swm")), "原生 SWM 输出需要以 .swm 结尾");
+    ensure!(!cancelled.load(Ordering::Relaxed), CompressionError::Cancelled);
+    if let Some(parent) = output.parent() { std::fs::create_dir_all(parent)?; }
     ensure!(!output.exists() && super::archive_volumes::volume_paths(output)?.is_empty(), "SWM 输出组已存在，请选择新名称");
     ensure!(!cancelled.load(Ordering::Relaxed), CompressionError::Cancelled);
     let parent = output.parent().unwrap_or_else(|| Path::new("."));

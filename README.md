@@ -129,10 +129,10 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 
 | 能力 | 主要格式与说明 |
 | --- | --- |
-| 创建归档 | ZIP（Deflate / Zstandard / BZip2 / PPMd / LZMA）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码、数字分卷与保留历史的增量更新）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM（存储/XPRESS/LZX/LZMS/固实）、ESD（LZMS 固实），两者支持数字分卷 |
-| 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式当前内容/日志式历史快照、版本对比与变化提取）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，原生 SWM（Copy/XPRESS/LZX 整组只读），以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
+| 创建归档 | ZIP（Deflate / Zstandard / BZip2 / PPMd / LZMA）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码、数字分卷与保留历史的增量更新）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM（存储/XPRESS/LZX/LZMS/固实）、ESD（LZMS 固实），两者支持数字分卷；SWM（仅存储/XPRESS/LZX 原生资源分包） |
+| 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式当前内容/日志式历史快照、版本对比与变化提取）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，原生 SWM（Copy/XPRESS/LZX 整组读取），以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
 | 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷、ZPAQ 原生密码数字切卷；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
-| 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM、ZPAQ（含改密与数字分卷）；密码和分卷随目标格式提供 |
+| 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM / ESD / SWM、ZPAQ（含改密与数字分卷）；密码和分卷随目标格式提供 |
 | 清单校验 | SFV/MD5/SHA256 逐文件状态与原因、待补列表、按需复查；匹配表示与清单一致 |
 | 内部预览 | ZIP/TAR 系列及普通 GZIP/BZIP2/XZ/Zstandard 流、ZPAQ 日志式所选快照中的受支持图片与文本；预览超出读取范围时可先提取后打开 |
 | 图片压缩 | JPEG、PNG、WebP；质量、尺寸与格式按对应编码能力调整 |
@@ -236,7 +236,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.39 · 固实 WIM / ESD**。WIM 增加 LZMS 固实选择，ESD 固定真实固实归档；数字分卷、密码原包双向转换、浏览预览、提取与补卷接续。方法随配置组、模板、草稿、历史和多选保存，原交互与等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.39.md) · [范围与记录](long-compress-assistant/docs/WIM_SOLID_FREEZE_1.5.39.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.39)。下一版 [v1.5.40 原生 SWM 创建](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.40.md)仅规划，尚未开发。 [近期排期 v1.5.40～43](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.40_TO_1.5.43.md) · [五模块分阶段路线与主线回归 v1.5.44～59](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)。
+**v1.5.40 · 原生 SWM 创建**。新增仅存储、XPRESS、LZX 非固实资源分包，生成 name.swm、name2.swm 等整组结果；接通密码原包转换、任意成员读取和补卷接续，保留单条展开、多选弹窗与等宽/窄窗布局。单个资源可能超过目标卷大小，无原生密码，不保证系统部署。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.40.md) · [范围与记录](long-compress-assistant/docs/NATIVE_SWM_CREATE_FREEZE_1.5.40.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.40)。下一步按[近期排期](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.40_TO_1.5.43.md)推进 v1.5.41 用途配置，后续按[五模块分阶段路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)执行。
+
+**v1.5.39 · 固实 WIM / ESD**。WIM 增加 LZMS 固实选择，ESD 固定真实固实归档；数字分卷、密码原包双向转换、浏览预览、提取与补卷接续。方法随配置组、模板、草稿、历史和多选保存，原交互与等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.39.md) · [范围与记录](long-compress-assistant/docs/WIM_SOLID_FREEZE_1.5.39.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.39)。原生 SWM 创建已由上方 v1.5.40 接续，当前进度以最新记录为准。 [近期排期 v1.5.40～43](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.40_TO_1.5.43.md) · [五模块分阶段路线与主线回归 v1.5.44～59](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)。
 
 **v1.5.38 · ZIP LZMA 创建**。增加可选方法，按强度显示字典，接通密码、数字/标准卷、转换、浏览提取与补卷流程。真实编码采样、暂停停止、草稿/历史/模板和多选保留方法，原交互与等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.38.md) · [范围与记录](long-compress-assistant/docs/ZIP_LZMA_FREEZE_1.5.38.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.38)。下一版 [v1.5.39 固实 WIM / ESD](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.39.md)已由 v1.5.39 接续，当前进度以上方最新记录为准。
 

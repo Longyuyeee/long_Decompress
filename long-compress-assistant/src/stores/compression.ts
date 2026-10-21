@@ -382,7 +382,7 @@ export const useCompressionStore = defineStore('compression', () => {
 
   const getEffectiveSettings = (settings?: CompressionOptions): CompressionOptions => {
     const effective = settings || globalSettings.value
-    if (effective.format === 'swm') return { ...effective, splitArchive: true, splitSize: Number(effective.splitSize) > 0 ? effective.splitSize : '1024', wimMethod: ['store','xpress','lzx'].includes(effective.wimMethod || '') ? effective.wimMethod : 'store' }
+    if (effective.format === 'swm') return { ...effective, splitArchive: true, wimMethod: ['store','xpress','lzx'].includes(effective.wimMethod || '') ? effective.wimMethod : 'store' }
     return effective.format === 'esd' ? { ...effective, wimMethod: 'solid' } : effective
   }
 
