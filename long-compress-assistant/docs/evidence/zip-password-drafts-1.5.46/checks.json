@@ -1,0 +1,51 @@
+{
+  "version": "1.5.46",
+  "date": "2026-10-21",
+  "frontend": {
+    "distinctPassed": 70,
+    "newPasswordAndDraftCases": 14,
+    "relatedPriorEditCases": 11,
+    "relatedPriorWorkspaceCases": 16,
+    "relatedBrowserCases": 29,
+    "execution": "Three initial isolated mocks/async waits corrected; only the three affected cases rerun, all passed."
+  },
+  "rust": {
+    "distinctPassed": 18,
+    "newPasswordAndReferenceCases": 6,
+    "newDraftPersistenceCases": 1,
+    "relatedPriorCases": 11,
+    "execution": "All passed; then only two strengthened password-only/legacy-encoding cases rerun, passed."
+  },
+  "builds": {
+    "typecheckAndVite": "passed",
+    "shellAndVersionIdentity": "passed",
+    "native": "custom-protocol,desktop-e2e; VITE_DESKTOP_E2E=1",
+    "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+    "shellSha256": "3c825ce40331579815e522960e7139544ee1dbb18687c78b09031916ae5d3089"
+  },
+  "desktop": {
+    "distinctFlows": 4,
+    "layoutRecords": 16,
+    "horizontalOverflow": 0,
+    "screenshotsViewed": 8,
+    "receipt": "desktop.json",
+    "sameFinalBinary": true,
+    "normalCloseAndSameProfileRestart": true,
+    "completedReceiptFixture": "A completed task id was injected into a stale recipe for the final restart; persisted DB receipt returned the existing result without a new task."
+  },
+  "archives": {
+    "不可覆盖的结果.zip": "ffa3ffbbbdd60df33e05bf8edb40cef6ca9973c560b88c9fb598bb51d5b6a0dc",
+    "传统密码原包.zip": "50f602ac63961b706d5c4f622da4bd593636b658bf4fa527082993665d6bf4cf",
+    "保留密码-237be447.zip": "14e1373792c34b9e06a29a20a85ce2176a623de3b790bf158cac5c18a9c9d570",
+    "密码原包.zip": "76287b6ef1fd4a01d5083c08dbd2237e1459558f9cf1166fdbcaa8a2cd4066e4",
+    "恢复编辑-6cf3ab7d.zip": "4d29f54ae1c80c78c32b851a0bf29315b0051ae35bd07c68bcfed0b1884fb2f7",
+    "新AES密码-11a9867c.zip": "d9d32ad5eb152d70f63cb98524688b9f5caa632e4d57f7a8cc63f7f65b2e5e43",
+    "重新定位的密码包.zip": "db514e6996771cb614d25b885780dcabd6bbb8398e659123501e9035bdb485d9"
+  },
+  "notRepeated": [
+    "unrelated format/password matrix",
+    "real disk-full",
+    "unrelated media and personal installation"
+  ],
+  "releaseReceipt": "Candidate CI, protected merge, tag and formal assets recorded on the version PR."
+}

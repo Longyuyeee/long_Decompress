@@ -32,7 +32,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
     </td>
     <td width="50%" valign="top">
       <h3>🧭 先看内容，再决定解压什么</h3>
-      <p>像浏览文件夹一样查看压缩包，搜索、筛选和选择文件。支持部分格式的图片与文本预览，也能进入嵌套压缩包、选择和对比 ZPAQ 历史快照，按版本取出所选变化。普通 ZIP 可补入、替换、删除、改名与批量整理内容，复核修改后另存新包，原包保留。</p>
+      <p>像浏览文件夹一样查看压缩包，搜索、筛选和选择文件。支持部分格式的图片与文本预览，也能进入嵌套压缩包、选择和对比 ZPAQ 历史快照，按版本取出所选变化。Store/Deflate ZIP 支持普通包与 AES/ZipCrypto 密码内容编辑，可补入、替换、删除、改名和批量整理，复核后另存新包；未完成修改可从草稿恢复，原包保留。</p>
     </td>
   </tr>
   <tr>
@@ -238,7 +238,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.45 · ZIP 目录整理与批量修改**。在原编辑入口按目录整理待保存内容，删除、改名、移动与批量名称规则先预览再加入清单，与添加/替换统一撤销和另存；原包保留，失败后可继续，新包沿原浏览/预览/提取使用。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.45.md) · [范围与记录](long-compress-assistant/docs/ZIP_ORGANIZE_FREEZE_1.5.45.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.45)。下一步按[五模块细分路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)接 v1.5.46 密码 ZIP 和跨次编辑草稿。
+**v1.5.46 · 密码 ZIP 编辑与草稿恢复**。ZIP 工作区接通 AES/ZipCrypto 密码内容、保留/更换/取消输出加密与只改密码另存；未完成修改自动存为本地草稿，重启后定位缺失或变化的来源，重新填写密码再继续。已保存的草稿返回原结果，失败与原件保留。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.46.md) · [范围与记录](long-compress-assistant/docs/ZIP_PASSWORD_DRAFTS_FREEZE_1.5.46.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.46)。编辑工作区三阶段在本版收尾，下一步按[五模块细分路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)进入 v1.5.47 归档资源库与跨包搜索。
+
+**v1.5.45 · ZIP 目录整理与批量修改**。在原编辑入口按目录整理待保存内容，删除、改名、移动与批量名称规则先预览再加入清单，与添加/替换统一撤销和另存；原包保留，失败后可继续，新包沿原浏览/预览/提取使用。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.45.md) · [范围与记录](long-compress-assistant/docs/ZIP_ORGANIZE_FREEZE_1.5.45.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.45)。密码 ZIP 和跨次编辑草稿已由上方 v1.5.46 接续，当前进度以最新记录为准。
 
 **v1.5.44 · ZIP 内容编辑第一阶段**。在原浏览器添加文件/目录、拖入或右键替换，明确处理同名项，在修改清单复核、撤销后另存新 ZIP；原包、未改条目与空目录保留，失败/停止可调整继续，新包可直接浏览、预览和提取。首版支持独立、未加密的 Store/Deflate ZIP。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.44.md) · [范围与记录](long-compress-assistant/docs/ZIP_EDIT_FREEZE_1.5.44.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.44)。目录整理已由上方 v1.5.45 接续，当前进度以最新记录为准。
 

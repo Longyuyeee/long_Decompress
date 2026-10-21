@@ -1,0 +1,348 @@
+{
+  "version": "1.5.46",
+  "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1546\\a153c8a0-74e4-4f5c-b22f-6ac33feaedc1",
+  "checks": [
+    {
+      "kind": "password-edit-failure-vault-keep-and-new-result",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "originalHashPreserved": true,
+      "wrongPasswordRetainsEdits": true,
+      "originalFailurePreserved": true,
+      "vault": true,
+      "independentContents": true,
+      "resultCredentialContinuity": true
+    },
+    {
+      "kind": "zipcrypto-password-only-rekey-as-aes",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "originalPreserved": true,
+      "noContentEditsRequired": true,
+      "newPasswordIndependentRead": true,
+      "newSourceCredentialContinuity": true
+    },
+    {
+      "kind": "real-restart-missing-changed-references-relink-and-corrected-save",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "realProfileRestart": true,
+      "passwordsOmitted": true,
+      "sourceRelocatedAndExplicitlyAccepted": true,
+      "folderRelinkPreservesReferences": true,
+      "extraFileExcluded": true,
+      "existingAndFailurePreserved": true,
+      "independentExtraction": true
+    },
+    {
+      "kind": "completed-receipt-prevents-replaying-a-stale-draft",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "persistedCompletedReceipt": true,
+      "noNewTasks": true,
+      "originalResultOpened": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "wrong-password",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "wrong-password",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "password-review",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "password-review",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "password-result-preview",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "password-result-preview",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "new-password-settings",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "new-password-settings",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "draft-recovery-list",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "draft-recovery-list",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "recovery-sources",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "recovery-sources",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "restored-password-review",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "restored-password-review",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "recovered-result",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "anchorOverflow": 0,
+      "columns": [
+        878
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "recovered-result",
+      "binarySha256": "74e7ac2986459218528c9d126f457c3ecdf6bd432eb54762260f3c53ea2b3194",
+      "anchorOverflow": 0,
+      "columns": [
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "zip-edit1546-wrong-password-1100x700.png",
+    "zip-edit1546-wrong-password-760x520.png",
+    "zip-edit1546-password-review-1100x700.png",
+    "zip-edit1546-password-review-760x520.png",
+    "zip-edit1546-password-result-preview-1100x700.png",
+    "zip-edit1546-password-result-preview-760x520.png",
+    "zip-edit1546-new-password-settings-1100x700.png",
+    "zip-edit1546-new-password-settings-760x520.png",
+    "zip-edit1546-draft-recovery-list-1100x700.png",
+    "zip-edit1546-draft-recovery-list-760x520.png",
+    "zip-edit1546-recovery-sources-1100x700.png",
+    "zip-edit1546-recovery-sources-760x520.png",
+    "zip-edit1546-restored-password-review-1100x700.png",
+    "zip-edit1546-restored-password-review-760x520.png",
+    "zip-edit1546-recovered-result-1100x700.png",
+    "zip-edit1546-recovered-result-760x520.png"
+  ],
+  "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1546\\a153c8a0-74e4-4f5c-b22f-6ac33feaedc1\\密码原包.zip",
+  "zipcrypto": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1546\\a153c8a0-74e4-4f5c-b22f-6ac33feaedc1\\传统密码原包.zip",
+  "sourceHash": "76287b6ef1fd4a01d5083c08dbd2237e1459558f9cf1166fdbcaa8a2cd4066e4",
+  "zipcryptoHash": "50f602ac63961b706d5c4f622da4bd593636b658bf4fa527082993665d6bf4cf",
+  "addition": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1546\\a153c8a0-74e4-4f5c-b22f-6ac33feaedc1\\补入.txt",
+  "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1546\\a153c8a0-74e4-4f5c-b22f-6ac33feaedc1\\保留密码-237be447.zip",
+  "rekey": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1546\\a153c8a0-74e4-4f5c-b22f-6ac33feaedc1\\新AES密码-11a9867c.zip",
+  "draftSource": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1546\\a153c8a0-74e4-4f5c-b22f-6ac33feaedc1\\需要恢复的密码包.zip",
+  "folder": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1546\\a153c8a0-74e4-4f5c-b22f-6ac33feaedc1\\外部引用目录",
+  "recoveredOutput": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1546\\a153c8a0-74e4-4f5c-b22f-6ac33feaedc1\\恢复编辑-6cf3ab7d.zip",
+  "movedSource": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1546\\a153c8a0-74e4-4f5c-b22f-6ac33feaedc1\\重新定位的密码包.zip",
+  "movedFolder": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1546\\a153c8a0-74e4-4f5c-b22f-6ac33feaedc1\\重新定位的外部目录",
+  "changedSourceHash": "db514e6996771cb614d25b885780dcabd6bbb8398e659123501e9035bdb485d9",
+  "recoveryPrepared": true,
+  "resumeNote": "Normal window close and same-profile restart completed; resume the existing missing-source draft. Prior two passed workflows retained.",
+  "fixtureCorrection": "Changed-source fixture regenerated by 7z: Python append retained a mismatched Unicode path extra-field CRC. Runtime unchanged; prior passed flows retained.",
+  "staleDraft": {
+    "sourcePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1546\\a153c8a0-74e4-4f5c-b22f-6ac33feaedc1\\重新定位的密码包.zip",
+    "catalog": {
+      "revision": "4f0697035b812b99c7417150138e4688897ec2ffb3b872d66ca43829c223eb6e",
+      "methods": [
+        "Stored"
+      ],
+      "entries": [
+        {
+          "path": "docs/",
+          "isDir": true,
+          "size": 0
+        },
+        {
+          "path": "docs/说明.txt",
+          "isDir": false,
+          "size": 25
+        },
+        {
+          "path": "empty/",
+          "isDir": true,
+          "size": 0
+        },
+        {
+          "path": "README.txt",
+          "isDir": false,
+          "size": 25
+        },
+        {
+          "path": "后来补入原包.txt",
+          "isDir": false,
+          "size": 29
+        }
+      ],
+      "encrypted": true,
+      "defaultEncryption": "aes256",
+      "encryptions": {
+        "README.txt": "aes256",
+        "后来补入原包.txt": "aes256",
+        "docs/": "none",
+        "empty/": "none",
+        "docs/说明.txt": "aes256"
+      }
+    },
+    "drafts": [
+      {
+        "id": "6b6ef794-cbca-47a3-8a9f-58051f1cde94",
+        "batch": "1681abb9-208a-4b7c-85f9-49b1827bc604",
+        "order": 0,
+        "choice": "choose",
+        "sourcePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1546\\a153c8a0-74e4-4f5c-b22f-6ac33feaedc1\\重新定位的外部目录",
+        "targetPath": "外部引用目录/",
+        "isDir": true,
+        "size": 0,
+        "sourceRevision": "directory"
+      },
+      {
+        "id": "7a758dd1-8e9a-4988-bac0-bf4bfc917d4b",
+        "batch": "1681abb9-208a-4b7c-85f9-49b1827bc604",
+        "order": 1,
+        "choice": "choose",
+        "sourcePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1546\\a153c8a0-74e4-4f5c-b22f-6ac33feaedc1\\重新定位的外部目录\\file.txt",
+        "targetPath": "外部引用目录/file.txt",
+        "isDir": false,
+        "size": 26,
+        "sourceRevision": "26:SystemTime { intervals: 134370352649333670 }"
+      }
+    ],
+    "operations": [
+      {
+        "id": "0f33879e-d9ab-4cff-8a52-428a0ff73d81",
+        "order": 2,
+        "kind": "rename",
+        "targets": [
+          {
+            "id": "input:6b6ef794-cbca-47a3-8a9f-58051f1cde94",
+            "path": "已整理资料"
+          }
+        ]
+      }
+    ],
+    "method": "deflate",
+    "level": 6,
+    "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1546\\a153c8a0-74e4-4f5c-b22f-6ac33feaedc1\\恢复编辑-6cf3ab7d.zip",
+    "saves": 0,
+    "taskId": "zip-edit-789490b8-f892-4e76-b0bc-07ba1e5232a2",
+    "savedAt": "2026-10-21T05:52:57.679Z",
+    "outputMode": "aes256",
+    "outputEncoding": "utf8"
+  },
+  "completedRecoveryId": "zip-edit-fb82748c-9e95-4964-a4f3-8eaaf59e8858"
+}

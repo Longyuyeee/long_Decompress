@@ -435,7 +435,7 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
               <p class="text-xs text-muted mt-2">报告包含此任务已保存的文件路径、错误和日志；旧记录缺失的信息不会补写。</p>
             </section>
             <HistoryExtractionDraft v-if="selectedRecord.taskType === 'decompression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" :record="selectedRecord" />
-            <section v-if="isEdit(selectedRecord)" class="detail-section"><p class="text-xs leading-relaxed text-muted">本条为 ZIP 编辑另存的结果记录。当前会话中的修改可回原包继续；重新启动后的编辑草稿将在后续阶段提供。</p><button class="history-chip text-primary mt-2" data-testid="history-edit-source" @click="openEditSource(selectedRecord)">打开原包编辑</button></section>
+            <section v-if="isEdit(selectedRecord)" class="detail-section"><p class="text-xs leading-relaxed text-muted">本条为 ZIP 编辑另存的结果记录。未完成的修改可从“编辑草稿”恢复；密码需重新填写，已完成的记录不会自动重复执行。</p><button class="history-chip text-primary mt-2" data-testid="history-edit-source" @click="openEditSource(selectedRecord)">打开原包编辑</button></section>
             <button v-else-if="isConversion(selectedRecord)" :disabled="conversion.busy" class="history-chip text-primary" @click="retryConversion(selectedRecord)">{{ selectedRecord.executionConfig?.kind === 'archive-conversion' && selectedRecord.executionConfig.operation === 'zpaq-update' ? '再次更新' : '再次转换' }}</button>
             <HistoryCompressionDraft v-else-if="selectedRecord.taskType === 'compression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" :record="selectedRecord" />
             <HistoryMediaDraft v-if="selectedRecord.taskType === 'compression' && ['image', 'video', 'pdf'].includes(selectedRecord.workloadKind)" :record="selectedRecord" />

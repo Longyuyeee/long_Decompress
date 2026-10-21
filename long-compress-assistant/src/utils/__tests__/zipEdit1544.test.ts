@@ -50,7 +50,7 @@ describe('zipEdit1544',()=>{
   })
   it('keeps edits and the old failure when retrying and clears edits only after publication succeeds',async()=>{
     const store=useZipEditStore();await store.begin('C:/source.zip');const session=store.sessionFor('C:/source.zip')!;session.drafts=[draft('new.txt')]
-    let attempts=0;mocks.invoke.mockImplementation(async command=>{if(command==='save_zip_edit'){if(++attempts===1)throw new Error('输出位置已存在');return{primaryPath:'C:/new.zip',files:[{path:'C:/new.zip',bytes:20}],totalBytes:20,split:false}}})
+    let attempts=0;mocks.invoke.mockImplementation(async command=>{if(command==='inspect_zip_edit')return structuredClone(catalog);if(command==='check_zip_edit_inputs')return [];if(command==='save_zip_edit'){if(++attempts===1)throw new Error('输出位置已存在');return{primaryPath:'C:/new.zip',files:[{path:'C:/new.zip',bytes:20}],totalBytes:20,split:false}}})
     await store.save(session.sourcePath);expect(session.drafts).toHaveLength(1);expect(store.taskFor(session)!.status).toBe('failed');const original=structuredClone(JSON.parse(JSON.stringify(store.taskFor(session))))
     await store.save(session.sourcePath);expect(session.drafts).toHaveLength(0);expect(store.taskFor(session)!.status).toBe('completed');expect(store.taskFor(session)!.retryOfTaskId).toBe(original.id)
     expect(JSON.parse(JSON.stringify(useTaskStore().tasks.find(t=>t.id===original.id)))).toEqual(original)

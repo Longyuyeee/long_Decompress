@@ -314,7 +314,32 @@ pub async fn prepare_zip_edit_inputs(sources:Vec<String>,directory:String)->Resu
     tauri::async_runtime::spawn_blocking(move||crate::services::zip_edit::prepare(&sources,&directory)).await.map_err(|e|e.to_string())?.map_err(|e|format!("{e:#}"))
 }
 #[command]
-pub async fn save_zip_edit(window:Window,task_id:String,source_path:String,revision:String,changes:Vec<crate::services::zip_edit::Change>,original_edits:Option<Vec<crate::services::zip_edit::OriginalEdit>>,output_path:String,method:String,level:u32)->Result<PublishedArchiveOutput,String>{
+pub async fn check_zip_edit_inputs(inputs:Vec<crate::services::zip_edit::Input>)->Result<Vec<crate::services::zip_edit::InputIssue>,String>{
+    tauri::async_runtime::spawn_blocking(move||crate::services::zip_edit::check_inputs(&inputs)).await.map_err(|e|e.to_string())?.map_err(|e|format!("{e:#}"))
+}
+#[command]
+pub async fn load_zip_edit_drafts()->Result<Option<String>,String>{
+    tauri::async_runtime::spawn_blocking(||crate::services::zip_edit_drafts::load(&crate::utils::app_paths::app_data_dir())).await.map_err(|e|e.to_string())?.map_err(|e|format!("{e:#}"))
+}
+#[command]
+pub async fn save_zip_edit_drafts(data:Option<String>)->Result<(),String>{
+    tauri::async_runtime::spawn_blocking(move||crate::services::zip_edit_drafts::save(&crate::utils::app_paths::app_data_dir(),data.as_deref())).await.map_err(|e|e.to_string())?.map_err(|e|format!("{e:#}"))
+}
+#[derive(Serialize)]
+#[serde(rename_all="camelCase")]
+pub struct ZipEditReceipt{status:String,output:Option<PublishedArchiveOutput>}
+#[command]
+pub async fn zip_edit_task_receipt(task_id:String,source_path:String)->Result<Option<ZipEditReceipt>,String>{
+    let pool=crate::database::connection::get_pool().await.map_err(|e|e.to_string())?;
+    let row:Option<(String,String,Option<String>,Option<String>)>=sqlx::query_as("SELECT status,source_paths,execution_config,archive_output FROM task_operation_history WHERE id = ?").bind(task_id).fetch_optional(&pool).await.map_err(|e|e.to_string())?;
+    let Some((status,sources,config,output))=row else{return Ok(None)};
+    let sources:Vec<String>=serde_json::from_str(&sources).map_err(|e|e.to_string())?;
+    let config:serde_json::Value=config.and_then(|value|serde_json::from_str(&value).ok()).unwrap_or_default();
+    if config["kind"]!="archive-edit"||sources.first()!=Some(&source_path){return Ok(None)}
+    Ok(Some(ZipEditReceipt{status,output:output.and_then(|value|serde_json::from_str(&value).ok())}))
+}
+#[command]
+pub async fn save_zip_edit(window:Window,task_id:String,source_path:String,revision:String,changes:Vec<crate::services::zip_edit::Change>,original_edits:Option<Vec<crate::services::zip_edit::OriginalEdit>>,output_path:String,method:String,level:u32,credentials:Option<crate::services::zip_edit::Credentials>)->Result<PublishedArchiveOutput,String>{
     let _output_guard=CompressionOutputGuard::acquire(&task_id,&output_path)?;
     let service=service_for_task(&task_id).await?;let _guard=TaskCancellationGuard::new(&task_id);
     let flag=service.cancellation_flag.clone();let progress_id=task_id.clone();let progress_window=window.clone();let progress_service=service.clone();
@@ -331,7 +356,7 @@ pub async fn save_zip_edit(window:Window,task_id:String,source_path:String,revis
         }
     });
     let result_path=output_path.clone();
-    tauri::async_runtime::spawn_blocking(move||crate::services::zip_edit::save_with_edits(Path::new(&source_path),&revision,&changes,&original_edits.unwrap_or_default(),Path::new(&output_path),&method,level,flag,observer)).await.map_err(|e|e.to_string())?.map_err(|e|format!("ZIP 编辑失败：{e:#}"))?;
+    tauri::async_runtime::spawn_blocking(move||crate::services::zip_edit::save_encrypted(Path::new(&source_path),&revision,&changes,&original_edits.unwrap_or_default(),Path::new(&output_path),&method,level,&credentials.unwrap_or_default(),flag,observer)).await.map_err(|e|e.to_string())?.map_err(|e|format!("ZIP 编辑失败：{e:#}"))?;
     published_archive_output(Path::new(&result_path),false).map_err(|e|e.to_string())
 }
 

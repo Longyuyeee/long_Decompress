@@ -325,7 +325,8 @@ fn main() {
                     let _ = event.window().set_focus();
                     let _ = event.window().emit("exit-confirmation-requested", ());
                 } else {
-                    event.window().app_handle().exit(0);
+                    api.prevent_close();
+                    let _ = event.window().emit("exit-drafts-requested", ());
                 }
             }
         })
@@ -471,6 +472,10 @@ fn main() {
             long_compress_assistant::commands::compression::extract_multiple,
             long_compress_assistant::commands::compression::compress_files,
             long_compress_assistant::commands::compression::inspect_zip_edit,
+            long_compress_assistant::commands::compression::check_zip_edit_inputs,
+            long_compress_assistant::commands::compression::load_zip_edit_drafts,
+            long_compress_assistant::commands::compression::save_zip_edit_drafts,
+            long_compress_assistant::commands::compression::zip_edit_task_receipt,
             long_compress_assistant::commands::compression::prepare_zip_edit_inputs,
             long_compress_assistant::commands::compression::save_zip_edit,
             long_compress_assistant::commands::compression::convert_archive,
