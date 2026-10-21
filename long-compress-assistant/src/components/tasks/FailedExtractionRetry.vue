@@ -23,8 +23,8 @@ const rows = ref(props.taskIds.flatMap(id => {
   const policy = extractionRetryPolicy(task)
   const draft = store.tasks.find(item => item.id === task.retryDraftId)
   const needsPassword = task.passwordRequired && policy.category === 'unknown'
-  return [{ id, name: task.name, reason: task.error || '原任务未提供具体原因', policy,
-    summary: needsPassword ? '需要确认解压密码' : policy.guidance?.title || '解压未完成',
+  return [{ id, name: task.name, reason: task.error || (task.status === 'cancelled' ? '原任务已取消，未完成解压。' : '原任务未提供具体原因'), policy,
+    summary: task.status === 'cancelled' ? '已取消，可调整后创建新任务' : needsPassword ? '需要确认解压密码' : policy.guidance?.title || '解压未完成',
     nextStep: needsPassword ? '在下方填写正确密码，再添加到队列。' : policy.guidance?.steps[0],
     selected: !policy.blocked && !task.retryDraftId,
     source: draft?.sourceFiles[0] || task.sourceFiles[0] || '', output: draft?.outputPath || task.outputPath,
@@ -106,7 +106,7 @@ async function createDrafts() {
       row.checking = true
       try {
         const parent = store.tasks.find(task => task.id === row.id)
-        if (!parent || parent.status !== 'failed') throw new Error('原失败任务已不在队列，请到历史任务查看。')
+        if (!parent || !['failed','cancelled'].includes(parent.status)) throw new Error('原失败任务已不在队列，请到历史任务查看。')
         if (parent.retryDraftId) { row.createdId = parent.retryDraftId; continue }
         const policy = extractionRetryPolicy(parent)
         if (policy.blocked) throw new Error(policy.blocked)
@@ -119,7 +119,7 @@ async function createDrafts() {
         const result = await validateExtractionRetry(row, policy.requireIntegrity, activeDiagnosticId, () => disposed || stopped.value)
         if (disposed || stopped.value) break
         // The original can be cleared or retried by another entry while IPC is pending.
-        if (!store.tasks.includes(parent) || parent.status !== 'failed') throw new Error('原任务状态已变化，请重新打开处理窗口。')
+        if (!store.tasks.includes(parent) || !['failed','cancelled'].includes(parent.status)) throw new Error('原任务状态已变化，请重新打开处理窗口。')
         if (parent.retryDraftId) { row.createdId = parent.retryDraftId; continue }
         const id = store.addTask({
           id: generateId(), name: result.name, type: 'decompression', workloadKind: 'archive',

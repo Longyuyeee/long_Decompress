@@ -10,6 +10,8 @@ import type { ArchiveConversionConfigV1 } from '@/types/executionConfig'
 import type { PublishedArchiveOutput } from '@/types/archiveOutput'
 import type { ConversionDraft, ConversionPatch, ConversionSettings } from '@/types/archiveConversion'
 import { conversionOutputPath, defaultConversionSettings, normalizeConversionSettings } from '@/utils/archiveConversionDraft'
+import { describeTaskFailure } from '@/utils/taskFailure'
+import { isPasswordRelatedError } from '@/utils'
 import { parentDirectory } from '@/utils/resultLocation'
 import { archiveGroupKey, archiveSourceFormat, detectArchiveGroup } from '@/utils/archiveSource'
 import { isPotentialSplitArchivePath, supportsNativePassword, supportsArchiveSplit, supportsFilenameEncryption } from '@/utils/compressionFormat'
@@ -96,6 +98,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     item.sourcePasswordRequired = patch.sourcePassword !== undefined ? false : requirements.source
     item.targetPasswordRequired = patch.password !== undefined || !supportsNativePassword(item.settings.format) ? false : requirements.target
     item.passwordRequired = item.sourcePasswordRequired || item.targetPasswordRequired
+    if (error.value && error.value === item.error) error.value = ''
     item.error = undefined
     if (item.intent === 'zpaq-update' && patch.updateSources !== undefined) { item.sourceIssue = undefined; queueSourceResolution(item) }
   }
@@ -288,8 +291,8 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     const item: ConversionDraft = { id: 'conversion-draft-' + crypto.randomUUID(), sourcePath: source,
       sourceParts: record.sourcePaths.length > 1 ? [...record.sourcePaths] : undefined,
       intent: updating ? 'zpaq-update' : 'convert', expanded: true, selected: true, retryOfTaskId: record.id,
-      targetPasswordRequired: !updating && config.passwordRequired, sourcePasswordRequired: updating && config.passwordRequired, passwordRequired: config.passwordRequired,
-      settings: { ...defaultConversionSettings(), ...(updating ? { updateSources: [...(config.updateSources || [])], archivePrefix: config.archivePrefix || '' } : {}), sourceZpaqSnapshot: config.sourceZpaqSnapshot, outputPath: '', format: config.format,
+      targetPasswordRequired: !updating && config.passwordRequired, sourcePasswordRequired: config.sourcePasswordRequired ?? (updating && config.passwordRequired), passwordRequired: config.passwordRequired || config.sourcePasswordRequired,
+      settings: { ...defaultConversionSettings(), ...(updating ? { updateSources: [...(config.updateSources || [])], archivePrefix: config.archivePrefix || '' } : {}), sourceZpaqSnapshot: config.sourceZpaqSnapshot, outputDirectory: parentDirectory(config.outputPath), outputPath: '', format: config.format,
       ...(config.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: config.sourceZipPasswordEncoding } : {}),
       ...(config.wimMethod ? { wimMethod: config.wimMethod } : {}),
       zipMethod: config.zipMethod ?? 'deflate',
@@ -338,7 +341,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     const id = 'conversion-' + crypto.randomUUID()
     const updating = item.intent === 'zpaq-update'
     const sourceEncoding = item.sourceFormat ? zipPasswordEncodingForSource(item.sourcePath, settings.sourceZipPasswordEncoding, item.sourceFormat) : settings.sourceZipPasswordEncoding
-    const config: ArchiveConversionConfigV1 = { schemaVersion: 1, kind: 'archive-conversion',
+    const config: ArchiveConversionConfigV1 = { schemaVersion: 1, kind: 'archive-conversion', sourcePasswordRequired: !!settings.sourcePassword,
       ...(updating ? { operation: 'zpaq-update', updateSources: [...(settings.updateSources || [])], archivePrefix: settings.archivePrefix || '' } : {}),
       ...(settings.sourceZpaqSnapshot ? { sourceZpaqSnapshot: { ...settings.sourceZpaqSnapshot } } : {}),
       ...(sourceEncoding ? { sourceZipPasswordEncoding: sourceEncoding } : {}),
@@ -385,12 +388,15 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
         const message = String(failure)
         if (/cancelled|canceled|已取消|操作取消/i.test(message)) {
           stopRequested.value = true; tasks.updateTaskStatus(id, 'cancelled')
-        } else { item.error = message; item.expanded = true; tasks.failTask(id, message) }
+        } else { config.sourcePasswordRequired ||= isPasswordRelatedError(message); item.error = message; item.expanded = true; tasks.failTask(id, message) }
       }
       await tasks.waitForHistoryPersistence(id)
     } catch (failure) { item.error = String(failure) }
     finally {
       unlisten?.(); runningTaskId.value = ''
+      item.sourcePasswordRequired = !!settings.sourcePassword || (!!item.error && isPasswordRelatedError(item.error))
+      item.targetPasswordRequired = !updating && !!settings.password
+      item.passwordRequired = item.sourcePasswordRequired || item.targetPasswordRequired
       if (item.settings) { item.settings.sourcePassword = ''; item.settings.password = '' }
     }
   }
@@ -450,6 +456,43 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     } catch (failure) { error.value = String(failure) }
     finally { busy.value = false; defaults.value.sourcePassword = ''; defaults.value.password = '' }
   }
+  async function prepareRetry(id: string) {
+    if (busy.value || preparing.value) return
+    const original = items.value.find(item => item.id === id), previous = original && taskFor(original)
+    if (!original || !previous || !['failed','cancelled'].includes(previous.status)) return
+    const category = describeTaskFailure({ status: previous.status as 'failed' | 'cancelled', errorMessage: previous.error })?.category
+    if (category === 'rollback-incomplete') { error.value = '请先保留并核对原输出和恢复目录，再从历史创建新的任务。'; return }
+    const existing = pending.value.find(item => item.retryOfTaskId === previous.id)
+    if (existing) { existing.expanded = true; activeId.value = existing.id; return existing.id }
+    preparing.value = true; error.value = ''
+    try {
+      const saved = previous.historySaveError ? await tasks.retryHistoryPersistence(previous.id) : await tasks.waitForHistoryPersistence(previous.id)
+      if (!saved) throw new Error('原任务历史尚未保存成功，请先重试保存；未创建新条目。')
+      if (!items.value.includes(original) || taskFor(original) !== previous || !['failed','cancelled'].includes(previous.status)) return
+      const settings = { ...effectiveSettings(original), sourcePassword: '', password: '' }
+      if (settings.updateSources) settings.updateSources = [...settings.updateSources]
+      if (category === 'output-conflict') {
+        const suffix = '.' + settings.format
+        const oldOutput = outputFor(original)
+        const stem = oldOutput.toLowerCase().endsWith(suffix) ? oldOutput.slice(0, -suffix.length) : oldOutput
+        const occupied = new Set(items.value.map(outputFor).map(pathKey))
+        for (let n = 1; ; n++) {
+          const candidate = stem + '_重试' + (n === 1 ? '' : n) + suffix
+          if (!occupied.has(pathKey(candidate))) { settings.outputPath = candidate; break }
+        }
+      }
+      const requirements = passwordRequirements(original)
+      const item: ConversionDraft = { id:'conversion-draft-' + crypto.randomUUID(), sourcePath:original.sourcePath,
+        sourceParts: original.sourceParts ? [...original.sourceParts] : undefined, sourceFormat:original.sourceFormat,
+        sourceReference: original.sourceReference, sourceBytes: original.sourceBytes, intent:original.intent,
+        expanded:true, selected:true, retryOfTaskId:previous.id, settings,
+        sourcePasswordRequired:requirements.source, targetPasswordRequired:requirements.target,
+        passwordRequired:requirements.source || requirements.target }
+      items.value.push(item); queueSourceResolution(item); activeId.value = item.id
+      return item.id
+    } catch (failure) { error.value = String(failure) }
+    finally { preparing.value = false }
+  }
   async function cancel() {
     if (!busy.value || stopRequested.value) return
     stopRequested.value = true
@@ -465,5 +508,5 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     format, zipEncryption, zipPasswordEncoding, sourceZipPasswordEncoding, level, splitMiB, encryptFilenames, error, busy, task, phase,
     supportsPassword, contextIntent, contextSources, stopRequested, preparing, batchNotice, rarSupport, refreshRarSupport, effectiveSettings, outputFor, taskFor, passwordRequirements,
     addSources, chooseContextSource, selectSource, openFromExplorer, show, restore, start, cancel,
-    updateItem, applySelected, updateDefaults, remove, replaceSource }
+    prepareRetry, updateItem, applySelected, updateDefaults, remove, replaceSource }
 })

@@ -1,0 +1,154 @@
+{
+  "version": "1.5.42",
+  "binarySha256": "16041fd0b025b64e1fd4d0b8d93b703035d827eb893f80db6c5568d2deec2bb0",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\failure-recovery-1542\\0ec5de76-3cc0-4d31-b03c-bf080b22136b",
+  "checks": [
+    {
+      "kind": "conversion-conflict-password-confirmation-and-linked-retry",
+      "binarySha256": "16041fd0b025b64e1fd4d0b8d93b703035d827eb893f80db6c5568d2deec2bb0",
+      "oldFailurePreserved": true,
+      "occupiedFilePreserved": true,
+      "allHashes": true,
+      "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\failure-recovery-1542\\0ec5de76-3cc0-4d31-b03c-bf080b22136b\\已有密码输出_重试.zip"
+    },
+    {
+      "kind": "taskbar-missing-volume-correction-without-executing-old-task",
+      "binarySha256": "16041fd0b025b64e1fd4d0b8d93b703035d827eb893f80db6c5568d2deec2bb0",
+      "oldFailurePreserved": true,
+      "newTaskWaitedForConfirmation": true,
+      "allHashes": true
+    },
+    {
+      "kind": "compression-conflict-uses-original-settings-and-new-draft",
+      "binarySha256": "16041fd0b025b64e1fd4d0b8d93b703035d827eb893f80db6c5568d2deec2bb0",
+      "oldFailurePreserved": true,
+      "occupiedFilePreserved": true,
+      "allHashes": true,
+      "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\failure-recovery-1542\\0ec5de76-3cc0-4d31-b03c-bf080b22136b\\已有压缩结果_重试.zip"
+    }
+  ],
+  "layouts": [
+    {
+      "name": "conversion-failure",
+      "binarySha256": "16041fd0b025b64e1fd4d0b8d93b703035d827eb893f80db6c5568d2deec2bb0",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "conversion-failure",
+      "binarySha256": "16041fd0b025b64e1fd4d0b8d93b703035d827eb893f80db6c5568d2deec2bb0",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "conversion-password-confirm",
+      "binarySha256": "16041fd0b025b64e1fd4d0b8d93b703035d827eb893f80db6c5568d2deec2bb0",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "conversion-password-confirm",
+      "binarySha256": "16041fd0b025b64e1fd4d0b8d93b703035d827eb893f80db6c5568d2deec2bb0",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "extraction-correction",
+      "binarySha256": "16041fd0b025b64e1fd4d0b8d93b703035d827eb893f80db6c5568d2deec2bb0",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "extraction-correction",
+      "binarySha256": "16041fd0b025b64e1fd4d0b8d93b703035d827eb893f80db6c5568d2deec2bb0",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "compression-failure",
+      "binarySha256": "16041fd0b025b64e1fd4d0b8d93b703035d827eb893f80db6c5568d2deec2bb0",
+      "anchorOverflow": 0,
+      "columns": [
+        378,
+        378
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "compression-failure",
+      "binarySha256": "16041fd0b025b64e1fd4d0b8d93b703035d827eb893f80db6c5568d2deec2bb0",
+      "anchorOverflow": 0,
+      "columns": [
+        286,
+        286
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "compression-new-draft",
+      "binarySha256": "16041fd0b025b64e1fd4d0b8d93b703035d827eb893f80db6c5568d2deec2bb0",
+      "anchorOverflow": 0,
+      "columns": [
+        394,
+        394
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "compression-new-draft",
+      "binarySha256": "16041fd0b025b64e1fd4d0b8d93b703035d827eb893f80db6c5568d2deec2bb0",
+      "anchorOverflow": 0,
+      "columns": [
+        298,
+        298
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "recovery1542-conversion-failure-1100x700.png",
+    "recovery1542-conversion-failure-760x520.png",
+    "recovery1542-conversion-password-confirm-1100x700.png",
+    "recovery1542-conversion-password-confirm-760x520.png",
+    "recovery1542-extraction-correction-1100x700.png",
+    "recovery1542-extraction-correction-760x520.png",
+    "recovery1542-compression-failure-1100x700.png",
+    "recovery1542-compression-failure-760x520.png",
+    "recovery1542-compression-new-draft-1100x700.png",
+    "recovery1542-compression-new-draft-760x520.png"
+  ],
+  "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\failure-recovery-1542\\0ec5de76-3cc0-4d31-b03c-bf080b22136b\\需要保留的源文件与长名称-资料资料资料资料资料资料资料资料.bin",
+  "inputZip": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\failure-recovery-1542\\0ec5de76-3cc0-4d31-b03c-bf080b22136b\\密码原包.zip",
+  "splitBase": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\failure-recovery-1542\\0ec5de76-3cc0-4d31-b03c-bf080b22136b\\待补齐.7z",
+  "parts": [
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\failure-recovery-1542\\0ec5de76-3cc0-4d31-b03c-bf080b22136b\\待补齐.7z.001",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\failure-recovery-1542\\0ec5de76-3cc0-4d31-b03c-bf080b22136b\\待补齐.7z.002",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\failure-recovery-1542\\0ec5de76-3cc0-4d31-b03c-bf080b22136b\\待补齐.7z.003"
+  ]
+}

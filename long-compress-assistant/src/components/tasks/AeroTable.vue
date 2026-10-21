@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
 import { useSavedLocations } from '@/composables/useSavedLocations'
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useTaskStore, type Task, type TaskType } from '@/stores/task'
 import { useAppStore } from '@/stores/app'
 import { usePasswordStore } from '@/stores/password'
@@ -236,6 +236,14 @@ const getSeverityClass = (severity: string) => {
     default: return 'text-muted'
   }
 }
+
+watch([() => taskStore.recoveryTaskId, displayTasks], async ([id]) => {
+  if (!id || !displayTasks.value.some(task=>task.id===id)) return
+  expandedTasks.value.add(id); taskStore.recoveryTaskId = null
+  await nextTick()
+  const row=Array.from(document.querySelectorAll<HTMLElement>('[data-task-id]')).find(element=>element.dataset.taskId===id)
+  row?.scrollIntoView?.({block:'center',behavior:'smooth'})
+}, {immediate:true})
 
 // Resolve batch destinations only while task details are expanded; no directory scans per row.
 watch(() => expandedTasks.value.size ? pendingDisplayTasks.value
@@ -507,7 +515,7 @@ async (tasks, _, onCleanup) => {
                       <ZipPasswordEncodingField v-if="task.status === 'pending' && (supportsZipPasswordEncoding(task.sourceFiles[0] || '', task.format) || (!task.format && task.zipPasswordEncoding !== undefined))"
                         v-model="task.zipPasswordEncoding" :source-path="task.sourceFiles[0]" :source-format="task.format" test-id="task-zip-password-encoding" />
                       <ResourcePreflightCard :report="task.resourcePreflight" compact />
-                      <FailedExtractionRetry v-if="task.status === 'failed' && (!task.workloadKind || task.workloadKind === 'archive')" :task-ids="[task.id]" inline @created="emit('retry-created', $event)" />
+                      <FailedExtractionRetry v-if="['failed','cancelled'].includes(task.status) && (!task.workloadKind || task.workloadKind === 'archive')" :task-ids="[task.id]" inline @created="emit('retry-created', $event)" />
 
                       <div v-if="task.status === 'pending'" class="inherited-config-control flex min-w-0 flex-wrap items-center gap-x-5 gap-y-3">
                         <button type="button" role="switch" :aria-checked="task.extractToSubfolder" :disabled="task.status !== 'pending'" class="task-subfolder-option flex min-w-0 items-center gap-3 cursor-pointer group/check text-left disabled:cursor-not-allowed disabled:opacity-60" @click.stop="task.extractToSubfolder = !task.extractToSubfolder; task.configurationMode = 'individual'">

@@ -117,6 +117,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | 只提取包里的几个文件 | 文件浏览器 → 打开压缩包 | 搜索并勾选条目，再解压所选内容 |
 | 改格式、密码或分卷 | 压缩中心 → 转换压缩包 | 带入原包，选择新包格式与保存位置 |
 | 压缩图片、视频或 PDF | 特殊压缩 | 选择文件类型，调整对应参数并查看结果 |
+| 失败后调整并继续 | 原任务详情 / 任务栏 | 看原因，带入配置创建新任务，确认后启动；原失败保留 |
 | 找回以前的输出 | 历史任务 | 搜索记录，打开结果或恢复配置创建新任务 |
 
 **运行环境：** Windows 10 1809 及以上 / Windows 11，x64。视频功能暂不保证兼容 Windows N。
@@ -236,7 +237,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.41 · 按用途配置压缩**。兼容分享、体积优先、加密分享、按大小分包四种方案，在原配置位置显示实际参数并确认应用；密码、目录和原包凭据等未指定项保留。压缩与转换共用，单条展开、多选弹窗、自然继承和等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.41.md) · [范围与记录](long-compress-assistant/docs/PURPOSE_PRESETS_FREEZE_1.5.41.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.41)。下一步按[近期排期](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.40_TO_1.5.43.md)推进 v1.5.42 失败纠正和 v1.5.43 批处理结果，再进入[五模块分阶段路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)。
+**v1.5.42 · 失败后调整并继续**。当前压缩/转换详情显示原因与下一步；重名时建议新名称，转换分别确认原包和新包密码。任务栏重试带入原配置创建待处理项，保留原失败、原文件和已有结果，由用户确认启动。单条展开、多选弹窗及等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.42.md) · [范围与记录](long-compress-assistant/docs/FAILURE_RECOVERY_FREEZE_1.5.42.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.42)。下一步按[近期排期](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.40_TO_1.5.43.md)推进 v1.5.43 批处理和结果，再进入[五模块分阶段路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)。
+
+**v1.5.41 · 按用途配置压缩**。兼容分享、体积优先、加密分享、按大小分包四种方案，在原配置位置显示实际参数并确认应用；密码、目录和原包凭据等未指定项保留。压缩与转换共用，单条展开、多选弹窗、自然继承和等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.41.md) · [范围与记录](long-compress-assistant/docs/PURPOSE_PRESETS_FREEZE_1.5.41.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.41)。失败纠正已由上方 v1.5.42 接续，后续进度以最新记录为准。
 
 **v1.5.40 · 原生 SWM 创建**。新增仅存储、XPRESS、LZX 非固实资源分包，生成 name.swm、name2.swm 等整组结果；接通密码原包转换、任意成员读取和补卷接续，保留单条展开、多选弹窗与等宽/窄窗布局。单个资源可能超过目标卷大小，无原生密码，不保证系统部署。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.40.md) · [范围与记录](long-compress-assistant/docs/NATIVE_SWM_CREATE_FREEZE_1.5.40.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.40)。用途配置已由上方 v1.5.41 接续，后续进度以最新记录为准。
 

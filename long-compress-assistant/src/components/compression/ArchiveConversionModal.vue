@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import TaskFailureHint from '@/components/tasks/TaskFailureHint.vue'
+import { computed, ref, nextTick } from 'vue'
 import ZpaqUpdateFields from './ZpaqUpdateFields.vue'
 import ZpaqSnapshotPicker from '@/components/archive/ZpaqSnapshotPicker.vue'
 import { useTauriCommands } from '@/composables/useTauriCommands'
@@ -13,6 +14,7 @@ import ConversionBatchConfig from './ConversionBatchConfig.vue'
 import BatchResultActions from '@/components/tasks/BatchResultActions.vue'
 import { useArchiveConversionStore } from '@/stores/archiveConversion'
 import { resultLocation } from '@/utils/resultLocation'
+import { archiveInspectionMessageForDisplay } from '@/utils/taskFailure'
 import { formatProgressPercent } from '@/utils/progress'
 const store = useArchiveConversionStore()
 const commands = useTauriCommands()
@@ -71,6 +73,12 @@ async function chooseOutput(id: string) {
     if (typeof selected === 'string') store.updateItem(id, { outputPath: selected })
   } catch (error) { store.error = String(error) }
 }
+async function prepareRetry(id: string) {
+  const next=await store.prepareRetry(id)
+  if (!next) return
+  await nextTick()
+  Array.from(document.querySelectorAll<HTMLElement>('[data-conversion-id]')).find(row=>row.dataset.conversionId===next)?.scrollIntoView?.({block:'start',behavior:'smooth'})
+}
 function toggle(id: string) {
   const item = store.items.find(item => item.id === id)!
   item.expanded = !item.expanded
@@ -87,7 +95,7 @@ function toggle(id: string) {
       </div>
       <ConversionBatchConfig />
       <BatchResultActions :locations="results" />
-      <p v-if="store.error" role="alert" class="rounded-xl bg-red-500/5 px-3 py-2 text-xs text-red-500 break-words">{{ store.error }}</p>
+      <p v-if="store.error && !store.items.some(item => store.taskFor(item)?.status === 'failed' && item.error === store.error)" role="alert" class="rounded-xl bg-red-500/5 px-3 py-2 text-xs text-red-500 break-words">{{ archiveInspectionMessageForDisplay(store.error) }}</p>
       <div v-if="!store.items.length" class="rounded-2xl border border-dashed border-primary/30 bg-primary/5 py-10 text-center">
         <i class="pi pi-file-export mb-3 text-3xl text-primary" aria-hidden="true"></i>
         <p class="text-sm font-semibold">{{ store.contextIntent === 'zpaq-update' ? '让已有备份继续保存新内容' : '一次处理多个压缩包' }}</p>
@@ -100,7 +108,7 @@ function toggle(id: string) {
           <span class="mr-auto">共 {{ store.items.length }} 项 · 待处理 {{ store.pending.length }} 项</span>
           <button type="button" class="hover:text-primary" :disabled="store.busy || store.preparing || !results.length" @click="store.items.filter(item => store.taskFor(item)?.status === 'completed').forEach(item => store.remove(item.id))">清除已完成</button>
         </div>
-        <section v-for="item in store.items" :key="item.id" class="min-w-0 border-b border-subtle last:border-b-0" data-testid="conversion-item">
+        <section v-for="item in store.items" :key="item.id" class="min-w-0 border-b border-subtle last:border-b-0" data-testid="conversion-item" :data-conversion-id="item.id">
           <div class="flex min-w-0 items-center gap-3 px-4 py-3 hover:bg-primary/5">
             <input v-model="item.selected" type="checkbox" :disabled="store.busy || store.preparing || !!item.taskId" :aria-label="'选择 ' + item.sourcePath.split(/[\\/]/).pop()" data-testid="conversion-checkbox" />
             <button type="button" class="min-w-0 flex-1 text-left" data-testid="conversion-row" :aria-expanded="item.expanded" @click="toggle(item.id)">
@@ -111,8 +119,9 @@ function toggle(id: string) {
             <button type="button" class="shrink-0 text-muted hover:text-red-500 disabled:opacity-30" :disabled="store.busy || store.preparing" :aria-label="'移除 ' + item.sourcePath.split(/[\\/]/).pop()" @click="store.remove(item.id)"><i class="pi pi-times" aria-hidden="true"></i></button>
           </div>
           <div v-if="item.expanded" class="min-w-0 space-y-4 border-t border-subtle bg-input/20 p-4 sm:px-6" data-testid="conversion-details">
+            <p v-if="item.retryOfTaskId && !item.taskId" data-testid="conversion-retry-notice" class="rounded-lg border border-primary/20 bg-primary/5 p-2 text-xs text-primary">从原任务创建的新条目，请确认后启动；原失败记录和已有结果保留。</p>
             <p class="select-text break-words text-xs text-muted [overflow-wrap:anywhere]">{{ item.sourcePath }}</p>
-            <p v-if="item.error || item.sourceIssue" role="alert" class="break-words text-xs text-red-500">{{ item.error || item.sourceIssue }}</p>
+            <p v-if="item.sourceIssue || (!item.taskId && item.error)" role="alert" class="break-words text-xs text-red-500">{{ archiveInspectionMessageForDisplay(item.error || item.sourceIssue || '') }}</p>
             <template v-if="!item.taskId">
               <div v-if="item.sourceIssue" class="flex items-center gap-2"><button type="button" class="conversion-button" @click="chooseSource(item.id)">重新选择来源</button></div>
               <p v-if="item.passwordRequired" class="rounded-lg bg-amber-500/5 p-2 text-xs text-amber-600">密码未保存在草稿中，请在对应输入框重新填写；不再需要时可选择下方的免密码选项。</p>
@@ -130,12 +139,13 @@ function toggle(id: string) {
                 @update="store.updateItem(item.id, $event)" />
             </template>
             <template v-else>
+              <TaskFailureHint :task="store.taskFor(item)" />
               <div v-if="store.taskFor(item)?.status === 'completed' && store.taskFor(item)?.archiveOutput" data-testid="conversion-result" class="space-y-2"><p class="text-sm font-semibold text-emerald-600">{{ item.intent === 'zpaq-update' ? '更新完成 · 原备份和历史已保留' : '转换完成 · 原压缩包已保留' }}</p><ArchiveOutputSummary :output="store.taskFor(item)!.archiveOutput!" @checksum="store.visible = false" /></div>
               <p v-else-if="store.taskFor(item)?.status === 'cancelled'" class="text-xs text-amber-600">任务已取消 · 原包和未开始的条目仍保留</p>
               <div v-else-if="store.taskFor(item) && !['failed', 'completed', 'cancelled'].includes(store.taskFor(item)!.status)" class="space-y-2 text-xs text-primary"><span>{{ store.phase }} · 当前阶段 {{ formatProgressPercent(store.taskFor(item)!.progress) }}%</span><progress class="w-full" :value="store.taskFor(item)!.progress" max="100" /></div>
               <p v-if="store.taskFor(item)?.historySaveError" class="text-xs text-red-500">{{ store.taskFor(item)?.historySaveError }}</p>
               <details class="text-xs text-muted"><summary class="cursor-pointer">执行日志</summary><div class="mt-2 max-h-40 space-y-1 overflow-y-auto"><p v-for="(log, index) in store.taskFor(item)?.logs" :key="index" class="break-words">{{ log.message }}</p></div></details>
-              <button v-if="['failed', 'cancelled'].includes(store.taskFor(item)?.status || '')" type="button" class="conversion-button" :disabled="store.busy || store.preparing" @click="item.taskId = undefined; item.error = undefined; item.expanded = true; item.selected = true">{{ item.intent === 'zpaq-update' ? '调整后再次更新' : '调整后再次转换' }}</button>
+              <button v-if="['failed', 'cancelled'].includes(store.taskFor(item)?.status || '')" type="button" class="conversion-button" :disabled="store.busy || store.preparing" data-testid="conversion-prepare-retry" @click="prepareRetry(item.id)">{{ store.pending.some(pending => pending.retryOfTaskId === item.taskId) ? '查看已创建的待处理项' : item.intent === 'zpaq-update' ? '调整配置并创建更新草稿' : '调整配置并创建转换草稿' }}</button>
             </template>
           </div>
         </section>

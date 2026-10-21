@@ -16,7 +16,7 @@
         
         <div class="flex-1 min-w-0 pr-8">
           <div class="text-xs font-black tracking-widest opacity-75 mb-1">{{ getTypeLabel(toast.type) }}</div>
-          <p class="text-xs font-bold leading-relaxed break-words [overflow-wrap:anywhere]">{{ toast.message }}</p>
+          <p class="text-xs font-bold leading-relaxed break-words [overflow-wrap:anywhere]">{{ toast.type === 'error' ? taskErrorToastForDisplay(toast.message) : toast.message }}</p>
         </div>
 
         <button @click="uiStore.removeToast(toast.id)" :aria-label="`关闭${getTypeLabel(toast.type)}提示`" class="pointer-events-auto absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-content hover:bg-input transition-colors">
@@ -28,6 +28,7 @@
 </template>
 
 <script setup lang="ts">
+import { taskErrorToastForDisplay } from '@/utils/taskFailure'
 import { useUIStore } from '@/stores/ui'
 
 const uiStore = useUIStore()

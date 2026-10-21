@@ -1,0 +1,50 @@
+{
+  "version": "1.5.42",
+  "baseCommit": "eee0b27604f272ac8da04767875d5900a51432d0",
+  "binarySha256": "16041fd0b025b64e1fd4d0b8d93b703035d827eb893f80db6c5568d2deec2bb0",
+  "flags": {
+    "frontend": "VITE_DESKTOP_E2E=1",
+    "native": "custom-protocol,desktop-e2e"
+  },
+  "sourceHashes": {
+    "src/utils/taskFailure.ts": "c51159600c202d01ac94628bbfdd2af4948c5ae3992332bd74b6197b11ec5297",
+    "src/utils/index.ts": "56156123e502e4e263e0886a54eaef47eca3fb8bcbdc46abc1872033a8fee61b",
+    "src/utils/compressionRetry.ts": "833a3626ef7f2f7f9ef0f1c577bf933933b05bc6569901e38b9d1bd80fb09e62",
+    "src/utils/extractionRetry.ts": "841bc5eac3f218bc1692357f943c7cfe11dee66c19f0d5146e40378316d3b0cb",
+    "src/types/executionConfig.ts": "dc86fb676e0c9c668c5fe36885a01ba4e2494a1092c366003fc801fb79e747c6",
+    "src/stores/task.ts": "1d19f38394b0bc6798bfdfcb17e6d3d2e72bdd8e7e0fd4c5f7aa1ec175e51605",
+    "src/stores/compression.ts": "005f2621df380e37249fee87eda243d3c31bf680ed2e65478945ae4bd4c8b908",
+    "src/stores/archiveConversion.ts": "16dcae30855f666db5822088c3ec781b401d2eb162933fd045a8c2654d1eb7e4",
+    "src/components/tasks/AeroTable.vue": "cd606d49e827f32f142ae3df1cd92f7dbcdfa05557c11d15ba4aec97fce371ea",
+    "src/components/tasks/TaskFailureHint.vue": "ecf2a3e08615e65c3bad139372de2ca78c95cdba9cdbb5060b6fa3690e1333fc",
+    "src/components/tasks/FailedExtractionRetry.vue": "8803ee94e4bc139b190a2e13959ab857a40dfe5b5cd4d0ea2ffe9a3186215e70",
+    "src/components/ui/GlobalProgressBar.vue": "d3fb9c9de64407d3f7eb48ce2bf18351810b0e1170c401e1a0b17281edb183c7",
+    "src/components/ui/ToastContainer.vue": "27e5e005b3612c535231336a8921bf5e2e270ada582df79a8904db91dacb7d5f",
+    "src/components/compression/ArchiveConversionModal.vue": "9251f9622ff0b5374738d3c0553be9a5bab48ee387d6be03fe2941b13e1cae7d",
+    "src/components/compression/CompressionExecutionPanel.vue": "ba888263aa068e331f83a1ad91757bf4f181419c97e87e87cc714bf68fff8f4e",
+    "src/components/compression/ConversionSettingsFields.vue": "806c97f0277b541eae843e1f7b3b56d51044c511db6a6d795e6fba91735cf951",
+    "src/views/CompressionView.vue": "58d1e8087162d6fb1a0aef9cc19b077f2b2981c5be9d44a60c502cb7c717d158",
+    "src-tauri/src/commands/compression.rs": "bb0c9efb2f244087165a5f4bc79dc66fce1bc5e24f9954859ce001bd70368664",
+    "src-tauri/src/commands/task_history.rs": "778f081c441f6bb78ba7a94d613721f3727a30cbb10803842a36a7ae8492824d",
+    "src-tauri/src/commands/history_execution_config.rs": "24817eb856e37ec20706eca03d300aa32e90412b50fffff177c69dc7da0e671e",
+    "src-tauri/src/services/compression_service.rs": "c723063fc804fc9e1fccbc09e845b9319f417ea53c3769fd08ee8eccad3b619d",
+    "src-tauri/tauri.conf.json": "c198b2fbca6fb35160fbc79dbff914ce00a52c8e8e99c3f518151fce96d6b08b"
+  },
+  "frontendChecks": {
+    "distinctPassed": 159
+  },
+  "rustChecks": {
+    "distinctPassed": 4
+  },
+  "desktopChecks": 3,
+  "supplement": {
+    "reason": "After inspecting the actual screenshots, shortened conflict toasts and clarified required-password placeholders; cleared the resolved per-row validation hint. Functional desktop receipts retained, two focused frontend cases added.",
+    "sourceHashes": {
+      "src/utils/taskFailure.ts": "901c95f953ccc4e7a2d4a127d4709af034bf69120643a2c64d2131d11950990b",
+      "src/stores/archiveConversion.ts": "8d8be21a6feef52341cdd51a3a0356e098842be6a6f79b04918434c1bdadc26c",
+      "src/components/compression/ConversionSettingsFields.vue": "0e93b418325a07ab9a274f5b82aa26b000709a6b9895a54d1f12a968a034953c",
+      "src/components/ui/ToastContainer.vue": "ed3f32801548b882c999a88b58f50b790ffb1b5e8555220185fbcf5e6ffd25a0"
+    },
+    "passed": 2
+  }
+}

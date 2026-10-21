@@ -391,7 +391,7 @@ fn conversion_extraction_options(encoding: Option<ZipPasswordEncoding>) -> Decom
 fn validate_conversion_request(source: &str, output: &str, options: &CompressionOptions) -> Result<(), String> {
     if !Path::new(source).is_file() { return Err("请选择存在的原压缩包".to_string()); }
     if !Path::new(output).is_absolute() { return Err("转换输出必须是完整路径".to_string()); }
-    if Path::new(output).exists() { return Err("转换不能覆盖已有文件，请选择新的输出名称".to_string()); }
+    if Path::new(output).exists() { return Err(crate::services::compression_service::CompressionError::OutputConflictBeforeProcessing(output.to_string()).to_string()); }
     if options.delete_after { return Err("转换必须保留原包，不支持删除源文件".to_string()); }
     if !options.verify_after { return Err("转换必须开启压缩完成后校验".to_string()); }
     if options.preserve_paths == Some(false) { return Err("转换必须保留归档内的目录结构".to_string()); }
@@ -407,6 +407,14 @@ fn validate_conversion_request(source: &str, output: &str, options: &Compression
 #[cfg(test)]
 mod conversion_request_tests {
     use super::*;
+    #[test]
+    fn recovery1542_conversion_conflict_has_precheck_evidence() {
+        let root=tempfile::tempdir().unwrap();let source=root.path().join("source.zip");let output=root.path().join("old.zip");
+        std::fs::write(&source,b"source archive").unwrap();std::fs::write(&output,b"original output").unwrap();
+        let error=validate_conversion_request(&source.to_string_lossy(),&output.to_string_lossy(),&CompressionOptions::default()).unwrap_err();
+        assert!(error.contains("[archive-output:Pre-checking:output-conflict]"));assert_eq!(std::fs::read(output).unwrap(),b"original output");assert_eq!(std::fs::read(source).unwrap(),b"source archive");
+    }
+
 
     #[test]
     fn conversion_source_encoding_is_optional_and_separate_from_target_settings() {

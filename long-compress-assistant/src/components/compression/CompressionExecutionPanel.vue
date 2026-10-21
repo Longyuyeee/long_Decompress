@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { prepareCompressionRetryDraft } from '@/utils/compressionRetry'
+import { useCompressionStore } from '@/stores/compression'
+import TaskFailureHint from '@/components/tasks/TaskFailureHint.vue'
+import { computed, ref, nextTick } from 'vue'
 import { useAppStore } from '@/stores/app'
 import type { Task } from '@/stores/task'
 import { formatFileSize } from '@/utils'
@@ -14,6 +17,20 @@ import {
 
 const props = defineProps<{ task?: Task }>()
 const appStore = useAppStore()
+const compression = useCompressionStore()
+const retryBusy = ref(false), retryError = ref('')
+const retryCreated = computed(()=>compression.groups.some(group=>group.retryOfTaskId===props.task?.id))
+async function prepareRetry() {
+  if (!props.task || retryBusy.value) return
+  retryBusy.value = true; retryError.value = ''
+  try {
+    await prepareCompressionRetryDraft(props.task)
+    await nextTick()
+    Array.from(document.querySelectorAll<HTMLElement>('[data-retry-of]')).find(row=>row.dataset.retryOf===props.task?.id)?.scrollIntoView?.({block:'start',behavior:'smooth'})
+  }
+  catch(error) { retryError.value=String(error) }
+  finally { retryBusy.value=false }
+}
 const sourceBytes = computed(() => props.task?.compressionSourceProgress?.processedBytes ?? props.task?.processedBytes ?? 0)
 const pendingSplitResult = computed(() => Boolean(props.task?.compressionSourceProgress && props.task.status !== 'completed'))
 
@@ -32,6 +49,10 @@ const savedRatio = computed(() => liveRatio.value === undefined ? undefined : 10
     data-testid="compression-draft-execution"
     class="pending-execution-panel compression-execution-panel custom-scrollbar"
   >
+    <TaskFailureHint :task="task">
+      <button v-if="task?.executionConfig?.kind==='archive-compression'" type="button" data-testid="compression-prepare-retry" class="retry-action" :disabled="retryBusy || retryCreated" @click="prepareRetry">{{ retryCreated ? '已创建待处理项，请在配置区确认并启动' : retryBusy ? '正在带入配置…' : '带入配置，创建待处理项' }}</button>
+      <p v-if="retryError" role="alert" class="text-red-500">{{ retryError }}</p>
+    </TaskFailureHint>
     <ArchiveOutputSummary v-if="task?.status === 'completed' && task.archiveOutput" :output="task.archiveOutput" />
     <ResultActions v-else-if="task?.status === 'completed' && task.outputPath" :path="task.outputPath" show-path class="mb-3" />
     <TaskExecutionOverview
@@ -80,6 +101,8 @@ const savedRatio = computed(() => liveRatio.value === undefined ? undefined : 10
 </template>
 
 <style scoped>
+.retry-action { align-self:flex-start; border:1px solid var(--border-subtle); color:var(--dynamic-accent); border-radius:.6rem; padding:.45rem .65rem; font-weight:600; }
+.retry-action:disabled { opacity:.6; cursor:default; }
 .detail-heading {
   display: flex;
   align-items: center;

@@ -11,7 +11,7 @@ export function extractionRetryPolicy(task: Task) {
   const record = { status: task.status === 'failed' ? 'failed' as const : 'cancelled' as const, errorMessage: task.error }
   const category = describeTaskFailure(record)?.category
   const blocked = task.type !== 'decompression' || (task.workloadKind && task.workloadKind !== 'archive')
-    || task.status !== 'failed' ? '仅支持已失败的归档解压任务。'
+    || !['failed','cancelled'].includes(task.status) ? '仅支持已失败或已取消的归档解压任务。'
     : category === 'rollback-incomplete' ? '请先保留并人工核对原输出和恢复目录；此处不能直接重试回滚不完整的任务。'
     : task.sourceFiles.length !== 1 || task.fileFilter || (task.selectedEntries?.length && !(task.zpaqSnapshot && task.zpaqCatalogId))
       ? '此任务包含特殊来源或局部解压范围，请返回归档浏览重新选择范围。' : ''

@@ -60,6 +60,10 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
         output.insert("zpaqCatalogId".into(),id.clone());output.insert("selectedEntries".into(),Value::Array(selected.clone()));
     }}
     if kind == "archive-conversion" {
+        if let Some(required) = value.get("sourcePasswordRequired") {
+            required.as_bool()?;
+            output.insert("sourcePasswordRequired".into(), required.clone());
+        }
         if let Some(operation)=value.get("operation") {
             if operation.as_str()!=Some("zpaq-update") || value.get("format")?.as_str()? != "zpaq" || value.get("sourceZpaqSnapshot").is_some() { return None; }
             let sources=value.get("updateSources")?.as_array()?;
@@ -155,6 +159,15 @@ fn project(value: &Value, fields: &[(&str, char)]) -> Option<Map<String, Value>>
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn recovery1542_history_preserves_only_boolean_password_requirements() {
+        for required in [true,false] {
+            let value=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","outputPath":"D:/out.zip","format":"zip","level":6,"splitSize":0,"encryptFilenames":false,"passwordRequired":true,"sourcePasswordRequired":required,"sourcePassword":"never-save-source","password":"never-save-target"});
+            let saved=super::sanitize(value.clone(),"compression","archive").unwrap();
+            assert_eq!(saved["sourcePasswordRequired"],required);assert!(saved.get("sourcePassword").is_none());assert!(saved.get("password").is_none());
+            let mut invalid=value;invalid["sourcePasswordRequired"]=serde_json::json!("true");assert!(super::sanitize(invalid,"compression","archive").is_none());
+        }
+    }
     #[test]
     fn zpaq1536_history_preserves_update_inputs_and_never_the_password() {
         let value=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","operation":"zpaq-update","updateSources":["D:/资料"],"archivePrefix":"备份","outputPath":"D:/new.zpaq","format":"zpaq","level":6,"splitSize":65536,"encryptFilenames":false,"passwordRequired":true,"sourcePassword":"do not persist"});

@@ -54,6 +54,8 @@ pub enum CompressionError {
     FileNotFound(String),
     #[error("压缩失败: {0}")]
     CompressionFailed(String),
+    #[error("[archive-output:Pre-checking:output-conflict] 输出文件已存在，原文件未覆盖，请选择新的名称或保存目录：{0}")]
+    OutputConflictBeforeProcessing(String),
     #[error("解压失败: {0}")]
     ExtractionFailed(String),
     #[error("[archive-source:Pre-checking:source-changed] 源压缩包在密码检测或预检期间发生变化，请等待下载或复制完成后重试")]
@@ -965,10 +967,7 @@ impl CompressionService {
             }
         }
         if output.exists() {
-            return Err(CompressionError::CompressionFailed(format!(
-                "Output already exists; choose a new path to avoid overwriting data: {}",
-                output.display()
-            )).into());
+            return Err(CompressionError::OutputConflictBeforeProcessing(output.display().to_string()).into());
         }
         let resolved_output = Self::canonicalize_with_missing_tail(output)?;
         let split_requested = options.split_size.is_some_and(|size| size > 0);
@@ -3794,6 +3793,13 @@ impl CompressionService {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn recovery1542_compression_conflict_has_precheck_evidence() {
+        let root=tempfile::tempdir().unwrap();let source=root.path().join("source.txt");let output=root.path().join("old.zip");
+        std::fs::write(&source,b"source").unwrap();std::fs::write(&output,b"original output").unwrap();
+        let error=CompressionService::validate_compression_io_paths(&[source.to_string_lossy().into_owned()],&output.to_string_lossy(),&CompressionOptions::default()).unwrap_err().to_string();
+        assert!(error.contains("[archive-output:Pre-checking:output-conflict]"));assert_eq!(std::fs::read(output).unwrap(),b"original output");assert_eq!(std::fs::read(source).unwrap(),b"source");
+    }
 
     #[tokio::test]
     async fn standard_zip_main_volume_reads_complete_set_with_real_engine() {
