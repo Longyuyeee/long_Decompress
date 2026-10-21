@@ -291,7 +291,7 @@ const runCompressionResourcePreflight = async (
 
   taskStore.updateTaskStatus(taskId, 'preparing')
   try {
-    const estimate = (job.settings.format === 'esd' || (job.settings.format === 'wim' && ['xpress', 'lzx', 'lzms', 'solid'].includes(job.settings.wimMethod || ''))) ? undefined : getCompressionEstimate(job.id, job.files, job.settings.format, job.settings.level, job.settings.zipMethod)
+    const estimate = (job.settings.format === 'swm' || job.settings.format === 'esd' || (job.settings.format === 'wim' && ['xpress', 'lzx', 'lzms', 'solid'].includes(job.settings.wimMethod || ''))) ? undefined : getCompressionEstimate(job.id, job.files, job.settings.format, job.settings.level, job.settings.zipMethod)
     const report = await tauriCommands.preflightOperationResources({
       operation: 'compression',
       outputPath: job.outputPath,
@@ -481,7 +481,7 @@ const runCompression = async () => {
       compressionOptions: {
         fast_pack: false,
         zip_password_encoding: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipPasswordEncoding ?? 'utf8') : 'utf8',
-        ...(['wim','esd'].includes(job.settings.format) ? { wim_method: job.settings.wimMethod ?? 'store' } : {}),
+        ...(['wim','esd','swm'].includes(job.settings.format) ? { wim_method: job.settings.wimMethod ?? 'store' } : {}),
         zip_method: job.settings.zipMethod ?? 'deflate',
         zip_encryption: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipEncryption ?? 'aes256') : 'aes256',
         zip_split_mode: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipSplitMode ?? 'numeric') : 'numeric',
@@ -530,7 +530,7 @@ const runCompression = async () => {
         {
           fast_pack: false,
           zip_password_encoding: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipPasswordEncoding ?? 'utf8') : 'utf8',
-          ...(['wim','esd'].includes(job.settings.format) ? { wim_method: job.settings.wimMethod ?? 'store' } : {}),
+          ...(['wim','esd','swm'].includes(job.settings.format) ? { wim_method: job.settings.wimMethod ?? 'store' } : {}),
         zip_method: job.settings.zipMethod ?? 'deflate',
           zip_encryption: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipEncryption ?? 'aes256') : 'aes256',
           zip_split_mode: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipSplitMode ?? 'numeric') : 'numeric',

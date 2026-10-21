@@ -85,6 +85,7 @@ import { runZipPpmd1535Gate } from './zip-ppmd-1535-gate.mjs'
 import { runZpaqIncremental1536Gate } from './zpaq-incremental-1536-gate.mjs'
 import { runZpaqDiff1537Gate } from './zpaq-diff-1537-gate.mjs'
 import { runZipBzip1534Gate } from './zip-bzip2-1534-gate.mjs'
+import { runSwmCreate1540Gate } from './swm-create-1540-gate.mjs'
 import { runWimSolid1539Gate } from './wim-solid-1539-gate.mjs'
 import { runWimLzms1533Gate } from './wim-lzms-1533-gate.mjs'
 import { runWimLzx1532Gate } from './wim-lzx-1532-gate.mjs'
@@ -4968,6 +4969,8 @@ try {
     await runZipPpmd1535Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
   } else if (process.argv.includes('--zip-bzip2-1534-only')) {
     await runZipBzip1534Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
+  } else if (process.argv.includes('--swm-create-1540-only')) {
+    await runSwmCreate1540Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
   } else if (process.argv.includes('--wim-solid-1539-only')) {
     await runWimSolid1539Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
   } else if (process.argv.includes('--wim-lzms-1533-only')) {

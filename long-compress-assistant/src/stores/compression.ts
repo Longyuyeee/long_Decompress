@@ -382,6 +382,7 @@ export const useCompressionStore = defineStore('compression', () => {
 
   const getEffectiveSettings = (settings?: CompressionOptions): CompressionOptions => {
     const effective = settings || globalSettings.value
+    if (effective.format === 'swm') return { ...effective, splitArchive: true, splitSize: Number(effective.splitSize) > 0 ? effective.splitSize : '1024', wimMethod: ['store','xpress','lzx'].includes(effective.wimMethod || '') ? effective.wimMethod : 'store' }
     return effective.format === 'esd' ? { ...effective, wimMethod: 'solid' } : effective
   }
 
@@ -451,9 +452,9 @@ export const useCompressionStore = defineStore('compression', () => {
     let count = 0
     const drafts = [...selectedFiles.value.map(file => ({ id: file.path, draft: file })),
       ...groups.value.map(group => ({ id: group.id, draft: group }))]
-    if (['wim','esd'].includes(patch.format || '') && drafts.some(({id,draft}) => selected.has(id) && !draft.taskId && (getEffectiveSettings(draft.settings).password || draft.draftPasswordRequired))) throw new Error(`${patch.format === 'esd' ? 'ESD' : 'WIM'} 不支持原生密码，所选配置未修改。请保持密码格式，或先在单条配置中明确移除密码。`)
+    if (['wim','esd','swm'].includes(patch.format || '') && drafts.some(({id,draft}) => selected.has(id) && !draft.taskId && (getEffectiveSettings(draft.settings).password || draft.draftPasswordRequired))) throw new Error(`${patch.format === 'esd' ? 'ESD' : patch.format === 'swm' ? 'SWM' : 'WIM'} 不支持原生密码，所选配置未修改。请保持密码格式，或先在单条配置中明确移除密码。`)
     const wimOnly = patch.wimMethod !== undefined && Object.entries(patch).every(([key,v]) => key === 'wimMethod' || v === undefined)
-    if (wimOnly && !drafts.some(({id,draft}) => selected.has(id) && !draft.taskId && getEffectiveSettings(draft.settings).format === 'wim')) throw new Error('所选任务中没有 WIM 任务，请选择 WIM 格式或保持各自方法。')
+    if (wimOnly && !drafts.some(({id,draft}) => selected.has(id) && !draft.taskId && ['wim','swm'].includes(getEffectiveSettings(draft.settings).format))) throw new Error('所选任务中没有 WIM 任务，请选择 WIM 格式或保持各自方法。')
     const methodOnly = patch.zipMethod !== undefined && Object.entries(patch).every(([field, value]) => field === 'zipMethod' || value === undefined)
     const formatOptionsOnly = Object.entries(patch).every(([field,value]) => ['wimMethod','zipMethod','zipPasswordEncoding'].includes(field) || value === undefined)
     const zipOptionsOnly = Object.entries(patch).every(([field,value]) => ['zipMethod','zipPasswordEncoding'].includes(field) || value === undefined)
@@ -471,10 +472,11 @@ export const useCompressionStore = defineStore('compression', () => {
     })) throw new Error('LZMA / LZMA.AES 每条任务只能压缩一个普通文件；目录或多个文件请选择 TAR.LZMA / TAR.LZMA.AES。所选配置未修改。')
     for (const { id, draft } of drafts) {
       if (!selected.has(id) || draft.taskId || (methodOnly && getEffectiveSettings(draft.settings).format !== 'zip')) continue
-      if (wimOnly && getEffectiveSettings(draft.settings).format !== 'wim') continue
+      if (wimOnly && !['wim','swm'].includes(getEffectiveSettings(draft.settings).format)) continue
       if (zipOptionsOnly && !((patch.zipMethod !== undefined && getEffectiveSettings(draft.settings).format === 'zip') || (patch.zipPasswordEncoding !== undefined && ['zip','zipx'].includes(getEffectiveSettings(draft.settings).format)))) continue
       const currentFormat = getEffectiveSettings(draft.settings).format
-      if (formatOptionsOnly && !((patch.wimMethod !== undefined && currentFormat === 'wim') || (patch.zipMethod !== undefined && currentFormat === 'zip') || (patch.zipPasswordEncoding !== undefined && ['zip','zipx'].includes(currentFormat)))) continue
+      if (wimOnly && currentFormat === 'swm' && !['store','xpress','lzx'].includes(patch.wimMethod!)) continue
+      if (formatOptionsOnly && !((patch.wimMethod !== undefined && ['wim','swm'].includes(currentFormat)) || (patch.zipMethod !== undefined && currentFormat === 'zip') || (patch.zipPasswordEncoding !== undefined && ['zip','zipx'].includes(currentFormat)))) continue
       const settings = cloneSettings(getEffectiveSettings(draft.settings))
       if (patch.format !== undefined) settings.format = patch.format
       if (patch.format === 'tar.lz' || patch.format === 'lzma' || patch.format === 'tar.lzma') {
@@ -485,13 +487,13 @@ export const useCompressionStore = defineStore('compression', () => {
         settings.rarRecoveryPercent = 0
         settings.rarRecoveryVolumes = 0
       }
-      if (patch.format === 'wim' || patch.format === 'esd' || patch.format === 'zpaq' || patch.format === 'lzma.aes' || patch.format === 'tar.lzma.aes') {
+      if (patch.format === 'swm' || patch.format === 'wim' || patch.format === 'esd' || patch.format === 'zpaq' || patch.format === 'lzma.aes' || patch.format === 'tar.lzma.aes') {
         settings.encryptFilenames = false
         settings.createSolidArchive = false
         settings.rarRecoveryPercent = 0
         settings.rarRecoveryVolumes = 0
       }
-      if (patch.wimMethod !== undefined && settings.format === 'wim') settings.wimMethod = patch.wimMethod
+      if (patch.wimMethod !== undefined && ['wim','swm'].includes(settings.format) && (settings.format !== 'swm' || ['store','xpress','lzx'].includes(patch.wimMethod))) settings.wimMethod = patch.wimMethod
       if (patch.zipMethod !== undefined && settings.format === 'zip') settings.zipMethod = patch.zipMethod
       if (patch.zipPasswordEncoding !== undefined && ['zip','zipx'].includes(settings.format)) settings.zipPasswordEncoding = patch.zipPasswordEncoding
       if (patch.level !== undefined) settings.level = patch.level

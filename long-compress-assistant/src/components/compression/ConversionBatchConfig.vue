@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { open } from '@tauri-apps/api/dialog'
 import HelpHint from '@/components/ui/HelpHint.vue'
 import Modal from '@/components/ui/Modal.vue'
@@ -23,6 +23,7 @@ const changePassword = ref(false), password = ref(''), changeSourcePassword = re
 const changeSplit = ref(false), splitMiB = ref(0), hiddenNames = ref('keep'), recovery = ref('keep')
 const recoveryVolumes = ref('keep'), zipMethod = ref('keep')
 const wimMethod = ref('keep')
+watch(format, () => { if (format.value === 'swm' && !['keep','store','xpress','lzx'].includes(wimMethod.value)) wimMethod.value = 'keep' })
 const sourceEncoding = ref('keep'), targetEncoding = ref('keep')
 const defaults = ref({ ...store.defaults })
 const keep = { value: 'keep', label: '保持各自设置' }
@@ -55,7 +56,7 @@ async function apply() {
     ...(isZipPasswordEncoding(targetEncoding.value) ? {zipPasswordEncoding:targetEncoding.value} : {}),
     ...(format.value === 'keep' ? {} : { format: format.value }),
     ...(zipMethod.value === 'keep' || (format.value !== 'keep' && format.value !== 'zip') ? {} : { zipMethod: zipMethod.value as 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma' }),
-    ...(wimMethod.value === 'keep' || (format.value !== 'keep' && format.value !== 'wim') ? {} : { wimMethod: wimMethod.value as 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' }),
+    ...(wimMethod.value === 'keep' || (format.value !== 'keep' && !['wim','swm'].includes(format.value)) ? {} : { wimMethod: wimMethod.value as 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' }),
     ...(level.value === 'keep' ? {} : { level: Number(level.value) }),
     ...(destination.value === 'keep' ? {} : { outputDirectory: destination.value === 'source' ? '' : directory.value.trim() }),
     ...(changePassword.value ? { password: password.value } : {}),
@@ -97,8 +98,8 @@ async function apply() {
           <div v-if="!updatesOnly" class="min-w-0 space-y-1.5 text-sm">新包 ZIP 密码编码 <HelpHint label="批量新包编码说明">只修改目标为 ZIP/ZIPX 的任务。保持各自设置不会覆盖已有值；UTF-8 是新包默认值。</HelpHint><ThemedSelect v-model="targetEncoding" :options="[keep,...ZIP_PASSWORD_ENCODING_OPTIONS]" :disabled="applying" test-id="conversion-batch-target-encoding" floating /></div>
           <label v-if="!updatesOnly" class="min-w-0 text-sm">目标格式 <HelpHint v-if="format === 'zipx'" label="ZIPX 分卷说明">ZIPX 使用 XZ，支持数字卷和 .zx01/…/.zipx 标准卷；卷型沿用各自设置，可在任务中调整。</HelpHint><ThemedSelect v-model="format" :options="[keep, ...conversionFormats]" test-id="conversion-batch-format" floating /></label>
           <label v-if="!updatesOnly && (format === 'keep' || format === 'zip')" class="min-w-0 text-sm">ZIP 压缩方法<ThemedSelect v-model="zipMethod" :options="[keep, { value: 'deflate', label: '兼容 ZIP · Deflate' }, { value: 'zstd', label: 'Zstandard' }, { value: 'bzip2', label: 'BZip2' }, { value: 'ppmd', label: 'PPMd · 文本归档' }, { value: 'lzma', label: 'LZMA' }]" test-id="conversion-batch-zip-method" floating /><span class="text-xs text-muted">仅修改 ZIP 任务；ZIPX 使用 XZ。</span></label>
-          <label v-if="!updatesOnly && (format === 'keep' || format === 'wim')" class="min-w-0 text-sm">WIM 压缩方法<ThemedSelect v-model="wimMethod" :options="[keep,{value:'store',label:'仅存储 · 去重'},{value:'xpress',label:'XPRESS · 快速压缩'},{value:'lzx',label:'LZX · 体积优先'},{value:'lzms',label:'LZMS · 高压缩'},{value:'solid',label:'LZMS · 固实归档'}]" test-id="conversion-batch-wim-method" floating /><span class="text-xs text-muted">仅修改 WIM 任务；不改变原包密码和分卷。</span></label>
-          <label class="min-w-0 text-sm">压缩强度<ThemedSelect v-model="level" :disabled="['wim','esd'].includes(format)" :options="[keep, ...Array.from({ length: 10 }, (_, n) => ({ value: String(n), label: String(n) }))]" test-id="conversion-batch-level" floating /></label>
+          <label v-if="!updatesOnly && (format === 'keep' || ['wim','swm'].includes(format))" class="min-w-0 text-sm">WIM 压缩方法<ThemedSelect v-model="wimMethod" :options="[keep,{value:'store',label:'仅存储 · 去重'},{value:'xpress',label:'XPRESS · 快速压缩'},{value:'lzx',label:'LZX · 体积优先'},{value:'lzms',label:'LZMS · 高压缩'},{value:'solid',label:'LZMS · 固实归档'}].filter(option => format !== 'swm' || ['keep','store','xpress','lzx'].includes(option.value))" test-id="conversion-batch-wim-method" floating /><span class="text-xs text-muted">仅修改适用的 WIM/SWM 任务；不改变原包密码和分卷。</span></label>
+          <label class="min-w-0 text-sm">压缩强度<ThemedSelect v-model="level" :disabled="['wim','esd','swm'].includes(format)" :options="[keep, ...Array.from({ length: 10 }, (_, n) => ({ value: String(n), label: String(n) }))]" test-id="conversion-batch-level" floating /></label>
           <label v-if="!updatesOnly" class="min-w-0 text-sm">RAR 恢复保护<ThemedSelect v-model="recovery" :options="[keep, {value:'0',label:'关闭'}, {value:'3',label:'3%'}, {value:'5',label:'5%'}, {value:'10',label:'10%'}]" test-id="conversion-batch-rar-recovery" floating /></label>
           <label v-if="!updatesOnly" class="min-w-0 text-sm">RAR 分包恢复卷<ThemedSelect v-model="recoveryVolumes" :options="[keep, ...[0,1,2,3,5,10].map(value => ({value:String(value),label:value ? `${value} 个 .rev 恢复卷` : '不生成恢复卷'}))]" test-id="conversion-batch-rar-recovery-volumes" floating /></label>
           <label v-if="!updatesOnly" class="min-w-0 text-sm">文件名加密<ThemedSelect v-model="hiddenNames" :options="[keep, { value: 'yes', label: '启用（7Z/RAR，需要新包密码）' }, { value: 'no', label: '关闭' }]" floating /></label>

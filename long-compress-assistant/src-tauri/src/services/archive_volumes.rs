@@ -18,6 +18,22 @@ pub(crate) fn recovery_volume_paths(output: &Path) -> Result<Vec<PathBuf>> {
 
 /// Actual volume names, shared by publication, progress and result collection.
 pub(crate) fn volume_paths(output: &Path) -> Result<Vec<(usize, PathBuf)>> {
+    if output.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("swm")) {
+        let stem = output.file_stem().and_then(|s| s.to_str()).ok_or_else(|| anyhow::anyhow!("无效 SWM 名称"))?;
+        let matcher = regex::Regex::new(&format!(r"(?i)^{}(\d*)\.swm$", regex::escape(stem)))?;
+        let mut paths = Vec::new();
+        for entry in std::fs::read_dir(output.parent().unwrap_or(Path::new(".")))? {
+            let entry = entry?;
+            if let Some(c) = matcher.captures(&entry.file_name().to_string_lossy()) {
+                let number = if c[1].is_empty() { 1 } else { c[1].parse::<usize>()? };
+                ensure!(number > 0 && (c[1].is_empty() || number > 1), "无效的 SWM 卷号");
+                ensure!(entry.file_type()?.is_file(), "SWM 卷不是普通文件：{}", entry.path().display());
+                paths.push((number, entry.path()));
+            }
+        }
+        paths.sort_by_key(|p| p.0);
+        return Ok(paths);
+    }
     let name = output
         .file_name()
         .and_then(|name| name.to_str())
@@ -72,6 +88,11 @@ pub(crate) fn volume_paths(output: &Path) -> Result<Vec<(usize, PathBuf)>> {
 
 pub(crate) fn complete_volume_paths(output: &Path) -> Result<Vec<PathBuf>> {
     let parts = volume_paths(output)?;
+    if output.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("swm")) {
+        let group = super::swm_volumes::inspect(output)?.ok_or_else(|| anyhow::anyhow!("缺少 SWM 首卷"))?;
+        ensure!(group.is_complete, "缺少 SWM 分卷：{:?}", group.missing_parts);
+        ensure!(parts.len() == group.total_parts, "SWM 输出含多余或重复编号的分卷，请选择新名称");
+    }
     ensure!(!parts.is_empty(), "没有找到压缩产物的分卷");
     if is_standard_zip_set(output, &parts) {
         let selected = if output.is_file() { output } else { &parts[0].1 };
@@ -93,6 +114,7 @@ fn is_standard_zip_set(output: &Path, parts: &[(usize, PathBuf)]) -> bool {
 }
 
 pub(crate) fn first_volume_path(output: &Path) -> PathBuf {
+    if output.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("swm")) { return output.to_path_buf(); }
     let paths = volume_paths(output).ok();
     if paths.as_ref().is_some_and(|parts| is_standard_zip_set(output, parts)) { return output.to_path_buf(); }
     paths

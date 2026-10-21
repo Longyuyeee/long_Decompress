@@ -129,6 +129,26 @@ pub(crate) fn publish_verified_volumes(
     destination: &Path,
     mut is_cancelled: impl FnMut() -> bool,
 ) -> Result<(), PublishError> {
+    if staged.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("swm")) {
+        let mut published = Vec::new();
+        let result = (|| {
+            if staged.parent() != destination.parent() { return Err(PublishError::CrossDirectoryPublish); }
+            if !staged_output_belongs_to_destination(staged, destination) { return Err(PublishError::InvalidStagedOutput(staged.to_path_buf())); }
+            let parts = crate::services::archive_volumes::complete_volume_paths(staged).map_err(|_| PublishError::InvalidStagedOutput(staged.to_path_buf()))?;
+            if let Some((_, path)) = crate::services::archive_volumes::volume_paths(destination).map_err(|_| PublishError::InvalidStagedOutput(destination.to_path_buf()))?.first() { return Err(PublishError::TargetAppeared(path.clone())); }
+            for (i, source) in parts.iter().enumerate() {
+                if is_cancelled() { return Err(PublishError::Cancelled); }
+                let target = if i == 0 { destination.to_path_buf() } else { destination.with_file_name(format!("{}{}.{}", destination.file_stem().unwrap().to_string_lossy(), i+1, destination.extension().unwrap().to_string_lossy())) };
+                transfer_no_replace(source, &target)?;
+                published.push(target);
+            }
+            if is_cancelled() { return Err(PublishError::Cancelled); }
+            Ok(())
+        })();
+        if result.is_err() { for path in published { let _ = std::fs::remove_file(path); } }
+        cleanup_staged_output_family(staged);
+        return result;
+    }
     if staged.extension().is_some_and(|ext| ext.eq_ignore_ascii_case("zip") || ext.eq_ignore_ascii_case("zipx"))
         && (staged.is_file() || crate::services::archive_volumes::volume_paths(staged).is_ok_and(|paths|
             paths.iter().any(|(_, path)| path.extension().is_some_and(|ext| ext.to_string_lossy().starts_with('z')))))

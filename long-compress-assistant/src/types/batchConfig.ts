@@ -1,7 +1,7 @@
 import type { ZipPasswordEncoding } from './zipPassword'
 
 export interface BatchConfigPatch {
-  format?: 'zip' | 'zipx' | '7z' | 'rar' | 'wim' | 'esd' | 'zpaq' | 'tar.lz' | 'lzma' | 'tar.lzma' | 'lzma.aes' | 'tar.lzma.aes'
+  format?: 'zip' | 'zipx' | '7z' | 'rar' | 'swm' | 'wim' | 'esd' | 'zpaq' | 'tar.lz' | 'lzma' | 'tar.lzma' | 'lzma.aes' | 'tar.lzma.aes'
   wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
   zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'
   level?: number

@@ -7,6 +7,7 @@ export type CompressionFormatId =
   | 'zipx'
   | '7z'
   | 'rar'
+  | 'swm'
   | 'wim'
   | 'esd'
   | 'tar'
@@ -66,6 +67,7 @@ export const FORMAT_CAPABILITIES: CompressionFormatCapability[] = [
   { format: '7z', displayName: '7Z', extensions: ['7z'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
   { format: 'rar', displayName: 'RAR', extensions: ['rar'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: true, fallbackEngine: 'winrar', knownLimitations: 'RAR creation, including encrypted RAR, requires user-installed WinRAR/RAR command line tools.' },
   { format: 'esd', displayName: 'ESD（固实）', extensions: ['esd'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: true, requiresWinRar: false, fallbackEngine: '7za', engineFormat: 'wim', knownLimitations: '使用 LZMS 固实内容归档，单线程；更耗内存和时间，选择性提取也可能需要读取整个固实块。数字切卷需整组保留，不是原生 SWM；不含原生密码，不保证系统部署或 Windows 权限元数据。' },
+  { format: 'swm', displayName: 'SWM（原生分包）', extensions: ['swm'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: true, requiresWinRar: false, fallbackEngine: '7za', engineFormat: 'wim', knownLimitations: '创建仅存储、XPRESS、LZX 非固实原生资源分包，按目标卷大小生成 name.swm、name2.swm 等；单个资源可能超过目标大小。需整组保留，没有原生密码；只承诺内容归档，不保证 Windows 部署元数据。' },
   { format: 'wim', displayName: 'WIM', extensions: ['wim'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: true, requiresWinRar: false, fallbackEngine: '7za', engineFormat: 'wim', knownLimitations: '创建可选仅存储、XPRESS、LZX、LZMS 或 LZMS 固实压缩，均支持去重，不使用强度滑块；数字切卷不是原生 SWM，需要集齐整组；WIM 不支持原生密码。多镜像按编号目录浏览。' },
   { format: 'tar', displayName: 'TAR', extensions: ['tar', 'ova'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
   { format: 'tar.gz', displayName: 'TGZ', extensions: ['tar.gz', 'tgz', 'tpz'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'container-7z' },
@@ -110,7 +112,6 @@ export interface ExtractOnlyFormatCapability {
 }
 
 export const EXTRACT_ONLY_FORMATS: ExtractOnlyFormatCapability[] = [
-  { displayName: 'SWM（原生 WIM 分卷，只读）', extensions: ['swm'], requires7za: true },
   { displayName: 'ALZ', extensions: ['alz'], requires7za: false },
   { displayName: 'EGG', extensions: ['egg'], requires7za: false },
   { displayName: 'Application packages', extensions: ['jar', 'xpi', 'ipa', 'apk', 'appx'], requires7za: false },
