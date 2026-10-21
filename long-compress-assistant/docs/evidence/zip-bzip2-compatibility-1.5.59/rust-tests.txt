@@ -1,0 +1,10 @@
+running 7 tests
+test services::zip_bzip2_compatibility_tests::bzip21559_unknown_method_is_still_distinct_from_password_and_supported_bzip2 ... ok
+test services::zip_bzip2_compatibility_tests::bzip21559_plain_edit_preserves_compressed_bytes_method_comments_and_time ... ok
+test services::zip_bzip2_compatibility_tests::bzip21559_password_failure_preserves_original_edits_and_existing_output ... ok
+test services::zip_bzip2_compatibility_tests::bzip21559_bad_crc_size_and_truncated_stream_never_publish_or_become_content_evidence ... ok
+test services::zip_bzip2_compatibility_tests::bzip21559_numeric_password_material_uses_exact_range_and_detects_missing_or_changed_members ... ok
+test services::zip_bzip2_compatibility_tests::bzip21559_folder_and_zip_content_comparison_reads_real_plain_and_password_bytes ... ok
+test services::zip_bzip2_compatibility_tests::bzip21559_encrypted_edit_keeps_method_and_rekeys_with_explicit_encoding ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 1015 filtered out; finished in 2.41s
