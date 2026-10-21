@@ -19,7 +19,8 @@ use std::{
 use tokio::sync::Mutex;
 const MAX_VISITS: usize = 20000;
 const MAX_CANDIDATES: usize = 1000;
-const PENDING: &str = "'settling','waiting_parts','queued','needs_input','missing'";
+pub(crate) const PENDING: &str =
+    "'settling','waiting_parts','queued','needs_input','missing','missed'";
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Rule {
@@ -55,11 +56,18 @@ pub struct Item {
     pub run_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub original_run_id: Option<String>,
+    #[serde(default)]
+    pub trigger: String,
+    #[serde(default)]
+    pub scheduled_at: Option<String>,
+    #[serde(default)]
+    pub explicit: bool,
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct State {
     pub rules: Vec<Rule>,
+    pub schedules: Vec<super::workflow_schedules::Schedule>,
     pub items: Vec<Item>,
     pub paused: bool,
 }
@@ -70,11 +78,11 @@ struct Watch {
     signature: String,
 }
 #[derive(Default)]
-struct Runtime {
+pub(crate) struct Runtime {
     watchers: HashMap<String, Watch>,
 }
 pub(crate) static RUNS_CHANGED: AtomicBool = AtomicBool::new(true);
-static RUNTIME: Lazy<Mutex<Runtime>> = Lazy::new(|| Mutex::new(Runtime::default()));
+pub(crate) static RUNTIME: Lazy<Mutex<Runtime>> = Lazy::new(|| Mutex::new(Runtime::default()));
 #[derive(Clone, Debug)]
 struct Candidate {
     key: String,
@@ -84,7 +92,7 @@ struct Candidate {
     files: usize,
     copying: bool,
 }
-fn display_path(path: &Path) -> String {
+pub(crate) fn display_path(path: &Path) -> String {
     let value = path.to_string_lossy();
     if let Some(unc) = value.strip_prefix(r"\\?\UNC\") {
         format!(r"\\{unc}")
@@ -92,7 +100,7 @@ fn display_path(path: &Path) -> String {
         value.strip_prefix(r"\\?\").unwrap_or(&value).to_string()
     }
 }
-fn key(path: &Path) -> String {
+pub(crate) fn key(path: &Path) -> String {
     display_path(path).replace('\\', "/").to_lowercase()
 }
 
@@ -102,10 +110,10 @@ fn now() -> i64 {
 fn stamp() -> String {
     chrono::Utc::now().to_rfc3339()
 }
-fn terminal(state: &str) -> bool {
+pub(crate) fn terminal(state: &str) -> bool {
     matches!(
         state,
-        "completed" | "failed" | "stopped" | "cancelled" | "interrupted"
+        "completed" | "failed" | "stopped" | "cancelled" | "interrupted" | "skipped"
     )
 }
 pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
@@ -119,6 +127,7 @@ pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
   "CREATE TABLE IF NOT EXISTS workflow_trigger_options(id INTEGER PRIMARY KEY,paused INTEGER NOT NULL)",
   "INSERT OR IGNORE INTO workflow_trigger_options VALUES(1,0)"
  ] {sqlx::query(sql).execute(pool).await?;}
+    super::workflow_schedules::init_tables(pool).await?;
     Ok(())
 }
 async fn rules(pool: &SqlitePool) -> Result<Vec<Rule>> {
@@ -135,8 +144,8 @@ async fn rules(pool: &SqlitePool) -> Result<Vec<Rule>> {
         })
         .collect()
 }
-async fn items(pool: &SqlitePool) -> Result<Vec<Item>> {
-    let rows:Vec<(String,)>=sqlx::query_as("SELECT record FROM workflow_trigger_queue ORDER BY CASE WHEN state IN ('completed','failed','stopped','cancelled','interrupted') THEN 1 ELSE 0 END,created_at DESC,id LIMIT 701").fetch_all(pool).await?;
+pub(crate) async fn items(pool: &SqlitePool) -> Result<Vec<Item>> {
+    let rows:Vec<(String,)>=sqlx::query_as("SELECT record FROM workflow_trigger_queue ORDER BY CASE WHEN state IN ('completed','failed','stopped','cancelled','interrupted','skipped') THEN 1 ELSE 0 END,created_at DESC,id LIMIT 701").fetch_all(pool).await?;
     rows.into_iter()
         .map(|r| {
             let mut item: Item = serde_json::from_str(&r.0)?;
@@ -154,7 +163,7 @@ async fn put_rule(pool: &SqlitePool, rule: &Rule) -> Result<()> {
     sqlx::query("INSERT INTO workflow_trigger_rules VALUES(?,?) ON CONFLICT(id) DO UPDATE SET definition=excluded.definition").bind(&rule.id).bind(serde_json::to_string(rule)?).execute(pool).await?;
     Ok(())
 }
-async fn put_item(pool: &SqlitePool, item: &Item) -> Result<()> {
+pub(crate) async fn put_item(pool: &SqlitePool, item: &Item) -> Result<()> {
     sqlx::query("INSERT INTO workflow_trigger_queue VALUES(?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET revision=excluded.revision,state=excluded.state,record=excluded.record").bind(&item.id).bind(&item.rule_id).bind(&item.source_key).bind(&item.revision).bind(&item.state).bind(serde_json::to_string(item)?).bind(&item.created_at).execute(pool).await?;
     Ok(())
 }
@@ -170,9 +179,10 @@ async fn acknowledge(pool: &SqlitePool, item: &Item) -> Result<()> {
     .await?;
     Ok(())
 }
-async fn snapshot(pool: &SqlitePool) -> Result<State> {
+pub(crate) async fn snapshot(pool: &SqlitePool) -> Result<State> {
     Ok(State {
         rules: rules(pool).await?,
+        schedules: super::workflow_schedules::list(pool).await?,
         items: items(pool).await?,
         paused: sqlx::query_scalar::<_, bool>(
             "SELECT paused FROM workflow_trigger_options WHERE id=1",
@@ -181,7 +191,7 @@ async fn snapshot(pool: &SqlitePool) -> Result<State> {
         .await?,
     })
 }
-async fn plan(pool: &SqlitePool, id: &str) -> Result<Plan> {
+pub(crate) async fn plan(pool: &SqlitePool, id: &str) -> Result<Plan> {
     let row: Option<(String,)> = sqlx::query_as("SELECT definition FROM workflow_plans WHERE id=?")
         .bind(id)
         .fetch_optional(pool)
@@ -190,7 +200,7 @@ async fn plan(pool: &SqlitePool, id: &str) -> Result<Plan> {
         &row.context("方案已删除，请重新选择已保存方案")?.0,
     )?)
 }
-fn path_dir(path: &str) -> Result<PathBuf> {
+pub(crate) fn path_dir(path: &str) -> Result<PathBuf> {
     let original = fs::symlink_metadata(path).context("目录无法访问，请重新选择")?;
     ensure!(
         !metadata_is_link_or_reparse_point(&original),
@@ -204,7 +214,7 @@ fn path_dir(path: &str) -> Result<PathBuf> {
     );
     Ok(path)
 }
-async fn output_excludes(pool: &SqlitePool, rules: &[Rule]) -> Result<Vec<PathBuf>> {
+pub(crate) async fn output_excludes(pool: &SqlitePool, rules: &[Rule]) -> Result<Vec<PathBuf>> {
     let paths: Vec<(String,)> = sqlx::query_as("SELECT path FROM workflow_trigger_outputs")
         .fetch_all(pool)
         .await?;
@@ -484,6 +494,7 @@ async fn sync_runs_changed(pool: &SqlitePool, restart: bool) -> Result<()> {
 pub async fn initialize(pool: &SqlitePool) -> Result<State> {
     let _guard = RUNTIME.lock().await;
     sync_runs(pool, true).await?;
+    super::workflow_schedules::poll_at(pool, now(), true, false).await?;
     snapshot(pool).await
 }
 pub async fn save_rule(pool: &SqlitePool, mut rule: Rule) -> Result<State> {
@@ -658,6 +669,9 @@ async fn observe(
                 created_at: stamp(),
                 run_id: None,
                 original_run_id: None,
+                trigger: String::new(),
+                scheduled_at: None,
+                explicit: false,
             }
         };
         item.paths = value.paths;
@@ -682,6 +696,19 @@ async fn observe(
             item.state = "queued".into();
             item.reason = "来源已稳定，等待本次工作流开始".into();
         }
+        if matches!(item.state.as_str(), "queued" | "needs_input")
+            && existing.iter().any(|other| {
+                other.id != item.id
+                    && other.trigger == "schedule"
+                    && !terminal(&other.state)
+                    && other.plan.id == item.plan.id
+                    && super::workflow_schedules::overlap(&other.paths, &item.paths)
+            })
+        {
+            item.state = "skipped".into();
+            item.reason = "相同方案与来源已在定时队列中，本次目录变化不重复派发".into();
+            acknowledge(pool, &item).await?;
+        }
         put_item(pool, &item).await?;
     }
     for mut item in existing.into_iter().filter(|i| {
@@ -703,7 +730,7 @@ async fn observe(
     }
     Ok(())
 }
-pub async fn poll(pool: &SqlitePool) -> Result<State> {
+pub async fn poll(pool: &SqlitePool, busy: bool) -> Result<State> {
     let mut runtime = RUNTIME.lock().await;
     sync_runs(pool, false).await?;
     let all = rules(pool).await?;
@@ -779,8 +806,9 @@ pub async fn poll(pool: &SqlitePool) -> Result<State> {
             put_rule(pool, &rule).await?;
         }
     }
+    super::workflow_schedules::poll_at(pool, now(), false, busy).await?;
     // Keep the latest 500 visible receipts; deduplication remains in observations.
-    sqlx::query("DELETE FROM workflow_trigger_queue WHERE state IN ('completed','failed','stopped','cancelled','interrupted') AND id NOT IN (SELECT id FROM workflow_trigger_queue ORDER BY created_at DESC,id LIMIT 500)").execute(pool).await?;
+    sqlx::query("DELETE FROM workflow_trigger_queue WHERE state IN ('completed','failed','stopped','cancelled','interrupted','skipped') AND id NOT IN (SELECT id FROM workflow_trigger_queue ORDER BY created_at DESC,id LIMIT 500)").execute(pool).await?;
     snapshot(pool).await
 }
 pub async fn claim(pool: &SqlitePool, id: &str, run_id: &str) -> Result<Item> {
@@ -797,27 +825,46 @@ pub async fn claim(pool: &SqlitePool, id: &str, run_id: &str) -> Result<Item> {
         matches!(item.state.as_str(), "queued" | "needs_input"),
         "来源尚未就绪或已经开始"
     );
-    let rule = state
-        .rules
-        .iter()
-        .find(|r| r.id == item.rule_id)
-        .context("规则已删除")?;
-    ensure!(rule.enabled, "规则已暂停");
+    if item.trigger == "schedule" {
+        let rule = state
+            .schedules
+            .iter()
+            .find(|r| r.id == item.rule_id)
+            .context("定时规则已删除")?;
+        ensure!(rule.enabled || item.explicit, "定时规则已暂停");
+    } else {
+        let rule = state
+            .rules
+            .iter()
+            .find(|r| r.id == item.rule_id)
+            .context("规则已删除")?;
+        ensure!(rule.enabled, "规则已暂停");
+    }
     let active: i64 =
         sqlx::query_scalar("SELECT COUNT(*) FROM workflow_trigger_queue WHERE state='running'")
             .fetch_one(pool)
             .await?;
     ensure!(active == 0, "已有工作流正在执行，请等待本次完成");
-    let paths = item.paths.iter().map(PathBuf::from).collect::<Vec<_>>();
-    let excludes = output_excludes(pool, &state.rules).await?;
-    let check_path = paths.first().context("来源为空")?.clone();
-    let current =
-        tauri::async_runtime::spawn_blocking(move || candidate(&check_path, &excludes)).await??;
-    ensure!(
-        current.revision == item.revision && current.missing.is_empty() && !current.copying,
-        "来源已变化或分卷不齐，正在重新等待稳定"
-    );
-    path_dir(&item.output_directory)?;
+    if item.trigger == "schedule" {
+        if let Err(error) = super::workflow_schedules::check_item(pool, &item).await {
+            item.state = "failed".into();
+            item.reason = format!("暂未执行：{error:#}。处理后可重新加入队列");
+            put_item(pool, &item).await?;
+            return Err(error);
+        }
+    } else {
+        let paths = item.paths.iter().map(PathBuf::from).collect::<Vec<_>>();
+        let excludes = output_excludes(pool, &state.rules).await?;
+        let check_path = paths.first().context("来源为空")?.clone();
+        let current =
+            tauri::async_runtime::spawn_blocking(move || candidate(&check_path, &excludes))
+                .await??;
+        ensure!(
+            current.revision == item.revision && current.missing.is_empty() && !current.copying,
+            "来源已变化或分卷不齐，正在重新等待稳定"
+        );
+        path_dir(&item.output_directory)?;
+    }
     item.state = "running".into();
     item.reason = "已进入原工作流执行，进度与结果在对应运行中查看".into();
     item.run_id = Some(run_id.into());
@@ -841,6 +888,20 @@ pub async fn action(pool: &SqlitePool, id: &str, action: &str) -> Result<State> 
             item.state = "cancelled".into();
             item.reason = "已取消，来源不变时不会再次自动加入".into();
             acknowledge(pool, &item).await?;
+        }
+        "retry" if item.trigger == "schedule" => {
+            ensure!(terminal(&item.state), "此项仍在等待或执行");
+            super::workflow_schedules::enqueue_by_id(pool, &item.rule_id, now(), true, false)
+                .await?;
+        }
+        "run_missed" if item.trigger == "schedule" => {
+            ensure!(item.state == "missed", "此项不是错过的计划");
+            super::workflow_schedules::prepare_missed(pool, &mut item).await?;
+        }
+        "skip" if item.trigger == "schedule" => {
+            ensure!(item.state == "missed", "此项不是错过的计划");
+            item.state = "skipped".into();
+            item.reason = "已选择跳过错过的时段，后续按下一次时间执行".into();
         }
         "retry" => {
             ensure!(terminal(&item.state), "此项仍在等待或执行");
@@ -1074,7 +1135,7 @@ mod tests {
             .fetch_one(&pool)
             .await
             .unwrap();
-        assert_eq!(version, 17);
+        assert_eq!(version, 18);
         assert_eq!(
             super::super::workflows::state(&pool)
                 .await
@@ -1108,6 +1169,41 @@ mod tests {
         observed(&pool, &rule, 6000).await;
         assert_eq!(items(&pool).await.unwrap()[0].state, "queued");
     }
+    #[tokio::test]
+    async fn workflow1553_shared_directory_schedule_dedup_in_both_orders() {
+        let (pool, dir, rule) = setup().await;
+        let source = dir.path().join("in/source.txt");
+        fs::write(&source, b"shared input").unwrap();
+        save_rule(&pool, rule.clone()).await.unwrap();
+        let scheduled:super::super::workflow_schedules::Schedule=serde_json::from_value(serde_json::json!({"id":"schedule-shared","name":"同来源定时","planId":"plan","paths":[source.to_string_lossy()],"outputDirectory":rule.output_directory,"kind":"daily","time":"18:00","busyPolicy":"queue","enabled":true})).unwrap();
+        super::super::workflow_schedules::save(&pool, scheduled)
+            .await
+            .unwrap();
+        super::super::workflow_schedules::action(&pool, "schedule-shared", "run")
+            .await
+            .unwrap();
+        observed(&pool, &rule, 1000).await;
+        observed(&pool, &rule, 4500).await;
+        let all = items(&pool).await.unwrap();
+        assert_eq!(all.iter().filter(|i| i.state == "queued").count(), 1);
+        assert!(all
+            .iter()
+            .any(|i| i.rule_id == rule.id && i.state == "skipped"));
+        for item in all.iter().filter(|i| i.state == "queued") {
+            action(&pool, &item.id, "cancel").await.unwrap();
+        }
+        fs::write(&source, b"new shared input").unwrap();
+        observed(&pool, &rule, 5000).await;
+        observed(&pool, &rule, 8500).await;
+        super::super::workflow_schedules::action(&pool, "schedule-shared", "run")
+            .await
+            .unwrap();
+        let all = items(&pool).await.unwrap();
+        assert_eq!(all.iter().filter(|i| i.state == "queued").count(), 1);
+        assert!(all
+            .iter()
+            .any(|i| i.trigger == "schedule" && i.state == "skipped"));
+    }
 }
 
 #[cfg(test)]
@@ -1140,6 +1236,9 @@ mod continuation_tests {
             created_at: stamp(),
             run_id: Some("original".into()),
             original_run_id: None,
+            trigger: String::new(),
+            scheduled_at: None,
+            explicit: false,
         };
         put_item(&pool, &item).await.unwrap();
         let mut child = run;
@@ -1237,4 +1336,36 @@ mod queue_notice_tests {
             "running"
         );
     }
+}
+
+pub(crate) async fn schedule_sources(
+    pool: &SqlitePool,
+    paths: &[String],
+) -> Result<(Vec<String>, String)> {
+    // Explicit fixed inputs may intentionally be another rule's results.
+    // Only directory observers exclude registered outputs to prevent event loops.
+    let excludes: Vec<PathBuf> = Vec::new();
+    let _ = pool;
+    let paths = paths.to_vec();
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut values = BTreeMap::new();
+        for path in paths {
+            let value = candidate(Path::new(&path), &excludes)?;
+            ensure!(!value.copying, "来源仍在写入或被占用，请等待复制完成");
+            ensure!(value.missing.is_empty(), "{}", value.missing);
+            ensure!(value.files > 0, "来源中尚无可处理文件");
+            values.insert(value.key.clone(), value);
+        }
+        let mut hash = blake3::Hasher::new();
+        let mut paths = Vec::new();
+        for (key, value) in values {
+            hash.update(key.as_bytes());
+            hash.update(value.revision.as_bytes());
+            paths.extend(value.paths);
+        }
+        paths.sort();
+        paths.dedup();
+        Ok((paths, hash.finalize().to_hex().to_string()))
+    })
+    .await?
 }

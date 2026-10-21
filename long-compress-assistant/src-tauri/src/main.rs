@@ -485,6 +485,8 @@ fn main() {
             long_compress_assistant::commands::workflows::workflow_trigger_claim,
             long_compress_assistant::commands::workflows::workflow_trigger_action,
             long_compress_assistant::commands::workflows::workflow_trigger_finish,
+            long_compress_assistant::commands::workflows::workflow_schedule_save,
+            long_compress_assistant::commands::workflows::workflow_schedule_action,
             long_compress_assistant::commands::workflows::workflow_state,
             long_compress_assistant::commands::workflows::workflow_save_plan,
             long_compress_assistant::commands::workflows::workflow_delete_plan,

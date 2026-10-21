@@ -62,7 +62,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
     </td>
     <td width="50%" valign="top">
       <h3>🪄 重复处理，存成一套方案</h3>
-      <p>将解压、筛选、压缩和转换按顺序串起来，保存后手动运行。运行前确认来源、目录和密码，每步使用实际产物，进度、日志与结果集中查看。出错后修改参数，从相应步骤继续，核对后的成功产物可以复用。也可绑定目录，资料稳定后自动排队处理。</p>
+      <p>将解压、筛选、压缩和转换按顺序串起来，保存后手动运行。运行前确认来源、目录和密码，每步使用实际产物，进度、日志与结果集中查看。出错后修改参数，从相应步骤继续，核对后的成功产物可以复用。也可绑定目录，资料稳定后自动排队处理，或按单次、每天、每周安排固定资料；下一次时间与最近结果直接可见，错过后选择补跑或跳过。</p>
     </td>
   </tr>
 </table>
@@ -249,7 +249,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.52 · 目录触发与运行队列**。明确启用目录规则，等待复制稳定和分卷到齐后执行已保存方案；支持按文件/项目文件夹处理、暂停与取消，密码只在本次会话使用。队列保留方案快照，失败纠正后直达最新接续结果，重启保留等待与运行关联。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.52.md) · [范围与记录](long-compress-assistant/docs/DIRECTORY_WORKFLOW_FREEZE_1.5.52.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.52)。下一步按[细分路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)推进 v1.5.53 定时触发与运行管理。
+**v1.5.53 · 定时工作流与错过处理**。单次、每天或每周安排固定资料处理，直观看到下一次时间与最近结果；错过后明确补跑或跳过，忙碌时排队/跳过，同来源与目录事件不重复派发。密码、来源变化提醒和原有纠正接续贯通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.53.md) · [范围与记录](long-compress-assistant/docs/SCHEDULED_WORKFLOW_FREEZE_1.5.53.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.53)。工作流模块在声明范围完成，下一步按[细分路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)进入 v1.5.54 文件夹与压缩包对比。
+
+**v1.5.52 · 目录触发与运行队列**。明确启用目录规则，等待复制稳定和分卷到齐后执行已保存方案；支持按文件/项目文件夹处理、暂停与取消，密码只在本次会话使用。队列保留方案快照，失败纠正后直达最新接续结果，重启保留等待与运行关联。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.52.md) · [范围与记录](long-compress-assistant/docs/DIRECTORY_WORKFLOW_FREEZE_1.5.52.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.52)。定时与运行管理已由上方 v1.5.53 接续。
 
 **v1.5.51 · 工作流纠正与接续**。从失败或指定步骤重跑，修改本次来源、目录、密码和参数；开始时按实际内容核对成功步骤，只复用仍匹配的产物。新记录关联原运行，重启后可手动继续，整组分卷传递补齐。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.51.md) · [范围与记录](long-compress-assistant/docs/WORKFLOW_RECOVERY_FREEZE_1.5.51.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.51)。目录触发与运行队列已由上方 v1.5.52 接续，当前进度以最新记录为准。
 
