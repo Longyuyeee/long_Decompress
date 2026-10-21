@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import BatchConfigImpact from '@/components/tasks/BatchConfigImpact.vue'
+import { batchConfigSummary } from '@/utils/batchConfigSummary'
+import type { ConversionPatch } from '@/types/archiveConversion'
 import CompressionPurposePicker from './CompressionPurposePicker.vue'
 import { conversionPurposePatch, type PurposePatch } from '@/utils/compressionPurpose'
 import { computed, ref, watch } from 'vue'
@@ -60,13 +63,7 @@ async function chooseDirectory() {
     if (visible.value && typeof path === 'string') { directory.value = path; destination.value = 'custom' }
   } catch { /* The editable path remains available. */ }
 }
-async function apply() {
-  if (!valid.value || store.busy || store.preparing || applying.value) return
-  applying.value = true
-  applyError.value = ''
-  try {
-  if (mode.value === 'defaults') store.updateDefaults(defaults.value)
-  else applyError.value = await store.applySelected({
+const stagedPatch = computed<ConversionPatch>(() => ({
     ...(sourceEncoding.value === 'auto' || isZipPasswordEncoding(sourceEncoding.value) ? {sourceZipPasswordEncoding:sourceEncoding.value === 'auto' ? undefined : sourceEncoding.value} : {}),
     ...(isZipPasswordEncoding(targetEncoding.value) ? {zipPasswordEncoding:targetEncoding.value} : {}),
     ...(format.value === 'keep' ? {} : { format: format.value }),
@@ -81,7 +78,16 @@ async function apply() {
     ...(hiddenNames.value === 'keep' ? {} : { encryptFilenames: hiddenNames.value === 'yes' }),
     ...(recovery.value === 'keep' ? {} : { rarRecoveryPercent: Number(recovery.value) }),
     ...(recoveryVolumes.value === 'keep' ? {} : { rarRecoveryVolumes: Number(recoveryVolumes.value) }),
-  })
+  }))
+const changes = computed(() => batchConfigSummary(stagedPatch.value))
+const subjects = computed(() => store.selected.map(item => ({ name: item.sourcePath.split(/[\\/]/).pop() || item.sourcePath, path: item.sourcePath })))
+async function apply() {
+  if (!valid.value || store.busy || store.preparing || applying.value) return
+  applying.value = true
+  applyError.value = ''
+  try {
+  if (mode.value === 'defaults') store.updateDefaults(defaults.value)
+  else applyError.value = await store.applySelected(stagedPatch.value)
   if (applyError.value) return
   if (mode.value === 'selected' && store.batchNotice) useUIStore().showToast('info', store.batchNotice)
   visible.value = false
@@ -129,6 +135,7 @@ async function apply() {
           <label>输出目录<ThemedSelect v-model="destination" :options="[{ value: 'keep', label: '保持各自目录' }, { value: 'source', label: '各自源文件目录' }, { value: 'custom', label: '统一输出目录' }]" test-id="conversion-batch-destination" floating /></label>
           <div v-if="destination === 'custom'" class="flex min-w-0 gap-2"><input v-model="directory" class="conversion-input min-w-0 flex-1" placeholder="新包保存目录" /><button type="button" class="conversion-button" @click="chooseDirectory">选择目录</button><SavedLocationPicker @select="directory = $event" /></div>
         </div>
+        <BatchConfigImpact :count="store.selected.length" :subjects="subjects" :changes="changes" />
       </template>
     </fieldset>
     <template #footer>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import TaskScopeBar from '@/components/tasks/TaskScopeBar.vue'
+import { matchesTaskScope, type TaskScope } from '@/utils/taskScope'
 import TaskFailureHint from '@/components/tasks/TaskFailureHint.vue'
-import { computed, ref, nextTick } from 'vue'
+import { computed, ref, nextTick, watch } from 'vue'
 import ZpaqUpdateFields from './ZpaqUpdateFields.vue'
 import ZpaqSnapshotPicker from '@/components/archive/ZpaqSnapshotPicker.vue'
 import { useTauriCommands } from '@/composables/useTauriCommands'
@@ -18,6 +20,15 @@ import { archiveInspectionMessageForDisplay } from '@/utils/taskFailure'
 import { formatProgressPercent } from '@/utils/progress'
 const store = useArchiveConversionStore()
 const commands = useTauriCommands()
+const scope = ref<TaskScope>('all')
+const statuses = computed(() => store.items.map(item => store.taskFor(item)?.status))
+const visibleItems = computed(() => store.items.filter(item => matchesTaskScope(scope.value, store.taskFor(item)?.status)))
+function changeScope(value: TaskScope) {
+  if (scope.value !== value) store.pending.forEach(item => item.selected = false)
+  scope.value = value
+}
+watch(() => store.visible, visible => { if (visible) scope.value = 'all' })
+watch(() => store.pending.map(item => item.id), (ids, previous) => { if (scope.value !== 'all' && ids.some(id => !previous.includes(id))) scope.value = 'pending' })
 const histories = ref<Record<string, ZpaqHistory>>({})
 const historyBusy = ref('')
 async function loadSnapshots(id: string) {
@@ -76,6 +87,7 @@ async function chooseOutput(id: string) {
 async function prepareRetry(id: string) {
   const next=await store.prepareRetry(id)
   if (!next) return
+  scope.value = 'pending'
   await nextTick()
   Array.from(document.querySelectorAll<HTMLElement>('[data-conversion-id]')).find(row=>row.dataset.conversionId===next)?.scrollIntoView?.({block:'start',behavior:'smooth'})
 }
@@ -94,7 +106,8 @@ function toggle(id: string) {
         <button type="button" class="conversion-button" :disabled="store.busy || store.preparing" data-testid="conversion-choose-source" @click="chooseSource()"><i class="pi pi-plus" aria-hidden="true"></i>{{ store.contextIntent === 'zpaq-update' ? '添加 ZPAQ 备份' : '添加压缩包' }}</button>
       </div>
       <ConversionBatchConfig />
-      <BatchResultActions :locations="results" />
+      <TaskScopeBar v-if="store.items.length" :model-value="scope" :statuses="statuses" @update:model-value="changeScope" />
+      <BatchResultActions v-if="scope === 'all' || scope === 'completed'" :locations="results" />
       <p v-if="store.error && !store.items.some(item => store.taskFor(item)?.status === 'failed' && item.error === store.error)" role="alert" class="rounded-xl bg-red-500/5 px-3 py-2 text-xs text-red-500 break-words">{{ archiveInspectionMessageForDisplay(store.error) }}</p>
       <div v-if="!store.items.length" class="rounded-2xl border border-dashed border-primary/30 bg-primary/5 py-10 text-center">
         <i class="pi pi-file-export mb-3 text-3xl text-primary" aria-hidden="true"></i>
@@ -104,15 +117,16 @@ function toggle(id: string) {
       </div>
       <div v-else class="min-w-0 overflow-hidden rounded-2xl border border-subtle">
         <div class="flex items-center gap-3 border-b border-subtle bg-input/40 px-4 py-2.5 text-xs text-muted">
-          <input type="checkbox" :checked="store.pending.length > 0 && store.selected.length === store.pending.length" :disabled="store.busy || store.preparing || !store.pending.length" aria-label="选择全部待转换任务" @change="store.pending.forEach(item => item.selected = ($event.target as HTMLInputElement).checked)" />
+          <input type="checkbox" :checked="store.pending.length > 0 && store.selected.length === store.pending.length" :disabled="store.busy || store.preparing || !store.pending.length || !['all', 'pending'].includes(scope)" aria-label="选择全部待转换任务" @change="store.pending.forEach(item => item.selected = ($event.target as HTMLInputElement).checked)" />
           <span class="mr-auto">共 {{ store.items.length }} 项 · 待处理 {{ store.pending.length }} 项</span>
           <button type="button" class="hover:text-primary" :disabled="store.busy || store.preparing || !results.length" @click="store.items.filter(item => store.taskFor(item)?.status === 'completed').forEach(item => store.remove(item.id))">清除已完成</button>
         </div>
-        <section v-for="item in store.items" :key="item.id" class="min-w-0 border-b border-subtle last:border-b-0" data-testid="conversion-item" :data-conversion-id="item.id">
+        <div v-if="!visibleItems.length" data-testid="task-scope-empty" class="p-6 text-center text-sm text-muted"><p>当前分类没有任务。</p><button type="button" class="mt-3 text-primary" @click="changeScope('all')">返回全部任务</button></div>
+        <section v-for="item in visibleItems" :key="item.id" class="min-w-0 border-b border-subtle last:border-b-0" data-testid="conversion-item" :data-conversion-id="item.id">
           <div class="flex min-w-0 items-center gap-3 px-4 py-3 hover:bg-primary/5">
             <input v-model="item.selected" type="checkbox" :disabled="store.busy || store.preparing || !!item.taskId" :aria-label="'选择 ' + item.sourcePath.split(/[\\/]/).pop()" data-testid="conversion-checkbox" />
             <button type="button" class="min-w-0 flex-1 text-left" data-testid="conversion-row" :aria-expanded="item.expanded" @click="toggle(item.id)">
-              <div class="flex min-w-0 items-center gap-2"><i class="pi pi-box text-primary" aria-hidden="true"></i><span v-if="item.intent === 'zpaq-update'" class="shrink-0 rounded-md bg-primary/10 px-1.5 py-0.5 text-xs text-primary">增量更新</span><span class="truncate text-sm font-semibold" :title="item.sourcePath">{{ item.sourcePath.split(/[\\/]/).pop() }}</span><i class="pi ml-auto shrink-0 text-xs text-muted" :class="item.expanded ? 'pi-chevron-up' : 'pi-chevron-down'" aria-hidden="true"></i></div>
+              <div class="flex min-w-0 items-center gap-2"><i class="pi pi-box text-primary" aria-hidden="true"></i><span v-if="item.intent === 'zpaq-update'" class="shrink-0 rounded-md bg-primary/10 px-1.5 py-0.5 text-xs text-primary">增量更新</span><span class="min-w-0 break-words text-sm font-semibold [overflow-wrap:anywhere] line-clamp-2" :title="item.sourcePath">{{ item.sourcePath.split(/[\\/]/).pop() }}</span><i class="pi ml-auto shrink-0 text-xs text-muted" :class="item.expanded ? 'pi-chevron-up' : 'pi-chevron-down'" aria-hidden="true"></i></div>
               <p class="mt-1 truncate text-xs text-muted" :title="store.outputFor(item)">→ {{ store.outputFor(item) }}</p>
             </button>
             <span class="shrink-0 rounded-lg bg-input/60 px-2 py-1 text-xs" :class="item.error || item.sourceIssue ? 'text-red-500' : store.taskFor(item)?.status === 'completed' ? 'text-emerald-600' : 'text-muted'">{{ item.sourceIssue ? '来源待调整' : status(item.id) }}</span>
@@ -155,7 +169,7 @@ function toggle(id: string) {
       <button type="button" class="conversion-button" @click="store.visible = false">{{ store.busy ? '后台继续' : '关闭' }}</button>
       <button v-if="store.busy && store.activeId && store.items.find(item => item.id === store.activeId)?.intent === 'zpaq-update'" type="button" class="conversion-button" data-testid="zpaq-update-pause" @click="store.togglePause()">{{ store.task?.status === 'paused' ? '继续更新' : '暂停更新' }}</button>
       <button v-if="store.busy" type="button" class="conversion-button" data-testid="conversion-cancel" :disabled="store.stopRequested" @click="store.cancel">{{ store.stopRequested ? '正在停止…' : '停止本批次' }}</button>
-      <button v-else type="button" class="conversion-button bg-primary text-white" data-testid="conversion-start" :disabled="!store.selected.length || store.preparing || !!historyBusy" @click="store.start">{{ store.preparing ? '正在读取卷组…' : store.selected.some(item => item.intent === 'zpaq-update') ? '开始所选任务' : '开始转换' }}{{ store.selected.length ? '（' + store.selected.length + ' 项）' : '' }}</button>
+      <button v-else type="button" class="conversion-button bg-primary text-white" data-testid="conversion-start" :disabled="!store.selected.length || store.preparing || !!historyBusy" @click="scope = 'all'; store.start()">{{ store.preparing ? '正在读取卷组…' : store.selected.some(item => item.intent === 'zpaq-update') ? '开始所选任务' : '开始转换' }}{{ store.selected.length ? '（' + store.selected.length + ' 项）' : '' }}</button>
     </template>
   </Modal>
 </template>

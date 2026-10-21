@@ -53,6 +53,16 @@ const mountView = (pinia = createPinia()) => mount(DecompressView, {
 })
 
 describe('DecompressView', () => {
+  it('batch1543 scopes the original table and restores visibility for taskbar recovery', async () => {
+    const wrapper=mountView();const store=useTaskStore()
+    for(const id of ['pending1543','failed1543'])store.addTask({id,name:id+'.zip',type:'decompression',sourceFiles:['C:/'+id+'.zip'],outputPath:'D:/out'})
+    store.tasks.find(t=>t.id==='failed1543')!.status='failed';await nextTick()
+    await wrapper.get('[data-testid="task-scope-attention"]').trigger('click');expect(wrapper.findComponent({name:'AeroTable'}).props('taskIds')).toEqual(['failed1543'])
+    await wrapper.get('[data-testid="task-scope-completed"]').trigger('click');expect(wrapper.find('[data-testid="task-scope-empty"]').exists()).toBe(true);expect(wrapper.find('[aria-label="全局解压设置"]').exists()).toBe(false);expect(wrapper.findComponent(DropzoneStub).exists()).toBe(true)
+    store.recoveryTaskId='failed1543';await nextTick();expect(wrapper.get('[data-testid="task-scope-all"]').attributes('aria-pressed')).toBe('true');expect(wrapper.findComponent({name:'AeroTable'}).props('taskIds')).toHaveLength(2)
+    await wrapper.get('[data-testid="task-scope-pending"]').trigger('click');await wrapper.get('[data-testid="start-decompression-queue"]').trigger('click');await flushPromises();expect(wrapper.get('[data-testid="task-scope-all"]').attributes('aria-pressed')).toBe('true');wrapper.unmount()
+  })
+
   it.each(['cancelling', 'cancelled'] as const)('does not rewrite %s as a failure when native cancellation rejects extraction', async status => {
     const wrapper=mountView(),store=useTaskStore()
     store.addTask({id:'native-cancel',name:'资料.rar',type:'decompression',sourceFiles:['C:/资料.rar'],outputPath:'D:/out',configurationMode:'individual'})

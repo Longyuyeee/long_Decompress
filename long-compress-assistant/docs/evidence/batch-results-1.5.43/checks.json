@@ -1,0 +1,38 @@
+{
+  "version": "1.5.43",
+  "distinctFrontendCases": 32,
+  "finalBinarySha256": "85ab38ac7fed41f09a940185c329142d8f9c059bf775885e6af58817b81fe883",
+  "frontendSourcesSha256": {
+    "src/components/compression/ArchiveConversionModal.vue": "66887f72938aed18624105948e926aaf3589e7435414c6c081db2e5bb209969d",
+    "src/components/compression/CompressionExecutionPanel.vue": "b4e9067c7ed5f07ee6397a5faf0bd63a26c83b26b355a3ae79a14bebaff329e8",
+    "src/components/compression/ConversionBatchConfig.vue": "721da2d265f5bc2ac443df71f2f37567cb3860f8aacdb07c75a11ff2778f019f",
+    "src/components/tasks/BatchConfigBar.vue": "7f6e88560dc7b0d055eab2dbcc1a020cfb98a3d83dd155726e0c02bdf4fe1233",
+    "src/components/tasks/BatchResultActions.vue": "789ce92a1b9a54528fff9926bc6c479a9077604e71d03f890e2741154bc644e5",
+    "src/views/CompressionView.vue": "3189a7fe2fe58e11152b9df911e9b84dabebe6e8a970d38f1cfb009c67ca2948",
+    "src/views/DecompressView.vue": "ce12897cc198177eb0157d4e630135a4f9f74b7a5087b321b0ff65d84ebe8819",
+    "src/views/__tests__/CompressionView.test.ts": "1eabae9081ca4fb3474d03a301f7a3ac3161c5a2c37244659658d588ce52f633",
+    "src/views/__tests__/DecompressView.test.ts": "e8da4b28f85d6c71d5f1d438153d1e6dc0ae74a0fca1a0072ba445b67cbcb79e",
+    "src/components/tasks/BatchConfigImpact.vue": "8d2529b987d00a5e63f0d9e4b33ccfb6b9835365563ffddc25b88442f682613d",
+    "src/components/tasks/TaskScopeBar.vue": "85aa463d966067b3919659e0c25bc8704a4d01d76f118c52dc99a8417ae061d3",
+    "src/components/tasks/__tests__/BatchExperience1543.test.ts": "35abcf21c20a72b910725a31772b0bbbd0be731191c2c1fcd04b801fc20ffe48",
+    "src/utils/batchConfigSummary.ts": "8d15d1c40a74cc359cc7e849307a2df3eaf2ad17000a79ab091e551ded38b62c",
+    "src/utils/taskScope.ts": "aad429b1912f162633a2ca1d90b371a618d54681778a570c26b45b7504977319"
+  },
+  "nativeFlows": 3,
+  "changedExtractionDisplayContinuation": true,
+  "sizes": [
+    [
+      1100,
+      700
+    ],
+    [
+      760,
+      520
+    ]
+  ],
+  "notes": [
+    "Native checks retain their original binary identities; only the affected extraction display was resumed on the final binary.",
+    "Final start-from-pending visibility in compression, conversion and extraction also passed the three focused frontend checks.",
+    "No codec/backend logic changes. Existing format/password matrices and disk-full checks were not repeated."
+  ]
+}

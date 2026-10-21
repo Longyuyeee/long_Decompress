@@ -28,7 +28,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
   <tr>
     <td width="50%" valign="top">
       <h3>📦 一批文件，一次配置</h3>
-      <p>拖入多个文件或压缩包，勾选需要调整的任务，一次修改指定参数。单条任务点击后直接展开编辑，各自的密码、名称和其他设置继续保留。</p>
+      <p>拖入多个文件或压缩包，按状态找到任务；勾选后在原弹窗核对所选清单与修改摘要，一次调整指定参数。单条点击直接展开，各自未修改的设置继续保留。</p>
     </td>
     <td width="50%" valign="top">
       <h3>🧭 先看内容，再决定解压什么</h3>
@@ -237,7 +237,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.42 · 失败后调整并继续**。当前压缩/转换详情显示原因与下一步；重名时建议新名称，转换分别确认原包和新包密码。任务栏重试带入原配置创建待处理项，保留原失败、原文件和已有结果，由用户确认启动。单条展开、多选弹窗及等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.42.md) · [范围与记录](long-compress-assistant/docs/FAILURE_RECOVERY_FREEZE_1.5.42.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.42)。下一步按[近期排期](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.40_TO_1.5.43.md)推进 v1.5.43 批处理和结果，再进入[五模块分阶段路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)。
+**v1.5.43 · 批处理与结果体验**。压缩、解压与转换按状态分类找任务，原多选弹窗显示所选清单与修改摘要；成功结果直接沿原入口操作，无法打开的目录可单独重试。单条展开、多选弹窗、自然继承和等宽布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.43.md) · [范围与记录](long-compress-assistant/docs/BATCH_RESULTS_FREEZE_1.5.43.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.43)。近期常用体验阶段在本版收尾，下一步按[五模块分阶段路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)推进 v1.5.44 ZIP 添加/替换与另存。
+
+**v1.5.42 · 失败后调整并继续**。当前压缩/转换详情显示原因与下一步；重名时建议新名称，转换分别确认原包和新包密码。任务栏重试带入原配置创建待处理项，保留原失败、原文件和已有结果，由用户确认启动。单条展开、多选弹窗及等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.42.md) · [范围与记录](long-compress-assistant/docs/FAILURE_RECOVERY_FREEZE_1.5.42.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.42)。批处理与结果体验已由上方 v1.5.43 接续，当前进度以最新记录为准。
 
 **v1.5.41 · 按用途配置压缩**。兼容分享、体积优先、加密分享、按大小分包四种方案，在原配置位置显示实际参数并确认应用；密码、目录和原包凭据等未指定项保留。压缩与转换共用，单条展开、多选弹窗、自然继承和等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.41.md) · [范围与记录](long-compress-assistant/docs/PURPOSE_PRESETS_FREEZE_1.5.41.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.41)。失败纠正已由上方 v1.5.42 接续，后续进度以最新记录为准。
 

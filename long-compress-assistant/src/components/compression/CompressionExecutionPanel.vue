@@ -16,6 +16,7 @@ import {
 } from '@/utils/compressionTaskPresentation'
 
 const props = defineProps<{ task?: Task }>()
+const emit = defineEmits<{ 'retry-prepared': [] }>()
 const appStore = useAppStore()
 const compression = useCompressionStore()
 const retryBusy = ref(false), retryError = ref('')
@@ -25,6 +26,7 @@ async function prepareRetry() {
   retryBusy.value = true; retryError.value = ''
   try {
     await prepareCompressionRetryDraft(props.task)
+    emit('retry-prepared')
     await nextTick()
     Array.from(document.querySelectorAll<HTMLElement>('[data-retry-of]')).find(row=>row.dataset.retryOf===props.task?.id)?.scrollIntoView?.({block:'start',behavior:'smooth'})
   }

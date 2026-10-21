@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import TaskScopeBar from '@/components/tasks/TaskScopeBar.vue'
+import BatchResultActions from '@/components/tasks/BatchResultActions.vue'
+import { matchesTaskScope, type TaskScope } from '@/utils/taskScope'
+import { resultLocation } from '@/utils/resultLocation'
+
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
 import { useSavedLocations } from '@/composables/useSavedLocations'
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
@@ -46,6 +51,7 @@ const closeRetry = () => {
   retrySuppliedPassword.value = ''
 }
 const selectRetryDrafts = (ids: string[]) => {
+  scope.value = 'pending'
   batchStore.showingFailures = false
   selectedTaskIds.value = new Set(ids)
   appStore.setSuccess(`已创建 ${ids.length} 个新任务，请核对后点击开始；原失败记录保留。`)
@@ -54,11 +60,17 @@ const showConflictModal = ref(false)
 const resolvingConflictTaskId = computed(() => taskStore.tasks.find(task => task.conflictResolutionPending)?.id || null)
 let disposed = false
 const selectedTaskIds = ref<Set<string>>(new Set())
+const scope = ref<TaskScope>('all')
+function changeScope(value: TaskScope) { if (scope.value !== value) selectedTaskIds.value = new Set(); scope.value = value }
+
 const supportedArchiveAccept = DECOMPRESS_ARCHIVE_ACCEPT
 const supportedArchiveHint = DECOMPRESS_ARCHIVE_HINT
 const decompressionTasks = computed(() => taskStore.tasksFor('decompression'))
+const visibleTasks = computed(() => decompressionTasks.value.filter(task => matchesTaskScope(scope.value, task.status)))
+const completedLocations = computed(() => decompressionTasks.value.flatMap(task => { const location = resultLocation(task); return location ? [location] : [] }))
 const selectedPendingTasks = computed(() => decompressionTasks.value.filter(task => task.status === 'pending' && selectedTaskIds.value.has(task.id)))
-watch(() => decompressionTasks.value.filter(task => task.status === 'pending').map(task => task.id), ids => {
+watch(() => decompressionTasks.value.filter(task => task.status === 'pending').map(task => task.id), (ids, previous) => {
+  if (scope.value !== 'all' && ids.some(id => !previous.includes(id))) { scope.value = 'pending'; batchStore.showingFailures = false }
   const valid = new Set(ids)
   selectedTaskIds.value = new Set([...selectedTaskIds.value].filter(id => valid.has(id)))
 })
@@ -424,6 +436,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
     ? decompressionTasks.value.filter(t => selectedTaskIds.value.has(t.id) && t.status === 'pending')
     : decompressionTasks.value.filter(t => t.status === 'pending')).filter(task => !task.conflicts.length && !task.conflictResolutionPending)
   if (pendingTasks.length === 0) return
+  scope.value = 'all'
 
   isProcessing.value = true
   batchStore.begin(pendingTasks.map(task => task.id))
@@ -528,6 +541,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
 const hasPendingTasks = computed(() => decompressionTasks.value.some(t => t.status === 'pending'))
 const showBatchFailures = () => {
   selectedTaskIds.value = new Set()
+  scope.value = 'all'
   batchStore.showingFailures = true
 }
 const pausableTasks = computed(() => decompressionTasks.value.filter(t => ['running', 'extracting', 'preparing', 'finalizing'].includes(t.status)))
@@ -636,16 +650,19 @@ const openNextConflict = () => {
 }
 const unsubConflict = taskStore.$subscribe(openNextConflict)
 onMounted(openNextConflict)
+watch(() => taskStore.recoveryTaskId, id => {
+  if (id && decompressionTasks.value.some(task => task.id === id)) { changeScope('all'); batchStore.showingFailures = false }
+}, { immediate: true })
 </script>
 
 <template>
   <div class="decompress-view p-3 sm:p-4 h-full flex flex-col gap-2.5 transition-colors duration-700 relative overflow-hidden">
-    <header data-testid="decompression-header" class="compact-workspace-header flex justify-between items-center shrink-0">
+    <header data-testid="decompression-header" class="compact-workspace-header flex flex-wrap justify-between items-center gap-2 shrink-0">
       <div>
         <h1 class="text-xl md:text-2xl font-black text-content tracking-tight">{{ appStore.t('nav.decompress') }}</h1>
         <p class="text-xs text-muted font-semibold mt-0.5">{{ appStore.t('decompress.subtitle') }}</p>
       </div>
-      <div class="flex gap-3">
+      <div class="ml-auto flex max-w-full flex-wrap justify-end gap-2">
         <button
           v-if="!batchStore.showingFailures && !isRunning && decompressionTasks.some(t => ['completed', 'failed', 'cancelled'].includes(t.status))"
           @click="taskStore.clearFinishedTasks('decompression')"
@@ -693,20 +710,22 @@ onMounted(openNextConflict)
     </header>
 
     <div data-testid="decompression-workspace-shell" class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
-      <DecompressionBatchSummary @show-failures="showBatchFailures" @show-all="batchStore.showingFailures = false"
+      <DecompressionBatchSummary v-if="scope === 'all' || batchStore.showingFailures" @show-failures="showBatchFailures" @show-all="batchStore.showingFailures = false"
         @retry-failures="openBatchRetry" />
-      <div class="flex-1 overflow-hidden flex flex-col relative">
+      <TaskScopeBar v-if="decompressionTasks.length && !batchStore.showingFailures" :model-value="scope" :statuses="decompressionTasks.map(task => task.status)" @update:model-value="changeScope" />
+      <div class="flex-1 min-h-0 overflow-hidden flex flex-col relative">
         <div v-if="batchStore.showingFailures && !batchStore.visibleFailureIds.length" class="flex-1 flex flex-col items-center justify-center gap-3 p-6 text-sm text-muted" data-testid="batch-failures-cleared">
           <p>{{ appStore.t('decompress.batch.no_visible_failures') }}</p>
           <RouterLink to="/history" class="text-primary underline">{{ appStore.t('nav.history') }}</RouterLink>
         </div>
-        <!-- 显示所有任务，不再过滤只显示 pending -->
+        <div v-else-if="decompressionTasks.length && !batchStore.showingFailures && !visibleTasks.length" data-testid="task-scope-empty" class="flex-1 min-h-0 overflow-y-auto p-6 text-center text-sm text-muted"><p>当前分类没有任务。</p><button type="button" class="mt-3 text-primary" @click="changeScope('all')">返回全部任务</button></div>
+        <!-- 保留原行内详情，筛选只控制可见任务 -->
         <div v-else-if="decompressionTasks.length > 0" class="flex-1 min-h-0">
           <AeroTable
           :selectedTaskIds="selectedTaskIds"
           statusFilter="all"
           taskType="decompression"
-          :taskIds="batchStore.showingFailures ? batchStore.visibleFailureIds : undefined"
+          :taskIds="batchStore.showingFailures ? batchStore.visibleFailureIds : visibleTasks.map(task => task.id)"
           @toggle-task="toggleTaskSelection"
           @select-all-pending="selectAllPending"
           @deselect-all="deselectAll"
@@ -717,7 +736,8 @@ onMounted(openNextConflict)
           @resume-task="taskStore.resumeTask"
           >
             <template #before-tasks>
-              <BatchConfigBar v-if="selectedPendingTasks.length && !batchStore.showingFailures" class="mb-3" :count="selectedPendingTasks.length" mode="decompression" @apply="applySelectedConfiguration" @clear="deselectAll" />
+              <BatchResultActions v-if="scope === 'completed'" :locations="completedLocations" class="mb-3" />
+              <BatchConfigBar v-if="selectedPendingTasks.length && !batchStore.showingFailures" class="mb-3" :count="selectedPendingTasks.length" :subjects="selectedPendingTasks.map(task => ({ name: task.name, path: task.sourceFiles[0] }))" mode="decompression" @apply="applySelectedConfiguration" @clear="deselectAll" />
             </template>
           </AeroTable>
         </div>
@@ -737,7 +757,7 @@ onMounted(openNextConflict)
 
       <!-- 底部操作区 -->
       <div v-if="decompressionTasks.length > 0 && !batchStore.showingFailures" class="border-t border-subtle bg-input/10 px-3 py-2 flex items-center gap-3 flex-wrap shrink-0">
-          <div class="global-config-controls" aria-label="全局解压设置">
+          <div v-if="scope === 'all' || scope === 'pending'" class="global-config-controls" aria-label="全局解压设置">
             <SavedLocationPicker :current="globalOutputPath" @select="setGlobalOutput" />
             <span class="text-xs font-black text-primary uppercase tracking-widest opacity-80 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
 
@@ -783,7 +803,7 @@ onMounted(openNextConflict)
               <span class="text-xs font-black text-muted uppercase tracking-widest whitespace-nowrap">{{ appStore.t('decompress.config.recycle_source') }}</span>
             </button>
           </div>
-        <div class="w-px h-5 bg-subtle/20 mx-1 hidden md:block"></div>
+        <div v-if="scope === 'all' || scope === 'pending'" class="w-px h-5 bg-subtle/20 mx-1 hidden md:block"></div>
 
         <EnhancedFileDropzone
           @files-selected="onFilesSelected"

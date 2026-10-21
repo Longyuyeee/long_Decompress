@@ -1,0 +1,197 @@
+{
+  "version": "1.5.43",
+  "binarySha256": "85ab38ac7fed41f09a940185c329142d8f9c059bf775885e6af58817b81fe883",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\batch-results-1543\\827dcf14-1cd6-41f2-9803-f185fc3ed1f8",
+  "checks": [
+    {
+      "kind": "compression-batch-summary-mixed-results-and-filtering",
+      "occupiedFilePreserved": true,
+      "originalFailurePreserved": true,
+      "binarySha256": "905edb938333094acc6487d3835481a4c516836b1851bee8badbd45046fa352e"
+    },
+    {
+      "kind": "conversion-batch-preview-and-result-scope",
+      "binarySha256": "905edb938333094acc6487d3835481a4c516836b1851bee8badbd45046fa352e"
+    },
+    {
+      "kind": "extraction-batch-preview-results-and-content",
+      "contentHashes": true,
+      "binarySha256": "905edb938333094acc6487d3835481a4c516836b1851bee8badbd45046fa352e"
+    },
+    {
+      "kind": "extraction-final-layout-and-content",
+      "binarySha256": "85ab38ac7fed41f09a940185c329142d8f9c059bf775885e6af58817b81fe883",
+      "contentHashes": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "compression-batch-preview",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "905edb938333094acc6487d3835481a4c516836b1851bee8badbd45046fa352e"
+    },
+    {
+      "name": "compression-batch-preview",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "905edb938333094acc6487d3835481a4c516836b1851bee8badbd45046fa352e"
+    },
+    {
+      "name": "compression-success",
+      "anchorOverflow": 0,
+      "columns": [
+        378,
+        378
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "905edb938333094acc6487d3835481a4c516836b1851bee8badbd45046fa352e"
+    },
+    {
+      "name": "compression-success",
+      "anchorOverflow": 0,
+      "columns": [
+        286,
+        286
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "905edb938333094acc6487d3835481a4c516836b1851bee8badbd45046fa352e"
+    },
+    {
+      "name": "conversion-batch-preview",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "905edb938333094acc6487d3835481a4c516836b1851bee8badbd45046fa352e"
+    },
+    {
+      "name": "conversion-batch-preview",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "905edb938333094acc6487d3835481a4c516836b1851bee8badbd45046fa352e"
+    },
+    {
+      "name": "conversion-success",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "905edb938333094acc6487d3835481a4c516836b1851bee8badbd45046fa352e"
+    },
+    {
+      "name": "conversion-success",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "905edb938333094acc6487d3835481a4c516836b1851bee8badbd45046fa352e"
+    },
+    {
+      "name": "extraction-batch-preview",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "905edb938333094acc6487d3835481a4c516836b1851bee8badbd45046fa352e"
+    },
+    {
+      "name": "extraction-batch-preview",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "905edb938333094acc6487d3835481a4c516836b1851bee8badbd45046fa352e"
+    },
+    {
+      "name": "extraction-success",
+      "anchorOverflow": 0,
+      "columns": [
+        775
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "905edb938333094acc6487d3835481a4c516836b1851bee8badbd45046fa352e"
+    },
+    {
+      "name": "extraction-success",
+      "anchorOverflow": 0,
+      "columns": [
+        591
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "905edb938333094acc6487d3835481a4c516836b1851bee8badbd45046fa352e"
+    },
+    {
+      "name": "extraction-success-final",
+      "binarySha256": "85ab38ac7fed41f09a940185c329142d8f9c059bf775885e6af58817b81fe883",
+      "anchorOverflow": 0,
+      "columns": [
+        775
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "extraction-success-final",
+      "binarySha256": "85ab38ac7fed41f09a940185c329142d8f9c059bf775885e6af58817b81fe883",
+      "anchorOverflow": 0,
+      "columns": [
+        591
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "batch1543-compression-batch-preview-1100x700.png",
+    "batch1543-compression-batch-preview-760x520.png",
+    "batch1543-compression-success-1100x700.png",
+    "batch1543-compression-success-760x520.png",
+    "batch1543-conversion-batch-preview-1100x700.png",
+    "batch1543-conversion-batch-preview-760x520.png",
+    "batch1543-conversion-success-1100x700.png",
+    "batch1543-conversion-success-760x520.png",
+    "batch1543-extraction-batch-preview-1100x700.png",
+    "batch1543-extraction-batch-preview-760x520.png",
+    "batch1543-extraction-success-1100x700.png",
+    "batch1543-extraction-success-760x520.png",
+    "batch1543-extraction-success-final-1100x700.png",
+    "batch1543-extraction-success-final-760x520.png"
+  ],
+  "sources": [
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\batch-results-1543\\827dcf14-1cd6-41f2-9803-f185fc3ed1f8\\资料-甲-很长的文件名很长的文件名很长的文件名很长的文件名很长的文件名.txt",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\batch-results-1543\\827dcf14-1cd6-41f2-9803-f185fc3ed1f8\\资料-乙-需要处理.txt"
+  ],
+  "compressed": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\batch-results-1543\\827dcf14-1cd6-41f2-9803-f185fc3ed1f8\\成功结果长名称-项目资料项目资料项目资料项目资料项目资料项目资料-94531986.zip",
+  "converted": [
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\batch-results-1543\\827dcf14-1cd6-41f2-9803-f185fc3ed1f8\\显示接续-0-fed89985.zip",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\batch-results-1543\\827dcf14-1cd6-41f2-9803-f185fc3ed1f8\\显示接续-1-13b3669e.zip"
+  ],
+  "previousIdentities": [
+    "905edb938333094acc6487d3835481a4c516836b1851bee8badbd45046fa352e"
+  ]
+}
