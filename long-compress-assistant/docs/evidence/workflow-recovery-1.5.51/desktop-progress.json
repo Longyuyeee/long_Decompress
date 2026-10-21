@@ -1,0 +1,479 @@
+{
+  "version": "1.5.51",
+  "binarySha256": "c36768c247256d62b277aead704e1bf62e42b9306013640dc1be7bf04a408083",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f",
+  "checks": [
+    {
+      "kind": "legacy-summary-is-viewable-and-fresh-run-is-explicit",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "oldId": "42a12384-a9a5-449b-8ca6-a102e51f8b34",
+      "legacyNoInventedResume": true,
+      "originalSourcesPrefilled": true,
+      "noAutomaticRun": true
+    },
+    {
+      "kind": "failure-receipt-and-partial-output-retention",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "runId": "a0150f37-1da3-470c-84c4-547267577acd",
+      "unstartedDownstream": true,
+      "completedSourceRetained": true,
+      "credentialFreeSnapshot": true
+    },
+    {
+      "kind": "correct-password-and-directory-reuse-prefix",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "runId": "12108293-4949-4b33-bf79-56fc322b4378",
+      "previousFilterReused": true,
+      "onlyFailedSuffixRan": true,
+      "oldReceiptAndPartialBytesUnchanged": true,
+      "newOutputBase": true,
+      "independentArchiveBytes": true
+    },
+    {
+      "kind": "explicit-last-step-rerun-and-profile-reuse",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "runId": "6bbd0abd-a405-44be-be7b-9591bdef33c0",
+      "reusedFilterAndExtraction": true,
+      "oneNewTaskOnly": true,
+      "existingProfileApplied": true,
+      "new7zBytesVerified": true
+    },
+    {
+      "kind": "changed-content-blocks-reuse-and-advances-only-needed-suffix",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "runId": "b749d526-e71e-4ade-bf61-5527a9073688",
+      "sameSizeAndTimestampChangeDetected": true,
+      "blockedWithoutNewTask": true,
+      "onlyUnchangedFilterReused": true,
+      "oldChangedFileKept": true
+    },
+    {
+      "kind": "actual-split-members-handoff-and-missing-member-correction",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "initialId": "b092e616-09b2-4fea-a01b-d08be61091a2",
+      "resumeId": "b606b5c4-3dc7-4568-bade-34b6fa2fc84e",
+      "actualMembers": 3,
+      "allMembersWrapped": true,
+      "missingMemberBlocked": true,
+      "onlyDownstreamRepeatedAfterRestore": true
+    },
+    {
+      "kind": "normal-stop-exit-restart-cancel-check-and-resume-without-saved-plan",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "interruptedRun": "364adac2-a263-4b91-b44c-1108baf55d05",
+      "continuedRun": "608deed3-52ec-471a-b2e7-c0a2a7b65218",
+      "withoutSavedPlan": "568f3551-f02e-4398-a6db-30a208166126",
+      "normalCloseSameProfile": true,
+      "realReadCancelledWithoutDispatch": true,
+      "noAutomaticRun": true,
+      "largeArchiveBytesVerified": true,
+      "sourceAndPartialHashesUnchanged": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "failure-receipt",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 1100
+    },
+    {
+      "name": "failure-receipt",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 760
+    },
+    {
+      "name": "resume-review",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 1100
+    },
+    {
+      "name": "resume-review",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 760
+    },
+    {
+      "name": "step-settings",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 1100
+    },
+    {
+      "name": "step-settings",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 760
+    },
+    {
+      "name": "reused-results",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 1100
+    },
+    {
+      "name": "reused-results",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 760
+    },
+    {
+      "name": "changed-content",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 1100
+    },
+    {
+      "name": "changed-content",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 760
+    },
+    {
+      "name": "cancelled-check",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 1100
+    },
+    {
+      "name": "cancelled-check",
+      "binarySha256": "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 760
+    },
+    {
+      "name": "final-source-and-password",
+      "binarySha256": "c36768c247256d62b277aead704e1bf62e42b9306013640dc1be7bf04a408083",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 1100
+    },
+    {
+      "name": "final-source-and-password",
+      "binarySha256": "c36768c247256d62b277aead704e1bf62e42b9306013640dc1be7bf04a408083",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 760
+    },
+    {
+      "name": "final-parameter-settings",
+      "binarySha256": "c36768c247256d62b277aead704e1bf62e42b9306013640dc1be7bf04a408083",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 1100
+    },
+    {
+      "name": "final-parameter-settings",
+      "binarySha256": "c36768c247256d62b277aead704e1bf62e42b9306013640dc1be7bf04a408083",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 760
+    },
+    {
+      "name": "final-record-actions",
+      "binarySha256": "c36768c247256d62b277aead704e1bf62e42b9306013640dc1be7bf04a408083",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 1100
+    },
+    {
+      "name": "final-record-actions",
+      "binarySha256": "c36768c247256d62b277aead704e1bf62e42b9306013640dc1be7bf04a408083",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "scrollable": true,
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "workflow1551-failure-receipt-1100x700.png",
+    "workflow1551-failure-receipt-760x520.png",
+    "workflow1551-resume-review-1100x700.png",
+    "workflow1551-resume-review-760x520.png",
+    "workflow1551-step-settings-1100x700.png",
+    "workflow1551-step-settings-760x520.png",
+    "workflow1551-reused-results-1100x700.png",
+    "workflow1551-reused-results-760x520.png",
+    "workflow1551-changed-content-1100x700.png",
+    "workflow1551-changed-content-760x520.png",
+    "workflow1551-cancelled-check-1100x700.png",
+    "workflow1551-cancelled-check-760x520.png",
+    "workflow1551-final-source-and-password-1100x700.png",
+    "workflow1551-final-source-and-password-760x520.png",
+    "workflow1551-final-parameter-settings-1100x700.png",
+    "workflow1551-final-parameter-settings-760x520.png",
+    "workflow1551-final-record-actions-1100x700.png",
+    "workflow1551-final-record-actions-760x520.png"
+  ],
+  "fixture": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源",
+  "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源\\运行输出",
+  "corrected": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\纠正后的结果",
+  "plain": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源\\01-普通.zip",
+  "encrypted": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源\\02-密码.zip",
+  "originals": {
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源\\01-普通.zip": "c292e0943dffd8a5f694533b0b939134be70c2b9828aa48778138e1714ad8e3e",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源\\02-密码.zip": "29badf5f3369eaaaa0d2152a276a106d03417756fdf2bc16314829e4f5bf2b8b"
+  },
+  "failedRun": "a0150f37-1da3-470c-84c4-547267577acd",
+  "failedRecord": {
+    "id": "a0150f37-1da3-470c-84c4-547267577acd",
+    "planId": "10b58cb3-fd69-4cc9-b070-8ddabbfc32f5",
+    "name": "纠正密码后继续交付",
+    "status": "failed",
+    "startedAt": "2026-10-21T11:33:30.485Z",
+    "finishedAt": "2026-10-21T11:33:30.960Z",
+    "directory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源\\运行输出\\纠正密码后继续交付-20261021-193330-a0150f",
+    "inputs": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源"
+    ],
+    "steps": [
+      {
+        "id": "669ce86b-93fe-4e76-8976-74f476310f52",
+        "name": "筛选需要的资料",
+        "kind": "filter",
+        "status": "completed",
+        "inputs": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源"
+        ],
+        "outputs": [
+          {
+            "path": "\\\\?\\E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源\\01-普通.zip",
+            "directory": false,
+            "files": [],
+            "totalBytes": 0,
+            "split": false
+          },
+          {
+            "path": "\\\\?\\E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源\\02-密码.zip",
+            "directory": false,
+            "files": [],
+            "totalBytes": 0,
+            "split": false
+          }
+        ],
+        "taskIds": [],
+        "message": "已筛选 2 个文件 · 扫描 3 个位置",
+        "inputProof": {
+          "digest": "02f857764d5556716617a2a4ceabd4909d07c720c1b9e7e412e3bc8cbc8f69a4",
+          "metadata": "010b03a48f8938a86d3bbf2fab12c762e697a06f50fa17f34cf2f2963d2990de",
+          "files": 2,
+          "bytes": 407,
+          "policy": {
+            "excludes": [
+              "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源\\运行输出\\纠正密码后继续交付-20261021-193330-a0150f",
+              "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源\\运行输出"
+            ],
+            "extensions": "zip",
+            "filesOnly": true,
+            "archiveMembers": false
+          }
+        },
+        "outputProof": {
+          "digest": "02f857764d5556716617a2a4ceabd4909d07c720c1b9e7e412e3bc8cbc8f69a4",
+          "metadata": "010b03a48f8938a86d3bbf2fab12c762e697a06f50fa17f34cf2f2963d2990de",
+          "files": 2,
+          "bytes": 407,
+          "policy": {
+            "excludes": [],
+            "extensions": null,
+            "filesOnly": false,
+            "archiveMembers": false
+          }
+        }
+      },
+      {
+        "id": "c9da7e50-bcc3-4e9d-b9b9-53bf197a84f4",
+        "name": "解压到本次目录",
+        "kind": "extract",
+        "status": "failed",
+        "inputs": [
+          "\\\\?\\E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源\\01-普通.zip",
+          "\\\\?\\E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源\\02-密码.zip"
+        ],
+        "outputs": [
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源\\运行输出\\纠正密码后继续交付-20261021-193330-a0150f\\02-解压/01-普通_1",
+            "directory": true,
+            "files": [],
+            "totalBytes": 0,
+            "split": false
+          }
+        ],
+        "taskIds": [
+          "5de4b21c-4e59-42ba-9d8a-c1a347a92cd7",
+          "453860d5-a1a4-4455-8143-6810130e864b"
+        ],
+        "message": "提供的密码不正确",
+        "inputProof": {
+          "digest": "02f857764d5556716617a2a4ceabd4909d07c720c1b9e7e412e3bc8cbc8f69a4",
+          "metadata": "010b03a48f8938a86d3bbf2fab12c762e697a06f50fa17f34cf2f2963d2990de",
+          "files": 2,
+          "bytes": 407,
+          "policy": {
+            "excludes": [
+              "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源\\运行输出\\纠正密码后继续交付-20261021-193330-a0150f"
+            ],
+            "extensions": null,
+            "filesOnly": false,
+            "archiveMembers": true
+          }
+        }
+      },
+      {
+        "id": "1a54649e-2ccf-4160-a548-6846085d7e2f",
+        "name": "生成交付压缩包",
+        "kind": "compress",
+        "status": "pending",
+        "inputs": [],
+        "outputs": [],
+        "taskIds": [],
+        "message": ""
+      }
+    ],
+    "plan": {
+      "id": "10b58cb3-fd69-4cc9-b070-8ddabbfc32f5",
+      "name": "纠正密码后继续交付",
+      "steps": [
+        {
+          "id": "669ce86b-93fe-4e76-8976-74f476310f52",
+          "name": "筛选需要的资料",
+          "kind": "filter",
+          "extensions": "zip",
+          "passwordRequired": false,
+          "settings": {
+            "format": "zip",
+            "level": 6,
+            "filename": "资料-{date}",
+            "splitArchive": false,
+            "splitSize": "1024",
+            "keepStructure": true,
+            "verifyAfter": true,
+            "createSolidArchive": false,
+            "deleteAfter": false
+          }
+        },
+        {
+          "id": "c9da7e50-bcc3-4e9d-b9b9-53bf197a84f4",
+          "name": "解压到本次目录",
+          "kind": "extract",
+          "extensions": "",
+          "passwordRequired": false,
+          "settings": {
+            "format": "zip",
+            "level": 6,
+            "filename": "资料-{date}",
+            "splitArchive": false,
+            "splitSize": "1024",
+            "keepStructure": true,
+            "verifyAfter": true,
+            "createSolidArchive": false,
+            "deleteAfter": false
+          }
+        },
+        {
+          "id": "1a54649e-2ccf-4160-a548-6846085d7e2f",
+          "name": "生成交付压缩包",
+          "kind": "compress",
+          "extensions": "",
+          "passwordRequired": false,
+          "settings": {
+            "format": "zip",
+            "level": 6,
+            "filename": "资料-{date}",
+            "splitArchive": false,
+            "splitSize": "1024",
+            "keepStructure": true,
+            "verifyAfter": true,
+            "createSolidArchive": false,
+            "deleteAfter": false
+          }
+        }
+      ],
+      "updatedAt": ""
+    },
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源\\运行输出"
+  },
+  "partialHashes": {
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\来源\\运行输出\\纠正密码后继续交付-20261021-193330-a0150f\\02-解压\\01-普通_1\\docs\\说明.txt": "f2481240810a408c58a670f1d47ec14a61fae21b893ec653b5ead1d9ab79d555"
+  },
+  "correctedRun": "12108293-4949-4b33-bf79-56fc322b4378",
+  "profileSaved": true,
+  "explicitRun": "6bbd0abd-a405-44be-be7b-9591bdef33c0",
+  "changedFile": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\纠正后的结果\\纠正密码后继续交付-20261021-193334-121082\\02-解压\\01-普通_1\\docs\\说明.txt",
+  "changed": true,
+  "changedRecovery": "b749d526-e71e-4ade-bf61-5527a9073688",
+  "splitSource": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\分卷资料.bin",
+  "large": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1551\\120fc1a6-6806-4f3f-8440-4aeda7df583f\\重启资料.bin",
+  "largeSha": "ad0c09573b69a985af122f12beae12a04eeddb8bbe1cad309fcd1b650afef7bc",
+  "exitRun": "364adac2-a263-4b91-b44c-1108baf55d05",
+  "previousIdentities": [
+    "0a43b22e9ac16b29431be74a3ad0ba010cd519f4ec770c5871fc0d11b5a1f412"
+  ]
+}

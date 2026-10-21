@@ -3,6 +3,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createPinia, setActivePinia } from 'pinia'
 import { nextTick } from 'vue'
 import App from '../App.vue'
+import { useWorkflowStore } from '@/stores/workflows'
 import { useAppStore } from '@/stores/app'
 import { useCompressionStore } from '@/stores/compression'
 import { useTaskStore } from '@/stores/task'
@@ -426,4 +427,14 @@ describe('App orchestration', () => {
 
     wrapper.unmount()
   })
+it('workflow1551 normal exit awaits workflow receipt before closing',async()=>{
+ const pinia=createPinia();setActivePinia(pinia);const workflows=useWorkflowStore();let finish!:(value:boolean)=>void;vi.spyOn(workflows,'flush').mockImplementation(()=>new Promise(resolve=>finish=resolve));
+ const view=mount(App,{global:{plugins:[pinia],stubs:{MainLayout:true,ToastContainer:true,UpdateDialog:true,Modal:true}}});await flushPromises();mocks.invoke.mockClear();
+ const exiting=mocks.listeners.get('exit-drafts-requested')!({payload:null});await flushPromises();expect(mocks.invoke.mock.calls.some(c=>c[0]==='exit_app')).toBe(false);finish(true);await exiting;expect(mocks.invoke).toHaveBeenCalledWith('exit_app');view.unmount();
+})
+it('workflow1551 failed workflow persistence preserves the open application',async()=>{
+ const pinia=createPinia();setActivePinia(pinia);const workflows=useWorkflowStore();workflows.saveError='记录暂未保存';vi.spyOn(workflows,'flush').mockResolvedValue(false);
+ const view=mount(App,{global:{plugins:[pinia],stubs:{MainLayout:true,ToastContainer:true,UpdateDialog:true,Modal:true}}});await flushPromises();mocks.invoke.mockClear();await mocks.listeners.get('exit-drafts-requested')!({payload:null});expect(mocks.invoke.mock.calls.some(c=>c[0]==='exit_app')).toBe(false);expect(useAppStore().error).toBe('记录暂未保存');view.unmount();
+})
+
 })

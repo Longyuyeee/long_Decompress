@@ -25,7 +25,7 @@ export function workflowCompressionOptions(settings: CompressionOptions, passwor
         throw Error('请确认此格式支持分卷，并填写有效的分卷大小');
     return { format, level: settings.level, password: password || undefined, split_size: size || null, preserve_paths: settings.keepStructure, delete_after: false, verify_after: settings.verifyAfter, fast_pack: false, create_solid_archive: settings.createSolidArchive, encrypt_filenames: !!password && supportsFilenameEncryption(format) && (settings.encryptFilenames ?? true), zip_method: settings.zipMethod ?? 'deflate', zip_encryption: settings.zipEncryption ?? 'aes256', zip_split_mode: settings.zipSplitMode ?? 'numeric', zip_password_encoding: settings.zipPasswordEncoding ?? 'utf8', wim_method: settings.wimMethod ?? (format === 'esd' ? 'solid' : 'store'), rar_recovery_percent: settings.rarRecoveryPercent ?? 0, rar_recovery_volumes: settings.rarRecoveryVolumes ?? 0, allow_insecure_password_cli: false };
 }
-export function validateWorkflow(plan: WorkflowPlan, paths: string[], output: string, passwords: Record<string, string>, now = new Date()) {
+export function validateWorkflow(plan: WorkflowPlan, paths: string[], output: string, passwords: Record<string, string>, now = new Date(), from = 0) {
     if (!plan.name.trim() || plan.name.length > 60)
         throw Error('请填写 1～60 字的方案名称');
     if (!plan.steps.length || plan.steps.length > 8)
@@ -35,7 +35,7 @@ export function validateWorkflow(plan: WorkflowPlan, paths: string[], output: st
     if (!output.trim())
         throw Error('请选择本次保存位置');
     for (const [index, step] of plan.steps.entries())
-        if (['compress', 'convert'].includes(step.kind)) {
+        if (index>=from && ['compress', 'convert'].includes(step.kind)) {
             const password = passwords[step.id] || step.settings.password;
             if (step.passwordRequired && !password)
                 throw Error(`「${step.name}」需要本次输出密码，请填写或从保险箱选择`);
@@ -43,3 +43,38 @@ export function validateWorkflow(plan: WorkflowPlan, paths: string[], output: st
             workflowCompressionOptions(step.settings, password);
         }
 }
+
+export function normalizeWorkflowPlan(plan:WorkflowPlan):WorkflowPlan {
+ return {...workflowClone(plan),steps:plan.steps.map(step=>({...step,settings:{...workflowSettings(),...step.settings,password:step.settings.password||''}}))}
+}
+export function workflowOutputPaths(outputs:import('@/types/workflow').WorkflowOutput[]):string[]{
+ return [...new Set(outputs.flatMap(output=>output.files.length?output.files.map(file=>file.path):[output.path]))]
+}
+export function workflowDefaultResume(run:import('@/types/workflow').WorkflowRun):number {
+ const index=run.steps.findIndex(step=>step.status!=='completed'||!step.inputProof||!step.outputProof||!!step.reuseIssue)
+ return index<0?Math.max(0,run.steps.length-1):index
+}
+const stepExecutionKey=(step:WorkflowStep)=>{
+ if(step.kind==='filter')return JSON.stringify({kind:step.kind,extensions:step.extensions})
+ if(step.kind==='extract')return step.kind
+ const required=step.passwordRequired||!!step.settings.password
+ try{const {password:_,...options}=workflowCompressionOptions(step.settings,required?'required':'');return JSON.stringify({kind:step.kind,required,filename:step.settings.filename.trim()||'{name}-{date}',options})}
+ catch{return JSON.stringify({...step,settings:{...step.settings,password:required?'required':''},name:''})}
+}
+export function workflowResumeFrom(run:import('@/types/workflow').WorkflowRun,plan:WorkflowPlan,paths:string[],requested:number):number {
+ if(!run.plan||run.plan.steps.length!==plan.steps.length)return 0
+ if(!Number.isInteger(requested)||requested<0||requested>=plan.steps.length)throw Error('请选择有效的接续步骤')
+ const key=(paths:string[])=>paths.map(p=>p.replaceAll('\\','/').toLowerCase()).join('\n')
+ if(key(run.inputs)!==key(paths))return 0
+ let from=requested
+ for(let index=0;index<from;index++)if(run.plan.steps[index].id!==plan.steps[index].id||stepExecutionKey(run.plan.steps[index])!==stepExecutionKey(plan.steps[index])){from=index;break}
+ return from
+}
+export function workflowInputCredential(run:import('@/types/workflow').WorkflowRun,plan:WorkflowPlan,from:number){
+ const reading=plan.steps.slice(from).find(step=>step.kind!=='filter')
+ const needsSource=!!reading&&['extract','convert'].includes(reading.kind)
+ const producer=plan.steps.slice(0,from).reverse().find(step=>step.kind!=='filter')
+ const generated=producer&&['compress','convert'].includes(producer.kind)
+ return {visible:needsSource&&producer?.kind!=='extract',required:needsSource&&!!generated&&producer!.passwordRequired,label:generated?`已有「${producer!.name}」产物的读取密码`:'原始来源密码（可留空）',encoding:generated?producer!.settings.zipPasswordEncoding:run.sourceEncoding}
+}
+export function workflowParentDirectory(path:string){const end=Math.max(path.lastIndexOf('/'),path.lastIndexOf('\\'));return end===2&&/^[a-z]:/i.test(path)?path.slice(0,3):path.slice(0,end)||path}

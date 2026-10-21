@@ -61,3 +61,39 @@ pub async fn workflow_children(path: String) -> Result<Vec<String>, String> {
 pub async fn workflow_cancel_inputs(job_id: String) {
     crate::services::archive_library::cancel(&job_id)
 }
+
+#[tauri::command]
+pub async fn workflow_witness(
+    window: tauri::Window,
+    paths: Vec<String>,
+    policy: crate::services::workflow_recovery::Policy,
+    job_id: String,
+    metadata_only: bool,
+) -> Result<crate::services::workflow_recovery::Proof, String> {
+    tauri::async_runtime::spawn_blocking(move||{let id=job_id.clone();crate::services::workflow_recovery::witness(paths,policy,&job_id,metadata_only,&mut |progress|{let _=window.emit("workflow-proof-progress",serde_json::json!({"jobId":id,"files":progress.files,"bytes":progress.bytes,"path":progress.path}));})}).await.map_err(|e|e.to_string())?.map_err(|e|format!("{e:#}"))
+}
+#[tauri::command]
+pub async fn workflow_check_reuse(
+    window: tauri::Window,
+    run_id: String,
+    count: usize,
+    job_id: String,
+) -> Result<crate::services::workflow_recovery::Report, String> {
+    let record: (String,) = sqlx::query_as("SELECT record FROM workflow_runs WHERE id=?")
+        .bind(run_id)
+        .fetch_one(&pool().await?)
+        .await
+        .map_err(|e| e.to_string())?;
+    let run: workflow::Run = serde_json::from_str(&record.0).map_err(|e| e.to_string())?;
+    tauri::async_runtime::spawn_blocking(move||{let id=job_id.clone();crate::services::workflow_recovery::check(&run,count,&job_id,&mut |progress|{let _=window.emit("workflow-proof-progress",serde_json::json!({"jobId":id,"files":progress.files,"bytes":progress.bytes,"path":progress.path}));})}).await.map_err(|e|e.to_string())?.map_err(|e|format!("{e:#}"))
+}
+
+#[tauri::command]
+pub async fn workflow_run(id: String) -> Result<workflow::Run, String> {
+    let record: (String,) = sqlx::query_as("SELECT record FROM workflow_runs WHERE id=?")
+        .bind(id)
+        .fetch_one(&pool().await?)
+        .await
+        .map_err(|e| e.to_string())?;
+    serde_json::from_str(&record.0).map_err(|e| e.to_string())
+}

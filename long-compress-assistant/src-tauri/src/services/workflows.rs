@@ -58,6 +58,14 @@ pub struct StepRun {
     pub task_ids: Vec<String>,
     #[serde(default)]
     pub message: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub input_proof: Option<super::workflow_recovery::Proof>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub output_proof: Option<super::workflow_recovery::Proof>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reuse_issue: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reused_from: Option<String>,
 }
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -72,6 +80,16 @@ pub struct Run {
     pub directory: String,
     pub inputs: Vec<String>,
     pub steps: Vec<StepRun>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plan: Option<Plan>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub output_directory: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_encoding: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent_run_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resume_from: Option<usize>,
 }
 #[derive(Serialize)]
 pub struct State {
@@ -173,7 +191,7 @@ pub async fn delete_plan(pool: &SqlitePool, id: &str) -> Result<()> {
         .await?;
     Ok(())
 }
-pub async fn save_run(pool: &SqlitePool, run: Run) -> Result<()> {
+pub async fn save_run(pool: &SqlitePool, mut run: Run) -> Result<()> {
     ensure!(
         run.steps.len() <= 8
             && run.inputs.len() <= 1000
@@ -182,6 +200,16 @@ pub async fn save_run(pool: &SqlitePool, run: Run) -> Result<()> {
                 && s.task_ids.len() <= 1000),
         "运行记录超过当前范围"
     );
+    if let Some(plan) = run.plan.take() {
+        let stamp = plan.updated_at.clone();
+        let mut plan = clean_plan(plan)?;
+        plan.updated_at = stamp;
+        ensure!(
+            plan.steps.len() == run.steps.len(),
+            "执行快照与步骤记录不对应"
+        );
+        run.plan = Some(plan);
+    }
     let record = serde_json::to_string(&run)?;
     ensure!(
         record.len() <= 16 * 1024 * 1024,
