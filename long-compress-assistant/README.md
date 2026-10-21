@@ -92,7 +92,7 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.5.39 · 固实 WIM / ESD**。WIM 增加 LZMS 固实选择，ESD 固定真实固实归档；数字分卷、密码原包双向转换、浏览预览、提取与补卷接续。方法随配置组、模板、草稿、历史和多选保存，原交互与等宽/窄窗布局保持。[中文说明](docs/RELEASE_NOTES_1.5.39.md) · [范围与记录](docs/WIM_SOLID_FREEZE_1.5.39.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.39)。下一版 [v1.5.40 原生 SWM 创建](docs/ARCHIVE_ROADMAP_1.5.40.md)仅规划，尚未开发。 [后续排期与格式阶段收尾](docs/ARCHIVE_ROADMAP_1.5.40_TO_1.5.43.md)。
+**v1.5.39 · 固实 WIM / ESD**。WIM 增加 LZMS 固实选择，ESD 固定真实固实归档；数字分卷、密码原包双向转换、浏览预览、提取与补卷接续。方法随配置组、模板、草稿、历史和多选保存，原交互与等宽/窄窗布局保持。[中文说明](docs/RELEASE_NOTES_1.5.39.md) · [范围与记录](docs/WIM_SOLID_FREEZE_1.5.39.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.39)。下一版 [v1.5.40 原生 SWM 创建](docs/ARCHIVE_ROADMAP_1.5.40.md)仅规划，尚未开发。 [近期排期 v1.5.40～43](docs/ARCHIVE_ROADMAP_1.5.40_TO_1.5.43.md) · [五模块与格式主线回归 v1.5.44～49](docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.49.md)。
 
 **v1.5.38 · ZIP LZMA 创建**。增加可选方法，按强度显示字典，接通密码、数字/标准卷、转换、浏览提取与补卷流程。真实编码采样、暂停停止、草稿/历史/模板和多选保留方法，原交互与等宽/窄窗布局保持。[中文说明](docs/RELEASE_NOTES_1.5.38.md) · [范围与记录](docs/ZIP_LZMA_FREEZE_1.5.38.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.38)。下一版 [v1.5.39 固实 WIM / ESD](docs/ARCHIVE_ROADMAP_1.5.39.md)已由 v1.5.39 接续，当前进度以上方最新记录为准。
 
