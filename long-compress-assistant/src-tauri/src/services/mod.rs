@@ -150,3 +150,7 @@ pub mod workflow_schedules;
 pub mod source_comparison;
 
 pub mod source_comparison_content;
+
+pub mod comparison_package;
+
+#[cfg(test)] mod comparison_package_tests;

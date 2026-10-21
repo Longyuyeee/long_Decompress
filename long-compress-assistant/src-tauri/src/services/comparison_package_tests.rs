@@ -1,0 +1,31 @@
+use super::comparison_package::*;
+use super::{source_comparison as comparison,zip_edit as edit};
+use std::{fs,io::{Read,Write},path::Path,sync::{Arc,atomic::{AtomicBool,Ordering}}};
+fn flag()->Arc<AtomicBool>{Arc::new(AtomicBool::new(false))}
+fn part(path:&Path,paths:Option<Vec<&str>>)->Part{Part{source:comparison::read(path,flag(),|_|{}).unwrap().source,paths:paths.map(|p|p.into_iter().map(String::from).collect()),encoding:None}}
+fn changes(prepared:&Prepared)->Vec<edit::Change>{prepared.inputs.iter().cloned().map(|input|edit::Change{input,action:"add".into(),replaces_path:None}).collect()}
+fn write_zip(path:&Path,password:Option<&str>){let mut z=zip_aes::ZipWriter::new(fs::File::create(path).unwrap());let options=zip_aes::write::SimpleFileOptions::default().compression_method(zip_aes::CompressionMethod::Deflated);z.start_file("nested/secret.txt",if let Some(p)=password{options.with_aes_encryption(zip_aes::AesMode::Aes256,p)}else{options}).unwrap();z.write_all(b"selected private bytes").unwrap();z.start_file("unselected.txt",options).unwrap();z.write_all(b"not requested").unwrap();z.finish().unwrap();}
+fn save_test(prepared:&Prepared,output:&Path,secrets:&[Credential],flag:Arc<AtomicBool>,observer:edit::Observer)->anyhow::Result<()>{let source=Path::new(&prepared.source_path);save(source,&edit::inspect(source)?.revision,&changes(prepared),&[],output,"deflate",6,&edit::Credentials::default(),secrets,flag,observer)}
+fn noop()->edit::Observer{Arc::new(|_|{})}
+#[test]fn comparison1556_folder_and_zip_references_form_exact_new_package_without_modifying_originals(){
+ let dir=tempfile::tempdir().unwrap();let folder=dir.path().join("folder");fs::create_dir_all(folder.join("empty")).unwrap();fs::write(folder.join("keep.txt"),b"base").unwrap();let zip=dir.path().join("source.zip");write_zip(&zip,None);let before=fs::read(&zip).unwrap();
+ let prepared=prepare(&[part(&folder,None),part(&zip,Some(vec!["nested/secret.txt"]))],&dir.path().join("seeds"),flag()).unwrap();let out=dir.path().join("delivery.zip");save_test(&prepared,&out,&[],flag(),noop()).unwrap();
+ let mut result=zip_aes::ZipArchive::new(fs::File::open(out).unwrap()).unwrap();assert!(result.by_name("empty/").unwrap().is_dir());assert!(result.by_name("unselected.txt").is_err());let mut bytes=Vec::new();result.by_name("nested/secret.txt").unwrap().read_to_end(&mut bytes).unwrap();assert_eq!(bytes,b"selected private bytes");assert_eq!(fs::read(zip).unwrap(),before);assert_eq!(fs::read(folder.join("keep.txt")).unwrap(),b"base");assert!(!fs::read_dir(dir.path()).unwrap().any(|p|p.unwrap().file_name().to_string_lossy().starts_with(".long-compose-")));
+}
+#[test]fn comparison1556_aes_numeric_volumes_need_password_and_can_continue_same_references(){
+ let dir=tempfile::tempdir().unwrap();let zip=dir.path().join("source.zip");write_zip(&zip,Some("source-secret"));let bytes=fs::read(&zip).unwrap();fs::remove_file(&zip).unwrap();for(i,chunk)in bytes.chunks(80).enumerate(){fs::write(dir.path().join(format!("source.zip.{:03}",i+1)),chunk).unwrap();}
+ let first=dir.path().join("source.zip.002");let prepared=prepare(&[part(&first,Some(vec!["nested/secret.txt"]))],&dir.path().join("seeds"),flag()).unwrap();let out=dir.path().join("delivery.zip");assert!(save_test(&prepared,&out,&[],flag(),noop()).is_err());assert!(!out.exists());
+ let source_path=prepared.inputs[0].comparison.as_ref().unwrap().source.path.clone();let secrets=[Credential{path:source_path,password:"source-secret".into(),encoding:None}];save_test(&prepared,&out,&secrets,flag(),noop()).unwrap();let mut z=zip_aes::ZipArchive::new(fs::File::open(&out).unwrap()).unwrap();let mut text=String::new();z.by_name("nested/secret.txt").unwrap().read_to_string(&mut text).unwrap();assert_eq!(text,"selected private bytes");assert!(z.by_name("unselected.txt").is_err());
+}
+#[test]fn comparison1556_changed_sources_and_inside_output_keep_references_and_never_publish(){
+ let dir=tempfile::tempdir().unwrap();let folder=dir.path().join("folder");fs::create_dir(&folder).unwrap();fs::write(folder.join("a.txt"),b"before").unwrap();let prepared=prepare(&[part(&folder,None)],&dir.path().join("seeds"),flag()).unwrap();assert!(save_test(&prepared,&folder.join("new.zip"),&[],flag(),noop()).is_err());fs::write(folder.join("a.txt"),b"changed-size").unwrap();let out=dir.path().join("out.zip");assert!(save_test(&prepared,&out,&[],flag(),noop()).is_err());assert!(!out.exists());assert!(edit::check_inputs(&prepared.inputs).unwrap().len()>0);
+}
+#[test]fn comparison1556_source_change_during_save_is_caught_before_publication(){
+ let dir=tempfile::tempdir().unwrap();let folder=dir.path().join("folder");fs::create_dir(&folder).unwrap();fs::write(folder.join("a.txt"),b"before").unwrap();let prepared=prepare(&[part(&folder,None)],&dir.path().join("seeds"),flag()).unwrap();let out=dir.path().join("out.zip");let altered=folder.join("a.txt");assert!(save_test(&prepared,&out,&[],flag(),Arc::new(move|e|{if e.phase=="verifying"{fs::write(&altered,b"changed after staging").unwrap()}})).is_err());assert!(!out.exists());
+}
+#[test]fn comparison1556_cancellation_cleans_decoded_material_and_retains_draft_references(){
+ let dir=tempfile::tempdir().unwrap();let zip=dir.path().join("source.zip");write_zip(&zip,None);let prepared=prepare(&[part(&zip,None)],&dir.path().join("seeds"),flag()).unwrap();let out=dir.path().join("out.zip");let stop=flag();let trigger=stop.clone();assert!(save_test(&prepared,&out,&[],stop,Arc::new(move|e|{if e.phase=="reading"{trigger.store(true,Ordering::SeqCst)}})).is_err());assert!(!out.exists());assert!(Path::new(&prepared.source_path).exists());assert!(!fs::read_dir(dir.path()).unwrap().any(|p|p.unwrap().file_name().to_string_lossy().starts_with(".long-compose-")));
+}
+#[test]fn comparison1556_existing_output_and_missing_selection_are_not_silently_replaced(){
+ let dir=tempfile::tempdir().unwrap();let zip=dir.path().join("source.zip");write_zip(&zip,None);assert!(prepare(&[part(&zip,Some(vec!["missing.txt"]))],&dir.path().join("seeds"),flag()).is_err());let prepared=prepare(&[part(&zip,None)],&dir.path().join("seeds"),flag()).unwrap();let out=dir.path().join("out.zip");fs::write(&out,b"existing").unwrap();assert!(save_test(&prepared,&out,&[],flag(),noop()).is_err());assert_eq!(fs::read(out).unwrap(),b"existing");
+}

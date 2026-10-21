@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ComparisonPackageSources from './ComparisonPackageSources.vue'
 import { computed,ref } from 'vue'
 import Modal from '@/components/ui/Modal.vue'
 import ThemedSelect from '@/components/ui/ThemedSelect.vue'
@@ -16,12 +17,13 @@ async function choose(entry:PasswordEntry){try{if(session.value)session.value[fi
 </script>
 <template>
  <fieldset v-if="session" :disabled="session.busy" class="min-w-0 space-y-3 rounded-xl border border-subtle bg-input/20 p-3" data-testid="zip-edit-credentials">
+  <ComparisonPackageSources :source-path="sourcePath"/>
   <strong class="text-xs text-content"><i class="pi pi-key mr-2 text-primary"></i>原包与新包的密码</strong>
   <template v-if="session.catalog.encrypted">
    <label class="block text-xs text-muted">原包密码<div class="mt-2 flex min-w-0 gap-2"><input v-model="session.sourcePassword" type="password" autocomplete="off" class="password-input min-w-0 flex-1" data-testid="zip-edit-source-password" placeholder="输入原包密码" /><button class="password-button text-primary" data-testid="zip-edit-source-vault" @click="selectPassword('sourcePassword')">保险箱</button></div></label>
    <ZipPasswordEncodingField v-model="session.sourceEncoding" label="原包密码编码" test-id="zip-edit-source-encoding" />
   </template>
-  <p v-else class="text-xs text-muted">原包没有密码内容。</p>
+  <p v-else-if="session.drafts.some(row=>row.comparison)" class="text-xs text-muted">来源密码只用于取材。新 ZIP 的密码在下方单独设置。</p><p v-else class="text-xs text-muted">原包没有密码内容。</p>
   <label class="block text-xs text-muted">新 ZIP 的加密方式<ThemedSelect v-model="session.outputMode" :options="[{value:'keep',label:session.catalog.encrypted?'保留原加密与密码':'保持无密码'},{value:'aes256',label:'设置新密码 · AES-256'},{value:'zipcrypto',label:'设置新密码 · ZipCrypto（传统兼容，较弱）'},{value:'none',label:'新包不加密'}]" test-id="zip-edit-output-mode" floating /></label>
   <label v-if="['aes256','zipcrypto'].includes(session.outputMode)" class="block text-xs text-muted">新包密码<div class="mt-2 flex min-w-0 gap-2"><input v-model="session.outputPassword" type="password" autocomplete="new-password" class="password-input min-w-0 flex-1" data-testid="zip-edit-output-password" placeholder="重新填写，或从保险箱选择" /><button class="password-button text-primary" data-testid="zip-edit-output-vault" @click="selectPassword('outputPassword')">保险箱</button></div></label>
   <ZipPasswordEncodingField v-if="encryptedOutput" v-model="session.outputEncoding" mode="output" label="新包密码编码" test-id="zip-edit-output-encoding" />

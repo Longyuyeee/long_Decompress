@@ -129,3 +129,9 @@ pub async fn comparison_verify(
     .map_err(|e| e.to_string())?
     .map_err(|e| format!("{e:#}"))
 }
+
+#[tauri::command]
+pub async fn comparison_package_prepare(parts:Vec<crate::services::comparison_package::Part>,job_id:String)->Result<crate::services::comparison_package::Prepared,String>{
+ let job=crate::services::archive_library::Job::start(&job_id).map_err(|e|e.to_string())?;
+ tauri::async_runtime::spawn_blocking(move||crate::services::comparison_package::prepare(&parts,&crate::utils::app_paths::app_data_dir().join("comparison-package-seeds"),job.flag.clone())).await.map_err(|e|e.to_string())?.map_err(|e|format!("{e:#}"))
+}

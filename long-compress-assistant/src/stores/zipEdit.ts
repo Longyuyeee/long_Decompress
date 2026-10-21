@@ -1,3 +1,4 @@
+import type { ComparisonSource, ComparisonSourceRef } from '@/types/sourceComparison'
 import { defineStore } from 'pinia'
 import { ref, computed, watch, markRaw, type WatchStopHandle } from 'vue'
 import { savedZipEdit, parseZipEdits, type SavedZipEdit } from '@/utils/zipEditDrafts'
@@ -10,6 +11,7 @@ import type { ZipEditCatalog, ZipEditDraft, ZipEditInput, ZipEditChoice, ZipStru
 import type { PublishedArchiveOutput } from '@/types/archiveOutput'
 import { pathKey } from '@/utils/resultLocation'
 export interface ZipEditSession extends ZipEditCredentials {
+  comparisonPasswords?: Record<string,{password:string;encoding?:ZipEditCredentials['sourceEncoding']}>;
   sourcePath: string; catalog: ZipEditCatalog; drafts: ZipEditDraft[]; method: 'deflate' | 'store'; level: number
   outputPath: string; busy: boolean; editing: boolean; error: string; taskId?: string; saves: number; operations: ZipStructureOperation[]
   sourceIssue: string; inputIssues: Record<string,string>; retryOfTaskId?: string
@@ -47,7 +49,7 @@ export const useZipEditStore = defineStore('zipEdit', () => {
   async function checkSources(source:string){
     const session=sessionFor(source);if(!session||session.busy)return
     try{const catalog=await invoke<ZipEditCatalog>('inspect_zip_edit',{sourcePath:source});session.sourceIssue=catalog.revision===session.catalog.revision?'':'原包已变化，请读取当前原包并确认后继续'}catch{session.sourceIssue='原包缺失或无法访问，请重新定位'}
-    try{const issues=await invoke<Array<{index:number;issue:string}>>('check_zip_edit_inputs',{inputs:session.drafts.map(row=>({sourcePath:row.sourcePath,targetPath:row.targetPath,isDir:row.isDir,size:row.size,sourceRevision:row.sourceRevision}))});session.inputIssues=Object.fromEntries((issues||[]).filter(row=>session.drafts[row.index]).map(row=>[session.drafts[row.index].id,row.issue]))}catch(error){session.error='来源检查未完成：'+String(error)}
+    try{const issues=await invoke<Array<{index:number;issue:string}>>('check_zip_edit_inputs',{inputs:session.drafts.map(row=>({sourcePath:row.sourcePath,targetPath:row.targetPath,isDir:row.isDir,size:row.size,sourceRevision:row.sourceRevision,comparison:row.comparison}))});session.inputIssues=Object.fromEntries((issues||[]).filter(row=>session.drafts[row.index]).map(row=>[session.drafts[row.index].id,row.issue]))}catch(error){session.error='来源检查未完成：'+String(error)}
   }
   async function restoreDraft(source:string):Promise<{path?:string;published?:string}> {
     await initialize();const current=sessionFor(source)
@@ -108,6 +110,28 @@ export const useZipEditStore = defineStore('zipEdit', () => {
       return sessionFor(source)
     } catch (error) { openingError.value = { source, message: String(error) } }
     finally { opening.value = false }
+  }
+  async function beginComparison(parts:{source:ComparisonSourceRef;paths?:string[];encoding?:ZipEditCredentials['sourceEncoding']}[],passwords:NonNullable<ZipEditSession['comparisonPasswords']>) {
+    await initialize();preparing.value=true
+    try {
+      const prepared=await invoke<{sourcePath:string;inputs:ZipEditInput[]}>('comparison_package_prepare',{parts,jobId:crypto.randomUUID()})
+      const session=await begin(prepared.sourcePath);if(!session)throw Error(openingError.value?.message||'无法准备组包清单')
+      session.comparisonPasswords=passwords
+      session.drafts=prepared.inputs.map((input,index)=>({...input,id:crypto.randomUUID(),batch:input.comparison!.source.path,order:index+1,choice:'choose'}))
+      session.outputMode=prepared.inputs.some(input=>input.comparison?.source.encrypted)?'aes256':'none'
+      const base=parts[0]!.source.path.replace(/\\/g,'/'),slash=base.lastIndexOf('/')
+      session.outputPath=base.slice(0,slash+1)+'所选资料_新包.zip'
+      await flush();return session.sourcePath
+    }finally{preparing.value=false}
+  }
+  async function acceptComparisonSource(source:string,origin:string,replacement?:string){
+    const session=sessionFor(source);if(!session||session.busy)return
+    const current=await invoke<ComparisonSource>('comparison_read',{path:replacement||origin,jobId:crypto.randomUUID()})
+    const references=session.drafts.filter(row=>row.comparison?.source.path===origin)
+    const updates=references.map(row=>{const entry=current.entries.find(entry=>entry.path===row.comparison!.path&&(entry.selectable||entry.directory)&&entry.directory===row.isDir);if(!entry)throw Error('原选路径已缺失或类型变化，请撤销该项后重新选择：'+row.comparison!.path);return{row,entry}})
+    for(const {row,entry} of updates){row.comparison={source:{...current.source},path:entry.path,encoding:row.comparison!.encoding};row.sourcePath=current.source.path;row.sourceRevision=current.source.revision;row.size=entry.size}
+    if(origin!==current.source.path&&session.comparisonPasswords?.[origin]){session.comparisonPasswords[current.source.path]=session.comparisonPasswords[origin]!;delete session.comparisonPasswords[origin]}
+    await checkSources(source);await flush()
   }
   async function add(source: string, paths: string[], directory: string, replacement?: string, logicalDirectory = false) {
     const session = await begin(source); if (!session || session.busy || preparing.value || !paths.length) return
@@ -182,12 +206,12 @@ export const useZipEditStore = defineStore('zipEdit', () => {
     try {
       if (previous && ['failed','cancelled'].includes(previous.status) && !await tasks.waitForHistoryPersistence(previous.id)) throw new Error('原任务历史尚未保存成功，请先在任务面板重试保存；修改仍保留')
       await tasks.initListeners()
-      tasks.addTask({ id, name: '编辑另存 · ' + (source.split(/[\\/]/).pop() || source), type: 'compression', workloadKind: 'archive', sourceFiles: [source], outputPath: session.outputPath.trim(), format: 'zip',
+      tasks.addTask({ id, name: session.drafts.some(row=>row.comparison) ? '对比组包 · '+session.outputPath.split(/[\\/]/).pop() : '编辑另存 · '+(source.split(/[\\/]/).pop()||source), type: 'compression', workloadKind: 'archive', sourceFiles: [source], outputPath: session.outputPath.trim(), format: 'zip',
         ...(previous && ['failed','cancelled'].includes(previous.status) ? { retryOfTaskId: previous.id } : session.retryOfTaskId ? {retryOfTaskId:session.retryOfTaskId} : {}),
         executionConfig: { schemaVersion: 1, kind: 'archive-edit', outputPath: session.outputPath.trim() } })
       session.taskId = id; tasks.updateTaskStatus(id, 'compressing');await flush()
       const output = await invoke<PublishedArchiveOutput>('save_zip_edit', { taskId: id, sourcePath: source, revision: session.catalog.revision,
-        changes: resolved.changes, originalEdits: resolved.originalEdits, outputPath: session.outputPath.trim(), method: session.method, level: session.level,credentials:credentialsFor(session) })
+        changes: resolved.changes, originalEdits: resolved.originalEdits, outputPath: session.outputPath.trim(), method: session.method, level: session.level,credentials:credentialsFor(session),comparisonCredentials:Object.entries(session.comparisonPasswords||{}).map(([path,value])=>({path,...value})) })
       const task = taskFor(session)!
       task.archiveOutput = output; task.outputPath = output.primaryPath; task.outputBytes = output.totalBytes
       session.drafts = []; session.operations = []; session.editing = false; session.saves++; tasks.updateTaskStatus(id, 'completed');await flush()
@@ -200,5 +224,5 @@ export const useZipEditStore = defineStore('zipEdit', () => {
     } finally { session.busy = false;if(session.editing){await checkSources(source);await flush()} }
   }
   async function cancel(source: string) { const session = sessionFor(source); if (session?.taskId && session.busy) await tasks.cancelTask(session.taskId) }
-  return { recovery, recoveryVisible, recoveryBusy, recoveryFeedback, saveError, draftCount, allDrafts, initialize, flush, dispose, restoreDraft, discardDraft, relocateSource, relinkInput, checkSources, resultReadOptions, sessions, opening, preparing, openingError, sessionFor, taskFor, plan, begin, add, remove, choose, organize, undoOperation, discard, refresh, save, cancel }
+  return { recovery, recoveryVisible, recoveryBusy, recoveryFeedback, saveError, draftCount, allDrafts, initialize, flush, dispose, restoreDraft, discardDraft, relocateSource, relinkInput, checkSources, resultReadOptions, sessions, opening, preparing, openingError, sessionFor, taskFor, plan, begin, beginComparison, acceptComparisonSource, add, remove, choose, organize, undoOperation, discard, refresh, save, cancel }
 })

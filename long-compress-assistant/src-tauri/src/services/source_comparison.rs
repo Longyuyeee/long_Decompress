@@ -16,7 +16,7 @@ use std::{
     },
 };
 const MAX_ENTRIES: usize = 50_000;
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SourceRef {
     pub path: String,

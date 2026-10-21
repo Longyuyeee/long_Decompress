@@ -68,9 +68,9 @@ export function resolveZipWorkspace(catalog: ZipEditCatalog, drafts: ZipEditDraf
     rows.push(...segment.rows); unresolved += segment.unresolved
     const map = new Map(nodes.map(node => [zipPathKey(node.path), node]))
     for (const row of segment.rows) if (row.status === 'add' || row.status === 'replace') {
-      const { sourcePath, sourceRevision, isDir, size } = row.draft
+      const { sourcePath, sourceRevision, isDir, size, comparison } = row.draft
       const previous=map.get(zipPathKey(row.target))
-      map.set(zipPathKey(row.target), { originalAlias: previous?.originalPath || previous?.originalAlias, id: 'input:' + row.draft.id, path: row.target, isDir, size, input: { sourcePath, sourceRevision, isDir, size, targetPath: row.target } })
+      map.set(zipPathKey(row.target), { originalAlias: previous?.originalPath || previous?.originalAlias, id: 'input:' + row.draft.id, path: row.target, isDir, size, input: { sourcePath, sourceRevision, isDir, size, comparison, targetPath: row.target } })
     }
     try { ensureParents(map) } catch (error) { unresolved++; rows[rows.length-1].issue = String(error) }
     nodes = [...map.values()]; pending = []

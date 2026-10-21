@@ -1,0 +1,375 @@
+{
+  "version": "1.5.56",
+  "binarySha256": "89d28e20a60f557037498b09fa9b25de8acd4e8ad5e04b047952abb5bb9152b9",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1556\\5b60fc6b-1f70-4891-b1ce-c494766be4b2",
+  "checks": [
+    {
+      "kind": "folder-base-zip-overlay-conflicts-structure-undo-and-result",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "taskId": "zip-edit-baf12f89-e1a7-4f47-ad2d-754e91993cea",
+      "independentSevenZip": true,
+      "originalsUnchanged": true,
+      "undoRemoval": true,
+      "renamedFinalPath": true,
+      "browseResult": true
+    },
+    {
+      "kind": "zip-base-folder-overlay-source-change-and-output-conflict-retry",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "taskId": "zip-edit-88641215-d73d-4bdf-8cdd-c8836b922e2e",
+      "explicitReaccept": true,
+      "failedDraftPreserved": true,
+      "existingOutputPreserved": true,
+      "independentSevenZip": true
+    },
+    {
+      "kind": "password-volume-references-normal-restart-and-same-draft-save",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "taskId": "zip-edit-f85ce3f8-e604-4dc9-8084-78036af28d71",
+      "noPlaintextDraft": true,
+      "noCredentialsRestored": true,
+      "nonFirstNumericVolume": true,
+      "independentEncryptedSevenZip": true
+    },
+    {
+      "kind": "zip-pair-standard-password-material-and-final-compact-display",
+      "binarySha256": "89d28e20a60f557037498b09fa9b25de8acd4e8ad5e04b047952abb5bb9152b9",
+      "taskId": "zip-edit-cdc4aac2-7f23-4c6d-9173-b94b80bd63c8",
+      "standardNonFirstMember": true,
+      "explicitUnencryptedOutput": true,
+      "selectedMethodStore": true,
+      "independentSevenZip": true,
+      "priorThreeFlowsRetained": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "package-options",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "package-options",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "conflict-review",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "conflict-review",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "explicit-removal",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [
+        431,
+        431
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "explicit-removal",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "final-structure-and-settings",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "final-structure-and-settings",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "published-result",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [
+        878
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "published-result",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "changed-source-references-kept",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "changed-source-references-kept",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "password-material-before-restart",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "password-material-before-restart",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "restored-needs-source-password",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "restored-needs-source-password",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "encrypted-new-package",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [
+        878
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "encrypted-new-package",
+      "binarySha256": "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7",
+      "anchorOverflow": 0,
+      "columns": [
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "final-compact-sources",
+      "binarySha256": "89d28e20a60f557037498b09fa9b25de8acd4e8ad5e04b047952abb5bb9152b9",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "final-compact-sources",
+      "binarySha256": "89d28e20a60f557037498b09fa9b25de8acd4e8ad5e04b047952abb5bb9152b9",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "final-package-settings",
+      "binarySha256": "89d28e20a60f557037498b09fa9b25de8acd4e8ad5e04b047952abb5bb9152b9",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "final-package-settings",
+      "binarySha256": "89d28e20a60f557037498b09fa9b25de8acd4e8ad5e04b047952abb5bb9152b9",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "final-zip-pair-result",
+      "binarySha256": "89d28e20a60f557037498b09fa9b25de8acd4e8ad5e04b047952abb5bb9152b9",
+      "anchorOverflow": 0,
+      "columns": [
+        878
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "final-zip-pair-result",
+      "binarySha256": "89d28e20a60f557037498b09fa9b25de8acd4e8ad5e04b047952abb5bb9152b9",
+      "anchorOverflow": 0,
+      "columns": [
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "comparison1556-package-options-1100x700.png",
+    "comparison1556-package-options-760x520.png",
+    "comparison1556-conflict-review-1100x700.png",
+    "comparison1556-conflict-review-760x520.png",
+    "comparison1556-explicit-removal-1100x700.png",
+    "comparison1556-explicit-removal-760x520.png",
+    "comparison1556-final-structure-and-settings-1100x700.png",
+    "comparison1556-final-structure-and-settings-760x520.png",
+    "comparison1556-published-result-1100x700.png",
+    "comparison1556-published-result-760x520.png",
+    "comparison1556-changed-source-references-kept-1100x700.png",
+    "comparison1556-changed-source-references-kept-760x520.png",
+    "comparison1556-password-material-before-restart-1100x700.png",
+    "comparison1556-password-material-before-restart-760x520.png",
+    "comparison1556-restored-needs-source-password-1100x700.png",
+    "comparison1556-restored-needs-source-password-760x520.png",
+    "comparison1556-encrypted-new-package-1100x700.png",
+    "comparison1556-encrypted-new-package-760x520.png",
+    "comparison1556-final-compact-sources-1100x700.png",
+    "comparison1556-final-compact-sources-760x520.png",
+    "comparison1556-final-package-settings-1100x700.png",
+    "comparison1556-final-package-settings-760x520.png",
+    "comparison1556-final-zip-pair-result-1100x700.png",
+    "comparison1556-final-zip-pair-result-760x520.png"
+  ],
+  "left": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1556\\5b60fc6b-1f70-4891-b1ce-c494766be4b2\\left",
+  "right": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1556\\5b60fc6b-1f70-4891-b1ce-c494766be4b2\\right",
+  "zip": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1556\\5b60fc6b-1f70-4891-b1ce-c494766be4b2\\right.zip",
+  "originalHash": "d45c541651e29258edfca2ca132a551327de8a02f8430140d1945ab5d68e729f",
+  "protected": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1556\\5b60fc6b-1f70-4891-b1ce-c494766be4b2\\protected.zip",
+  "numeric": [
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1556\\5b60fc6b-1f70-4891-b1ce-c494766be4b2\\parts.zip.001",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1556\\5b60fc6b-1f70-4891-b1ce-c494766be4b2\\parts.zip.002",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1556\\5b60fc6b-1f70-4891-b1ce-c494766be4b2\\parts.zip.003",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1556\\5b60fc6b-1f70-4891-b1ce-c494766be4b2\\parts.zip.004",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1556\\5b60fc6b-1f70-4891-b1ce-c494766be4b2\\parts.zip.005",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1556\\5b60fc6b-1f70-4891-b1ce-c494766be4b2\\parts.zip.006"
+  ],
+  "fixtures": true,
+  "restoreOutput": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1556\\5b60fc6b-1f70-4891-b1ce-c494766be4b2\\restored.zip",
+  "restartPrepared": true,
+  "previousIdentities": [
+    "e3543e5f416b443a45918d2fe1eecf35b4f3ef6b55e90f3c6f400ea3310e41a7"
+  ],
+  "standard": [
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1556\\5b60fc6b-1f70-4891-b1ce-c494766be4b2\\delivery-standard.z01",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1556\\5b60fc6b-1f70-4891-b1ce-c494766be4b2\\delivery-standard.z02",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1556\\5b60fc6b-1f70-4891-b1ce-c494766be4b2\\delivery-standard.z03",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1556\\5b60fc6b-1f70-4891-b1ce-c494766be4b2\\delivery-standard.zip"
+  ],
+  "standardMain": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1556\\5b60fc6b-1f70-4891-b1ce-c494766be4b2\\delivery-standard.zip"
+}

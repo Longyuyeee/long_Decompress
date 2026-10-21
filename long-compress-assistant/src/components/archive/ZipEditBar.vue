@@ -20,6 +20,7 @@ const emit = defineEmits<{ 'open-result': [path: string, options?:ArchiveReadOpt
 const store = useZipEditStore(), review = ref(false), discardVisible = ref(false), organizer = ref(false)
 const organizePaths = ref<string[]>([]), organizeMode = ref<'rename'|'delete'>('rename'), reviewQuery = ref(''), reviewKind = ref('all')
 const session = computed(() => store.sessionFor(props.sourcePath))
+const comparisonPackage=computed(()=>/(?:[\\/])comparison-package-seeds[\\/]/.test(props.sourcePath))
 const saveHasChanges=computed(()=>resolved.value.hasChanges||!!session.value&&session.value.outputMode!=='keep')
 const beginEdit=()=>store.begin(props.sourcePath,{password:props.password,encoding:props.sourceEncoding})
 const openResult=(path:string)=>emit('open-result',path,session.value?store.resultReadOptions(session.value):{})
@@ -73,7 +74,7 @@ async function organize(paths: string[] = [], mode: 'rename'|'delete' = 'rename'
   if (locked.value || !await beginEdit()) return
   review.value=false; organizePaths.value=paths; organizeMode.value=mode; organizer.value=true
 }
-defineExpose({ organize, replace: (path: string) => chooseInputs(false, path), addDropped, addFiles: () => chooseInputs(false), addFolder: () => chooseInputs(true) })
+defineExpose({ openReview:()=>{review.value=true}, organize, replace: (path: string) => chooseInputs(false, path), addDropped, addFiles: () => chooseInputs(false), addFolder: () => chooseInputs(true) })
 </script>
 <template>
   <section class="zip-edit-bar shrink-0 min-w-0 rounded-xl border border-primary/20 bg-primary/5 p-3" data-testid="zip-edit-bar">
@@ -89,11 +90,11 @@ defineExpose({ organize, replace: (path: string) => chooseInputs(false, path), a
       </template>
       <template v-else>
         <button v-if="task?.archiveOutput" class="edit-button" data-testid="zip-edit-open-result" @click="openResult(task.archiveOutput.primaryPath)">浏览新包</button>
-        <button class="edit-button text-primary" data-testid="zip-edit-begin" :disabled="locked" @click="beginEdit">{{ store.opening ? '读取编辑信息…' : '编辑内容' }}</button>
+        <button v-if="!comparisonPackage||session?.editing" class="edit-button text-primary" data-testid="zip-edit-begin" :disabled="locked" @click="beginEdit">{{ store.opening ? '读取编辑信息…' : '编辑内容' }}</button>
         <button v-if="task?.archiveOutput" class="edit-button" @click="review = true">查看结果</button>
       </template>
     </div>
-    <p v-if="session?.editing" class="mt-2 text-xs leading-relaxed text-muted">下方浏览原包；“整理内容”查看待保存结构，可删除、重命名或批量移动。另存后再浏览新包。</p>
+    <p v-if="session?.editing" class="mt-2 text-xs leading-relaxed text-muted">{{ session.drafts.some(row=>row.comparison) ? '来自资料对比的组包清单；“整理内容”查看新包结构，可删除、改名或移动，原件保留。' : '下方浏览原包；“整理内容”查看待保存结构，可删除、重命名或批量移动。另存后再浏览新包。' }}</p>
     <p v-if="store.openingError?.source === sourcePath" role="alert" class="mt-2 break-words text-xs leading-relaxed text-amber-600 [overflow-wrap:anywhere]">{{ store.openingError.message }}</p>
     <p v-if="session?.error" role="alert" class="mt-2 break-words text-xs text-red-500 [overflow-wrap:anywhere]">{{ session.error }}</p>
     <p v-else-if="session?.editing && task?.status === 'failed'" class="mt-2 text-xs text-amber-600">保存未完成，修改清单仍保留。可打开“调整并继续”处理原因后另存。</p>
@@ -104,14 +105,14 @@ defineExpose({ organize, replace: (path: string) => chooseInputs(false, path), a
     <div v-if="session" class="grid min-w-0 gap-4" :class="session.editing ? 'lg:grid-cols-2' : ''" data-testid="zip-edit-review-content">
       <section v-if="session.editing" class="min-w-0 space-y-3" data-testid="zip-edit-change-list">
         <div class="flex flex-wrap items-center gap-2"><strong class="mr-auto text-sm">待保存修改 · {{ resolved.changeCount }} 项</strong><span v-if="resolved.unresolved" class="text-xs text-amber-600">{{ resolved.unresolved }} 项需处理</span></div>
-        <p class="break-words text-xs leading-relaxed text-muted [overflow-wrap:anywhere]">原包：{{ sourcePath }}。按顺序应用以下修改；未修改内容保留原方法与条目时间，同名文件由你决定。</p>
+        <p class="break-words text-xs leading-relaxed text-muted [overflow-wrap:anywhere]">{{ session.drafts.some(row=>row.comparison) ? '资料对比组包：按来源引用读取所选内容，应用以下修改；同名项由你决定。新包使用下方方法和密码设置，原件保留。' : '原包：'+sourcePath+'。按顺序应用以下修改；未修改内容保留原方法与条目时间，同名文件由你决定。' }}</p>
         <div class="flex min-w-0 flex-wrap gap-2"><input v-model="reviewQuery" class="edit-input min-w-0 flex-1" placeholder="搜索修改前后路径或来源" data-testid="zip-edit-review-search" /><select v-model="reviewKind" class="edit-input" aria-label="筛选修改类型"><option value="all">全部修改</option><option value="input">添加 / 替换</option><option value="rename">改名 / 移动</option><option value="delete">删除</option></select><button class="edit-button text-primary" :disabled="locked" data-testid="zip-edit-structure-preview" @click="organize()">查看整理结构</button></div>
         <p v-if="!reviewRows.length" class="rounded-xl border border-dashed border-subtle p-4 text-xs text-muted">没有匹配的修改。可以调整筛选，或回到浏览/整理窗口继续编辑。</p>
         <ol class="max-h-80 space-y-2 overflow-y-auto custom-scrollbar">
           <li v-for="entry in displayedRows" :key="entry.id" class="min-w-0 space-y-2 rounded-xl border border-subtle bg-input/30 p-3" data-testid="zip-edit-change" :data-edit-id="entry.id">
             <template v-if="entry.input">
             <div class="flex min-w-0 items-start gap-2"><span class="shrink-0 rounded-md bg-primary/10 px-2 py-1 text-xs text-primary">{{ labels[entry.input.status] }}</span><strong class="min-w-0 flex-1 break-words text-xs leading-relaxed [overflow-wrap:anywhere]">{{ entry.input.target }}</strong><button class="shrink-0 text-xs text-muted hover:text-red-500" :disabled="session.busy" data-testid="zip-edit-undo" @click="store.remove(sourcePath, entry.input.draft.id)">撤销</button></div>
-            <p class="select-text break-words text-xs leading-relaxed text-muted [overflow-wrap:anywhere]">{{ entry.input.draft.sourcePath }} · {{ entry.input.draft.isDir ? '目录' : formatFileSize(entry.input.draft.size) }}</p>
+            <p class="select-text break-words text-xs leading-relaxed text-muted [overflow-wrap:anywhere]">{{ entry.input.draft.sourcePath }}{{ entry.input.draft.comparison ? '!/'+entry.input.draft.comparison.path : '' }} · {{ entry.input.draft.isDir ? '目录' : formatFileSize(entry.input.draft.size) }}</p>
             <p v-if="entry.input.issue" class="text-xs text-amber-600">{{ entry.input.issue }}</p>
             <div v-if="entry.input.collision" class="flex flex-wrap gap-1.5">
               <button v-if="!entry.input.draft.isDir && entry.input.collision === 'file'" class="edit-choice" :aria-pressed="entry.input.draft.choice === 'replace'" :disabled="session.busy" data-testid="zip-edit-choice-replace" @click="store.choose(sourcePath, entry.input.draft.id, 'replace')">替换</button>
@@ -129,11 +130,11 @@ defineExpose({ organize, replace: (path: string) => chooseInputs(false, path), a
         <div v-if="pageCount > 1" class="flex flex-wrap justify-between gap-2 text-xs"><button :disabled="page <= 1" @click="page--">上一页</button><span>{{ page }} / {{ pageCount }}</span><button :disabled="page >= pageCount" @click="page++">下一页</button></div>
       </section>
       <section class="min-w-0 space-y-3" data-testid="zip-edit-save-panel">
-        <p v-if="!session.editing" class="break-words text-xs leading-relaxed text-muted [overflow-wrap:anywhere]">已生成新 ZIP，原包保留：{{ sourcePath }}</p>
+        <p v-if="!session.editing" class="break-words text-xs leading-relaxed text-muted [overflow-wrap:anywhere]">{{ comparisonPackage ? '新 ZIP 已生成，原文件夹与原压缩包保留。可以浏览新包，继续整理、预览或提取。' : '已生成新 ZIP，原包保留：'+sourcePath }}</p>
         <fieldset v-if="session.editing" :disabled="session.busy" class="min-w-0 space-y-3 rounded-xl border border-subtle bg-input/20 p-3">
           <label class="block text-xs text-muted">新 ZIP 保存位置<div class="mt-2 flex min-w-0 gap-2"><input v-model="session.outputPath" data-testid="zip-edit-output" class="edit-input min-w-0 flex-1" /><button class="edit-button" data-testid="zip-edit-choose-output" @click="chooseOutput">另存为</button></div></label>
           <div class="grid min-w-0 gap-3 sm:grid-cols-2"><label class="min-w-0 text-xs text-muted">新增/替换方法<ThemedSelect v-model="session.method" :options="[{value:'deflate',label:'Deflate · 兼容 ZIP'},{value:'store',label:'Store · 仅存储'}]" test-id="zip-edit-method" floating /></label><label class="min-w-0 text-xs text-muted">压缩强度<ThemedSelect v-model="level" :disabled="session.method === 'store'" :options="Array.from({length:10},(_,n)=>({value:String(n),label:String(n)}))" test-id="zip-edit-level" floating /></label></div>
-          <p class="text-xs leading-relaxed text-muted">另存独立 ZIP，不分卷；原包保留，内容沿原方法写出，密码条目会重新编码。修改只在点击下方“另存新 ZIP”后生效。</p>
+          <p class="text-xs leading-relaxed text-muted">{{ session.drafts.some(row=>row.comparison) ? '另存独立 ZIP，不分卷；组包内容按所选方法和新包密码写出。原目录与原包保留，点击“另存新 ZIP”后才保存。' : '另存独立 ZIP，不分卷；原包保留，内容沿原方法写出，密码条目会重新编码。修改只在点击下方“另存新 ZIP”后生效。' }}</p>
         </fieldset>
         <ZipEditCredentialsPanel v-if="session.editing" :source-path="sourcePath" />
         <ZipEditSourceStatus v-if="session.editing" :source-path="sourcePath" />
