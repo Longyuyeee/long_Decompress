@@ -173,6 +173,15 @@ const pdfReport = (overrides: Record<string, unknown> = {}) => ({
 })
 
 describe('CompressionView', () => {
+  it('batch1543 filters real job rows, clears hidden selections and reveals new drafts', async () => {
+    const wrapper=mountView();const store=useCompressionStore();[source('C:/one.txt'),source('D:/two.txt')].forEach(file=>store.addFile(file));await nextTick()
+    const tasks=useTaskStore();tasks.addTask({id:'batch1543',name:'one.zip',type:'compression',sourceFiles:['C:/one.txt'],outputPath:'C:/one.zip'});tasks.tasks[0].status='completed';store.selectedFiles[0].taskId='batch1543';await nextTick()
+    await wrapper.get('[data-testid="compression-group-checkbox"]').trigger('click');expect(wrapper.find('[data-testid="batch-config-bar"]').exists()).toBe(true)
+    await wrapper.get('[data-testid="task-scope-completed"]').trigger('click');expect(wrapper.find('[data-testid="batch-config-bar"]').exists()).toBe(false);expect(wrapper.findAll('[data-testid="compression-draft-row"]')).toHaveLength(1)
+    await wrapper.get('[data-testid="task-scope-attention"]').trigger('click');expect(wrapper.find('[data-testid="task-scope-empty"]').exists()).toBe(true)
+    store.addFile(source('E:/new.txt'));await nextTick();expect(wrapper.get('[data-testid="task-scope-pending"]').attributes('aria-pressed')).toBe('true');expect(wrapper.findAll('[data-testid="compression-draft-row"]')).toHaveLength(2);expect(tasks.tasks[0].status).toBe('completed');wrapper.unmount()
+  })
+
   beforeEach(() => {
     setActivePinia(createPinia())
     vi.clearAllMocks()
@@ -484,7 +493,7 @@ describe('CompressionView', () => {
     wrapper.unmount()
   })
 
-  it('keeps one row and updates real progress and logs in place for the full lifecycle', async () => {
+  it('batch1543 keeps one row and updates real progress and logs in place for the full lifecycle', async () => {
     let resolveCompression!: () => void
     mocks.compressFiles.mockImplementationOnce(() => new Promise<void>(resolve => {
       resolveCompression = resolve
@@ -492,6 +501,7 @@ describe('CompressionView', () => {
     const wrapper = mountView()
     wrapper.findComponent(DropzoneStub).vm.$emit('files-selected', [source()])
     await nextTick()
+    await wrapper.get('[data-testid="task-scope-pending"]').trigger('click')
     await wrapper.get('[data-testid="compression-draft-row"]').trigger('click')
 
     const startButton = wrapper.findAll('button').find(
@@ -500,6 +510,7 @@ describe('CompressionView', () => {
     await startButton!.trigger('click')
     await flushPromises()
 
+    expect(wrapper.get('[data-testid="task-scope-all"]').attributes('aria-pressed')).toBe('true')
     const compressionStore = useCompressionStore()
     const taskStore = useTaskStore()
     expect(compressionStore.selectedFiles).toHaveLength(1)

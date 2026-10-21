@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import BatchConfigImpact from './BatchConfigImpact.vue'
+import { batchConfigSummary, type BatchSubject } from '@/utils/batchConfigSummary'
 import CompressionPurposePicker from '@/components/compression/CompressionPurposePicker.vue'
 import type { PurposePatch } from '@/utils/compressionPurpose'
 import { computed, ref, watch } from 'vue'
@@ -13,7 +15,7 @@ import type { BatchConfigPatch } from '@/types/batchConfig'
 import { isZipPasswordEncoding, ZIP_PASSWORD_ENCODING_OPTIONS } from '@/types/zipPassword'
 
 defineOptions({ inheritAttrs: false })
-const props = defineProps<{ count: number; mode: 'compression' | 'decompression' }>()
+const props = defineProps<{ count: number; mode: 'compression' | 'decompression'; subjects?: BatchSubject[] }>()
 const emit = defineEmits<{ apply: [patch: BatchConfigPatch, complete?: (error?: string) => void]; clear: [] }>()
 const app = useAppStore()
 const visible = ref(false)
@@ -68,8 +70,7 @@ async function chooseOutput() {
     if (typeof path === 'string') { setOutput(path); useSavedLocations().remember(path) }
   } catch { app.setError('无法选择输出目录，请重试。') }
 }
-function apply() {
-  if (!canApply.value || applying.value) return
+const stagedPatch = computed(() => {
   const patch: BatchConfigPatch = { ...purposeExtras.value }
   if (destination.value !== 'keep') patch.outputDirectory = destination.value === 'source' ? '' : outputDirectory.value.trim()
   if (props.mode === 'compression') {
@@ -84,9 +85,14 @@ function apply() {
     if (subfolder.value !== 'keep') patch.extractToSubfolder = subfolder.value === 'yes'
     if (zipPasswordEncoding.value === 'auto' || isZipPasswordEncoding(zipPasswordEncoding.value)) patch.zipPasswordEncoding = zipPasswordEncoding.value
   }
+  return patch
+})
+const changes = computed(() => batchConfigSummary(stagedPatch.value))
+function apply() {
+  if (!canApply.value || applying.value) return
   applyError.value = ''
   applying.value = true
-  emit('apply', patch, error => {
+  emit('apply', stagedPatch.value, error => {
     applying.value = false
     if (error) applyError.value = error
     else { visible.value = false; purposeExtras.value = {} }
@@ -159,6 +165,7 @@ function apply() {
         </div>
         <p v-if="destination === 'custom'" class="select-text break-words rounded-lg bg-input/60 px-3 py-2 text-xs text-content [overflow-wrap:anywhere]" :title="outputDirectory">{{ outputDirectory }}</p>
       </div>
+      <BatchConfigImpact :count="count" :subjects="subjects" :changes="changes" />
       <p v-if="applyError" class="rounded-lg border border-danger/20 bg-danger/5 px-3 py-2 text-xs leading-relaxed text-danger" role="alert">{{ applyError }}</p>
     </fieldset>
     <template #footer>

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import TaskScopeBar from '@/components/tasks/TaskScopeBar.vue'
+import { matchesTaskScope, type TaskScope } from '@/utils/taskScope'
+
 import { useDrawerTransition } from '@/composables/useDrawerTransition'
 import { ref, computed, watch, onMounted } from 'vue'
 import { useAppStore } from '@/stores/app'
@@ -106,6 +109,17 @@ const compressionTaskById = computed(() =>
   new Map(compressionTasks.value.map(task => [task.id, task]))
 )
 const taskForJob = (taskId?: string) => taskId ? compressionTaskById.value.get(taskId) : undefined
+
+const scope = ref<TaskScope>('all')
+const jobStatuses = computed(() => [...compressionStore.groups, ...compressionStore.selectedFiles].map(job => taskForJob(job.taskId)?.status))
+const visibleGroups = computed(() => compressionStore.groups.filter(job => matchesTaskScope(scope.value, taskForJob(job.taskId)?.status)))
+const visibleFiles = computed(() => compressionStore.selectedFiles.filter(job => matchesTaskScope(scope.value, taskForJob(job.taskId)?.status)))
+const selectedSubjects = computed(() => [
+  ...compressionStore.groups.filter(job => selectedRows.value.has(job.id)).map(job => ({ name: job.name, path: getGroupArchivePath(job) })),
+  ...compressionStore.selectedFiles.filter(job => selectedRows.value.has(job.path)).map(job => ({ name: job.name, path: job.path })),
+])
+function changeScope(value: TaskScope) { if (scope.value !== value) selectedRows.value = new Set(); scope.value = value }
+watch(selectableJobIds, (ids, previous) => { if (scope.value !== 'all' && ids.some(id => !previous.includes(id))) scope.value = 'pending' })
 
 const requestConfirmation = async (message: string, options: Parameters<typeof ask>[1]) => {
   if (import.meta.env.VITE_DESKTOP_E2E === '1') {
@@ -312,6 +326,7 @@ const runCompressionResourcePreflight = async (
 
 const runCompression = async () => {
   if (compressionStore.groups.length === 0 && compressionStore.selectedFiles.length === 0) return
+  scope.value = 'all'
 
   let jobs = [
     ...compressionStore.groups.filter(group => !group.taskId).map(group => {
@@ -729,11 +744,12 @@ const drawerTransition = useDrawerTransition()
     <!-- 主工作区 -->
     <div data-testid="compression-workspace-shell" class="flex-1 min-h-0 aero-card overflow-hidden flex flex-col relative border border-subtle bg-card/40 shadow-2xl">
       <div v-if="totalPayload > 0" class="compression-task-region flex-1 min-h-0 min-w-0 flex flex-col overflow-hidden">
+        <TaskScopeBar :model-value="scope" :statuses="jobStatuses" @update:model-value="changeScope" />
         <div
           data-testid="compression-table-header"
           class="compression-table-header relative z-30 flex shrink-0 items-center px-4 py-2.5 border-b border-subtle bg-card/95 backdrop-blur-xl text-dim text-xs font-bold tracking-[0.1em] uppercase shadow-[0_8px_20px_-16px_rgba(0,0,0,0.75)]"
         >
-          <button type="button" class="compression-leading-cell w-8 shrink-0 text-primary" aria-label="选择全部待压缩任务" :disabled="!selectableJobIds.length" :aria-pressed="Boolean(selectableJobIds.length && selectedRows.size === selectableJobIds.length)" @click="selectAllDrafts"><i :class="selectableJobIds.length && selectedRows.size === selectableJobIds.length ? 'pi pi-check-square' : 'pi pi-stop'" aria-hidden="true"></i></button>
+          <button type="button" class="compression-leading-cell w-8 shrink-0 text-primary" aria-label="选择全部待压缩任务" :disabled="!selectableJobIds.length || !['all', 'pending'].includes(scope)" :aria-pressed="Boolean(selectableJobIds.length && selectedRows.size === selectableJobIds.length)" @click="selectAllDrafts"><i :class="selectableJobIds.length && selectedRows.size === selectableJobIds.length ? 'pi pi-check-square' : 'pi pi-stop'" aria-hidden="true"></i></button>
           <div data-testid="compression-name-header" class="flex-[1.25] min-w-0">压缩包名称</div>
           <div data-testid="compression-source-header" class="flex-1 min-w-0 px-4 hidden md:block">源文件路径</div>
           <div data-testid="compression-status-header" class="flex-1 min-w-0">压缩状态与进度</div>
@@ -741,11 +757,12 @@ const drawerTransition = useDrawerTransition()
         </div>
 
         <div class="compression-task-list flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden custom-scrollbar p-3 space-y-3">
-        <BatchConfigBar v-if="selectedRows.size" :count="selectedRows.size" mode="compression" @apply="applySelectedConfiguration" @clear="selectedRows = new Set()" />
-        <BatchResultActions :locations="completedLocations" />
+        <BatchConfigBar v-if="selectedRows.size" :count="selectedRows.size" :subjects="selectedSubjects" mode="compression" @apply="applySelectedConfiguration" @clear="selectedRows = new Set()" />
+        <BatchResultActions v-if="scope === 'all' || scope === 'completed'" :locations="completedLocations" />
+        <div v-if="!visibleGroups.length && !visibleFiles.length" data-testid="task-scope-empty" class="rounded-xl border border-dashed border-subtle p-6 text-center text-sm text-muted"><p>当前分类没有任务。</p><button type="button" class="mt-3 text-primary" @click="changeScope('all')">返回全部任务</button></div>
 
         <!-- 1. 压缩组列表 -->
-        <div v-for="group in compressionStore.groups" :key="group.id" 
+        <div v-for="group in visibleGroups" :key="group.id"
              data-testid="compression-group-row" :data-retry-of="group.retryOfTaskId"
              class="compression-job-card group-container rounded-lg border transition-all duration-200 overflow-hidden"
              :class="group.expanded ? 'bg-card/60 border-primary/30 shadow-lg' : 'bg-card/40 border-subtle/40 hover:border-primary/30 hover:bg-card/60'"
@@ -920,14 +937,14 @@ const drawerTransition = useDrawerTransition()
                   </div>
                 </div>
 
-                <CompressionExecutionPanel :task="taskForJob(group.taskId)" />
+                <CompressionExecutionPanel :task="taskForJob(group.taskId)" @retry-prepared="scope = 'pending'" />
               </div>
             </div>
           </Transition>
         </div>
 
         <!-- 2. 未分组文件列表 (待分配) -->
-        <div v-if="compressionStore.selectedFiles.length > 0" class="space-y-3">
+        <div v-if="visibleFiles.length > 0" class="space-y-3">
           <div data-testid="compression-grouping-actions" class="flex items-center justify-between gap-3 px-4">
             <h3 class="text-xs font-black text-muted uppercase tracking-[0.3em]">{{ appStore.t('compress.add_files') }}</h3>
             <transition name="pop">
@@ -941,7 +958,7 @@ const drawerTransition = useDrawerTransition()
               </button>
             </transition>
           </div>
-          <div v-for="file in compressionStore.selectedFiles" :key="file.path" 
+          <div v-for="file in visibleFiles" :key="file.path"
                data-testid="compression-draft-row"
                :data-task-id="file.taskId || ''"
                @click="file.expanded = !file.expanded"
@@ -1105,7 +1122,7 @@ const drawerTransition = useDrawerTransition()
                     </Transition>
                   </div>
 
-                  <CompressionExecutionPanel :task="taskForJob(file.taskId)" />
+                  <CompressionExecutionPanel :task="taskForJob(file.taskId)" @retry-prepared="scope = 'pending'" />
                 </div>
               </div>
             </Transition>
