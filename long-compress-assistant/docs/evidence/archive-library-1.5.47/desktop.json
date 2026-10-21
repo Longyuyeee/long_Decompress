@@ -1,0 +1,299 @@
+{
+  "version": "1.5.47",
+  "binarySha256": "ec92a5144c2486b3a4c1ca90079c3ac23ac471cfb1cbca0d5a960a734257f2de",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1547\\3a07da87-158b-4d37-9b91-86a1798a073f",
+  "checks": [
+    {
+      "kind": "scan-confirm-index-search",
+      "binarySha256": "44a1923b34810004f500a545846e1d8857d29d14b525ce91f74906294a3e6fcd",
+      "manualIndex": true,
+      "readyAndFailuresSeparated": true,
+      "unicodeCrossSearch": true
+    },
+    {
+      "kind": "original-preview-and-return",
+      "binarySha256": "c9dcba39d8d33cdeab52857615bd145ad2d8ba042f69c6d9a5732d772b51bb3c",
+      "manualIndex": true,
+      "readyAndFailuresSeparated": true,
+      "unicodeCrossSearch": true,
+      "originalPreview": true,
+      "exactSingleSelection": true,
+      "returnPreservesSearch": true
+    },
+    {
+      "kind": "single-hit-extraction-source-guard-and-refresh",
+      "binarySha256": "c9dcba39d8d33cdeab52857615bd145ad2d8ba042f69c6d9a5732d772b51bb3c",
+      "taskId": "1792564050699",
+      "singleFileContent": true,
+      "originalTarPreserved": true,
+      "missingAndChangedBlocked": true,
+      "manualRefresh": true
+    },
+    {
+      "kind": "stop-index-and-manual-continue",
+      "binarySha256": "c9dcba39d8d33cdeab52857615bd145ad2d8ba042f69c6d9a5732d772b51bb3c",
+      "stopCurrentSource": true,
+      "manualContinue": true,
+      "entryCount": 30000
+    },
+    {
+      "kind": "persisted-restart",
+      "binarySha256": "c9dcba39d8d33cdeab52857615bd145ad2d8ba042f69c6d9a5732d772b51bb3c",
+      "stopCurrentSource": true,
+      "manualContinue": true,
+      "normalCloseSameProfile": true,
+      "persistedWithoutRebuild": true
+    },
+    {
+      "kind": "filters-pagination-and-remove-original-preserved",
+      "binarySha256": "c9dcba39d8d33cdeab52857615bd145ad2d8ba042f69c6d9a5732d772b51bb3c",
+      "sourceAndTypeFilters": true,
+      "pagination": true,
+      "removeIndexOnly": true,
+      "originalHashes": true
+    },
+    {
+      "kind": "source-list-scroll-with-expanded-row",
+      "binarySha256": "ec92a5144c2486b3a4c1ca90079c3ac23ac471cfb1cbca0d5a960a734257f2de",
+      "noShrunkOrClippedRows": true,
+      "wideAndNarrowScroll": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "candidates",
+      "anchorOverflow": 0,
+      "columns": "252.766px 539.234px",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100,
+      "binarySha256": "44a1923b34810004f500a545846e1d8857d29d14b525ce91f74906294a3e6fcd"
+    },
+    {
+      "name": "candidates",
+      "anchorOverflow": 0,
+      "columns": "628.406px",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760,
+      "binarySha256": "44a1923b34810004f500a545846e1d8857d29d14b525ce91f74906294a3e6fcd"
+    },
+    {
+      "name": "source-failure",
+      "anchorOverflow": 0,
+      "columns": "252.766px 539.234px",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100,
+      "binarySha256": "44a1923b34810004f500a545846e1d8857d29d14b525ce91f74906294a3e6fcd"
+    },
+    {
+      "name": "source-failure",
+      "anchorOverflow": 0,
+      "columns": "628.406px",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760,
+      "binarySha256": "44a1923b34810004f500a545846e1d8857d29d14b525ce91f74906294a3e6fcd"
+    },
+    {
+      "name": "cross-search",
+      "anchorOverflow": 0,
+      "columns": "252.766px 539.234px",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100,
+      "binarySha256": "44a1923b34810004f500a545846e1d8857d29d14b525ce91f74906294a3e6fcd"
+    },
+    {
+      "name": "cross-search",
+      "anchorOverflow": 0,
+      "columns": "628.406px",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760,
+      "binarySha256": "44a1923b34810004f500a545846e1d8857d29d14b525ce91f74906294a3e6fcd"
+    },
+    {
+      "name": "hit-preview",
+      "binarySha256": "c9dcba39d8d33cdeab52857615bd145ad2d8ba042f69c6d9a5732d772b51bb3c",
+      "anchorOverflow": 0,
+      "columns": "",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "hit-preview",
+      "binarySha256": "c9dcba39d8d33cdeab52857615bd145ad2d8ba042f69c6d9a5732d772b51bb3c",
+      "anchorOverflow": 0,
+      "columns": "",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "missing-source",
+      "binarySha256": "c9dcba39d8d33cdeab52857615bd145ad2d8ba042f69c6d9a5732d772b51bb3c",
+      "anchorOverflow": 0,
+      "columns": "252.766px 539.234px",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "missing-source",
+      "binarySha256": "c9dcba39d8d33cdeab52857615bd145ad2d8ba042f69c6d9a5732d772b51bb3c",
+      "anchorOverflow": 0,
+      "columns": "628.406px",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "refreshed-hit",
+      "binarySha256": "c9dcba39d8d33cdeab52857615bd145ad2d8ba042f69c6d9a5732d772b51bb3c",
+      "anchorOverflow": 0,
+      "columns": "252.766px 539.234px",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "refreshed-hit",
+      "binarySha256": "c9dcba39d8d33cdeab52857615bd145ad2d8ba042f69c6d9a5732d772b51bb3c",
+      "anchorOverflow": 0,
+      "columns": "628.406px",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "stopped-source",
+      "binarySha256": "c9dcba39d8d33cdeab52857615bd145ad2d8ba042f69c6d9a5732d772b51bb3c",
+      "anchorOverflow": 0,
+      "columns": "252.766px 539.234px",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "stopped-source",
+      "binarySha256": "c9dcba39d8d33cdeab52857615bd145ad2d8ba042f69c6d9a5732d772b51bb3c",
+      "anchorOverflow": 0,
+      "columns": "628.406px",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "persisted-search",
+      "binarySha256": "c9dcba39d8d33cdeab52857615bd145ad2d8ba042f69c6d9a5732d772b51bb3c",
+      "anchorOverflow": 0,
+      "columns": "252.766px 539.234px",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "persisted-search",
+      "binarySha256": "c9dcba39d8d33cdeab52857615bd145ad2d8ba042f69c6d9a5732d772b51bb3c",
+      "anchorOverflow": 0,
+      "columns": "628.406px",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "source-scroll",
+      "binarySha256": "ec92a5144c2486b3a4c1ca90079c3ac23ac471cfb1cbca0d5a960a734257f2de",
+      "anchorOverflow": 0,
+      "columns": "252.766px 539.234px",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "source-scroll",
+      "binarySha256": "ec92a5144c2486b3a4c1ca90079c3ac23ac471cfb1cbca0d5a960a734257f2de",
+      "anchorOverflow": 0,
+      "columns": "628.406px",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "final-cross-search",
+      "binarySha256": "ec92a5144c2486b3a4c1ca90079c3ac23ac471cfb1cbca0d5a960a734257f2de",
+      "anchorOverflow": 0,
+      "columns": "252.766px 539.234px",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "final-cross-search",
+      "binarySha256": "ec92a5144c2486b3a4c1ca90079c3ac23ac471cfb1cbca0d5a960a734257f2de",
+      "anchorOverflow": 0,
+      "columns": "628.406px",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "library1547-candidates-1100x700.png",
+    "library1547-candidates-760x520.png",
+    "library1547-source-failure-1100x700.png",
+    "library1547-source-failure-760x520.png",
+    "library1547-cross-search-1100x700.png",
+    "library1547-cross-search-760x520.png",
+    "library1547-hit-preview-1100x700.png",
+    "library1547-hit-preview-760x520.png",
+    "library1547-missing-source-1100x700.png",
+    "library1547-missing-source-760x520.png",
+    "library1547-refreshed-hit-1100x700.png",
+    "library1547-refreshed-hit-760x520.png",
+    "library1547-stopped-source-1100x700.png",
+    "library1547-stopped-source-760x520.png",
+    "library1547-persisted-search-1100x700.png",
+    "library1547-persisted-search-760x520.png",
+    "library1547-source-scroll-1100x700.png",
+    "library1547-source-scroll-760x520.png",
+    "library1547-final-cross-search-1100x700.png",
+    "library1547-final-cross-search-760x520.png"
+  ],
+  "fixture": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1547\\3a07da87-158b-4d37-9b91-86a1798a073f\\资料目录",
+  "zip": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1547\\3a07da87-158b-4d37-9b91-86a1798a073f\\资料目录\\项目资料.zip",
+  "tar": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1547\\3a07da87-158b-4d37-9b91-86a1798a073f\\资料目录\\旧资料.tar",
+  "big": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1547\\3a07da87-158b-4d37-9b91-86a1798a073f\\可停止的大目录.zip",
+  "originalZipHash": "5705b4ccb4843a3683fb7fef8e365c74d0dfa8b29f5b61732b1638dd9a283ab0",
+  "originalTarHash": "9044f31ec3d2975d259d6c40f327fa88cf0c3f8ac189953bcc9c53390aa4f6ac",
+  "resumeNote": "Discovery, manual indexing, rejection states and cross-package search passed; resume preview after fixing initial capability readiness.",
+  "previousIdentities": [
+    "44a1923b34810004f500a545846e1d8857d29d14b525ce91f74906294a3e6fcd",
+    "c9dcba39d8d33cdeab52857615bd145ad2d8ba042f69c6d9a5732d772b51bb3c"
+  ],
+  "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1547\\3a07da87-158b-4d37-9b91-86a1798a073f\\取回资料",
+  "changedZipHash": "a21b179b8bbdc1dd9bd206c5c3239a5e658308ffa4f48534cb321ae3177c236c"
+}

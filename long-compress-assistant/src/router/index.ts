@@ -38,6 +38,7 @@ const routes: Array<RouteRecordRaw> = [
       title: '双栏文件浏览器'
     }
   },
+  { path: '/library', name: 'ArchiveLibrary', component: () => import('@/views/ArchiveLibraryView.vue'), meta: { title: '归档资源库' } },
   {
     path: '/vault',
     name: 'Vault',

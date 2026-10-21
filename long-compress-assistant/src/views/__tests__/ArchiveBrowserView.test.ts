@@ -3,6 +3,10 @@ import { DOMWrapper, flushPromises, mount } from '@vue/test-utils'
 import ArchiveBrowserView from '../ArchiveBrowserView.vue'
 
 const mocks = vi.hoisted(() => ({
+  invoke: vi.fn(),
+  capabilityRefresh: vi.fn(),
+  pendingPath: '',
+  readOptions: {} as Record<string, unknown>,
   selectFiles: vi.fn(),
   selectDirectory: vi.fn(),
   browseArchive: vi.fn(),
@@ -21,8 +25,9 @@ const mocks = vi.hoisted(() => ({
   setSuccess: vi.fn(),
 }))
 
+vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 vi.mock('@/stores/app', () => ({
-  useAppStore: () => ({ setError: mocks.setError, clearError: mocks.clearError, get error() { return mocks.currentError }, setSuccess: mocks.setSuccess })
+  useAppStore: () => ({ get pendingArchiveBrowserPath() { return mocks.pendingPath }, takeArchiveBrowserOptions: () => mocks.readOptions, takeArchiveBrowserPath: () => { const path=mocks.pendingPath; mocks.pendingPath=''; return path }, setError: mocks.setError, clearError: mocks.clearError, get error() { return mocks.currentError }, setSuccess: mocks.setSuccess })
 }))
 vi.mock('@/components/archive/ZpaqSnapshotDiff.vue', () => ({ default: { template: '<div />' } }))
 vi.mock('@/stores/zipEdit', () => ({useZipEditStore: () => ({ sessionFor: () => undefined, taskFor: () => undefined, opening: false, preparing: false, openingError: null, begin: vi.fn() })}))
@@ -42,7 +47,7 @@ vi.mock('@/composables/useArchiveEngine', () => ({
       message: 'ready',
     } },
     loading: { value: false },
-    refresh: vi.fn().mockResolvedValue(undefined),
+    refresh: mocks.capabilityRefresh,
   }),
 }))
 
@@ -62,6 +67,34 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('ArchiveBrowserView', () => {
+  it('library1547 waits for the initial engine capabilities before deciding preview support',async()=>{
+    let ready!:()=>void;mocks.capabilityRefresh.mockReturnValue(new Promise<void>(resolve=>{ready=resolve}))
+    mocks.pendingPath='C:/archives/demo.zip';mocks.readOptions={librarySourceId:'source-a',focusEntryPath:'docs/readme.txt',entryAction:'preview'}
+    const wrapper=mount(ArchiveBrowserView,{global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises();expect(mocks.previewArchiveText).not.toHaveBeenCalled();ready();await flushPromises();expect(mocks.previewArchiveText).toHaveBeenCalled();wrapper.unmount()
+  })
+  it('library1547 focuses just the matching internal file and opens the original preview', async () => {
+    mocks.pendingPath='C:/archives/demo.zip';mocks.readOptions={librarySourceId:'source-a',focusEntryPath:'docs/readme.txt',entryAction:'preview'}
+    const wrapper=mount(ArchiveBrowserView,{global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
+    expect(mocks.previewArchiveText).toHaveBeenCalledWith('C:/archives/demo.zip','docs/readme.txt','')
+    expect(wrapper.get('footer').text()).toContain('已选择 1 / 2')
+    expect(wrapper.get('[data-testid="archive-library-origin"]').text()).toContain('docs/readme.txt')
+    expect(mocks.decompressFile).not.toHaveBeenCalled();wrapper.unmount()
+  })
+  it.each([null,'C:/recovered'])('library1547 asks for output and extracts only the hit; destination=%s',async destination=>{
+    mocks.pendingPath='C:/archives/demo.zip';mocks.readOptions={librarySourceId:'source-a',focusEntryPath:'docs/readme.txt',entryAction:'extract'};mocks.selectDirectory.mockResolvedValue(destination)
+    const wrapper=mount(ArchiveBrowserView,{global:{stubs:{RouterLink:true}}});await flushPromises()
+    expect(mocks.selectDirectory).toHaveBeenCalled()
+    if(destination)expect(mocks.decompressFile).toHaveBeenCalledWith('C:/archives/demo.zip',expect.objectContaining({outputPath:destination,selectedEntries:['docs/readme.txt'],overwrite:false,deleteAfter:false}))
+    else expect(mocks.decompressFile).not.toHaveBeenCalled()
+    wrapper.unmount()
+  })
+  it('library1547 rejects stale source before preview or extraction and missing hits never select everything',async()=>{
+    mocks.pendingPath='C:/archives/demo.zip';mocks.readOptions={librarySourceId:'source-a',focusEntryPath:'gone.txt',entryAction:'extract'}
+    const wrapper=mount(ArchiveBrowserView);await flushPromises();expect(wrapper.get('footer').text()).toContain('已选择 0 / 2');expect(mocks.decompressFile).not.toHaveBeenCalled();wrapper.unmount()
+    mocks.pendingPath='C:/archives/demo.zip';mocks.invoke.mockRejectedValue(new Error('原包发生变化'))
+    const stale=mount(ArchiveBrowserView);await flushPromises();expect(mocks.setError).toHaveBeenLastCalledWith(expect.stringContaining('原包发生变化'));expect(mocks.previewArchiveText).not.toHaveBeenCalled();expect(mocks.decompressFile).not.toHaveBeenCalled();stale.unmount()
+  })
+
   it('zpaq1530 switches snapshots with empty selection and keeps preview, refresh, extraction and conversion bound', async () => {
     const one={version:1,date:20261020130000},latest={version:3,date:20261020150000}
     const entry=(path:string)=>({path,name:path,size:8,modified:null,compressedSize:null,crc:null,encrypted:false,isDir:false})
@@ -154,6 +187,9 @@ describe('ArchiveBrowserView', () => {
   })
   beforeEach(() => {
     vi.clearAllMocks()
+    mocks.invoke.mockReset(); mocks.invoke.mockResolvedValue(undefined)
+    mocks.capabilityRefresh.mockReset(); mocks.capabilityRefresh.mockResolvedValue(undefined)
+    mocks.pendingPath=''; mocks.readOptions={}
     mocks.currentError=null
     mocks.setError.mockImplementation(message=>{mocks.currentError=message})
     mocks.clearError.mockImplementation(()=>{mocks.currentError=null})

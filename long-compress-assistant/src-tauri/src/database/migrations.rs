@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use sqlx::{SqlitePool, query, query_as};
 
 /// 当前数据库 schema 版本。增加此数字并添加新的迁移步骤以更新 schema。
-const _CURRENT_VERSION: i32 = 12;
+const _CURRENT_VERSION: i32 = 13;
 
 /// 初始化数据库表（含版本化迁移）
 pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
@@ -112,6 +112,10 @@ pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
         query("INSERT INTO schema_version (version) VALUES (12)")
             .execute(&mut *transaction).await?;
         transaction.commit().await?;
+    }
+    if current < 13 {
+        crate::services::archive_library::init_tables(pool).await?;
+        query("INSERT INTO schema_version (version) VALUES (13)").execute(pool).await?;
     }
     Ok(())
 }
