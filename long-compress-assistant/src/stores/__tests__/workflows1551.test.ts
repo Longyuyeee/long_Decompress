@@ -33,3 +33,10 @@ it('recovery edits expand inline and show the changed rerun range before submiss
 it('completed/reused steps expose explicit rerun and original receipt without rewriting history',async()=>{const old=parent();old.parentRunId='ancestor';old.steps[0].reusedFrom='ancestor';const view=mount(WorkflowRunDetails,{props:{run:old},global:{stubs:{ResultActions:true,TaskExecutionOverview:true,ArchiveOutputSummary:true,RouterLink:true}}});expect(view.text()).toContain('沿用原产物');await view.get('[data-workflow-rerun-step="1"]').trigger('click');expect(view.emitted('resume')?.[0]).toEqual([1]);await view.get('[data-testid="workflow-open-origin"]').trigger('click');expect(view.emitted('origin')?.[0]).toEqual(['ancestor']);view.unmount()})
 
 it('old run output at a drive root stays an absolute drive directory',()=>{expect(workflowParentDirectory('D:/run')).toBe('D:/');expect(workflowParentDirectory('D:\\run')).toBe('D:\\');expect(workflowParentDirectory('D:/out/run')).toBe('D:/out')})
+
+it('1552 queued preparation reserves execution and stopping before claim completion dispatches nothing',async()=>{
+ const store=useWorkflowStore();let finish!:(value:any)=>void;const pending=store.startQueued(()=>new Promise(resolve=>finish=resolve));expect(store.busy).toBe(true);expect(await store.start(request())).toBe(false);await store.stop();finish({id:'claim',plan:workflowTemplate('empty'),request:request()});expect(await pending).toBe(false);expect(store.runs).toHaveLength(0);expect(mocks.tasks.tasks).toHaveLength(0);expect(store.busy).toBe(false)
+})
+it('1552 queued execution persists its predetermined identity and leaves the editor draft untouched',async()=>{
+ const store=useWorkflowStore(),before=workflowClone(store.draft),plan=workflowTemplate('empty');store.selectedRunId='viewing-history';plan.name='队列快照';expect(await store.startQueued(async()=>({id:'claimed-1552',plan,request:request()}))).toBe(true);expect(store.runs[0].id).toBe('claimed-1552');expect(store.runs[0].name).toBe('队列快照');expect(stored[0].id).toBe('claimed-1552');expect(store.draft).toEqual(before);expect(store.selectedRunId).toBe('viewing-history')
+})
