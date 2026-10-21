@@ -16,7 +16,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     let expected = match kind {
         "archive-extraction" => ("decompression", "archive"),
         "archive-compression" => ("compression", "archive"),
-        "archive-conversion" => ("compression", "archive"),
+        "archive-conversion" | "archive-edit" => ("compression", "archive"),
         "image-compression" => ("compression", "image"),
         "video-compression" => ("compression", "video"),
         "pdf-optimization" => ("compression", "pdf"),
@@ -27,6 +27,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
         ("schemaVersion".into(), Value::from(1)), ("kind".into(), Value::from(kind)),
     ]);
     let fields: &[(&str, char)] = match kind {
+        "archive-edit" => &[("outputPath", 's')],
         "archive-extraction" => &[("outputDirectory", 's'), ("extractToSubfolder", 'b')],
         "archive-compression" => &[("outputDirectory", 's'), ("passwordRequired", 'b')],
         "archive-conversion" => &[("outputPath", 's'), ("format", 's'), ("level", 'n'), ("splitSize", 'n'), ("encryptFilenames", 'b'), ("passwordRequired", 'b')],
@@ -359,4 +360,11 @@ mod tests {
         invalid["settings"]["zipPasswordEncoding"] = "unknown".into();
         assert!(super::sanitize(invalid, "compression", "archive").is_none());
     }
+}
+
+#[cfg(test)]
+#[test]
+fn zip_edit1544_history_identifies_results_without_replaying_edits(){
+    let value=serde_json::json!({"schemaVersion":1,"kind":"archive-edit","outputPath":"D:/new.zip","changes":["private/source"],"password":"secret"});
+    let result=sanitize(value,"compression","archive").unwrap();assert_eq!(result,serde_json::json!({"schemaVersion":1,"kind":"archive-edit","outputPath":"D:/new.zip"}));
 }

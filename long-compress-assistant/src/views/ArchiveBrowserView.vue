@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import ZipEditBar from '@/components/archive/ZipEditBar.vue'
+import { useZipEditStore } from '@/stores/zipEdit'
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { listen } from '@tauri-apps/api/event'
 import { useAppStore, type ArchiveReadOptions } from '@/stores/app'
@@ -51,6 +53,11 @@ const selectedSnapshot = computed(() => result.value?.zpaqHistory?.selected || r
 const snapshotReadArguments = computed((): [ZipPasswordEncoding?, ZpaqSnapshot?] => selectedSnapshot.value
   ? [inputEncoding.value, selectedSnapshot.value] : zipPasswordEncodingArguments(inputEncoding.value))
 const conversion = useArchiveConversionStore()
+const zipEditing = useZipEditStore()
+const zipEditor = ref<InstanceType<typeof ZipEditBar> | null>(null)
+const canEditZip = computed(() => result.value?.format === 'ZIP' && !parentFrames.value.length)
+const editingZip = computed(() => canEditZip.value && zipEditing.sessionFor(archivePath.value)?.editing)
+const zipEditBusy = computed(() => !!zipEditing.sessionFor(archivePath.value)?.busy)
 const selected = ref(new Set<string>())
 const query = ref('')
 const typeFilter = ref('all')
@@ -67,7 +74,7 @@ const extracting = ref(false)
 const checkingSnapshot = ref(false)
 const diffVisible = ref(false)
 const openingEntryPath = ref('')
-const inputBusy = computed(() => loading.value || extracting.value || checkingSnapshot.value || !!openingEntryPath.value)
+const inputBusy = computed(() => zipEditBusy.value || loading.value || extracting.value || checkingSnapshot.value || !!openingEntryPath.value)
 const dangerousOpenEntry = ref<ArchiveEntryInfo | null>(null)
 const imagePreview = ref<ArchiveImagePreview | null>(null)
 const textPreview = ref<ArchiveTextPreview | null>(null)
@@ -637,8 +644,9 @@ const handleWorkspaceKeydown = (event: KeyboardEvent) => {
 const droppedBrowserFiles = (event: DragEvent) => {
   event.preventDefault()
   isDraggingArchive.value = false
-  const path = (event.dataTransfer?.files[0] as (File & { path?: string }) | undefined)?.path
-  if (path) void openArchivePath(path)
+  const paths = Array.from(event.dataTransfer?.files || []).map(file => (file as File & { path?: string }).path).filter((path): path is string => !!path)
+  if (editingZip.value) { void zipEditor.value?.addDropped(paths); return }
+  if (paths[0]) void openArchivePath(paths[0])
 }
 
 watch(() => appStore.pendingArchiveBrowserPath, path => {
@@ -657,7 +665,8 @@ onMounted(() => {
     listen('tauri://file-drop-hover', () => { isDraggingArchive.value = true }).then(value => { unlistenHover = value }),
     listen<string[]>('tauri://file-drop', event => {
       isDraggingArchive.value = false
-      if (event.payload[0]) void openArchivePath(event.payload[0])
+      if (editingZip.value) void zipEditor.value?.addDropped(event.payload)
+      else if (event.payload[0]) void openArchivePath(event.payload[0])
     }).then(value => { unlistenDrop = value }),
     listen('tauri://file-drop-cancelled', () => { isDraggingArchive.value = false }).then(value => { unlistenCancel = value })
   ]).catch(error => console.warn('Archive browser drag-and-drop is unavailable:', error))
@@ -728,6 +737,8 @@ const extractSelected = async () => {
     </ZpaqSnapshotPicker>
     <ZpaqSnapshotDiff v-if="result?.zpaqHistory" v-model:visible="diffVisible" :path="archivePath" :password="password" :history="result.zpaqHistory" :output-directory="outputPath" />
     <p v-if="result?.format === 'WIM'" data-testid="wim-image-hint" class="text-xs leading-relaxed text-muted">固实 WIM/ESD 的预览与所选提取可能需要读取同块内容。多镜像按 1、2 等编号目录展示，可进入后选择文件；根目录的 [1].xml 为镜像说明。原生 SWM 请将同组 install.swm、install2.swm 等放在同一目录，可从任意一卷进入。提取与转换保留当前目录视图，不修改原镜像。</p>
+    <ZipEditBar v-if="canEditZip" ref="zipEditor" :source-path="archivePath" :directory="activeDirectory" :selected-file="selected.size === 1 ? [...selected][0] : undefined" :disabled="inputBusy" @open-result="openArchivePath($event)" />
+
     <section class="aero-card shrink-0 p-3 grid gap-3 browser-toolbar" :class="{'has-zip-encoding': archivePath && supportsZipPasswordEncoding(archivePath, result?.format)}">
       <div class="min-w-0 browser-field">
         <span class="browser-label">当前压缩包</span>
@@ -905,6 +916,8 @@ const extractSelected = async () => {
           <button v-if="contextMenu.entry && isNestedArchiveEntry(contextMenu.entry)" type="button" role="menuitem" data-testid="archive-context-enter-nested" :disabled="archiveDepth >= 3 || Boolean(openingEntryPath)" :title="archiveDepth >= 3 ? '已达到最多 3 层嵌套限制' : '在只读子工作区中打开'" @click="enterNestedArchive(contextMenu.entry)"><i class="pi pi-sitemap"></i><span>{{ archiveDepth >= 3 ? '已达到 3 层上限' : '进入压缩包' }}</span><kbd>Enter</kbd></button>
           <button v-if="contextMenu.entry && !contextMenu.entry.isDir && canPreviewEntry(contextMenu.entry) && previewRouteSupported" type="button" role="menuitem" data-testid="archive-context-preview" @click="previewContextEntry(contextMenu.entry)"><i class="pi pi-eye"></i><span>内部查看器打开</span><kbd>Ctrl+Enter</kbd></button>
 
+          <button v-if="canEditZip && contextMenu.entry && !contextMenu.entry.isDir" type="button" role="menuitem" data-testid="archive-context-edit-replace" :disabled="inputBusy" @click="zipEditor?.replace(contextMenu.entry.path); closeContextMenu()"><i class="pi pi-file-edit"></i><span>替换此文件并另存…</span></button>
+          <button v-if="canEditZip && !contextMenu.entry" type="button" role="menuitem" data-testid="archive-context-edit-add" :disabled="inputBusy" @click="zipEditor?.addFiles(); closeContextMenu()"><i class="pi pi-plus"></i><span>添加文件到当前目录…</span></button>
           <div v-if="contextMenu.entries.length > 0" class="archive-context-separator"></div>
           <button v-if="contextMenu.entries.length > 0" type="button" role="menuitem" data-testid="archive-context-extract-current" :disabled="extracting || !outputPath" @click="extractContextEntries(false)"><i class="pi pi-download"></i><span>解压到当前输出目录</span><kbd>Alt+E</kbd></button>
           <button v-if="contextMenu.entries.length > 0" type="button" role="menuitem" data-testid="archive-context-extract-choose" :disabled="extracting" @click="extractContextEntries(true)"><i class="pi pi-folder-open"></i><span>解压到指定目录…</span><kbd>Alt+Shift+E</kbd></button>

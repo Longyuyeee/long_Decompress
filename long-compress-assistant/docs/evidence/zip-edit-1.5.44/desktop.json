@@ -1,0 +1,188 @@
+{
+  "version": "1.5.44",
+  "binarySha256": "9b3ab529fd0fad5110658d8f318269500e6eb835a2145f1a280f733841861e36",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1544\\5894098f-a4d5-4219-acd7-446553bbbc23",
+  "checks": [
+    {
+      "kind": "save-as-add-replace-conflicts-folder-drag",
+      "binarySha256": "62ab9615100b6602bf3397268f5014aebe8a29e206e73cc1f8e833eb9bc2c90d",
+      "originalHashPreserved": true,
+      "independentContents": true,
+      "emptyDirectories": true
+    },
+    {
+      "kind": "new-result-browse-preview-and-selected-extraction",
+      "binarySha256": "9b3ab529fd0fad5110658d8f318269500e6eb835a2145f1a280f733841861e36",
+      "nativePreview": true,
+      "selectedExtraction": true
+    },
+    {
+      "kind": "failed-save-retains-edits-and-original-failure-on-corrected-save",
+      "binarySha256": "9b3ab529fd0fad5110658d8f318269500e6eb835a2145f1a280f733841861e36",
+      "existingFilePreserved": true,
+      "oldFailurePreserved": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "conflict-review",
+      "binarySha256": "62ab9615100b6602bf3397268f5014aebe8a29e206e73cc1f8e833eb9bc2c90d",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "conflict-review",
+      "binarySha256": "62ab9615100b6602bf3397268f5014aebe8a29e206e73cc1f8e833eb9bc2c90d",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "save-review",
+      "binarySha256": "62ab9615100b6602bf3397268f5014aebe8a29e206e73cc1f8e833eb9bc2c90d",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "save-review",
+      "binarySha256": "62ab9615100b6602bf3397268f5014aebe8a29e206e73cc1f8e833eb9bc2c90d",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "save-result",
+      "binarySha256": "62ab9615100b6602bf3397268f5014aebe8a29e206e73cc1f8e833eb9bc2c90d",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "save-result",
+      "binarySha256": "62ab9615100b6602bf3397268f5014aebe8a29e206e73cc1f8e833eb9bc2c90d",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "result-preview",
+      "binarySha256": "9b3ab529fd0fad5110658d8f318269500e6eb835a2145f1a280f733841861e36",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "result-preview",
+      "binarySha256": "9b3ab529fd0fad5110658d8f318269500e6eb835a2145f1a280f733841861e36",
+      "anchorOverflow": 0,
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "failed-save",
+      "binarySha256": "9b3ab529fd0fad5110658d8f318269500e6eb835a2145f1a280f733841861e36",
+      "anchorOverflow": 0,
+      "columns": [
+        426,
+        426
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "failed-save",
+      "binarySha256": "9b3ab529fd0fad5110658d8f318269500e6eb835a2145f1a280f733841861e36",
+      "anchorOverflow": 0,
+      "columns": [
+        652,
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "corrected-result",
+      "binarySha256": "9b3ab529fd0fad5110658d8f318269500e6eb835a2145f1a280f733841861e36",
+      "anchorOverflow": 0,
+      "columns": [
+        878
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "corrected-result",
+      "binarySha256": "9b3ab529fd0fad5110658d8f318269500e6eb835a2145f1a280f733841861e36",
+      "anchorOverflow": 0,
+      "columns": [
+        652
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "zip-edit1544-conflict-review-1100x700.png",
+    "zip-edit1544-conflict-review-760x520.png",
+    "zip-edit1544-save-review-1100x700.png",
+    "zip-edit1544-save-review-760x520.png",
+    "zip-edit1544-save-result-1100x700.png",
+    "zip-edit1544-save-result-760x520.png",
+    "zip-edit1544-result-preview-1100x700.png",
+    "zip-edit1544-result-preview-760x520.png",
+    "zip-edit1544-failed-save-1100x700.png",
+    "zip-edit1544-failed-save-760x520.png",
+    "zip-edit1544-corrected-result-1100x700.png",
+    "zip-edit1544-corrected-result-760x520.png"
+  ],
+  "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1544\\5894098f-a4d5-4219-acd7-446553bbbc23\\需要保留的原包.zip",
+  "incoming": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1544\\5894098f-a4d5-4219-acd7-446553bbbc23\\待补入资料",
+  "folder": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1544\\5894098f-a4d5-4219-acd7-446553bbbc23\\补充目录",
+  "drag": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1544\\5894098f-a4d5-4219-acd7-446553bbbc23\\拖入资料.txt",
+  "sourceHash": "c6351cbfe2ed5d11e69f0054dec4b2bde75b86db40f087ad4d1b911baad5640d",
+  "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-edit-1544\\5894098f-a4d5-4219-acd7-446553bbbc23\\编辑后-36fb0b68.zip",
+  "savedId": "zip-edit-7adf4466-905a-4930-988d-9f7fa6d38f47",
+  "previousIdentities": [
+    "62ab9615100b6602bf3397268f5014aebe8a29e206e73cc1f8e833eb9bc2c90d"
+  ]
+}

@@ -64,7 +64,8 @@ export interface ArchiveConversionConfigV1 {
   rarRecoveryVolumes?: number
   passwordRequired: boolean
 }
-export type ExecutionConfigV1 = ExtractionConfigV1 | ArchiveCompressionConfigV1 | ArchiveConversionConfigV1 | ImageConfigV1 | VideoConfigV1 | PdfConfigV1
+export interface ArchiveEditConfigV1 { schemaVersion: 1; kind: 'archive-edit'; outputPath: string }
+export type ExecutionConfigV1 = ArchiveEditConfigV1 | ExtractionConfigV1 | ArchiveCompressionConfigV1 | ArchiveConversionConfigV1 | ImageConfigV1 | VideoConfigV1 | PdfConfigV1
 
 /** Explicit fields only: never serialize passwords, deletion or transient consent. */
 export function copyExecutionConfig(config?: ExecutionConfigV1 | null): ExecutionConfigV1 | null {
@@ -92,7 +93,9 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
   if (config.kind === 'archive-conversion' && config.sourcePasswordRequired !== undefined && typeof config.sourcePasswordRequired !== 'boolean') return null
   const method = config.kind === 'archive-compression' ? config.settings.wimMethod : config.kind === 'archive-conversion' ? config.wimMethod : undefined
   if (method !== undefined && method !== 'store' && method !== 'xpress' && method !== 'lzx' && method !== 'lzms' && method !== 'solid') return null
+  if (config.kind === 'archive-edit' && (typeof config.outputPath !== 'string' || !config.outputPath.trim())) return null
   switch (config.kind) {
+    case 'archive-edit': return { schemaVersion: 1, kind: config.kind, outputPath: config.outputPath }
     case 'archive-conversion': return { schemaVersion: 1, kind: config.kind,
       ...(config.sourcePasswordRequired !== undefined ? { sourcePasswordRequired: config.sourcePasswordRequired } : {}),
       ...(config.operation === 'zpaq-update' ? { operation: config.operation, updateSources: [...(config.updateSources || [])], archivePrefix: config.archivePrefix || '' } : {}),

@@ -78,6 +78,7 @@ const runningTask = computed(() => taskStats.value.runningTask)
 const currentTaskName = computed(() => runningTask.value?.name || '')
 
 const taskTypeLabel = (task: Task) => {
+  if (task.executionConfig?.kind === 'archive-edit') return 'ZIP 编辑另存'
   if (task.executionConfig?.kind === 'archive-conversion') return task.executionConfig.operation === 'zpaq-update' ? 'ZPAQ 增量更新' : '压缩包转换'
   if (task.type === 'decompression') return appStore.t('tasks.type.decompress')
   if (task.workloadKind === 'image') return '图片压缩'
@@ -144,6 +145,7 @@ const stageLabel = (stage?: string) => {
     case 'Extracting': return appStore.t('tasks.status.running')
     case 'Verifying': return '验证输出'
     case 'Splitting': return appStore.t('compress.status.splitting')
+    case 'Transforming': return '处理内容'
     case 'Finalizing': return appStore.t('tasks.status.finalizing')
     case 'password-attempt': return '验证解压密码'
     case 'Probing': return '重新探测'
@@ -159,7 +161,9 @@ const retryTask = async (task: Task) => {
   if (retryingTaskId.value) return
   retryingTaskId.value = task.id
   try {
-    if (task.executionConfig?.kind === 'archive-conversion') {
+    if (task.executionConfig?.kind === 'archive-edit') {
+      appStore.openArchiveInBrowser(task.sourceFiles[0]); window.location.hash = '#/browser'
+    } else if (task.executionConfig?.kind === 'archive-conversion') {
       const conversion=useArchiveConversionStore()
       const original=conversion.items.find(item=>item.taskId===task.id)
       if (original) { await conversion.prepareRetry(original.id); conversion.visible=true }
