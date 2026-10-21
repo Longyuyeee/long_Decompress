@@ -7,6 +7,7 @@ import { extractErrorMessage } from '@/utils'
 import { formatProgressPercent } from '@/utils/progress'
 import SmoothProgressValue from '@/components/ui/SmoothProgressValue.vue'
 import { useArchiveConversionStore } from '@/stores/archiveConversion'
+import { prepareCompressionRetryDraft } from '@/utils/compressionRetry'
 import { createTaskHistoryRecord } from '@/types/taskHistory'
 import ResultActions from '@/components/tasks/ResultActions.vue'
 import BatchResultActions from '@/components/tasks/BatchResultActions.vue'
@@ -155,59 +156,24 @@ const stageLabel = (stage?: string) => {
 }
 
 const retryTask = async (task: Task) => {
-  if (task.executionConfig?.kind === 'archive-conversion') {
-    useArchiveConversionStore().restore(createTaskHistoryRecord(task))
-    isExpanded.value = false
-    return
-  }
   if (retryingTaskId.value) return
   retryingTaskId.value = task.id
-
   try {
-    if (task.type === 'decompression') {
-      taskStore.updateTaskStatus(task.id, 'pending')
-      task.passwordRequired = false
-      const options = {
-        outputPath: task.outputPath,
-        keepStructure: true,
-        overwrite: false,
-        deleteAfter: task.recycleSourceAfterExtract ?? false,
-        createSubdirectory: task.extractToSubfolder ?? false,
-        password: task.password || undefined,
-        fileFilter: task.fileFilter || null,
-        selectedEntries: task.selectedEntries,
-        conflictPolicy: appStore.settings.conflictPolicy
-      }
-      taskStore.updateTaskStatus(task.id, 'preparing')
-      await tauriCommands.decompressFile(task.sourceFiles[0], options, task.id)
-    } else if (task.type === 'compression') {
-      taskStore.updateTaskStatus(task.id, 'pending')
-      taskStore.updateTaskStatus(task.id, 'compressing')
-      const options = task.compressionOptions || {
-        format: task.format || 'zip',
-        level: 6,
-        password: task.password || undefined
-      }
-      const publishedOutput = await tauriCommands.compressFiles(
-        task.id,
-        task.sourceFiles,
-        task.outputPath,
-        options
-      )
-      task.archiveOutput = publishedOutput
-      if (publishedOutput) {
-        task.outputBytes = publishedOutput.totalBytes
-        task.outputBytesEstimated = false
-      }
-      taskStore.updateTaskStatus(task.id, 'completed')
+    if (task.executionConfig?.kind === 'archive-conversion') {
+      const conversion=useArchiveConversionStore()
+      const original=conversion.items.find(item=>item.taskId===task.id)
+      if (original) { await conversion.prepareRetry(original.id); conversion.visible=true }
+      else conversion.restore(createTaskHistoryRecord(task))
+    } else if (task.type === 'decompression') {
+      taskStore.recoveryTaskId = task.id
+      window.location.hash = '#/decompress'
+    } else {
+      await prepareCompressionRetryDraft(task)
+      window.location.hash = '#/compress'
     }
-  } catch (error) {
-    const finalReason = extractErrorMessage(error)
-    taskStore.failTask(task.id, finalReason)
-    appStore.setError(`${appStore.t('common.error')}: ${finalReason}`)
-  } finally {
-    retryingTaskId.value = null
-  }
+    isExpanded.value = false
+  } catch(error) { appStore.setError(extractErrorMessage(error)) }
+  finally { retryingTaskId.value = null }
 }
 
 const cancelTask = async (task: Task) => {
@@ -392,7 +358,7 @@ const copyToClipboard = async (text: string) => {
                     @click.stop="retryTask(task)"
                     :disabled="retryingTaskId === task.id"
                     class="w-7 h-7 rounded-lg flex items-center justify-center text-dim hover:text-primary hover:bg-primary/10 transition-all disabled:opacity-85"
-                    :title="appStore.t('tasks.retry')">
+                    :data-retry-task-id="task.id" data-testid="global-task-prepare-retry" title="调整配置后创建新任务，不会立即重跑">
                     <i :class="retryingTaskId === task.id ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'" class="text-[0.75rem]"></i>
                   </button>
 

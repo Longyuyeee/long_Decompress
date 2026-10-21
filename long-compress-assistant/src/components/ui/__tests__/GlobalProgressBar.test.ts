@@ -30,7 +30,7 @@ describe('GlobalProgressBar', () => {
     tasks.tasks[0].status = 'cancelled'
     const wrapper = mount(GlobalProgressBar, { global: { plugins: [pinia] } })
     await wrapper.find('.progress-summary').trigger('click')
-    await wrapper.findAll('button').find(button => button.attributes('title') === useAppStore().t('tasks.retry'))!.trigger('click')
+    await wrapper.get('[data-testid="global-task-prepare-retry"]').trigger('click')
     const conversion = useArchiveConversionStore()
     expect(conversion.visible).toBe(true)
     expect(conversion.sourcePath).toBe('C:\\old.zip')
@@ -238,4 +238,14 @@ describe('GlobalProgressBar', () => {
     expect(tauriMocks.invoke).toHaveBeenCalledWith('resume_archive_task', { taskId: 'pause-control' })
     expect(taskStore.tasks[0].status).toBe('extracting')
   })
+})
+
+it('1542 opens the failed extraction correction without executing or overwriting the original task',async()=>{
+ const pinia=createPinia();setActivePinia(pinia);const tasks=useTaskStore()
+ tasks.addTask({id:'failed-extraction',name:'a.zip',type:'decompression',sourceFiles:['C:/a.zip'],outputPath:'D:/out'})
+ tasks.failTask('failed-extraction','[archive-inspection:missing-volume] 缺少 a.z02');await tasks.waitForHistoryPersistence('failed-extraction')
+ const original=JSON.stringify(tasks.tasks[0]);const wrapper=mount(GlobalProgressBar,{global:{plugins:[pinia]}})
+ await wrapper.get('.progress-summary').trigger('click');await wrapper.get('[data-testid="global-task-prepare-retry"]').trigger('click')
+ expect(tasks.recoveryTaskId).toBe('failed-extraction');expect(window.location.hash).toBe('#/decompress')
+ expect(JSON.stringify(tasks.tasks[0])).toBe(original);expect(commandMocks.decompressFile).not.toHaveBeenCalled();wrapper.unmount()
 })

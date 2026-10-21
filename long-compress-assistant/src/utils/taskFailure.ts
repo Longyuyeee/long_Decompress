@@ -31,8 +31,14 @@ export type FailureCategory = keyof typeof failureCategories
 // Classification markers remain in task/history evidence for recovery routing.
 // Only the ordinary toast/log presentation removes them; never mutate records.
 export function archiveInspectionMessageForDisplay(message: string): string {
-  const readable = message.replace(/\[(?:archive-inspection:[^\]]+|archive-io:[^\]]+|alz-(?:encoding|password-encoding|io|password)|egg-(?:password-encoding|io|password))\]\s*/g, '').trim()
+  const readable = message.replace(/\[(?:archive-inspection:[^\]]+|archive-io:[^\]]+|archive-output:[^\]]+|archive-source:[^\]]+|alz-(?:encoding|password-encoding|io|password)|egg-(?:password-encoding|io|password))\]\s*/g, '').trim()
   return readable || (message ? '归档检测未通过，未提供具体原因。' : '')
+}
+
+/** Keep notifications brief; the task still carries the complete original error. */
+export function taskErrorToastForDisplay(message: string): string {
+  if (/\[archive-output:(?:Pre-checking|Publishing):output-conflict\]/.test(message)) return '输出位置已有文件，请修改名称或保存位置后继续。原文件已保留。'
+  return archiveInspectionMessageForDisplay(message)
 }
 
 const stageLabels: Record<string, string> = {
@@ -50,21 +56,28 @@ export function describeTaskFailure(record: Pick<TaskHistoryRecord, 'status' | '
   const ioMarker = message.match(/\[archive-io:(disk-full|target-busy|permission|io)\]/)?.[1] as FailureCategory | undefined
   const sourceStage = sourceMarker?.[1]
   const verification = message.includes('[archive-output:Verifying:verification-failed]')
-  const publication = message.match(/\[archive-output:Publishing:(output-conflict|publication-failed|rollback-incomplete)\]/)?.[1] as FailureCategory | undefined
+  const publicationMarker = message.match(/\[archive-output:(Pre-checking|Publishing):(output-conflict|publication-failed|rollback-incomplete)\]/)
+  const publication = publicationMarker?.[2] as FailureCategory | undefined
   const category: FailureCategory = marker && Object.hasOwn(failureCategories, marker)
     ? marker as FailureCategory : 'unknown'
   const inspection = Boolean(marker) || message.includes('归档检测失败：')
   const persisted = record.failure?.schemaVersion === 1 ? record.failure : null
-  const savedCategory = persisted && Object.hasOwn(failureCategories, persisted.category)
-    ? persisted.category as FailureCategory : publication || (verification ? 'verification-failed' : sourceMarker ? sourceMarker[2] as FailureCategory : ioMarker || category)
-  const stage = persisted && Object.hasOwn(stageLabels, persisted.stage)
-    ? persisted.stage : publication ? 'Publishing' : verification ? 'Verifying' : sourceStage || (inspection ? 'inspection' : 'unknown')
+  // A live snapshot only knows "unknown" plus the last observed stage.
+  // It must not hide an explicit reason subsequently supplied by the engine.
+  const explicitCategory = publication || (verification ? 'verification-failed' : sourceMarker ? sourceMarker[2] as FailureCategory : ioMarker || category)
+  const savedCategory = persisted && persisted.category !== 'unknown' && Object.hasOwn(failureCategories, persisted.category)
+    ? persisted.category as FailureCategory : explicitCategory
+  const markedStage = publication ? publicationMarker?.[1] : verification ? 'Verifying' : sourceStage || (inspection ? 'inspection' : undefined)
+  const stage = markedStage || (persisted && Object.hasOwn(stageLabels, persisted.stage) ? persisted.stage : 'unknown')
+  const stageEvidence = markedStage ? 'recorded-marker' : persisted?.evidence || 'unknown'
+
   return {
     category: savedCategory,
     categoryLabel: failureCategories[savedCategory],
     stage,
-    stageLabel: stageLabels[stage] + (persisted?.evidence === 'observed-stage' ? '（最后观测阶段）' : ''),
-    evidence: persisted?.evidence || (marker || sourceStage || verification || publication || ioMarker ? 'recorded-marker' : 'legacy-message'),
+    stageLabel: stageLabels[stage] + (stageEvidence === 'observed-stage' ? '（最后观测阶段）' : ''),
+    stageEvidence,
+    evidence: marker || sourceStage || verification || publication || ioMarker ? 'recorded-marker' : persisted?.evidence || 'legacy-message',
     message,
   }
 }
@@ -132,7 +145,7 @@ export function getTaskRecoveryGuidance(record: Pick<TaskHistoryRecord, 'status'
         '恢复来源和访问条件后创建新任务；旧失败记录保留，不会自动提交旧暂存。', report,
       ] }
     case 'permission': {
-      const confirmed = failure.evidence === 'recorded-marker'
+      const confirmed = failure.stageEvidence === 'recorded-marker'
       const step = confirmed && failure.stage === 'inspection'
         ? '错误发生在来源读取检测：先确认当前账户能访问来源文件及其目录；仅更换输出目录不能解决来源读取权限问题。'
         : confirmed && failure.stage === 'Publishing'
@@ -145,7 +158,7 @@ export function getTaskRecoveryGuidance(record: Pick<TaskHistoryRecord, 'status'
     case 'publication-failed':
       return { title: '输出未能提交：先保留现有文件', steps: [
         '按原始错误核对目标是否已存在、被占用或不可写；不要覆盖尚未核对的已有文件。',
-        '确认来源仍完整，重新执行时选择新的空输出目录；新任务不会接着提交旧暂存结果。', report,
+        '确认来源仍完整，重新执行时使用新的名称或空输出目录；新任务不会接着提交旧暂存结果。', report,
       ] }
     case 'source-changed':
     case 'source-missing':

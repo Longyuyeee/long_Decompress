@@ -406,7 +406,7 @@ export const useCompressionStore = defineStore('compression', () => {
     if (file) {
       file.outputPath ??= globalOutputPath.value
       file.settings = cloneSettings(settings)
-      if (settings.format === 'lz' || settings.format === 'tar.lz' || settings.format === 'tar.lzma') file.draftPasswordRequired = false
+      if (settings.password || settings.format === 'lz' || settings.format === 'tar.lz' || settings.format === 'tar.lzma') file.draftPasswordRequired = false
     }
   }
 
@@ -428,7 +428,7 @@ export const useCompressionStore = defineStore('compression', () => {
     if (group) {
       group.outputPath ??= globalOutputPath.value
       group.settings = cloneSettings(settings)
-      if (settings.format === 'lz' || settings.format === 'tar.lz' || settings.format === 'tar.lzma') group.draftPasswordRequired = false
+      if (settings.password || settings.format === 'lz' || settings.format === 'tar.lz' || settings.format === 'tar.lzma') group.draftPasswordRequired = false
     }
   }
 

@@ -240,3 +240,14 @@ describe('failed extraction corrections', () => {
     wrapper.unmount()
   })
 })
+
+it('1542 creates a new pending task for a cancelled extraction without restarting or rewriting it',async()=>{
+ const pinia=createPinia();setActivePinia(pinia);const store=useTaskStore()
+ store.addTask({id:'cancelled-1542',name:'old.zip',type:'decompression',sourceFiles:['C:/old.zip'],outputPath:'C:/output'})
+ store.updateTaskStatus('cancelled-1542','cancelled');await store.waitForHistoryPersistence('cancelled-1542')
+ const before=JSON.stringify({status:store.tasks[0].status,error:store.tasks[0].error,logs:store.tasks[0].logs});const wrapper=mount(FailedExtractionRetry,{props:{taskIds:['cancelled-1542'],inline:true},global:{plugins:[pinia],stubs:{ExtractionOutputPreview:true,Teleport:true}}})
+ await wrapper.get('[data-testid="create-retry-drafts"]').trigger('click');await flushPromises()
+ expect(store.tasks).toHaveLength(2);expect(store.tasks[1]).toMatchObject({status:'pending',retryOfTaskId:'cancelled-1542'});expect(store.tasks[0].status).toBe('cancelled')
+ expect(JSON.stringify({status:store.tasks[0].status,error:store.tasks[0].error,logs:store.tasks[0].logs})).toBe(before)
+ expect(mocks.invoke.mock.calls.some(([cmd])=>cmd==='extract_file')).toBe(false);wrapper.unmount()
+})

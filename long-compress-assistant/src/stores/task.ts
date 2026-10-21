@@ -119,6 +119,7 @@ export interface Task {
 
 export const useTaskStore = defineStore('task', () => {
   const tasks = ref<Task[]>([])
+  const recoveryTaskId = ref<string | null>(null)
   const activeTaskCount = computed(() => tasks.value.filter(t => !['completed', 'failed', 'cancelled'].includes(t.status)).length)
   const tasksFor = (type: TaskType) => tasks.value.filter(task => task.type === type)
   let listenerInitialization: Promise<void> | null = null
@@ -500,7 +501,7 @@ export const useTaskStore = defineStore('task', () => {
   }
 
   return {
-    tasks,
+    tasks, recoveryTaskId,
     activeTaskCount,
     tasksFor,
     initListeners,

@@ -16,6 +16,9 @@ pub struct TaskFailureV1 {
 fn classify_failure(record: &TaskHistoryRecord) -> Option<TaskFailureV1> {
     if record.status != "failed" { return None; }
     let message = record.error_message.as_deref().unwrap_or_default();
+    if message.contains("[archive-output:Pre-checking:output-conflict]") {
+        return Some(TaskFailureV1{schema_version:1,category:"output-conflict".into(),stage:"Pre-checking".into(),evidence:"recorded-marker".into()});
+    }
     for code in ["output-conflict", "publication-failed", "rollback-incomplete"] {
         if message.contains(&format!("[archive-output:Publishing:{code}]")) {
             return Some(TaskFailureV1 {
@@ -500,7 +503,8 @@ fn history_failure_category_sql() -> String {
     let mut fallback = String::from("CASE WHEN status != 'failed' THEN NULL ");
     for category in categories {
         let markers = match category {
-            "rollback-incomplete" | "output-conflict" | "publication-failed" => vec![format!("[archive-output:Publishing:{category}]")],
+            "output-conflict" => vec!["[archive-output:Pre-checking:output-conflict]".into(), "[archive-output:Publishing:output-conflict]".into()],
+            "rollback-incomplete" | "publication-failed" => vec![format!("[archive-output:Publishing:{category}]")],
             "verification-failed" => vec![format!("[archive-output:Verifying:{category}]")],
             "source-changed" | "source-missing" | "source-unavailable" | "source-invalid" => vec![format!("[archive-source:Pre-checking:{category}]"), format!("[archive-source:Extracting:{category}]")],
             "disk-full" | "target-busy" => vec![format!("[archive-io:{category}]")],
@@ -673,6 +677,16 @@ pub async fn clear_task_history() -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[tokio::test]
+    async fn recovery1542_precheck_conflict_survives_history_filtering() {
+        let dir=tempfile::tempdir().unwrap();let db=crate::database::connection::DatabaseConnection::new(&dir.path().join("precheck.db"),None).await.unwrap();
+        let message="[archive-output:Pre-checking:output-conflict] 原目标保留";
+        let record=serde_json::from_value(serde_json::json!({"id":"precheck","name":"out.zip","taskType":"compression","workloadKind":"archive","status":"failed","sourcePaths":["D:/source.zip"],"outputPath":"D:/out.zip","completedAt":"2026-10-21T00:00:00Z","durationMs":1,"processedBytes":0,"totalBytes":0,"logs":[],"errorMessage":message,"failure":{"schemaVersion":1,"category":"unknown","stage":"Compressing","evidence":"observed-stage"}})).unwrap();
+        save_task_history_to_pool(db.pool(),record).await.unwrap();
+        let page=history_query_from_pool(db.pool(),100,None,HistoryQuery{failure_category:Some("output-conflict".into()),..Default::default()}).await.unwrap();
+        assert_eq!(page.records.len(),1);let saved=page.records[0].failure.as_ref().unwrap();assert_eq!(saved.stage,"Pre-checking");assert_eq!(saved.evidence,"recorded-marker");assert_eq!(page.records[0].error_message.as_deref(),Some(message));
+    }
+
 
     #[tokio::test]
     async fn io1516_categories_survive_persistence_filters_and_observed_stages() {

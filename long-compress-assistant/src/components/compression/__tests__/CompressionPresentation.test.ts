@@ -100,7 +100,7 @@ describe('compression presentation components', () => {
       busy: false,
     })
 
-    expect(wrapper.findAll('button')).toHaveLength(2)
+    expect(wrapper.findAll('button')).toHaveLength(3) // ZPAQ update, conversion and global settings are existing entry points
     expect(wrapper.get('[data-testid="open-archive-conversion"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="compression-batch-config-mode"]').exists()).toBe(false)
     expect(wrapper.get('[data-testid="open-global-compression-settings"]').exists()).toBe(true)

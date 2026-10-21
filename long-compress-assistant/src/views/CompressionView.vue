@@ -746,7 +746,7 @@ const drawerTransition = useDrawerTransition()
 
         <!-- 1. 压缩组列表 -->
         <div v-for="group in compressionStore.groups" :key="group.id" 
-             data-testid="compression-group-row"
+             data-testid="compression-group-row" :data-retry-of="group.retryOfTaskId"
              class="compression-job-card group-container rounded-lg border transition-all duration-200 overflow-hidden"
              :class="group.expanded ? 'bg-card/60 border-primary/30 shadow-lg' : 'bg-card/40 border-subtle/40 hover:border-primary/30 hover:bg-card/60'"
              :style="{ borderColor: group.expanded ? group.themeColor : '' }">
