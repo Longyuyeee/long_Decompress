@@ -105,7 +105,7 @@ fn open_catalog(path: &Path) -> Result<(ZipArchive<File>,Catalog)> {
     for index in 0..archive.len() {
         let file=archive.by_index_raw(index)?;
         let mode=file.unix_mode().unwrap_or(0)&0o170000;ensure!(mode==0||mode==0o100000||mode==0o040000,"ZIP 含链接或特殊条目，暂不支持编辑：{}",file.name());
-        ensure!(matches!(file.compression(),CompressionMethod::Stored|CompressionMethod::Deflated),"本阶段编辑支持原方法为 Store/Deflate 的普通 ZIP；条目 {} 使用 {:?}，仍可浏览/提取",file.name(),file.compression());
+        ensure!(matches!(file.compression(),CompressionMethod::Stored|CompressionMethod::Deflated|CompressionMethod::Bzip2),"本阶段编辑支持原方法为 Store/Deflate/Bzip2 的独立 ZIP；条目 {} 使用 {:?}，仍可浏览/提取",file.name(),file.compression());
         let path=normalized_path(file.name(),file.is_dir())?;ensure!(names.insert(key(&path)),"ZIP 包内同名或大小写冲突：{path}");
         digest.update(format!("{}:{:?}:{}:{}:{}:{:?}:{:?}",path,file.compression(),file.size(),file.compressed_size(),file.crc32(),file.last_modified(),file.unix_mode()).as_bytes());
         encryptions.insert(path.clone(),entry_encryption(&file));methods.insert(format!("{:?}",file.compression()));register_entry(&mut map,Entry{path,is_dir:file.is_dir(),size:file.size()})?;
@@ -152,9 +152,10 @@ struct Staging(PathBuf);impl Drop for Staging {fn drop(&mut self){let _=std::fs:
 fn validate_contents<R:Read+Seek>(archive:&mut ZipArchive<R>,flag:&Arc<AtomicBool>,observer:&Observer,phase:&'static str,start:f32,weight:f32,password:&str,encoding:Option<ZipPasswordEncoding>)->Result<HashMap<String,(u64,u32)>> {
     let total=(0..archive.len()).try_fold(0u64,|n,i|->Result<_>{Ok(n.saturating_add(archive.by_index_raw(i)?.size()))})?;
     let mut processed=0u64;let mut map=HashMap::new();let mut buffer=vec![0u8;256*1024];
-    for index in 0..archive.len(){checkpoint(flag)?;let mut entry=super::zip_password::open_entry_with_encoding(archive,index,password,encoding).context("无法读取 ZIP 条目，请核对原包密码与密码编码")?;let name=normalized_path(entry.name(),entry.is_dir())?;let mut crc=crc32fast::Hasher::new();
-        loop {checkpoint(flag)?;let n=entry.read(&mut buffer).with_context(||format!("条目无法完整读取：{name}"))?;if n==0{break}crc.update(&buffer[..n]);processed+=n as u64;progress(observer,phase,start+weight*(processed as f64/total.max(1) as f64) as f32,&name,processed,total,None);}
-        ensure!(map.insert(name,(entry.size(),crc.finalize())).is_none(),"新包存在重复条目");
+    for index in 0..archive.len(){checkpoint(flag)?;let mut entry=super::zip_password::open_entry_with_encoding(archive,index,password,encoding).context("无法读取 ZIP 条目，请核对原包密码与密码编码")?;let name=normalized_path(entry.name(),entry.is_dir())?;let expected=entry.size();let mut copied=0u64;let mut crc=crc32fast::Hasher::new();
+        loop {checkpoint(flag)?;let n=entry.read(&mut buffer).with_context(||format!("条目无法完整读取：{name}"))?;if n==0{break}copied=copied.checked_add(n as u64).context("ZIP 条目大小超出范围")?;ensure!(copied<=expected,"条目内容与目录记录大小不一致：{name}；原包保留，请重新读取或提取可用内容");crc.update(&buffer[..n]);processed+=n as u64;progress(observer,phase,start+weight*(processed as f64/total.max(1) as f64) as f32,&name,processed,total,None);}
+        ensure!(copied==expected,"条目未完整读取：{name}；实际大小与 ZIP 目录记录不一致，原包保留");
+        ensure!(map.insert(name,(copied,crc.finalize())).is_none(),"新包存在重复条目");
     }progress(observer,phase,start+weight,"",processed,total,None);Ok(map)
 }
 #[cfg(test)]

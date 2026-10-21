@@ -95,7 +95,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.5.58 · 接着阅读，挑选取回**。文件浏览器可继续最近阅读，保留位置与显示方式；找图面板搜索/分页、跨页勾选、资源库命中往返、弹窗取回及原队列/草稿/历史接续贯通。[中文说明](docs/RELEASE_NOTES_1.5.58.md) · [范围与记录](docs/READING_CONTINUITY_FREEZE_1.5.58.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.58)。下一步 [v1.5.59 ZIP Bzip2 跨流程兼容](docs/ARCHIVE_ROADMAP_1.5.59.md)，回归格式、算法、密码、卷型与容错主线。
+**v1.5.59 · Bzip2 ZIP 继续整理与对比**。独立普通/密码包编辑另存保留原方法，内容对比、完整分卷取材、精确取回和草稿/历史贯通；原包方法与新增/替换方法说明更清楚，损坏内容不误报可用。[中文说明](docs/RELEASE_NOTES_1.5.59.md) · [范围与记录](docs/ZIP_BZIP2_COMPATIBILITY_FREEZE_1.5.59.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.59)。下一步 [v1.5.60 ZIP LZMA 跨流程兼容](docs/ARCHIVE_ROADMAP_1.5.60.md)，继续格式、算法、密码、卷型与容错主线。
+
+**v1.5.58 · 接着阅读，挑选取回**。文件浏览器可继续最近阅读，保留位置与显示方式；找图面板搜索/分页、跨页勾选、资源库命中往返、弹窗取回及原队列/草稿/历史接续贯通。[中文说明](docs/RELEASE_NOTES_1.5.58.md) · [范围与记录](docs/READING_CONTINUITY_FREEZE_1.5.58.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.58)。Bzip2 跨流程兼容已由上方 v1.5.59 接续。
 
 **v1.5.57 · 整包图片连续阅读**。按目录或整包自然排序，连续翻页/跳页/键盘、缩略导航、原始大小/缩放；读取/停止/跳过、来源变化刷新、密码分卷和当前图精确提取贯通。[中文说明](docs/RELEASE_NOTES_1.5.57.md) · [范围与记录](docs/IMAGE_READER_FREEZE_1.5.57.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.57)。阅读记忆、长列表和所选取回由上方 v1.5.58 接续。
 

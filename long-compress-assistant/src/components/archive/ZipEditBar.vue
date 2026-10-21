@@ -134,7 +134,8 @@ defineExpose({ openReview:()=>{review.value=true}, organize, replace: (path: str
         <fieldset v-if="session.editing" :disabled="session.busy" class="min-w-0 space-y-3 rounded-xl border border-subtle bg-input/20 p-3">
           <label class="block text-xs text-muted">新 ZIP 保存位置<div class="mt-2 flex min-w-0 gap-2"><input v-model="session.outputPath" data-testid="zip-edit-output" class="edit-input min-w-0 flex-1" /><button class="edit-button" data-testid="zip-edit-choose-output" @click="chooseOutput">另存为</button></div></label>
           <div class="grid min-w-0 gap-3 sm:grid-cols-2"><label class="min-w-0 text-xs text-muted">新增/替换方法<ThemedSelect v-model="session.method" :options="[{value:'deflate',label:'Deflate · 兼容 ZIP'},{value:'store',label:'Store · 仅存储'}]" test-id="zip-edit-method" floating /></label><label class="min-w-0 text-xs text-muted">压缩强度<ThemedSelect v-model="level" :disabled="session.method === 'store'" :options="Array.from({length:10},(_,n)=>({value:String(n),label:String(n)}))" test-id="zip-edit-level" floating /></label></div>
-          <p class="text-xs leading-relaxed text-muted">{{ session.drafts.some(row=>row.comparison) ? '另存独立 ZIP，不分卷；组包内容按所选方法和新包密码写出。原目录与原包保留，点击“另存新 ZIP”后才保存。' : '另存独立 ZIP，不分卷；原包保留，内容沿原方法写出，密码条目会重新编码。修改只在点击下方“另存新 ZIP”后生效。' }}</p>
+          <p v-if="!comparisonPackage" class="break-words text-xs text-muted [overflow-wrap:anywhere]" data-testid="zip-edit-source-methods">原包方法：{{ session.catalog.methods.join(' / ') }} · 保留条目沿原方法写出</p>
+          <p class="text-xs leading-relaxed text-muted">{{ session.drafts.some(row=>row.comparison) ? '另存独立 ZIP，不分卷；组包内容按所选方法和新包密码写出。原目录与原包保留，点击“另存新 ZIP”后才保存。' : '另存独立 ZIP，不分卷；原包保留；保留内容沿原方法写出，密码条目会重新编码；新增/替换内容使用上方所选方法。修改只在点击下方“另存新 ZIP”后生效。' }}</p>
         </fieldset>
         <ZipEditCredentialsPanel v-if="session.editing" :source-path="sourcePath" />
         <ZipEditSourceStatus v-if="session.editing" :source-path="sourcePath" />

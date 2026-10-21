@@ -156,3 +156,6 @@ pub mod comparison_package;
 #[cfg(test)] mod comparison_package_tests;
 
 pub mod image_reader;
+
+#[cfg(test)]
+mod zip_bzip2_compatibility_tests;

@@ -85,6 +85,7 @@ fn digest(
             "[comparison:changed] 文件已变化，请重新读取来源"
         );
     }
+    let is_zip = zip.is_some();
     let mut input: Box<dyn Read> = if let Some(zip) = zip.as_mut() {
         Box::new(catalog::open_entry(
             zip,
@@ -107,14 +108,14 @@ fn digest(
         bytes = bytes.checked_add(n as u64).context("读取字节超出范围")?;
         ensure!(
             bytes <= entry.size,
-            "[comparison:changed] 内容大小已变化，请重新读取来源"
+            if is_zip { "ZIP 条目实际大小与目录记录不一致，本项无法完成内容核对；请重新读取或提取可用内容" } else { "[comparison:changed] 内容大小已变化，请重新读取来源" }
         );
         hash.update(&buffer[..n]);
         on_bytes(n as u64);
     }
     ensure!(
         bytes == entry.size,
-        "[comparison:changed] 内容大小已变化，请重新读取来源"
+        if is_zip { "ZIP 条目实际大小与目录记录不一致，本项无法完成内容核对；请重新读取或提取可用内容" } else { "[comparison:changed] 内容大小已变化，请重新读取来源" }
     );
     drop(input);
     if zip.is_none() {
