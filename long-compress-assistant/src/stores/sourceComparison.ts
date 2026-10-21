@@ -8,6 +8,7 @@ import { compareEntries,copyComparisonSelection,type ComparisonSide,type Compari
 interface SideState {path:string;source?:ComparisonSource;jobId:string;error:string;readCount:number;password:string;encoding?:ZipPasswordEncoding;retained?:string[]}
 const initial=():SideState=>({path:'',jobId:'',error:'',readCount:0,password:''})
 export const useSourceComparisonStore=defineStore('sourceComparison',()=>{
+ const packageSource=ref('')
  const tasks=useTaskStore(),sides=ref<Record<ComparisonSide,SideState>>({left:initial(),right:initial()}),selected=ref<Record<ComparisonSide,Set<string>>>({left:new Set(),right:new Set()}),query=ref(''),filter=ref('all'),page=ref(1),expanded=ref(''),busy=ref(false),error=ref(''),notice=ref(''),issues=ref<Partial<Record<ComparisonSide,string>>>({}),admitted=ref(0)
  const verdicts=ref<Record<string,ContentVerdict>>({}),verifyJob=ref(''),stopping=ref(false),verifyNote=ref(''),verifyProgress=ref<ContentProgress>({processedBytes:0,totalBytes:0,completed:0,total:0,path:'',side:''})
  const options=ref({outputDirectory:'',keepStructure:true,separateSides:true,conflictPolicy:'rename' as 'rename'|'skip'})
@@ -77,5 +78,5 @@ export const useSourceComparisonStore=defineStore('sourceComparison',()=>{
    notice.value=`已将 ${amount} 项按 ${admitted.value} 份来源加入解压中心待处理队列`+(selectedCount.value?'；剩余项请处理来源后继续':'，核对后点击开始取回')
   }catch(cause){error.value=String(cause)}finally{busy.value=false}
  }
- return {unverifiedCount,changedCount,verdicts,verifyJob,verifyProgress,verifyNote,stopping,verify,verifySelected,verifyFiltered,stopVerification,sides,selected,query,filter,page,expanded,busy,error,notice,issues,admitted,options,ready,rows,counts,filtered,pages,visible,selectedCount,attach,detach,cancel,read,toggle,clear,togglePage,request,queue,editPath}
+ return {packageSource,unverifiedCount,changedCount,verdicts,verifyJob,verifyProgress,verifyNote,stopping,verify,verifySelected,verifyFiltered,stopVerification,sides,selected,query,filter,page,expanded,busy,error,notice,issues,admitted,options,ready,rows,counts,filtered,pages,visible,selectedCount,attach,detach,cancel,read,toggle,clear,togglePage,request,queue,editPath}
 })

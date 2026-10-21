@@ -48,8 +48,8 @@ export function resolveZipEdits(catalog: ZipEditCatalog, drafts: ZipEditDraft[])
     const k = key(target), previous = accepted.get(k)
     if (previous) previous.row.status = 'superseded'
     row.status = old ? 'replace' : 'add'
-    const { sourcePath, isDir, size, sourceRevision } = draft
-    accepted.set(k, { row, change: { sourcePath, targetPath: target, isDir, size, sourceRevision, action: original.has(k) ? 'replace' : 'add' } })
+    const { sourcePath, isDir, size, sourceRevision, comparison } = draft
+    accepted.set(k, { row, change: { sourcePath, targetPath: target, isDir, size, sourceRevision, comparison, action: original.has(k) ? 'replace' : 'add' } })
     nodes.set(k, { path: target, isDir, size })
   }
   return { rows, changes: [...accepted.values()].map(item => item.change), unresolved: rows.filter(row => row.status === 'pending').length }

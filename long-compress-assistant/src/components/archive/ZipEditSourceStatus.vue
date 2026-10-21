@@ -5,7 +5,7 @@ import { useZipEditStore } from '@/stores/zipEdit'
 import { useAppStore } from '@/stores/app'
 const props=defineProps<{sourcePath:string}>(),store=useZipEditStore(),app=useAppStore(),busy=ref(false),error=ref('')
 const session=computed(()=>store.sessionFor(props.sourcePath))
-const issues=computed(()=>session.value?.drafts.filter(row=>session.value!.inputIssues[row.id])||[])
+const issues=computed(()=>session.value?.drafts.filter(row=>!row.comparison&&session.value!.inputIssues[row.id])||[])
 const queued=()=>import.meta.env.VITE_DESKTOP_E2E==='1'?window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection():undefined
 async function locate(id?:string,current=false){busy.value=true;error.value='';try{
  const draft=id?session.value?.drafts.find(row=>row.id===id):undefined

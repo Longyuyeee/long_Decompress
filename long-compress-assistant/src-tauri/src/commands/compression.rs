@@ -343,7 +343,7 @@ pub async fn zip_edit_task_receipt(task_id:String,source_path:String)->Result<Op
     Ok(Some(ZipEditReceipt{status,output:output.and_then(|value|serde_json::from_str(&value).ok())}))
 }
 #[command]
-pub async fn save_zip_edit(window:Window,task_id:String,source_path:String,revision:String,changes:Vec<crate::services::zip_edit::Change>,original_edits:Option<Vec<crate::services::zip_edit::OriginalEdit>>,output_path:String,method:String,level:u32,credentials:Option<crate::services::zip_edit::Credentials>)->Result<PublishedArchiveOutput,String>{
+pub async fn save_zip_edit(window:Window,task_id:String,source_path:String,revision:String,changes:Vec<crate::services::zip_edit::Change>,original_edits:Option<Vec<crate::services::zip_edit::OriginalEdit>>,output_path:String,method:String,level:u32,credentials:Option<crate::services::zip_edit::Credentials>,comparison_credentials:Option<Vec<crate::services::comparison_package::Credential>>)->Result<PublishedArchiveOutput,String>{
     let _output_guard=CompressionOutputGuard::acquire(&task_id,&output_path)?;
     let service=service_for_task(&task_id).await?;let _guard=TaskCancellationGuard::new(&task_id);
     let flag=service.cancellation_flag.clone();let progress_id=task_id.clone();let progress_window=window.clone();let progress_service=service.clone();
@@ -360,7 +360,7 @@ pub async fn save_zip_edit(window:Window,task_id:String,source_path:String,revis
         }
     });
     let result_path=output_path.clone();
-    tauri::async_runtime::spawn_blocking(move||crate::services::zip_edit::save_encrypted(Path::new(&source_path),&revision,&changes,&original_edits.unwrap_or_default(),Path::new(&output_path),&method,level,&credentials.unwrap_or_default(),flag,observer)).await.map_err(|e|e.to_string())?.map_err(|e|format!("ZIP 编辑失败：{e:#}"))?;
+    tauri::async_runtime::spawn_blocking(move||crate::services::comparison_package::save(Path::new(&source_path),&revision,&changes,&original_edits.unwrap_or_default(),Path::new(&output_path),&method,level,&credentials.unwrap_or_default(),&comparison_credentials.unwrap_or_default(),flag,observer)).await.map_err(|e|e.to_string())?.map_err(|e|format!("ZIP 编辑失败：{e:#}"))?;
     published_archive_output(Path::new(&result_path),false).map_err(|e|e.to_string())
 }
 

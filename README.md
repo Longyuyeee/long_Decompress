@@ -126,7 +126,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 
 | 你想做什么 | 从哪里开始 | 操作要点 |
 | --- | --- | --- |
-| 比较两份资料 | 资料对比 | 选择文件夹或 ZIP/完整分卷，查看候选、按需核对内容，再取回所选 |
+| 比较两份资料 | 资料对比 | 选择文件夹或 ZIP/完整分卷，查看候选、按需核对内容，再取回或组成新 ZIP |
 | 解压一批文件 | 解压中心 | 拖入压缩包，设置目录；常用密码可交给保险箱尝试 |
 | 打包文件和文件夹 | 压缩中心 | 按用途选兼容分享、体积优先、加密或分包方案，再微调密码、名称等参数 |
 | 只提取包里的几个文件 | 文件浏览器 → 打开压缩包 | 搜索并勾选条目，再解压所选内容 |
@@ -252,7 +252,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.5.55 · 资料内容核对与密码分卷 ZIP**。逐侧读取完整内容，确认相同、不同或仅时间变化，显示实际进度，可停止后继续剩余项；接通 AES/ZipCrypto、数字与标准分卷，密码弹窗/保险箱、精确取回和草稿历史贯通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.55.md) · [范围与记录](long-compress-assistant/docs/SOURCE_CONTENT_FREEZE_1.5.55.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.55)。下一步 [v1.5.56 所选变更生成新包](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.56.md)。
+**v1.5.56 · 所选资料组成新 ZIP**。在对比多选弹窗选择基础与补充，沿原编辑清单确认冲突、整理最终路径并另存；密码/完整分卷取材、引用草稿恢复与失败继续贯通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.56.md) · [范围与记录](long-compress-assistant/docs/COMPARISON_PACKAGE_FREEZE_1.5.56.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.56)。下一步 [v1.5.57 图片连续阅读](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.57.md)。
+
+**v1.5.55 · 资料内容核对与密码分卷 ZIP**。逐侧读取完整内容，确认相同、不同或仅时间变化，显示实际进度，可停止后继续剩余项；接通 AES/ZipCrypto、数字与标准分卷，密码弹窗/保险箱、精确取回和草稿历史贯通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.55.md) · [范围与记录](long-compress-assistant/docs/SOURCE_CONTENT_FREEZE_1.5.55.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.55)。所选资料组包由上方 v1.5.56 接续完成。
 
 **v1.5.54 · 资料对比与所选取回**。两份文件夹或普通 ZIP 按路径查看类型/大小/时间差异，左右独立跨页选择，多选弹窗统一配置后进入原队列取回；来源变化、草稿和历史保留精确范围。内容相同需后续核对。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.54.md) · [范围与记录](long-compress-assistant/docs/SOURCE_COMPARISON_FREEZE_1.5.54.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.54)。内容核对和复杂 ZIP 接续由上方 v1.5.55 完成。
 

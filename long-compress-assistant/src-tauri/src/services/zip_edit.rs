@@ -34,7 +34,7 @@ pub struct Entry { pub path: String, pub is_dir: bool, pub size: u64 }
 pub struct Catalog { pub revision: String, pub entries: Vec<Entry>, pub methods: Vec<String>, pub encrypted:bool, pub default_encryption:Encryption, pub encryptions:HashMap<String,Encryption> }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
-pub struct Input { pub source_path: String, pub target_path: String, pub is_dir: bool, pub size: u64, pub source_revision: String }
+pub struct Input { pub source_path: String, pub target_path: String, pub is_dir: bool, pub size: u64, pub source_revision: String, #[serde(default,skip_serializing_if="Option::is_none")] pub comparison: Option<super::comparison_package::Reference> }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
 pub struct Change { #[serde(flatten)] pub input: Input, pub action: String, #[serde(default)] pub replaces_path:Option<String> }
@@ -122,7 +122,7 @@ pub fn prepare(sources: &[String], directory: &str) -> Result<Vec<Input>> {
     fn walk(source: &Path,target: String,inputs:&mut Vec<Input>)->Result<()> {
         ensure!(inputs.len()<MAX_ADDITIONS,"一次最多添加 10000 项，请分批整理");
         let metadata=std::fs::symlink_metadata(source)?;let is_dir=metadata.is_dir();let source_revision=file_revision(source,is_dir)?;let target_path=normalized_path(&target,is_dir)?;
-        inputs.push(Input{source_path:source.to_string_lossy().into_owned(),target_path:target_path.clone(),is_dir,size:if is_dir{0}else{metadata.len()},source_revision});
+        inputs.push(Input{source_path:source.to_string_lossy().into_owned(),target_path:target_path.clone(),is_dir,size:if is_dir{0}else{metadata.len()},source_revision,comparison:None});
         if is_dir {let mut children=std::fs::read_dir(source)?.map(|e|e.map(|e|e.path())).collect::<std::io::Result<Vec<_>>>()?;children.sort();
             for child in children {let name=child.file_name().context("来源名称无效")?.to_str().context("来源文件名不能表示为 Unicode")?;walk(&child,format!("{target_path}{name}"),inputs)?;}
         }Ok(())
@@ -135,7 +135,8 @@ pub fn prepare(sources: &[String], directory: &str) -> Result<Vec<Input>> {
 pub struct InputIssue {pub index:usize,pub issue:String}
 pub fn check_inputs(inputs:&[Input])->Result<Vec<InputIssue>>{
     ensure!(inputs.len()<=MAX_ADDITIONS,"编辑来源超过 10000 项");
-    Ok(inputs.iter().enumerate().filter_map(|(index,input)|match file_revision(Path::new(&input.source_path),input.is_dir){Ok(revision)if revision==input.source_revision=>None,Ok(_)=>Some(InputIssue{index,issue:"来源已变化，请重新读取或重新定位后确认".into()}),Err(_)=>Some(InputIssue{index,issue:"来源缺失或无法访问，请重新定位".into()})}).collect())
+    let comparison_issues=super::comparison_package::check_inputs(inputs);
+    Ok(inputs.iter().enumerate().filter_map(|(index,input)|match if let Some(reference)=&input.comparison{comparison_issues.get(&reference.source.path).cloned().unwrap_or_else(||Ok(input.source_revision.clone()))}else{file_revision(Path::new(&input.source_path),input.is_dir).map_err(|e|e.to_string())}{Ok(revision)if revision==input.source_revision=>None,Ok(_)=>Some(InputIssue{index,issue:"来源已变化，请重新读取或重新定位后确认".into()}),Err(_)=>Some(InputIssue{index,issue:"来源缺失或无法访问，请重新定位".into()})}).collect())
 }
 struct ControlledFile { file:File, flag:Arc<AtomicBool>, observer:Option<Observer>, position:u64, high:u64, estimate:u64 }
 impl ControlledFile {
@@ -165,6 +166,9 @@ pub fn save_with_edits(source:&Path,revision:&str,changes:&[Change],original_edi
     save_encrypted(source,revision,changes,original_edits,output,method,level,&Credentials::default(),flag,observer)
 }
 pub fn save_encrypted(source:&Path,revision:&str,changes:&[Change],original_edits:&[OriginalEdit],output:&Path,method:&str,level:u32,credentials:&Credentials,flag:Arc<AtomicBool>,observer:Observer)->Result<()> {
+    save_encrypted_guarded(source,revision,changes,original_edits,output,method,level,credentials,flag,observer,||Ok(()))
+}
+pub fn save_encrypted_guarded(source:&Path,revision:&str,changes:&[Change],original_edits:&[OriginalEdit],output:&Path,method:&str,level:u32,credentials:&Credentials,flag:Arc<AtomicBool>,observer:Observer,before_publish:impl FnOnce()->Result<()>)->Result<()> {
     ensure!((!changes.is_empty()||!original_edits.is_empty()||credentials.output_mode!=OutputMode::Keep)&&changes.len()<=MAX_ADDITIONS&&original_edits.len()<=200_000,"没有需要保存的修改，或一次修改超过支持范围");
     ensure!(matches!(method,"deflate"|"store")&&level<=9,"新增内容请使用 Deflate 0～9 或仅存储");
     ensure!(output.extension().is_some_and(|s|s.eq_ignore_ascii_case("zip")),"请另存为 .zip 文件");
@@ -248,7 +252,7 @@ pub fn save_encrypted(source:&Path,revision:&str,changes:&[Change],original_edit
     ensure!(facts.keys().cloned().collect::<HashSet<_>>()==written_paths,"新包条目与确认的修改清单不一致");
     for change in changes{ensure!(facts.get(&change.input.target_path).is_some_and(|(size,_)|*size==change.input.size),"新增内容大小不一致：{}",change.input.target_path);}
     drop(rebuilt);ensure!(inspect(source)?.revision==revision,"原包在保存期间变化，请重新确认后再编辑");
-    checkpoint(&flag)?;progress(&observer,"publishing",0.99,"",0,0,None);
+    before_publish()?;checkpoint(&flag)?;progress(&observer,"publishing",0.99,"",0,0,None);
     super::output_publish_transaction::transfer_no_replace(&staged.0,output)?;
     progress(&observer,"completed",1.0,"",0,0,Some(output.metadata()?.len()));Ok(())
 }

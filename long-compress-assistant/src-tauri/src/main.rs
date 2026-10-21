@@ -477,6 +477,7 @@ fn main() {
             long_compress_assistant::commands::workflows::workflow_check_reuse,
             long_compress_assistant::commands::workflows::workflow_run,
             long_compress_assistant::commands::source_comparison::comparison_read,
+            long_compress_assistant::commands::source_comparison::comparison_package_prepare,
             long_compress_assistant::commands::source_comparison::comparison_verify,
             long_compress_assistant::commands::source_comparison::comparison_validate,
             long_compress_assistant::commands::source_comparison::comparison_output,

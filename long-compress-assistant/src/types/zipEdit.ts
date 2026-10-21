@@ -1,10 +1,12 @@
+import type { ComparisonSourceRef } from './sourceComparison'
 import type { ZipPasswordEncoding } from './zipPassword'
 export type ZipEditEncryption = 'none' | 'zipcrypto' | 'aes128' | 'aes192' | 'aes256'
 export type ZipEditOutputMode = 'keep' | 'none' | 'aes256' | 'zipcrypto'
 export interface ZipEditCredentials { sourcePassword: string; sourceEncoding?: ZipPasswordEncoding; outputMode: ZipEditOutputMode; outputPassword: string; outputEncoding: ZipPasswordEncoding }
 export interface ZipEditEntry { path: string; isDir: boolean; size: number }
 export interface ZipEditCatalog { revision: string; entries: ZipEditEntry[]; methods: string[]; encrypted?: boolean; defaultEncryption?: ZipEditEncryption; encryptions?: Record<string,ZipEditEncryption> }
-export interface ZipEditInput { sourcePath: string; targetPath: string; isDir: boolean; size: number; sourceRevision: string }
+export interface ComparisonPackageReference { source: ComparisonSourceRef; path: string; encoding?:ZipPasswordEncoding }
+export interface ZipEditInput { comparison?: ComparisonPackageReference; sourcePath: string; targetPath: string; isDir: boolean; size: number; sourceRevision: string }
 export type ZipEditChoice = 'choose' | 'replace' | 'skip' | 'keep-both'
 export interface ZipEditDraft extends ZipEditInput { id: string; batch: string; choice: ZipEditChoice; order?: number }
 export interface ZipEditChange extends ZipEditInput { action: 'add' | 'replace'; replacesPath?: string }
