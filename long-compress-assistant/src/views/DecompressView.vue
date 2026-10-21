@@ -213,8 +213,9 @@ const onFilesSelected = async (files: any[]) => {
     decompressionTasks.value.flatMap(task => task.sourceFiles.map(normalizePath))
   )
 
-  const createTask = (sourcePath: string, name: string, splitCount?: number, actualFormat?: string | null) => {
-    const parentDir = sourcePath.substring(0, Math.max(sourcePath.lastIndexOf('/'), sourcePath.lastIndexOf('\\')))
+  const createTask = (sourcePath: string, name: string, splitCount?: number, actualFormat?: string | null, originPath?:string) => {
+    const location=originPath||sourcePath
+    const parentDir = location.substring(0, Math.max(location.lastIndexOf('/'), location.lastIndexOf('\\')))
     const taskId = taskStore.addTask({
       id: generateId(),
       name: splitCount ? `${name} (${splitCount} 个分卷)` : name,
@@ -247,7 +248,7 @@ const onFilesSelected = async (files: any[]) => {
 
     let detectedFormat: string | null | undefined
     try {
-      const splitInfo = await detectArchiveGroup(sourcePath)
+      const splitInfo = await detectArchiveGroup(sourcePath,true)
       detectedFormat = splitInfo?.archive_format
       if (isPotentialSfxPath(sourcePath) && !splitInfo?.archive_format) {
         throw new Error('不是可读取的 ZIP、7Z 或 RAR 自解压归档；不会执行此程序')
@@ -272,13 +273,13 @@ const onFilesSelected = async (files: any[]) => {
         const normalizedFirst = normalizePath(firstPart)
         if (existingSources.has(normalizedFirst)) continue
         const displayName = splitInfo.base_name || firstPart.split(/[\\/]/).pop() || file.name || 'Unknown'
-        createTask(firstPart, displayName, Number(splitInfo.total_parts || groupPaths.length || 1), detectedFormat)
+        createTask(firstPart, displayName, Number(splitInfo.total_parts || groupPaths.length || 1), detectedFormat, splitInfo.format==='ZpaqNativeSplit'?groupPaths[0]:undefined)
         groupedSplitCount++
         existingSources.add(normalizedFirst)
         continue
       }
     } catch (error) {
-      if (isPotentialSfxPath(sourcePath)) {
+      if (isPotentialSfxPath(sourcePath)||/\.zpaq$/i.test(sourcePath)) {
         const detail = archiveInspectionMessageForDisplay(extractErrorMessage(error))
         errors.push(`${file.name || sourcePath}：${detail}`)
         continue

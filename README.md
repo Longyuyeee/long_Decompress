@@ -32,7 +32,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
     </td>
     <td width="50%" valign="top">
       <h3>🧭 先看内容，再决定解压什么</h3>
-      <p>像浏览文件夹一样查看压缩包，搜索、筛选和选择文件。支持部分格式的图片与文本预览，也能进入嵌套压缩包、选择和对比 ZPAQ 历史快照，按版本取出所选变化。Store/Deflate/Bzip2/LZMA/Zstandard/PPMd ZIP、ZIPX（XZ） 支持普通包与 AES/ZipCrypto 密码内容编辑，可补入、替换、删除、改名和批量整理，复核后另存新包；未完成修改可从草稿恢复，原包保留。</p>
+      <p>像浏览文件夹一样查看压缩包，搜索、筛选和选择文件。支持部分格式的图片与文本预览，也能进入嵌套压缩包、确认 ZPAQ 原生多部分来源、选择和对比历史快照，按版本取出所选变化。Store/Deflate/Bzip2/LZMA/Zstandard/PPMd ZIP、ZIPX（XZ） 支持普通包与 AES/ZipCrypto 密码内容编辑，可补入、替换、删除、改名和批量整理，复核后另存新包；未完成修改可从草稿恢复，原包保留。</p>
     </td>
   </tr>
   <tr>
@@ -149,8 +149,8 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | 能力 | 主要格式与说明 |
 | --- | --- |
 | 创建归档 | ZIP（Deflate / Zstandard / BZip2 / PPMd / LZMA）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码、数字分卷与保留历史的增量更新）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM（存储/XPRESS/LZX/LZMS/固实）、ESD（LZMS 固实），两者支持数字分卷；SWM（仅存储/XPRESS/LZX 原生资源分包） |
-| 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式当前内容/日志式历史快照、版本对比与变化提取）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，原生 SWM（Copy/XPRESS/LZX 整组读取），以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
-| 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷、ZPAQ 原生密码数字切卷；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
+| 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式当前内容/日志式历史快照、原生多部分确认读取、版本对比与变化提取）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，原生 SWM（Copy/XPRESS/LZX 整组读取），以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
+| 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷、ZPAQ 原生密码数字切卷及原生多部分只读；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM / ESD / SWM、ZPAQ（含改密与数字分卷）；密码和分卷随目标格式提供 |
 | 清单校验 | SFV/MD5/SHA256 逐文件状态与原因、待补列表、按需复查；匹配表示与清单一致 |
 | 内部预览 | ZIP/TAR 系列及普通 GZIP/BZIP2/XZ/Zstandard 流、ZPAQ 日志式所选快照中的受支持图片与文本；预览超出读取范围时可先提取后打开 |
@@ -253,7 +253,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.5.63 · ZIPX（XZ）继续整理与对比**。方法 95 接通原编辑、内容核对、密码分卷取材及精确取回；默认另存后缀和提示更准确，XZ 尾部与大小异常不误报完成，保留原交互。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.63.md) · [范围与记录](long-compress-assistant/docs/ZIP_XZ_COMPATIBILITY_FREEZE_1.5.63.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.63)。下一步 [v1.5.64 ZPAQ 原生多部分只读与快照接续](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.64.md)，按真实原厂来源继续分卷与容错主线。
+**v1.5.64 · ZPAQ 原生多部分与旧快照取回**。明确确认来源组，普通/密码组接通浏览预览、完整检查、精确取回与快照转换，重启及失败重试保留原选择。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.64.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_NATIVE_MULTIPART_FREEZE_1.5.64.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.64)。下一步 [v1.5.65 原生多部分另存增量更新](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.65.md)，仅规划，继续格式、密码、分卷与容错主线。
+
+**v1.5.63 · ZIPX（XZ）继续整理与对比**。方法 95 接通原编辑、内容核对、密码分卷取材及精确取回；默认另存后缀和提示更准确，XZ 尾部与大小异常不误报完成，保留原交互。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.63.md) · [范围与记录](long-compress-assistant/docs/ZIP_XZ_COMPATIBILITY_FREEZE_1.5.63.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.63)。
 
 **v1.5.62 · PPMd ZIP 继续整理与对比**。方法 98 接入独立普通/密码包编辑、实际内容核对、完整分卷取材与精确取回；修正提前断流判断，异常恢复参数和不完整内容明确提示，保留原交互。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.62.md) · [范围与记录](long-compress-assistant/docs/ZIP_PPMD_COMPATIBILITY_FREEZE_1.5.62.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.62)。ZIPX（XZ）工作区接续已由上方 v1.5.63 完成。
 

@@ -4,6 +4,7 @@
     <ToastContainer />
     <UpdateDialog />
     <ArchiveConversionModal />
+    <ZpaqMultipartDialog />
     <Modal
       :visible="showExitConfirmation"
       :title="appStore.t('exit.confirm.title')"
@@ -37,6 +38,7 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import MainLayout from '@/components/layouts/MainLayout.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
+import ZpaqMultipartDialog from '@/components/archive/ZpaqMultipartDialog.vue'
 import ArchiveConversionModal from '@/components/compression/ArchiveConversionModal.vue'
 import { useArchiveConversionStore } from '@/stores/archiveConversion'
 import Modal from '@/components/ui/Modal.vue'

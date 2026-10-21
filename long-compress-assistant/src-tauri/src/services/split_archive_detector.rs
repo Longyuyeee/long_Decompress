@@ -8,6 +8,7 @@ pub struct SplitArchiveDetector;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum SplitFormat {
+    ZpaqNativeSplit,
     WimSplit,
     AlzSplit,
     EggSplit,
@@ -71,6 +72,7 @@ impl SplitArchiveDetector {
     }
 
     pub fn detect_split_archive(path: &Path) -> Result<Option<SplitArchiveInfo>> {
+        if let Some(group) = super::zpaq_multipart::inspect(path)? { return Ok(Some(group)); }
         if path.is_file() { if let Some(group) = super::sfx_volumes::inspect(path)? { return Ok(Some(group)); } }
         if let Some(group) = super::swm_volumes::inspect(path)? { return Ok(Some(group)); }
         if let Some(group) = super::egg_volumes::inspect(path)? {

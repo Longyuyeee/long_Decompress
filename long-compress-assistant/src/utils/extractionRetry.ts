@@ -1,3 +1,4 @@
+import {detectArchiveGroup} from '@/utils/archiveSource'
 import { snapshotArguments } from '@/types/zpaqSnapshot'
 import { invoke } from '@tauri-apps/api/tauri'
 import type { Task } from '@/stores/task'
@@ -48,7 +49,7 @@ export async function validateExtractionRetry(
   if (!path || !outputPath) throw new Error('请确认来源文件与本次输出目录。')
   if (!isDecompressArchivePath(path) && !isPotentialSplitArchivePath(path) && !isPotentialSfxPath(path)) throw new Error('请选择支持的归档文件或首个分卷。')
   check()
-  const split = await invoke<{ is_split: boolean; archive_format?: string; first_part?: string; is_complete?: boolean; missing_parts?: string[] } | null>('detect_split_archive', { path })
+  const split = await detectArchiveGroup(path,true)
   check()
   if (split?.is_split) {
     if (!split.first_part || split.is_complete === false || split.missing_parts?.length) {

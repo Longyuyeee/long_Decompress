@@ -52,6 +52,7 @@ impl ZipInputReader {
     }
 
     pub(crate) fn open(path: &Path) -> anyhow::Result<Self> {
+        if let Some(group) = super::zpaq_multipart::inspect(path)? { return Ok(Self::Volumes(NumericVolumeReader::from_paths(group.parts)?)); }
         if super::split_archive_detector::SplitArchiveDetector::is_haozip_seven_zip(path) {
             let group = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(path)?
                 .ok_or_else(|| anyhow::anyhow!("[archive-inspection:incomplete] 未找到好压 7Z 论坛卷组"))?;

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {prepareZpaqSource,type ZpaqGroup} from '@/utils/zpaqMultipart'
 import ArchiveImageReader from '@/components/archive/ArchiveImageReader.vue'
 import ReaderRetrievalDialog from '@/components/archive/ReaderRetrievalDialog.vue'
 import {useArchiveReadingStore} from '@/stores/archiveReading'
@@ -48,6 +49,7 @@ const archiveCapabilities = useArchiveBrowserCapabilities()
 const capabilitiesReady = archiveCapabilities.refresh()
 const browseRequest = useArchiveBrowseRequest(commands.browseArchive, commands.cancelArchiveBrowse)
 const archivePath = ref('')
+const nativeZpaqGroup=ref<ZpaqGroup|null>(null)
 const librarySourceId = ref('')
 const libraryEntryPath = ref('')
 const outputPath = ref('')
@@ -207,6 +209,8 @@ const openArchivePath = async (path: string, options: ArchiveReadOptions = {}) =
     librarySourceId.value = options.librarySourceId || ''
     libraryEntryPath.value = options.focusEntryPath || ''
     readerCollectPaths.value=null
+    path=await prepareZpaqSource(path)
+    nativeZpaqGroup.value=/\.zpaq$/i.test(path)?await invoke<ZpaqGroup|null>('zpaq_multipart_details',{path}):null
     archivePath.value = path
     password.value = options.password || ''
     zipPasswordEncoding.value = options.zipPasswordEncoding
@@ -216,7 +220,7 @@ const openArchivePath = async (path: string, options: ArchiveReadOptions = {}) =
     nestedLoadError.value = ''
     nestedLoadRevision.value = 0
     browseRequest.clearNotice()
-    outputPath.value = parentDirectory(path)
+    outputPath.value = parentDirectory(nativeZpaqGroup.value?.members[0]?.path||path)
     query.value = ''
     typeFilter.value = 'all'
     await loadArchive()
@@ -569,7 +573,10 @@ const extractPaths = async (paths: string[], destination: string, readerSelectio
   closeContextMenu()
   try {
     if (librarySourceId.value) await invoke('library_check', { sourceId: librarySourceId.value, entryPath: null })
+    const zpaqCatalogId=nativeZpaqGroup.value&&selectedSnapshot.value&&!readerSelection
+      ? await invoke<string>('zpaq_snapshot_catalog_id',{filePath:archivePath.value,password:password.value||null,snapshot:selectedSnapshot.value}) : undefined
     await commands.decompressFile(archivePath.value, {
+      ...(zpaqCatalogId?{zpaqCatalogId}:{}),
       ...(readerSelection?{readerSelection}:{}),
       sourceFormat: result.value?.format, zpaqSnapshot: selectedSnapshot.value,
       outputPath: destination,
@@ -796,6 +803,7 @@ const extractSelected = async () => {
       <span class="archive-depth">{{ archiveDepth }} / 3 层</span>
     </nav>
 
+    <details v-if="nativeZpaqGroup && !parentFrames.length" class="native-zpaq-source shrink-0" data-testid="zpaq-multipart-source"><summary><i class="pi pi-link"/> 已确认 ZPAQ 来源 · {{nativeZpaqGroup.members.length}} 个部分 <span>查看成员</span></summary><ul><li v-for="member in nativeZpaqGroup.members" :key="member.path">{{member.path}}</li></ul></details>
     <ZpaqSnapshotPicker v-if="result?.zpaqHistory && result.zpaqHistory.snapshots.length > 1" :history="result.zpaqHistory" :disabled="inputBusy" class="shrink-0" @change="changeSnapshot">
       <button type="button" data-testid="zpaq-snapshot-diff" class="browser-secondary" :disabled="inputBusy" @click="diffVisible=true">对比快照</button>
       <button type="button" data-testid="zpaq-snapshot-check" class="browser-secondary" :disabled="inputBusy" @click="checkSnapshot">{{ checkingSnapshot ? '检查中…' : '检查此快照' }}</button>
@@ -1048,6 +1056,8 @@ const extractSelected = async () => {
 </template>
 
 <style scoped>
+.native-zpaq-source{font-size:.72rem;border:1px solid var(--border-subtle);border-radius:.9rem;padding:.65rem 1rem;min-width:0}.native-zpaq-source summary{cursor:pointer;color:var(--color-primary,#0ea5e9);font-weight:700}.native-zpaq-source summary span{float:right;opacity:.65}.native-zpaq-source ul{margin-top:.6rem;max-height:7rem;overflow:auto;overflow-wrap:anywhere;list-style:none;line-height:1.8;opacity:.7}
+
 .browser-page { max-width: 100%; }
 .archive-chain { min-width: 0; display: flex; align-items: center; gap: .35rem; overflow-x: auto; overflow-y: hidden; padding: .15rem .1rem; scrollbar-width: none; }
 .archive-chain::-webkit-scrollbar { display: none; }

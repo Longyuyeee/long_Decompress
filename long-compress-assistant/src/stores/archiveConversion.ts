@@ -69,7 +69,10 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     if (effective.format === 'swm') return { ...effective, wimMethod: ['store','xpress','lzx'].includes(effective.wimMethod || '') ? effective.wimMethod : 'store' }
     return effective.format === 'esd' ? { ...effective, wimMethod: 'solid' } : effective
   }
-  function outputFor(item: ConversionDraft) { return conversionOutputPath(item.sourcePath, effectiveSettings(item), item.intent) }
+  function outputFor(item: ConversionDraft) {
+    const location=item.sourceParts?.length&&!item.sourceParts.includes(item.sourcePath)?item.sourceParts[0]:item.sourcePath
+    return conversionOutputPath(location, effectiveSettings(item), item.intent)
+  }
   function taskFor(item: ConversionDraft) { return tasks.tasks.find(task => task.id === item.taskId) }
   function passwordRequirements(item: ConversionDraft) {
     const legacy = !!item.passwordRequired && item.sourcePasswordRequired === undefined && item.targetPasswordRequired === undefined
@@ -137,11 +140,12 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       if (!current || current.sourcePath !== original || current.taskId) return
       item = current
       try {
-        const group = await detectArchiveGroup(reference)
+        const group = await detectArchiveGroup(reference,true)
         if (!items.value.includes(item) || item.sourcePath !== original || item.taskId) return
         // Undefined is only possible in browser previews without native IPC.
         if (!group) return
         item.sourceFormat = group.archive_format?.toLowerCase() || undefined
+        if (item.intent === 'zpaq-update'&&group.format==='ZpaqNativeSplit') throw new Error('原生多部分当前可浏览、取回或转换；另存更新将在后续版本提供。')
         if (item.intent === 'zpaq-update') {
           try { item.sourceBytes = group.is_split ? group.total_size : (await invoke<{ size: number }>('get_file_info', { path: item.sourcePath }))?.size } catch { item.sourceBytes = undefined }
         }
@@ -153,7 +157,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
         }
         if (!group.first_part) throw new Error('没有找到完整卷组，请重新选择来源。')
         item.sourcePath = group.first_part
-        item.sourceReference = reference
+        item.sourceReference = group.format==='ZpaqNativeSplit'?group.first_part:reference
         item.sourceParts = group.parts
         if (item.intent === 'reconfigure' && !item.settings && item.defaultFormat !== undefined) {
           const format = item.sourceFormat || archiveSourceFormat(group.first_part)

@@ -2086,6 +2086,7 @@ impl CompressionService {
     }
 
     pub async fn extract(&self, window: Window, task_id: String, file_path: String, output_dir: Option<String>, password: Option<String>, mut options: DecompressOptions) -> Result<String> {
+        anyhow::ensure!(!options.delete_after || crate::services::zpaq_multipart::details(Path::new(&file_path))?.is_none(),"原生多部分只读取回请关闭回收来源；本版保留整组原件");
         let file_path = Self::resolve_extraction_source(Path::new(&file_path))?;
         let snapshot = Self::source_file_snapshot(Path::new(&file_path), "Pre-checking")?;
         crate::services::image_reader::apply_selection(Path::new(&file_path), &mut options)?;
@@ -2182,6 +2183,9 @@ impl CompressionService {
         if format == ArchiveFormat::Unknown && crate::services::numeric_volume_reader::ZipInputReader::is_numeric_first(path) {
             format = ArchiveFormat::from_extension(Path::new(file_stem).extension().and_then(|value| value.to_str()).unwrap_or(""));
         }
+        // Native password headers have no public magic. Resolve ZPAQ before
+        // validating a snapshot, just as numeric ZPAQ sources already do.
+        if format == ArchiveFormat::Unknown && ext == "zpaq" { format = ArchiveFormat::Zpaq; }
         anyhow::ensure!(options.zpaq_catalog_id.is_none() || (format==ArchiveFormat::Zpaq&&options.zpaq_snapshot.is_some()), "变化提取必须使用原ZPAQ快照，请重新对比");
         anyhow::ensure!(options.zpaq_snapshot.is_none() || format == ArchiveFormat::Zpaq,
             "所选快照只适用于 ZPAQ 日志归档，请重新选择原归档");
