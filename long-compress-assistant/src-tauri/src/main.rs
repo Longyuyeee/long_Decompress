@@ -471,6 +471,8 @@ fn main() {
             long_compress_assistant::commands::compression::verify_archive_password,
             long_compress_assistant::commands::compression::extract_multiple,
             long_compress_assistant::commands::compression::compress_files,
+            long_compress_assistant::commands::archive_library::library_audit,
+            long_compress_assistant::commands::archive_library::library_relocate,
             long_compress_assistant::commands::archive_library::library_sources,
             long_compress_assistant::commands::archive_library::library_add,
             long_compress_assistant::commands::archive_library::library_remove,

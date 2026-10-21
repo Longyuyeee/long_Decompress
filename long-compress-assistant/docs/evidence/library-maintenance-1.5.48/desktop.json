@@ -1,0 +1,255 @@
+{
+  "version": "1.5.48",
+  "binarySha256": "22fea6f2ba9f7d3fdf27021b6e1fdc14cb983ab516eed059de00e4b1efa80d6b",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1548\\ce4017a9-6922-4a3f-8353-2fd76dfa2cff",
+  "checks": [
+    {
+      "kind": "upgrade-existing-index-and-extended-group-import",
+      "binarySha256": "3fd340f8226ae2449b4c439f51635f512c164ba06d895f8c5c656deaf8109d17",
+      "oldCachePreserved": true,
+      "groupDeduplication": true,
+      "compressedTar": true,
+      "aesZipAndHeaderEncryptedSevenZip": true,
+      "wrongPasswordThenVault": true,
+      "encodingSavedWithoutPassword": true
+    },
+    {
+      "kind": "password-hit-original-extraction-and-result",
+      "binarySha256": "3fd340f8226ae2449b4c439f51635f512c164ba06d895f8c5c656deaf8109d17",
+      "taskId": "1792568499346",
+      "sessionCredentialsPassed": true,
+      "selectedContentOnly": true,
+      "originalPreserved": true
+    },
+    {
+      "kind": "offline-cache-relocate-and-incremental-refresh",
+      "binarySha256": "3fd340f8226ae2449b4c439f51635f512c164ba06d895f8c5c656deaf8109d17",
+      "cachedOfflineSearch": true,
+      "staleActionsBlocked": true,
+      "sameSourceIdentity": true,
+      "explicitRefresh": true,
+      "unrelatedIndexNotRebuilt": true
+    },
+    {
+      "kind": "missing-volume-cache-and-restored-source-skip",
+      "binarySha256": "3fd340f8226ae2449b4c439f51635f512c164ba06d895f8c5c656deaf8109d17",
+      "missingMemberNamed": true,
+      "cachedHitsRetained": true,
+      "extractBlocked": true,
+      "restoredUnchangedIndexSkipped": true
+    },
+    {
+      "kind": "pause-continue-and-normal-restart-password-reentry",
+      "binarySha256": "22fea6f2ba9f7d3fdf27021b6e1fdc14cb983ab516eed059de00e4b1efa80d6b",
+      "pauseStopsNextDispatch": true,
+      "continueDoesNotRepeatFirst": true,
+      "normalCloseSameProfile": true,
+      "noPersistedPassword": true,
+      "vaultAndPreviewAfterRestart": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "wrong-password",
+      "binarySha256": "3fd340f8226ae2449b4c439f51635f512c164ba06d895f8c5c656deaf8109d17",
+      "anchorOverflow": 0,
+      "columns": "252.766px 539.234px",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "wrong-password",
+      "binarySha256": "3fd340f8226ae2449b4c439f51635f512c164ba06d895f8c5c656deaf8109d17",
+      "anchorOverflow": 0,
+      "columns": "628.406px",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "password-search",
+      "binarySha256": "3fd340f8226ae2449b4c439f51635f512c164ba06d895f8c5c656deaf8109d17",
+      "anchorOverflow": 0,
+      "columns": "252.766px 539.234px",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "password-search",
+      "binarySha256": "3fd340f8226ae2449b4c439f51635f512c164ba06d895f8c5c656deaf8109d17",
+      "anchorOverflow": 0,
+      "columns": "628.406px",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "offline-cache",
+      "binarySha256": "3fd340f8226ae2449b4c439f51635f512c164ba06d895f8c5c656deaf8109d17",
+      "anchorOverflow": 0,
+      "columns": "252.766px 539.234px",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "offline-cache",
+      "binarySha256": "3fd340f8226ae2449b4c439f51635f512c164ba06d895f8c5c656deaf8109d17",
+      "anchorOverflow": 0,
+      "columns": "628.406px",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "updated-cache",
+      "binarySha256": "3fd340f8226ae2449b4c439f51635f512c164ba06d895f8c5c656deaf8109d17",
+      "anchorOverflow": 0,
+      "columns": "252.766px 539.234px",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "updated-cache",
+      "binarySha256": "3fd340f8226ae2449b4c439f51635f512c164ba06d895f8c5c656deaf8109d17",
+      "anchorOverflow": 0,
+      "columns": "628.406px",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "missing-volume",
+      "binarySha256": "3fd340f8226ae2449b4c439f51635f512c164ba06d895f8c5c656deaf8109d17",
+      "anchorOverflow": 0,
+      "columns": "252.766px 539.234px",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "missing-volume",
+      "binarySha256": "3fd340f8226ae2449b4c439f51635f512c164ba06d895f8c5c656deaf8109d17",
+      "anchorOverflow": 0,
+      "columns": "628.406px",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "paused-batch",
+      "binarySha256": "22fea6f2ba9f7d3fdf27021b6e1fdc14cb983ab516eed059de00e4b1efa80d6b",
+      "anchorOverflow": 0,
+      "columns": "252.766px 539.234px",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "paused-batch",
+      "binarySha256": "22fea6f2ba9f7d3fdf27021b6e1fdc14cb983ab516eed059de00e4b1efa80d6b",
+      "anchorOverflow": 0,
+      "columns": "628.406px",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "restart-password",
+      "binarySha256": "22fea6f2ba9f7d3fdf27021b6e1fdc14cb983ab516eed059de00e4b1efa80d6b",
+      "anchorOverflow": 0,
+      "columns": "252.766px 539.234px",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "restart-password",
+      "binarySha256": "22fea6f2ba9f7d3fdf27021b6e1fdc14cb983ab516eed059de00e4b1efa80d6b",
+      "anchorOverflow": 0,
+      "columns": "628.406px",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "recovered-preview",
+      "binarySha256": "22fea6f2ba9f7d3fdf27021b6e1fdc14cb983ab516eed059de00e4b1efa80d6b",
+      "anchorOverflow": 0,
+      "columns": "",
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "recovered-preview",
+      "binarySha256": "22fea6f2ba9f7d3fdf27021b6e1fdc14cb983ab516eed059de00e4b1efa80d6b",
+      "anchorOverflow": 0,
+      "columns": "",
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "library1548-wrong-password-1100x700.png",
+    "library1548-wrong-password-760x520.png",
+    "library1548-password-search-1100x700.png",
+    "library1548-password-search-760x520.png",
+    "library1548-offline-cache-1100x700.png",
+    "library1548-offline-cache-760x520.png",
+    "library1548-updated-cache-1100x700.png",
+    "library1548-updated-cache-760x520.png",
+    "library1548-missing-volume-1100x700.png",
+    "library1548-missing-volume-760x520.png",
+    "library1548-paused-batch-1100x700.png",
+    "library1548-paused-batch-760x520.png",
+    "library1548-restart-password-1100x700.png",
+    "library1548-restart-password-760x520.png",
+    "library1548-recovered-preview-1100x700.png",
+    "library1548-recovered-preview-760x520.png"
+  ],
+  "fixture": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1548\\ce4017a9-6922-4a3f-8353-2fd76dfa2cff\\维护资料",
+  "zip": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1548\\ce4017a9-6922-4a3f-8353-2fd76dfa2cff\\维护资料\\密码内容.zip",
+  "seven": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1548\\ce4017a9-6922-4a3f-8353-2fd76dfa2cff\\维护资料\\加密目录.7z",
+  "tar": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1548\\ce4017a9-6922-4a3f-8353-2fd76dfa2cff\\维护资料\\日常资料.tar.gz",
+  "big": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1548\\ce4017a9-6922-4a3f-8353-2fd76dfa2cff\\维护资料\\000-暂停资料.zip",
+  "next": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1548\\ce4017a9-6922-4a3f-8353-2fd76dfa2cff\\维护资料\\001-后续资料.zip",
+  "members": [
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1548\\ce4017a9-6922-4a3f-8353-2fd76dfa2cff\\维护资料\\资料.zip.001",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1548\\ce4017a9-6922-4a3f-8353-2fd76dfa2cff\\维护资料\\资料.zip.002",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1548\\ce4017a9-6922-4a3f-8353-2fd76dfa2cff\\维护资料\\资料.zip.003",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1548\\ce4017a9-6922-4a3f-8353-2fd76dfa2cff\\维护资料\\资料.zip.004",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1548\\ce4017a9-6922-4a3f-8353-2fd76dfa2cff\\维护资料\\资料.zip.005",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1548\\ce4017a9-6922-4a3f-8353-2fd76dfa2cff\\维护资料\\资料.zip.006",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1548\\ce4017a9-6922-4a3f-8353-2fd76dfa2cff\\维护资料\\资料.zip.007"
+  ],
+  "zipHash": "faa0857ce83d60eb5a680945fc0ff5a43cdaf081adb3e103dde5dd193f3fbdfb",
+  "sevenHash": "b4725186a678fadd88d41e52c4eae65672f9f346c67e9c2a8a872fbe167abc98",
+  "tarHash": "d9e2950f443962a030c86b4704c3a97fcf0759d18e1a8983f9cea575eabbc38c",
+  "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1548\\ce4017a9-6922-4a3f-8353-2fd76dfa2cff\\密码资料取回",
+  "moved": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1548\\ce4017a9-6922-4a3f-8353-2fd76dfa2cff\\重新定位的资料.tar.gz",
+  "changedTarHash": "e52c4d2dcb54befe69776e925a6b6a938c412f7203dbb33e9394ea11b0225d0e",
+  "previousIdentities": [
+    "3fd340f8226ae2449b4c439f51635f512c164ba06d895f8c5c656deaf8109d17"
+  ]
+}

@@ -3600,7 +3600,7 @@ impl CompressionService {
         Ok(())
     }
 
-    async fn test_extraction_password(&self, file_path: &str, password: &str, options: &DecompressOptions) -> Result<bool> {
+    pub(crate) async fn test_extraction_password(&self, file_path: &str, password: &str, options: &DecompressOptions) -> Result<bool> {
         if Self::detect_password_format(file_path)? == ArchiveFormat::Egg {
             return crate::services::egg_engine::try_password(Path::new(file_path), password, options, self.cancellation_flag.clone()).await;
         }
