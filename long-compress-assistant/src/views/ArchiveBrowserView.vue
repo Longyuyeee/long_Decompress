@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import ArchiveImageReader from '@/components/archive/ArchiveImageReader.vue'
+import ReaderRetrievalDialog from '@/components/archive/ReaderRetrievalDialog.vue'
+import {useArchiveReadingStore} from '@/stores/archiveReading'
+import type {ArchiveReadingRecord,ReaderSelection} from '@/types/archiveReading'
 import { useArchiveLibraryStore } from '@/stores/archiveLibrary'
 import { invoke } from '@tauri-apps/api/tauri'
 import ZipEditBar from '@/components/archive/ZipEditBar.vue'
@@ -81,17 +84,24 @@ const diffVisible = ref(false)
 const openingEntryPath = ref('')
 const inputBusy = computed(() => zipEditBusy.value || loading.value || extracting.value || checkingSnapshot.value || !!openingEntryPath.value)
 const dangerousOpenEntry = ref<ArchiveEntryInfo | null>(null)
-const readerOpen=ref(false),readerInitialPath=ref('')
+const reading=useArchiveReadingStore()
+const readerOpen=ref(false),readerInitialPath=ref(''),readerResume=ref<ArchiveReadingRecord>(),readerCollectPaths=ref<string[]|null>(null),showAllReading=ref(false)
+const readingSource=computed(()=>result.value?.sourcePath||archivePath.value)
+const currentReadingRecord=computed(()=>!parentFrames.value.length?reading.find(readingSource.value,selectedSnapshot.value):undefined)
 let readerReturnFocus:HTMLElement|null=null
 const readerCandidates=computed(()=>files.value.filter(entry=>archiveCapabilities.entryCategory(entry.name)==='image'))
-function openImageReader(entry?:ArchiveEntryInfo){
+function openImageReader(entry?:ArchiveEntryInfo,resume?:ArchiveReadingRecord){
  const first=entry||readerCandidates.value.find(entry=>entryParent(entry)===activeDirectory.value)||readerCandidates.value[0]
- if(!first)return;readerReturnFocus=document.activeElement as HTMLElement;readerInitialPath.value=first.path;closePreview();readerOpen.value=true
+ if(!first&&!resume)return;readerReturnFocus=document.activeElement as HTMLElement;readerInitialPath.value=resume?.path||first!.path;readerResume.value=resume;closePreview();readerOpen.value=true
 }
 async function closeImageReader(){if(!readerOpen.value)return;readerOpen.value=false;const target=readerReturnFocus;readerReturnFocus=null;await nextTick();if(target?.isConnected)target.focus({preventScroll:true})}
 async function locateReaderImage(path:string){await closeImageReader();query.value='';typeFilter.value='all';const normalized=path.replace(/\\/g,'/'),slash=normalized.lastIndexOf('/');navigateToDirectory(slash<0?'':normalized.slice(0,slash));focusedEntryPath.value=path;await nextTick();const row=Array.from(document.querySelectorAll<HTMLElement>('[data-entry-path]')).find(row=>row.dataset.entryPath===path);row?.scrollIntoView({block:'nearest'});row?.focus({preventScroll:true})}
-async function extractReaderImage(path:string){await closeImageReader();const target=await requestOutputDirectory(outputPath.value);if(target)await extractPaths([path],target)}
+async function extractReaderImage(path:string){const selection:ReaderSelection={revision:result.value?.revision||'',paths:[path],keepStructure:true,conflictPolicy:'rename'};await closeImageReader();const target=await requestOutputDirectory(outputPath.value);if(target)await extractPaths([path],target,selection)}
 async function refreshReaderSource(){await closeImageReader();await refreshDirectory()}
+async function collectReaderImages(paths:string[],position?:ArchiveReadingRecord){readerResume.value=position;readerCollectPaths.value=[...paths];await closeImageReader()}
+function closeReaderCollection(resume=true){readerCollectPaths.value=null;if(resume)openImageReader(undefined,currentReadingRecord.value||readerResume.value)}
+async function continueCurrentReading(){const row=currentReadingRecord.value;if(row&&await refreshDirectory())openImageReader(undefined,row)}
+async function continueReading(row:ArchiveReadingRecord){await openArchivePath(row.filePath,{focusEntryPath:row.path,entryAction:'read',resumeReading:true,zpaqSnapshot:row.snapshot,zipPasswordEncoding:row.encoding})}
 const imagePreview = ref<ArchiveImagePreview | null>(null)
 const textPreview = ref<ArchiveTextPreview | null>(null)
 const previewEntry = ref<ArchiveEntryInfo | null>(null)
@@ -196,6 +206,7 @@ const openArchivePath = async (path: string, options: ArchiveReadOptions = {}) =
     if (options.librarySourceId) await invoke('library_check', { sourceId: options.librarySourceId, entryPath: options.focusEntryPath || null })
     librarySourceId.value = options.librarySourceId || ''
     libraryEntryPath.value = options.focusEntryPath || ''
+    readerCollectPaths.value=null
     archivePath.value = path
     password.value = options.password || ''
     zipPasswordEncoding.value = options.zipPasswordEncoding
@@ -211,14 +222,18 @@ const openArchivePath = async (path: string, options: ArchiveReadOptions = {}) =
     await loadArchive()
     if (options.focusEntryPath && result.value) {
       const entry = result.value.entries.find(row => row.path === options.focusEntryPath && !row.isDir)
-      if (!entry) { selected.value = new Set(); throw new Error('当前归档已找不到所选条目，请返回资源库刷新索引') }
-      selected.value = new Set([entry.path])
-      navigateToDirectory(entryParent(entry)); focusedEntryPath.value = entry.path
-      if (options.entryAction === 'preview') {
+      if (!entry && (options.entryAction!=='read'||!options.resumeReading)) { selected.value = new Set(); throw new Error('当前归档已找不到所选条目，请返回资源库刷新索引') }
+      selected.value = new Set(entry?[entry.path]:[])
+      if(entry){navigateToDirectory(entryParent(entry));focusedEntryPath.value=entry.path}
+      if(options.entryAction==='read'){
+        await capabilitiesReady
+        const saved=options.resumeReading?reading.find(readingSource.value,selectedSnapshot.value):undefined
+        openImageReader(entry,saved)
+      }else if (options.entryAction === 'preview' && entry) {
         await capabilitiesReady
         if (canPreviewEntry(entry) && previewRouteSupported.value) await openPreview(entry)
         else browseNotice.value = '已定位所选文件；此类型暂不提供内部预览，可提取后打开'
-      } else if (options.entryAction === 'extract') {
+      } else if (options.entryAction === 'extract' && entry) {
         const destination = await requestOutputDirectory(outputPath.value)
         if (destination) { outputPath.value = destination; await extractPaths([entry.path], destination) }
       }
@@ -356,6 +371,7 @@ const refreshDirectory = async () => {
     const availableFiles = new Set(refreshed.entries.filter(entry => !entry.isDir).map(entry => entry.path))
     selected.value = new Set([...selected.value].filter(path => availableFiles.has(path)))
     navigation.reconcile()
+    return true
   } catch (error) {
     if (sequence === archiveLoadSequence) appStore.setError(`刷新压缩包失败：${describeArchiveBrowseError(error)}`)
   } finally {
@@ -547,13 +563,14 @@ async function addToLibrary(){
   addingToLibrary.value=true
   try{const library=useArchiveLibraryStore();if(await library.add([archivePath.value])){addedToLibrary.value=true;appStore.setSuccess('已加入资料库，请前往资料库手动建立或刷新索引')}else appStore.setError(library.error)}finally{addingToLibrary.value=false}
 }
-const extractPaths = async (paths: string[], destination: string) => {
+const extractPaths = async (paths: string[], destination: string, readerSelection?:ReaderSelection) => {
   if (!archivePath.value || !destination || paths.length === 0 || extracting.value) return
   extracting.value = true
   closeContextMenu()
   try {
     if (librarySourceId.value) await invoke('library_check', { sourceId: librarySourceId.value, entryPath: null })
     await commands.decompressFile(archivePath.value, {
+      ...(readerSelection?{readerSelection}:{}),
       sourceFormat: result.value?.format, zpaqSnapshot: selectedSnapshot.value,
       outputPath: destination,
       password: password.value || undefined,
@@ -765,6 +782,7 @@ const extractSelected = async () => {
       </div>
     </header>
 
+    <section v-if="!result&&!loading&&reading.records.length" class="reading-history shrink-0" data-testid="archive-reading-history"><div><strong><i class="pi pi-bookmark"/>继续上次阅读</strong><small>本机阅读位置 · 不保存密码或图片数据</small><button v-if="reading.records.length>4" class="text-primary" @click="showAllReading=!showAllReading">{{ showAllReading?'收起':'更多阅读记录' }}</button></div><div class="reading-recent"><article v-for="row in reading.records.slice(0,showAllReading?30:4)" :key="row.filePath+String(row.snapshot?.version||'')"><button class="reading-recent-open" :disabled="inputBusy" :title="row.filePath" data-testid="reading-recent-open" @click="continueReading(row)"><strong>{{ row.filePath.replace(/\\/g,'/').split('/').pop() }}<small v-if="row.snapshot"> · 快照 {{ row.snapshot.version }}</small></strong><span>{{ row.path }}</span></button><button class="reading-recent-remove" aria-label="移除此阅读记录" @click="reading.remove(row)"><i class="pi pi-times"/></button></article></div></section>
     <p v-if="result && browseNotice" class="shrink-0 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-primary" data-testid="archive-result-notice">{{ browseNotice }}</p>
     <div v-if="librarySourceId" class="shrink-0 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs" data-testid="archive-library-origin"><span class="min-w-0 break-all text-muted">来自归档资源库 · {{ libraryEntryPath }}</span><RouterLink to="/library" class="font-bold text-primary">返回搜索结果</RouterLink></div>
 
@@ -825,6 +843,7 @@ const extractSelected = async () => {
 
     <template v-else>
       <section class="browser-summary shrink-0" aria-label="压缩包摘要">
+        <button v-if="currentReadingRecord" class="browser-input browser-continue-reading" data-testid="archive-reader-continue" :disabled="inputBusy" :title="currentReadingRecord.path" @click="continueCurrentReading"><i class="pi pi-bookmark"/>继续上次阅读</button>
         <button class="browser-primary browser-reader-button" data-testid="archive-reader-open" :disabled="inputBusy||!readerCandidates.length" @click="openImageReader()"><i class="pi pi-images"/>阅读图片 · {{ readerCandidates.length }}</button>
         <span><b>{{ result.format }}</b> 格式</span>
         <span v-if="result.format === 'ZPAQ'" data-testid="zpaq-current-view">当前文件<HelpHint label="ZPAQ 当前文件视图">按当前所选快照显示有效文件，其他版本不会混入。日志包支持历史选择、版本对比与变化提取，普通和原生密码数字卷可继续读取；压缩中心支持另存增量更新。流式包仅显示当前内容，文件检查不能检测所有未认证头部变化。</HelpHint></span>
@@ -921,7 +940,8 @@ const extractSelected = async () => {
       <div><i class="pi pi-cloud-upload"></i><strong>松开即可浏览压缩包</strong><span>将替换当前打开的压缩包</span></div>
     </div>
 
-    <ArchiveImageReader v-if="readerOpen&&result" :file-path="archivePath" :entries="result.entries" :initial-path="readerInitialPath" :directory="activeDirectory" :revision="result.revision" :password="password" :encoding="inputEncoding" :snapshot="selectedSnapshot" :supported="previewRouteSupported" :image-extensions="archiveCapabilities.capabilities.value?.imagePreviewExtensions||[]" @close="closeImageReader" @locate="locateReaderImage" @extract="extractReaderImage" @refresh="refreshReaderSource"/>
+    <ReaderRetrievalDialog v-if="readerCollectPaths&&result" :file-path="readingSource" :format="result.format" :revision="result.revision||''" :paths="readerCollectPaths" :output-path="outputPath" :password="password" :encoding="inputEncoding" :snapshot="selectedSnapshot" :password-required="result.entries.some(entry=>readerCollectPaths!.includes(entry.path)&&entry.encrypted)" @close="closeReaderCollection" @selection="readerResume&&(readerResume.selected=$event)"/>
+    <ArchiveImageReader v-if="readerOpen&&result" :resume="readerResume" :remember="!parentFrames.length" :format="result.format" :file-path="readingSource" :entries="result.entries" :initial-path="readerInitialPath" :directory="activeDirectory" :revision="result.revision" :password="password" :encoding="inputEncoding" :snapshot="selectedSnapshot" :supported="previewRouteSupported" :image-extensions="archiveCapabilities.capabilities.value?.imagePreviewExtensions||[]" @close="closeImageReader" @locate="locateReaderImage" @extract="extractReaderImage" @refresh="refreshReaderSource" @collect="collectReaderImages"/>
     <Teleport to="body">
     <div v-if="previewEntry" class="preview-backdrop" data-testid="archive-entry-preview" @click.self="closePreview">
       <section class="preview-dialog" role="dialog" aria-modal="true" :aria-label="`预览 ${previewEntry.name}`">
@@ -1152,4 +1172,5 @@ const extractSelected = async () => {
   .browser-workspace { flex: 0 0 24rem; min-height: 24rem; }
 }
 @media (max-width: 760px) { .browser-page { padding: 1rem; overflow-y: auto; overflow-x: hidden; } .browser-workspace { flex: 0 0 34rem; min-height: 34rem; grid-template-columns: 1fr; grid-template-rows: minmax(7rem, 10rem) minmax(22rem, 1fr); } .browser-toolbar { grid-template-columns: 1fr; } .browser-table-head, .browser-row { grid-template-columns: 1.5rem minmax(0, 1fr); } .output-target { max-width: 80vw; } .archive-details-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .archive-details-grid { grid-template-columns: 1fr; } }
+.reading-history{border:1px solid var(--border-subtle);border-radius:16px;padding:16px;background:var(--bg-card);max-height:40%;overflow:auto}.reading-history>div:first-child{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px}.reading-history strong i{color:var(--dynamic-accent);margin-right:7px}.reading-history small{font-size:10px;font-weight:400;color:var(--text-muted)}.reading-recent{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.reading-recent article{display:flex;gap:9px;align-items:center;padding:10px 12px;border:1px solid var(--border-subtle);border-radius:11px;min-width:0}.reading-recent-open{flex:1;text-align:left;min-width:0;font-size:11px}.reading-recent-open strong,.reading-recent-open span{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.reading-recent-open span{color:var(--text-muted);font-size:10px;margin-top:5px}.reading-recent-open:hover strong{color:var(--dynamic-accent)}.reading-recent-remove{color:var(--text-muted);font-size:10px;padding:5px}.browser-continue-reading{white-space:nowrap;font-size:.7rem}@media(max-width:800px){.reading-recent{grid-template-columns:minmax(0,1fr)}.reading-history{padding:12px}}
 </style>

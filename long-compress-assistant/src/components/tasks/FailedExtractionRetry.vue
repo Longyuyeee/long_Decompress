@@ -34,7 +34,7 @@ const rows = ref(props.taskIds.flatMap(id => {
     extractToSubfolder: task.extractToSubfolder ?? true,
     zipPasswordEncoding: draft ? draft.zipPasswordEncoding : task.zipPasswordEncoding,
     zpaqSnapshot: draft?.zpaqSnapshot || task.zpaqSnapshot, zpaqCatalogId: draft?.zpaqCatalogId || task.zpaqCatalogId, selectedEntries: draft?.selectedEntries || task.selectedEntries,
-    librarySourceId:task.librarySourceId,libraryRevision:task.libraryRevision,libraryKeepStructure:task.libraryKeepStructure,libraryConflictPolicy:task.libraryConflictPolicy,
+    readerSelection:draft?.readerSelection || task.readerSelection,librarySourceId:task.librarySourceId,libraryRevision:task.libraryRevision,libraryKeepStructure:task.libraryKeepStructure,libraryConflictPolicy:task.libraryConflictPolicy,
     originalSource: task.sourceFiles[0], sourceFormat: task.format,
     createdId: task.retryDraftId || '', error: '', checking: false, missing: [] as string[] }]
 }))
@@ -128,7 +128,7 @@ async function createDrafts() {
           configurationMode: 'individual', extractToSubfolder: row.extractToSubfolder,
           recycleSourceAfterExtract: false, password: row.password || undefined,
           zipPasswordEncoding: result.zipPasswordEncoding, format: result.format, zpaqSnapshot: row.zpaqSnapshot, zpaqCatalogId: row.zpaqCatalogId, selectedEntries: row.selectedEntries,
-          librarySourceId:row.librarySourceId,libraryRevision:row.libraryRevision,libraryKeepStructure:row.libraryKeepStructure,libraryConflictPolicy:row.libraryConflictPolicy,
+          readerSelection:row.readerSelection,librarySourceId:row.librarySourceId,libraryRevision:row.libraryRevision,libraryKeepStructure:row.libraryKeepStructure,libraryConflictPolicy:row.libraryConflictPolicy,
           ...(row.zpaqCatalogId ? {executionConfig:{schemaVersion:1,kind:'archive-extraction',outputDirectory:result.outputPath,extractToSubfolder:row.extractToSubfolder,zpaqSnapshot:row.zpaqSnapshot,zpaqCatalogId:row.zpaqCatalogId,selectedEntries:[...(row.selectedEntries || [])]}} : {}),
         })
         parent.retryDraftId = id

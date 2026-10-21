@@ -14,12 +14,13 @@ export function extractionRetryPolicy(task: Task) {
     || !['failed','cancelled'].includes(task.status) ? '仅支持已失败或已取消的归档解压任务。'
     : task.comparisonSelection ? '此任务保留资料对比的精确范围，请返回资料对比重新读取来源，或从历史记录按原范围创建任务。'
     : category === 'rollback-incomplete' ? '请先保留并人工核对原输出和恢复目录；此处不能直接重试回滚不完整的任务。'
-    : task.sourceFiles.length !== 1 || task.fileFilter || (task.selectedEntries?.length && !(task.zpaqSnapshot && task.zpaqCatalogId) && !task.librarySourceId)
+    : task.sourceFiles.length !== 1 || task.fileFilter || (task.selectedEntries?.length && !(task.zpaqSnapshot && task.zpaqCatalogId) && !task.librarySourceId && !task.readerSelection)
       ? '此任务包含特殊来源或局部解压范围，请返回归档浏览重新选择范围。' : ''
   return { blocked, category, guidance: getTaskRecoveryGuidance(record), requireIntegrity: category === 'damaged' }
 }
 
 export interface ExtractionRetryInput {
+  readerSelection?: import('@/types/archiveReading').ReaderSelection
   librarySourceId?: string
   libraryRevision?: string
   libraryKeepStructure?: boolean
@@ -76,6 +77,7 @@ export async function validateExtractionRetry(
   check()
   if (!output.is_dir) throw new Error('输出位置必须是已存在的目录。')
   const zipPasswordEncoding = zipPasswordEncodingForSource(path, input.zipPasswordEncoding, split?.archive_format)
+  if(input.readerSelection){await invoke('check_image_reader_source',{filePath:path,revision:input.readerSelection.revision});check()}
   if(input.librarySourceId){const source=await invoke<{path:string}>('library_selection',{sourceId:input.librarySourceId,revision:input.libraryRevision,paths:input.selectedEntries});check();if(source.path.toLowerCase()!==path.toLowerCase())throw Error('来源已重新定位，请返回资料库重新选择文件')}
   if (input.zpaqCatalogId && input.zpaqSnapshot) {
     await invoke('check_zpaq_snapshot_catalog', { filePath: path, password: input.password || null, snapshot: input.zpaqSnapshot, catalogId: input.zpaqCatalogId }); check()

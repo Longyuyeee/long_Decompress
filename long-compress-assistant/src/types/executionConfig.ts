@@ -1,3 +1,4 @@
+import {copyReaderSelection} from './archiveReading'
 import {copyComparisonSelection,type ComparisonSelection} from './sourceComparison'
 import { isZpaqSnapshot, type ZpaqSnapshot } from './zpaqSnapshot'
 import type { CompressionOptions } from '@/stores/compression'
@@ -7,6 +8,7 @@ import type { PdfOptimizationMode } from '@/types/pdf'
 import { isZipPasswordEncoding, type ZipPasswordEncoding } from './zipPassword'
 
 export interface ExtractionConfigV1 {
+  readerSelection?: import('@/types/archiveReading').ReaderSelection
   comparisonSelection?: ComparisonSelection
   librarySourceId?: string
   libraryRevision?: string
@@ -83,6 +85,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
         || !config.updateSources.every(path => typeof path === 'string' && path.trim().length > 0 && path.length <= 32768)
         || (config.archivePrefix !== undefined && (typeof config.archivePrefix !== 'string' || config.archivePrefix.length > 32768))) return null
   }
+  if(config.kind==='archive-extraction'&&config.readerSelection!==undefined&&!copyReaderSelection(config.readerSelection))return null
   if(config.kind==='archive-extraction'&&config.comparisonSelection!==undefined&&!copyComparisonSelection(config.comparisonSelection))return null
   if (config.kind === 'archive-extraction' && config.zpaqCatalogId !== undefined
       && (!config.zpaqSnapshot || !/^[a-f0-9]{64}$/.test(config.zpaqCatalogId) || !Array.isArray(config.selectedEntries)
@@ -124,6 +127,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
       rarRecoveryVolumes: config.rarRecoveryVolumes ?? 0,
       splitSize: config.splitSize, encryptFilenames: config.encryptFilenames, passwordRequired: config.passwordRequired }
     case 'archive-extraction': return { schemaVersion: 1, kind: config.kind,
+      ...(config.readerSelection?{readerSelection:copyReaderSelection(config.readerSelection)!}:{}),
       ...(config.comparisonSelection?{comparisonSelection:copyComparisonSelection(config.comparisonSelection)!}:{}),
       ...(config.librarySourceId ? {librarySourceId:config.librarySourceId,libraryRevision:config.libraryRevision,libraryKeepStructure:config.libraryKeepStructure,libraryConflictPolicy:config.libraryConflictPolicy,selectedEntries:[...(config.selectedEntries||[])]} : {}),
       ...(config.zpaqCatalogId ? { zpaqCatalogId: config.zpaqCatalogId, selectedEntries: [...(config.selectedEntries || [])] } : {}),

@@ -1,6 +1,6 @@
 //! A reading session reuses bounded previews and binds every page to one source revision.
 use anyhow::{ensure,Context,Result};
-use serde::Serialize;
+use serde::{Serialize,Deserialize};
 use std::{path::Path,sync::{Arc,atomic::{AtomicBool,Ordering}}};
 #[derive(Clone,Serialize)]
 #[serde(rename_all="camelCase")]
@@ -11,6 +11,29 @@ impl Default for Control {fn default()->Self{Self{flag:Arc::new(AtomicBool::new(
 impl Control {
  pub fn check(&self)->Result<()>{ensure!(!self.flag.load(Ordering::Acquire),"IMAGE_READER_CANCELLED|已停止读取图片");Ok(())}
  pub fn update(&self,phase:&'static str,processed:u64,total:u64){(self.observer)(Progress{phase,processed_bytes:processed,total_bytes:total})}
+}
+#[derive(Clone,Debug,Serialize,Deserialize)]
+#[serde(rename_all="camelCase")]
+pub struct Selection {pub revision:String,pub paths:Vec<String>,pub keep_structure:bool,pub conflict_policy:String}
+pub fn source_path(path:&Path)->Result<String>{
+ let source=super::split_archive_detector::SplitArchiveDetector::complete_source(path)?.canonicalize()?.to_string_lossy().into_owned();
+ Ok(if let Some(tail)=source.strip_prefix(r"\\?\UNC\"){format!(r"\\{tail}")}else{source.strip_prefix(r"\\?\").unwrap_or(&source).to_string()})
+}
+impl Selection {
+ pub fn validate(&self)->Result<()>{
+  ensure!(self.revision.len()==64&&self.revision.bytes().all(|b|b.is_ascii_hexdigit()),"阅读来源版本无效，请重新读取");
+  ensure!(!self.paths.is_empty()&&self.paths.len()<=2000&&serde_json::to_string(&self.paths)?.len()<=240000,"阅读所选范围无效，请返回阅读器重新选择");
+  let unique:std::collections::HashSet<_>=self.paths.iter().collect();
+  ensure!(unique.len()==self.paths.len()&&self.paths.iter().all(|p|!p.is_empty()&&p.len()<=131072),"阅读所选路径无效，请重新选择");
+  ensure!(matches!(self.conflict_policy.as_str(),"rename"|"skip"),"请重新确认所选图片的同名处理方式");Ok(())
+ }
+}
+pub fn apply_selection(path:&Path,options:&mut crate::models::compression::DecompressOptions)->Result<()>{
+ let Some(selection)=options.reader_selection.clone()else{return Ok(())};selection.validate()?;
+ check_source(path,&selection.revision).map_err(|_|anyhow::anyhow!("阅读来源已变化、离线或缺卷，请返回浏览中心刷新并重新选择图片；原选择不会扩大为整包提取"))?;
+ options.selected_entries=selection.paths;options.preserve_paths=selection.keep_structure;options.conflict_policy=selection.conflict_policy;
+ ensure!(!options.delete_after,"所选图片取回保留原包，请关闭回收来源选项");
+ Ok(())
 }
 pub fn revision(path:&Path)->Result<String>{
  let source=super::split_archive_detector::SplitArchiveDetector::complete_source(path)?;
@@ -36,4 +59,17 @@ pub async fn read(path:&Path,entry:&str,password:Option<&str>,encoding:Option<su
  #[test]fn reader1557_missing_and_replaced_source_cannot_reuse_a_cache_revision(){let d=tempfile::tempdir().unwrap();let p=d.path().join("pages.zip");zip(&p,None);let version=revision(&p).unwrap();assert!(check_source(&p,&version).is_ok());fs::remove_file(p.clone()).unwrap();assert!(format!("{:#}",check_source(&p,&version).unwrap_err()).contains("IMAGE_READER_CHANGED"));}
  #[tokio::test]async fn reader1557_tar_page_progress_does_not_return_to_locating_after_reading(){let d=tempfile::tempdir().unwrap();let p=d.path().join("pages.tar");let mut tar=tar::Builder::new(fs::File::create(&p).unwrap());let b=bmp();let mut h=tar::Header::new_gnu();h.set_size(b.len()as u64);h.set_mode(0o644);h.set_cksum();tar.append_data(&mut h,"page2.bmp",b.as_slice()).unwrap();tar.finish().unwrap();drop(tar);let phases=Arc::new(std::sync::Mutex::new(Vec::new()));let events=phases.clone();let control=Control{observer:Arc::new(move|event|events.lock().unwrap().push(event.phase)),..Default::default()};read(&p,"page2.bmp",None,None,None,&revision(&p).unwrap(),control).await.unwrap();let phases=phases.lock().unwrap();let reading=phases.iter().position(|p|*p=="reading").unwrap();assert!(!phases[reading..].contains(&"locating"));}
 
+}
+
+#[cfg(test)]
+mod reader1558_tests {
+ use super::*;
+ use crate::models::compression::DecompressOptions;
+ fn source(root:&Path)->std::path::PathBuf{let path=root.join("pages.zip");std::fs::write(&path,b"fixture-metadata-for-selection").unwrap();path}
+ fn selection(path:&Path)->Selection{Selection{revision:revision(path).unwrap(),paths:vec!["pages/2.png".into(),"other/10.png".into()],keep_structure:false,conflict_policy:"skip".into()}}
+ #[test]fn reader1558_selection_keeps_exact_paths_and_original_options(){let root=tempfile::tempdir().unwrap();let path=source(root.path());let expected=selection(&path);let mut options=DecompressOptions{reader_selection:Some(expected.clone()),..Default::default()};apply_selection(&path,&mut options).unwrap();assert_eq!(options.selected_entries,expected.paths);assert!(!options.preserve_paths);assert_eq!(options.conflict_policy,"skip");assert!(!options.delete_after);}
+ #[test]fn reader1558_changed_source_cannot_reuse_old_selection(){let root=tempfile::tempdir().unwrap();let path=source(root.path());let mut options=DecompressOptions{reader_selection:Some(selection(&path)),..Default::default()};std::fs::write(&path,b"replacement-source-with-new-size").unwrap();assert!(apply_selection(&path,&mut options).unwrap_err().to_string().contains("重新选择图片"));assert!(options.selected_entries.is_empty());}
+ #[test]fn reader1558_empty_or_duplicate_selection_never_extracts_whole_archive(){let root=tempfile::tempdir().unwrap();let path=source(root.path());for paths in [vec![],vec!["same.png".into(),"same.png".into()]]{let mut selected=selection(&path);selected.paths=paths;let mut options=DecompressOptions{reader_selection:Some(selected),..Default::default()};assert!(apply_selection(&path,&mut options).is_err());}}
+ #[test]fn reader1558_any_numeric_member_has_one_reading_source(){let root=tempfile::tempdir().unwrap();for suffix in ["001","002","003"]{std::fs::write(root.path().join(format!("pages.zip.{suffix}")),b"volume").unwrap();}let first=root.path().join("pages.zip.001");let last=root.path().join("pages.zip.003");assert_eq!(source_path(&first).unwrap(),source_path(&last).unwrap());assert_eq!(revision(&first).unwrap(),revision(&last).unwrap());}
+ #[test]fn reader1558_old_options_remain_unchanged_without_reading_reference(){let root=tempfile::tempdir().unwrap();let path=source(root.path());let mut options=DecompressOptions{preserve_paths:true,selected_entries:vec!["old.txt".into()],..Default::default()};apply_selection(&path,&mut options).unwrap();assert_eq!(options.selected_entries,vec!["old.txt"]);assert!(options.preserve_paths);}
 }

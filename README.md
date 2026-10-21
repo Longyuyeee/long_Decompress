@@ -126,7 +126,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 
 | 你想做什么 | 从哪里开始 | 操作要点 |
 | --- | --- | --- |
-| 连续看图片包 | 文件浏览器 | 阅读图片，按目录或整包翻页、跳页、缩放，定位或提取当前图片 |
+| 连续看图片包 | 文件浏览器 | 继续阅读、找图搜索与跨页选择；按目录/整包翻阅缩放，在弹窗配置后取回所选 |
 | 比较两份资料 | 资料对比 | 选择文件夹或 ZIP/完整分卷，查看候选、按需核对内容，再取回或组成新 ZIP |
 | 解压一批文件 | 解压中心 | 拖入压缩包，设置目录；常用密码可交给保险箱尝试 |
 | 打包文件和文件夹 | 压缩中心 | 按用途选兼容分享、体积优先、加密或分包方案，再微调密码、名称等参数 |
@@ -253,7 +253,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.5.57 · 整包图片连续阅读**。按目录或整包自然排序，连续翻页/跳页/键盘、缩略导航、原始大小/缩放；读取/停止/跳过、来源变化刷新、密码分卷和当前图精确提取贯通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.57.md) · [范围与记录](long-compress-assistant/docs/IMAGE_READER_FREEZE_1.5.57.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.57)。下一步 [v1.5.58 阅读记忆与所选取回](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.58.md)。
+**v1.5.58 · 接着阅读，挑选取回**。文件浏览器可继续最近阅读，保留位置与显示方式；找图面板搜索/分页、跨页勾选、资源库命中往返、弹窗取回及原队列/草稿/历史接续贯通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.58.md) · [范围与记录](long-compress-assistant/docs/READING_CONTINUITY_FREEZE_1.5.58.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.58)。下一步 [v1.5.59 ZIP Bzip2 跨流程兼容](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.59.md)，回归格式、算法、密码、卷型与容错主线。
+
+**v1.5.57 · 整包图片连续阅读**。按目录或整包自然排序，连续翻页/跳页/键盘、缩略导航、原始大小/缩放；读取/停止/跳过、来源变化刷新、密码分卷和当前图精确提取贯通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.57.md) · [范围与记录](long-compress-assistant/docs/IMAGE_READER_FREEZE_1.5.57.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.57)。阅读记忆、长列表和所选取回由上方 v1.5.58 接续。
 
 **v1.5.56 · 所选资料组成新 ZIP**。在对比多选弹窗选择基础与补充，沿原编辑清单确认冲突、整理最终路径并另存；密码/完整分卷取材、引用草稿恢复与失败继续贯通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.56.md) · [范围与记录](long-compress-assistant/docs/COMPARISON_PACKAGE_FREEZE_1.5.56.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.56)。图片连续阅读由上方 v1.5.57 接续完成。
 

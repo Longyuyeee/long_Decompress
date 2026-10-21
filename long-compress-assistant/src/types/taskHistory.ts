@@ -79,7 +79,7 @@ export const createTaskHistoryRecord = (task: Task): TaskHistoryRecord => {
       ? { ...task.archiveOutput, files: task.archiveOutput.files.map(file => ({ ...file })) } : null,
     id: task.id,
     retryOfTaskId: task.retryOfTaskId || null,
-    executionConfig: copyExecutionConfig(task.comparisonSelection ? {schemaVersion:1,kind:'archive-extraction',outputDirectory:task.outputPath,extractToSubfolder:false,comparisonSelection:task.comparisonSelection} : task.librarySourceId ? {
+    executionConfig: copyExecutionConfig(task.readerSelection ? {schemaVersion:1,kind:'archive-extraction',outputDirectory:task.outputPath,extractToSubfolder:task.extractToSubfolder??false,readerSelection:task.readerSelection,zpaqSnapshot:task.zpaqSnapshot,zipPasswordEncoding:task.zipPasswordEncoding} : task.comparisonSelection ? {schemaVersion:1,kind:'archive-extraction',outputDirectory:task.outputPath,extractToSubfolder:false,comparisonSelection:task.comparisonSelection} : task.librarySourceId ? {
       schemaVersion:1,kind:'archive-extraction',outputDirectory:task.outputPath,extractToSubfolder:task.extractToSubfolder??false,
       librarySourceId:task.librarySourceId,libraryRevision:task.libraryRevision,libraryKeepStructure:task.libraryKeepStructure??true,
       libraryConflictPolicy:task.libraryConflictPolicy??'rename',selectedEntries:[...(task.selectedEntries||[])],zipPasswordEncoding:task.zipPasswordEncoding,

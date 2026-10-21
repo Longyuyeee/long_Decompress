@@ -396,6 +396,7 @@ const runDecompressionResourcePreflight = async (task: Task) => {
     return task.status!=='cancelled'&&task.status!=='cancelling'
   }
 
+  if(task.readerSelection) task.executionConfig={schemaVersion:1,kind:'archive-extraction',outputDirectory:task.outputPath,extractToSubfolder:task.extractToSubfolder??false,readerSelection:task.readerSelection,zpaqSnapshot:task.zpaqSnapshot,zipPasswordEncoding:task.zipPasswordEncoding}
   if(task.librarySourceId) task.executionConfig={schemaVersion:1,kind:'archive-extraction',outputDirectory:task.outputPath,extractToSubfolder:task.extractToSubfolder??false,librarySourceId:task.librarySourceId,libraryRevision:task.libraryRevision,libraryKeepStructure:task.libraryKeepStructure??true,libraryConflictPolicy:task.libraryConflictPolicy??'rename',selectedEntries:[...(task.selectedEntries||[])],zipPasswordEncoding:task.zipPasswordEncoding}
   if (task.zpaqCatalogId && task.zpaqSnapshot) task.executionConfig = {
     schemaVersion: 1, kind: 'archive-extraction', outputDirectory: task.outputPath,
@@ -466,8 +467,9 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
     // 不预先添加密码，先尝试解压，只有明确要求密码时才使用保险箱
     const options = {
       outputPath: task.outputPath,
+      readerSelection:task.readerSelection,
       comparisonSelection:task.comparisonSelection?{...task.comparisonSelection,zipPasswordEncoding:task.zipPasswordEncoding??task.comparisonSelection.zipPasswordEncoding}:undefined,
-      keepStructure: task.libraryKeepStructure ?? true,
+      keepStructure: task.readerSelection?.keepStructure ?? task.libraryKeepStructure ?? true,
       overwrite: false,
       deleteAfter: task.recycleSourceAfterExtract ?? false,
       createSubdirectory: task.extractToSubfolder ?? false,
@@ -476,7 +478,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
       zpaqSnapshot: task.zpaqSnapshot, zpaqCatalogId: task.zpaqCatalogId, selectedEntries: task.selectedEntries,
       librarySourceId:task.librarySourceId,libraryRevision:task.libraryRevision,libraryKeepStructure:task.libraryKeepStructure,libraryConflictPolicy:task.libraryConflictPolicy,
       fileFilter: task.fileFilter || null
-      ,conflictPolicy: task.libraryConflictPolicy || appStore.settings.conflictPolicy
+      ,conflictPolicy: task.readerSelection?.conflictPolicy || task.libraryConflictPolicy || appStore.settings.conflictPolicy
     }
 
     try {
