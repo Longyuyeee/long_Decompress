@@ -405,7 +405,22 @@ impl<R: io::BufRead> io::Read for Decompressor<R> {
             #[cfg(feature = "_bzip2_any")]
             Decompressor::Bzip2(r) => r.read(buf),
             #[cfg(feature = "zstd")]
-            Decompressor::Zstd(r) => r.read(buf),
+            Decompressor::Zstd(r) => {
+                if buf.is_empty() { return Ok(0); }
+                r.read(buf).map_err(|error| {
+                    let detail = error.to_string();
+                    let reason = if detail.contains("Dictionary") {
+                        "条目需要外部字典或字典不匹配，当前无法提供外部字典；请用原工具重新导出不依赖字典的 ZIP"
+                    } else if detail.contains("Window size too large") || detail.contains("Frame requires too much memory") {
+                        "条目窗口超过当前解码器支持范围；请用原工具减小窗口后重新导出"
+                    } else if error.kind() == io::ErrorKind::UnexpectedEof {
+                        "条目未完整结束；请补齐来源后重试"
+                    } else {
+                        "内容无法完整解码；请检查来源完整性和密码"
+                    };
+                    io::Error::new(error.kind(), format!("ZIP Zstandard：{reason}（{detail}）"))
+                })
+            },
             #[cfg(feature = "lzma")]
             Decompressor::Lzma(r) => match r {
                 Lzma::Uninitialized {

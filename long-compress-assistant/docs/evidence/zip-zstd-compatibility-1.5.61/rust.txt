@@ -1,0 +1,12 @@
+running 8 tests
+test services::zip_zstd_compatibility_tests::zstd1561_plain_edit_preserves_compressed_bytes_method_comments_and_time ... ok
+test services::zip_zstd_compatibility_tests::zstd1561_password_failure_preserves_original_edits_and_existing_output ... ok
+test services::zip_zstd_compatibility_tests::zstd1561_real_raw_and_concatenated_frames_survive_edit_and_independent_readback ... ok
+test services::zip_zstd_compatibility_tests::zstd1561_bad_crc_size_and_truncated_stream_never_publish_or_become_content_evidence ... ok
+test services::zip_zstd_compatibility_tests::zstd1561_numeric_password_material_uses_exact_range_and_detects_missing_or_changed_members ... ok
+test services::zip_zstd_compatibility_tests::zstd1561_folder_and_zip_content_comparison_reads_real_plain_and_password_bytes ... ok
+test services::zip_zstd_compatibility_tests::zstd1561_incomplete_trailing_dictionary_window_and_old_id_are_not_complete ... ok
+test services::zip_zstd_compatibility_tests::zstd1561_encrypted_edit_keeps_method_and_rekeys_with_explicit_encoding ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 1031 filtered out; finished in 3.49s
+

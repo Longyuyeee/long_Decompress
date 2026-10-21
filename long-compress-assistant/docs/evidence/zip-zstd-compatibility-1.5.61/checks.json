@@ -1,0 +1,20 @@
+{
+  "version": "1.5.61",
+  "native": "8 passed; 0 failed; 1031 filtered out",
+  "frontend": "vue-tsc + vite: passed",
+  "releaseIdentity": "8 version fields + shell DLL: passed",
+  "desktopBuild": "custom-protocol,desktop-e2e: passed",
+  "desktopBinarySha256": "8d526069350f6b72595a16446653c02582119a8c50049ed71825193781dff4ae",
+  "environmentInterruption": "Initial Rust compilation stopped before tests: E: had no free space. Cargo clean -p long-compress-assistant --profile dev removed generated development artifacts; resumed compilation and all 8 new tests passed. Sources and evidence preserved.",
+  "unchangedChecksReused": [
+    "v1.4.14 Zstandard creation/password/volume/conversion",
+    "other methods/media/disk-full/personal installation not rerun"
+  ],
+  "desktop": {
+    "combinations": 4,
+    "layouts": 18,
+    "representativeScreenshotsInspected": 6,
+    "binarySha256": "8d526069350f6b72595a16446653c02582119a8c50049ed71825193781dff4ae",
+    "scriptCorrection": "Initial fixture validation expected uppercase ZSTD; 7-Zip reports lowercase zstd. Assertion corrected case-insensitively before any completed desktop flow. No product change or repeat of passed flows."
+  }
+}
