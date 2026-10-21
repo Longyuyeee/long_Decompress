@@ -1,3 +1,4 @@
+import { prepareZpaqSource } from './zpaqMultipart'
 import { invoke } from '@tauri-apps/api/tauri'
 import { FORMAT_CAPABILITIES, EXTRACT_ONLY_FORMATS } from './compressionFormat'
 
@@ -14,7 +15,7 @@ export interface ArchiveVolumeGroup {
   missing_parts: string[]
 }
 
-export const detectArchiveGroup = (path: string) => invoke<ArchiveVolumeGroup>('detect_split_archive', { path })
+export const detectArchiveGroup = async (path: string, confirmZpaq=false) => invoke<ArchiveVolumeGroup>('detect_split_archive', { path: confirmZpaq ? await prepareZpaqSource(path) : path })
 
 export function archiveGroupKey(path: string): string {
   return path.replace(/\\/g, '/').toLowerCase()

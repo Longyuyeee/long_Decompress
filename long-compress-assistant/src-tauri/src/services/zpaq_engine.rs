@@ -16,6 +16,7 @@ pub fn command_path() -> Option<PathBuf> {
 }
 
 pub fn requires_password(path: &Path) -> Result<bool> {
+    anyhow::ensure!(super::zpaq_multipart::suggest(path)?.is_none(),"[archive-inspection:multipart-confirmation] 发现同名 ZPAQ 部分，请从浏览中心或重新添加到解压中心，确认整组或仅打开此文件；没有默认只读第一部分");
     let source = super::split_archive_detector::SplitArchiveDetector::complete_source(path)?;
     let mut header = Vec::with_capacity(32);
     super::numeric_volume_reader::ZipInputReader::open(&source)?.take(32).read_to_end(&mut header)?;
@@ -67,7 +68,7 @@ async fn run_catalog_mode(path: &Path,password: Option<&str>,output: Option<&Pat
         command.args(["-long-snapshot", &snapshot.version.to_string(), &snapshot.date.to_string()]);
     }
     let mut data = input(if encrypted { password } else { None }, selected)?;
-    if super::numeric_volume_reader::ZipInputReader::is_numeric_first(path) {
+    if super::numeric_volume_reader::ZipInputReader::is_numeric_first(path) || super::zpaq_multipart::details(path)?.is_some() {
         let group = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(path)?.context("没有找到 ZPAQ 数字卷组")?;
         anyhow::ensure!(group.is_complete, "[archive-inspection:incomplete] 缺少 ZPAQ 分卷：{}", group.missing_part_names());
         anyhow::ensure!(group.parts.len() <= 100000, "ZPAQ 分卷数量过多");

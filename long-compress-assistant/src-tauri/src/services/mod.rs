@@ -17,6 +17,7 @@ pub mod compression_analysis;
 pub(crate) mod compression_verification;
 pub mod archive_format;
 pub mod zpaq_engine;
+pub mod zpaq_multipart;
 pub mod zpaq_update;
 pub mod zpaq_diff;
 pub mod alz_engine;
@@ -171,3 +172,5 @@ mod zip_ppmd_compatibility_tests;
 
 #[cfg(test)]
 mod zip_xz_compatibility_tests;
+
+#[cfg(test)] mod zpaq_1564_tests;

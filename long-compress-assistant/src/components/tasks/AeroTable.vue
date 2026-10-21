@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {archiveSourceDirectory} from '@/utils/zpaqMultipart'
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
 import { useSavedLocations } from '@/composables/useSavedLocations'
 import { ref, computed, watch, nextTick } from 'vue'
@@ -156,14 +157,13 @@ const handleSelectOutputDir = async (task: Task) => {
   }
 }
 
-const handleSetSameDir = (task: Task) => {
-  if (task.sourceFiles.length > 0) {
-    const sourcePath = task.sourceFiles[0]
-    // 提取父目录
-    const parentDir = sourcePath.substring(0, Math.max(sourcePath.lastIndexOf('/'), sourcePath.lastIndexOf('\\')))
-    task.outputPath = parentDir
-    task.configurationMode = 'individual'
-  }
+const handleSetSameDir = async (task: Task) => {
+  const source=task.sourceFiles[0]
+  if(!source)return
+  try{const directory=await archiveSourceDirectory(source)
+    if(task.status!=='pending'||task.sourceFiles[0]!==source)return
+    task.outputPath=directory;task.configurationMode='individual'
+  }catch(error){appStore.setError(String(error))}
 }
 
 const getStatusIcon = (status: string) => {

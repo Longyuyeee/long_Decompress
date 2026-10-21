@@ -1,0 +1,10 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+zpaq1564: source-directory-actions
+{
+  "version": "1.5.64",
+  "checks": 7,
+  "layouts": 24,
+  "binarySha256": "700225ed1754df02ca4932a3a6008df0779655dc9ff00d4b7d3e73f91d00f1ee"
+}

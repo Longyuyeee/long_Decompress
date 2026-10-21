@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {detectArchiveGroup} from '@/utils/archiveSource'
 import { computed, ref, watch, onUnmounted } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import { open } from '@tauri-apps/api/dialog'
@@ -76,7 +77,7 @@ async function createDraft() {
   }
   busy.value = true
   try {
-    const split = await invoke<{ is_split: boolean; archive_format?: string; first_part?: string; is_complete?: boolean; missing_parts?: string[] }>('detect_split_archive', { path })
+    const split = await detectArchiveGroup(path,true)
     if (split?.is_split) {
       if (!split.first_part || split.is_complete === false || split.missing_parts?.length) {
         throw new Error(`分卷不完整，请补齐后重试：${split.missing_parts?.join('、') || '缺少首卷或必要分卷'}`)

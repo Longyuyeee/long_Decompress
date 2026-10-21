@@ -1,0 +1,26 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+zpaq1564: plain-confirm-and-old-previews
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: {"archiveOutput":null,"completedAt":"2026-10-21T21:37:50.510Z","durationMs":42,"errorMessage":"所选快照只适用于 ZPAQ 日志归档，请重新选择原归档","executionConfig":{"extractToSubfolder":false,"kind":"archive-extraction","outputDirectory":"E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-1564\\91585db5-7e07-4182-90bd-e281e99939b7\\selected-password","schemaVersion":1,"zpaqSnapshot":{"date":20261021212008,"version":1}},"failure":{"category":"unknown","evidence":"unknown","schemaVersion":1,"stage":"unknown"},"format":"ZPAQ","id":"1792618670468","logs":[{"message":"最终失败原因：所选快照只适用于 ZPAQ 日志归档，请重新选择原归档","severity":"error","timestamp":"2026-10-21T21:37:50.510Z"}],"metrics":null,"name":"journal-key01.zpaq（快照 1）","outputPath":"E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-1564\\91585db5-7e07-4182-90bd-e281e99939b7\\selected-password","processedBytes":0,"retryOfTaskId":null,"sourcePaths":["E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-1564\\profile\\zpaq-sources\\03699504879e343ae0140b786077a4f1627f9afdc7984282f0ea6037308f4860\\journal-key01.zpaq"],"startedAt":"2026-10-21T21:37:50.468Z","status":"failed","taskType":"decompression","totalBytes":0,"workloadKind":"archive"}
++ actual - expected
+
++ 'failed'
+- 'completed'
+
+    at runZpaqNative1564Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/zpaq-native-1564-gate.mjs:49:418)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:4997:5 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 'failed',
+  expected: 'completed',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

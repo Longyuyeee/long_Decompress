@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {archiveSourceDirectory} from '@/utils/zpaqMultipart'
 import TaskScopeBar from '@/components/tasks/TaskScopeBar.vue'
 import BatchResultActions from '@/components/tasks/BatchResultActions.vue'
 import { matchesTaskScope, type TaskScope } from '@/utils/taskScope'
@@ -96,7 +97,10 @@ async function applySelectedConfiguration(patch: BatchConfigPatch, complete?: (e
     }
     if (disposed || !taskStore.tasks.includes(task) || task.status !== 'pending' || task.sourceFiles[0] !== source) continue
     if (patch.outputDirectory !== undefined) {
-      task.outputPath = patch.outputDirectory || parentDirectory(source || '')
+      let directory:string
+      try{directory=patch.outputDirectory||await archiveSourceDirectory(source||'')}catch(error){complete?.(String(error));return}
+      if(disposed||task.status!=='pending'||task.sourceFiles[0]!==source)continue
+      task.outputPath = directory
       changed = true
     }
     if (patch.extractToSubfolder !== undefined && !task.comparisonSelection) { task.extractToSubfolder = patch.extractToSubfolder; changed = true }
@@ -213,8 +217,9 @@ const onFilesSelected = async (files: any[]) => {
     decompressionTasks.value.flatMap(task => task.sourceFiles.map(normalizePath))
   )
 
-  const createTask = (sourcePath: string, name: string, splitCount?: number, actualFormat?: string | null) => {
-    const parentDir = sourcePath.substring(0, Math.max(sourcePath.lastIndexOf('/'), sourcePath.lastIndexOf('\\')))
+  const createTask = (sourcePath: string, name: string, splitCount?: number, actualFormat?: string | null, originPath?:string) => {
+    const location=originPath||sourcePath
+    const parentDir = location.substring(0, Math.max(location.lastIndexOf('/'), location.lastIndexOf('\\')))
     const taskId = taskStore.addTask({
       id: generateId(),
       name: splitCount ? `${name} (${splitCount} 个分卷)` : name,
@@ -247,7 +252,7 @@ const onFilesSelected = async (files: any[]) => {
 
     let detectedFormat: string | null | undefined
     try {
-      const splitInfo = await detectArchiveGroup(sourcePath)
+      const splitInfo = await detectArchiveGroup(sourcePath,true)
       detectedFormat = splitInfo?.archive_format
       if (isPotentialSfxPath(sourcePath) && !splitInfo?.archive_format) {
         throw new Error('不是可读取的 ZIP、7Z 或 RAR 自解压归档；不会执行此程序')
@@ -272,13 +277,13 @@ const onFilesSelected = async (files: any[]) => {
         const normalizedFirst = normalizePath(firstPart)
         if (existingSources.has(normalizedFirst)) continue
         const displayName = splitInfo.base_name || firstPart.split(/[\\/]/).pop() || file.name || 'Unknown'
-        createTask(firstPart, displayName, Number(splitInfo.total_parts || groupPaths.length || 1), detectedFormat)
+        createTask(firstPart, displayName, Number(splitInfo.total_parts || groupPaths.length || 1), detectedFormat, splitInfo.format==='ZpaqNativeSplit'?groupPaths[0]:undefined)
         groupedSplitCount++
         existingSources.add(normalizedFirst)
         continue
       }
     } catch (error) {
-      if (isPotentialSfxPath(sourcePath)) {
+      if (isPotentialSfxPath(sourcePath)||/\.zpaq$/i.test(sourcePath)) {
         const detail = archiveInspectionMessageForDisplay(extractErrorMessage(error))
         errors.push(`${file.name || sourcePath}：${detail}`)
         continue
@@ -332,16 +337,14 @@ const handleGlobalSelectDir = async () => {
   }
 }
 
-const handleGlobalSetSameDir = () => {
-  isGlobalSameDir.value = true
-  globalOutputPath.value = ''
-  // 同步到所有待处理任务：设置各自的父目录
-  decompressionTasks.value.forEach(t => {
-    if (t.status === 'pending' && t.configurationMode === 'global' && t.sourceFiles.length > 0) {
-      const sp = t.sourceFiles[0]
-      t.outputPath = sp.substring(0, Math.max(sp.lastIndexOf('/'), sp.lastIndexOf('\\')))
-    }
-  })
+const handleGlobalSetSameDir = async () => {
+  isGlobalSameDir.value = true;globalOutputPath.value = ''
+  await Promise.all(decompressionTasks.value.filter(t=>t.status==='pending'&&t.configurationMode==='global').map(async task=>{
+    const source=task.sourceFiles[0];if(!source)return
+    try{const directory=await archiveSourceDirectory(source)
+      if(!disposed&&task.status==='pending'&&task.configurationMode==='global'&&task.sourceFiles[0]===source&&isGlobalSameDir.value)task.outputPath=directory
+    }catch(error){appStore.setError(String(error))}
+  }))
 }
 
 const toggleGlobalSubfolder = () => {
@@ -360,13 +363,12 @@ const toggleGlobalRecycleSource = () => {
   })
 }
 
-const applyGlobalConfiguration = (task: Task) => {
-  const sourcePath = task.sourceFiles[0] || ''
-  const separatorIndex = Math.max(sourcePath.lastIndexOf('/'), sourcePath.lastIndexOf('\\'))
-  task.outputPath = isGlobalSameDir.value
-    ? sourcePath.substring(0, separatorIndex)
-    : globalOutputPath.value
-  task.recycleSourceAfterExtract = globalRecycleSourceAfterExtract.value
+const applyGlobalConfiguration = async (task: Task) => {
+  const source=task.sourceFiles[0]||''
+  try{const directory=isGlobalSameDir.value?await archiveSourceDirectory(source):globalOutputPath.value
+    if(disposed||task.status!=='pending'||task.sourceFiles[0]!==source)return
+    task.outputPath=directory;task.recycleSourceAfterExtract=globalRecycleSourceAfterExtract.value
+  }catch(error){appStore.setError(String(error))}
 }
 
 const toggleTaskSelection = (taskId: string) => {
@@ -463,7 +465,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
       appStore.setError(task.sourceIssue || '此任务的密码未保存在草稿中，请展开条目重新填写。')
       return
     }
-    if (task.configurationMode === 'global') applyGlobalConfiguration(task)
+    if (task.configurationMode === 'global') await applyGlobalConfiguration(task)
     // 不预先添加密码，先尝试解压，只有明确要求密码时才使用保险箱
     const options = {
       outputPath: task.outputPath,

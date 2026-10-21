@@ -154,3 +154,16 @@ pub async fn get_dictionary_passwords(
     .await
     .map_err(|error| error.to_string())?
 }
+
+#[tauri::command]
+pub async fn suggest_zpaq_multipart(path:String)->Result<Option<crate::services::zpaq_multipart::Group>,String>{
+ tauri::async_runtime::spawn_blocking(move||crate::services::zpaq_multipart::suggest(Path::new(&path))).await.map_err(|e|e.to_string())?.map_err(|e|format!("{e:#}"))
+}
+#[tauri::command]
+pub async fn confirm_zpaq_multipart(group:crate::services::zpaq_multipart::Group)->Result<String,String>{
+ tauri::async_runtime::spawn_blocking(move||crate::services::zpaq_multipart::confirm(&crate::utils::app_paths::app_data_dir(),group).map(|p|p.to_string_lossy().into_owned())).await.map_err(|e|e.to_string())?.map_err(|e|format!("{e:#}"))
+}
+#[tauri::command]
+pub async fn zpaq_multipart_details(path:String)->Result<Option<crate::services::zpaq_multipart::Group>,String>{
+ tauri::async_runtime::spawn_blocking(move||crate::services::zpaq_multipart::details(Path::new(&path))).await.map_err(|e|e.to_string())?.map_err(|e|format!("{e:#}"))
+}

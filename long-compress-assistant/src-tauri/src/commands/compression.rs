@@ -1449,6 +1449,11 @@ async fn resolve_zpaq_password(path:&str,password:Option<String>)->Result<Option
     CompressionService::new_with_defaults().await.resolve_archive_password_silent(path,&DecompressOptions::default()).await.map_err(|e|format!("{e:#}"))
 }
 #[command]
+pub async fn zpaq_snapshot_catalog_id(file_path:String,password:Option<String>,snapshot:crate::models::compression::ZpaqSnapshot)->Result<String,String>{
+    let password=resolve_zpaq_password(&file_path,password).await?;
+    crate::services::zpaq_engine::catalog(Path::new(&file_path),password.as_deref(),&snapshot,Arc::new(AtomicBool::new(false))).await.map(|catalog|catalog.id).map_err(|e|format!("{e:#}"))
+}
+#[command]
 pub async fn check_zpaq_snapshot_catalog(file_path:String,password:Option<String>,snapshot:crate::models::compression::ZpaqSnapshot,catalog_id:String)->Result<(),String>{
     let password=resolve_zpaq_password(&file_path,password).await?;
     crate::services::zpaq_engine::check_catalog(Path::new(&file_path),password.as_deref(),&snapshot,&catalog_id,Arc::new(AtomicBool::new(false))).await.map_err(|e|format!("{e:#}"))

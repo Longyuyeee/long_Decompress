@@ -98,6 +98,7 @@ async fn append(staged: &Path, entries: &[CompressionEntry], password: Option<&s
 
 pub async fn update(source: &Path, sources: &[String], prefix: &str, output: &Path, password: Option<&str>, level: u32, split_size: Option<u64>, flag: Arc<AtomicBool>, progress: Progress) -> Result<UpdateSummary> {
     check(&flag)?;
+    anyhow::ensure!(super::zpaq_multipart::details(source)?.is_none(),"原生多部分当前仅支持浏览、取回和转换；另存多部分更新将在后续版本提供，请先转换为新的单文件 ZPAQ");
     anyhow::ensure!(output.is_absolute()&&output.extension().is_some_and(|e|e.to_str().is_some_and(|s|s.eq_ignore_ascii_case("zpaq"))),"新备份需要使用完整的 .zpaq 路径");
     anyhow::ensure!(!output.exists()&&super::archive_volumes::volume_paths(output)?.is_empty(),"新备份名称已存在，请另选名称");
     anyhow::ensure!(level<=9,"压缩等级应为0～9");
