@@ -144,3 +144,5 @@ pub mod workflows;
 pub mod workflow_recovery;
 
 pub mod workflow_triggers;
+
+pub mod workflow_schedules;

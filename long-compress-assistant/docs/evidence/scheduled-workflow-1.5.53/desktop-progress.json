@@ -1,0 +1,446 @@
+{
+  "version": "1.5.53",
+  "binarySha256": "4d04f8815cc0b78276d6eddcb863c3b4e3936d7e63eea09574d5a2dc600dad17",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1553\\81a6857b-f222-4db6-913c-06726152c02d",
+  "checks": [
+    {
+      "name": "real-local-time-once-background-result",
+      "binarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+      "runId": "881da9bb-74d3-415a-a849-25c0e493e5a9",
+      "due": "2026-10-21T13:32:00+00:00",
+      "independentBytes": true,
+      "awayFromWorkflow": true
+    },
+    {
+      "name": "normal-restart-missed-skip-run-and-session-credentials",
+      "binarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+      "sameProfile": true,
+      "noCatchUp": true,
+      "skipId": "a719585d-9740-4a68-a486-96d3c9ac3b6e",
+      "lateRun": "94c9392a-1915-44ac-9057-929586dfa4cb",
+      "encryptedRun": "e3e2e703-d83b-467a-9d71-44526377ef61",
+      "sessionCleared": true,
+      "noPasswordsPersisted": true
+    },
+    {
+      "name": "changed-queued-source-never-starts-and-explicit-retry-uses-current-data",
+      "binarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+      "staleId": "e71bdfb6-84a8-49b5-aaed-4c6d9d1b71c6",
+      "retryRun": "fdd8f9ba-87f5-46d0-8319-137cf2d43eff",
+      "independentBytes": true,
+      "noAutomaticRetry": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "schedule-editor-once",
+      "binarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "schedule-editor-once",
+      "binarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "once-result",
+      "binarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "once-result",
+      "binarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "schedule-editor-weekly",
+      "binarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "schedule-editor-weekly",
+      "binarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "session-credentials",
+      "binarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "session-credentials",
+      "binarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "missed-choice",
+      "binarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "missed-choice",
+      "binarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "weekly-and-recent-results",
+      "binarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "weekly-and-recent-results",
+      "binarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "source-changed",
+      "binarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "source-changed",
+      "binarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "final-overview",
+      "binarySha256": "3c9d29fd977cb962935a39e23fd41f2b9a23b26bbddc39f8963e16f9015fa8b2",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "theme": "light enhanced-focus",
+      "width": 1100
+    },
+    {
+      "name": "final-overview",
+      "binarySha256": "3c9d29fd977cb962935a39e23fd41f2b9a23b26bbddc39f8963e16f9015fa8b2",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "theme": "light enhanced-focus",
+      "width": 760
+    },
+    {
+      "name": "final-time-picker",
+      "binarySha256": "3c9d29fd977cb962935a39e23fd41f2b9a23b26bbddc39f8963e16f9015fa8b2",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "theme": "light enhanced-focus",
+      "width": 1100
+    },
+    {
+      "name": "final-time-picker",
+      "binarySha256": "3c9d29fd977cb962935a39e23fd41f2b9a23b26bbddc39f8963e16f9015fa8b2",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "theme": "light enhanced-focus",
+      "width": 760
+    },
+    {
+      "name": "final-source-changed",
+      "binarySha256": "3c9d29fd977cb962935a39e23fd41f2b9a23b26bbddc39f8963e16f9015fa8b2",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "theme": "light enhanced-focus",
+      "width": 1100
+    },
+    {
+      "name": "final-source-changed",
+      "binarySha256": "3c9d29fd977cb962935a39e23fd41f2b9a23b26bbddc39f8963e16f9015fa8b2",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "theme": "light enhanced-focus",
+      "width": 760
+    },
+    {
+      "name": "final-time-picker-light-fixed",
+      "binarySha256": "4d04f8815cc0b78276d6eddcb863c3b4e3936d7e63eea09574d5a2dc600dad17",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "theme": "enhanced-focus light",
+      "width": 1100
+    },
+    {
+      "name": "final-time-picker-light-fixed",
+      "binarySha256": "4d04f8815cc0b78276d6eddcb863c3b4e3936d7e63eea09574d5a2dc600dad17",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "theme": "enhanced-focus light",
+      "width": 760
+    },
+    {
+      "name": "final-time-picker-dark-fixed",
+      "binarySha256": "4d04f8815cc0b78276d6eddcb863c3b4e3936d7e63eea09574d5a2dc600dad17",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "theme": "enhanced-focus dark",
+      "width": 1100
+    },
+    {
+      "name": "final-time-picker-dark-fixed",
+      "binarySha256": "4d04f8815cc0b78276d6eddcb863c3b4e3936d7e63eea09574d5a2dc600dad17",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "theme": "enhanced-focus dark",
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "workflow1553-schedule-editor-once-1100x700.png",
+    "workflow1553-schedule-editor-once-760x520.png",
+    "workflow1553-once-result-1100x700.png",
+    "workflow1553-once-result-760x520.png",
+    "workflow1553-schedule-editor-weekly-1100x700.png",
+    "workflow1553-schedule-editor-weekly-760x520.png",
+    "workflow1553-session-credentials-1100x700.png",
+    "workflow1553-session-credentials-760x520.png",
+    "workflow1553-missed-choice-1100x700.png",
+    "workflow1553-missed-choice-760x520.png",
+    "workflow1553-weekly-and-recent-results-1100x700.png",
+    "workflow1553-weekly-and-recent-results-760x520.png",
+    "workflow1553-source-changed-1100x700.png",
+    "workflow1553-source-changed-760x520.png",
+    "workflow1553-final-overview-1100x700.png",
+    "workflow1553-final-overview-760x520.png",
+    "workflow1553-final-time-picker-1100x700.png",
+    "workflow1553-final-time-picker-760x520.png",
+    "workflow1553-final-source-changed-1100x700.png",
+    "workflow1553-final-source-changed-760x520.png",
+    "workflow1553-final-time-picker-light-fixed-1100x700.png",
+    "workflow1553-final-time-picker-light-fixed-760x520.png",
+    "workflow1553-final-time-picker-dark-fixed-1100x700.png",
+    "workflow1553-final-time-picker-dark-fixed-760x520.png"
+  ],
+  "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1553\\81a6857b-f222-4db6-913c-06726152c02d\\每日报表.txt",
+  "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1553\\81a6857b-f222-4db6-913c-06726152c02d\\交付结果",
+  "packPlan": {
+    "id": "716b955c-58cb-455e-8531-f0963830a53e",
+    "name": "定时普通交付",
+    "steps": [
+      {
+        "id": "6b0c06b6-94c8-4521-8bab-3a137d38e8a3",
+        "name": "生成交付压缩包",
+        "kind": "compress",
+        "extensions": "",
+        "passwordRequired": false,
+        "settings": {
+          "format": "zip",
+          "level": 6,
+          "filename": "资料-{date}",
+          "splitArchive": false,
+          "splitSize": "1024",
+          "keepStructure": true,
+          "verifyAfter": true,
+          "createSolidArchive": false,
+          "deleteAfter": false
+        }
+      }
+    ],
+    "updatedAt": "2026-10-21T13:30:58.060851700+00:00"
+  },
+  "onceRule": {
+    "id": "4dfc6d54-3c69-46f9-94bf-e5a4e7254037",
+    "name": "单次准时交付",
+    "planId": "716b955c-58cb-455e-8531-f0963830a53e",
+    "paths": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1553\\81a6857b-f222-4db6-913c-06726152c02d\\每日报表.txt"
+    ],
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1553\\81a6857b-f222-4db6-913c-06726152c02d\\交付结果",
+    "kind": "once",
+    "time": "21:32",
+    "date": "2026-10-21",
+    "weekdays": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "busyPolicy": "queue",
+    "enabled": true,
+    "nextAt": "2026-10-21T13:32:00+00:00",
+    "checkedAt": 1792589462503,
+    "note": ""
+  },
+  "passwordPlan": {
+    "id": "0b73c300-6cea-4c24-a87e-4e52c58825f1",
+    "name": "定时加密交付",
+    "steps": [
+      {
+        "id": "1b041357-583d-4f8c-ad3a-b5cb6ec24f63",
+        "name": "生成交付压缩包",
+        "kind": "compress",
+        "extensions": "",
+        "passwordRequired": true,
+        "settings": {
+          "format": "zip",
+          "level": 6,
+          "filename": "资料-{date}",
+          "splitArchive": false,
+          "splitSize": "1024",
+          "keepStructure": true,
+          "verifyAfter": true,
+          "createSolidArchive": false,
+          "deleteAfter": false
+        }
+      }
+    ],
+    "updatedAt": "2026-10-21T13:32:05.638334900+00:00"
+  },
+  "passwordRule": {
+    "id": "f56693de-f74b-4e04-8c4f-ce59b99b9715",
+    "name": "每周加密归档",
+    "planId": "0b73c300-6cea-4c24-a87e-4e52c58825f1",
+    "paths": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1553\\81a6857b-f222-4db6-913c-06726152c02d\\每日报表.txt"
+    ],
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1553\\81a6857b-f222-4db6-913c-06726152c02d\\交付结果",
+    "kind": "weekly",
+    "time": "18:00",
+    "date": "2026-10-21",
+    "weekdays": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "busyPolicy": "queue",
+    "enabled": false,
+    "nextAt": "2026-10-22T10:00:00+00:00",
+    "checkedAt": 1792589529567,
+    "note": ""
+  },
+  "passwordItem": "f0a4f2e1-0480-4c42-94c1-3da82e41a8ae",
+  "missedSkip": {
+    "id": "ce95af27-9284-4b80-9481-1c193a6c29c5",
+    "name": "错过后跳过",
+    "planId": "716b955c-58cb-455e-8531-f0963830a53e",
+    "paths": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1553\\81a6857b-f222-4db6-913c-06726152c02d\\每日报表.txt"
+    ],
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1553\\81a6857b-f222-4db6-913c-06726152c02d\\交付结果",
+    "kind": "once",
+    "time": "21:33",
+    "date": "2026-10-21",
+    "weekdays": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "busyPolicy": "queue",
+    "enabled": true,
+    "nextAt": "2026-10-21T13:33:00+00:00",
+    "checkedAt": 1792589535113,
+    "note": ""
+  },
+  "missedRun": {
+    "id": "11cedc32-06b4-478a-8b8d-9080e3db993c",
+    "name": "错过后补跑",
+    "planId": "716b955c-58cb-455e-8531-f0963830a53e",
+    "paths": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1553\\81a6857b-f222-4db6-913c-06726152c02d\\每日报表.txt"
+    ],
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1553\\81a6857b-f222-4db6-913c-06726152c02d\\交付结果",
+    "kind": "once",
+    "time": "21:33",
+    "date": "2026-10-21",
+    "weekdays": [
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "busyPolicy": "queue",
+    "enabled": true,
+    "nextAt": "2026-10-21T13:33:00+00:00",
+    "checkedAt": 1792589536743,
+    "note": ""
+  },
+  "restarted": true,
+  "previousIdentities": [
+    "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+    "3c9d29fd977cb962935a39e23fd41f2b9a23b26bbddc39f8963e16f9015fa8b2"
+  ],
+  "displayThemes": {
+    "light": "light",
+    "dark": "dark"
+  }
+}

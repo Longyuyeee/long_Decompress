@@ -1,0 +1,55 @@
+{
+  "version": "1.5.53",
+  "frontend": {
+    "distinctTests": 18,
+    "suites": [
+      "workflowAutomation1553.test.ts (8)",
+      "workflowAutomation1552.test.ts (10)"
+    ],
+    "result": "passed"
+  },
+  "rust": {
+    "distinctTests": 22,
+    "filters": [
+      "workflow1553 (initial 8)",
+      "workflow1553_shared_ (2)",
+      "workflow1552 (affected shared queue 11)",
+      "workflow1553_fixed_inputs (1)"
+    ],
+    "result": "passed"
+  },
+  "build": [
+    "TypeScript/Vite",
+    "Shell extension",
+    "release identity eight identifiers",
+    "Windows custom-protocol/desktop-e2e release binary"
+  ],
+  "desktop": {
+    "result": "passed",
+    "compositeFlows": 3,
+    "layoutRecords": 24,
+    "viewedSelectedScreenshots": 8,
+    "displayThemes": {
+      "light": "light",
+      "dark": "dark"
+    },
+    "flowBinarySha256": "7162adce2434c7d762f4bbbe4ef831e4b17cb02ce346d3507a8d9e7ddca02b7b",
+    "finalBinarySha256": "4d04f8815cc0b78276d6eddcb863c3b4e3936d7e63eea09574d5a2dc600dad17",
+    "selectedScreenshots": [
+      "workflow1553-final-overview-1100x700.png",
+      "workflow1553-final-overview-760x520.png",
+      "workflow1553-final-time-picker-light-fixed-1100x700.png",
+      "workflow1553-final-time-picker-dark-fixed-760x520.png",
+      "workflow1553-missed-choice-1100x700.png",
+      "workflow1553-missed-choice-760x520.png",
+      "workflow1553-weekly-and-recent-results-760x520.png",
+      "workflow1553-final-source-changed-760x520.png"
+    ],
+    "incrementalScope": "After the three real flows, only due-only history reading, explicit fixed-source availability (targeted Rust), UI copy and date/time theme display changed. Final theme assertion and screenshots passed without repeating the flows. Intermediate theme scope failure was fixed."
+  },
+  "notRepeated": [
+    "old format/algorithm/media matrices",
+    "real disk full",
+    "personal installation"
+  ]
+}

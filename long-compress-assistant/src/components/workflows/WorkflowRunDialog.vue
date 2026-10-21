@@ -36,7 +36,7 @@ function submit(){emit('run',{paths:[...paths.value],outputDirectory:output.valu
 onUnmounted(()=>{sourcePassword.value='';passwords.value={}})
 </script>
 <template>
-  <Modal :visible="true" :title="queued?'目录规则的本次会话密码':recovery?'纠正并接续这次运行':'确认并运行这套方案'" icon="pi pi-play" size="xl" :show-footer="true" :show-close-button="!busy" :close-on-backdrop="!busy" :close-on-escape="!busy" @update:visible="emit('close')">
+  <Modal :visible="true" :title="queued?'自动化规则的本次会话密码':recovery?'纠正并接续这次运行':'确认并运行这套方案'" icon="pi pi-play" size="xl" :show-footer="true" :show-close-button="!busy" :close-on-backdrop="!busy" :close-on-escape="!busy" @update:visible="emit('close')">
     <slot name="before" />
     <fieldset :disabled="busy" class="workflow-run-grid" :class="{'one-column':recovery&&!showSourceCredential&&!outputSteps.length}" data-testid="workflow-run-dialog">
       <section class="run-card">

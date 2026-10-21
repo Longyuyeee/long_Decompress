@@ -105,8 +105,10 @@ pub async fn workflow_trigger_state() -> Result<crate::services::workflow_trigge
         .map_err(|e| format!("{e:#}"))
 }
 #[tauri::command]
-pub async fn workflow_trigger_poll() -> Result<crate::services::workflow_triggers::State, String> {
-    crate::services::workflow_triggers::poll(&pool().await?)
+pub async fn workflow_trigger_poll(
+    busy: Option<bool>,
+) -> Result<crate::services::workflow_triggers::State, String> {
+    crate::services::workflow_triggers::poll(&pool().await?, busy.unwrap_or(false))
         .await
         .map_err(|e| format!("{e:#}"))
 }
@@ -165,6 +167,24 @@ pub async fn workflow_trigger_action(
 pub async fn workflow_trigger_finish() -> Result<crate::services::workflow_triggers::State, String>
 {
     crate::services::workflow_triggers::finish(&pool().await?)
+        .await
+        .map_err(|e| format!("{e:#}"))
+}
+
+#[tauri::command]
+pub async fn workflow_schedule_save(
+    rule: crate::services::workflow_schedules::Schedule,
+) -> Result<crate::services::workflow_triggers::State, String> {
+    crate::services::workflow_schedules::save(&pool().await?, rule)
+        .await
+        .map_err(|e| format!("{e:#}"))
+}
+#[tauri::command]
+pub async fn workflow_schedule_action(
+    id: String,
+    action: String,
+) -> Result<crate::services::workflow_triggers::State, String> {
+    crate::services::workflow_schedules::action(&pool().await?, &id, &action)
         .await
         .map_err(|e| format!("{e:#}"))
 }
