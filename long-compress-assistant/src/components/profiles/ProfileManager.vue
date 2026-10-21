@@ -104,6 +104,11 @@ const dialogTitle = computed(() =>
 )
 
 watch(() => formData.value.config.format, () => {
+  if (formData.value.config.format === 'swm') {
+    formData.value.config.splitArchive = true
+    if (!formData.value.config.splitSize) formData.value.config.splitSize = 1024
+    if (!['store','xpress','lzx'].includes(formData.value.config.wimMethod || '')) formData.value.config.wimMethod = 'store'
+  }
   if (!supportsPassword.value) formData.value.config.password = null
   if (!supportsSplit.value) {
     formData.value.config.splitArchive = false
@@ -674,7 +679,7 @@ const formatDate = (timestamp: number | null) =>
             <div><p class="text-xs font-black text-content">压缩等级</p><p class="mt-0.5 text-xs text-muted">数值越高通常压缩率越高，但耗时更长</p></div>
             <span class="rounded-lg bg-primary/10 px-3 py-1 text-sm font-black text-primary">{{ formData.config.level }}</span>
           </div>
-          <input v-model.number="formData.config.level" :disabled="['wim','esd'].includes(formData.config.format)" type="range" min="0" max="9" class="w-full accent-primary" />
+          <input v-model.number="formData.config.level" :disabled="['wim','esd','swm'].includes(formData.config.format)" type="range" min="0" max="9" class="w-full accent-primary" />
           <div class="mt-1 flex justify-between text-xs text-muted"><span>0 · 仅打包</span><span>9 · 最大压缩</span></div>
         </div>
 
@@ -690,12 +695,13 @@ const formatDate = (timestamp: number | null) =>
           <label class="profile-option"><input v-model="formData.config.keepStructure" type="checkbox" /><span><strong>保留目录结构</strong><small>归档内保留原始文件夹层级</small></span></label>
           <label class="profile-option"><input v-model="formData.config.deleteAfter" type="checkbox" /><span><strong>完成后删除源文件</strong><small>仅在完整性校验通过后执行</small></span></label>
           <label class="profile-option" :class="{ 'opacity-70': formData.config.deleteAfter }"><input v-model="formData.config.verifyAfter" type="checkbox" :disabled="formData.config.deleteAfter" /><span><strong>压缩完成后校验</strong><small>{{ formData.config.deleteAfter ? '删除源文件时强制开启' : '发布最终文件前读取并验证归档' }}</small></span></label>
-          <label v-if="supportsSplit" class="profile-option"><input v-model="formData.config.splitArchive" type="checkbox" /><span><strong>分卷压缩</strong><small>将压缩包拆分为多个文件</small></span></label>
+          <label v-if="supportsSplit" class="profile-option"><input v-model="formData.config.splitArchive" :disabled="formData.config.format === 'swm'" type="checkbox" /><span><strong>分卷压缩</strong><small>将压缩包拆分为多个文件</small></span></label>
           <RarRecoveryField v-if="formData.config.format === 'rar'" v-model="formData.config.rarRecoveryPercent" v-model:recovery-volumes="formData.config.rarRecoveryVolumes" />
           <label v-if="supportsSolid" class="profile-option"><input v-model="formData.config.createSolidArchive" type="checkbox" /><span><strong>固实压缩</strong><small>提高同类文件压缩率</small></span></label>
           <label v-if="supportsSolid" class="profile-option"><input data-testid="profile-encrypt-filenames" v-model="formData.config.encryptFilenames" type="checkbox" /><span><strong>加密文件名 <HelpHint label="配置组文件名加密说明">查看包内文件名也需要密码。支持 7Z / RAR，运行前请填写密码。</HelpHint></strong></span></label>
         </div>
 
+        <p v-if="formData.config.format === 'swm'" data-testid="profile-swm-hint" class="text-xs leading-relaxed text-muted">SWM 使用原生资源分包，需整组保留；单个资源可能超过目标大小。仅支持非固实的仅存储、XPRESS、LZX，不含原生密码。</p>
         <label v-if="formData.config.splitArchive" class="block">
           <span class="mb-2 block text-xs font-black text-muted">每个分卷大小（MiB）</span>
           <input v-model.number="formData.config.splitSize" type="number" min="1" step="1" class="h-10 w-full rounded-xl border border-subtle bg-input px-3 text-sm text-content outline-none focus:border-primary" />
@@ -760,7 +766,7 @@ const formatDate = (timestamp: number | null) =>
               <span v-if="templatePreview.template.compression.createSolidArchive" class="rounded-md bg-emerald-500/10 px-2 py-1 text-emerald-400">固实</span>
             </div>
             <dl class="mt-3 space-y-2 text-xs">
-              <div v-if="['wim','esd'].includes(templatePreview.template.compression.format)" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">WIM 压缩方法</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.format === 'esd' || templatePreview.template.compression.wimMethod === 'solid' ? 'LZMS · 固实归档' : templatePreview.template.compression.wimMethod === 'lzms' ? 'LZMS · 高压缩' : templatePreview.template.compression.wimMethod === 'lzx' ? 'LZX · 体积优先' : templatePreview.template.compression.wimMethod === 'xpress' ? 'XPRESS · 快速压缩' : '仅存储 · 去重' }}</dd></div>
+              <div v-if="['wim','esd','swm'].includes(templatePreview.template.compression.format)" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">WIM 压缩方法</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.format === 'esd' || templatePreview.template.compression.wimMethod === 'solid' ? 'LZMS · 固实归档' : templatePreview.template.compression.wimMethod === 'lzms' ? 'LZMS · 高压缩' : templatePreview.template.compression.wimMethod === 'lzx' ? 'LZX · 体积优先' : templatePreview.template.compression.wimMethod === 'xpress' ? 'XPRESS · 快速压缩' : '仅存储 · 去重' }}</dd></div>
               <div v-if="['zip', 'zipx'].includes(templatePreview.template.compression.format)" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">压缩方法</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.format === 'zipx' ? 'XZ' : templatePreview.template.compression.zipMethod === 'lzma' ? 'LZMA' : templatePreview.template.compression.zipMethod === 'ppmd' ? 'PPMd' : templatePreview.template.compression.zipMethod === 'bzip2' ? 'BZip2' : templatePreview.template.compression.zipMethod === 'zstd' ? 'Zstandard' : '兼容 ZIP · Deflate' }}</dd></div>
               <div data-testid="template-filename-encryption" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">文件名加密</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.encryptFilenames ? '开启' : '关闭' }}</dd></div>
               <div v-if="['zip', 'zipx'].includes(templatePreview.template.compression.format)" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">ZIP 加密方式</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.zipEncryption === 'zipcrypto' ? 'ZipCrypto（传统兼容，较弱）' : 'AES-256' }}</dd></div>

@@ -1,10 +1,13 @@
 # 文档导航与维护规则
 
-- **本轮 v1.5.19 功能封板**：[逐文件校验](CHECKSUM_DETAILS_1.5.19.md)、[封板记录](CHECKSUM_DETAILS_FREEZE_1.5.19.md)、[中文说明](RELEASE_NOTES_1.5.19.md)。七项 Rust、26 前端、四条原生 IPC、五条实际 UI、八张实看页面；最终候选/正式状态在本版 PR 与[发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.19)接续。
-- **下一阶段已规划，尚未实施**：[v1.5.20～v1.5.22](ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)：LZIP 数字分卷、扩展 AES 内层、大清单真实进度与停止/继续。准确状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
-- **上一版 v1.5.18 已正式发布**：[AES 数字分卷](AES_VOLUMES_FREEZE_1.5.18.md)、[Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.18)、[PR #213](https://github.com/Longyuyeee/long_Decompress/pull/213)。真实 VHD 盘满补测已通过。
+- **此前正式版 v1.5.39**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.39)，准确开发状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
+- **当前开发路线**：v1.5.40 [原生 SWM 创建](NATIVE_SWM_CREATE_1.5.40.md)已完成功能封板，发布在本版 PR 接续，后续按[近期 v1.5.40～v1.5.43](ARCHIVE_ROADMAP_1.5.40_TO_1.5.43.md) → [五模块分阶段 v1.5.44～v1.5.58，v1.5.59 起主线回归](ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)。大模块拆成可独立使用的功能阶段，小阶段可合并。
 
-下方为历史阶段记录，不覆盖本轮状态与接续顺序。
+以下为历史阶段记录，不覆盖上述当前状态与路线。
+
+- **历史 v1.5.19 功能封板**：[逐文件校验](CHECKSUM_DETAILS_1.5.19.md)、[封板记录](CHECKSUM_DETAILS_FREEZE_1.5.19.md)、[中文说明](RELEASE_NOTES_1.5.19.md)。七项 Rust、26 前端、四条原生 IPC、五条实际 UI、八张实看页面；最终候选/正式状态在本版 PR 与[发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.19)接续。
+- **历史阶段原排期**：[v1.5.20～v1.5.22](ARCHIVE_ROADMAP_1.5.20_TO_1.5.22.md)：LZIP 数字分卷、扩展 AES 内层、大清单真实进度与停止/继续。准确状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
+- **历史 v1.5.18 已正式发布**：[AES 数字分卷](AES_VOLUMES_FREEZE_1.5.18.md)、[Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.18)、[PR #213](https://github.com/Longyuyeee/long_Decompress/pull/213)。真实 VHD 盘满补测已通过。
 
 - **历史正式版：[v1.5.14 TAR 与真实路由](TAR_ROUTING_FREEZE_1.5.14.md)**已封板发布：203 Rust、170 前端、36 桌面记录、18 张实看页面及普通生产通过，PR #208 受保护合入，正式四资产与中文说明已回下载核对；[下载安装包](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.14)。
 

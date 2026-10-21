@@ -1285,7 +1285,7 @@ impl CompressionService {
                 working_output.clone(),
                 split_requested,
             );
-            let generic_split = split_requested && !matches!(route, CompressionRoute::Zip | CompressionRoute::SevenZip | CompressionRoute::Rar);
+            let generic_split = requested_format != "swm" && split_requested && !matches!(route, CompressionRoute::Zip | CompressionRoute::SevenZip | CompressionRoute::Rar);
             let split_size = options.split_size.unwrap_or(0);
             let mut options = options;
             if generic_split { options.split_size = None; }
@@ -3556,6 +3556,17 @@ impl CompressionService {
     }
 
     fn do_compress_wim(&self, window: &Window, task_id: &str, sources: &[String], output: &str, options: CompressionOptions) -> Result<()> {
+        if options.format.as_deref() == Some("swm") || output.to_ascii_lowercase().ends_with(".swm") {
+            self.emit_log(window, task_id, &format!("创建原生 SWM · {}：先编码内容，再生成资源分包；单个资源过大时成员可能超过目标大小。", options.wim_method.label()), TaskLogSeverity::Info);
+            let splitting = std::cell::Cell::new(false);
+            let bytes = crate::services::wim_writer::create_swm(sources, Path::new(output), options.preserve_paths.unwrap_or(true), options.wim_method,
+                options.split_size.context("原生 SWM 需要目标卷大小")?, self.cancellation_flag.clone(), |progress, source_bytes| {
+                    if progress >= 0.75 && !splitting.replace(true) { self.emit_progress(window, task_id, progress, None, source_bytes, source_bytes); self.emit_compression_stage(window, task_id, "Splitting", None); self.emit_log(window, task_id, "内容编码完成，正在生成原生 SWM 资源分包", TaskLogSeverity::Info); }
+                    self.emit_progress(window, task_id, progress, None, 0, 0);
+                })?;
+            self.emit_progress(window, task_id, 0.99, None, bytes, bytes);
+            return Ok(());
+        }
         if ![".wim", ".esd"].iter().any(|suffix| output.to_ascii_lowercase().ends_with(suffix)) {
             return Err(CompressionError::CompressionFailed("WIM/ESD 输出路径需要以 .wim 或 .esd 结尾".to_string()).into());
         }

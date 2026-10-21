@@ -21,6 +21,7 @@ pub struct CompressionFormatCapability {
 }
 
 pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
+    CompressionFormatCapability { format: "swm", extensions: &["swm"], can_compress: true, can_extract: true, supports_password_compress: false, supports_password_extract: false, single_file_only: false, supports_split: true, requires_7za: true, requires_winrar: false },
     CompressionFormatCapability { format: "tar.lzma.aes", extensions: &["tar.lzma.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "lzma.aes", extensions: &["lzma.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: true, supports_split: true, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "tar.lzma", extensions: &["tar.lzma"], can_compress: true, can_extract: true, supports_password_compress: false, supports_password_extract: false, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
@@ -454,6 +455,11 @@ pub fn validate_compression_request(
         .is_some_and(|password| !password.is_empty());
     let split_requested = options.split_size.is_some_and(|size| size > 0);
 
+    if requested_format == "swm" {
+        anyhow::ensure!(options.split_size.is_some_and(|s| s >= 65536), "原生 SWM 需要设置至少 64 KiB 的目标卷大小");
+        anyhow::ensure!(matches!(options.wim_method, super::wim_writer::WimMethod::Store | super::wim_writer::WimMethod::Xpress | super::wim_writer::WimMethod::Lzx), "原生 SWM 仅支持仅存储、XPRESS、LZX，不支持 LZMS 或固实");
+        anyhow::ensure!(output_path.to_ascii_lowercase().ends_with(".swm"), "原生 SWM 输出需要以 .swm 结尾");
+    }
     if options.encrypt_filenames && (!matches!(requested_format.as_str(), "7z" | "rar") || !has_password) {
         return Err(CompressionError::CompressionFailed(
             "文件名加密仅支持 7Z/RAR，且必须设置压缩密码。".to_string(),
@@ -532,7 +538,7 @@ pub(crate) fn compression_route(format: &str) -> Option<CompressionRoute> {
         "tar.xz" => Some(CompressionRoute::TarXz),
         "7z" => Some(CompressionRoute::SevenZip),
         "rar" => Some(CompressionRoute::Rar),
-        "wim" | "esd" => Some(CompressionRoute::Wim),
+        "wim" | "esd" | "swm" => Some(CompressionRoute::Wim),
         "gz" => Some(CompressionRoute::Gzip),
         "bz2" => Some(CompressionRoute::Bzip2),
         "xz" => Some(CompressionRoute::Xz),

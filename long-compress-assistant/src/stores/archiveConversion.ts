@@ -31,7 +31,7 @@ export const conversionFormats = [
   ['tar.br.aes', 'TAR.BR.AES（加密）'],
   ['tar.lz.aes', 'TAR.LZIP.AES（加密）'],
   ['tar.aes', 'TAR.AES（加密）'], ['tar.gz.aes', 'TGZ.AES（加密）'],
-  ['tar.bz2.aes', 'TBZ.AES（加密）'], ['tar.xz.aes', 'TXZ.AES（加密）'], ['tar.zst.aes', 'TZST.AES（加密）'], ['wim', 'WIM'], ['esd', 'ESD（固实）'],
+  ['tar.bz2.aes', 'TBZ.AES（加密）'], ['tar.xz.aes', 'TXZ.AES（加密）'], ['tar.zst.aes', 'TZST.AES（加密）'], ['swm', 'SWM（原生分包）'], ['wim', 'WIM'], ['esd', 'ESD（固实）'],
 ].map(([value, label]) => ({ value, label }))
 const pathKey = (path: string) => path.replace(/\\/g, '/').toLowerCase()
 export const useArchiveConversionStore = defineStore('archiveConversion', () => {
@@ -64,6 +64,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     const settings = item.settings || defaults.value
     if (item.intent === 'zpaq-update') return { ...settings, format: 'zpaq', password: '', encryptFilenames: false, sourceZpaqSnapshot: undefined }
     const effective = !item.settings && item.defaultFormat ? { ...settings, format: item.defaultFormat } : { ...settings }
+    if (effective.format === 'swm') return { ...effective, wimMethod: ['store','xpress','lzx'].includes(effective.wimMethod || '') ? effective.wimMethod : 'store' }
     return effective.format === 'esd' ? { ...effective, wimMethod: 'solid' } : effective
   }
   function outputFor(item: ConversionDraft) { return conversionOutputPath(item.sourcePath, effectiveSettings(item), item.intent) }
@@ -227,7 +228,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     const targets = chosen.filter(item => items.value.includes(item) && item.selected && !item.taskId)
     const methodOnly = !sourceEncodingChanged && patch.zipMethod !== undefined && Object.entries(patch).every(([field, value]) => field === 'zipMethod' || value === undefined)
     const wimOnly = patch.wimMethod !== undefined && Object.entries(patch).every(([key,v]) => key === 'wimMethod' || v === undefined)
-    if (wimOnly && !targets.some(item => effectiveSettings(item).format === 'wim')) return '所选任务中没有 WIM 任务，请选择 WIM 格式或保持各自方法。'
+    if (wimOnly && !targets.some(item => ['wim','swm'].includes(effectiveSettings(item).format))) return '所选任务中没有 WIM 任务，请选择 WIM 格式或保持各自方法。'
     if (methodOnly && !targets.some(item => effectiveSettings(item).format === 'zip')) return '所选任务中没有 ZIP 任务，请选择 ZIP 格式或保持各自方法。'
     if (patch.rarRecoveryPercent && targets.some(item => (patch.format || effectiveSettings(item).format) !== 'rar')) return '恢复保护只适用于 RAR，请调整所选任务的目标格式。'
     if (patch.rarRecoveryVolumes && targets.some(item => (patch.format || effectiveSettings(item).format) !== 'rar')) return '恢复卷只适用于 RAR 分包，请调整所选任务的目标格式。'
@@ -237,7 +238,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     let applied = 0, skippedSource = 0, skippedTarget = 0
     for (const item of targets) {
       const filtered = { ...patch }, format = patch.format || effectiveSettings(item).format
-      if (filtered.wimMethod !== undefined && format !== 'wim') delete filtered.wimMethod
+      if (filtered.wimMethod !== undefined && (!['wim','swm'].includes(format) || format === 'swm' && !['store','xpress','lzx'].includes(filtered.wimMethod))) delete filtered.wimMethod
       if (filtered.zipMethod !== undefined && format !== 'zip') delete filtered.zipMethod
       if (filtered.zipPasswordEncoding !== undefined && !['zip','zipx'].includes(format)) { delete filtered.zipPasswordEncoding; skippedTarget++ }
       if (sourceEncodingChanged && (!item.sourceFormat || !supportsZipPasswordEncoding(item.sourcePath, item.sourceFormat))) { delete filtered.sourceZipPasswordEncoding; skippedSource++ }
@@ -324,6 +325,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     if (settings.encryptFilenames && (!supportsFilenameEncryption(settings.format) || !settings.password)) return '文件名加密需要选择 7Z/RAR 并填写新包密码'
     if (settings.format.endsWith('.aes') && !settings.password) return '此加密格式需要填写新包密码'
     if (settings.password && !supportsNativePassword(settings.format)) return '此格式不支持原生密码，请选择 ZIP、7Z、RAR 或加密包装格式'
+    if (settings.format === 'swm' && settings.splitMiB < 0.0625) return 'SWM 目标卷大小至少为 64 KiB'
     if (settings.splitMiB > 0 && !supportsArchiveSplit(settings.format)) return '此格式暂不支持分卷'
     if (['zip', 'zipx'].includes(settings.format) && settings.zipSplitMode === 'standard' && settings.splitMiB > 0 && (settings.splitMiB < 0.0625 || settings.splitMiB >= 4096)) return '标准 ZIP 每卷大小需要在 64 KiB 至 4 GiB（不含）之间'
     if (!output.toLowerCase().endsWith('.' + settings.format)) return '新包名称必须以 .' + settings.format + ' 结尾'
@@ -369,7 +371,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
           ...(config.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: config.sourceZipPasswordEncoding } : {}),
           sourcePassword: settings.sourcePassword || null, outputPath, ...snapshotArguments(settings.sourceZpaqSnapshot),
           options: { format: config.format, level: config.level, password: settings.password || null,
-            ...(['wim','esd'].includes(config.format) ? { wim_method: settings.wimMethod ?? 'store' } : {}),
+            ...(['wim','esd','swm'].includes(config.format) ? { wim_method: settings.wimMethod ?? 'store' } : {}),
             zip_method: config.zipMethod ?? 'deflate', zip_encryption: config.zipEncryption, zip_password_encoding: config.zipPasswordEncoding,
             zip_split_mode: config.zipSplitMode, rar_recovery_percent: config.rarRecoveryPercent ?? 0,
             rar_recovery_volumes: config.splitSize > 0 ? (config.rarRecoveryVolumes ?? 0) : 0,
