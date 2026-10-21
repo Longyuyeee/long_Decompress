@@ -85,6 +85,7 @@ import { runZipPpmd1535Gate } from './zip-ppmd-1535-gate.mjs'
 import { runZpaqIncremental1536Gate } from './zpaq-incremental-1536-gate.mjs'
 import { runZpaqDiff1537Gate } from './zpaq-diff-1537-gate.mjs'
 import { runZipBzip1534Gate } from './zip-bzip2-1534-gate.mjs'
+import { runZipEdit1545Gate } from './zip-edit-1545-gate.mjs'
 import { runZipEdit1544Gate } from './zip-edit-1544-gate.mjs'
 import { runBatchResults1543Gate } from './batch-results-1543-gate.mjs'
 import { runFailureRecovery1542Gate } from './failure-recovery-1542-gate.mjs'
@@ -4973,6 +4974,9 @@ try {
     await runZipPpmd1535Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
   } else if (process.argv.includes('--zip-bzip2-1534-only')) {
     await runZipBzip1534Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
+  } else if (process.argv.includes('--zip-edit-1545-only')) {
+    await runZipEdit1545Gate({ driver, bridge: callDesktopBridge, artifactDirectory, application, root, bundledSevenZip })
+    completedSuccessfully = true
   } else if (process.argv.includes('--zip-edit-1544-only')) {
     await runZipEdit1544Gate({ driver, bridge: callDesktopBridge, artifactDirectory, application, root, bundledSevenZip })
     completedSuccessfully = true
