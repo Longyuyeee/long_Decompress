@@ -1,0 +1,49 @@
+{
+  "version": "1.5.52",
+  "frontend": {
+    "distinctTests": 37,
+    "suites": [
+      "workflows1550.test.ts (13)",
+      "workflowAutomation1552.test.ts (10)",
+      "App.test.ts (12)",
+      "workflows1551.test.ts new 1552 cases (2)"
+    ],
+    "result": "passed",
+    "finalTargeted": "preserve selected history and allow ready work despite observation notices"
+  },
+  "rust": {
+    "distinctTests": 11,
+    "result": "passed",
+    "filters": [
+      "workflow1552 (initial 8)",
+      "workflow1552_queue_follows (1)",
+      "workflow1552_windows_path (1)",
+      "workflow1552_queue_capacity (1)"
+    ]
+  },
+  "build": [
+    "TypeScript/Vite",
+    "Shell extension",
+    "eight release identities",
+    "custom-protocol desktop-e2e Windows binary"
+  ],
+  "desktop": {
+    "flows": 5,
+    "layouts": 20,
+    "representativeImagesViewedAndSaved": 8,
+    "flowBinarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+    "finalDisplayBinarySha256": "ac109cd1c8d191c536924c01bf20b32aa3b89556900b6f0de2a5a7d1eb9fb474",
+    "images": [
+      "workflow1552-completed-and-rules-1100x700.png",
+      "workflow1552-completed-and-rules-760x520.png",
+      "workflow1552-folder-rule-expanded-1100x700.png",
+      "workflow1552-missing-volume-760x520.png",
+      "workflow1552-corrected-current-result-1100x700.png",
+      "workflow1552-stopped-queue-760x520.png",
+      "workflow1552-final-session-passwords-1100x700.png",
+      "workflow1552-final-session-passwords-760x520.png"
+    ]
+  },
+  "provenance": "Initial baseline/writer/cancel checks and four layouts retained on baca04fb. Windows verbatim output paths caused real ZIP publication failure; normalized rule/queue paths, then resumed failed or remaining work. Timestamp helper now preserves nanoseconds; a real metadata change is not labeled a duplicate event. Five composite flows completed on 8d0cd7f5. Later only capacity-notice policy (targeted frontend/Rust) and credential labels/read-only long-path display changed; final native program covers those changes, with only two affected display checks repeated. Isolated v1.5.51 test profile copied using read-only SQLite backup; no personal install/data touched.",
+  "scope": "No old format/password matrix, real disk-full or media checks repeated. Candidate, normal merge, tag and formal assets receipted in PR."
+}

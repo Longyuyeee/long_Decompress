@@ -142,3 +142,5 @@ pub mod library_organization;
 pub mod workflows;
 
 pub mod workflow_recovery;
+
+pub mod workflow_triggers;

@@ -1,0 +1,419 @@
+{
+  "version": "1.5.52",
+  "binarySha256": "ac109cd1c8d191c536924c01bf20b32aa3b89556900b6f0de2a5a7d1eb9fb474",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c",
+  "checks": [
+    {
+      "name": "new-only-stable-copy-cancel-retry-background-output-exclusion",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "runId": "de3d05b1-1a17-451b-8ebc-e2a9fe761e59",
+      "writerWaited": true,
+      "originalPreserved": true,
+      "noDuplicateEvents": true,
+      "noOutputLoop": true
+    },
+    {
+      "name": "rule-pause-folder-source-and-queued-snapshot",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "runId": "de746495-87ca-4e34-84e6-7a872aec357d",
+      "folderContentsVerified": true,
+      "queuedSnapshotUnaffected": true
+    },
+    {
+      "name": "split-arrival-session-password-failure-and-corrected-result",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "members": 3,
+      "failedRun": "35b9dd6c-4baf-4730-a4fe-a7cdaf107bf8",
+      "correctedRun": "6700cd3c-8e0c-4c38-a309-12bb7453423b",
+      "separateOutputPassword": true,
+      "originalTriggerRetained": true,
+      "independentBytes": true
+    },
+    {
+      "name": "normal-restart-keeps-paused-queue-and-requires-session-passwords-again",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "runId": "86aa6af7-38bb-46e6-bde8-882c80335fb8",
+      "sameProfile": true,
+      "noAutomaticRunWhilePaused": true,
+      "sessionPasswordsCleared": true,
+      "noSecretsPersisted": true
+    },
+    {
+      "name": "stop-and-normal-exit-retain-claimed-run-without-automatic-repeat",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "runId": "f8502cdb-95d2-4a73-b332-f3b6d9ead419",
+      "sourceHashUnchanged": true,
+      "normalCloseSameProfile": true,
+      "noAutomaticDuplicate": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "rule-editor",
+      "binarySha256": "baca04fb956b9472845653585a5ba4df33c5f95ad48ffee87cbef87acb13b662",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "rule-editor",
+      "binarySha256": "baca04fb956b9472845653585a5ba4df33c5f95ad48ffee87cbef87acb13b662",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "stable-queue",
+      "binarySha256": "baca04fb956b9472845653585a5ba4df33c5f95ad48ffee87cbef87acb13b662",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "stable-queue",
+      "binarySha256": "baca04fb956b9472845653585a5ba4df33c5f95ad48ffee87cbef87acb13b662",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "completed-and-rules",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "completed-and-rules",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "folder-rule-expanded",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "folder-rule-expanded",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "missing-volume",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "missing-volume",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "session-passwords",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "session-passwords",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "corrected-current-result",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "corrected-current-result",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "restart-credentials",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "restart-credentials",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "stopped-queue",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "stopped-queue",
+      "binarySha256": "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "final-session-passwords",
+      "binarySha256": "ac109cd1c8d191c536924c01bf20b32aa3b89556900b6f0de2a5a7d1eb9fb474",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "final-session-passwords",
+      "binarySha256": "ac109cd1c8d191c536924c01bf20b32aa3b89556900b6f0de2a5a7d1eb9fb474",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "workflow1552-rule-editor-1100x700.png",
+    "workflow1552-rule-editor-760x520.png",
+    "workflow1552-stable-queue-1100x700.png",
+    "workflow1552-stable-queue-760x520.png",
+    "workflow1552-completed-and-rules-1100x700.png",
+    "workflow1552-completed-and-rules-760x520.png",
+    "workflow1552-folder-rule-expanded-1100x700.png",
+    "workflow1552-folder-rule-expanded-760x520.png",
+    "workflow1552-missing-volume-1100x700.png",
+    "workflow1552-missing-volume-760x520.png",
+    "workflow1552-session-passwords-1100x700.png",
+    "workflow1552-session-passwords-760x520.png",
+    "workflow1552-corrected-current-result-1100x700.png",
+    "workflow1552-corrected-current-result-760x520.png",
+    "workflow1552-restart-credentials-1100x700.png",
+    "workflow1552-restart-credentials-760x520.png",
+    "workflow1552-stopped-queue-1100x700.png",
+    "workflow1552-stopped-queue-760x520.png",
+    "workflow1552-final-session-passwords-1100x700.png",
+    "workflow1552-final-session-passwords-760x520.png"
+  ],
+  "inbox": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\来件",
+  "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\来件\\处理结果",
+  "packPlan": {
+    "id": "1e1cd0fe-ce14-4433-82b8-eb737f7fa319",
+    "name": "目录自动交付",
+    "steps": [
+      {
+        "id": "07dd89f1-2f50-492f-90c2-c0e015f9b768",
+        "name": "生成交付压缩包",
+        "kind": "compress",
+        "extensions": "",
+        "passwordRequired": false,
+        "settings": {
+          "format": "zip",
+          "level": 6,
+          "filename": "资料-{date}",
+          "splitArchive": false,
+          "splitSize": "1024",
+          "keepStructure": true,
+          "verifyAfter": true,
+          "createSolidArchive": false,
+          "deleteAfter": false
+        }
+      }
+    ],
+    "updatedAt": "2026-10-21T12:29:13.779023300+00:00"
+  },
+  "plainRule": {
+    "id": "e8cc6560-1278-4039-903d-aac9fbabb2e6",
+    "name": "每日来件",
+    "planId": "1e1cd0fe-ce14-4433-82b8-eb737f7fa319",
+    "root": "\\\\?\\E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\来件",
+    "outputDirectory": "\\\\?\\E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\来件\\处理结果",
+    "extensions": "txt",
+    "recursive": true,
+    "mode": "files",
+    "settleSeconds": 3,
+    "enabled": true,
+    "includeExisting": false,
+    "note": ""
+  },
+  "plainSource": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\来件\\新增资料.txt",
+  "plainHash": "adb2fd0a07f991498dce4604cfa46ea5e9d4a79cfd32e6741b1fbe7fee883457",
+  "plainItem": "605fb411-bca2-4699-ada4-1f38e45dfcba",
+  "plainRetry": "560a1caf-654f-476c-a9ce-674294a14144",
+  "partialChecks": [
+    {
+      "name": "writer-baseline-cancellation-and-unchanged-dedup",
+      "binarySha256": "baca04fb956b9472845653585a5ba4df33c5f95ad48ffee87cbef87acb13b662",
+      "retained": true,
+      "reason": "Only failed ZIP publication resumed after normalizing Windows verbatim output paths."
+    }
+  ],
+  "previousIdentities": [
+    "baca04fb956b9472845653585a5ba4df33c5f95ad48ffee87cbef87acb13b662",
+    "8d0cd7f5f0ee763890d71d93dfb6955e738fe20c2e9ec78ecad82f16233f587e"
+  ],
+  "projects": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\项目收件",
+  "projectOutput": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\项目收件\\归档结果",
+  "projectRule": {
+    "id": "29fe60aa-32bf-4e5a-9330-935f817f54ed",
+    "name": "项目目录",
+    "planId": "1e1cd0fe-ce14-4433-82b8-eb737f7fa319",
+    "root": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\项目收件",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\项目收件\\归档结果",
+    "extensions": "",
+    "recursive": true,
+    "mode": "folders",
+    "settleSeconds": 3,
+    "enabled": false,
+    "includeExisting": true,
+    "note": ""
+  },
+  "projectItem": "9419f894-4782-415d-88e1-f526c5a371f3",
+  "archiveInbox": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\分卷收件",
+  "archiveOutput": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\分卷交付",
+  "repackPlan": {
+    "id": "b934809b-c8b7-44f4-992f-15ce2035f1d3",
+    "name": "密码分卷交付",
+    "steps": [
+      {
+        "id": "a143db72-a0e2-4d78-a688-d9fb25f9fde2",
+        "name": "解压到本次目录",
+        "kind": "extract",
+        "extensions": "",
+        "passwordRequired": false,
+        "settings": {
+          "format": "zip",
+          "level": 6,
+          "filename": "资料-{date}",
+          "splitArchive": false,
+          "splitSize": "1024",
+          "keepStructure": true,
+          "verifyAfter": true,
+          "createSolidArchive": false,
+          "deleteAfter": false
+        }
+      },
+      {
+        "id": "dab160ad-532f-4ed3-bd31-b8c31b0356f2",
+        "name": "生成交付压缩包",
+        "kind": "compress",
+        "extensions": "",
+        "passwordRequired": true,
+        "settings": {
+          "format": "7z",
+          "level": 6,
+          "filename": "资料-{date}",
+          "splitArchive": false,
+          "splitSize": "1024",
+          "keepStructure": true,
+          "verifyAfter": true,
+          "createSolidArchive": false,
+          "deleteAfter": false
+        }
+      }
+    ],
+    "updatedAt": "2026-10-21T12:46:30.523152400+00:00"
+  },
+  "archiveRule": {
+    "id": "d9a312af-4f80-4f57-90a5-c59c5c92b6dc",
+    "name": "密码分卷",
+    "planId": "b934809b-c8b7-44f4-992f-15ce2035f1d3",
+    "root": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\分卷收件",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\分卷交付",
+    "extensions": "7z",
+    "recursive": true,
+    "mode": "files",
+    "settleSeconds": 3,
+    "enabled": true,
+    "includeExisting": false,
+    "note": ""
+  },
+  "archiveParts": [
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\分卷来件.7z.001",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\分卷来件.7z.002",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\分卷来件.7z.003"
+  ],
+  "sourceBinary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\原始数据.bin",
+  "sourceSha": "d6a70e5f6a1c40bbbf23ec79d5400335696ead78051bee1d6d50a9dc16f3bcd9",
+  "encryptedItem": "97227bb8-08cb-4ce9-bfc4-72ee789b03a4",
+  "failedRun": "35b9dd6c-4baf-4730-a4fe-a7cdaf107bf8",
+  "correctedRun": "6700cd3c-8e0c-4c38-a309-12bb7453423b",
+  "restartItem": "e1f5b036-7927-491e-8352-5be449a9a05e",
+  "restartRunCount": 22,
+  "stopInbox": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\停止收件",
+  "stopOutput": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\停止结果",
+  "stopRule": {
+    "id": "913cb30a-f1f0-4b16-9081-85be9c7c5706",
+    "name": "停止与重启",
+    "planId": "1e1cd0fe-ce14-4433-82b8-eb737f7fa319",
+    "root": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\停止收件",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\停止结果",
+    "extensions": "bin",
+    "recursive": true,
+    "mode": "files",
+    "settleSeconds": 3,
+    "enabled": true,
+    "includeExisting": false,
+    "note": ""
+  },
+  "stopSource": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\workflow-1552\\5277b8c4-8f34-457c-9e7c-75d46427f17c\\停止收件\\大资料.bin",
+  "stopSha": "5b3474d02958377da535e0536994ad0ad184c4e70684c1d3c3f4d1fd37e96359",
+  "stopItem": "5a4bd28e-0d0c-4f17-9c32-d17ef23bda36",
+  "stopRun": "f8502cdb-95d2-4a73-b332-f3b6d9ead419"
+}

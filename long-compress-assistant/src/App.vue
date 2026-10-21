@@ -44,6 +44,7 @@ import UpdateDialog from '@/components/update/UpdateDialog.vue'
 import { useTaskStore } from '@/stores/task'
 import { useCompressionStore } from '@/stores/compression'
 import { useWorkflowStore } from '@/stores/workflows'
+import { useWorkflowAutomationStore } from '@/stores/workflowAutomation'
 import { useZipEditStore } from '@/stores/zipEdit'
 import { usePendingDraftStore } from '@/stores/pendingDrafts'
 import { useAppStore } from '@/stores/app'
@@ -64,6 +65,7 @@ const compressionStore = useCompressionStore()
 const pendingDrafts = usePendingDraftStore()
 pendingDrafts.initialize()
 const workflows=useWorkflowStore()
+const workflowAutomation=useWorkflowAutomationStore()
 const zipEdit=useZipEditStore()
 void zipEdit.initialize()
 const appStore = useAppStore()
@@ -106,13 +108,16 @@ const cancelTasksAndExit = async () => {
     task => !['completed', 'failed', 'cancelled'].includes(task.status)
   )
   try {
+    workflowAutomation.prepareExit()
     await workflows.stop()
     await invoke('cancel_tasks_and_wait', { taskIds: unfinished.map(task => task.id) })
     unfinished.forEach(task => taskStore.updateTaskStatus(task.id, 'cancelled'))
-    if(!await workflows.flush()){exitInProgress.value=false;appStore.setError(workflows.saveError);return}
+    if(!await workflowAutomation.flush()){exitInProgress.value=false;workflowAutomation.resumeAfterExitFailure();appStore.setError(workflowAutomation.error);return}
+    if(!await workflows.flush()){exitInProgress.value=false;workflowAutomation.resumeAfterExitFailure();appStore.setError(workflows.saveError);return}
     await invoke('exit_app')
   } catch (error) {
     exitInProgress.value = false
+    workflowAutomation.resumeAfterExitFailure()
     appStore.setError(String(error))
   }
 }
@@ -248,10 +253,12 @@ const handleKeydown = (e: KeyboardEvent) => {
 onMounted(async () => {
   keepAppListener(await listen('exit-drafts-requested',async()=>{
     pendingDrafts.flush()
+    workflowAutomation.prepareExit()
     await workflows.stop()
-    if(!await workflows.flush()){appStore.setError(workflows.saveError);return}
+    if(!await workflowAutomation.flush()){workflowAutomation.resumeAfterExitFailure();appStore.setError(workflowAutomation.error);return}
+    if(!await workflows.flush()){workflowAutomation.resumeAfterExitFailure();appStore.setError(workflows.saveError);return}
     if(await zipEdit.flush())await invoke('exit_app')
-    else appStore.setError(zipEdit.saveError)
+    else {workflowAutomation.resumeAfterExitFailure();appStore.setError(zipEdit.saveError)}
   }))
   window.addEventListener('keydown', handleKeydown)
   // 初始化可访问性设置
@@ -458,6 +465,7 @@ onMounted(async () => {
     console.warn('Window resize listener is unavailable:', error)
   }
 
+  workflowAutomation.begin()
   void drainWatchFolderBatches()
   watchBatchTimer = setInterval(() => {
     void drainWatchFolderBatches()
@@ -472,6 +480,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   pendingDrafts.dispose()
+  workflowAutomation.dispose()
   zipEdit.dispose()
   isUnmounted = true
   window.removeEventListener('keydown', handleKeydown)

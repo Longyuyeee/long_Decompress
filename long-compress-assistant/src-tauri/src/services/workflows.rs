@@ -99,6 +99,8 @@ pub struct State {
 pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
     sqlx::query("CREATE TABLE IF NOT EXISTS workflow_plans(id TEXT PRIMARY KEY,name TEXT NOT NULL,definition TEXT NOT NULL,updated_at TEXT NOT NULL)").execute(pool).await?;
     sqlx::query("CREATE TABLE IF NOT EXISTS workflow_runs(id TEXT PRIMARY KEY,record TEXT NOT NULL,started_at TEXT NOT NULL)").execute(pool).await?;
+    sqlx::query("CREATE TABLE IF NOT EXISTS workflow_run_links(child_id TEXT PRIMARY KEY,parent_id TEXT NOT NULL,started_at TEXT NOT NULL)").execute(pool).await?;
+    sqlx::query("CREATE INDEX IF NOT EXISTS workflow_run_parent ON workflow_run_links(parent_id,started_at)").execute(pool).await?;
     Ok(())
 }
 fn clean_plan(mut plan: Plan) -> Result<Plan> {
@@ -216,6 +218,14 @@ pub async fn save_run(pool: &SqlitePool, mut run: Run) -> Result<()> {
         "运行记录过大，请缩小来源范围"
     );
     sqlx::query("INSERT INTO workflow_runs VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET record=excluded.record").bind(&run.id).bind(record).bind(&run.started_at).execute(pool).await?;
+    if let Some(parent) = run
+        .parent_run_id
+        .as_ref()
+        .filter(|parent| *parent != &run.id)
+    {
+        sqlx::query("INSERT INTO workflow_run_links VALUES(?,?,?) ON CONFLICT(child_id) DO UPDATE SET parent_id=excluded.parent_id").bind(&run.id).bind(parent).bind(&run.started_at).execute(pool).await?;
+    }
+    super::workflow_triggers::RUNS_CHANGED.store(true, std::sync::atomic::Ordering::SeqCst);
     Ok(())
 }
 pub async fn state(pool: &SqlitePool) -> Result<State> {
@@ -399,7 +409,7 @@ mod workflow1550_tests {
             .execute(&pool)
             .await
             .unwrap();
-        sqlx::query("DELETE FROM schema_version WHERE version=16")
+        sqlx::query("DELETE FROM schema_version WHERE version>=16")
             .execute(&pool)
             .await
             .unwrap();

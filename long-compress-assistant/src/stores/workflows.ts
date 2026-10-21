@@ -13,7 +13,7 @@ export const useWorkflowStore = defineStore('workflows', () => {
     const tasks = useTaskStore(), commands = useTauriCommands();
     const plans = ref<WorkflowPlan[]>([]), runs = ref<WorkflowRun[]>([]), draft = ref<WorkflowPlan>(workflowTemplate('repack')), selectedRunId = ref('');
     const loading = ref(false), saving = ref(false), busy = ref(false), stopRequested = ref(false), error = ref(''), notice = ref(''), saveError = ref(''), currentTaskId = ref(''), collectorId = ref('');
-    const workspace=ref<'edit'|'runs'>('edit');
+    const workspace=ref<'edit'|'runs'|'directory'>('edit');
     const phase=ref(''), proofProgress=ref<WorkflowProofProgress>(), resumeIssue=ref<WorkflowReuseIssue>();
     let initialized = false, initializing: Promise<void> | undefined;
     const selectedRun = computed(() => runs.value.find(run => run.id === selectedRunId.value)), currentTask = computed(() => tasks.tasks.find(task => task.id === currentTaskId.value));
@@ -123,8 +123,13 @@ export const useWorkflowStore = defineStore('workflows', () => {
       if(!parent?.plan){error.value='旧记录缺少执行快照，请带入当前方案重新运行';return false}
       return execute(plan,request,parent,requested)
     }
-    async function execute(selectedPlan:WorkflowPlan,request:WorkflowRunRequest,parent?:WorkflowRun,requested=0) {
-        if (busy.value)
+    async function startQueued(prepare:()=>Promise<{plan:WorkflowPlan;request:WorkflowRunRequest;id:string}>){
+      if(busy.value)return false;
+      busy.value=true;stopRequested.value=false;
+      try{const entry=await prepare();if(stopRequested.value)return false;return await execute(entry.plan,entry.request,undefined,0,entry.id,true)}finally{busy.value=false}
+    }
+    async function execute(selectedPlan:WorkflowPlan,request:WorkflowRunRequest,parent?:WorkflowRun,requested=0,queuedId?:string,reserved=false) {
+        if (busy.value&&!reserved)
             return false;
         error.value = '';
         notice.value = '';
@@ -157,14 +162,15 @@ export const useWorkflowStore = defineStore('workflows', () => {
               if(stopRequested.value)throw Error('已停止核对，尚未创建新的任务')
             }
             phase.value='';if(stopRequested.value)throw Error('已停止核对，尚未创建新的任务');
-            const id = crypto.randomUUID(), label = plan.name.replace(/[<>:"/\\|?*{}\x00-\x1f]/g, '_').slice(0, 40), directory = await invoke<string>('workflow_begin_directory', { parent: request.outputDirectory, name: `${label}-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}-${id.slice(0, 6)}` });
+            const id = queuedId || crypto.randomUUID(), label = plan.name.replace(/[<>:"/\\|?*{}\x00-\x1f]/g, '_').slice(0, 40), directory = await invoke<string>('workflow_begin_directory', { parent: request.outputDirectory, name: `${label}-${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}-${id.slice(0, 6)}` });
             run = { id, planId: plan.id, name: plan.name, status: 'running', startedAt: now.toISOString(), directory, inputs: [...request.paths], steps: plan.steps.map(step => ({ id: step.id, name: step.name, kind: step.kind, status: 'pending', inputs: [], outputs: [], taskIds: [], message: '' })) };
             run.plan=cleanWorkflowPlan({...plan,steps:plan.steps.map(step=>({...step,passwordRequired:step.passwordRequired||!!request.passwords[step.id]}))});run.outputDirectory=request.outputDirectory;run.sourceEncoding=request.sourceEncoding;
             if(parent){run.parentRunId=parent.id;run.resumeFrom=from;for(let index=0;index<from;index++)run.steps[index]={...workflowClone(parent.steps[index]),name:plan.steps[index].name,reusedFrom:parent.id,message:'已核对内容，沿用原产物；本次未重新执行'};}
 
             runs.value.unshift(run);
+            runs.value=runs.value.filter((record,index)=>index<100||record.id===selectedRunId.value);
             run = runs.value[0];
-            selectedRunId.value = id;
+            if(!queuedId||!selectedRunId.value)selectedRunId.value = id;
             await invoke('workflow_save_run', { run: workflowClone(run) });
             await tasks.initListeners();
             let inputs: WorkflowOutput[] = [], inputPassword = request.sourcePassword, inputEncoding = request.sourceEncoding;
@@ -358,5 +364,5 @@ export const useWorkflowStore = defineStore('workflows', () => {
         }
         return run?.status === 'completed';
     }
-    return { plans, runs, draft, selectedRunId, selectedRun, currentTask, loading, saving, busy, stopRequested, error, notice, saveError, flush,workspace,openRun, phase,proofProgress,resumeIssue, initialize, newPlan, choosePlan, copyPlan, savePlan, deletePlan, start, resume, stop };
+    return { plans, runs, draft, selectedRunId, selectedRun, currentTask, loading, saving, busy, stopRequested, error, notice, saveError, flush,workspace,openRun, phase,proofProgress,resumeIssue, initialize, newPlan, choosePlan, copyPlan, savePlan, deletePlan, start, startQueued, resume, stop };
 });

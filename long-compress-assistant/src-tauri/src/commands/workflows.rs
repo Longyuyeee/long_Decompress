@@ -97,3 +97,74 @@ pub async fn workflow_run(id: String) -> Result<workflow::Run, String> {
         .map_err(|e| e.to_string())?;
     serde_json::from_str(&record.0).map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+pub async fn workflow_trigger_state() -> Result<crate::services::workflow_triggers::State, String> {
+    crate::services::workflow_triggers::initialize(&pool().await?)
+        .await
+        .map_err(|e| format!("{e:#}"))
+}
+#[tauri::command]
+pub async fn workflow_trigger_poll() -> Result<crate::services::workflow_triggers::State, String> {
+    crate::services::workflow_triggers::poll(&pool().await?)
+        .await
+        .map_err(|e| format!("{e:#}"))
+}
+#[tauri::command]
+pub async fn workflow_trigger_save(
+    rule: crate::services::workflow_triggers::Rule,
+) -> Result<crate::services::workflow_triggers::State, String> {
+    crate::services::workflow_triggers::save_rule(&pool().await?, rule)
+        .await
+        .map_err(|e| format!("{e:#}"))
+}
+#[tauri::command]
+pub async fn workflow_trigger_enabled(
+    id: String,
+    enabled: bool,
+) -> Result<crate::services::workflow_triggers::State, String> {
+    crate::services::workflow_triggers::set_enabled(&pool().await?, &id, enabled)
+        .await
+        .map_err(|e| format!("{e:#}"))
+}
+#[tauri::command]
+pub async fn workflow_trigger_delete(
+    id: String,
+) -> Result<crate::services::workflow_triggers::State, String> {
+    crate::services::workflow_triggers::delete_rule(&pool().await?, &id)
+        .await
+        .map_err(|e| format!("{e:#}"))
+}
+#[tauri::command]
+pub async fn workflow_trigger_pause(
+    paused: bool,
+) -> Result<crate::services::workflow_triggers::State, String> {
+    crate::services::workflow_triggers::pause(&pool().await?, paused)
+        .await
+        .map_err(|e| format!("{e:#}"))
+}
+#[tauri::command]
+pub async fn workflow_trigger_claim(
+    id: String,
+    run_id: String,
+) -> Result<crate::services::workflow_triggers::Item, String> {
+    crate::services::workflow_triggers::claim(&pool().await?, &id, &run_id)
+        .await
+        .map_err(|e| format!("{e:#}"))
+}
+#[tauri::command]
+pub async fn workflow_trigger_action(
+    id: String,
+    action: String,
+) -> Result<crate::services::workflow_triggers::State, String> {
+    crate::services::workflow_triggers::action(&pool().await?, &id, &action)
+        .await
+        .map_err(|e| format!("{e:#}"))
+}
+#[tauri::command]
+pub async fn workflow_trigger_finish() -> Result<crate::services::workflow_triggers::State, String>
+{
+    crate::services::workflow_triggers::finish(&pool().await?)
+        .await
+        .map_err(|e| format!("{e:#}"))
+}
