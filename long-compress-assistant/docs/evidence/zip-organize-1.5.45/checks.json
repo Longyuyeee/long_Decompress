@@ -1,0 +1,44 @@
+{
+  "version": "1.5.45",
+  "date": "2026-10-21",
+  "frontend": {
+    "distinctPassed": 56,
+    "workspaceCases": 16,
+    "affectedPriorEditCases": 11,
+    "affectedBrowserCases": 29,
+    "execution": "Initial 54 passed; only two added original-location continuity cases run afterward. No repeated matrix."
+  },
+  "rust": {
+    "distinctPassed": 11,
+    "newStructureCases": 5,
+    "relatedPriorEditCases": 6,
+    "result": "passed"
+  },
+  "builds": {
+    "typecheckAndVite": "passed",
+    "shellAndVersionIdentity": "passed",
+    "native": "custom-protocol,desktop-e2e; VITE_DESKTOP_E2E=1",
+    "binarySha256": "890b075d5f89e862bbeda122277b48f19df60128d1f12662db1259ba4e810204"
+  },
+  "desktop": {
+    "distinctFlows": 3,
+    "layoutRecords": 14,
+    "horizontalOverflow": 0,
+    "screenshotsViewed": 8,
+    "receipt": "desktop.json"
+  },
+  "sourceSha256": "9136b45ad5d5de4eac1cdc0d275bb044755ac9469c28dad33e4c0b9adc48fe19",
+  "archives": {
+    "已有结果.zip": "5ef5ff961735739afb2457179ef4935f0333fe5433d609a507e45157995cb3e5",
+    "待整理原包.zip": "9136b45ad5d5de4eac1cdc0d275bb044755ac9469c28dad33e4c0b9adc48fe19",
+    "整理交付-17cf8704.zip": "abc555c3d258fe655a81da4c8ebfd3eee99f04f21730f8d2bdcd89dd89db2a73",
+    "清空后-5630ab92.zip": "332713f0fed4ccdf8ef787ce5b6b4d273785ccdcda0b7ba202a41f7dc0bdb239",
+    "纠正整理-96a85e3a.zip": "5136c7eb96eb4152786c67b0cbd712b6e2d2a0a99107d090a63cd41b7b53ac0c"
+  },
+  "notRepeated": [
+    "unrelated format/password matrix",
+    "real disk-full",
+    "unrelated media and personal installation"
+  ],
+  "releaseReceipt": "Candidate CI, protected merge, tag and formal assets recorded on the version PR."
+}

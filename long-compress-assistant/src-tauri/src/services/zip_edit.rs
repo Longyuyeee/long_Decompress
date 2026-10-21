@@ -17,6 +17,9 @@ pub struct Input { pub source_path: String, pub target_path: String, pub is_dir:
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
 pub struct Change { #[serde(flatten)] pub input: Input, pub action: String }
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all="camelCase")]
+pub struct OriginalEdit { pub source_path: String, pub target_path: Option<String> }
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all="camelCase")]
 pub struct Progress { pub phase: &'static str, pub progress: f32, pub current_file: String, pub processed_bytes: u64, pub total_bytes: u64, pub output_bytes: Option<u64> }
@@ -120,8 +123,12 @@ fn validate_contents<R:Read+Seek>(archive:&mut ZipArchive<R>,flag:&Arc<AtomicBoo
         ensure!(map.insert(name,(entry.size(),entry.crc32())).is_none(),"新包存在重复条目");
     }progress(observer,phase,start+weight,"",processed,total,None);Ok(map)
 }
+#[cfg(test)]
 pub fn save(source:&Path,revision:&str,changes:&[Change],output:&Path,method:&str,level:u32,flag:Arc<AtomicBool>,observer:Observer)->Result<()> {
-    ensure!(!changes.is_empty()&&changes.len()<=MAX_ADDITIONS,"没有需要保存的修改，或一次修改超过 10000 项");
+    save_with_edits(source,revision,changes,&[],output,method,level,flag,observer)
+}
+pub fn save_with_edits(source:&Path,revision:&str,changes:&[Change],original_edits:&[OriginalEdit],output:&Path,method:&str,level:u32,flag:Arc<AtomicBool>,observer:Observer)->Result<()> {
+    ensure!((!changes.is_empty()||!original_edits.is_empty())&&changes.len()<=MAX_ADDITIONS&&original_edits.len()<=200_000,"没有需要保存的修改，或一次修改超过支持范围");
     ensure!(matches!(method,"deflate"|"store")&&level<=9,"新增内容请使用 Deflate 0～9 或仅存储");
     ensure!(output.extension().is_some_and(|s|s.eq_ignore_ascii_case("zip")),"请另存为 .zip 文件");
     ensure!(!output.exists(),"[archive-output:Pre-checking:output-conflict] 输出文件已存在，请更换名称或保存位置；已有文件保留");
@@ -129,7 +136,19 @@ pub fn save(source:&Path,revision:&str,changes:&[Change],output:&Path,method:&st
     let source_absolute=source.canonicalize()?;let target_absolute=parent.canonicalize()?.join(output.file_name().context("新包名称为空")?);
     ensure!(!source_absolute.to_string_lossy().eq_ignore_ascii_case(&target_absolute.to_string_lossy()),"请另存新名称，不能覆盖原压缩包");
     let (_,catalog)=open_catalog(source)?;ensure!(catalog.revision==revision,"原包已变化，请保留修改清单，重新打开并确认来源后再编辑");
-    let mut expected:BTreeMap<_,_>=catalog.entries.iter().map(|e|(key(&e.path),e.clone())).collect();let mut targets=HashSet::new();
+    let originals:HashMap<_,_>=catalog.entries.iter().map(|e|(e.path.as_str(),e)).collect();
+    let mut edits=HashMap::new();
+    for edit in original_edits {
+        let original=originals.get(edit.source_path.as_str()).with_context(||format!("整理来源已变化，请重新读取：{}",edit.source_path))?;
+        if let Some(target)=&edit.target_path {ensure!(normalized_path(target,original.is_dir)?==*target,"新包内路径不规范：{target}");}
+        ensure!(edits.insert(edit.source_path.as_str(),edit.target_path.as_deref()).is_none(),"同一原条目重复整理：{}",edit.source_path);
+    }
+    let mut expected=BTreeMap::new();
+    for entry in &catalog.entries {
+        let target=edits.get(entry.path.as_str()).copied().unwrap_or(Some(entry.path.as_str()));
+        if let Some(path)=target {register_entry(&mut expected,Entry{path:path.into(),is_dir:entry.is_dir,size:entry.size})?;}
+    }
+    let mut targets=HashSet::new();
     for change in changes {let input=&change.input;let normalized=normalized_path(&input.target_path,input.is_dir)?;ensure!(normalized==input.target_path,"修改目标不是规范包内位置");ensure!(targets.insert(key(&normalized)),"多个修改指向相同位置：{normalized}");
         ensure!(file_revision(Path::new(&input.source_path),input.is_dir)?==input.source_revision,"添加来源已变化，请撤销并重新添加：{}",input.source_path);
         let old=expected.get(&key(&normalized));match change.action.as_str(){"replace"=>ensure!(old.is_some_and(|e|!e.is_dir&&!input.is_dir&&e.path==normalized),"替换位置已变化，请重新确认：{normalized}"),"add"=>ensure!(old.is_none(),"同名项尚未处理：{normalized}"),_=>anyhow::bail!("请选择替换、跳过或保留两份")};
@@ -144,11 +163,17 @@ pub fn save(source:&Path,revision:&str,changes:&[Change],output:&Path,method:&st
     let file=OpenOptions::new().create_new(true).write(true).read(true).open(&staged.0)?;
     let mut writer=ZipWriter::new(ControlledFile{file,flag:flag.clone(),observer:Some(observer.clone()),position:0,high:0,estimate});writer.set_raw_comment(original.comment().to_vec().into_boxed_slice())?;
     let replacements:HashSet<_>=changes.iter().filter(|e|e.action=="replace").map(|e|key(&e.input.target_path)).collect();
-    for index in 0..original.len(){checkpoint(&flag)?;let entry=original.by_index_raw(index)?;let path=normalized_path(entry.name(),entry.is_dir())?;
-        if !replacements.contains(&key(&path)){progress(&observer,"writing",0.3,&path,0,estimate,None);writer.raw_copy_file_rename(entry,path)?;}
+    let mut retained_facts=HashMap::new();let mut written_paths=HashSet::new();
+    for index in 0..original.len(){checkpoint(&flag)?;let entry=original.by_index_raw(index)?;let old_path=normalized_path(entry.name(),entry.is_dir())?;
+        let target=edits.get(old_path.as_str()).copied().unwrap_or(Some(old_path.as_str()));
+        if let Some(path)=target {if !replacements.contains(&key(path)){
+            retained_facts.insert(path.to_string(),original_facts[&old_path]);written_paths.insert(path.to_string());
+            progress(&observer,"writing",0.3,path,0,estimate,None);writer.raw_copy_file_rename(entry,path)?;
+        }}
     }
     let mut buffer=vec![0u8;256*1024];
     for change in changes {checkpoint(&flag)?;let input=&change.input;progress(&observer,"writing",0.3,&input.target_path,0,estimate,None);
+        written_paths.insert(input.target_path.clone());
         let metadata=std::fs::metadata(&input.source_path)?;
         let date=chrono::DateTime::<chrono::Local>::from(metadata.modified()?);
         use chrono::{Datelike,Timelike};
@@ -160,13 +185,16 @@ pub fn save(source:&Path,revision:&str,changes:&[Change],output:&Path,method:&st
         loop{checkpoint(&flag)?;let n=file.read(&mut buffer)?;if n==0{break}writer.write_all(&buffer[..n])?;copied+=n as u64;}
         ensure!(copied==input.size&&file_revision(Path::new(&input.source_path),false)?==input.source_revision,"添加来源在保存期间变化，请重新添加：{}",input.source_path);
     }
+    // An implicit directory can become empty after removing its last file. Keep the projected directory usable.
+    fn mark_parents(path:&str,represented:&mut HashSet<String>){let parts:Vec<_>=path.trim_end_matches('/').split('/').collect();for i in 1..parts.len(){represented.insert(format!("{}/",parts[..i].join("/")));}if path.ends_with('/'){represented.insert(path.into());}}
+    let mut represented=HashSet::new();for path in &written_paths{mark_parents(path,&mut represented);}
+    let mut directories:Vec<_>=expected.values().filter(|entry|entry.is_dir).collect();directories.sort_by_key(|entry|std::cmp::Reverse(entry.path.len()));
+    for directory in directories {checkpoint(&flag)?;if !represented.contains(&directory.path){writer.add_directory(&directory.path,SimpleFileOptions::default().compression_method(CompressionMethod::Stored))?;written_paths.insert(directory.path.clone());mark_parents(&directory.path,&mut represented);}}
     let file=writer.finish()?;file.file.sync_all()?;drop(file);checkpoint(&flag)?;
     let mut rebuilt=ZipArchive::new(ControlledFile{file:File::open(&staged.0)?,flag:flag.clone(),observer:None,position:0,high:0,estimate:0})?;
     let facts=validate_contents(&mut rebuilt,&flag,&observer,"verifying",0.75,0.23)?;
-    let replaced:HashSet<_>=changes.iter().filter(|e|e.action=="replace").map(|e|e.input.target_path.clone()).collect();
-    for (path,fact) in &original_facts {if !replaced.contains(path){ensure!(facts.get(path)==Some(fact),"未修改条目的内容或位置未保留：{path}");}}
-    let mut expected_paths:HashSet<_>=original_facts.keys().cloned().collect();for change in changes{expected_paths.insert(change.input.target_path.clone());}
-    ensure!(facts.keys().cloned().collect::<HashSet<_>>()==expected_paths,"新包条目与确认的修改清单不一致");
+    for (path,fact) in &retained_facts {ensure!(facts.get(path)==Some(fact),"保留条目的内容或新位置不一致：{path}");}
+    ensure!(facts.keys().cloned().collect::<HashSet<_>>()==written_paths,"新包条目与确认的修改清单不一致");
     for change in changes{ensure!(facts.get(&change.input.target_path).is_some_and(|(size,_)|*size==change.input.size),"新增内容大小不一致：{}",change.input.target_path);}
     drop(rebuilt);ensure!(inspect(source)?.revision==revision,"原包在保存期间变化，请重新确认后再编辑");
     checkpoint(&flag)?;progress(&observer,"publishing",0.99,"",0,0,None);
@@ -215,4 +243,40 @@ mod tests {
         let temp=tempfile::tempdir().unwrap();let source=temp.path().join("empty.zip");ZipWriter::new(File::create(&source).unwrap()).finish().unwrap();let catalog=inspect(&source).unwrap();let input=temp.path().join("file.txt");std::fs::write(&input,b"stored").unwrap();let mut changes=changes(&[input.to_string_lossy().into()],"","add");let output=temp.path().join("stored.zip");save(&source,&catalog.revision,&changes,&output,"store",0,Arc::new(AtomicBool::new(false)),observer()).unwrap();assert_eq!(ZipArchive::new(File::open(output).unwrap()).unwrap().by_index(0).unwrap().compression(),CompressionMethod::Stored);
         changes.push(changes[0].clone());assert!(save(&source,&catalog.revision,&changes,&temp.path().join("duplicate.zip"),"deflate",6,Arc::new(AtomicBool::new(false)),observer()).is_err());
     }
+    fn edit(source:&str,target:Option<&str>)->OriginalEdit{OriginalEdit{source_path:source.into(),target_path:target.map(str::to_string)}}
+    #[test]
+    fn zip_edit1545_combines_move_replace_add_delete_and_retains_raw_facts(){
+        let temp=tempfile::tempdir().unwrap();let source=temp.path().join("原包.zip");zip(&source);let before=std::fs::read(&source).unwrap();let catalog=inspect(&source).unwrap();
+        let input=temp.path().join("新增.txt");std::fs::write(&input,"新内容").unwrap();let mut additions=changes(&[input.to_string_lossy().into()],"新资料","add");
+        additions[0].input.target_path="说明.txt".into();
+        let original_edits=[edit("资料/",Some("交付/")),edit("资料/说明.txt",Some("交付/中文说明.txt")),edit("替换.txt",None),edit("空目录/",Some("新的空目录/"))];
+        let output=temp.path().join("整理.zip");save_with_edits(&source,&catalog.revision,&additions,&original_edits,&output,"deflate",6,Arc::new(AtomicBool::new(false)),observer()).unwrap();
+        assert_eq!(std::fs::read(&source).unwrap(),before);let mut archive=ZipArchive::new(File::open(output).unwrap()).unwrap();assert_eq!(archive.comment(),"保留备注".as_bytes());assert!(archive.by_name("替换.txt").is_err());assert!(archive.by_name("新的空目录/").unwrap().is_dir());
+        let mut kept=archive.by_name("交付/中文说明.txt").unwrap();assert_eq!(kept.last_modified().unwrap().year(),2020);assert_eq!(kept.compression(),CompressionMethod::Deflated);let mut content=String::new();kept.read_to_string(&mut content).unwrap();assert_eq!(content,"keep original contents");drop(kept);
+        let mut content=String::new();archive.by_name("说明.txt").unwrap().read_to_string(&mut content).unwrap();assert_eq!(content,"新内容");
+    }
+    #[test]
+    fn zip_edit1545_swaps_names_and_keeps_an_implicit_directory_that_becomes_empty(){
+        let temp=tempfile::tempdir().unwrap();let source=temp.path().join("source.zip");let mut writer=ZipWriter::new(File::create(&source).unwrap());for(name,content)in[("A.txt","aaa"),("B.txt","bbb"),("implicit/last.txt","last")]{writer.start_file(name,SimpleFileOptions::default().compression_method(CompressionMethod::Stored)).unwrap();writer.write_all(content.as_bytes()).unwrap();}writer.finish().unwrap();
+        let catalog=inspect(&source).unwrap();let output=temp.path().join("swap.zip");save_with_edits(&source,&catalog.revision,&[],&[edit("A.txt",Some("B.txt")),edit("B.txt",Some("a.txt")),edit("implicit/last.txt",None)],&output,"store",0,Arc::new(AtomicBool::new(false)),observer()).unwrap();
+        let mut archive=ZipArchive::new(File::open(output).unwrap()).unwrap();for(name,expected)in[("B.txt","aaa"),("a.txt","bbb")]{let mut content=String::new();archive.by_name(name).unwrap().read_to_string(&mut content).unwrap();assert_eq!(content,expected);}assert!(archive.by_name("implicit/").unwrap().is_dir());assert_eq!(archive.len(),3);
+    }
+    #[test]
+    fn zip_edit1545_delete_everything_creates_a_readable_empty_zip(){
+        let temp=tempfile::tempdir().unwrap();let source=temp.path().join("source.zip");zip(&source);let catalog=inspect(&source).unwrap();let edits:Vec<_>=catalog.entries.iter().map(|entry|edit(&entry.path,None)).collect();let output=temp.path().join("empty.zip");
+        save_with_edits(&source,&catalog.revision,&[],&edits,&output,"deflate",6,Arc::new(AtomicBool::new(false)),observer()).unwrap();assert_eq!(ZipArchive::new(File::open(output).unwrap()).unwrap().len(),0);
+    }
+    #[test]
+    fn zip_edit1545_rejects_unknown_duplicate_conflicting_and_invalid_transforms_before_output(){
+        let temp=tempfile::tempdir().unwrap();let source=temp.path().join("source.zip");zip(&source);let before=std::fs::read(&source).unwrap();let catalog=inspect(&source).unwrap();let output=temp.path().join("invalid.zip");
+        for edits in [vec![edit("missing",None)],vec![edit("替换.txt",None),edit("替换.txt",None)],vec![edit("替换.txt",Some("资料/说明.txt"))],vec![edit("替换.txt",Some("资料"))],vec![edit("替换.txt",Some("../escape.txt"))]]{
+            assert!(save_with_edits(&source,&catalog.revision,&[],&edits,&output,"deflate",6,Arc::new(AtomicBool::new(false)),observer()).is_err());assert!(!output.exists());assert_eq!(std::fs::read(&source).unwrap(),before);
+        }
+    }
+    #[test]
+    fn zip_edit1545_stopping_a_rename_keeps_the_source_and_no_partial_output(){
+        let temp=tempfile::tempdir().unwrap();let source=temp.path().join("source.zip");zip(&source);let before=std::fs::read(&source).unwrap();let catalog=inspect(&source).unwrap();let flag=Arc::new(AtomicBool::new(false));let signal=flag.clone();let output=temp.path().join("cancelled.zip");
+        assert!(save_with_edits(&source,&catalog.revision,&[],&[edit("替换.txt",Some("new.txt"))],&output,"store",0,flag,Arc::new(move|event|{if event.phase=="writing"{signal.store(true,Ordering::SeqCst)}})).is_err());assert!(!output.exists());assert_eq!(std::fs::read(source).unwrap(),before);assert!(std::fs::read_dir(temp.path()).unwrap().all(|entry|!entry.unwrap().file_name().to_string_lossy().starts_with(".zip-edit-")));
+    }
+
 }

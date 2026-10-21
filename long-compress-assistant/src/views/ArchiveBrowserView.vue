@@ -737,7 +737,7 @@ const extractSelected = async () => {
     </ZpaqSnapshotPicker>
     <ZpaqSnapshotDiff v-if="result?.zpaqHistory" v-model:visible="diffVisible" :path="archivePath" :password="password" :history="result.zpaqHistory" :output-directory="outputPath" />
     <p v-if="result?.format === 'WIM'" data-testid="wim-image-hint" class="text-xs leading-relaxed text-muted">固实 WIM/ESD 的预览与所选提取可能需要读取同块内容。多镜像按 1、2 等编号目录展示，可进入后选择文件；根目录的 [1].xml 为镜像说明。原生 SWM 请将同组 install.swm、install2.swm 等放在同一目录，可从任意一卷进入。提取与转换保留当前目录视图，不修改原镜像。</p>
-    <ZipEditBar v-if="canEditZip" ref="zipEditor" :source-path="archivePath" :directory="activeDirectory" :selected-file="selected.size === 1 ? [...selected][0] : undefined" :disabled="inputBusy" @open-result="openArchivePath($event)" />
+    <ZipEditBar v-if="canEditZip" ref="zipEditor" :source-path="archivePath" :directory="activeDirectory" :selected-paths="[...selected]" :selected-file="selected.size === 1 ? [...selected][0] : undefined" :disabled="inputBusy" @open-result="openArchivePath($event)" />
 
     <section class="aero-card shrink-0 p-3 grid gap-3 browser-toolbar" :class="{'has-zip-encoding': archivePath && supportsZipPasswordEncoding(archivePath, result?.format)}">
       <div class="min-w-0 browser-field">
@@ -917,6 +917,8 @@ const extractSelected = async () => {
           <button v-if="contextMenu.entry && !contextMenu.entry.isDir && canPreviewEntry(contextMenu.entry) && previewRouteSupported" type="button" role="menuitem" data-testid="archive-context-preview" @click="previewContextEntry(contextMenu.entry)"><i class="pi pi-eye"></i><span>内部查看器打开</span><kbd>Ctrl+Enter</kbd></button>
 
           <button v-if="canEditZip && contextMenu.entry && !contextMenu.entry.isDir" type="button" role="menuitem" data-testid="archive-context-edit-replace" :disabled="inputBusy" @click="zipEditor?.replace(contextMenu.entry.path); closeContextMenu()"><i class="pi pi-file-edit"></i><span>替换此文件并另存…</span></button>
+          <button v-if="canEditZip && contextMenu.entry" type="button" role="menuitem" data-testid="archive-context-edit-rename" :disabled="inputBusy" @click="zipEditor?.organize(contextDisplayEntries.map(entry=>entry.path),'rename'); closeContextMenu()"><i class="pi pi-pencil"></i><span>{{ contextDisplayEntries.length>1?'批量改名或移动…':'重命名或移动…' }}</span></button>
+          <button v-if="canEditZip && contextMenu.entry" type="button" role="menuitem" data-testid="archive-context-edit-delete" :disabled="inputBusy" @click="zipEditor?.organize(contextDisplayEntries.map(entry=>entry.path),'delete'); closeContextMenu()"><i class="pi pi-trash"></i><span>从新 ZIP 删除…</span></button>
           <button v-if="canEditZip && !contextMenu.entry" type="button" role="menuitem" data-testid="archive-context-edit-add" :disabled="inputBusy" @click="zipEditor?.addFiles(); closeContextMenu()"><i class="pi pi-plus"></i><span>添加文件到当前目录…</span></button>
           <div v-if="contextMenu.entries.length > 0" class="archive-context-separator"></div>
           <button v-if="contextMenu.entries.length > 0" type="button" role="menuitem" data-testid="archive-context-extract-current" :disabled="extracting || !outputPath" @click="extractContextEntries(false)"><i class="pi pi-download"></i><span>解压到当前输出目录</span><kbd>Alt+E</kbd></button>
