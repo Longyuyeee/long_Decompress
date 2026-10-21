@@ -40,6 +40,7 @@ interface Props {
   suggestedFilename?: string
   compact?: boolean
   showOutputPath?: boolean
+  allowDeleteAfter?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -49,7 +50,8 @@ const props = withDefaults(defineProps<Props>(), {
   allowSplitArchive: true,
   suggestedFilename: '',
   compact: false,
-  showOutputPath: true
+  showOutputPath: true,
+  allowDeleteAfter: true
 })
 
 interface Emits {
@@ -581,7 +583,7 @@ const closeVaultPasswordsAfterFocus = () => {
             <input data-testid="compression-keep-structure" v-model="compressionOptions.keepStructure" type="checkbox" />
             <span><strong>{{ appStore.t('preset.keep_structure') }} <HelpHint label="保持目录结构说明">保留源文件夹的层级关系</HelpHint></strong></span>
           </label>
-          <label class="advanced-option advanced-option-danger">
+          <label v-if="allowDeleteAfter" class="advanced-option advanced-option-danger">
             <input data-testid="compression-delete-after" v-model="compressionOptions.deleteAfter" type="checkbox" />
             <span><strong>{{ appStore.t('preset.delete_after') }} <HelpHint label="完成后删除源文件说明">{{ appStore.t('preset.delete_after.desc') }}</HelpHint></strong></span>
           </label>

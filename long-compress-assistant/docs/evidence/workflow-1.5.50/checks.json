@@ -1,0 +1,35 @@
+{
+  "version": "1.5.50",
+  "frontend": {
+    "distinctTests": 19,
+    "suites": [
+      "workflows1550.test.ts (13)",
+      "MainLayout.test.ts (6)"
+    ],
+    "result": "passed",
+    "fixes": [
+      "failed step leaves following steps pending",
+      "no filename encryption without current password",
+      "stop checked again after record persistence, before dispatch"
+    ]
+  },
+  "rust": {
+    "distinctTests": 4,
+    "filter": "workflow1550 --lib",
+    "result": "passed",
+    "affectedFilterRerun": "passed after excluding output base"
+  },
+  "build": [
+    "TypeScript/Vite",
+    "Shell extension",
+    "eight release identities",
+    "custom-protocol desktop-e2e Windows binary"
+  ],
+  "desktop": {
+    "flows": 6,
+    "layoutRecords": 8,
+    "imagesViewed": 8,
+    "binarySha256": "17e5739348713f1df7943459e5d007bfb1bb3c74d209a34dfd34bf4ff33b5df4"
+  },
+  "scope": "No old format/password matrix, real disk-full, media or personal install checks repeated. First worker start timeout and two failed desktop stages were fixed/resumed, earlier layout evidence retained."
+}

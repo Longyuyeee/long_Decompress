@@ -38,6 +38,7 @@ const routes: Array<RouteRecordRaw> = [
       title: '双栏文件浏览器'
     }
   },
+  { path: '/workflows', name: 'Workflows', component: () => import('@/views/WorkflowView.vue'), meta: { title: '工作流中心' } },
   { path: '/library', name: 'ArchiveLibrary', component: () => import('@/views/ArchiveLibraryView.vue'), meta: { title: '归档资源库' } },
   {
     path: '/vault',

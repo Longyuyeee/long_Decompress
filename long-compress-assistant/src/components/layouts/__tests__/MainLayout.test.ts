@@ -51,6 +51,7 @@ const routes = [
   { path: '/compress', name: 'Compress', component: { template: '<div>Compress</div>' } },
   { path: '/special-compression', name: 'SpecialCompression', component: { template: '<div>Special Compression</div>' } },
   { path: '/browser', name: 'ArchiveBrowser', component: { template: '<div>Browser</div>' } },
+  { path: '/workflows', name: 'Workflows', component: { template: '<div>Workflows</div>' } },
   { path: '/library', name: 'ArchiveLibrary', component: { template: '<div>Library</div>' } },
   { path: '/vault', name: 'Vault', component: { template: '<div>Vault</div>' } },
   { path: '/integrity', name: 'FileIntegrity', component: { template: '<div>Integrity</div>' } },
@@ -112,7 +113,7 @@ describe('MainLayout', () => {
     expect(mocks.invoke).toHaveBeenCalledTimes(8)
   })
 
-  it('renders the nine product navigation entries with special compression beside the file browser', async () => {
+  it('renders the ten product navigation entries with special compression beside the file browser', async () => {
     const { wrapper } = await mountLayout()
 
     expect(wrapper.find('.pi-folder-open').exists()).toBe(true)
@@ -128,6 +129,7 @@ describe('MainLayout', () => {
     expect(mocks.t).toHaveBeenCalledWith('nav.special_compression')
     expect(wrapper.get('[data-testid="nav-SpecialCompression"]').attributes('aria-label')).toContain('Ctrl+Shift+S')
     expect(mocks.t).toHaveBeenCalledWith('nav.browser')
+    expect(mocks.t).toHaveBeenCalledWith('nav.workflows')
     expect(mocks.t).toHaveBeenCalledWith('nav.library')
     expect(mocks.t).toHaveBeenCalledWith('nav.vault')
     expect(mocks.t).toHaveBeenCalledWith('nav.integrity')
@@ -139,9 +141,9 @@ describe('MainLayout', () => {
     const { wrapper } = await mountLayout('/compress')
 
     const navButtons = wrapper.findAll('aside nav > button')
-    expect(navButtons).toHaveLength(9)
-    expect(navButtons[7].attributes('data-testid')).toBe('nav-History')
-    expect(navButtons[8].attributes('data-testid')).toBe('nav-Settings')
+    expect(navButtons).toHaveLength(10)
+    expect(navButtons[8].attributes('data-testid')).toBe('nav-History')
+    expect(navButtons[9].attributes('data-testid')).toBe('nav-Settings')
     expect(navButtons[1].classes()).toContain('bg-primary/20')
     expect(navButtons[0].classes()).toContain('hover:bg-primary/8')
     expect(navButtons[1].attributes('aria-current')).toBe('page')
