@@ -1,3 +1,4 @@
+import {parentDirectory} from './resultLocation'
 import { shallowRef } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
 export interface ZpaqMember { path:string;size:number;stamp:string }
@@ -21,4 +22,12 @@ export function prepareZpaqSource(path:string):Promise<string>{
   if(details?.members.length===group.members.length)confirmed.set(key,result)
   return result
  });queue=work;return work
+}
+
+/** A composite source reference is not the user's archive directory. */
+export async function archiveSourceDirectory(path:string):Promise<string>{
+ if(!/\.zpaq$/i.test(path))return parentDirectory(path)
+ const group=await invoke<ZpaqGroup|null>('zpaq_multipart_details',{path})
+ if(!group&&/[\\/]zpaq-sources[\\/]/i.test(path))throw new Error('来源组记录已不存在，请重新选择原成员确认整组')
+ return parentDirectory(group?.members[0]?.path||path)
 }

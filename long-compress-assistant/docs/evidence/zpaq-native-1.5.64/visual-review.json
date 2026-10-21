@@ -8,13 +8,16 @@
     "zpaq1564-inline-pending-760x520.png",
     "zpaq1564-native-multi-config-760x520.png",
     "zpaq1564-conversion-result-1100x700.png",
-    "zpaq1564-missing-history-retry-1100x700.png"
+    "zpaq1564-missing-history-retry-1100x700.png",
+    "zpaq1564-native-source-directory-1100x700.png",
+    "zpaq1564-native-source-directory-760x520.png"
   ],
-  "layouts": 22,
-  "checks": 6,
-  "finalBinarySha256": "c0d1a52acd60992e2b78e8f2f10d37b8204c66a6999c12ee5a634302bfec5567",
+  "layouts": 24,
+  "checks": 7,
+  "finalBinarySha256": "700225ed1754df02ca4932a3a6008df0779655dc9ff00d4b7d3e73f91d00f1ee",
   "preservedPriorBinary": [
-    "2908a6b44f9eb50463ac01a2cfafcdbeec2194b5e99925a4896ae3bb371f8bb6"
+    "2908a6b44f9eb50463ac01a2cfafcdbeec2194b5e99925a4896ae3bb371f8bb6",
+    "c0d1a52acd60992e2b78e8f2f10d37b8204c66a6999c12ee5a634302bfec5567"
   ],
   "notes": "确认/文图预览成功依据保留其原程序身份。最终程序继续取回、正常重启、缺成员失败/补齐历史新任务、独立 ZIP 转换和双组导入/多选弹窗；全部原件摘要保持。"
 }

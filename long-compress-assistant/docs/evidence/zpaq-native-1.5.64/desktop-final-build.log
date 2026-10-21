@@ -55,4 +55,4 @@ warning: function `stats` is never used
   |               ^^^^^
 
 warning: `long-compress-assistant` (lib) generated 4 warnings (run `cargo fix --lib -p long-compress-assistant` to apply 1 suggestion)
-    Finished `release` profile [optimized] target(s) in 2m 48s
+    Finished `release` profile [optimized] target(s) in 2m 45s

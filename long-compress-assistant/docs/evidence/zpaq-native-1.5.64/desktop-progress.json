@@ -1,6 +1,6 @@
 {
   "version": "1.5.64",
-  "binarySha256": "c0d1a52acd60992e2b78e8f2f10d37b8204c66a6999c12ee5a634302bfec5567",
+  "binarySha256": "700225ed1754df02ca4932a3a6008df0779655dc9ff00d4b7d3e73f91d00f1ee",
   "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-1564\\91585db5-7e07-4182-90bd-e281e99939b7",
   "checks": [
     {
@@ -52,6 +52,18 @@
           "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-1564\\91585db5-7e07-4182-90bd-e281e99939b7\\journal-key"
         }
       ],
+      "notStarted": true
+    },
+    {
+      "kind": "source-directory-actions",
+      "binarySha256": "700225ed1754df02ca4932a3a6008df0779655dc9ff00d4b7d3e73f91d00f1ee",
+      "global": true,
+      "single": true,
+      "batch": true,
+      "expected": {
+        "1jequ4s1fmvinw5f0": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-1564\\91585db5-7e07-4182-90bd-e281e99939b7\\journal",
+        "pjyj767rimvinw5s7": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-1564\\91585db5-7e07-4182-90bd-e281e99939b7\\journal-key"
+      },
       "notStarted": true
     }
   ],
@@ -281,6 +293,32 @@
       "height": 520,
       "overflow": 0,
       "width": 760
+    },
+    {
+      "name": "native-source-directory",
+      "outerWidth": 1100,
+      "binarySha256": "700225ed1754df02ca4932a3a6008df0779655dc9ff00d4b7d3e73f91d00f1ee",
+      "anchorOverflow": 0,
+      "columns": [
+        387.5,
+        387.5
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "native-source-directory",
+      "outerWidth": 760,
+      "binarySha256": "700225ed1754df02ca4932a3a6008df0779655dc9ff00d4b7d3e73f91d00f1ee",
+      "anchorOverflow": 0,
+      "columns": [
+        295.5,
+        295.5
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760
     }
   ],
   "screenshots": [
@@ -305,7 +343,9 @@
     "zpaq1564-conversion-result-1100x700.png",
     "zpaq1564-conversion-result-760x520.png",
     "zpaq1564-native-multi-config-1100x700.png",
-    "zpaq1564-native-multi-config-760x520.png"
+    "zpaq1564-native-multi-config-760x520.png",
+    "zpaq1564-native-source-directory-1100x700.png",
+    "zpaq1564-native-source-directory-760x520.png"
   ],
   "parts": [
     [
@@ -320,7 +360,8 @@
     ]
   ],
   "previousIdentities": [
-    "2908a6b44f9eb50463ac01a2cfafcdbeec2194b5e99925a4896ae3bb371f8bb6"
+    "2908a6b44f9eb50463ac01a2cfafcdbeec2194b5e99925a4896ae3bb371f8bb6",
+    "c0d1a52acd60992e2b78e8f2f10d37b8204c66a6999c12ee5a634302bfec5567"
   ],
   "record": {
     "archiveOutput": null,
@@ -415,5 +456,5 @@
     "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-1564\\profile\\zpaq-sources\\03699504879e343ae0140b786077a4f1627f9afdc7984282f0ea6037308f4860\\journal-key01.zpaq",
     "status": "pending"
   },
-  "completedAt": "2026-10-21T21:50:46.664Z"
+  "completedAt": "2026-10-21T22:06:29.687Z"
 }
