@@ -391,6 +391,7 @@ const deselectAll = () => {
 const isProcessing = ref(false)
 
 const runDecompressionResourcePreflight = async (task: Task) => {
+  if(task.librarySourceId) task.executionConfig={schemaVersion:1,kind:'archive-extraction',outputDirectory:task.outputPath,extractToSubfolder:task.extractToSubfolder??false,librarySourceId:task.librarySourceId,libraryRevision:task.libraryRevision,libraryKeepStructure:task.libraryKeepStructure??true,libraryConflictPolicy:task.libraryConflictPolicy??'rename',selectedEntries:[...(task.selectedEntries||[])],zipPasswordEncoding:task.zipPasswordEncoding}
   if (task.zpaqCatalogId && task.zpaqSnapshot) task.executionConfig = {
     schemaVersion: 1, kind: 'archive-extraction', outputDirectory: task.outputPath,
     extractToSubfolder: task.extractToSubfolder ?? false, zpaqSnapshot: {...task.zpaqSnapshot},
@@ -460,15 +461,16 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
     // 不预先添加密码，先尝试解压，只有明确要求密码时才使用保险箱
     const options = {
       outputPath: task.outputPath,
-      keepStructure: true,
+      keepStructure: task.libraryKeepStructure ?? true,
       overwrite: false,
       deleteAfter: task.recycleSourceAfterExtract ?? false,
       createSubdirectory: task.extractToSubfolder ?? false,
       password: task.password || undefined, // 只使用用户手动输入的密码
       zipPasswordEncoding: zipPasswordEncodingForSource(task.sourceFiles[0], task.zipPasswordEncoding, task.format),
       zpaqSnapshot: task.zpaqSnapshot, zpaqCatalogId: task.zpaqCatalogId, selectedEntries: task.selectedEntries,
+      librarySourceId:task.librarySourceId,libraryRevision:task.libraryRevision,libraryKeepStructure:task.libraryKeepStructure,libraryConflictPolicy:task.libraryConflictPolicy,
       fileFilter: task.fileFilter || null
-      ,conflictPolicy: appStore.settings.conflictPolicy
+      ,conflictPolicy: task.libraryConflictPolicy || appStore.settings.conflictPolicy
     }
 
     try {

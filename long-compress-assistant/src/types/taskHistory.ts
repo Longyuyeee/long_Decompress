@@ -79,7 +79,11 @@ export const createTaskHistoryRecord = (task: Task): TaskHistoryRecord => {
       ? { ...task.archiveOutput, files: task.archiveOutput.files.map(file => ({ ...file })) } : null,
     id: task.id,
     retryOfTaskId: task.retryOfTaskId || null,
-    executionConfig: copyExecutionConfig(task.executionConfig),
+    executionConfig: copyExecutionConfig(task.librarySourceId ? {
+      schemaVersion:1,kind:'archive-extraction',outputDirectory:task.outputPath,extractToSubfolder:task.extractToSubfolder??false,
+      librarySourceId:task.librarySourceId,libraryRevision:task.libraryRevision,libraryKeepStructure:task.libraryKeepStructure??true,
+      libraryConflictPolicy:task.libraryConflictPolicy??'rename',selectedEntries:[...(task.selectedEntries||[])],zipPasswordEncoding:task.zipPasswordEncoding,
+    } : task.executionConfig),
     name: task.name,
     taskType: task.type,
     workloadKind: task.workloadKind || 'archive',

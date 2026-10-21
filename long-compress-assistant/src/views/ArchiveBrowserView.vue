@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useArchiveLibraryStore } from '@/stores/archiveLibrary'
 import { invoke } from '@tauri-apps/api/tauri'
 import ZipEditBar from '@/components/archive/ZipEditBar.vue'
 import { useZipEditStore } from '@/stores/zipEdit'
@@ -527,6 +528,12 @@ const copyContextText = async (kind: 'name' | 'path', entries: ArchiveEntryInfo[
   }
 }
 
+const addingToLibrary=ref(false),addedToLibrary=ref(false)
+async function addToLibrary(){
+  if(!archivePath.value||addingToLibrary.value)return
+  addingToLibrary.value=true
+  try{const library=useArchiveLibraryStore();if(await library.add([archivePath.value])){addedToLibrary.value=true;appStore.setSuccess('已加入资料库，请前往资料库手动建立或刷新索引')}else appStore.setError(library.error)}finally{addingToLibrary.value=false}
+}
 const extractPaths = async (paths: string[], destination: string) => {
   if (!archivePath.value || !destination || paths.length === 0 || extracting.value) return
   extracting.value = true
@@ -737,6 +744,7 @@ const extractSelected = async () => {
       </div>
       <div class="browser-header-actions flex min-w-0 flex-wrap items-center gap-2">
         <slot name="header-actions" />
+        <button v-if="result && !parentFrames.length" class="browser-input" type="button" data-testid="browser-add-library" :disabled="inputBusy || addingToLibrary" @click="addToLibrary"><i class="pi pi-database"/>{{ addingToLibrary ? '正在加入…' : '加入 / 刷新资料库' }}</button><RouterLink v-if="addedToLibrary" to="/library" class="text-primary text-xs font-bold">前往资料库建索引</RouterLink>
         <button class="browser-primary" type="button" :disabled="inputBusy" @click="chooseArchive">
           <i class="pi pi-folder-open"></i><span>打开压缩包</span>
         </button>

@@ -6,6 +6,11 @@ import type { PdfOptimizationMode } from '@/types/pdf'
 import { isZipPasswordEncoding, type ZipPasswordEncoding } from './zipPassword'
 
 export interface ExtractionConfigV1 {
+  librarySourceId?: string
+  libraryRevision?: string
+  libraryKeepStructure?: boolean
+  libraryConflictPolicy?: 'rename' | 'skip'
+
   zpaqCatalogId?: string
   selectedEntries?: string[]
   zpaqSnapshot?: ZpaqSnapshot
@@ -80,6 +85,12 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
       && (!config.zpaqSnapshot || !/^[a-f0-9]{64}$/.test(config.zpaqCatalogId) || !Array.isArray(config.selectedEntries)
       || !config.selectedEntries.length || config.selectedEntries.length > 2000 || JSON.stringify(config.selectedEntries).length > 60000
       || !config.selectedEntries.every(path=>typeof path==='string'&&path.length>0&&path.length<=32768))) return null
+  if (config.kind === 'archive-extraction' && config.librarySourceId !== undefined && (
+      typeof config.librarySourceId !== 'string' || !config.librarySourceId || config.librarySourceId.length > 100
+      || typeof config.libraryRevision !== 'string' || !config.libraryRevision || config.libraryRevision.length > 60000
+      || !Array.isArray(config.selectedEntries) || !config.selectedEntries.length || config.selectedEntries.length > 2000 || JSON.stringify(config.selectedEntries).length > 60000
+      || !config.selectedEntries.every(path=>typeof path==='string'&&path.length>0&&path.length<=32768)
+      || typeof config.libraryKeepStructure !== 'boolean' || !['rename','skip'].includes(config.libraryConflictPolicy || ''))) return null
   if (config.kind === 'archive-extraction' && config.zpaqSnapshot != null && !isZpaqSnapshot(config.zpaqSnapshot)) return null
   if (config.kind === 'archive-conversion' && config.sourceZpaqSnapshot != null && !isZpaqSnapshot(config.sourceZpaqSnapshot)) return null
   if (config.kind === 'archive-extraction' && config.zipPasswordEncoding != null
@@ -110,6 +121,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
       rarRecoveryVolumes: config.rarRecoveryVolumes ?? 0,
       splitSize: config.splitSize, encryptFilenames: config.encryptFilenames, passwordRequired: config.passwordRequired }
     case 'archive-extraction': return { schemaVersion: 1, kind: config.kind,
+      ...(config.librarySourceId ? {librarySourceId:config.librarySourceId,libraryRevision:config.libraryRevision,libraryKeepStructure:config.libraryKeepStructure,libraryConflictPolicy:config.libraryConflictPolicy,selectedEntries:[...(config.selectedEntries||[])]} : {}),
       ...(config.zpaqCatalogId ? { zpaqCatalogId: config.zpaqCatalogId, selectedEntries: [...(config.selectedEntries || [])] } : {}),
       ...(config.zpaqSnapshot ? { zpaqSnapshot: { ...config.zpaqSnapshot } } : {}),
       ...(config.zipPasswordEncoding ? { zipPasswordEncoding: config.zipPasswordEncoding } : {}),

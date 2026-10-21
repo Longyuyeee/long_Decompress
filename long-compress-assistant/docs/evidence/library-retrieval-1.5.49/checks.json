@@ -1,0 +1,244 @@
+{
+  "version": "1.5.49",
+  "date": "2026-10-21",
+  "frontend": {
+    "distinctPassed": 140,
+    "initialRelated": 80,
+    "newQueueDraftHistoryIntegration": 5,
+    "relatedBrowserAndFailureRetry": 48,
+    "newResultEntry": 3,
+    "cancelBeforeStartSelection": 1,
+    "relatedHistoryRecords": 3,
+    "continuation": "Initial 79 passed, one init-call ordering expectation corrected for the new parallel organization read and only that case rerun. Final history-before-start correction ran one new case and three affected history cases. No passed unrelated matrix repeated."
+  },
+  "rust": {
+    "distinctPassed": 5,
+    "organizationSearchAndSelection": 3,
+    "migration14to15": 1,
+    "selectedHistoryPersistence": 1
+  },
+  "builds": {
+    "typecheckAndVite": "passed",
+    "shellAndEightVersionIdentities": "passed",
+    "native": "custom-protocol,desktop-e2e; VITE_DESKTOP_E2E=1",
+    "binarySha256": "6dc34d0b574b1078987ccce312b8c84c3877d93b5eefe93ffa17bcd415e9dc53",
+    "previousIdentities": [
+      "782641f3576a4d1f9d0f20d9ffde1142f1c01dff1418840f6747c4472141c255"
+    ]
+  },
+  "desktop": {
+    "passedFlows": 4,
+    "layoutRecords": 16,
+    "horizontalOverflow": 0,
+    "representativeScreenshots": 8,
+    "schemaUpgrade": "Isolated closed v1.5.48 schema-14 profile to 15; original 65-entry project cache retained",
+    "normalCloseSameProfile": true,
+    "searchScrollAndExpansionRetained": true,
+    "pendingExactSelectionRecovered": true,
+    "continuation": "First three flows retained on original program. Final binary bounds result/modal list scrolling and preserves scope in history if cancelled before starting; targeted frontend cases passed. Resumed only the fourth flow and affected final layouts. One screenshot selector targeted a closed row after successful extractions; SQLite records and bytes confirmed without repeating extraction. Title-bar close exited before automation sought an unnecessary confirmation. Two WebView readiness waits timed out; later same-profile startup, recovery and original queue extraction passed. Runtime startup flags unchanged.",
+    "receipt": "desktop.json"
+  },
+  "originalArchiveSha256": {
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\分类资料\\项目甲.zip": "8f4f13e5c3f3e5a0e4bc95b0106ee2fdda893cd604b5a48fac041d07381bc718",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\分类资料\\项目乙.zip": "1c1dca57a2373675bc1e114ccd302ed76ddd7eafdd2dbe50a94f8a444aee3544",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\分类资料\\密码资料.zip": "9fa0169394ff54d1ab0179a1108f1951027eccd6d503ef92927255500eb163a6",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\分类资料\\离线资料.zip": "0422a8a1f1e4847d0b0766823ae3e908b13ed9edb8a08592c29d2960c56dda7a"
+  },
+  "actualFiles": {
+    "output": [
+      {
+        "path": "项目乙-03be675f/docs/取回00 (1).txt",
+        "bytes": 7,
+        "sha256": "f4000b76b5e915f4215d24a4e33e8eeccf2924385e04c11d9a9a391387eaf4af"
+      },
+      {
+        "path": "项目乙-03be675f/docs/取回00.txt",
+        "bytes": 7,
+        "sha256": "f4000b76b5e915f4215d24a4e33e8eeccf2924385e04c11d9a9a391387eaf4af"
+      },
+      {
+        "path": "项目甲-c2b18fb5/docs/取回00.txt",
+        "bytes": 8,
+        "sha256": "38fd34f0e02475ef410be92d3c7191c11e992231893b9c4c4c17bf751947b4ab"
+      },
+      {
+        "path": "项目甲-c2b18fb5/docs/取回51.txt",
+        "bytes": 8,
+        "sha256": "437a005a024bd2a95bad9f1aa64520f711a25df552f9acb161dc710d06d64d00"
+      }
+    ],
+    "merged": [
+      {
+        "path": "取回密码 (1).txt",
+        "bytes": 17,
+        "sha256": "bf91a8356d2eab2b8d88b5b866e0d2f95633cc22432494a892e62e6776b633ae"
+      },
+      {
+        "path": "取回密码.txt",
+        "bytes": 15,
+        "sha256": "74241030e48b43b9ad89f2fe385c95d67b3c8897674edd487344bbe8337f1b5b"
+      },
+      {
+        "path": "取回离线.txt",
+        "bytes": 16,
+        "sha256": "4ffe9fae42036eb14c5750050b492ec509def698dcb914bbf913de5edd250c3b"
+      }
+    ],
+    "skipped": [
+      {
+        "path": "取回00.txt",
+        "bytes": 13,
+        "sha256": "e240510193f886a2d58f0dfa3b441af6fbe676b70d9da2ee419b75190c4ea198"
+      }
+    ]
+  },
+  "taskReceipts": [
+    {
+      "id": "5b58a563-9243-4ef3-8122-18a9e6f63614",
+      "name": "项目甲.zip · 所选 2 个文件",
+      "status": "completed",
+      "source_paths": "[\"E:\\\\Project\\\\AIProject\\\\GeminiProject\\\\long_Decompress\\\\long-compress-assistant\\\\test-results\\\\library-1549\\\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\\\分类资料\\\\项目甲.zip\"]",
+      "output_path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\按来源取回/项目甲-c2b18fb5",
+      "executionConfig": {
+        "schemaVersion": 1,
+        "kind": "archive-extraction",
+        "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\按来源取回/项目甲-c2b18fb5",
+        "extractToSubfolder": false,
+        "librarySourceId": "c2b18fb5-bdf5-4f2d-b859-6bfb460c1b84",
+        "libraryRevision": "6274:SystemTime { intervals: 134370484949851812 }",
+        "selectedEntries": [
+          "docs/取回00.txt",
+          "docs/取回51.txt"
+        ],
+        "libraryKeepStructure": true,
+        "libraryConflictPolicy": "rename"
+      }
+    },
+    {
+      "id": "d0964078-e815-4621-9e7d-6e2aa13bf82c",
+      "name": "项目乙.zip · 所选 1 个文件",
+      "status": "completed",
+      "source_paths": "[\"E:\\\\Project\\\\AIProject\\\\GeminiProject\\\\long_Decompress\\\\long-compress-assistant\\\\test-results\\\\library-1549\\\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\\\分类资料\\\\项目乙.zip\"]",
+      "output_path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\按来源取回/项目乙-03be675f",
+      "executionConfig": {
+        "schemaVersion": 1,
+        "kind": "archive-extraction",
+        "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\按来源取回/项目乙-03be675f",
+        "extractToSubfolder": false,
+        "librarySourceId": "03be675f-6367-4874-a05d-1a906243204a",
+        "libraryRevision": "255:SystemTime { intervals: 134370484949891817 }",
+        "selectedEntries": [
+          "docs/取回00.txt"
+        ],
+        "libraryKeepStructure": true,
+        "libraryConflictPolicy": "rename"
+      }
+    },
+    {
+      "id": "dad0b9da-c8cd-4ed1-ab73-c70288582d2a",
+      "name": "离线资料.zip · 所选 1 个文件",
+      "status": "completed",
+      "source_paths": "[\"E:\\\\Project\\\\AIProject\\\\GeminiProject\\\\long_Decompress\\\\long-compress-assistant\\\\test-results\\\\library-1549\\\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\\\分类资料\\\\离线资料.zip\"]",
+      "output_path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\合并平铺",
+      "executionConfig": {
+        "schemaVersion": 1,
+        "kind": "archive-extraction",
+        "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\合并平铺",
+        "extractToSubfolder": false,
+        "librarySourceId": "3658f7f0-5ec9-4e81-acc8-d9661877cb61",
+        "libraryRevision": "276:SystemTime { intervals: 134370484949965547 }",
+        "selectedEntries": [
+          "备份/取回离线.txt"
+        ],
+        "libraryKeepStructure": false,
+        "libraryConflictPolicy": "rename"
+      }
+    },
+    {
+      "id": "8b0dba50-3941-416f-a7eb-35016b8831c0",
+      "name": "密码资料.zip · 所选 1 个文件",
+      "status": "completed",
+      "source_paths": "[\"E:\\\\Project\\\\AIProject\\\\GeminiProject\\\\long_Decompress\\\\long-compress-assistant\\\\test-results\\\\library-1549\\\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\\\分类资料\\\\密码资料.zip\"]",
+      "output_path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\合并平铺",
+      "executionConfig": {
+        "schemaVersion": 1,
+        "kind": "archive-extraction",
+        "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\合并平铺",
+        "extractToSubfolder": false,
+        "librarySourceId": "2c208839-8a5a-40e6-a9f9-593962a8fa79",
+        "libraryRevision": "275:SystemTime { intervals: 134370484956373824 }",
+        "selectedEntries": [
+          "取回密码.txt"
+        ],
+        "libraryKeepStructure": false,
+        "libraryConflictPolicy": "rename"
+      }
+    },
+    {
+      "id": "eb7ffd48-2dcf-497c-afb7-c149e289801c",
+      "name": "项目甲.zip · 所选 1 个文件",
+      "status": "completed",
+      "source_paths": "[\"E:\\\\Project\\\\AIProject\\\\GeminiProject\\\\long_Decompress\\\\long-compress-assistant\\\\test-results\\\\library-1549\\\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\\\分类资料\\\\项目甲.zip\"]",
+      "output_path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\同名跳过",
+      "executionConfig": {
+        "schemaVersion": 1,
+        "kind": "archive-extraction",
+        "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\同名跳过",
+        "extractToSubfolder": false,
+        "librarySourceId": "c2b18fb5-bdf5-4f2d-b859-6bfb460c1b84",
+        "libraryRevision": "6274:SystemTime { intervals: 134370484949851812 }",
+        "selectedEntries": [
+          "docs/取回00.txt"
+        ],
+        "libraryKeepStructure": false,
+        "libraryConflictPolicy": "skip"
+      }
+    },
+    {
+      "id": "16cec331-09a7-450d-b97f-4bad8557a55b",
+      "name": "项目乙.zip · 所选 1 个文件",
+      "status": "completed",
+      "source_paths": "[\"E:\\\\Project\\\\AIProject\\\\GeminiProject\\\\long_Decompress\\\\long-compress-assistant\\\\test-results\\\\library-1549\\\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\\\分类资料\\\\项目乙.zip\"]",
+      "output_path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\同名跳过",
+      "executionConfig": {
+        "schemaVersion": 1,
+        "kind": "archive-extraction",
+        "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\同名跳过",
+        "extractToSubfolder": false,
+        "librarySourceId": "03be675f-6367-4874-a05d-1a906243204a",
+        "libraryRevision": "255:SystemTime { intervals: 134370484949891817 }",
+        "selectedEntries": [
+          "docs/取回00.txt"
+        ],
+        "libraryKeepStructure": false,
+        "libraryConflictPolicy": "skip"
+      }
+    },
+    {
+      "id": "recovered-f493856a-c780-4183-a0da-157813d79dca",
+      "name": "项目乙.zip · 所选 1 个文件",
+      "status": "completed",
+      "source_paths": "[\"E:\\\\Project\\\\AIProject\\\\GeminiProject\\\\long_Decompress\\\\long-compress-assistant\\\\test-results\\\\library-1549\\\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\\\分类资料\\\\项目乙.zip\"]",
+      "output_path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\按来源取回/项目乙-03be675f",
+      "executionConfig": {
+        "schemaVersion": 1,
+        "kind": "archive-extraction",
+        "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\按来源取回/项目乙-03be675f",
+        "extractToSubfolder": false,
+        "librarySourceId": "03be675f-6367-4874-a05d-1a906243204a",
+        "libraryRevision": "255:SystemTime { intervals: 134370484949891817 }",
+        "selectedEntries": [
+          "docs/取回00.txt"
+        ],
+        "libraryKeepStructure": true,
+        "libraryConflictPolicy": "rename"
+      }
+    }
+  ],
+  "notRepeated": [
+    "unaffected format/password matrices",
+    "real disk-full",
+    "media and personal installation"
+  ],
+  "releaseReceipt": "Candidate, normal protected merge, tag and formal assets recorded on the version PR."
+}

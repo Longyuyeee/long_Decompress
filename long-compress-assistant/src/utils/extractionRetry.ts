@@ -13,12 +13,17 @@ export function extractionRetryPolicy(task: Task) {
   const blocked = task.type !== 'decompression' || (task.workloadKind && task.workloadKind !== 'archive')
     || !['failed','cancelled'].includes(task.status) ? '仅支持已失败或已取消的归档解压任务。'
     : category === 'rollback-incomplete' ? '请先保留并人工核对原输出和恢复目录；此处不能直接重试回滚不完整的任务。'
-    : task.sourceFiles.length !== 1 || task.fileFilter || (task.selectedEntries?.length && !(task.zpaqSnapshot && task.zpaqCatalogId))
+    : task.sourceFiles.length !== 1 || task.fileFilter || (task.selectedEntries?.length && !(task.zpaqSnapshot && task.zpaqCatalogId) && !task.librarySourceId)
       ? '此任务包含特殊来源或局部解压范围，请返回归档浏览重新选择范围。' : ''
   return { blocked, category, guidance: getTaskRecoveryGuidance(record), requireIntegrity: category === 'damaged' }
 }
 
 export interface ExtractionRetryInput {
+  librarySourceId?: string
+  libraryRevision?: string
+  libraryKeepStructure?: boolean
+  libraryConflictPolicy?: 'rename' | 'skip'
+
   zpaqSnapshot?: import('@/types/zpaqSnapshot').ZpaqSnapshot
   zpaqCatalogId?: string
   selectedEntries?: string[]
@@ -61,7 +66,7 @@ export async function validateExtractionRetry(
     // Keep that distinct output after a failure before extraction started.
     const parent = outputPath.slice(0, Math.max(outputPath.lastIndexOf('/'), outputPath.lastIndexOf('\\')) + 1)
     let parentExists = false
-    if (input.zpaqCatalogId && parent && parent !== outputPath) {
+    if ((input.zpaqCatalogId || input.librarySourceId) && parent && parent !== outputPath) {
       try { parentExists = (await invoke<{ is_dir: boolean }>('get_file_info', { path: parent })).is_dir } catch { /* Show the original directory error. */ }
     }
     if (!parentExists) throw new Error(`无法读取本次输出目录「${outputPath}」，请创建该目录或选择已存在且可访问的目录。原归档未改动。详情：${String(error)}`)
@@ -70,6 +75,7 @@ export async function validateExtractionRetry(
   check()
   if (!output.is_dir) throw new Error('输出位置必须是已存在的目录。')
   const zipPasswordEncoding = zipPasswordEncodingForSource(path, input.zipPasswordEncoding, split?.archive_format)
+  if(input.librarySourceId){const source=await invoke<{path:string}>('library_selection',{sourceId:input.librarySourceId,revision:input.libraryRevision,paths:input.selectedEntries});check();if(source.path.toLowerCase()!==path.toLowerCase())throw Error('来源已重新定位，请返回资料库重新选择文件')}
   if (input.zpaqCatalogId && input.zpaqSnapshot) {
     await invoke('check_zpaq_snapshot_catalog', { filePath: path, password: input.password || null, snapshot: input.zpaqSnapshot, catalogId: input.zpaqCatalogId }); check()
   }

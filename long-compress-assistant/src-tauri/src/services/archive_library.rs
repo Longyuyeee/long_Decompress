@@ -13,6 +13,7 @@ pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
     sqlx::query("CREATE TABLE IF NOT EXISTS archive_library_entries (source_id TEXT NOT NULL REFERENCES archive_library_sources(id) ON DELETE CASCADE, path TEXT NOT NULL, name TEXT NOT NULL, search_path TEXT NOT NULL, extension TEXT NOT NULL, size INTEGER NOT NULL, modified TEXT, PRIMARY KEY(source_id,path))").execute(pool).await?;
     sqlx::query("CREATE INDEX IF NOT EXISTS idx_library_entries_type ON archive_library_entries(extension,source_id)").execute(pool).await?;
     upgrade_tables(pool).await?;
+    super::library_organization::init_tables(pool).await?;
     Ok(())
 }
 
@@ -26,12 +27,12 @@ pub struct Candidate { pub path:String, pub name:String, pub format:String }
 #[derive(Serialize)]
 #[serde(rename_all="camelCase")]
 pub struct Scan { pub candidates:Vec<Candidate>, pub visited:usize, pub inaccessible:usize, pub stopped:bool, pub limited:bool }
-#[derive(Default,Deserialize)]
+#[derive(Clone,Default,Serialize,Deserialize)]
 #[serde(rename_all="camelCase",default)]
-pub struct Search { pub query:String, pub source_id:String, pub category:String, pub page:u32 }
+pub struct Search { pub query:String, pub source_id:String, pub category:String, pub page:u32, pub tag:String, pub favorites_only:bool }
 #[derive(Clone, Debug, Serialize, FromRow)]
 #[serde(rename_all="camelCase")]
-pub struct Hit { pub source_id:String, pub source_path:String, pub source_name:String, pub format:String, pub path:String, pub name:String, pub extension:String, pub size:i64, pub modified:Option<String>, pub size_known:bool, pub availability:String, pub source_status:String, pub encrypted:bool, pub indexed_at:Option<String> }
+pub struct Hit { pub source_id:String, pub source_path:String, pub source_name:String, pub format:String, pub path:String, pub name:String, pub extension:String, pub size:i64, pub modified:Option<String>, pub size_known:bool, pub availability:String, pub source_status:String, pub encrypted:bool, pub indexed_at:Option<String>, pub revision:String }
 #[derive(Serialize)]
 pub struct Results { pub items:Vec<Hit>, pub total:i64, pub page:u32 }
 
@@ -112,7 +113,7 @@ pub async fn list(pool:&SqlitePool)->Result<Vec<Source>>{
     for mut row in rows{if row.status=="indexing"&&!active.contains(&row.id){row.status="interrupted".into();row.note="上次建库已中断，可手动继续；其他已完成来源可搜索".into();sqlx::query("UPDATE archive_library_sources SET status=?,note=? WHERE id=? AND status='indexing'").bind(&row.status).bind(&row.note).bind(&row.id).execute(pool).await?;}result.push(row)}Ok(result)
 }
 pub async fn source(pool:&SqlitePool,id:&str)->Result<Source>{sqlx::query_as("SELECT * FROM archive_library_sources WHERE id=?").bind(id).fetch_optional(pool).await?.context("来源已移出资料库，请返回重新选择")}
-pub async fn remove(pool:&SqlitePool,id:&str)->Result<()>{ensure!(!JOBS.lock().unwrap().contains_key(id),"请先停止这份来源的建库，再移除");let mut tx=pool.begin().await?;sqlx::query("DELETE FROM archive_library_entries WHERE source_id=?").bind(id).execute(&mut *tx).await?;sqlx::query("DELETE FROM archive_library_sources WHERE id=?").bind(id).execute(&mut *tx).await?;tx.commit().await?;Ok(())}
+pub async fn remove(pool:&SqlitePool,id:&str)->Result<()>{ensure!(!JOBS.lock().unwrap().contains_key(id),"请先停止这份来源的建库，再移除");let mut tx=pool.begin().await?;sqlx::query("DELETE FROM archive_library_organization WHERE source_id=?").bind(id).execute(&mut *tx).await?;sqlx::query("DELETE FROM archive_library_entries WHERE source_id=?").bind(id).execute(&mut *tx).await?;sqlx::query("DELETE FROM archive_library_sources WHERE id=?").bind(id).execute(&mut *tx).await?;tx.commit().await?;Ok(())}
 
 #[derive(Default,Clone,Deserialize)]
 #[serde(rename_all="camelCase",default)]
@@ -217,13 +218,14 @@ pub async fn search(pool:&SqlitePool,request:Search)->Result<Results>{
     ensure!(request.query.chars().count()<=512,"搜索文字请控制在 512 字以内");
     let query=request.query.trim().to_lowercase();let escaped=query.replace('\\',"\\\\").replace('%',"\\%").replace('_',"\\_");
     let mut filter=String::from(" FROM archive_library_entries e JOIN archive_library_sources s ON s.id=e.source_id WHERE s.indexed_at IS NOT NULL AND (e.search_path LIKE ? ESCAPE '\\') AND (?='' OR s.id=?)");
+    filter.push_str(" AND (?=0 OR EXISTS(SELECT 1 FROM archive_library_organization o WHERE o.source_id=s.id AND o.favorite=1)) AND (?='' OR EXISTS(SELECT 1 FROM archive_library_organization o,json_each(o.tags) t WHERE o.source_id=s.id AND t.value=?))");
     let extensions=category_extensions(&request.category);if !extensions.is_empty(){filter.push_str(" AND e.extension IN (");filter.push_str(&vec!["?";extensions.len()].join(","));filter.push(')');}
     let pattern=format!("%{escaped}%");
     let count_sql=format!("SELECT COUNT(*){filter}");
-    let mut count=sqlx::query_as::<_,(i64,)>(&count_sql).bind(&pattern).bind(&request.source_id).bind(&request.source_id);for value in extensions{count=count.bind(value)}let (total,)=count.fetch_one(pool).await?;
+    let mut count=sqlx::query_as::<_,(i64,)>(&count_sql).bind(&pattern).bind(&request.source_id).bind(&request.source_id).bind(request.favorites_only).bind(&request.tag).bind(&request.tag);for value in extensions{count=count.bind(value)}let (total,)=count.fetch_one(pool).await?;
     let page=request.page.max(1).min(((total.max(1) as u64+49)/50) as u32);
-    let rows_sql=format!("SELECT s.id source_id,s.path source_path,s.name source_name,s.format,e.path,e.name,e.extension,e.size,e.modified,e.size_known,s.availability,s.status source_status,s.encrypted,s.indexed_at{filter} ORDER BY e.name COLLATE NOCASE,s.name COLLATE NOCASE,s.id,e.path LIMIT 50 OFFSET ?");
-    let mut rows=sqlx::query_as::<_,Hit>(&rows_sql).bind(&pattern).bind(&request.source_id).bind(&request.source_id);for value in extensions{rows=rows.bind(value)}let items=rows.bind((page as i64-1)*50).fetch_all(pool).await?;Ok(Results{items,total,page})
+    let rows_sql=format!("SELECT s.id source_id,s.path source_path,s.name source_name,s.format,e.path,e.name,e.extension,e.size,e.modified,e.size_known,s.availability,s.status source_status,s.encrypted,s.indexed_at,s.revision{filter} ORDER BY e.name COLLATE NOCASE,s.name COLLATE NOCASE,s.id,e.path LIMIT 50 OFFSET ?");
+    let mut rows=sqlx::query_as::<_,Hit>(&rows_sql).bind(&pattern).bind(&request.source_id).bind(&request.source_id).bind(request.favorites_only).bind(&request.tag).bind(&request.tag);for value in extensions{rows=rows.bind(value)}let items=rows.bind((page as i64-1)*50).fetch_all(pool).await?;Ok(Results{items,total,page})
 }
 
 #[cfg(test)]

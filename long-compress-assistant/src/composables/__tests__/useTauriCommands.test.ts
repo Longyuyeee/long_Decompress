@@ -28,6 +28,13 @@ const decompressionOptions = {
 } as const
 
 describe('useTauriCommands', () => {
+  it('library1549 passes live library identity and exact paths to extraction and records only that range',async()=>{
+    mocks.invoke.mockImplementation(async command=>command==='extract_file'?'D:/out':undefined)
+    await useTauriCommands().decompressFile('C:/source.zip',{...decompressionOptions,outputPath:'D:/out',password:'secret-1549',librarySourceId:'source',libraryRevision:'revision',libraryKeepStructure:false,libraryConflictPolicy:'skip',selectedEntries:['docs/合同.txt'],keepStructure:false,conflictPolicy:'skip'})
+    expect(mocks.invoke).toHaveBeenCalledWith('extract_file',expect.objectContaining({options:expect.objectContaining({library_source_id:'source',library_revision:'revision',selected_entries:['docs/合同.txt'],preserve_paths:false,conflict_policy:'skip'})}))
+    expect(useTaskStore().tasks[0].executionConfig).toMatchObject({librarySourceId:'source',libraryRevision:'revision',selectedEntries:['docs/合同.txt'],libraryKeepStructure:false,libraryConflictPolicy:'skip'});expect(JSON.stringify(useTaskStore().tasks[0].executionConfig)).not.toContain('secret-1549')
+  })
+
   it('zpaq1530 binds all read commands and task history to the selected transaction', async () => {
     const snapshot = { version: 1, date: 20261020130000 }, api = useTauriCommands()
     await api.browseArchive('C:/old.zpaq','key','browse',undefined,snapshot)

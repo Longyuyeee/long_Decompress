@@ -1,0 +1,243 @@
+{
+  "version": "1.5.49",
+  "binarySha256": "6dc34d0b574b1078987ccce312b8c84c3877d93b5eefe93ffa17bcd415e9dc53",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658",
+  "checks": [
+    {
+      "kind": "organization-saved-search-and-cross-page-selection",
+      "binarySha256": "782641f3576a4d1f9d0f20d9ffde1142f1c01dff1418840f6747c4472141c255",
+      "oldCachePreserved": true,
+      "persistentLabels": true,
+      "sourceFavorites": true,
+      "savedConditions": true,
+      "crossPageFiles": 5,
+      "sourceCount": 4
+    },
+    {
+      "kind": "usable-parts-queue-and-original-selected-results",
+      "binarySha256": "782641f3576a4d1f9d0f20d9ffde1142f1c01dff1418840f6747c4472141c255",
+      "taskIds": [
+        "5b58a563-9243-4ef3-8122-18a9e6f63614",
+        "d0964078-e815-4621-9e7d-6e2aa13bf82c"
+      ],
+      "selectedFilesOnly": 3,
+      "separateSourceDirectories": true,
+      "originalQueueAndHistory": true,
+      "blockedSelectionsRetained": 2
+    },
+    {
+      "kind": "correct-remaining-password-offline-merge-rename-and-skip",
+      "binarySha256": "782641f3576a4d1f9d0f20d9ffde1142f1c01dff1418840f6747c4472141c255",
+      "onlyRemainingSourcesQueued": true,
+      "vaultPassword": true,
+      "offlineRestored": true,
+      "flatOutput": true,
+      "existingOutputKept": true,
+      "renameAndSkip": true,
+      "taskIds": [
+        "dad0b9da-c8cd-4ed1-ab73-c70288582d2a",
+        "8b0dba50-3941-416f-a7eb-35016b8831c0",
+        "eb7ffd48-2dcf-497c-afb7-c149e289801c",
+        "16cec331-09a7-450d-b97f-4bad8557a55b"
+      ],
+      "continuation": "Functional assertions passed before the screenshot helper requested a task detail that was not expanded. Confirmed existing SQLite terminal receipts and output bytes; did not rerun these successful extractions."
+    },
+    {
+      "kind": "normal-restart-pending-scope-and-search-state",
+      "binarySha256": "6dc34d0b574b1078987ccce312b8c84c3877d93b5eefe93ffa17bcd415e9dc53",
+      "normalCloseSameProfile": true,
+      "labelsAndSavedConditionsRetained": true,
+      "queryRetained": true,
+      "pendingExactSelectionRecovered": true,
+      "originalHashesUnchanged": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "organized-search",
+      "binarySha256": "782641f3576a4d1f9d0f20d9ffde1142f1c01dff1418840f6747c4472141c255",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "organized-search",
+      "binarySha256": "782641f3576a4d1f9d0f20d9ffde1142f1c01dff1418840f6747c4472141c255",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "batch-review",
+      "binarySha256": "782641f3576a4d1f9d0f20d9ffde1142f1c01dff1418840f6747c4472141c255",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "batch-review",
+      "binarySha256": "782641f3576a4d1f9d0f20d9ffde1142f1c01dff1418840f6747c4472141c255",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "blocked-remainder",
+      "binarySha256": "782641f3576a4d1f9d0f20d9ffde1142f1c01dff1418840f6747c4472141c255",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "blocked-remainder",
+      "binarySha256": "782641f3576a4d1f9d0f20d9ffde1142f1c01dff1418840f6747c4472141c255",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "original-queue",
+      "binarySha256": "782641f3576a4d1f9d0f20d9ffde1142f1c01dff1418840f6747c4472141c255",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "original-queue",
+      "binarySha256": "782641f3576a4d1f9d0f20d9ffde1142f1c01dff1418840f6747c4472141c255",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "final-search-controls",
+      "binarySha256": "6dc34d0b574b1078987ccce312b8c84c3877d93b5eefe93ffa17bcd415e9dc53",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "final-search-controls",
+      "binarySha256": "6dc34d0b574b1078987ccce312b8c84c3877d93b5eefe93ffa17bcd415e9dc53",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "final-retrieval-layout",
+      "binarySha256": "6dc34d0b574b1078987ccce312b8c84c3877d93b5eefe93ffa17bcd415e9dc53",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "final-retrieval-layout",
+      "binarySha256": "6dc34d0b574b1078987ccce312b8c84c3877d93b5eefe93ffa17bcd415e9dc53",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "search-position",
+      "binarySha256": "6dc34d0b574b1078987ccce312b8c84c3877d93b5eefe93ffa17bcd415e9dc53",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "search-position",
+      "binarySha256": "6dc34d0b574b1078987ccce312b8c84c3877d93b5eefe93ffa17bcd415e9dc53",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "restored-selection",
+      "binarySha256": "6dc34d0b574b1078987ccce312b8c84c3877d93b5eefe93ffa17bcd415e9dc53",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "restored-selection",
+      "binarySha256": "6dc34d0b574b1078987ccce312b8c84c3877d93b5eefe93ffa17bcd415e9dc53",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "library1549-organized-search-1100x700.png",
+    "library1549-organized-search-760x520.png",
+    "library1549-batch-review-1100x700.png",
+    "library1549-batch-review-760x520.png",
+    "library1549-blocked-remainder-1100x700.png",
+    "library1549-blocked-remainder-760x520.png",
+    "library1549-original-queue-1100x700.png",
+    "library1549-original-queue-760x520.png",
+    "library1549-final-search-controls-1100x700.png",
+    "library1549-final-search-controls-760x520.png",
+    "library1549-final-retrieval-layout-1100x700.png",
+    "library1549-final-retrieval-layout-760x520.png",
+    "library1549-search-position-1100x700.png",
+    "library1549-search-position-760x520.png",
+    "library1549-restored-selection-1100x700.png",
+    "library1549-restored-selection-760x520.png"
+  ],
+  "fixture": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\分类资料",
+  "a": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\分类资料\\项目甲.zip",
+  "b": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\分类资料\\项目乙.zip",
+  "password": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\分类资料\\密码资料.zip",
+  "offline": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\分类资料\\离线资料.zip",
+  "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\按来源取回",
+  "merged": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\合并平铺",
+  "skipped": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\同名跳过",
+  "originals": {
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\分类资料\\项目甲.zip": "8f4f13e5c3f3e5a0e4bc95b0106ee2fdda893cd604b5a48fac041d07381bc718",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\分类资料\\项目乙.zip": "1c1dca57a2373675bc1e114ccd302ed76ddd7eafdd2dbe50a94f8a444aee3544",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\分类资料\\密码资料.zip": "9fa0169394ff54d1ab0179a1108f1951027eccd6d503ef92927255500eb163a6",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\library-1549\\c7e6173b-0a55-46c9-bea1-8dc7ab523658\\分类资料\\离线资料.zip": "0422a8a1f1e4847d0b0766823ae3e908b13ed9edb8a08592c29d2960c56dda7a"
+  },
+  "firstTasks": [
+    "5b58a563-9243-4ef3-8122-18a9e6f63614",
+    "d0964078-e815-4621-9e7d-6e2aa13bf82c"
+  ],
+  "previousIdentities": [
+    "782641f3576a4d1f9d0f20d9ffde1142f1c01dff1418840f6747c4472141c255"
+  ],
+  "savedScroll": 654,
+  "restartPending": true,
+  "restartContinuation": "Title-bar close exited normally before the automation tried to locate an unnecessary confirmation dialog (NoSuchWindow). Resume startup on the same isolated profile; retain completed extraction flows."
+}

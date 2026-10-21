@@ -2,7 +2,7 @@ use anyhow::{Context, Result};
 use sqlx::{SqlitePool, query, query_as};
 
 /// 当前数据库 schema 版本。增加此数字并添加新的迁移步骤以更新 schema。
-const _CURRENT_VERSION: i32 = 14;
+const _CURRENT_VERSION: i32 = 15;
 
 /// 初始化数据库表（含版本化迁移）
 pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
@@ -120,6 +120,10 @@ pub async fn init_tables(pool: &SqlitePool) -> Result<()> {
     if current < 14 {
         crate::services::archive_library::upgrade_tables(pool).await?;
         query("INSERT INTO schema_version (version) VALUES (14)").execute(pool).await?;
+    }
+    if current < 15 {
+        crate::services::library_organization::init_tables(pool).await?;
+        query("INSERT INTO schema_version (version) VALUES (15)").execute(pool).await?;
     }
     Ok(())
 }
@@ -1332,6 +1336,15 @@ mod tests {
         assert_eq!(row, ("保留配置".into(), "7z".into(), 7, false));
         let version: (i32,) = query_as("SELECT MAX(version) FROM schema_version").fetch_one(&pool).await.unwrap();
         assert_eq!(version.0, _CURRENT_VERSION);
+    }
+
+    #[tokio::test]
+    async fn library1549_v14_adds_organization_without_touching_cache(){
+        let pool=sqlx::sqlite::SqlitePoolOptions::new().max_connections(1).connect("sqlite::memory:").await.unwrap();
+        crate::services::archive_library::init_tables(&pool).await.unwrap();query("DROP TABLE archive_library_searches").execute(&pool).await.unwrap();query("DROP TABLE archive_library_organization").execute(&pool).await.unwrap();
+        query("CREATE TABLE schema_version(version INTEGER PRIMARY KEY)").execute(&pool).await.unwrap();query("INSERT INTO schema_version VALUES(14)").execute(&pool).await.unwrap();
+        query("INSERT INTO archive_library_sources(id,path,name,format,status,revision,indexed_at,entry_count) VALUES('old','old.zip','old.zip','ZIP','ready','same','2026-10-21',1)").execute(&pool).await.unwrap();query("INSERT INTO archive_library_entries(source_id,path,name,search_path,extension,size) VALUES('old','one.txt','one.txt','one.txt','txt',4)").execute(&pool).await.unwrap();
+        init_tables(&pool).await.unwrap();init_tables(&pool).await.unwrap();assert!(crate::services::library_organization::state(&pool).await.unwrap().sources.is_empty());assert_eq!(crate::services::archive_library::search(&pool,Default::default()).await.unwrap().total,1);assert_eq!(crate::services::archive_library::source(&pool,"old").await.unwrap().revision,"same");
     }
 
     #[tokio::test]

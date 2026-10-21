@@ -14,6 +14,10 @@ export const PENDING_DRAFTS_KEY = 'long-pending-archive-drafts-v1'
 interface ExtractionDraft {
   zpaqSnapshot?: import('@/types/zpaqSnapshot').ZpaqSnapshot
   zpaqCatalogId?: string
+  librarySourceId?: string
+  libraryRevision?: string
+  libraryKeepStructure?: boolean
+  libraryConflictPolicy?: 'rename' | 'skip'
   zipPasswordEncoding?: ZipPasswordEncoding
   id: string; name: string; sourceFiles: string[]; outputPath: string
   extractToSubfolder?: boolean; recycleSourceAfterExtract?: boolean
@@ -76,6 +80,7 @@ export const usePendingDraftStore = defineStore('pendingDrafts', () => {
           .map(task => ({ id: task.id, name: task.name, sourceFiles: [...task.sourceFiles], outputPath: task.outputPath,
             extractToSubfolder: task.extractToSubfolder, recycleSourceAfterExtract: task.recycleSourceAfterExtract,
             configurationMode: task.configurationMode, fileFilter: task.fileFilter, selectedEntries: task.selectedEntries,
+            librarySourceId:task.librarySourceId,libraryRevision:task.libraryRevision,libraryKeepStructure:task.libraryKeepStructure,libraryConflictPolicy:task.libraryConflictPolicy,
             zipPasswordEncoding: task.zipPasswordEncoding, zpaqSnapshot: task.zpaqSnapshot, zpaqCatalogId: task.zpaqCatalogId,
             retryOfTaskId: task.retryOfTaskId, draftPasswordRequired: task.draftPasswordRequired || !!task.password })) },
       conversion: { defaults: cleanConversion(conversion.defaults), items: conversion.pending.map(item => ({

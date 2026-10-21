@@ -14,6 +14,11 @@ afterEach(() => { session?.dispose(); session = undefined })
 function file(path: string) { return { path, name: path.split('/').pop()!, size: 20, type: 'file', isDirectory: false } }
 function reopen() { session?.dispose(); setActivePinia(createPinia()); session = usePendingDraftStore(); session.initialize(); return session }
 describe('pending archive draft recovery', () => {
+  it('library1549 restores exact library ranges and output policy without the session password',async()=>{
+    session=usePendingDraftStore();session.initialize();useTaskStore().addTask({id:'lib',name:'资料.zip',type:'decompression',sourceFiles:['C:/资料.zip'],outputPath:'D:/out',configurationMode:'individual',librarySourceId:'source-a',libraryRevision:'revision-a',libraryKeepStructure:false,libraryConflictPolicy:'skip',selectedEntries:['docs/合同.txt'],password:'secret-1549'})
+    session.flush();expect(localStorage.getItem(PENDING_DRAFTS_KEY)).not.toContain('secret-1549');await reopen().restore();expect(useTaskStore().tasks[0]).toMatchObject({status:'pending',librarySourceId:'source-a',libraryRevision:'revision-a',libraryKeepStructure:false,libraryConflictPolicy:'skip',selectedEntries:['docs/合同.txt'],draftPasswordRequired:true});expect(mocks.invoke.mock.calls.some(call=>call[0]==='extract_file')).toBe(false)
+  })
+
   it('zpaq1537 recovers guarded selections without passwords or merging different ranges of one snapshot',async()=>{
     session=usePendingDraftStore();session.initialize();const tasks=useTaskStore(),snapshot={version:1,date:20261020130000}
     for(const path of ['old.txt','other.txt'])tasks.addTask({id:path,name:path,type:'decompression',sourceFiles:['C:/old.zpaq'],outputPath:'D:/out',zpaqSnapshot:snapshot,zpaqCatalogId:'a'.repeat(64),selectedEntries:[path],password:'secret-1537',configurationMode:'individual'})

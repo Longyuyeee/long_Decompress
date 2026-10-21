@@ -133,10 +133,14 @@ pub async fn extract_file(
     password: Option<String>,
     options: Option<DecompressOptions>,
 ) -> Result<String, String> {
+    let opts = options.unwrap_or_default();
+    if let Some(id) = &opts.library_source_id {
+        let pool=crate::database::connection::get_pool().await.map_err(|e|e.to_string())?;
+        crate::services::library_organization::selection(&pool,id,opts.library_revision.as_deref().unwrap_or(""),&opts.selected_entries,Some(&file_path)).await.map_err(|e|format!("{e:#}"))?;
+    }
+
     let service = service_for_task(&task_id).await?;
     let _task_guard = TaskCancellationGuard::new(&task_id);
-    let opts = options.unwrap_or_default();
-
     let result = service
         .extract(
             window.clone(),
@@ -1628,6 +1632,8 @@ pub async fn materialize_nested_archive(
         .create_entry_dir(expected_bytes)
         .map_err(|error| error.to_string())?;
     let options = DecompressOptions {
+        library_source_id: None,
+        library_revision: None,
         zpaq_catalog_id: None,
         zpaq_snapshot,
         zip_password_encoding,
@@ -1751,6 +1757,8 @@ pub async fn open_archive_entry(
         .map_err(|error| error.to_string())?;
 
     let options = DecompressOptions {
+        library_source_id: None,
+        library_revision: None,
         zpaq_catalog_id: None,
         zpaq_snapshot,
         zip_password_encoding,
