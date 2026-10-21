@@ -21,6 +21,9 @@ fn entry_encryption<R:Read>(entry:&zip_aes::read::ZipFile<'_,R>)->Encryption {
 }
 fn output_encryption(mode:OutputMode,original:Encryption)->Encryption{match mode{OutputMode::Keep=>original,OutputMode::None=>Encryption::None,OutputMode::Zipcrypto=>Encryption::Zipcrypto,OutputMode::Aes256=>Encryption::Aes256}}
 fn write_options<'a>(method:CompressionMethod,size:u64,date:Option<zip_aes::DateTime>,permissions:Option<u32>,comment:&str,encryption:Encryption,password:&'a[u8],level:Option<i64>)->Result<FullFileOptions<'a>>{
+    // Match the existing ZIPX creator: the legacy XZ writer emits an invalid
+    // index for an untouched empty stream. Keep credentials/metadata, store no bytes.
+    let method=if method==CompressionMethod::Xz&&size==0{CompressionMethod::Stored}else{method};
     let mut options=SimpleFileOptions::default().compression_method(method).compression_level(level).large_file(size>=u32::MAX as u64).last_modified_time(date.filter(zip_aes::DateTime::is_valid).unwrap_or_default()).into_full_options().with_file_comment(comment.to_string());
     if let Some(mode)=permissions{options=options.unix_permissions(mode);}
     Ok(match encryption{Encryption::None=>options,Encryption::Zipcrypto=>options.with_deprecated_encryption(password)?,Encryption::Aes128=>options.with_aes_encryption_bytes(zip_aes::AesMode::Aes128,password),Encryption::Aes192=>options.with_aes_encryption_bytes(zip_aes::AesMode::Aes192,password),Encryption::Aes256=>options.with_aes_encryption_bytes(zip_aes::AesMode::Aes256,password)})
@@ -105,7 +108,7 @@ fn open_catalog(path: &Path) -> Result<(ZipArchive<File>,Catalog)> {
     for index in 0..archive.len() {
         let file=archive.by_index_raw(index)?;
         let mode=file.unix_mode().unwrap_or(0)&0o170000;ensure!(mode==0||mode==0o100000||mode==0o040000,"ZIP 含链接或特殊条目，暂不支持编辑：{}",file.name());
-        ensure!(matches!(file.compression(),CompressionMethod::Stored|CompressionMethod::Deflated|CompressionMethod::Bzip2|CompressionMethod::Lzma|CompressionMethod::Zstd|CompressionMethod::Ppmd),"本阶段编辑支持原方法为 Store/Deflate/Bzip2/LZMA/Zstandard/PPMd 的独立 ZIP；条目 {} 使用 {:?}，仍可浏览/提取",file.name(),file.compression());
+        ensure!(matches!(file.compression(),CompressionMethod::Stored|CompressionMethod::Deflated|CompressionMethod::Bzip2|CompressionMethod::Lzma|CompressionMethod::Zstd|CompressionMethod::Ppmd|CompressionMethod::Xz),"本阶段编辑支持原方法为 Store/Deflate/Bzip2/LZMA/Zstandard/PPMd/XZ 的独立 ZIP；条目 {} 使用 {:?}，仍可浏览/提取",file.name(),file.compression());
         let path=normalized_path(file.name(),file.is_dir())?;ensure!(names.insert(key(&path)),"ZIP 包内同名或大小写冲突：{path}");
         digest.update(format!("{}:{:?}:{}:{}:{}:{:?}:{:?}",path,file.compression(),file.size(),file.compressed_size(),file.crc32(),file.last_modified(),file.unix_mode()).as_bytes());
         encryptions.insert(path.clone(),entry_encryption(&file));methods.insert(format!("{:?}",file.compression()));register_entry(&mut map,Entry{path,is_dir:file.is_dir(),size:file.size()})?;
@@ -172,7 +175,7 @@ pub fn save_encrypted(source:&Path,revision:&str,changes:&[Change],original_edit
 pub fn save_encrypted_guarded(source:&Path,revision:&str,changes:&[Change],original_edits:&[OriginalEdit],output:&Path,method:&str,level:u32,credentials:&Credentials,flag:Arc<AtomicBool>,observer:Observer,before_publish:impl FnOnce()->Result<()>)->Result<()> {
     ensure!((!changes.is_empty()||!original_edits.is_empty()||credentials.output_mode!=OutputMode::Keep)&&changes.len()<=MAX_ADDITIONS&&original_edits.len()<=200_000,"没有需要保存的修改，或一次修改超过支持范围");
     ensure!(matches!(method,"deflate"|"store")&&level<=9,"新增内容请使用 Deflate 0～9 或仅存储");
-    ensure!(output.extension().is_some_and(|s|s.eq_ignore_ascii_case("zip")),"请另存为 .zip 文件");
+    ensure!(output.extension().is_some_and(|s|s.eq_ignore_ascii_case("zip")||s.eq_ignore_ascii_case("zipx")),"请另存为 .zip 或 .zipx 文件");
     ensure!(!output.exists(),"[archive-output:Pre-checking:output-conflict] 输出文件已存在，请更换名称或保存位置；已有文件保留");
     let parent=output.parent().context("请选择新包保存位置")?;ensure!(parent.is_dir(),"输出目录不存在，请选择可用目录");
     let source_absolute=source.canonicalize()?;let target_absolute=parent.canonicalize()?.join(output.file_name().context("新包名称为空")?);
@@ -216,7 +219,7 @@ pub fn save_encrypted_guarded(source:&Path,revision:&str,changes:&[Change],origi
             retained_facts.insert(path.to_string(),original_facts[&old_path]);written_paths.insert(path.to_string());
             progress(&observer,"writing",0.3,path,0,estimate,None);
             let encryption=output_encryption(credentials.output_mode,entry_encryption(&entry));
-            if !entry.encrypted()&&(encryption==Encryption::None||entry.is_dir()) {writer.raw_copy_file_rename(entry,path)?;}
+            if !entry.encrypted()&&(encryption==Encryption::None||entry.is_dir())&&!(entry.compression()==CompressionMethod::Xz&&entry.size()==0) {writer.raw_copy_file_rename(entry,path)?;}
             else {
                 let method=entry.compression();let size=entry.size();let date=entry.last_modified();let permissions=entry.unix_mode();let comment=entry.comment().to_string();let is_dir=entry.is_dir();drop(entry);
                 let mut decoded=super::zip_password::open_entry_with_encoding(&mut original,index,&credentials.source_password,credentials.source_encoding).context("无法解锁原条目，请核对密码和编码")?;

@@ -1,0 +1,22 @@
+{
+  "version": "1.5.63",
+  "native": "9 distinct checks completed: preserve 8 initial passes; continue the failed stream/empty case and affected tail case only",
+  "frontendUnit": "6 passed; output suggestions, ZIPX task identity and editable recovery",
+  "frontendBuild": "final vue-tsc + Vite passed",
+  "releaseIdentity": "8 fields + shell DLL passed",
+  "desktopBuild": "custom-protocol,desktop-e2e: passed",
+  "desktop": {
+    "combinations": 4,
+    "layouts": 18,
+    "representativeScreenshotsInspected": 6,
+    "binarySha256": "68a2a0b8d65832e2df7d23d6dd69e2cc9bc718f2e91bbab287b23af37e9378a5",
+    "firstRunPassed": true
+  },
+  "codecBoundaries": "Single XZ stream per method-95 entry, exact decoded size and payload end; extra tail including padding rejected. Empty XZ normalized to Store when editing, retaining content and password policy.",
+  "sampleSetup": "Native fixture initially referenced a disabled app XZ encoder feature; changed to independent Python/liblzma instead of adding product features/dependencies.",
+  "continuation": "Independent 7-Zip rejected padded payload and empty XZ. Tightened payload end and normalized empty entries; resumed only failed positive and affected tail cases. No old matrix repeated.",
+  "unchangedEvidence": [
+    "v1.4.18 ZIPX creation/conversion/native standard-volume interoperability",
+    "other formats/media/disk-full/personal installation not rerun"
+  ]
+}

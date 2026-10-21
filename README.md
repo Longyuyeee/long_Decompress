@@ -32,7 +32,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
     </td>
     <td width="50%" valign="top">
       <h3>🧭 先看内容，再决定解压什么</h3>
-      <p>像浏览文件夹一样查看压缩包，搜索、筛选和选择文件。支持部分格式的图片与文本预览，也能进入嵌套压缩包、选择和对比 ZPAQ 历史快照，按版本取出所选变化。Store/Deflate/Bzip2/LZMA/Zstandard/PPMd ZIP 支持普通包与 AES/ZipCrypto 密码内容编辑，可补入、替换、删除、改名和批量整理，复核后另存新包；未完成修改可从草稿恢复，原包保留。</p>
+      <p>像浏览文件夹一样查看压缩包，搜索、筛选和选择文件。支持部分格式的图片与文本预览，也能进入嵌套压缩包、选择和对比 ZPAQ 历史快照，按版本取出所选变化。Store/Deflate/Bzip2/LZMA/Zstandard/PPMd ZIP、ZIPX（XZ） 支持普通包与 AES/ZipCrypto 密码内容编辑，可补入、替换、删除、改名和批量整理，复核后另存新包；未完成修改可从草稿恢复，原包保留。</p>
     </td>
   </tr>
   <tr>
@@ -67,7 +67,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
   </tr>
   <tr><td colspan="2" valign="top">
     <h3>↔️ 两份资料放在一起，只取回需要的部分</h3>
-    <p>文件夹与 Store/Deflate/Bzip2/LZMA/Zstandard/PPMd ZIP 自由组合，按路径查看差异，再按需核对实际内容，确认相同、不同或仅时间变化。密码和完整分卷接通，核对可停止后继续；左右分别勾选，在弹窗统一配置取回方式，沿原队列查看实际结果。</p>
+    <p>文件夹与 Store/Deflate/Bzip2/LZMA/Zstandard/PPMd ZIP、ZIPX（XZ） 自由组合，按路径查看差异，再按需核对实际内容，确认相同、不同或仅时间变化。密码和完整分卷接通，核对可停止后继续；左右分别勾选，在弹窗统一配置取回方式，沿原队列查看实际结果。</p>
   </td></tr>
 </table>
 
@@ -253,7 +253,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.5.62 · PPMd ZIP 继续整理与对比**。方法 98 接入独立普通/密码包编辑、实际内容核对、完整分卷取材与精确取回；修正提前断流判断，异常恢复参数和不完整内容明确提示，保留原交互。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.62.md) · [范围与记录](long-compress-assistant/docs/ZIP_PPMD_COMPATIBILITY_FREEZE_1.5.62.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.62)。下一步 [v1.5.63 ZIPX（XZ）跨流程兼容](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.63.md)，接续已有创建方法的工作区断点，再回到真实来源支持的容错兼容。
+**v1.5.63 · ZIPX（XZ）继续整理与对比**。方法 95 接通原编辑、内容核对、密码分卷取材及精确取回；默认另存后缀和提示更准确，XZ 尾部与大小异常不误报完成，保留原交互。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.63.md) · [范围与记录](long-compress-assistant/docs/ZIP_XZ_COMPATIBILITY_FREEZE_1.5.63.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.63)。下一步 [v1.5.64 ZPAQ 原生多部分只读与快照接续](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.64.md)，按真实原厂来源继续分卷与容错主线。
+
+**v1.5.62 · PPMd ZIP 继续整理与对比**。方法 98 接入独立普通/密码包编辑、实际内容核对、完整分卷取材与精确取回；修正提前断流判断，异常恢复参数和不完整内容明确提示，保留原交互。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.62.md) · [范围与记录](long-compress-assistant/docs/ZIP_PPMD_COMPATIBILITY_FREEZE_1.5.62.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.62)。ZIPX（XZ）工作区接续已由上方 v1.5.63 完成。
 
 **v1.5.61 · Zstandard ZIP 继续整理与对比**。方法 93 接入独立普通/密码包编辑、实际内容核对、完整分卷取材及精确取回；原条目保留方法，新增/替换明确选择，外部字典、窗口或截断问题有处理提示，保留原交互。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.61.md) · [范围与记录](long-compress-assistant/docs/ZIP_ZSTD_COMPATIBILITY_FREEZE_1.5.61.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.61)。PPMd 跨流程兼容已由上方 v1.5.62 接续。
 

@@ -168,3 +168,6 @@ mod zip_zstd_compatibility_tests;
 
 #[cfg(test)]
 mod zip_ppmd_compatibility_tests;
+
+#[cfg(test)]
+mod zip_xz_compatibility_tests;

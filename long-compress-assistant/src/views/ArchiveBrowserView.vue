@@ -63,7 +63,7 @@ const snapshotReadArguments = computed((): [ZipPasswordEncoding?, ZpaqSnapshot?]
 const conversion = useArchiveConversionStore()
 const zipEditing = useZipEditStore()
 const zipEditor = ref<InstanceType<typeof ZipEditBar> | null>(null)
-const canEditZip = computed(() => (result.value?.format === 'ZIP' || !!zipEditing.sessionFor(archivePath.value)?.editing) && !parentFrames.value.length)
+const canEditZip = computed(() => (['ZIP','ZIPX'].includes(result.value?.format || '') || !!zipEditing.sessionFor(archivePath.value)?.editing) && !parentFrames.value.length)
 const editingZip = computed(() => canEditZip.value && zipEditing.sessionFor(archivePath.value)?.editing)
 const zipEditBusy = computed(() => !!zipEditing.sessionFor(archivePath.value)?.busy)
 const selected = ref(new Set<string>())

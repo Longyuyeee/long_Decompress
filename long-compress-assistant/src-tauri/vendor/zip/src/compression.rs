@@ -2,7 +2,7 @@
 
 use core::fmt;
 use std::{fmt::Debug, io};
-#[cfg(any(feature = "lzma", feature = "ppmd"))]
+#[cfg(any(feature = "lzma", feature = "ppmd", feature = "xz"))]
 use std::io::Read;
 
 #[allow(deprecated)]
@@ -325,7 +325,7 @@ pub(crate) enum Decompressor<R: io::BufRead> {
     #[cfg(feature = "legacy-zip")]
     Implode(crate::legacy::implode::ImplodeDecoder<R>),
     #[cfg(feature = "xz")]
-    Xz(Box<lzma_rust2::XzReader<R>>),
+    Xz { decoder: Box<lzma_rust2::XzReader<R>>, remaining: u64, finished: bool },
     #[cfg(feature = "ppmd")]
     Ppmd(Ppmd<R>),
 }
@@ -351,7 +351,7 @@ impl<R: io::BufRead> Debug for Decompressor<R> {
             #[cfg(feature = "legacy-zip")]
             Self::Implode(_) => write!(f, "ImplodeDecompressor"),
             #[cfg(feature = "xz")]
-            Self::Xz(_) => write!(f, "XzDecompressor"),
+            Self::Xz { .. } => write!(f, "XzDecompressor"),
             #[cfg(feature = "ppmd")]
             Self::Ppmd(_) => write!(f, "PpmdDecompressor"),
         }
@@ -408,6 +408,30 @@ fn read_zip_ppmd<R: io::BufRead>(decoder: &mut ppmd_rust::Ppmd8Decoder<PpmdInput
     let n = decoder.read(&mut buf[..limit])?;
     if n == 0 {
         return Err(io::Error::new(io::ErrorKind::UnexpectedEof, "ZIP PPMd 内容小于目录记录大小，条目未完整读取"));
+    }
+    *remaining -= n as u64;
+    Ok(n)
+}
+
+// Keep method 95's existing single-XZ-stream decoder, but require exact
+// output size and payload exhaustion, as ZIP receivers do for this method.
+#[cfg(feature = "xz")]
+fn read_zip_xz<R: io::BufRead>(decoder: &mut lzma_rust2::XzReader<R>, remaining: &mut u64, finished: &mut bool, buf: &mut [u8]) -> io::Result<usize> {
+    if buf.is_empty() || *finished { return Ok(0); }
+    if *remaining == 0 {
+        if decoder.read(&mut [0; 1])? != 0 {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "ZIPX（XZ）内容超出目录记录大小，条目未通过完整性检查"));
+        }
+        if decoder.inner_mut().read(&mut [0; 1])? != 0 {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "ZIPX（XZ）结束后存在额外数据、填充或后续流；请用原工具重新导出无附加数据的单个 XZ 流条目"));
+        }
+        *finished = true;
+        return Ok(0);
+    }
+    let limit = (buf.len() as u64).min(*remaining) as usize;
+    let n = decoder.read(&mut buf[..limit])?;
+    if n == 0 {
+        return Err(io::Error::new(io::ErrorKind::UnexpectedEof, "ZIPX（XZ）内容小于目录记录大小，条目未完整读取"));
     }
     *remaining -= n as u64;
     Ok(n)
@@ -519,7 +543,7 @@ impl<R: io::BufRead> io::Read for Decompressor<R> {
                 Lzma::Initialized { decoder, remaining } => read_zip_lzma(decoder, remaining, buf),
             },
             #[cfg(feature = "xz")]
-            Decompressor::Xz(r) => r.read(buf),
+            Decompressor::Xz { decoder, remaining, finished } => read_zip_xz(decoder, remaining, finished, buf),
             #[cfg(feature = "ppmd")]
             Decompressor::Ppmd(r) => match r {
                 Ppmd::Uninitialized { reader, uncompressed_size } => {
@@ -581,7 +605,7 @@ impl<R: io::BufRead> Decompressor<R> {
     pub fn new(
         reader: R,
         compression_method: CompressionMethod,
-        #[cfg_attr(not(any(feature = "lzma", feature = "ppmd", feature = "legacy-zip")), allow(unused))]
+        #[cfg_attr(not(any(feature = "lzma", feature = "ppmd", feature = "xz", feature = "legacy-zip")), allow(unused))]
         uncompressed_size: u64,
         #[cfg_attr(not(any(feature = "legacy-zip", feature = "lzma")), allow(unused))] flags: u16,
     ) -> crate::result::ZipResult<Self> {
@@ -607,7 +631,7 @@ impl<R: io::BufRead> Decompressor<R> {
             }),
             #[cfg(feature = "xz")]
             CompressionMethod::Xz => {
-                Decompressor::Xz(Box::new(lzma_rust2::XzReader::new(reader, false)))
+                Decompressor::Xz { decoder: Box::new(lzma_rust2::XzReader::new(reader, false)), remaining: uncompressed_size, finished: false }
             }
             #[cfg(feature = "ppmd")]
             CompressionMethod::Ppmd => Decompressor::Ppmd(Ppmd::Uninitialized { reader: Some(reader), uncompressed_size }),
@@ -659,7 +683,7 @@ impl<R: io::BufRead> Decompressor<R> {
             #[cfg(feature = "legacy-zip")]
             Decompressor::Implode(r) => r.into_inner(),
             #[cfg(feature = "xz")]
-            Decompressor::Xz(r) => r.into_inner(),
+            Decompressor::Xz { decoder, .. } => decoder.into_inner(),
             #[cfg(feature = "ppmd")]
             Decompressor::Ppmd(r) => match r {
                 Ppmd::Uninitialized { mut reader, .. } => reader
