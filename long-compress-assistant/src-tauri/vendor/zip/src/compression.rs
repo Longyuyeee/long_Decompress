@@ -2,6 +2,8 @@
 
 use core::fmt;
 use std::{fmt::Debug, io};
+#[cfg(feature = "lzma")]
+use std::io::Read;
 
 #[allow(deprecated)]
 /// Identifies the storage format used to compress a file within a ZIP archive.
@@ -361,14 +363,35 @@ pub(crate) enum Lzma<R: io::BufRead> {
     Uninitialized {
         reader: Option<R>,
         uncompressed_size: u64,
+        require_eos: bool,
     },
-    Initialized(Box<lzma_rust2::LzmaReader<R>>),
+    Initialized { decoder: Box<lzma_rust2::LzmaReader<R>>, remaining: u64 },
 }
 
 #[cfg(feature = "ppmd")]
 pub(crate) enum Ppmd<R: io::BufRead> {
     Uninitialized(Option<R>),
     Initialized(Box<ppmd_rust::Ppmd8Decoder<R>>),
+}
+
+// Always check the exact decoded size. For EOS streams the final one-byte
+// probe consumes the marker (or detects a truncated/longer stream) before EOF.
+#[cfg(feature = "lzma")]
+fn read_zip_lzma<R: io::BufRead>(decoder: &mut lzma_rust2::LzmaReader<R>, remaining: &mut u64, buf: &mut [u8]) -> io::Result<usize> {
+    if buf.is_empty() { return Ok(0); }
+    if *remaining == 0 {
+        if decoder.read(&mut [0; 1])? != 0 {
+            return Err(io::Error::new(io::ErrorKind::InvalidData, "ZIP LZMA 内容超出目录记录大小，条目未通过完整性检查"));
+        }
+        return Ok(0);
+    }
+    let limit = (buf.len() as u64).min(*remaining) as usize;
+    let n = decoder.read(&mut buf[..limit])?;
+    if n == 0 {
+        return Err(io::Error::new(io::ErrorKind::UnexpectedEof, "ZIP LZMA 未完整结束，内容小于目录记录大小"));
+    }
+    *remaining -= n as u64;
+    Ok(n)
 }
 
 impl<R: io::BufRead> io::Read for Decompressor<R> {
@@ -388,7 +411,9 @@ impl<R: io::BufRead> io::Read for Decompressor<R> {
                 Lzma::Uninitialized {
                     reader,
                     uncompressed_size,
+                    require_eos,
                 } => {
+                    if buf.is_empty() { return Ok(0); }
                     let mut reader = reader.take().ok_or_else(|| {
                         io::Error::other("Reader was not set while reading LZMA data")
                     })?;
@@ -419,23 +444,25 @@ impl<R: io::BufRead> io::Read for Decompressor<R> {
                             std::io::Error::other(format!("Cannot transform header to u32: {e}"))
                         })?);
 
-                    // We don't need to handle the end-of-stream marker here, since the LZMA reader
-                    // stops at the end-of-stream marker OR when it has decoded uncompressed_size bytes, whichever comes first.
+                    // Bit 1 promises EOS. Decode to that marker rather than silently
+                    // accepting a matching prefix at the central directory's size.
+                    // Preserve the old small-file dictionary clamp when size is unknown
+                    // to the decoder, and validate the original properties before it.
+                    lzma_rust2::lzma_get_memory_usage_by_props(dict_size, props)?;
+                    let effective_dict = u64::from(dict_size).min(*uncompressed_size).max(4096) as u32;
                     let mut decompressor = lzma_rust2::LzmaReader::new_with_props(
                         reader,
-                        *uncompressed_size,
+                        if *require_eos { u64::MAX } else { *uncompressed_size },
                         props,
-                        dict_size,
+                        effective_dict,
                         None,
                     )?;
-
-                    let read = decompressor.read(buf)?;
-
-                    *r = Lzma::Initialized(Box::new(decompressor));
-
+                    let mut remaining = *uncompressed_size;
+                    let read = read_zip_lzma(&mut decompressor, &mut remaining, buf)?;
+                    *r = Lzma::Initialized { decoder: Box::new(decompressor), remaining };
                     Ok(read)
                 }
-                Lzma::Initialized(decompressor) => decompressor.read(buf),
+                Lzma::Initialized { decoder, remaining } => read_zip_lzma(decoder, remaining, buf),
             },
             #[cfg(feature = "xz")]
             Decompressor::Xz(r) => r.read(buf),
@@ -498,7 +525,7 @@ impl<R: io::BufRead> Decompressor<R> {
         compression_method: CompressionMethod,
         #[cfg_attr(not(any(feature = "lzma", feature = "legacy-zip")), allow(unused))]
         uncompressed_size: u64,
-        #[cfg_attr(not(feature = "legacy-zip"), allow(unused))] flags: u16,
+        #[cfg_attr(not(any(feature = "legacy-zip", feature = "lzma")), allow(unused))] flags: u16,
     ) -> crate::result::ZipResult<Self> {
         Ok(match compression_method {
             CompressionMethod::Stored => Decompressor::Stored(reader),
@@ -518,6 +545,7 @@ impl<R: io::BufRead> Decompressor<R> {
             CompressionMethod::Lzma => Decompressor::Lzma(Lzma::Uninitialized {
                 reader: Some(reader),
                 uncompressed_size,
+                require_eos: flags & (1 << 1) != 0,
             }),
             #[cfg(feature = "xz")]
             CompressionMethod::Xz => {
@@ -564,7 +592,7 @@ impl<R: io::BufRead> Decompressor<R> {
                 Lzma::Uninitialized { mut reader, .. } => reader
                     .take()
                     .ok_or_else(|| io::Error::other("Reader was not set"))?,
-                Lzma::Initialized(decoder) => decoder.into_inner(),
+                Lzma::Initialized { decoder, .. } => decoder.into_inner(),
             },
             #[cfg(feature = "legacy-zip")]
             Decompressor::Shrink(r) => r.into_inner(),

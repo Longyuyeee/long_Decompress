@@ -1,0 +1,4 @@
+running 1 test
+test services::zip_lzma_compatibility_tests::lzma1560_valid_eos_and_sized_no_eos_survive_raw_copy_and_independent_extraction ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1030 filtered out; finished in 0.50s

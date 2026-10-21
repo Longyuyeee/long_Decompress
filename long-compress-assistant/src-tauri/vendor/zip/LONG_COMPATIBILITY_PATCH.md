@@ -33,3 +33,15 @@ No new product dependency or executable is added.
 
 Format references: [PKWARE APPNOTE 5.8.8 and 4.4.4](https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT),
 [CPython ZIP LZMA framing](https://github.com/python/cpython/blob/3.13/Lib/zipfile/__init__.py).
+
+## ZIP LZMA complete reading (v1.5.60)
+
+The method-14 reader now receives the real ZIP flags in seekable and stream paths.
+When bit 1 promises EOS it decodes to the marker, checking exact output size;
+otherwise legitimate sized, non-EOS streams keep their existing behavior. This
+prevents a directory-sized prefix or an incomplete EOS stream from being accepted
+as complete. Original properties are validated before preserving the existing
+small-file dictionary clamp, without adding a new dictionary/memory limit.
+CRC, AES/ZipCrypto wrapping and method-14 writer framing remain unchanged.
+Modified additional source: `src/compression.rs`; the private read helpers carry
+flags also when `legacy-zip` is disabled. No product dependency is added.
