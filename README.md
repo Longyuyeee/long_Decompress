@@ -55,6 +55,16 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
       <p>从任务、历史或全局面板直接打开输出目录、定位文件或复制路径。分卷产物集中查看，也能带入整组生成校验清单；批量打开相同目录只打开一次，失败项也有后续处理入口。</p>
     </td>
   </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>🗂️ 资料分散在多个包，也能一起找</h3>
+      <p>主动加入本地归档，按文件名和路径跨包查找。收藏来源、添加标签、保存常用搜索，跨页选择后在弹窗统一配置，按来源取回所选文件。</p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>🪄 重复处理，存成一套方案</h3>
+      <p>将解压、筛选、压缩和转换按顺序串起来，保存后手动运行。运行前确认来源、目录和密码，每步使用实际产物，进度、日志与结果集中查看。</p>
+    </td>
+  </tr>
 </table>
 
 **还有这些贴近日常的小细节：** 常用目录与书签、资源管理器右键、托盘后台任务、历史搜索与再次执行、多主题与强调色、界面缩放和减少动效。
@@ -239,7 +249,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.49 · 常用资料整理与跨包批量取回**。来源标签/收藏、保存搜索与查找位置接续，跨页勾选后在弹窗统一设置输出、目录结构和同名处理；可用部分先加入原队列，密码/离线/缺卷来源纠正后只继续剩余项，草稿与历史保留所选范围。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.49.md) · [范围与记录](long-compress-assistant/docs/LIBRARY_RETRIEVAL_FREEZE_1.5.49.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.49)。下一步按[五模块细分路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)推进 v1.5.50 手动顺序工作流。
+**v1.5.50 · 手动顺序工作流**。保存、复制和编辑筛选/解压/压缩/转换方案，复用原参数面板与配置组；在运行弹窗确认来源和密码，按实际产物接续，逐步查看进度、日志和结果。失败或停止不派发后续步骤，重启保留运行摘要。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.50.md) · [范围与记录](long-compress-assistant/docs/WORKFLOW_FREEZE_1.5.50.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.50)。下一步按[细分路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)推进 v1.5.51 失败纠正与按需接续。
+
+**v1.5.49 · 常用资料整理与跨包批量取回**。来源标签/收藏、保存搜索与查找位置接续，跨页勾选后在弹窗统一设置输出、目录结构和同名处理；可用部分先加入原队列，密码/离线/缺卷来源纠正后只继续剩余项，草稿与历史保留所选范围。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.49.md) · [范围与记录](long-compress-assistant/docs/LIBRARY_RETRIEVAL_FREEZE_1.5.49.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.49)。工作流第一阶段已由上方 v1.5.50 接续，当前进度以最新记录为准。
 
 **v1.5.48 · 资料库维护、密码包与分卷来源**。资料库接入现有可浏览格式、密码与整组分卷，复用保险箱和原预览/提取；离线资料保留上次索引并标明来源状态，支持重新定位、仅更新变化来源与批次暂停/继续，密码仅在当前会话使用。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.48.md) · [范围与记录](long-compress-assistant/docs/LIBRARY_MAINTENANCE_FREEZE_1.5.48.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.48)。分类、收藏与跨包批量取回已由上方 v1.5.49 接续，当前进度以最新记录为准。
 

@@ -18,3 +18,5 @@ pub mod video_engine;
 pub mod pdf_engine;
 
 pub mod archive_library;
+
+pub mod workflows;

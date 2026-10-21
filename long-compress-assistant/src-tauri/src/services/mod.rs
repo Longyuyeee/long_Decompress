@@ -138,3 +138,5 @@ pub mod zip_edit_drafts;
 pub mod archive_library;
 
 pub mod library_organization;
+
+pub mod workflows;
