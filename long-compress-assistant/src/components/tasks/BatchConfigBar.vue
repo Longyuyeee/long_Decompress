@@ -119,9 +119,9 @@ function apply() {
         <HelpHint label="批量新包密码编码说明">只修改目标为 ZIP/ZIPX 的任务，其他任务保持各自设置。新包默认 UTF-8；代码页不改变文件名。</HelpHint>
         <ThemedSelect v-model="zipPasswordEncoding" :disabled="applying" :options="[keep, ...ZIP_PASSWORD_ENCODING_OPTIONS]" aria-label="批量新包 ZIP 密码编码" test-id="batch-zip-password-encoding" floating />
       </div>
-      <label v-if="mode === 'compression' && (format === 'keep' || ['wim','swm'].includes(format))" class="block min-w-0 space-y-1.5 text-xs text-muted">WIM 压缩方法
+      <label v-if="mode === 'compression' && (format === 'keep' || ['wim','swm'].includes(format))" class="block min-w-0 space-y-1.5 text-xs text-muted">WIM / SWM 压缩方法
         <ThemedSelect v-model="wimMethod" :options="[keep,{value:'store',label:'仅存储 · 去重'},{value:'xpress',label:'XPRESS · 快速压缩'},{value:'lzx',label:'LZX · 体积优先'},{value:'lzms',label:'LZMS · 高压缩'},{value:'solid',label:'LZMS · 固实归档'}].filter(option => format !== 'swm' || ['keep','store','xpress','lzx'].includes(option.value))" test-id="batch-wim-method" floating />
-        <span class="block leading-relaxed">仅修改所选 WIM 任务，其余格式保持各自设置。</span>
+        <span class="block leading-relaxed">仅修改适用的 WIM / SWM 任务，其余格式保持各自设置。</span>
       </label>
       <label v-if="mode === 'compression' && (format === 'keep' || format === 'zip')" class="block min-w-0 space-y-1.5 text-xs text-muted">ZIP 压缩方法
         <ThemedSelect v-model="zipMethod" :options="[keep, { value: 'deflate', label: '兼容 ZIP · Deflate' }, { value: 'zstd', label: 'Zstandard' }, { value: 'bzip2', label: 'BZip2' }, { value: 'ppmd', label: 'PPMd · 文本归档' }, { value: 'lzma', label: 'LZMA' }]" test-id="batch-zip-method" floating />
