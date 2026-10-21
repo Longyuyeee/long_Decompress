@@ -1,0 +1,201 @@
+{
+  "version": "1.5.41",
+  "binarySha256": "dddc4684bd7451a2e62f74370abf0ac492d86a68385b10202706a9b232037ca1",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\purpose-presets-1541\\3bb3af71-4a14-43a7-b43d-c1db1a61c4b0",
+  "checks": [
+    {
+      "kind": "inline-confirmation-and-encrypted-create",
+      "allHashes": true,
+      "members": 1,
+      "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\purpose-presets-1541\\3bb3af71-4a14-43a7-b43d-c1db1a61c4b0\\用途加密-46c389f8-0217-4ce2-b67b-f57427bfa09d.7z"
+    },
+    {
+      "kind": "multi-select-cancel-and-standard-zip",
+      "allHashes": true,
+      "members": 3,
+      "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\purpose-presets-1541\\3bb3af71-4a14-43a7-b43d-c1db1a61c4b0\\用途分包-7c56c1f7-acef-4a23-b87b-05d60c52e320.zip"
+    },
+    {
+      "kind": "conversion-compatible-share-preserves-input-password",
+      "allHashes": true,
+      "members": 1,
+      "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\purpose-presets-1541\\3bb3af71-4a14-43a7-b43d-c1db1a61c4b0\\兼容分享-e389ff8e-74d5-41bd-bede-bdc7374b5b2d.zip"
+    },
+    {
+      "kind": "conversion-bulk-cancel-and-default-inheritance"
+    },
+    {
+      "kind": "global-save-cancel-and-natural-row-inheritance",
+      "inheritedDrafts": 1,
+      "independentDrafts": 1
+    }
+  ],
+  "layouts": [
+    {
+      "name": "inline-preview",
+      "columns": [
+        378,
+        378
+      ],
+      "height": 700,
+      "overflow": 0,
+      "pickerOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "inline-preview",
+      "columns": [
+        286,
+        286
+      ],
+      "height": 520,
+      "overflow": 0,
+      "pickerOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "inline-result",
+      "columns": [
+        378,
+        378
+      ],
+      "height": 700,
+      "overflow": 0,
+      "pickerOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "inline-result",
+      "columns": [
+        286,
+        286
+      ],
+      "height": 520,
+      "overflow": 0,
+      "pickerOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "batch-modal",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "pickerOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "batch-modal",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "pickerOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "conversion-preview",
+      "columns": [
+        378,
+        378
+      ],
+      "height": 700,
+      "overflow": 0,
+      "pickerOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "conversion-preview",
+      "columns": [
+        286,
+        286
+      ],
+      "height": 520,
+      "overflow": 0,
+      "pickerOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "conversion-preview",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "pickerOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "conversion-preview",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "pickerOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "conversion-bulk",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "pickerOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "conversion-bulk",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "pickerOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "global-config",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "pickerOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "global-config",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "pickerOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "global-config",
+      "columns": [],
+      "height": 700,
+      "overflow": 0,
+      "pickerOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "global-config",
+      "columns": [],
+      "height": 520,
+      "overflow": 0,
+      "pickerOverflow": 0,
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "purpose1541-inline-preview-1100x700.png",
+    "purpose1541-inline-preview-760x520.png",
+    "purpose1541-inline-result-1100x700.png",
+    "purpose1541-inline-result-760x520.png",
+    "purpose1541-batch-modal-1100x700.png",
+    "purpose1541-batch-modal-760x520.png",
+    "purpose1541-conversion-preview-1100x700.png",
+    "purpose1541-conversion-preview-760x520.png",
+    "purpose1541-conversion-preview-1100x700.png",
+    "purpose1541-conversion-preview-760x520.png",
+    "purpose1541-conversion-bulk-1100x700.png",
+    "purpose1541-conversion-bulk-760x520.png",
+    "purpose1541-global-config-1100x700.png",
+    "purpose1541-global-config-760x520.png",
+    "purpose1541-global-config-1100x700.png",
+    "purpose1541-global-config-760x520.png"
+  ],
+  "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\purpose-presets-1541\\3bb3af71-4a14-43a7-b43d-c1db1a61c4b0\\用户方案与长名称显示检查-资料资料资料资料资料资料资料资料资料资料资料资料.bin",
+  "encryptedArchive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\purpose-presets-1541\\3bb3af71-4a14-43a7-b43d-c1db1a61c4b0\\用途加密-46c389f8-0217-4ce2-b67b-f57427bfa09d.7z"
+}

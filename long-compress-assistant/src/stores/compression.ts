@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import type { ZipPasswordEncoding } from '@/types/zipPassword'
 import { ref, computed } from 'vue'
 import type { BatchConfigPatch } from '@/types/batchConfig'
-import type { CompressionFormatId } from '@/utils/compressionFormat'
+import { supportsNativePassword, supportsFilenameEncryption, supportsArchiveSplit, type CompressionFormatId } from '@/utils/compressionFormat'
 import type { CompressionAnalysisResult } from '@/composables/useTauriCommands'
 import type { VideoCompressionPlan, VideoCompressionSettings } from '@/types/video'
 import {
@@ -447,11 +447,16 @@ export const useCompressionStore = defineStore('compression', () => {
 
   const applyBatchConfiguration = (ids: string[], patch: BatchConfigPatch) => {
     const selected = new Set(ids)
-    if (patch.wimMethod === undefined && patch.zipMethod === undefined && patch.zipPasswordEncoding === undefined && patch.format === undefined && patch.level === undefined && patch.rarRecoveryPercent === undefined && patch.rarRecoveryVolumes === undefined && patch.outputDirectory === undefined) return 0
+    if (patch.password === undefined && patch.encryptFilenames === undefined && patch.splitArchive === undefined && patch.splitSize === undefined && patch.zipSplitMode === undefined && patch.wimMethod === undefined && patch.zipMethod === undefined && patch.zipPasswordEncoding === undefined && patch.format === undefined && patch.level === undefined && patch.rarRecoveryPercent === undefined && patch.rarRecoveryVolumes === undefined && patch.outputDirectory === undefined) return 0
+    if (patch.splitSize !== undefined && (!Number.isSafeInteger(Number(patch.splitSize)) || Number(patch.splitSize) < 1)) throw new Error('分卷大小请输入大于等于 1 的整数 MiB。')
     if (patch.zipPasswordEncoding === 'auto') throw new Error('创建新包请选择明确的密码编码，默认使用 UTF-8。')
     let count = 0
     const drafts = [...selectedFiles.value.map(file => ({ id: file.path, draft: file })),
       ...groups.value.map(group => ({ id: group.id, draft: group }))]
+    const targets = drafts.filter(({id,draft}) => selected.has(id) && !draft.taskId)
+    if (patch.password && targets.some(({draft}) => !supportsNativePassword(patch.format || getEffectiveSettings(draft.settings).format))) throw new Error('此目标格式不支持密码，请选择 ZIP、7Z 或 RAR。所选配置未修改。')
+    if (patch.encryptFilenames && targets.some(({draft}) => !supportsFilenameEncryption(patch.format || getEffectiveSettings(draft.settings).format))) throw new Error('文件名加密仅适用于 7Z/RAR，请调整目标格式，或重新选择兼容分享方案。所选配置未修改。')
+    if (patch.splitArchive && targets.some(({draft}) => !supportsArchiveSplit(patch.format || getEffectiveSettings(draft.settings).format))) throw new Error('此目标格式不支持分卷，请调整格式。所选配置未修改。')
     if (['wim','esd','swm'].includes(patch.format || '') && drafts.some(({id,draft}) => selected.has(id) && !draft.taskId && (getEffectiveSettings(draft.settings).password || draft.draftPasswordRequired))) throw new Error(`${patch.format === 'esd' ? 'ESD' : patch.format === 'swm' ? 'SWM' : 'WIM'} 不支持原生密码，所选配置未修改。请保持密码格式，或先在单条配置中明确移除密码。`)
     const wimOnly = patch.wimMethod !== undefined && Object.entries(patch).every(([key,v]) => key === 'wimMethod' || v === undefined)
     if (wimOnly && !drafts.some(({id,draft}) => selected.has(id) && !draft.taskId && ['wim','swm'].includes(getEffectiveSettings(draft.settings).format))) throw new Error('所选任务中没有 WIM 任务，请选择 WIM 格式或保持各自方法。')
@@ -462,7 +467,7 @@ export const useCompressionStore = defineStore('compression', () => {
     if (zipOptionsOnly && !drafts.some(({id,draft}) => selected.has(id) && !draft.taskId && ((patch.zipMethod !== undefined && getEffectiveSettings(draft.settings).format === 'zip') || (patch.zipPasswordEncoding !== undefined && ['zip','zipx'].includes(getEffectiveSettings(draft.settings).format))))) throw new Error('所选任务中没有适用的 ZIP/ZIPX 设置。')
     if (patch.rarRecoveryPercent && drafts.some(({ id, draft }) => selected.has(id) && !draft.taskId && (patch.format || getEffectiveSettings(draft.settings).format) !== 'rar')) throw new Error('恢复保护只适用于 RAR，请先将所选任务设为 RAR，或保持各自恢复设置。')
     if (patch.rarRecoveryVolumes && drafts.some(({ id, draft }) => selected.has(id) && !draft.taskId && (patch.format || getEffectiveSettings(draft.settings).format) !== 'rar')) throw new Error('恢复卷只适用于 RAR 分包，请先调整目标格式。')
-    if ((patch.format === 'zip' || patch.format === 'zipx') && drafts.some(({ id, draft }) => selected.has(id) && !draft.taskId && getEffectiveSettings(draft.settings).encryptFilenames)) {
+    if ((patch.format === 'zip' || patch.format === 'zipx') && drafts.some(({ id, draft }) => selected.has(id) && !draft.taskId && getEffectiveSettings(draft.settings).encryptFilenames && patch.encryptFilenames !== false)) {
       throw new Error('所选任务中有已开启文件名加密的 7Z 任务。请保持 7Z 格式，或先在该条配置中关闭文件名加密。')
     }
     if (['lzma', 'lzma.aes'].includes(patch.format || '') && drafts.some(({id,draft}) => {
@@ -496,6 +501,11 @@ export const useCompressionStore = defineStore('compression', () => {
       if (patch.wimMethod !== undefined && ['wim','swm'].includes(settings.format) && (settings.format !== 'swm' || ['store','xpress','lzx'].includes(patch.wimMethod))) settings.wimMethod = patch.wimMethod
       if (patch.zipMethod !== undefined && settings.format === 'zip') settings.zipMethod = patch.zipMethod
       if (patch.zipPasswordEncoding !== undefined && ['zip','zipx'].includes(settings.format)) settings.zipPasswordEncoding = patch.zipPasswordEncoding
+      if (patch.password !== undefined) { settings.password = patch.password; draft.draftPasswordRequired = false }
+      if (patch.encryptFilenames !== undefined) settings.encryptFilenames = patch.encryptFilenames
+      if (patch.splitArchive !== undefined) settings.splitArchive = patch.splitArchive
+      if (patch.splitSize !== undefined) settings.splitSize = patch.splitSize
+      if (patch.zipSplitMode !== undefined) settings.zipSplitMode = patch.zipSplitMode
       if (patch.level !== undefined) settings.level = patch.level
       if (patch.rarRecoveryPercent !== undefined) settings.rarRecoveryPercent = patch.rarRecoveryPercent
       if (patch.rarRecoveryVolumes !== undefined) settings.rarRecoveryVolumes = patch.rarRecoveryVolumes

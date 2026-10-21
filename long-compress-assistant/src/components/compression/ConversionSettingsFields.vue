@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import CompressionPurposePicker from './CompressionPurposePicker.vue'
+import { conversionPurposePatch } from '@/utils/compressionPurpose'
 import WimMethodField from '@/components/compression/WimMethodField.vue'
 import ZipMethodField from '@/components/compression/ZipMethodField.vue'
 import ThemedSelect from '@/components/ui/ThemedSelect.vue'
@@ -17,6 +19,7 @@ const value = (event: Event) => (event.target as HTMLInputElement).value
 </script>
 <template>
   <fieldset :disabled="disabled" class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 disabled:opacity-60">
+    <CompressionPurposePicker class="sm:col-span-2" :disabled="disabled" :has-password="!!settings.password" @apply="emit('update', conversionPurposePatch($event))" />
     <div v-if="settings.format === 'rar'" class="flex flex-wrap items-center gap-2 text-xs sm:col-span-2" :class="store.rarSupport?.available ? 'text-muted' : 'text-amber-600'">
       <span>{{ store.rarSupport === null ? '正在检测 RAR 编码器…' : store.rarSupport.available ? '已检测到 RAR 编码器，可创建密码和分卷归档。' : '创建 RAR 需要本机安装 WinRAR；也可选择 ZIP 或 7Z。' }}</span>
       <button type="button" class="text-primary hover:underline" @click="store.refreshRarSupport()">重新检测</button>
