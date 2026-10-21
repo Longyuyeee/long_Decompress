@@ -24,6 +24,8 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/stores/app', () => ({
   useAppStore: () => ({ setError: mocks.setError, clearError: mocks.clearError, get error() { return mocks.currentError }, setSuccess: mocks.setSuccess })
 }))
+vi.mock('@/components/archive/ZpaqSnapshotDiff.vue', () => ({ default: { template: '<div />' } }))
+vi.mock('@/stores/zipEdit', () => ({useZipEditStore: () => ({ sessionFor: () => undefined, taskFor: () => undefined, opening: false, preparing: false, openingError: null, begin: vi.fn() })}))
 vi.mock('@/stores/archiveConversion', () => ({ useArchiveConversionStore: () => ({ openSnapshot: mocks.convertSnapshot }) }))
 
 vi.mock('@/composables/useArchiveEngine', () => ({
@@ -442,7 +444,7 @@ describe('ArchiveBrowserView', () => {
     const preview = new DOMWrapper(document.body)
     expect(preview.get('[data-testid="archive-image-preview"] img').attributes('src'))
       .toBe('data:image/png;base64,c2FmZQ==')
-    expect(preview.get('[data-testid="archive-entry-preview"]').text()).toContain('只读 · 未写入磁盘')
+    expect(preview.get('[data-testid="archive-entry-preview"]').text()).toContain('只读 · 不改原包')
     expect(wrapper.find('footer').text()).toContain('已选择 2 / 2 个文件')
 
     await preview.get('[aria-label="关闭预览"]').trigger('click')

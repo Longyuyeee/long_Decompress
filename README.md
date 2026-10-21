@@ -32,7 +32,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
     </td>
     <td width="50%" valign="top">
       <h3>🧭 先看内容，再决定解压什么</h3>
-      <p>像浏览文件夹一样查看压缩包，搜索、筛选和选择文件。支持部分格式的图片与文本预览，也能进入嵌套压缩包、选择和对比 ZPAQ 历史快照，按版本取出所选变化。</p>
+      <p>像浏览文件夹一样查看压缩包，搜索、筛选和选择文件。支持部分格式的图片与文本预览，也能进入嵌套压缩包、选择和对比 ZPAQ 历史快照，按版本取出所选变化。普通 ZIP 可补入或替换内容，复核修改后另存新包，原包保留。</p>
     </td>
   </tr>
   <tr>
@@ -115,6 +115,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | 解压一批文件 | 解压中心 | 拖入压缩包，设置目录；常用密码可交给保险箱尝试 |
 | 打包文件和文件夹 | 压缩中心 | 按用途选兼容分享、体积优先、加密或分包方案，再微调密码、名称等参数 |
 | 只提取包里的几个文件 | 文件浏览器 → 打开压缩包 | 搜索并勾选条目，再解压所选内容 |
+| 补齐或替换 ZIP 内容 | 文件浏览器 → 打开普通 ZIP → 编辑内容 | 添加/替换，处理同名并复核后另存新包 |
 | 改格式、密码或分卷 | 压缩中心 → 转换压缩包 | 带入原包，选择新包格式与保存位置 |
 | 压缩图片、视频或 PDF | 特殊压缩 | 选择文件类型，调整对应参数并查看结果 |
 | 失败后调整并继续 | 原任务详情 / 任务栏 | 看原因，带入配置创建新任务，确认后启动；原失败保留 |
@@ -237,7 +238,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.43 · 批处理与结果体验**。压缩、解压与转换按状态分类找任务，原多选弹窗显示所选清单与修改摘要；成功结果直接沿原入口操作，无法打开的目录可单独重试。单条展开、多选弹窗、自然继承和等宽布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.43.md) · [范围与记录](long-compress-assistant/docs/BATCH_RESULTS_FREEZE_1.5.43.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.43)。近期常用体验阶段在本版收尾，下一步按[五模块分阶段路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)推进 v1.5.44 ZIP 添加/替换与另存。
+**v1.5.44 · ZIP 内容编辑第一阶段**。在原浏览器添加文件/目录、拖入或右键替换，明确处理同名项，在修改清单复核、撤销后另存新 ZIP；原包、未改条目与空目录保留，失败/停止可调整继续，新包可直接浏览、预览和提取。首版支持独立、未加密的 Store/Deflate ZIP。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.44.md) · [范围与记录](long-compress-assistant/docs/ZIP_EDIT_FREEZE_1.5.44.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.44)。下一步按[五模块细分路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)推进 v1.5.45 目录整理，后续再接密码与编辑草稿。
+
+**v1.5.43 · 批处理与结果体验**。压缩、解压与转换按状态分类找任务，原多选弹窗显示所选清单与修改摘要；成功结果直接沿原入口操作，无法打开的目录可单独重试。单条展开、多选弹窗、自然继承和等宽布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.43.md) · [范围与记录](long-compress-assistant/docs/BATCH_RESULTS_FREEZE_1.5.43.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.43)。ZIP 编辑已由上方 v1.5.44 接续，当前进度以最新记录为准。
 
 **v1.5.42 · 失败后调整并继续**。当前压缩/转换详情显示原因与下一步；重名时建议新名称，转换分别确认原包和新包密码。任务栏重试带入原配置创建待处理项，保留原失败、原文件和已有结果，由用户确认启动。单条展开、多选弹窗及等宽/窄窗布局保持。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.42.md) · [范围与记录](long-compress-assistant/docs/FAILURE_RECOVERY_FREEZE_1.5.42.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.42)。批处理与结果体验已由上方 v1.5.43 接续，当前进度以最新记录为准。
 

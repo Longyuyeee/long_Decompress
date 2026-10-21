@@ -427,7 +427,7 @@ export const useTaskStore = defineStore('task', () => {
       await invoke('cancel_compression', { taskId })
       // Conversion spans extraction and rebuilding; its command owner settles
       // the task only after the staging directory and publication have settled.
-      if (task.executionConfig?.kind !== 'archive-conversion') updateTaskStatus(taskId, 'cancelled')
+      if (!['archive-conversion', 'archive-edit'].includes(task.executionConfig?.kind || '')) updateTaskStatus(taskId, 'cancelled')
       return true
     } catch (e) {
       console.error('Failed to cancel task:', e)

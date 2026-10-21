@@ -1,0 +1,44 @@
+{
+  "version": "1.5.44",
+  "date": "2026-10-21",
+  "frontend": {
+    "distinctPassed": 40,
+    "newZipEditCases": 11,
+    "affectedBrowserCases": 29,
+    "typecheckAndVite": "passed",
+    "reruns": "Only previously failed or affected cases; distinct count excludes reruns."
+  },
+  "rust": {
+    "distinctPassed": 6,
+    "serviceCases": 5,
+    "historyWhitelistCases": 1,
+    "reruns": "Only output-conflict case rerun after adding its routing marker."
+  },
+  "desktop": {
+    "distinctFlows": 3,
+    "layoutRecords": 12,
+    "horizontalOverflow": 0,
+    "receipt": "desktop.json",
+    "finalBinarySha256": "9b3ab529fd0fad5110658d8f318269500e6eb835a2145f1a280f733841861e36",
+    "initialFlowBinarySha256": "62ab9615100b6602bf3397268f5014aebe8a29e206e73cc1f8e833eb9bc2c90d",
+    "finalPolish": "Compact completed result; reversible skip decisions and contextual output-conflict guidance. Initial passed add/replace/save flow retained; final binary covers result browse/preview/extraction and failure correction."
+  },
+  "sourceSha256": "c6351cbfe2ed5d11e69f0054dec4b2bde75b86db40f087ad4d1b911baad5640d",
+  "artifacts": {
+    "已有文件.zip": "c70341026e893dc09acef866fd3e78738819cfce18cef1c54f4b0369427193ea",
+    "纠正另存-fb5f158a.zip": "4f0b39fd10a403b2315f40e3859605285eaa24251939fd412b54e38ce262a4aa",
+    "编辑后-36fb0b68.zip": "0bec4631d57749a0449f14704d4b5ce8b986189d541e815785cd113c35873d58",
+    "需要保留的原包.zip": "c6351cbfe2ed5d11e69f0054dec4b2bde75b86db40f087ad4d1b911baad5640d"
+  },
+  "builds": {
+    "shellExtension": "passed",
+    "releaseIdentity": "passed",
+    "native": "custom-protocol,desktop-e2e with VITE_DESKTOP_E2E=1; not a formal installer"
+  },
+  "notRepeated": [
+    "unaffected format/password matrix",
+    "real disk-full",
+    "unrelated media and personal installation"
+  ],
+  "releaseReceipt": "Candidate CI, protected merge, tag and formal assets are recorded in this version pull request."
+}

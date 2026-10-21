@@ -1,3 +1,4 @@
+pub mod zip_edit;
 pub mod archive_engine;
 pub mod archive_browser;
 pub(crate) mod standard_zip_reader;

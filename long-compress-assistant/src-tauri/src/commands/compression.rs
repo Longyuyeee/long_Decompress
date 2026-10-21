@@ -305,6 +305,36 @@ pub struct PublishedArchiveOutput {
     split: bool,
 }
 
+#[command]
+pub async fn inspect_zip_edit(source_path:String)->Result<crate::services::zip_edit::Catalog,String>{
+    tauri::async_runtime::spawn_blocking(move||crate::services::zip_edit::inspect(Path::new(&source_path))).await.map_err(|e|e.to_string())?.map_err(|e|format!("{e:#}"))
+}
+#[command]
+pub async fn prepare_zip_edit_inputs(sources:Vec<String>,directory:String)->Result<Vec<crate::services::zip_edit::Input>,String>{
+    tauri::async_runtime::spawn_blocking(move||crate::services::zip_edit::prepare(&sources,&directory)).await.map_err(|e|e.to_string())?.map_err(|e|format!("{e:#}"))
+}
+#[command]
+pub async fn save_zip_edit(window:Window,task_id:String,source_path:String,revision:String,changes:Vec<crate::services::zip_edit::Change>,output_path:String,method:String,level:u32)->Result<PublishedArchiveOutput,String>{
+    let _output_guard=CompressionOutputGuard::acquire(&task_id,&output_path)?;
+    let service=service_for_task(&task_id).await?;let _guard=TaskCancellationGuard::new(&task_id);
+    let flag=service.cancellation_flag.clone();let progress_id=task_id.clone();let progress_window=window.clone();let progress_service=service.clone();
+    let last=std::sync::Mutex::new(("",0f32,crate::services::progress_gate::ProgressGate::new()));
+    let observer=Arc::new(move|event:crate::services::zip_edit::Progress|{
+        let mut last=last.lock().unwrap_or_else(|e|e.into_inner());let changed=last.0!=event.phase;
+        if changed {last.0=event.phase;let message=match event.phase{"reading"=>"读取原 ZIP 的完整内容；原包保留。","writing"=>"复制未修改条目，写入已确认的新增/替换内容。","verifying"=>"读取新 ZIP，确认全部内容与修改清单。","publishing"=>"正在另存新 ZIP。","completed"=>"新 ZIP 已保存，原包保留。",_=>"准备编辑 ZIP。"};progress_service.emit_log(&progress_window,&progress_id,message,TaskLogSeverity::Info);}
+        last.1=last.1.max(event.progress);
+        if changed||last.2.allow(event.progress>=1.0){
+            let stage=match event.phase{"reading"=>"Pre-checking","writing"=>"Transforming","verifying"=>"Verifying","publishing"=>"Publishing",_=>"Finalizing"};
+            let mut payload=serde_json::json!({"task_id":progress_id,"stage":stage,"progress":last.1,"current_file":event.current_file,"processed_bytes":event.processed_bytes,"total_bytes":event.total_bytes});
+            if let Some(bytes)=event.output_bytes{payload["output_bytes"]=bytes.into();}
+            let _=progress_window.emit("task-progress",payload);
+        }
+    });
+    let result_path=output_path.clone();
+    tauri::async_runtime::spawn_blocking(move||crate::services::zip_edit::save(Path::new(&source_path),&revision,&changes,Path::new(&output_path),&method,level,flag,observer)).await.map_err(|e|e.to_string())?.map_err(|e|format!("ZIP 编辑失败：{e:#}"))?;
+    published_archive_output(Path::new(&result_path),false).map_err(|e|e.to_string())
+}
+
 /// Rebuild an archive through private on-disk staging. Source archives are
 /// never compression inputs, so this converts their contents rather than
 /// placing the old archive inside a new one.
