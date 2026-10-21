@@ -590,7 +590,6 @@ impl<R: Read + Seek> ZipArchive<R> {
                 data.uncompressed_size,
                 crc32,
                 crypto_reader,
-                #[cfg(feature = "legacy-zip")]
                 data.flags,
             )?,
         })

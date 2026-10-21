@@ -32,7 +32,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
     </td>
     <td width="50%" valign="top">
       <h3>🧭 先看内容，再决定解压什么</h3>
-      <p>像浏览文件夹一样查看压缩包，搜索、筛选和选择文件。支持部分格式的图片与文本预览，也能进入嵌套压缩包、选择和对比 ZPAQ 历史快照，按版本取出所选变化。Store/Deflate/Bzip2 ZIP 支持普通包与 AES/ZipCrypto 密码内容编辑，可补入、替换、删除、改名和批量整理，复核后另存新包；未完成修改可从草稿恢复，原包保留。</p>
+      <p>像浏览文件夹一样查看压缩包，搜索、筛选和选择文件。支持部分格式的图片与文本预览，也能进入嵌套压缩包、选择和对比 ZPAQ 历史快照，按版本取出所选变化。Store/Deflate/Bzip2/LZMA ZIP 支持普通包与 AES/ZipCrypto 密码内容编辑，可补入、替换、删除、改名和批量整理，复核后另存新包；未完成修改可从草稿恢复，原包保留。</p>
     </td>
   </tr>
   <tr>
@@ -67,7 +67,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
   </tr>
   <tr><td colspan="2" valign="top">
     <h3>↔️ 两份资料放在一起，只取回需要的部分</h3>
-    <p>文件夹与 Store/Deflate/Bzip2 ZIP 自由组合，按路径查看差异，再按需核对实际内容，确认相同、不同或仅时间变化。密码和完整分卷接通，核对可停止后继续；左右分别勾选，在弹窗统一配置取回方式，沿原队列查看实际结果。</p>
+    <p>文件夹与 Store/Deflate/Bzip2/LZMA ZIP 自由组合，按路径查看差异，再按需核对实际内容，确认相同、不同或仅时间变化。密码和完整分卷接通，核对可停止后继续；左右分别勾选，在弹窗统一配置取回方式，沿原队列查看实际结果。</p>
   </td></tr>
 </table>
 
@@ -253,7 +253,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.5.59 · Bzip2 ZIP 继续整理与对比**。独立普通/密码包编辑另存保留原方法，内容对比、完整分卷取材、精确取回和草稿/历史贯通；原包方法与新增/替换方法说明更清楚，损坏内容不误报可用。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.59.md) · [范围与记录](long-compress-assistant/docs/ZIP_BZIP2_COMPATIBILITY_FREEZE_1.5.59.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.59)。下一步 [v1.5.60 ZIP LZMA 跨流程兼容](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.60.md)，继续格式、算法、密码、卷型与容错主线。
+**v1.5.60 · LZMA ZIP 继续整理与对比**。方法 14 接入独立普通/密码包编辑、实际内容核对、完整分卷取材及精确取回；结束标记、真实大小与属性异常按实际读取处理，保留原交互。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.60.md) · [范围与记录](long-compress-assistant/docs/ZIP_LZMA_COMPATIBILITY_FREEZE_1.5.60.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.60)。下一步 [v1.5.61 ZIP Zstandard 跨流程兼容](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.61.md)，继续格式、密码、卷型与容错主线。
+
+**v1.5.59 · Bzip2 ZIP 继续整理与对比**。独立普通/密码包编辑另存保留原方法，内容对比、完整分卷取材、精确取回和草稿/历史贯通；原包方法与新增/替换方法说明更清楚，损坏内容不误报可用。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.59.md) · [范围与记录](long-compress-assistant/docs/ZIP_BZIP2_COMPATIBILITY_FREEZE_1.5.59.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.59)。LZMA 跨流程兼容已由上方 v1.5.60 接续。
 
 **v1.5.58 · 接着阅读，挑选取回**。文件浏览器可继续最近阅读，保留位置与显示方式；找图面板搜索/分页、跨页勾选、资源库命中往返、弹窗取回及原队列/草稿/历史接续贯通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.58.md) · [范围与记录](long-compress-assistant/docs/READING_CONTINUITY_FREEZE_1.5.58.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.58)。Bzip2 跨流程兼容已由上方 v1.5.59 接续。
 

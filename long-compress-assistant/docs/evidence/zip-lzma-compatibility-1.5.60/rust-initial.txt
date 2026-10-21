@@ -1,0 +1,23 @@
+running 9 tests
+test services::zip_lzma_compatibility_tests::lzma1560_stream_reader_obeys_eos_and_sized_stream_flags ... ok
+
+thread 'services::zip_lzma_compatibility_tests::lzma1560_valid_eos_and_sized_no_eos_survive_raw_copy_and_independent_extraction' (74372) panicked at src\services\zip_lzma_compatibility_tests.rs:478:10:
+called `Result::unwrap()` on an `Err` value: 整理来源已变化，请重新读取：nested/合同.txt
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::zip_lzma_compatibility_tests::lzma1560_valid_eos_and_sized_no_eos_survive_raw_copy_and_independent_extraction ... FAILED
+test services::zip_lzma_compatibility_tests::lzma1560_plain_edit_preserves_compressed_bytes_method_comments_and_time ... ok
+test services::zip_lzma_compatibility_tests::lzma1560_password_failure_preserves_original_edits_and_existing_output ... ok
+test services::zip_lzma_compatibility_tests::lzma1560_eos_truncation_matching_prefix_and_invalid_properties_are_not_complete ... ok
+test services::zip_lzma_compatibility_tests::lzma1560_bad_crc_size_and_truncated_stream_never_publish_or_become_content_evidence ... ok
+test services::zip_lzma_compatibility_tests::lzma1560_numeric_password_material_uses_exact_range_and_detects_missing_or_changed_members ... ok
+test services::zip_lzma_compatibility_tests::lzma1560_folder_and_zip_content_comparison_reads_real_plain_and_password_bytes ... ok
+test services::zip_lzma_compatibility_tests::lzma1560_encrypted_edit_keeps_method_and_rekeys_with_explicit_encoding ... ok
+
+failures:
+
+failures:
+    services::zip_lzma_compatibility_tests::lzma1560_valid_eos_and_sized_no_eos_survive_raw_copy_and_independent_extraction
+
+test result: FAILED. 8 passed; 1 failed; 0 ignored; 0 measured; 1022 filtered out; finished in 4.03s
+
+error: test failed, to rerun pass `--lib`

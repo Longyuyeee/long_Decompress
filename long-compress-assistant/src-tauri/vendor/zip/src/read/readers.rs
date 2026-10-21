@@ -271,7 +271,7 @@ pub(crate) fn make_reader<R: Read + ?Sized>(
     uncompressed_size: u64,
     crc32: Option<u32>,
     reader: CryptoReader<'_, R>,
-    #[cfg(feature = "legacy-zip")] flags: u16,
+    flags: u16,
 ) -> ZipResult<ZipFileReader<'_, R>> {
     // enable the crc32 check when there is a crc32 and the content is not ae2_encrypted
     let (should_disable, crc32) = if let Some(data_crc32) = crc32 {
@@ -286,8 +286,6 @@ pub(crate) fn make_reader<R: Read + ?Sized>(
             should_disable,
         ))));
     }
-    #[cfg(not(feature = "legacy-zip"))]
-    let flags = 0;
     Ok(ZipFileReader::Compressed(Box::new(Crc32Reader::new(
         Decompressor::new(
             io::BufReader::new(reader),
