@@ -67,7 +67,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
   </tr>
   <tr><td colspan="2" valign="top">
     <h3>↔️ 两份资料放在一起，只取回需要的部分</h3>
-    <p>文件夹与普通 Store/Deflate ZIP 自由组合，按路径查看新增、缺项和类型/大小/时间变化，左右分别勾选。多选后在弹窗配置取回位置、目录结构与同名处理，沿原队列查看实际结果；内容相似仍明确标为“未核对”。</p>
+    <p>文件夹与 Store/Deflate ZIP 自由组合，按路径查看差异，再按需核对实际内容，确认相同、不同或仅时间变化。密码和完整分卷接通，核对可停止后继续；左右分别勾选，在弹窗统一配置取回方式，沿原队列查看实际结果。</p>
   </td></tr>
 </table>
 
@@ -126,7 +126,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 
 | 你想做什么 | 从哪里开始 | 操作要点 |
 | --- | --- | --- |
-| 比较两份资料 | 资料对比 | 选择文件夹或普通 ZIP，查看候选差异，分别勾选后取回 |
+| 比较两份资料 | 资料对比 | 选择文件夹或 ZIP/完整分卷，查看候选、按需核对内容，再取回所选 |
 | 解压一批文件 | 解压中心 | 拖入压缩包，设置目录；常用密码可交给保险箱尝试 |
 | 打包文件和文件夹 | 压缩中心 | 按用途选兼容分享、体积优先、加密或分包方案，再微调密码、名称等参数 |
 | 只提取包里的几个文件 | 文件浏览器 → 打开压缩包 | 搜索并勾选条目，再解压所选内容 |
@@ -252,7 +252,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.5.54 · 资料对比与所选取回**。两份文件夹或普通 ZIP 按路径查看类型/大小/时间差异，左右独立跨页选择，多选弹窗统一配置后进入原队列取回；来源变化、草稿和历史保留精确范围。内容相同需后续核对。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.54.md) · [范围与记录](long-compress-assistant/docs/SOURCE_COMPARISON_FREEZE_1.5.54.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.54)。下一步 [v1.5.55 实际内容核对与复杂 ZIP 来源](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.55.md)。
+**v1.5.55 · 资料内容核对与密码分卷 ZIP**。逐侧读取完整内容，确认相同、不同或仅时间变化，显示实际进度，可停止后继续剩余项；接通 AES/ZipCrypto、数字与标准分卷，密码弹窗/保险箱、精确取回和草稿历史贯通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.55.md) · [范围与记录](long-compress-assistant/docs/SOURCE_CONTENT_FREEZE_1.5.55.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.55)。下一步 [v1.5.56 所选变更生成新包](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.56.md)。
+
+**v1.5.54 · 资料对比与所选取回**。两份文件夹或普通 ZIP 按路径查看类型/大小/时间差异，左右独立跨页选择，多选弹窗统一配置后进入原队列取回；来源变化、草稿和历史保留精确范围。内容相同需后续核对。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.54.md) · [范围与记录](long-compress-assistant/docs/SOURCE_COMPARISON_FREEZE_1.5.54.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.54)。内容核对和复杂 ZIP 接续由上方 v1.5.55 完成。
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 

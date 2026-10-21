@@ -22,6 +22,8 @@ pub struct SourceRef {
     pub path: String,
     pub kind: String,
     pub revision: String,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub encrypted: bool,
 }
 #[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -31,6 +33,8 @@ pub struct Entry {
     pub size: u64,
     pub modified: Option<String>,
     pub selectable: bool,
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub encrypted: bool,
     #[serde(skip)]
     pub fingerprint: String,
     #[serde(skip)]
@@ -50,6 +54,8 @@ pub struct Selection {
     pub paths: Vec<String>,
     pub keep_structure: bool,
     pub conflict_policy: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zip_password_encoding: Option<super::zip_password::ZipPasswordEncoding>,
 }
 impl Selection {
     pub fn validate(&self) -> Result<()> {
@@ -121,7 +127,7 @@ fn metadata(path: &Path) -> Result<fs::Metadata> {
     );
     Ok(meta)
 }
-fn identity(meta: &fs::Metadata) -> Result<String> {
+pub(super) fn identity(meta: &fs::Metadata) -> Result<String> {
     Ok(format!(
         "{}:{}",
         meta.len(),
@@ -163,6 +169,7 @@ fn finish(path: &Path, kind: &str, map: BTreeMap<String, Entry>, base: &str) -> 
             path: display_path(path),
             kind: kind.into(),
             revision: hash.finalize().to_hex().to_string(),
+            encrypted: map.values().any(|entry| entry.encrypted),
         },
         name: path
             .file_name()
@@ -187,6 +194,7 @@ fn insert(map: &mut BTreeMap<String, Entry>, entry: Entry) -> Result<()> {
                     size: 0,
                     modified: None,
                     selectable: false,
+                    encrypted: false,
                     fingerprint: "directory".into(),
                     raw: String::new(),
                 },
@@ -225,7 +233,8 @@ pub fn read(
         );
         Ok(first)
     } else {
-        read_zip(&path, &flag, &mut progress)
+        let path = super::split_archive_detector::SplitArchiveDetector::complete_source(&path)?;
+        read_zip(&fs::canonicalize(path)?, &flag, &mut progress)
     }
 }
 fn read_folder(
@@ -265,6 +274,7 @@ fn read_folder(
                     size: if meta.is_file() { meta.len() } else { 0 },
                     modified,
                     selectable: false,
+                    encrypted: false,
                     fingerprint: if meta.is_dir() {
                         "directory".into()
                     } else {
@@ -294,15 +304,10 @@ fn read_zip(
     flag: &Arc<AtomicBool>,
     progress: &mut impl FnMut(Progress),
 ) -> Result<Source> {
-    ensure!(
-        path.extension()
-            .is_some_and(|e| e.eq_ignore_ascii_case("zip")),
-        "本版对比支持文件夹与普通单文件 ZIP；其他格式请使用原浏览器"
-    );
-    let before = identity(&metadata(path)?)?;
-    let mut file = fs::File::open(path)?;
-    let count = super::zip_edit::declared_count(&mut file)
-        .context("请使用完整普通单文件 ZIP；密码或分卷可回到原浏览器处理")?;
+    let before = source_identity(path)?;
+    let mut file = super::numeric_volume_reader::ZipInputReader::open(path)?;
+    let count = super::zip_edit::declared_count_reader(&mut file)
+        .context("请使用完整可读取的 ZIP 来源；缺卷请补齐后重新读取")?;
     ensure!(
         count <= MAX_ENTRIES as u64,
         "单侧超过 5 万条，请缩小 ZIP 范围"
@@ -318,15 +323,11 @@ fn read_zip(
         check(flag)?;
         let entry = archive.by_index_raw(index)?;
         ensure!(
-            !entry.encrypted(),
-            "这是密码 ZIP，本阶段请使用原浏览器查看与取回"
-        );
-        ensure!(
             matches!(
                 entry.compression(),
                 zip_aes::CompressionMethod::Stored | zip_aes::CompressionMethod::Deflated
             ),
-            "本阶段对比取回支持 Store/Deflate ZIP；此 ZIP 方法请使用原浏览器"
+            "资料对比支持 Store/Deflate ZIP；此 ZIP 方法请使用原浏览器"
         );
         ensure!(
             entry
@@ -362,6 +363,7 @@ fn read_zip(
                 size: entry.size(),
                 modified,
                 selectable: false,
+                encrypted: entry.encrypted(),
                 fingerprint,
                 raw,
             },
@@ -377,10 +379,83 @@ fn read_zip(
         }
     }
     ensure!(
-        before == identity(&metadata(path)?)?,
+        before == source_identity(path)?,
         "读取期间 ZIP 有变化，请重新读取这一侧"
     );
     finish(path, "zip", map, &before)
+}
+pub(super) fn source_identity(path: &Path) -> Result<String> {
+    if let Some(group) =
+        super::split_archive_detector::SplitArchiveDetector::detect_split_archive(path)?
+    {
+        ensure!(
+            group.is_complete,
+            "缺少分卷：{}；请补齐后重新读取",
+            group.missing_part_names()
+        );
+        let parts = group
+            .parts
+            .iter()
+            .map(|part| Ok((display_path(part), identity(&metadata(part)?)?)))
+            .collect::<Result<Vec<_>>>()?;
+        Ok(serde_json::to_string(&parts)?)
+    } else {
+        identity(&metadata(path)?)
+    }
+}
+pub(super) fn open_zip(
+    source: &Source,
+) -> Result<zip_aes::ZipArchive<super::numeric_volume_reader::ZipInputReader>> {
+    Ok(zip_aes::ZipArchive::new(
+        super::numeric_volume_reader::ZipInputReader::open(Path::new(&source.source.path))?,
+    )?)
+}
+pub(super) fn open_entry<'a>(
+    archive: &'a mut zip_aes::ZipArchive<super::numeric_volume_reader::ZipInputReader>,
+    raw: &str,
+    password: Option<&str>,
+    encoding: Option<super::zip_password::ZipPasswordEncoding>,
+) -> Result<zip_aes::read::ZipFile<'a, super::numeric_volume_reader::ZipInputReader>> {
+    let index = archive
+        .index_for_name(raw)
+        .context("所选文件不在当前 ZIP 中")?;
+    let encrypted = archive.by_index_raw(index)?.encrypted();
+    if encrypted {
+        ensure!(
+            password.is_some_and(|p| !p.is_empty()),
+            "需要本次 ZIP 密码，请在来源密码设置中填写"
+        );
+    }
+    super::zip_password::open_entry_with_encoding(archive, index, password.unwrap_or(""), encoding)
+        .map_err(|e| {
+            anyhow::anyhow!(e).context("ZIP 内容无法读取，请核对密码、密码编码和原卷完整性")
+        })
+}
+pub fn validate_password(
+    request: &Selection,
+    source: &Source,
+    password: Option<&str>,
+) -> Result<()> {
+    if source.source.kind != "zip" {
+        return Ok(());
+    }
+    let mut archive = open_zip(source)?;
+    for entry in source
+        .entries
+        .iter()
+        .filter(|entry| entry.encrypted && request.paths.contains(&entry.path))
+    {
+        let mut reader = open_entry(
+            &mut archive,
+            &entry.raw,
+            password,
+            request.zip_password_encoding,
+        )?;
+        reader
+            .read(&mut [0u8; 1])
+            .context("无法读取所选 ZIP 内容，请核对密码和编码")?;
+    }
+    Ok(())
 }
 fn output_path(value: &Path) -> Result<PathBuf> {
     ensure!(value.is_absolute(), "请选择完整取回位置");
@@ -463,6 +538,15 @@ pub fn retrieve(
     request: &Selection,
     output: &Path,
     flag: Arc<AtomicBool>,
+    progress: impl FnMut(Progress),
+) -> Result<(String, u64)> {
+    retrieve_with_password(request, output, None, flag, progress)
+}
+pub fn retrieve_with_password(
+    request: &Selection,
+    output: &Path,
+    password: Option<&str>,
+    flag: Arc<AtomicBool>,
     mut progress: impl FnMut(Progress),
 ) -> Result<(String, u64)> {
     let source = validate(request, output, flag.clone())?;
@@ -479,9 +563,7 @@ pub fn retrieve(
     publication::validate_disk_capacity(output.parent().unwrap_or(&output), total)?;
     let mut staging = publication::ExtractionStaging::create_for(&output)?;
     let mut zip = if source.source.kind == "zip" {
-        Some(zip_aes::ZipArchive::new(fs::File::open(
-            &source.source.path,
-        )?)?)
+        Some(open_zip(&source)?)
     } else {
         None
     };
@@ -523,7 +605,12 @@ pub fn retrieve(
             continue;
         }
         let mut input: Box<dyn Read> = if let Some(archive) = zip.as_mut() {
-            Box::new(archive.by_name(&entry.raw)?)
+            Box::new(open_entry(
+                archive,
+                &entry.raw,
+                password,
+                request.zip_password_encoding,
+            )?)
         } else {
             Box::new(fs::File::open(
                 Path::new(&source.source.path).join(relative),
@@ -635,6 +722,7 @@ mod tests {
             paths: paths.iter().map(|s| s.to_string()).collect(),
             keep_structure: true,
             conflict_policy: "rename".into(),
+            zip_password_encoding: None,
         }
     }
     #[test]
@@ -749,11 +837,7 @@ mod tests {
         .unwrap();
         z.write_all(b"secret").unwrap();
         z.finish().unwrap();
-        assert!(read(&path, flag(), |_| {})
-            .err()
-            .unwrap()
-            .to_string()
-            .contains("密码"));
+        assert!(read(&path,flag(),|_|{}).unwrap().source.encrypted);
         let mut z = zip::ZipWriter::new(fs::File::create(&path).unwrap());
         for _ in 0..2 {
             z.start_file("same.txt", zip::write::FileOptions::default())

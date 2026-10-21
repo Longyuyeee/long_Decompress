@@ -6,6 +6,7 @@ import { restoredExtractionConfig, type TaskHistoryRecord } from '@/types/taskHi
 import { useTaskStore } from '@/stores/task'
 import { generateId, extractErrorMessage } from '@/utils'
 import { isDecompressArchivePath, isPotentialSplitArchivePath, isPotentialSfxPath } from '@/utils/compressionFormat'
+import ComparisonPasswordField from '@/components/archive/ComparisonPasswordField.vue'
 import ExtractionOutputPreview from './ExtractionOutputPreview.vue'
 import ZipPasswordEncodingField from '@/components/ui/ZipPasswordEncodingField.vue'
 import type { ZipPasswordEncoding } from '@/types/zipPassword'
@@ -29,7 +30,7 @@ watch(() => props.record.id, () => {
   source.value = props.record.sourcePaths[0] || ''
   destination.value = restoredConfig.value?.outputDirectory || ''
   extractToSubfolder.value = restoredConfig.value?.extractToSubfolder ?? true
-  zipPasswordEncoding.value = restoredConfig.value?.zipPasswordEncoding
+  zipPasswordEncoding.value = restoredConfig.value?.comparisonSelection?.zipPasswordEncoding ?? restoredConfig.value?.zipPasswordEncoding
   password.value = ''
   error.value = ''
   created.value = false
@@ -61,11 +62,11 @@ async function createDraft() {
   const recordId = props.record.id
   if (!path || !outputPath) { error.value = '请确认来源文件并选择本次输出目录'; return }
   if(restoredConfig.value?.comparisonSelection){
-    const selection=restoredConfig.value.comparisonSelection
+    const selection={...restoredConfig.value.comparisonSelection,...(confirmedEncoding?{zipPasswordEncoding:confirmedEncoding}:{})}
     if(path!==selection.source.path){error.value='对比来源位置不可在这里替换，请返回资料对比重新读取';return}
     busy.value=true
-    try{await invoke('comparison_validate',{request:selection,output:outputPath});if(disposed||props.record.id!==recordId)return
-      store.addTask({id:generateId(),name:props.record.name,type:'decompression',sourceFiles:[path],outputPath,configurationMode:'individual',extractToSubfolder:false,recycleSourceAfterExtract:false,comparisonSelection:JSON.parse(JSON.stringify(selection)),selectedEntries:[...selection.paths],executionConfig:{...restoredConfig.value,outputDirectory:outputPath},retryOfTaskId:recordId,format:selection.source.kind==='zip'?'ZIP':'文件夹'});created.value=true
+    try{await invoke('comparison_validate',{request:selection,output:outputPath,password:confirmedPassword||null});if(disposed||props.record.id!==recordId)return
+      store.addTask({id:generateId(),name:props.record.name,type:'decompression',sourceFiles:[path],outputPath,configurationMode:'individual',extractToSubfolder:false,recycleSourceAfterExtract:false,password:confirmedPassword||undefined,zipPasswordEncoding:confirmedEncoding,comparisonSelection:JSON.parse(JSON.stringify(selection)),selectedEntries:[...selection.paths],executionConfig:{...restoredConfig.value,outputDirectory:outputPath},retryOfTaskId:recordId,format:selection.source.kind==='zip'?'ZIP':'文件夹'});created.value=true
     }catch(cause){error.value=extractErrorMessage(cause)}finally{busy.value=false}
     return
   }
@@ -146,6 +147,7 @@ async function createDraft() {
         <input v-model="password" data-testid="history-draft-password" type="password" autocomplete="off" class="history-control w-full mt-1" />
       </label>
       <ZipPasswordEncodingField v-if="!restoredConfig?.comparisonSelection && supportsZipPasswordEncoding(source, sourceFormat)" v-model="zipPasswordEncoding" :source-path="source" :source-format="sourceFormat" :disabled="busy || created" test-id="history-draft-zip-password-encoding" />
+      <ComparisonPasswordField v-if="restoredConfig?.comparisonSelection?.source.encrypted" v-model:password="password" v-model:encoding="zipPasswordEncoding" :disabled="busy||created" test-id="history-comparison-password"/>
       <ExtractionOutputPreview :source="source.trim()" :output="destination.trim()" :subfolder="extractToSubfolder" @change-output="selectPath(true)" />
       <button data-testid="history-draft-create" class="history-control w-full" @click="createDraft">{{ busy ? '正在检查来源…' : '创建待执行任务' }}</button>
     </fieldset>

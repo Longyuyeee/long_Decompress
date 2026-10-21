@@ -28,6 +28,10 @@ const decompressionOptions = {
 } as const
 
 describe('useTauriCommands', () => {
+  it('comparison1555 invokes scoped password retrieval with explicit input encoding, without broad extraction fallback',async()=>{
+    mocks.invoke.mockImplementation(async command=>command==='comparison_retrieve'?{path:'D:/out',outputBytes:4}:undefined);const comparisonSelection={source:{path:'C:/group.zip',kind:'zip' as const,revision:'a'.repeat(64),encrypted:true},paths:['one.txt'],keepStructure:true,conflictPolicy:'rename' as const};await useTauriCommands().decompressFile('C:/group.zip',{...decompressionOptions,comparisonSelection,password:'session-1555',zipPasswordEncoding:'cp936'});expect(mocks.invoke).toHaveBeenCalledWith('comparison_retrieve',expect.objectContaining({password:'session-1555',request:expect.objectContaining({zipPasswordEncoding:'cp936',paths:['one.txt']})}));expect(JSON.stringify(useTaskStore().tasks[0].executionConfig)).not.toContain('session-1555');expect(mocks.invoke.mock.calls.some(([command])=>command==='extract_file')).toBe(false)
+  })
+
   it.each([0, 25])('comparison1554 keeps measured final publication bytes including skipped output: %s', async outputBytes => {
     const comparisonSelection = {source:{kind:'directory' as const,path:'C:/source',revision:'a'.repeat(64)},paths:['selected.txt'],keepStructure:true,conflictPolicy:'skip' as const}
     mocks.invoke.mockImplementation(async command => command === 'comparison_retrieve' ? {path:'D:/actual',outputBytes} : undefined)

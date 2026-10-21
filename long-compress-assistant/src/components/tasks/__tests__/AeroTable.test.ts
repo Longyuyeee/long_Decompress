@@ -16,6 +16,10 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('AeroTable', () => {
+  it('comparison1555 restored encrypted tasks can refill the password inline without changing the saved scope',async()=>{
+    const pinia=createPinia();setActivePinia(pinia);const store=useTaskStore();store.addTask({id:'restored-compare',name:'selected ZIP',type:'decompression',sourceFiles:['C:/group.zip.001'],outputPath:'D:/out',draftPasswordRequired:true,comparisonSelection:{source:{path:'C:/group.zip.001',kind:'zip',revision:'a'.repeat(64),encrypted:true},paths:['one.txt'],keepStructure:true,conflictPolicy:'rename',zipPasswordEncoding:'cp936'}});const view=mount(AeroTable,{props:{taskType:'decompression'},global:{plugins:[pinia],stubs:{Teleport:true,ExtractionOutputPreview:true}}});await view.get('[data-testid="toggle-archive-task-restored-compare"]').trigger('click');await flushPromises();await view.get('[data-testid="comparison-task-password-restored-compare"]').setValue('fresh-password');expect(store.tasks[0]).toMatchObject({password:'fresh-password',draftPasswordRequired:false,comparisonSelection:{paths:['one.txt'],zipPasswordEncoding:'cp936'}});view.unmount()
+  })
+
   it('edits only the pending ZIP input choice and leaves shared output inheritance intact', async () => {
     const pinia = createPinia(); setActivePinia(pinia)
     const store = useTaskStore()
