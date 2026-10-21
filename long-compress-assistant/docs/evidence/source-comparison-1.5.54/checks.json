@@ -1,0 +1,64 @@
+{
+  "version": "1.5.54",
+  "frontend": {
+    "distinctTests": 111,
+    "result": "passed",
+    "scope": [
+      "sourceComparison1554.test.ts",
+      "DecompressView.test.ts",
+      "HistoryExtractionDraft.test.ts",
+      "pendingDrafts.test.ts",
+      "MainLayout.test.ts",
+      "useTauriCommands.test.ts: two publication receipts and two existing extraction option cases"
+    ],
+    "accounting": "107 distinct related tests, then 4 distinct command-wrapper cases; reruns of failed/affected cases do not add to the count"
+  },
+  "rust": {
+    "distinctTests": 9,
+    "filter": "comparison1554",
+    "result": "passed"
+  },
+  "build": [
+    "TypeScript/Vite final source",
+    "Shell extension",
+    "eight release identifiers",
+    "Windows custom-protocol/desktop-e2e binary"
+  ],
+  "desktop": {
+    "result": "passed",
+    "compositeFlows": 5,
+    "incrementalFlow": 1,
+    "layoutRecords": 24,
+    "viewedSelectedScreenshots": 10,
+    "flowBinarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+    "incrementalBinarySha256": "a14800879cfa9350dd1bd3f87ee74eba1b31035658b43883c20308f7331abc26",
+    "selectedScreenshots": [
+      "comparison1554-final-overview-1100x700.png",
+      "comparison1554-selected-pair-760x520.png",
+      "comparison1554-retrieval-dialog-1100x700.png",
+      "comparison1554-retrieval-dialog-760x520.png",
+      "comparison1554-queued-scope-1100x700.png",
+      "comparison1554-scoped-results-760x520.png",
+      "comparison1554-history-scope-760x520.png",
+      "comparison1554-unsupported-source-1100x700.png",
+      "comparison1554-final-actual-bytes-1100x700.png",
+      "comparison1554-final-actual-bytes-760x520.png"
+    ],
+    "incrementalScope": "After five completed flows, final publication receipt and completed-stage wording were checked with one new copy, one skip-only task and two layouts. Five earlier flows retained their original identity and were not repeated. Final source also displays the already supplied batch-configuration hint; this text-only addition was covered by final TypeScript/Vite build, without another native rebuild."
+  },
+  "notRepeated": [
+    "old format/algorithm/password/media matrices",
+    "real disk-full cases",
+    "personal installation",
+    "five completed composite flows after the final receipt fix"
+  ],
+  "previousRelease": {
+    "version": "1.5.53",
+    "pr": 249,
+    "tagCommit": "cfc86c4cb46cbb2d12c83e4a09895d46df700fa8",
+    "formalRun": 39612399222,
+    "formalConclusion": "success",
+    "assets": 4
+  },
+  "publicationReceipt": "Candidate, normal merge, tag and formal run tracked in the v1.5.54 PR to avoid an extra build-triggering backfill commit."
+}

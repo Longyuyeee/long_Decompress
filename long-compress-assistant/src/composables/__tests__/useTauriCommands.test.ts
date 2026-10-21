@@ -28,6 +28,15 @@ const decompressionOptions = {
 } as const
 
 describe('useTauriCommands', () => {
+  it.each([0, 25])('comparison1554 keeps measured final publication bytes including skipped output: %s', async outputBytes => {
+    const comparisonSelection = {source:{kind:'directory' as const,path:'C:/source',revision:'a'.repeat(64)},paths:['selected.txt'],keepStructure:true,conflictPolicy:'skip' as const}
+    mocks.invoke.mockImplementation(async command => command === 'comparison_retrieve' ? {path:'D:/actual',outputBytes} : undefined)
+    const result = await useTauriCommands().decompressFile('C:/source',{...decompressionOptions,comparisonSelection})
+    expect(result).toBe('D:/actual')
+    expect(useTaskStore().tasks[0]).toMatchObject({status:'completed',outputPath:'D:/actual',outputBytes,outputBytesEstimated:false})
+    expect(mocks.invoke.mock.calls.some(([command]) => command === 'extract_file')).toBe(false)
+  })
+
   it('library1549 passes live library identity and exact paths to extraction and records only that range',async()=>{
     mocks.invoke.mockImplementation(async command=>command==='extract_file'?'D:/out':undefined)
     await useTauriCommands().decompressFile('C:/source.zip',{...decompressionOptions,outputPath:'D:/out',password:'secret-1549',librarySourceId:'source',libraryRevision:'revision',libraryKeepStructure:false,libraryConflictPolicy:'skip',selectedEntries:['docs/合同.txt'],keepStructure:false,conflictPolicy:'skip'})

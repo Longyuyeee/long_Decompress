@@ -81,7 +81,7 @@ async function applySelectedConfiguration(patch: BatchConfigPatch, complete?: (e
   let skipped = 0, updated = 0
   for (const { task, source } of selected) {
     let changed = false
-    if (encodingChanged) {
+    if (encodingChanged && !task.comparisonSelection) {
       // Read the actual input format, not its possibly renamed extension.
       try {
         const group = await detectArchiveGroup(source)
@@ -99,7 +99,7 @@ async function applySelectedConfiguration(patch: BatchConfigPatch, complete?: (e
       task.outputPath = patch.outputDirectory || parentDirectory(source || '')
       changed = true
     }
-    if (patch.extractToSubfolder !== undefined) { task.extractToSubfolder = patch.extractToSubfolder; changed = true }
+    if (patch.extractToSubfolder !== undefined && !task.comparisonSelection) { task.extractToSubfolder = patch.extractToSubfolder; changed = true }
     if (changed) {
       // Encoding is task-local; changing only it must not detach output defaults.
       if (patch.outputDirectory !== undefined || patch.extractToSubfolder !== undefined) task.configurationMode = 'individual'
@@ -391,6 +391,11 @@ const deselectAll = () => {
 const isProcessing = ref(false)
 
 const runDecompressionResourcePreflight = async (task: Task) => {
+  if(task.comparisonSelection){
+    task.executionConfig={schemaVersion:1,kind:'archive-extraction',outputDirectory:task.outputPath,extractToSubfolder:false,comparisonSelection:task.comparisonSelection}
+    return task.status!=='cancelled'&&task.status!=='cancelling'
+  }
+
   if(task.librarySourceId) task.executionConfig={schemaVersion:1,kind:'archive-extraction',outputDirectory:task.outputPath,extractToSubfolder:task.extractToSubfolder??false,librarySourceId:task.librarySourceId,libraryRevision:task.libraryRevision,libraryKeepStructure:task.libraryKeepStructure??true,libraryConflictPolicy:task.libraryConflictPolicy??'rename',selectedEntries:[...(task.selectedEntries||[])],zipPasswordEncoding:task.zipPasswordEncoding}
   if (task.zpaqCatalogId && task.zpaqSnapshot) task.executionConfig = {
     schemaVersion: 1, kind: 'archive-extraction', outputDirectory: task.outputPath,
@@ -461,6 +466,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
     // 不预先添加密码，先尝试解压，只有明确要求密码时才使用保险箱
     const options = {
       outputPath: task.outputPath,
+      comparisonSelection:task.comparisonSelection,
       keepStructure: task.libraryKeepStructure ?? true,
       overwrite: false,
       deleteAfter: task.recycleSourceAfterExtract ?? false,
@@ -498,7 +504,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
       if (['cancelled', 'cancelling'].includes(task.status)) return
       // 只在后端明确返回密码相关错误时才尝试密码破解
       const errorMsg = extractErrorMessage(error) || String(error)
-      const isPasswordError = isPasswordRelatedError(error)
+      const isPasswordError = !task.comparisonSelection && isPasswordRelatedError(error)
       const isConflictResolutionRequired = /File conflict requires resolution/i.test(errorMsg)
 
       if (isConflictResolutionRequired) {
@@ -739,7 +745,7 @@ watch(() => taskStore.recoveryTaskId, id => {
           >
             <template #before-tasks>
               <BatchResultActions v-if="scope === 'completed'" :locations="completedLocations" class="mb-3" />
-              <BatchConfigBar v-if="selectedPendingTasks.length && !batchStore.showingFailures" class="mb-3" :count="selectedPendingTasks.length" :subjects="selectedPendingTasks.map(task => ({ name: task.name, path: task.sourceFiles[0] }))" mode="decompression" @apply="applySelectedConfiguration" @clear="deselectAll" />
+              <BatchConfigBar v-if="selectedPendingTasks.length && !batchStore.showingFailures" class="mb-3" :hint="selectedPendingTasks.some(task=>task.comparisonSelection)?'资料对比取回任务仅在此批量调整输出位置；精确范围、结构与同名策略保留，可在单条展开中调整。':undefined" :count="selectedPendingTasks.length" :subjects="selectedPendingTasks.map(task => ({ name: task.name, path: task.sourceFiles[0] }))" mode="decompression" @apply="applySelectedConfiguration" @clear="deselectAll" />
             </template>
           </AeroTable>
         </div>

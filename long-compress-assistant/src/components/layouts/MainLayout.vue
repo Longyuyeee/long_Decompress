@@ -56,6 +56,7 @@ const navItems = [
   { name: 'Compress', icon: 'pi pi-box', label: 'nav.compress', shortcut: 'Ctrl+N' },
   { name: 'SpecialCompression', icon: 'pi pi-sparkles', label: 'nav.special_compression', shortcut: 'Ctrl+Shift+S' },
   { name: 'ArchiveBrowser', icon: 'pi pi-folder', label: 'nav.browser', shortcut: 'Ctrl+B' },
+  {name:'SourceComparison',icon:'pi pi-arrows-h',label:'nav.compare',shortcut:''},
   { name: 'Workflows', icon: 'pi pi-sitemap', label: 'nav.workflows', shortcut: '' },
   { name: 'ArchiveLibrary', icon: 'pi pi-database', label: 'nav.library', shortcut: '' },
   { name: 'Vault', icon: 'pi pi-shield', label: 'nav.vault', shortcut: 'Ctrl+Shift+V' },

@@ -202,6 +202,7 @@ const getStatusText = (status: string) => {
 }
 
 const getStageText = (task: Task) => {
+  if (task.comparisonSelection && task.status === 'completed') return '已完成取回'
   if (task.status === 'paused') return getStatusText(task.status)
   switch (task.stage) {
     case 'password-attempt': return '验证解压密码'
@@ -483,8 +484,9 @@ async (tasks, _, onCleanup) => {
                     </div>
 
                     <div v-if="task.type === 'decompression'" class="space-y-3.5">
+                      <div v-if="task.comparisonSelection" data-testid="decompression-comparison-selection" class="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs leading-relaxed"><strong class="text-primary">资料对比取回 · 所选 {{ task.comparisonSelection.paths.length }} 项</strong><p class="text-muted mt-1">精确范围与来源版本保留，原件保留；来源变化时请返回重新读取。</p><div v-if="task.status==='pending'" class="grid grid-cols-1 gap-2 mt-3"><label>文件夹结构<select v-model="task.comparisonSelection.keepStructure" class="w-full mt-1 p-2 rounded-lg bg-input border border-subtle"><option :value="true">保留相对路径</option><option :value="false">放在同一层</option></select></label><label>同名文件<select v-model="task.comparisonSelection.conflictPolicy" class="w-full mt-1 p-2 rounded-lg bg-input border border-subtle"><option value="rename">自动改名，保留两份</option><option value="skip">跳过已存在项</option></select></label></div><details class="mt-2"><summary class="cursor-pointer text-muted">查看所选范围</summary><p v-for="path in task.comparisonSelection.paths" :key="path" class="break-all mt-1">{{ path }}</p></details><a href="#/compare" class="inline-block mt-2 text-primary underline">返回资料对比处理来源或重新选择</a></div>
                       <div v-if="task.librarySourceId" data-testid="decompression-library-selection" class="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs leading-relaxed"><strong class="text-primary">资料库所选 {{ task.selectedEntries?.length }} 个文件</strong><p class="text-muted mt-1">{{ task.libraryKeepStructure === false ? '平铺文件' : '保留包内目录' }} · {{ task.libraryConflictPolicy === 'skip' ? '同名跳过' : '同名自动改名' }}</p><details class="mt-2"><summary class="cursor-pointer text-muted">查看所选范围</summary><p v-for="path in task.selectedEntries" :key="path" class="break-all mt-1">{{ path }}</p></details><a href="#/library" class="inline-block mt-2 text-primary underline">返回资料库处理来源或重新选择</a></div>
-                      <DraftRecoveryNotice v-if="task.status === 'pending'" :sources="task.sourceFiles.map(path => ({ path, issue: task.sourceIssue }))" :needs-password="task.draftPasswordRequired"
+                      <DraftRecoveryNotice v-if="!task.comparisonSelection && task.status === 'pending'" :sources="task.sourceFiles.map(path => ({ path, issue: task.sourceIssue }))" :needs-password="task.draftPasswordRequired"
                         @replace="(index, path) => { task.sourceFiles[index] = path; task.name = path.split(/[\\/]/).pop() || path; task.sourceIssue = undefined; task.format = undefined }"
                         @password="task.password = $event; task.draftPasswordRequired = false" />
                       <!-- 路径行：增加 flex-wrap 兜底，但在大多数状态下保持并排 -->
@@ -493,7 +495,7 @@ async (tasks, _, onCleanup) => {
                         <div class="task-output-row flex min-w-0 items-center justify-between gap-3">
                           <span class="task-output-label text-muted text-xs uppercase font-black tracking-widest opacity-90 shrink-0">{{ appStore.t('decompress.config.output') }}</span>
                           <div class="task-output-actions flex min-w-0 flex-wrap justify-end gap-1.5">
-                            <button @click.stop="handleSetSameDir(task)" 
+                            <button v-if="!task.comparisonSelection" @click.stop="handleSetSameDir(task)"
                                     class="h-6 px-2.5 rounded-md bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all text-xs font-black whitespace-nowrap">
                               {{ appStore.t('decompress.config.output_same') }}
                             </button>
@@ -510,15 +512,15 @@ async (tasks, _, onCleanup) => {
                       </div>
 
                       <ExtractionOutputPreview v-if="task.status === 'pending' && (!task.workloadKind || task.workloadKind === 'archive')"
-                        :source="task.sourceFiles[0] || ''" :output="task.outputPath" :subfolder="task.extractToSubfolder ?? false"
+                        :source="task.sourceFiles[0] || ''" :output="task.outputPath" :subfolder="task.comparisonSelection?false:task.extractToSubfolder ?? false"
                         :shared-count="sharedDestinations.get(task.id) || 0" @change-output="handleSelectOutputDir(task)" />
                       <CompletedExtractionOutput v-if="task.status === 'completed' && (!task.workloadKind || task.workloadKind === 'archive')" :path="task.outputPath" />
-                      <ZipPasswordEncodingField v-if="task.status === 'pending' && (supportsZipPasswordEncoding(task.sourceFiles[0] || '', task.format) || (!task.format && task.zipPasswordEncoding !== undefined))"
+                      <ZipPasswordEncodingField v-if="!task.comparisonSelection && task.status === 'pending' && (supportsZipPasswordEncoding(task.sourceFiles[0] || '', task.format) || (!task.format && task.zipPasswordEncoding !== undefined))"
                         v-model="task.zipPasswordEncoding" :source-path="task.sourceFiles[0]" :source-format="task.format" test-id="task-zip-password-encoding" />
                       <ResourcePreflightCard :report="task.resourcePreflight" compact />
-                      <FailedExtractionRetry v-if="['failed','cancelled'].includes(task.status) && (!task.workloadKind || task.workloadKind === 'archive')" :task-ids="[task.id]" inline @created="emit('retry-created', $event)" />
+                      <FailedExtractionRetry v-if="!task.comparisonSelection && ['failed','cancelled'].includes(task.status) && (!task.workloadKind || task.workloadKind === 'archive')" :task-ids="[task.id]" inline @created="emit('retry-created', $event)" />
 
-                      <div v-if="task.status === 'pending'" class="inherited-config-control flex min-w-0 flex-wrap items-center gap-x-5 gap-y-3">
+                      <div v-if="!task.comparisonSelection && task.status === 'pending'" class="inherited-config-control flex min-w-0 flex-wrap items-center gap-x-5 gap-y-3">
                         <button type="button" role="switch" :aria-checked="task.extractToSubfolder" :disabled="task.status !== 'pending'" class="task-subfolder-option flex min-w-0 items-center gap-3 cursor-pointer group/check text-left disabled:cursor-not-allowed disabled:opacity-60" @click.stop="task.extractToSubfolder = !task.extractToSubfolder; task.configurationMode = 'individual'">
                           <span class="w-4 h-4 shrink-0 rounded border border-subtle flex items-center justify-center transition-all group-hover/check:border-primary"
                                 :class="task.extractToSubfolder ? 'bg-primary border-primary' : 'bg-input'">

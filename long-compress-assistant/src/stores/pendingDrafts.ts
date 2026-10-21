@@ -12,6 +12,8 @@ import type { ZipPasswordEncoding } from '@/types/zipPassword'
 
 export const PENDING_DRAFTS_KEY = 'long-pending-archive-drafts-v1'
 interface ExtractionDraft {
+  format?:string
+  comparisonSelection?: import('@/types/sourceComparison').ComparisonSelection
   zpaqSnapshot?: import('@/types/zpaqSnapshot').ZpaqSnapshot
   zpaqCatalogId?: string
   librarySourceId?: string
@@ -79,7 +81,7 @@ export const usePendingDraftStore = defineStore('pendingDrafts', () => {
         items: tasks.tasks.filter(task => task.type === 'decompression' && (!task.workloadKind || task.workloadKind === 'archive') && task.status === 'pending')
           .map(task => ({ id: task.id, name: task.name, sourceFiles: [...task.sourceFiles], outputPath: task.outputPath,
             extractToSubfolder: task.extractToSubfolder, recycleSourceAfterExtract: task.recycleSourceAfterExtract,
-            configurationMode: task.configurationMode, fileFilter: task.fileFilter, selectedEntries: task.selectedEntries,
+            configurationMode: task.configurationMode, fileFilter: task.fileFilter, selectedEntries: task.selectedEntries,format:task.format,comparisonSelection:task.comparisonSelection,
             librarySourceId:task.librarySourceId,libraryRevision:task.libraryRevision,libraryKeepStructure:task.libraryKeepStructure,libraryConflictPolicy:task.libraryConflictPolicy,
             zipPasswordEncoding: task.zipPasswordEncoding, zpaqSnapshot: task.zpaqSnapshot, zpaqCatalogId: task.zpaqCatalogId,
             retryOfTaskId: task.retryOfTaskId, draftPasswordRequired: task.draftPasswordRequired || !!task.password })) },
@@ -176,9 +178,9 @@ export const usePendingDraftStore = defineStore('pendingDrafts', () => {
           outputPath: group.outputPath ?? (hadCompression ? saved.compression.outputDirectory : undefined) })
         group.files.forEach(file => occupied.add(key(file.path))); restored++
       }
-      const extractSources = new Set(tasks.tasks.filter(task => task.type === 'decompression' && task.status === 'pending').map(task => task.sourceFiles.map(key).join('|') + ':' + snapshotKey(task.zpaqSnapshot) + ':' + (task.zpaqCatalogId || '') + ':' + JSON.stringify([...(task.selectedEntries || [])].sort())))
+      const extractSources = new Set(tasks.tasks.filter(task => task.type === 'decompression' && task.status === 'pending').map(task => task.sourceFiles.map(key).join('|') + ':' + snapshotKey(task.zpaqSnapshot) + ':' + (task.zpaqCatalogId || '') + ':' + JSON.stringify([...(task.selectedEntries || [])].sort())+':'+JSON.stringify(task.comparisonSelection||null)))
       for (const item of saved.extraction.items) {
-        const sourceKey = item.sourceFiles.map(key).join('|') + ':' + snapshotKey(item.zpaqSnapshot) + ':' + (item.zpaqCatalogId || '') + ':' + JSON.stringify([...(item.selectedEntries || [])].sort())
+        const sourceKey = item.sourceFiles.map(key).join('|') + ':' + snapshotKey(item.zpaqSnapshot) + ':' + (item.zpaqCatalogId || '') + ':' + JSON.stringify([...(item.selectedEntries || [])].sort())+':'+JSON.stringify(item.comparisonSelection||null)
         if (extractSources.has(sourceKey)) continue
         tasks.addTask({ ...item, id: 'recovered-' + crypto.randomUUID(), type: 'decompression',
           configurationMode: hadExtraction ? 'individual' : item.configurationMode,
