@@ -114,7 +114,7 @@ fn run_command(mut command: std::process::Command, cancelled: Arc<AtomicBool>, o
 /// Capture a content archive, then split resources into real SWM containers.
 /// Only the current, fresh output family is owned by this operation.
 pub fn create_swm(sources: &[String], output: &Path, preserve_paths: bool, method: WimMethod,
-    split_size: u64, cancelled: Arc<AtomicBool>, on_progress: impl Fn(f32)) -> Result<u64> {
+    split_size: u64, cancelled: Arc<AtomicBool>, on_progress: impl Fn(f32, u64)) -> Result<u64> {
     ensure!(matches!(method, WimMethod::Store | WimMethod::Xpress | WimMethod::Lzx), "原生 SWM 仅支持非固实的仅存储、XPRESS 或 LZX；请明确选择方法");
     ensure!(split_size >= 65536, "SWM 目标卷大小至少需要 64 KiB");
     ensure!(output.extension().is_some_and(|e| e.eq_ignore_ascii_case("swm")), "原生 SWM 输出需要以 .swm 结尾");
@@ -125,14 +125,14 @@ pub fn create_swm(sources: &[String], output: &Path, preserve_paths: bool, metho
     let parent = output.parent().unwrap_or_else(|| Path::new("."));
     let temporary = tempfile::Builder::new().prefix(".long-swm-source-").tempdir_in(parent)?;
     let capture = temporary.path().join("source.wim");
-    let bytes = create(sources, &capture, preserve_paths, method, cancelled.clone(), |p| on_progress(p * 0.75))?;
+    let bytes = create(sources, &capture, preserve_paths, method, cancelled.clone(), |p| on_progress(p * 0.75, 0))?;
     let result = (|| {
         ensure!(!cancelled.load(Ordering::Relaxed), CompressionError::Cancelled);
         let mut command = crate::utils::process::command(command_path().context("缺少随附的 WIM 分包编码器")?);
         command.arg("split").arg(&capture).arg(output).arg(format!("{:.9}", split_size as f64 / 1048576.0)).arg("--check")
             .stdout(std::process::Stdio::piped()).stderr(std::process::Stdio::piped());
-        on_progress(0.75);
-        run_command(command, cancelled.clone(), |p| on_progress(0.75 + p * 0.24), "原生 SWM 分包")?;
+        on_progress(0.75, bytes);
+        run_command(command, cancelled.clone(), |p| on_progress(0.75 + p * 0.24, 0), "原生 SWM 分包")?;
         let group = super::swm_volumes::inspect(output)?.context("SWM 编码器未生成有效卷组")?;
         ensure!(group.is_complete, "SWM 编码器生成的卷组不完整");
         Ok(bytes)

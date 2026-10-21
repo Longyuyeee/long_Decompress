@@ -3560,8 +3560,8 @@ impl CompressionService {
             self.emit_log(window, task_id, &format!("创建原生 SWM · {}：先编码内容，再生成资源分包；单个资源过大时成员可能超过目标大小。", options.wim_method.label()), TaskLogSeverity::Info);
             let splitting = std::cell::Cell::new(false);
             let bytes = crate::services::wim_writer::create_swm(sources, Path::new(output), options.preserve_paths.unwrap_or(true), options.wim_method,
-                options.split_size.context("原生 SWM 需要目标卷大小")?, self.cancellation_flag.clone(), |progress| {
-                    if progress >= 0.75 && !splitting.replace(true) { self.emit_compression_stage(window, task_id, "Splitting", None); self.emit_log(window, task_id, "内容编码完成，正在生成原生 SWM 资源分包", TaskLogSeverity::Info); }
+                options.split_size.context("原生 SWM 需要目标卷大小")?, self.cancellation_flag.clone(), |progress, source_bytes| {
+                    if progress >= 0.75 && !splitting.replace(true) { self.emit_progress(window, task_id, progress, None, source_bytes, source_bytes); self.emit_compression_stage(window, task_id, "Splitting", None); self.emit_log(window, task_id, "内容编码完成，正在生成原生 SWM 资源分包", TaskLogSeverity::Info); }
                     self.emit_progress(window, task_id, progress, None, 0, 0);
                 })?;
             self.emit_progress(window, task_id, 0.99, None, bytes, bytes);
