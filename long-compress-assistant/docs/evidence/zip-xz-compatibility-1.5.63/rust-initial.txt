@@ -1,0 +1,24 @@
+running 9 tests
+test services::zip_xz_compatibility_tests::xz1563_plain_edit_preserves_compressed_bytes_method_comments_and_time ... ok
+test services::zip_xz_compatibility_tests::xz1563_password_failure_preserves_original_edits_and_existing_output ... ok
+test services::zip_xz_compatibility_tests::xz1563_stream_empty_read_and_zip_output_alias_are_consistent ... ok
+
+thread 'services::zip_xz_compatibility_tests::xz1563_actual_stream_aligned_padding_and_empty_xz_survive_raw_copy_or_password_save' (98196) panicked at src\services\zip_xz_compatibility_tests.rs:502:9:
+ERROR: There are some data after the end of the payload data : delivery\��ͬ.txt
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::zip_xz_compatibility_tests::xz1563_actual_stream_aligned_padding_and_empty_xz_survive_raw_copy_or_password_save ... FAILED
+test services::zip_xz_compatibility_tests::xz1563_folder_and_zip_content_comparison_reads_real_plain_and_password_bytes ... ok
+test services::zip_xz_compatibility_tests::xz1563_bad_crc_size_and_truncated_stream_never_publish_or_become_content_evidence ... ok
+test services::zip_xz_compatibility_tests::xz1563_numeric_password_material_uses_exact_range_and_detects_missing_or_changed_members ... ok
+test services::zip_xz_compatibility_tests::xz1563_truncated_footer_header_crc_extra_stream_bad_padding_and_forged_size_rejected ... ok
+test services::zip_xz_compatibility_tests::xz1563_encrypted_edit_keeps_method_and_rekeys_with_explicit_encoding ... ok
+
+failures:
+
+failures:
+    services::zip_xz_compatibility_tests::xz1563_actual_stream_aligned_padding_and_empty_xz_survive_raw_copy_or_password_save
+
+test result: FAILED. 8 passed; 1 failed; 0 ignored; 0 measured; 1048 filtered out; finished in 3.02s
+
+error: test failed, to rerun pass `--lib`

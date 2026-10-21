@@ -1,0 +1,4 @@
+running 1 test
+test services::zip_xz_compatibility_tests::xz1563_actual_stream_and_empty_xz_survive_raw_copy_or_password_save ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1056 filtered out; finished in 0.75s

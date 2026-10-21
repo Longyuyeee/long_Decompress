@@ -16,7 +16,7 @@ export interface ZipEditSession extends ZipEditCredentials {
   outputPath: string; busy: boolean; editing: boolean; error: string; taskId?: string; saves: number; operations: ZipStructureOperation[]
   sourceIssue: string; inputIssues: Record<string,string>; retryOfTaskId?: string
 }
-const suggestion = (source: string, count: number) => source.replace(/\.zip$/i, '') + `_已编辑${count > 1 ? count : ''}.zip`
+const suggestion = (source: string, count: number, methods: string[]) => source.replace(/\.zipx?$/i, '') + `_已编辑${count > 1 ? count : ''}.${/\.zipx$/i.test(source)||methods.includes('Xz')?'zipx':'zip'}`
 export const useZipEditStore = defineStore('zipEdit', () => {
   const tasks = useTaskStore(), sessions = ref<Record<string, ZipEditSession>>({})
   const opening = ref(false), preparing = ref(false), openingError = ref<{ source: string; message: string } | null>(null)
@@ -105,7 +105,7 @@ export const useZipEditStore = defineStore('zipEdit', () => {
     try {
       const catalog = await invoke<ZipEditCatalog>('inspect_zip_edit', { sourcePath: source })
       const session: ZipEditSession = { sourcePath: source, catalog:markRaw(catalog), sourcePassword:credentials?.password||'', sourceEncoding:credentials?.encoding, outputMode:'keep',outputPassword:'',outputEncoding:'utf8',sourceIssue:'',inputIssues:{},drafts: [], method: 'deflate', level: 6,
-        operations: [], outputPath: suggestion(source, (current?.saves || 0) + 1), busy: false, editing: true, error: '', saves: current?.saves || 0 }
+        operations: [], outputPath: suggestion(source, (current?.saves || 0) + 1, catalog.methods), busy: false, editing: true, error: '', saves: current?.saves || 0 }
       sessions.value[pathKey(source)] = session
       return sessionFor(source)
     } catch (error) { openingError.value = { source, message: String(error) } }
@@ -206,7 +206,7 @@ export const useZipEditStore = defineStore('zipEdit', () => {
     try {
       if (previous && ['failed','cancelled'].includes(previous.status) && !await tasks.waitForHistoryPersistence(previous.id)) throw new Error('原任务历史尚未保存成功，请先在任务面板重试保存；修改仍保留')
       await tasks.initListeners()
-      tasks.addTask({ id, name: session.drafts.some(row=>row.comparison) ? '对比组包 · '+session.outputPath.split(/[\\/]/).pop() : '编辑另存 · '+(source.split(/[\\/]/).pop()||source), type: 'compression', workloadKind: 'archive', sourceFiles: [source], outputPath: session.outputPath.trim(), format: 'zip',
+      tasks.addTask({ id, name: session.drafts.some(row=>row.comparison) ? '对比组包 · '+session.outputPath.split(/[\\/]/).pop() : '编辑另存 · '+(source.split(/[\\/]/).pop()||source), type: 'compression', workloadKind: 'archive', sourceFiles: [source], outputPath: session.outputPath.trim(), format: /\.zipx$/i.test(session.outputPath.trim())?'zipx':'zip',
         ...(previous && ['failed','cancelled'].includes(previous.status) ? { retryOfTaskId: previous.id } : session.retryOfTaskId ? {retryOfTaskId:session.retryOfTaskId} : {}),
         executionConfig: { schemaVersion: 1, kind: 'archive-edit', outputPath: session.outputPath.trim() } })
       session.taskId = id; tasks.updateTaskStatus(id, 'compressing');await flush()

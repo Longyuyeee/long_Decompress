@@ -1,0 +1,16 @@
+running 1 test
+
+thread 'services::zip_xz_compatibility_tests::xz1563_actual_stream_and_empty_xz_survive_raw_copy_or_password_save' (99456) panicked at src\services\zip_xz_compatibility_tests.rs:502:9:
+ERROR: There are some data after the end of the payload data : delivery\��ͬ.txt
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::zip_xz_compatibility_tests::xz1563_actual_stream_and_empty_xz_survive_raw_copy_or_password_save ... FAILED
+
+failures:
+
+failures:
+    services::zip_xz_compatibility_tests::xz1563_actual_stream_and_empty_xz_survive_raw_copy_or_password_save
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1056 filtered out; finished in 0.64s
+
+error: test failed, to rerun pass `--lib`

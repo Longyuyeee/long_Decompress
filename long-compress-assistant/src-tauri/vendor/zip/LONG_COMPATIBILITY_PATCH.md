@@ -68,3 +68,12 @@ or new memory cap is introduced. Modified source: `src/compression.rs`.
 
 Reference: [7-Zip PpmdZip full-file decoder](https://github.com/ip7z/7zip/blob/main/CPP/7zip/Compress/PpmdZip.cpp)
 requires the end marker, finished range coder and exact input consumption.
+
+## ZIP XZ complete reading (v1.5.63)
+
+Method 95 retains its existing single-XZ-stream decoder and resource behavior.
+It now verifies exact output size and consumes the remaining compressed payload
+through the existing CRC/crypto wrappers. Extra payload, including zero padding
+or a subsequent stream, is explicitly rejected rather than ignored: independent
+7-Zip full ZIP decoding rejects a padded method-95 payload. Empty reads do not initialize the stream. No
+writer or dependency change. Modified source: `src/compression.rs`.
