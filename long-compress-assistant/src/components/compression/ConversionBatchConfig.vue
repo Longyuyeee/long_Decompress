@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import CompressionPurposePicker from './CompressionPurposePicker.vue'
+import { conversionPurposePatch, type PurposePatch } from '@/utils/compressionPurpose'
 import { computed, ref, watch } from 'vue'
 import { open } from '@tauri-apps/api/dialog'
 import HelpHint from '@/components/ui/HelpHint.vue'
@@ -23,13 +25,26 @@ const changePassword = ref(false), password = ref(''), changeSourcePassword = re
 const changeSplit = ref(false), splitMiB = ref(0), hiddenNames = ref('keep'), recovery = ref('keep')
 const recoveryVolumes = ref('keep'), zipMethod = ref('keep')
 const wimMethod = ref('keep')
+const zipSplitMode = ref<'numeric' | 'standard'>('numeric')
+const changeSplitMode = ref(false)
+function fillPurpose(patch: PurposePatch) {
+  const next = conversionPurposePatch(patch)
+  format.value = next.format || 'keep'; level.value = next.level === undefined ? 'keep' : String(next.level)
+  if (next.zipMethod !== undefined) zipMethod.value = next.zipMethod
+  if (next.encryptFilenames !== undefined) hiddenNames.value = next.encryptFilenames ? 'yes' : 'no'
+  if (next.password !== undefined) { changePassword.value = true; password.value = next.password }
+  if (next.splitMiB !== undefined) { changeSplit.value = true; splitMiB.value = next.splitMiB }
+  if (next.zipSplitMode !== undefined) { changeSplitMode.value = true; zipSplitMode.value = next.zipSplitMode }
+}
+
 watch(format, () => { if (format.value === 'swm' && !['keep','store','xpress','lzx'].includes(wimMethod.value)) wimMethod.value = 'keep' })
 const sourceEncoding = ref('keep'), targetEncoding = ref('keep')
 const defaults = ref({ ...store.defaults })
 const keep = { value: 'keep', label: '保持各自设置' }
-const changed = computed(() => wimMethod.value !== 'keep' || sourceEncoding.value !== 'keep' || targetEncoding.value !== 'keep' || format.value !== 'keep' || zipMethod.value !== 'keep' || level.value !== 'keep' || destination.value !== 'keep' || changePassword.value || changeSourcePassword.value || changeSplit.value || hiddenNames.value !== 'keep' || recovery.value !== 'keep' || recoveryVolumes.value !== 'keep')
+const changed = computed(() => changeSplitMode.value || wimMethod.value !== 'keep' || sourceEncoding.value !== 'keep' || targetEncoding.value !== 'keep' || format.value !== 'keep' || zipMethod.value !== 'keep' || level.value !== 'keep' || destination.value !== 'keep' || changePassword.value || changeSourcePassword.value || changeSplit.value || hiddenNames.value !== 'keep' || recovery.value !== 'keep' || recoveryVolumes.value !== 'keep')
 const valid = computed(() => (mode.value === 'defaults' || changed.value) && (destination.value !== 'custom' || !!directory.value.trim()) && (!changeSplit.value || Number.isFinite(splitMiB.value) && splitMiB.value >= 0))
 function show(nextMode: 'selected' | 'defaults') {
+  changeSplitMode.value = false; zipSplitMode.value = 'numeric'
   mode.value = nextMode; format.value = level.value = destination.value = hiddenNames.value = recovery.value = 'keep'
   recoveryVolumes.value = zipMethod.value = 'keep'
   wimMethod.value = 'keep'
@@ -61,6 +76,7 @@ async function apply() {
     ...(destination.value === 'keep' ? {} : { outputDirectory: destination.value === 'source' ? '' : directory.value.trim() }),
     ...(changePassword.value ? { password: password.value } : {}),
     ...(changeSourcePassword.value ? { sourcePassword: sourcePassword.value } : {}),
+    ...(changeSplitMode.value ? { zipSplitMode: zipSplitMode.value } : {}),
     ...(changeSplit.value ? { splitMiB: splitMiB.value } : {}),
     ...(hiddenNames.value === 'keep' ? {} : { encryptFilenames: hiddenNames.value === 'yes' }),
     ...(recovery.value === 'keep' ? {} : { rarRecoveryPercent: Number(recovery.value) }),
@@ -90,6 +106,7 @@ async function apply() {
         <label class="block text-sm">输出目录<input v-model="defaults.outputDirectory" class="conversion-input mt-1 w-full" placeholder="留空放在各自源文件旁" /></label>
       </template>
       <template v-else>
+        <CompressionPurposePicker v-if="!hasUpdates" staged :key="String(visible)" @apply="fillPurpose" />
         <p v-if="hasUpdates" class="rounded-lg bg-primary/5 p-3 text-xs leading-relaxed text-muted">ZPAQ 更新任务沿用原格式和原密码，可统一强度、分卷、保存目录与原包密码；添加内容和归档内位置在各条目展开编辑。</p>
         <p class="text-xs text-muted">只修改指定参数；名称、目录、密码等未指定的配置保持各自原值。</p>
         <p v-if="format !== 'keep' && (!supportsNativePassword(format) || !supportsArchiveSplit(format))" class="text-xs text-amber-600">此格式不支持的密码或分卷选项会关闭，其余配置保留。</p>
@@ -103,6 +120,7 @@ async function apply() {
           <label v-if="!updatesOnly" class="min-w-0 text-sm">RAR 恢复保护<ThemedSelect v-model="recovery" :options="[keep, {value:'0',label:'关闭'}, {value:'3',label:'3%'}, {value:'5',label:'5%'}, {value:'10',label:'10%'}]" test-id="conversion-batch-rar-recovery" floating /></label>
           <label v-if="!updatesOnly" class="min-w-0 text-sm">RAR 分包恢复卷<ThemedSelect v-model="recoveryVolumes" :options="[keep, ...[0,1,2,3,5,10].map(value => ({value:String(value),label:value ? `${value} 个 .rev 恢复卷` : '不生成恢复卷'}))]" test-id="conversion-batch-rar-recovery-volumes" floating /></label>
           <label v-if="!updatesOnly" class="min-w-0 text-sm">文件名加密<ThemedSelect v-model="hiddenNames" :options="[keep, { value: 'yes', label: '启用（7Z/RAR，需要新包密码）' }, { value: 'no', label: '关闭' }]" floating /></label>
+          <label v-if="changeSplitMode && ['keep','zip','zipx'].includes(format)" class="min-w-0 text-sm">ZIP 卷型<ThemedSelect v-model="zipSplitMode" :options="[{value:'numeric',label:'数字切卷'},{value:'standard',label:'标准 ZIP 分卷'}]" test-id="conversion-batch-zip-split-mode" floating /></label>
           <div class="space-y-2 text-sm"><label class="flex items-center gap-2"><input v-model="changeSplit" type="checkbox" />修改分卷大小</label><input v-if="changeSplit" v-model.number="splitMiB" type="number" min="0" class="conversion-input w-full" placeholder="0 表示不分卷" /></div>
           <div class="space-y-2 text-sm"><label class="flex items-center gap-2"><input v-model="changeSourcePassword" type="checkbox" />填写共用原包密码</label><input v-if="changeSourcePassword" v-model="sourcePassword" type="password" autocomplete="off" class="conversion-input w-full" placeholder="原包未加密可留空" /></div>
           <div v-if="!updatesOnly" class="space-y-2 text-sm"><label class="flex items-center gap-2"><input v-model="changePassword" type="checkbox" />修改新包密码</label><input v-if="changePassword" v-model="password" type="password" autocomplete="new-password" class="conversion-input w-full" placeholder="留空则新包不加密" /></div>

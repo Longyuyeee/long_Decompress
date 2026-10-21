@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import CompressionPurposePicker from '@/components/compression/CompressionPurposePicker.vue'
+import type { PurposePatch } from '@/utils/compressionPurpose'
 import { computed, ref, watch } from 'vue'
 import { open } from '@tauri-apps/api/dialog'
 import HelpHint from '@/components/ui/HelpHint.vue'
@@ -21,6 +23,14 @@ const format = ref('keep')
 const level = ref('keep')
 const zipMethod = ref('keep')
 const wimMethod = ref('keep')
+const purposeExtras = ref<BatchConfigPatch>({})
+function fillPurpose(patch: PurposePatch) {
+  const { format: nextFormat, level: nextLevel, zipMethod: method, ...extras } = patch
+  format.value = nextFormat || 'keep'; level.value = nextLevel === undefined ? 'keep' : String(nextLevel)
+  if (method !== undefined) zipMethod.value = method
+  purposeExtras.value = { ...purposeExtras.value, ...extras }
+}
+
 watch(format, () => { if (format.value === 'swm' && !['keep','store','xpress','lzx'].includes(wimMethod.value)) wimMethod.value = 'keep' })
 const recovery = ref('keep')
 const recoveryVolumes = ref('keep')
@@ -33,11 +43,12 @@ const keep = { value: 'keep', label: '保持各自设置' }
 const formats = [keep, { value: 'swm', label: 'SWM · 原生分包（无加密）' }, { value: 'wim', label: 'WIM（无加密）' }, { value: 'esd', label: 'ESD · 固实（无加密）' }, { value: 'zpaq', label: 'ZPAQ' }, { value: 'zip', label: 'ZIP' }, { value: 'zipx', label: 'ZIPX（XZ）' }, { value: '7z', label: '7Z' }, { value: 'rar', label: 'RAR（需要 WinRAR）' }, { value: 'tar.lz', label: 'TAR.LZIP（无加密）' }, { value: 'lzma', label: 'LZMA（单文件，无加密）' }, { value: 'tar.lzma', label: 'TAR.LZMA（多文件，无加密）' }, { value: 'lzma.aes', label: 'LZMA.AES（单文件加密）' }, { value: 'tar.lzma.aes', label: 'TAR.LZMA.AES（多文件加密）' }]
 const levels = [keep, ...Array.from({ length: 10 }, (_, value) => ({ value: String(value), label: `${value}${value === 0 ? ' · 最低强度（兼容 ZIP 仅存储）' : value === 9 ? ' · 最小体积' : value === 1 ? ' · 更快' : ''}` }))]
 const subfolders = [keep, { value: 'yes', label: '创建同名子文件夹' }, { value: 'no', label: '直接放入输出目录' }]
-const hasChanges = computed(() => destination.value !== 'keep' || (props.mode === 'compression'
+const hasChanges = computed(() => Object.keys(purposeExtras.value).length > 0 || destination.value !== 'keep' || (props.mode === 'compression'
     ? format.value !== 'keep' || wimMethod.value !== 'keep' || zipMethod.value !== 'keep' || zipPasswordEncoding.value !== 'keep' || level.value !== 'keep' || recovery.value !== 'keep' || recoveryVolumes.value !== 'keep' : subfolder.value !== 'keep' || zipPasswordEncoding.value !== 'keep'))
 const canApply = computed(() => hasChanges.value && (destination.value !== 'custom' || !!outputDirectory.value.trim()))
 function openConfiguration() {
   editingSession++
+  purposeExtras.value = {}
   format.value = level.value = subfolder.value = recovery.value = 'keep'
   recoveryVolumes.value = zipMethod.value = 'keep'
   wimMethod.value = 'keep'
@@ -46,6 +57,7 @@ function openConfiguration() {
   outputDirectory.value = applyError.value = ''
   visible.value = true
 }
+watch(visible, value => { if (!value) purposeExtras.value = {} })
 watch(() => props.count, count => { if (!count) visible.value = false })
 function setOutput(path: string) { outputDirectory.value = path; destination.value = 'custom' }
 async function chooseOutput() {
@@ -58,11 +70,11 @@ async function chooseOutput() {
 }
 function apply() {
   if (!canApply.value || applying.value) return
-  const patch: BatchConfigPatch = {}
+  const patch: BatchConfigPatch = { ...purposeExtras.value }
   if (destination.value !== 'keep') patch.outputDirectory = destination.value === 'source' ? '' : outputDirectory.value.trim()
   if (props.mode === 'compression') {
     if (formats.some(option => option.value === format.value) && format.value !== 'keep') patch.format = format.value as BatchConfigPatch['format']
-    if (zipMethod.value === 'lzma' || zipMethod.value === 'ppmd' || zipMethod.value === 'bzip2' || zipMethod.value === 'zstd' || zipMethod.value === 'deflate') patch.zipMethod = zipMethod.value
+    if ((format.value === 'keep' || format.value === 'zip') && ['lzma','ppmd','bzip2','zstd','deflate'].includes(zipMethod.value)) patch.zipMethod = zipMethod.value as BatchConfigPatch['zipMethod']
     if (wimMethod.value !== 'keep' && (format.value === 'keep' || ['wim','swm'].includes(format.value))) patch.wimMethod = wimMethod.value as 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
     if (level.value !== 'keep' && !['wim','esd','swm'].includes(format.value)) patch.level = Number(level.value)
     if (recovery.value !== 'keep') patch.rarRecoveryPercent = Number(recovery.value)
@@ -77,7 +89,7 @@ function apply() {
   emit('apply', patch, error => {
     applying.value = false
     if (error) applyError.value = error
-    else visible.value = false
+    else { visible.value = false; purposeExtras.value = {} }
   })
 }
 </script>
@@ -94,6 +106,9 @@ function apply() {
   </section>
   <Modal v-model:visible="visible" :title="mode === 'compression' ? '修改所选压缩配置' : '修改所选解压配置'" :description="`已选 ${count} 项任务`" icon="pi pi-sliders-h" size="md" cancel-text="关闭批量配置" :show-close-button="!applying" :close-on-backdrop="!applying" :close-on-escape="!applying">
     <fieldset :disabled="applying" class="space-y-4 min-w-0" data-testid="batch-config-fields">
+      <CompressionPurposePicker v-if="mode === 'compression'" :key="editingSession" staged @apply="fillPurpose" />
+      <p v-if="purposeExtras.password" class="text-xs text-muted">将统一所选任务的新包密码；可重新选择加密方案填写，或取消弹窗。</p>
+      <p v-if="purposeExtras.splitArchive" class="text-xs text-muted">将设置 {{ purposeExtras.splitSize }} MiB 标准 ZIP 分卷；可重新选择分包方案调整大小。</p>
       <p v-if="format === 'esd'" class="text-xs text-muted" data-testid="batch-esd-hint">ESD 使用 LZMS 固实归档，不支持原生密码，编码更耗内存和时间；保留各条分卷大小。</p>
       <p v-if="format === 'wim'" class="text-xs text-muted" data-testid="batch-wim-hint">WIM 可选仅存储、XPRESS、LZX、LZMS 或固实压缩，不使用压缩强度；保留各条分卷大小。带密码的任务需先明确处理密码，应用失败时原配置保持。</p>
       <p v-if="format === 'tar.lz'" class="text-xs text-muted">TAR.LZIP 无密码加密；保留各自的数字分卷设置，接收方需集齐全部卷。</p>

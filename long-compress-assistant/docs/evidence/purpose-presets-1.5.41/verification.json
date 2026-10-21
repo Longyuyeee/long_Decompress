@@ -1,0 +1,37 @@
+{
+  "version": "1.5.41",
+  "baseCommit": "0ca9bc99613697246c67a0657333a60e697a57e8",
+  "binarySha256": "dddc4684bd7451a2e62f74370abf0ac492d86a68385b10202706a9b232037ca1",
+  "flags": {
+    "frontend": "VITE_DESKTOP_E2E=1",
+    "native": "custom-protocol,desktop-e2e"
+  },
+  "sourceHashes": {
+    "src/utils/compressionPurpose.ts": "86186b728916aa2abda2f6099c1903e7de46878a2b786edbce5731e9616547ce",
+    "src/components/compression/CompressionPurposePicker.vue": "9b1d0722f5bc84d0edafcae945ba79275bf8364711656835992746839d7c06e8",
+    "src/components/compression/CompressionSettingsPanel.vue": "224ce825f613cbf6cb01ec0a626c76146981b425aef72845fb213a40e4e1bc92",
+    "src/components/compression/ConversionSettingsFields.vue": "22516aa3a15e33f6d5f6452525d1eaa66637cc0baa29e87212eac2fe0d070b05",
+    "src/components/compression/ConversionBatchConfig.vue": "97c3bdd790c5bd4335c66f4572ec7138d04071e5864b209cdee0e2f10c260eec",
+    "src/components/tasks/BatchConfigBar.vue": "b8485a767ac957525be701df3a2eda8fd87be0e4c79aa2f2cd1342890ce5e961",
+    "src/stores/compression.ts": "00b0d2d6a28938f571d3411ba95ae94df09da7d823705fb20a95bee12bbe2c09",
+    "src/types/batchConfig.ts": "89a4fa3d4c356221e79a1afdd4f57002878e9e673e2072a80653ee920114b8a4",
+    "package.json": "9205fd446a0490dd6aa6db4858f38a060aaeaf353c6ad26911e2e7a36287df56",
+    "src-tauri/Cargo.toml": "52f8aea2edeea21bc0d87baf5ceadaae1d7df6a0effc7270cd4759fac3106b2d",
+    "src-tauri/tauri.conf.json": "a8c009fcddae374db6006cadd208f242fc83478cb95b7986a3ca897444261b07"
+  },
+  "frontendChecks": {
+    "files": 6,
+    "passed": 159,
+    "distinctPassed": 160
+  },
+  "desktopChecks": 5,
+  "supplement": {
+    "reason": "Final review preserved already staged password/volumes when filling another purpose, and exposes the staged ZIP volume type for editing. Existing desktop evidence retained; no native or layout change to its exercised paths.",
+    "test": "CompressionPurpose1541: retains already filled",
+    "passed": 1,
+    "sourceHashes": {
+      "src/components/tasks/BatchConfigBar.vue": "9bccb798f71b3ea15d04c3b2079e023bb232531158848ffdbe5a8ae828ba0fc9",
+      "src/components/compression/ConversionBatchConfig.vue": "d3c2ff6f5159616d76b18e38e10b3f28a975fe9a4d7440dd5615f2dbe962fa4b"
+    }
+  }
+}

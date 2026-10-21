@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CompressionPurposePicker from './CompressionPurposePicker.vue'
 import WimMethodField from '@/components/compression/WimMethodField.vue'
 import ZipMethodField from '@/components/compression/ZipMethodField.vue'
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
@@ -344,6 +345,7 @@ const closeVaultPasswordsAfterFocus = () => {
 
 <template>
   <div class="horizontal-settings flex min-w-0 max-w-full flex-col gap-4 overflow-x-hidden" :class="{ compact }">
+    <CompressionPurposePicker :has-password="!!compressionOptions.password" :allow-split="allowSplitArchive" @apply="compressionOptions = { ...compressionOptions, ...$event }" />
     <!-- 第一行：核心必填参数 -->
     <div class="settings-core-grid">
       <!-- 格式选择 -->

@@ -19,7 +19,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 工作区 | 用户可以做什么 |
 | --- | --- |
 | 解压中心 | 导入多包、配置目录与子文件夹、使用密码候选、处理文件冲突、查看阶段和结果 |
-| 压缩中心 | 文件/文件夹/组归档、ZIP 方法选择（Deflate/Zstandard/BZip2/PPMd/LZMA）、ZIP/7Z/RAR 与十七种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码、数字分卷与保留历史的增量更新、WIM 存储/XPRESS/LZX/LZMS 与固实 ESD、数字分卷、SWM 原生资源分包、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
+| 压缩中心 | 按用途快捷配置（兼容分享/体积优先/加密分享/按大小分包）、文件/文件夹/组归档、ZIP 方法选择（Deflate/Zstandard/BZip2/PPMd/LZMA）、ZIP/7Z/RAR 与十七种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码、数字分卷与保留历史的增量更新、WIM 存储/XPRESS/LZX/LZMS 与固实 ESD、数字分卷、SWM 原生资源分包、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
 | 特殊压缩 | JPEG/PNG/WebP 图片编码与缩放、视频压缩预设、PDF 分析与结构优化 |
 | 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、文本/图片预览与选择性解压；支持普通压缩流、自有 AES 密码卷组、原生 SWM 多镜像及 ZPAQ 历史快照对比与变化提取 |
 | 密码保险箱 | 本地加密保存常用解压密码，分类、搜索、导入导出与使用统计 |
@@ -92,7 +92,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.5.40 · 原生 SWM 创建**。新增仅存储、XPRESS、LZX 非固实资源分包，生成 name.swm、name2.swm 等整组结果；接通密码原包转换、任意成员读取和补卷接续，保留单条展开、多选弹窗与等宽/窄窗布局。单个资源可能超过目标卷大小，无原生密码，不保证系统部署。[中文说明](docs/RELEASE_NOTES_1.5.40.md) · [范围与记录](docs/NATIVE_SWM_CREATE_FREEZE_1.5.40.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.40)。下一步按[近期排期](docs/ARCHIVE_ROADMAP_1.5.40_TO_1.5.43.md)推进 v1.5.41 用途配置，后续按[五模块分阶段路线](docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)执行。
+**v1.5.41 · 按用途配置压缩**。兼容分享、体积优先、加密分享、按大小分包四种方案，在原配置位置显示实际参数并确认应用；密码、目录和原包凭据等未指定项保留。压缩与转换共用，单条展开、多选弹窗、自然继承和等宽/窄窗布局保持。[中文说明](docs/RELEASE_NOTES_1.5.41.md) · [范围与记录](docs/PURPOSE_PRESETS_FREEZE_1.5.41.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.41)。下一步按[近期排期](docs/ARCHIVE_ROADMAP_1.5.40_TO_1.5.43.md)推进 v1.5.42 失败纠正和 v1.5.43 批处理结果，再进入[五模块分阶段路线](docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)。
+
+**v1.5.40 · 原生 SWM 创建**。新增仅存储、XPRESS、LZX 非固实资源分包，生成 name.swm、name2.swm 等整组结果；接通密码原包转换、任意成员读取和补卷接续，保留单条展开、多选弹窗与等宽/窄窗布局。单个资源可能超过目标卷大小，无原生密码，不保证系统部署。[中文说明](docs/RELEASE_NOTES_1.5.40.md) · [范围与记录](docs/NATIVE_SWM_CREATE_FREEZE_1.5.40.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.40)。用途配置已由上方 v1.5.41 接续，后续进度以最新记录为准。
 
 **v1.5.39 · 固实 WIM / ESD**。WIM 增加 LZMS 固实选择，ESD 固定真实固实归档；数字分卷、密码原包双向转换、浏览预览、提取与补卷接续。方法随配置组、模板、草稿、历史和多选保存，原交互与等宽/窄窗布局保持。[中文说明](docs/RELEASE_NOTES_1.5.39.md) · [范围与记录](docs/WIM_SOLID_FREEZE_1.5.39.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.39)。原生 SWM 创建已由上方 v1.5.40 接续，当前进度以最新记录为准。 [近期排期 v1.5.40～43](docs/ARCHIVE_ROADMAP_1.5.40_TO_1.5.43.md) · [五模块分阶段路线与主线回归 v1.5.44～59](docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)。
 
