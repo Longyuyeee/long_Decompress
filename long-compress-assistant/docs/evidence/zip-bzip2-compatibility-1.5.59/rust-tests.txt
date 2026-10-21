@@ -8,4 +8,3 @@ test services::zip_bzip2_compatibility_tests::bzip21559_folder_and_zip_content_c
 test services::zip_bzip2_compatibility_tests::bzip21559_encrypted_edit_keeps_method_and_rekeys_with_explicit_encoding ... ok
 
 test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 1015 filtered out; finished in 2.41s
-

@@ -10,4 +10,4 @@ Bzip2 ZIP 现在能继续整理、核对和取回资料，补齐压缩后进入�
 
 本版扩展的是方法 12 在现有工作区中的兼容，不是新增 .bz2 格式或原生分卷编辑。原包不覆盖，分卷可取材并生成独立 ZIP；不承诺损坏包修复、全元数据无损改写或全部外部工具兼容。
 
-[实施与范围](ARCHIVE_ROADMAP_1.5.59.md) · [封板记录](ZIP_BZIP2_COMPATIBILITY_FREEZE_1.5.59.md) · [下一版计划](ARCHIVE_ROADMAP_1.5.60.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.59)
+[实施与范围](https://github.com/Longyuyeee/long_Decompress/blob/v1.5.59/long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.59.md) · [封板记录](https://github.com/Longyuyeee/long_Decompress/blob/v1.5.59/long-compress-assistant/docs/ZIP_BZIP2_COMPATIBILITY_FREEZE_1.5.59.md) · [下一版计划](https://github.com/Longyuyeee/long_Decompress/blob/v1.5.59/long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.60.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.59)
