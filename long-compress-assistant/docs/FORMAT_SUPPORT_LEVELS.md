@@ -1,6 +1,8 @@
 # 归档格式支持等级（当前权威口径）
 
-**v1.5.60 ZIP LZMA 跨流程兼容**：方法 14 的独立普通/AES/ZipCrypto ZIP 纳入编辑、另存与资料对比；原方法保留、密码条目重编码，新增/替换和组包仍明确使用 Deflate/Store。实际内容核对、精确取回、完整数字/标准卷取材、明确密码编码及草稿/历史沿原引用流程。按 ZIP 标志验证 EOS 和精确大小，合法无 EOS 按大小读取；异常属性、截断、大小/CRC 问题不生成完整结论或新包，小文件保持原字典占用。不是 .lzma 或 ZIPX（XZ）扩展，不做原生分卷编辑或损坏修复。见[说明](RELEASE_NOTES_1.5.60.md)与[封板](ZIP_LZMA_COMPATIBILITY_FREEZE_1.5.60.md)；下一步 [v1.5.61 ZIP Zstandard 跨流程兼容](ARCHIVE_ROADMAP_1.5.61.md)，仅规划未开发。
+**v1.5.61 ZIP Zstandard 跨流程兼容**：方法 93 的独立普通/AES/ZipCrypto ZIP 纳入编辑、另存与资料对比；普通条目保留原压缩数据，密码条目沿原方法重编码，新增/替换及组包明确 Deflate/Store。真实内容核对、精确取回、完整数字/标准卷取材、明确密码编码及草稿/历史沿原引用流程。完整串联帧、实际大小/CRC 与密码校验保持，字典、窗口及截断错误有处理提示；不导入外部字典，不扩展旧编号 20 或 .zst，不做原生分卷回写或损坏修复。见[说明](RELEASE_NOTES_1.5.61.md)与[封板](ZIP_ZSTD_COMPATIBILITY_FREEZE_1.5.61.md)；下一步 [v1.5.62 ZIP PPMd 跨流程兼容](ARCHIVE_ROADMAP_1.5.62.md)，仅规划未开发。
+
+**v1.5.60 ZIP LZMA 跨流程兼容**：方法 14 的独立普通/AES/ZipCrypto ZIP 纳入编辑、另存与资料对比；原方法保留、密码条目重编码，新增/替换和组包仍明确使用 Deflate/Store。实际内容核对、精确取回、完整数字/标准卷取材、明确密码编码及草稿/历史沿原引用流程。按 ZIP 标志验证 EOS 和精确大小，合法无 EOS 按大小读取；异常属性、截断、大小/CRC 问题不生成完整结论或新包，小文件保持原字典占用。不是 .lzma 或 ZIPX（XZ）扩展，不做原生分卷编辑或损坏修复。见[说明](RELEASE_NOTES_1.5.60.md)与[封板](ZIP_LZMA_COMPATIBILITY_FREEZE_1.5.60.md)；后续方法 93 已由上方 v1.5.61 接续。
 
 **v1.5.59 Bzip2 ZIP 跨流程兼容**：方法 12 的独立普通/AES/ZipCrypto ZIP 可进入编辑与另存，保留条目沿原方法（未加密保留原压缩数据，密码条目重编码），新增/替换仍明确选择 Deflate/Store。文件夹↔ZIP、ZIP↔ZIP 对比、实际 SHA-256、精确取回及补充组包纳入 Bzip2，复用明确密码编码和完整数字/标准卷来源；原生分卷编辑仍不支持。编辑核对真实读取大小/CRC；坏条目不发布，内容核对仅将该项标为未完成。草稿/历史/失败接续沿原精确引用，密码仅会话。组包重新按所选方法写出独立 ZIP，不保证全元数据无损。见[说明](RELEASE_NOTES_1.5.59.md)与[封板](ZIP_BZIP2_COMPATIBILITY_FREEZE_1.5.59.md)；下一步 [v1.5.60 ZIP LZMA 跨流程兼容](ARCHIVE_ROADMAP_1.5.60.md)，尚未开发。
 

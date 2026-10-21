@@ -45,3 +45,13 @@ small-file dictionary clamp, without adding a new dictionary/memory limit.
 CRC, AES/ZipCrypto wrapping and method-14 writer framing remain unchanged.
 Modified additional source: `src/compression.rs`; the private read helpers carry
 flags also when `legacy-zip` is disabled. No product dependency is added.
+
+## ZIP Zstandard error context (v1.5.61)
+
+The existing method-93 streaming decoder continues through complete concatenated
+frames, retaining its default window bound, frame/checksum validation and strict
+CRC/AES wrappers. Read errors now include actionable context for missing external
+dictionaries, oversized windows and incomplete frames, preserving the I/O kind
+and original detail. Empty reads do not consume input. Method 20 is unchanged;
+no new codec, memory limit or dependency is introduced. Modified source:
+`src/compression.rs`.

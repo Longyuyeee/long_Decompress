@@ -325,9 +325,9 @@ fn read_zip(
         ensure!(
             matches!(
                 entry.compression(),
-                zip_aes::CompressionMethod::Stored | zip_aes::CompressionMethod::Deflated | zip_aes::CompressionMethod::Bzip2 | zip_aes::CompressionMethod::Lzma
+                zip_aes::CompressionMethod::Stored | zip_aes::CompressionMethod::Deflated | zip_aes::CompressionMethod::Bzip2 | zip_aes::CompressionMethod::Lzma | zip_aes::CompressionMethod::Zstd
             ),
-            "资料对比支持 Store/Deflate/Bzip2/LZMA ZIP；条目 {} 使用 {:?}，请使用原浏览器浏览/提取", entry.name(), entry.compression()
+            "资料对比支持 Store/Deflate/Bzip2/LZMA/Zstandard ZIP；条目 {} 使用 {:?}，请使用原浏览器浏览/提取", entry.name(), entry.compression()
         );
         ensure!(
             entry

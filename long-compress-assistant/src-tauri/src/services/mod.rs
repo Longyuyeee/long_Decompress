@@ -162,3 +162,6 @@ mod zip_bzip2_compatibility_tests;
 
 #[cfg(test)]
 mod zip_lzma_compatibility_tests;
+
+#[cfg(test)]
+mod zip_zstd_compatibility_tests;
