@@ -483,6 +483,7 @@ async (tasks, _, onCleanup) => {
                     </div>
 
                     <div v-if="task.type === 'decompression'" class="space-y-3.5">
+                      <div v-if="task.librarySourceId" data-testid="decompression-library-selection" class="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs leading-relaxed"><strong class="text-primary">资料库所选 {{ task.selectedEntries?.length }} 个文件</strong><p class="text-muted mt-1">{{ task.libraryKeepStructure === false ? '平铺文件' : '保留包内目录' }} · {{ task.libraryConflictPolicy === 'skip' ? '同名跳过' : '同名自动改名' }}</p><details class="mt-2"><summary class="cursor-pointer text-muted">查看所选范围</summary><p v-for="path in task.selectedEntries" :key="path" class="break-all mt-1">{{ path }}</p></details><a href="#/library" class="inline-block mt-2 text-primary underline">返回资料库处理来源或重新选择</a></div>
                       <DraftRecoveryNotice v-if="task.status === 'pending'" :sources="task.sourceFiles.map(path => ({ path, issue: task.sourceIssue }))" :needs-password="task.draftPasswordRequired"
                         @replace="(index, path) => { task.sourceFiles[index] = path; task.name = path.split(/[\\/]/).pop() || path; task.sourceIssue = undefined; task.format = undefined }"
                         @password="task.password = $event; task.draftPasswordRequired = false" />

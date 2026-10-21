@@ -162,6 +162,10 @@ pub struct CompressionOptions {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecompressOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub library_source_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub library_revision: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zpaq_snapshot: Option<ZpaqSnapshot>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zpaq_catalog_id: Option<String>,
@@ -230,6 +234,8 @@ fn default_true() -> bool {
 impl Default for DecompressOptions {
     fn default() -> Self {
         Self {
+            library_source_id: None,
+            library_revision: None,
             zpaq_snapshot: None,
             zpaq_catalog_id: None,
             zip_password_encoding: None,

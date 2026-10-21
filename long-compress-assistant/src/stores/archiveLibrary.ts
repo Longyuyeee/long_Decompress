@@ -1,11 +1,15 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
-import type { LibrarySource, LibraryHit, LibraryScan, LibraryResults, LibraryCredentials } from '@/types/archiveLibrary'
+import type { LibrarySource, LibraryHit, LibraryScan, LibraryResults, LibraryCredentials, LibraryOrganizationState, LibrarySearchFilter } from '@/types/archiveLibrary'
 
 export const useArchiveLibraryStore = defineStore('archiveLibrary', () => {
   const sources = ref<LibrarySource[]>([])
   const hits = ref<LibraryHit[]>([])
+  const organization = ref<LibraryOrganizationState>({ sources: [], searches: [] })
+  const tag = ref(''), favoritesOnly = ref(false)
+  const workspace = ref({ expanded: '', sourcePage: 1, sourceSearch: '', scrollTop: 0 })
+  const tags = computed(() => [...new Set(organization.value.sources.flatMap(row => row.tags))].sort((a,b) => a.localeCompare(b)))
   const query = ref(''), sourceId = ref(''), category = ref('all'), page = ref(1), total = ref(0)
   const error = ref(''), searchError = ref(''), notice = ref('')
   const loading = ref(false), searching = ref(false), indexing = ref(false), scanning = ref(false)
@@ -19,11 +23,38 @@ export const useArchiveLibraryStore = defineStore('archiveLibrary', () => {
   let initialized = false, initialization: Promise<void> | undefined, searchSequence = 0, scanId = ''
   const explain = (reason: unknown) => String(reason).replace(/^Error:\s*/, '')
 
+  const workspaceKey = 'long-decompress-library-search-v1'
+  try {
+    const saved = JSON.parse(localStorage.getItem(workspaceKey) || 'null')
+    if (saved && typeof saved.query === 'string' && saved.query.length <= 512) {
+      query.value=saved.query; sourceId.value=typeof saved.sourceId==='string'?saved.sourceId:''; category.value=typeof saved.category==='string'?saved.category:'all'; tag.value=typeof saved.tag==='string'?saved.tag:''; favoritesOnly.value=saved.favoritesOnly===true; page.value=Number.isInteger(saved.page)&&saved.page>0?saved.page:1
+      if(saved.workspace) { const w=saved.workspace; workspace.value={expanded:typeof w.expanded==='string'?w.expanded:'',sourceSearch:typeof w.sourceSearch==='string'?w.sourceSearch:'',sourcePage:Number.isInteger(w.sourcePage)&&w.sourcePage>0?w.sourcePage:1,scrollTop:typeof w.scrollTop==='number'?Math.max(0,w.scrollTop):0} }
+    }
+  } catch { /* A missing or old view preference does not block the library. */ }
+  function filters(): LibrarySearchFilter { return { query:query.value,sourceId:sourceId.value,category:category.value,tag:tag.value,favoritesOnly:favoritesOnly.value,page:page.value } }
+  watch(() => JSON.stringify({ ...filters(), workspace:workspace.value }), value => { try { localStorage.setItem(workspaceKey,value) } catch { /* View position is optional. */ } })
+  async function loadOrganization() { const value=await invoke<LibraryOrganizationState>('library_organization'); organization.value=value || {sources:[],searches:[]} }
+  const labels = (id:string) => organization.value.sources.find(row=>row.sourceId===id) || {sourceId:id,favorite:false,tags:[]}
+  async function organize(id:string,values:{favorite:boolean;tags:string[]}) {
+    try { organization.value=await invoke('library_organize',{value:{sourceId:id,...values}}); await search(); return true }
+    catch(reason) {error.value=explain(reason);return false}
+  }
+  async function saveSearch(name:string) {
+    try {organization.value=await invoke('library_save_search',{name,filters:{...filters(),page:1}});notice.value='常用搜索已保存，同名条件会更新';return true}
+    catch(reason){error.value=explain(reason);return false}
+  }
+  async function deleteSearch(id:string) {try{organization.value=await invoke('library_delete_search',{id});return true}catch(reason){error.value=explain(reason);return false}}
+  function applySearch(id:string) {
+    const saved=organization.value.searches.find(row=>row.id===id);if(!saved)return
+    if(saved.filters.sourceId&&!sources.value.some(row=>row.id===saved.filters.sourceId)){error.value='这份常用搜索的来源已移出资料库，请重新选择来源后保存条件';return}
+    query.value=saved.filters.query;sourceId.value=saved.filters.sourceId;category.value=saved.filters.category;tag.value=saved.filters.tag||'';favoritesOnly.value=saved.filters.favoritesOnly===true;page.value=1
+    void search()
+  }
   async function search() {
     const sequence = ++searchSequence
     searching.value = true; searchError.value = ''
     try {
-      const value = await invoke<LibraryResults>('library_search', { request: { query: query.value, sourceId: sourceId.value, category: category.value, page: page.value } })
+      const value = await invoke<LibraryResults>('library_search', { request: filters() })
       if (sequence !== searchSequence) return
       hits.value = value.items; total.value = value.total; page.value = value.page
     } catch (reason) {
@@ -40,7 +71,7 @@ export const useArchiveLibraryStore = defineStore('archiveLibrary', () => {
     if (initialization) return initialization
     initialization = (async () => {
       loading.value = true; error.value = ''
-      try { await reload(); initialized = true } catch (reason) { error.value = explain(reason) }
+      try { await Promise.all([reload(),loadOrganization()]); initialized = true } catch (reason) { error.value = explain(reason) }
       finally { loading.value = false; initialization = undefined }
     })()
     return initialization
@@ -54,7 +85,7 @@ export const useArchiveLibraryStore = defineStore('archiveLibrary', () => {
   }
   async function remove(id: string) {
     error.value = ''
-    try { await invoke('library_remove', { sourceId: id }); delete credentials.value[id]; await reload(); notice.value = '已移出资料库，原包保留'; return true }
+    try { await invoke('library_remove', { sourceId: id }); delete credentials.value[id]; await Promise.all([reload(),loadOrganization()]); notice.value = '已移出资料库，原包保留'; return true }
     catch (reason) { error.value = explain(reason); return false }
   }
   async function index(ids: string[], force = false) {
@@ -119,5 +150,5 @@ export const useArchiveLibraryStore = defineStore('archiveLibrary', () => {
       notice.value = '已重新定位，保留上次索引；请刷新确认当前来源后再查看或取回'; return true
     } catch (reason) { error.value = explain(reason); return false }
   }
-  return { sources, hits, query, sourceId, category, page, total, error, searchError, notice, loading, searching, indexing, scanning, activeSource, completed, planned, stopRequested, scanResult, ready, pending, initialize, reload, search, add, remove, index, scan, stop, check, credentials, paused, checking, skipped, pause, resume, setCredentials, audit, relocate }
+  return { organization, tag, favoritesOnly, tags, workspace, labels, organize, saveSearch, deleteSearch, applySearch, sources, hits, query, sourceId, category, page, total, error, searchError, notice, loading, searching, indexing, scanning, activeSource, completed, planned, stopRequested, scanResult, ready, pending, initialize, reload, search, add, remove, index, scan, stop, check, credentials, paused, checking, skipped, pause, resume, setCredentials, audit, relocate }
 })

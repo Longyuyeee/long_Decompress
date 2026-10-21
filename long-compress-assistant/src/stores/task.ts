@@ -70,6 +70,10 @@ export interface Task {
   zpaqSnapshot?: import('@/types/zpaqSnapshot').ZpaqSnapshot
   zpaqCatalogId?: string
   selectedEntries?: string[]
+  librarySourceId?: string
+  libraryRevision?: string
+  libraryKeepStructure?: boolean
+  libraryConflictPolicy?: 'rename' | 'skip'
   // 增强字段 [FE-INT-001]
   stage?: 'Pre-checking' | 'Extracting' | 'Splitting' | 'Verifying' | 'Finalizing' | 'password-attempt' | 'Probing' | 'Encoding' | 'Transforming' | 'Validating' | 'Publishing' | 'still-encoding'
   currentFile?: string

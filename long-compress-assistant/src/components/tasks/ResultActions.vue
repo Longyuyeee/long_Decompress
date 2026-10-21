@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useArchiveLibraryStore } from '@/stores/archiveLibrary'
+import { isDecompressArchivePath, isPotentialSplitArchivePath } from '@/utils/compressionFormat'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import { archiveOutputLocationError } from '@/utils/archiveOutputError'
@@ -46,6 +48,11 @@ async function copyPath() {
   try { await navigator.clipboard.writeText(path); if (token === request) copied.value = true }
   catch { if (token === request) error.value = '复制失败，可以选中路径手动复制。' }
 }
+async function addToLibrary(){
+  if(busy.value)return
+  busy.value=true;error.value=''
+  try{const library=useArchiveLibraryStore();if(await library.add([props.path]))await router.push('/library');else error.value=library.error}finally{busy.value=false}
+}
 async function generateManifest() {
   if (busy.value || !props.path.trim()) return
   const token = ++request
@@ -67,6 +74,7 @@ async function generateManifest() {
     <div class="flex flex-wrap items-center gap-2">
       <button type="button" class="result-button bg-primary text-white hover:brightness-110" :disabled="busy || !path.trim()" @click.stop="openOutput"><i class="pi pi-folder-open" aria-hidden="true"></i>{{ busy && !preparingChecksum ? '正在打开…' : label }}</button>
       <button type="button" class="result-button border border-subtle text-muted hover:bg-input hover:text-content" :disabled="!path.trim()" @click.stop="copyPath"><i :class="copied ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>{{ copied ? '已复制' : '复制路径' }}</button>
+      <button v-if="!directory && (isDecompressArchivePath(path) || isPotentialSplitArchivePath(path))" type="button" data-testid="result-add-library" class="result-button border border-subtle text-primary" :disabled="busy || !path.trim()" @click.stop="addToLibrary"><i class="pi pi-database"/>加入 / 刷新资料库</button>
       <button v-if="!directory" type="button" data-testid="result-generate-checksums" class="result-button border border-subtle text-muted hover:bg-input hover:text-content" :disabled="busy || !path.trim()" @click.stop="generateManifest"><i class="pi pi-hashtag" aria-hidden="true"></i>{{ preparingChecksum ? '正在带入…' : '生成校验清单' }}</button>
     </div>
     <p v-if="error" role="alert" class="break-words rounded-lg border border-subtle bg-input/50 px-3 py-2 text-xs leading-relaxed text-content">{{ error }}</p>

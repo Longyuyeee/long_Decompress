@@ -22,3 +22,14 @@ pub async fn library_scan(directory:String,job_id:String)->Result<library::Scan,
 pub async fn library_audit(source_id:String)->Result<library::Source,String>{library::audit(&pool().await?,&source_id).await.map_err(|e|format!("{e:#}"))}
 #[command]
 pub async fn library_relocate(source_id:String,path:String)->Result<library::Source,String>{library::relocate(&pool().await?,&source_id,std::path::Path::new(&path)).await.map_err(|e|format!("{e:#}"))}
+
+#[command]
+pub async fn library_organization()->Result<crate::services::library_organization::OrganizationState,String>{crate::services::library_organization::state(&pool().await?).await.map_err(|e|format!("{e:#}"))}
+#[command]
+pub async fn library_organize(value:crate::services::library_organization::Organization)->Result<crate::services::library_organization::OrganizationState,String>{crate::services::library_organization::organize(&pool().await?,value).await.map_err(|e|format!("{e:#}"))}
+#[command]
+pub async fn library_save_search(name:String,filters:library::Search)->Result<crate::services::library_organization::OrganizationState,String>{crate::services::library_organization::save_search(&pool().await?,&name,filters).await.map_err(|e|format!("{e:#}"))}
+#[command]
+pub async fn library_delete_search(id:String)->Result<crate::services::library_organization::OrganizationState,String>{crate::services::library_organization::delete_search(&pool().await?,&id).await.map_err(|e|format!("{e:#}"))}
+#[command]
+pub async fn library_selection(source_id:String,revision:String,paths:Vec<String>)->Result<library::Source,String>{crate::services::library_organization::selection(&pool().await?,&source_id,&revision,&paths,None).await.map_err(|e|format!("{e:#}"))}

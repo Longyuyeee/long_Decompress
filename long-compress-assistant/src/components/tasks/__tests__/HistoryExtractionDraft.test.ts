@@ -23,6 +23,13 @@ const setup = async () => {
   return { wrapper, store: useTaskStore() }
 }
 describe('history extraction draft', () => {
+  it('library1549 recreates only the saved selected range after confirming the current source',async()=>{
+    const pinia=createPinia();setActivePinia(pinia)
+    const saved:TaskHistoryRecord={...record,sourcePaths:['C:/source.zip'],executionConfig:{schemaVersion:1,kind:'archive-extraction',outputDirectory:'D:/out',extractToSubfolder:false,librarySourceId:'source',libraryRevision:'revision',libraryKeepStructure:false,libraryConflictPolicy:'skip',selectedEntries:['docs/合同.txt']}}
+    mocks.invoke.mockImplementation(async(command,args)=>command==='library_selection'?{path:'C:/source.zip'}:command==='detect_split_archive'?{is_split:false,archive_format:'ZIP'}:{name:'source.zip',size:100,is_dir:args.path==='D:/out'})
+    const view=mount(HistoryExtractionDraft,{props:{record:saved},global:{plugins:[pinia],stubs:{ExtractionOutputPreview:true}}});expect(view.get('[data-testid="history-library-selection"]').text()).toContain('1 个文件');await view.get('[data-testid="history-draft-create"]').trigger('click');await flushPromises();expect(useTaskStore().tasks[0]).toMatchObject({status:'pending',librarySourceId:'source',libraryRevision:'revision',libraryKeepStructure:false,libraryConflictPolicy:'skip',selectedEntries:['docs/合同.txt']});view.unmount()
+  })
+
   it('restores EGG key encoding without retaining the password', () => {
     const pinia=createPinia();setActivePinia(pinia)
     const saved:TaskHistoryRecord={...record,sourcePaths:['C:/原卷.vol3.egg'],format:'EGG',executionConfig:{schemaVersion:1,kind:'archive-extraction',outputDirectory:'D:/out',extractToSubfolder:false,zipPasswordEncoding:'cp936'}}

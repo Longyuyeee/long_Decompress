@@ -34,6 +34,11 @@ import type {
 const zipPasswordArguments = (encoding?: ZipPasswordEncoding) => encoding === undefined ? {} : { zipPasswordEncoding: encoding }
 
 export interface DecompressOptions {
+  librarySourceId?: string
+  libraryRevision?: string
+  libraryKeepStructure?: boolean
+  libraryConflictPolicy?: 'rename' | 'skip'
+
   zpaqSnapshot?: ZpaqSnapshot
   zpaqCatalogId?: string
   /** Actual browse format for task/history presentation, not a backend override. */
@@ -327,6 +332,10 @@ export const useTauriCommands = () => {
       if (options.zpaqSnapshot && !trackedTask.name.includes(`（快照 ${options.zpaqSnapshot.version}）`)) trackedTask.name += `（快照 ${options.zpaqSnapshot.version}）`
       trackedTask.zpaqCatalogId = options.zpaqCatalogId
       trackedTask.zpaqSnapshot = options.zpaqSnapshot ? { ...options.zpaqSnapshot } : undefined
+      trackedTask.librarySourceId = options.librarySourceId
+      trackedTask.libraryRevision = options.libraryRevision
+      trackedTask.libraryKeepStructure = options.libraryKeepStructure
+      trackedTask.libraryConflictPolicy = options.libraryConflictPolicy
       trackedTask.selectedEntries = options.selectedEntries ? [...options.selectedEntries] : undefined
       trackedTask.zipPasswordEncoding = options.zipPasswordEncoding
       // Comparison selections retain their exact range and catalog identity.
@@ -334,6 +343,7 @@ export const useTauriCommands = () => {
       trackedTask.executionConfig = {
         schemaVersion: 1, kind: 'archive-extraction', outputDirectory: options.outputPath,
         ...(options.zpaqCatalogId ? { zpaqCatalogId: options.zpaqCatalogId, selectedEntries: [...(options.selectedEntries || [])] } : {}),
+        ...(options.librarySourceId ? {librarySourceId:options.librarySourceId,libraryRevision:options.libraryRevision,libraryKeepStructure:options.libraryKeepStructure??true,libraryConflictPolicy:options.libraryConflictPolicy??'rename',selectedEntries:[...(options.selectedEntries||[])]} : {}),
         ...(options.zpaqSnapshot ? { zpaqSnapshot: { ...options.zpaqSnapshot } } : {}),
         extractToSubfolder: options.createSubdirectory ?? false,
         ...(options.zipPasswordEncoding ? { zipPasswordEncoding: options.zipPasswordEncoding } : {}),
@@ -350,6 +360,7 @@ export const useTauriCommands = () => {
         outputPath: options.outputPath,
         password: options.password || null,
         options: {
+          ...(options.librarySourceId ? {library_source_id:options.librarySourceId,library_revision:options.libraryRevision} : {}),
           ...(options.zpaqCatalogId ? { zpaq_catalog_id: options.zpaqCatalogId } : {}),
           ...(options.zpaqSnapshot ? { zpaq_snapshot: options.zpaqSnapshot } : {}),
           ...(options.zipPasswordEncoding === undefined ? {} : { zip_password_encoding: options.zipPasswordEncoding }),

@@ -53,6 +53,15 @@ const mountView = (pinia = createPinia()) => mount(DecompressView, {
 })
 
 describe('DecompressView', () => {
+  it.each([true,false])('library1549 dispatches original queue with exact library selection and keeps scope even when preflight canStart=%s',async canStart=>{
+    const view=mountView(),store=useTaskStore();store.addTask({id:'library',name:'source.zip',type:'decompression',sourceFiles:['C:/source.zip'],outputPath:'D:/out',configurationMode:'individual',librarySourceId:'source',libraryRevision:'revision',libraryKeepStructure:false,libraryConflictPolicy:'skip',selectedEntries:['docs/合同.txt']})
+    mocks.preflightOperationResources.mockResolvedValueOnce({canStart,summary:'space',warnings:[],sourceBytes:10,availableBytes:100,requiredBytes:20})
+    await nextTick();await view.get('[data-testid="start-decompression-queue"]').trigger('click');await flushPromises()
+    expect(store.tasks[0].executionConfig).toMatchObject({librarySourceId:'source',libraryRevision:'revision',selectedEntries:['docs/合同.txt'],libraryKeepStructure:false,libraryConflictPolicy:'skip'})
+    if(canStart)expect(mocks.decompressFile).toHaveBeenCalledWith('C:/source.zip',expect.objectContaining({librarySourceId:'source',libraryRevision:'revision',keepStructure:false,conflictPolicy:'skip',selectedEntries:['docs/合同.txt']}),'library');else expect(mocks.decompressFile).not.toHaveBeenCalled()
+    view.unmount()
+  })
+
   it('batch1543 scopes the original table and restores visibility for taskbar recovery', async () => {
     const wrapper=mountView();const store=useTaskStore()
     for(const id of ['pending1543','failed1543'])store.addTask({id,name:id+'.zip',type:'decompression',sourceFiles:['C:/'+id+'.zip'],outputPath:'D:/out'})
