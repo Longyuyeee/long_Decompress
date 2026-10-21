@@ -69,6 +69,7 @@ export interface Task {
   fileFilter?: string
   zpaqSnapshot?: import('@/types/zpaqSnapshot').ZpaqSnapshot
   zpaqCatalogId?: string
+  comparisonSelection?: import('@/types/sourceComparison').ComparisonSelection
   selectedEntries?: string[]
   librarySourceId?: string
   libraryRevision?: string

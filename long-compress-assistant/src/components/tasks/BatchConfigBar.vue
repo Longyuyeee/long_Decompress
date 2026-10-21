@@ -15,7 +15,7 @@ import type { BatchConfigPatch } from '@/types/batchConfig'
 import { isZipPasswordEncoding, ZIP_PASSWORD_ENCODING_OPTIONS } from '@/types/zipPassword'
 
 defineOptions({ inheritAttrs: false })
-const props = defineProps<{ count: number; mode: 'compression' | 'decompression'; subjects?: BatchSubject[] }>()
+const props = defineProps<{ hint?:string; count: number; mode: 'compression' | 'decompression'; subjects?: BatchSubject[] }>()
 const emit = defineEmits<{ apply: [patch: BatchConfigPatch, complete?: (error?: string) => void]; clear: [] }>()
 const app = useAppStore()
 const visible = ref(false)
@@ -112,6 +112,7 @@ function apply() {
   </section>
   <Modal v-model:visible="visible" :title="mode === 'compression' ? '修改所选压缩配置' : '修改所选解压配置'" :description="`已选 ${count} 项任务`" icon="pi pi-sliders-h" size="md" cancel-text="关闭批量配置" :show-close-button="!applying" :close-on-backdrop="!applying" :close-on-escape="!applying">
     <fieldset :disabled="applying" class="space-y-4 min-w-0" data-testid="batch-config-fields">
+      <p v-if="hint" class="text-xs leading-relaxed text-muted">{{ hint }}</p>
       <CompressionPurposePicker v-if="mode === 'compression'" :key="editingSession" staged @apply="fillPurpose" />
       <p v-if="purposeExtras.password" class="text-xs text-muted">将统一所选任务的新包密码；可重新选择加密方案填写，或取消弹窗。</p>
       <p v-if="purposeExtras.splitArchive" class="text-xs text-muted">将设置 {{ purposeExtras.splitSize }} MiB 标准 ZIP 分卷；可重新选择分包方案调整大小。</p>

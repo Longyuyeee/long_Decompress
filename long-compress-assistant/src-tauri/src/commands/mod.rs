@@ -20,3 +20,5 @@ pub mod pdf_engine;
 pub mod archive_library;
 
 pub mod workflows;
+
+pub mod source_comparison;

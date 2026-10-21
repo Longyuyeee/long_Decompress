@@ -51,6 +51,7 @@ const routes = [
   { path: '/compress', name: 'Compress', component: { template: '<div>Compress</div>' } },
   { path: '/special-compression', name: 'SpecialCompression', component: { template: '<div>Special Compression</div>' } },
   { path: '/browser', name: 'ArchiveBrowser', component: { template: '<div>Browser</div>' } },
+  {path:'/compare',name:'SourceComparison',component:{template:'<div>Compare</div>'}},
   { path: '/workflows', name: 'Workflows', component: { template: '<div>Workflows</div>' } },
   { path: '/library', name: 'ArchiveLibrary', component: { template: '<div>Library</div>' } },
   { path: '/vault', name: 'Vault', component: { template: '<div>Vault</div>' } },
@@ -141,9 +142,9 @@ describe('MainLayout', () => {
     const { wrapper } = await mountLayout('/compress')
 
     const navButtons = wrapper.findAll('aside nav > button')
-    expect(navButtons).toHaveLength(10)
-    expect(navButtons[8].attributes('data-testid')).toBe('nav-History')
-    expect(navButtons[9].attributes('data-testid')).toBe('nav-Settings')
+    expect(navButtons).toHaveLength(11)
+    expect(navButtons[9].attributes('data-testid')).toBe('nav-History')
+    expect(navButtons[10].attributes('data-testid')).toBe('nav-Settings')
     expect(navButtons[1].classes()).toContain('bg-primary/20')
     expect(navButtons[0].classes()).toContain('hover:bg-primary/8')
     expect(navButtons[1].attributes('aria-current')).toBe('page')

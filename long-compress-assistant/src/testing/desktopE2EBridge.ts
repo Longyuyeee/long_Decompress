@@ -23,7 +23,7 @@ export interface DesktopE2EBridge {
   pauseTask: (taskId: string) => Promise<boolean>
   resumeTask: (taskId: string) => Promise<boolean>
   clearTasks: () => Promise<void>
-  extractionRecoveryTasks: () => Array<{ id: string; status: TaskStatus; source: string; output: string; extractToSubfolder: boolean; retryOfTaskId?: string; hasPassword: boolean }>
+  extractionRecoveryTasks: () => Array<{ id: string; status: TaskStatus; source: string; output: string; extractToSubfolder: boolean; outputBytes?: number; retryOfTaskId?: string; hasPassword: boolean }>
   clearTaskHistory: () => Promise<void>
   taskHistory: () => Promise<TaskHistoryRecord[]>
   seedHistoryRecords: (records: TaskHistoryRecord[]) => Promise<void>
@@ -425,7 +425,7 @@ export const installDesktopE2EBridge = () => {
     },
     extractionRecoveryTasks: () => taskStore.tasks.filter(task => task.type === 'decompression').map(task => ({
       id: task.id, status: task.status, source: task.sourceFiles[0] || '', output: task.outputPath,
-      extractToSubfolder: task.extractToSubfolder ?? true, retryOfTaskId: task.retryOfTaskId, hasPassword: Boolean(task.password),
+      extractToSubfolder: task.extractToSubfolder ?? true, outputBytes:task.outputBytes, retryOfTaskId: task.retryOfTaskId, hasPassword: Boolean(task.password),
     })),
 
     async reset() {

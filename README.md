@@ -65,6 +65,10 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
       <p>将解压、筛选、压缩和转换按顺序串起来，保存后手动运行。运行前确认来源、目录和密码，每步使用实际产物，进度、日志与结果集中查看。出错后修改参数，从相应步骤继续，核对后的成功产物可以复用。也可绑定目录，资料稳定后自动排队处理，或按单次、每天、每周安排固定资料；下一次时间与最近结果直接可见，错过后选择补跑或跳过。</p>
     </td>
   </tr>
+  <tr><td colspan="2" valign="top">
+    <h3>↔️ 两份资料放在一起，只取回需要的部分</h3>
+    <p>文件夹与普通 Store/Deflate ZIP 自由组合，按路径查看新增、缺项和类型/大小/时间变化，左右分别勾选。多选后在弹窗配置取回位置、目录结构与同名处理，沿原队列查看实际结果；内容相似仍明确标为“未核对”。</p>
+  </td></tr>
 </table>
 
 **还有这些贴近日常的小细节：** 常用目录与书签、资源管理器右键、托盘后台任务、历史搜索与再次执行、多主题与强调色、界面缩放和减少动效。
@@ -122,6 +126,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 
 | 你想做什么 | 从哪里开始 | 操作要点 |
 | --- | --- | --- |
+| 比较两份资料 | 资料对比 | 选择文件夹或普通 ZIP，查看候选差异，分别勾选后取回 |
 | 解压一批文件 | 解压中心 | 拖入压缩包，设置目录；常用密码可交给保险箱尝试 |
 | 打包文件和文件夹 | 压缩中心 | 按用途选兼容分享、体积优先、加密或分包方案，再微调密码、名称等参数 |
 | 只提取包里的几个文件 | 文件浏览器 → 打开压缩包 | 搜索并勾选条目，再解压所选内容 |
@@ -247,9 +252,11 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
+**v1.5.54 · 资料对比与所选取回**。两份文件夹或普通 ZIP 按路径查看类型/大小/时间差异，左右独立跨页选择，多选弹窗统一配置后进入原队列取回；来源变化、草稿和历史保留精确范围。内容相同需后续核对。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.54.md) · [范围与记录](long-compress-assistant/docs/SOURCE_COMPARISON_FREEZE_1.5.54.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.54)。下一步 [v1.5.55 实际内容核对与复杂 ZIP 来源](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.55.md)。
+
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.53 · 定时工作流与错过处理**。单次、每天或每周安排固定资料处理，直观看到下一次时间与最近结果；错过后明确补跑或跳过，忙碌时排队/跳过，同来源与目录事件不重复派发。密码、来源变化提醒和原有纠正接续贯通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.53.md) · [范围与记录](long-compress-assistant/docs/SCHEDULED_WORKFLOW_FREEZE_1.5.53.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.53)。工作流模块在声明范围完成，下一步按[细分路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)进入 v1.5.54 文件夹与压缩包对比。
+**v1.5.53 · 定时工作流与错过处理**。单次、每天或每周安排固定资料处理，直观看到下一次时间与最近结果；错过后明确补跑或跳过，忙碌时排队/跳过，同来源与目录事件不重复派发。密码、来源变化提醒和原有纠正接续贯通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.53.md) · [范围与记录](long-compress-assistant/docs/SCHEDULED_WORKFLOW_FREEZE_1.5.53.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.53)。工作流模块在声明范围完成，对比首阶段由上方 v1.5.54 接续。
 
 **v1.5.52 · 目录触发与运行队列**。明确启用目录规则，等待复制稳定和分卷到齐后执行已保存方案；支持按文件/项目文件夹处理、暂停与取消，密码只在本次会话使用。队列保留方案快照，失败纠正后直达最新接续结果，重启保留等待与运行关联。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.52.md) · [范围与记录](long-compress-assistant/docs/DIRECTORY_WORKFLOW_FREEZE_1.5.52.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.52)。定时与运行管理已由上方 v1.5.53 接续。
 

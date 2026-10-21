@@ -23,6 +23,9 @@ const setup = async () => {
   return { wrapper, store: useTaskStore() }
 }
 describe('history extraction draft', () => {
+  it('comparison1554 history recreates an exact folder selection without trying whole archive detection',async()=>{
+    setActivePinia(createPinia());const comparisonSelection={source:{path:'C:/left',kind:'directory' as const,revision:'a'.repeat(64)},paths:['docs/合同.txt'],keepStructure:false,conflictPolicy:'skip' as const};const saved:TaskHistoryRecord={...record,sourcePaths:['C:/left'],executionConfig:{schemaVersion:1,kind:'archive-extraction',outputDirectory:'D:/out',extractToSubfolder:false,comparisonSelection}};mocks.invoke.mockResolvedValue(undefined);const view=mount(HistoryExtractionDraft,{props:{record:saved},global:{stubs:{ExtractionOutputPreview:true}}});expect(view.get('[data-testid="history-comparison-selection"]').text()).toContain('1 项');expect(view.find('[data-testid="history-draft-password"]').exists()).toBe(false);await view.get('[data-testid="history-draft-create"]').trigger('click');await flushPromises();expect(useTaskStore().tasks[0]).toMatchObject({comparisonSelection,selectedEntries:['docs/合同.txt'],status:'pending'});expect(mocks.invoke.mock.calls.some(call=>call[0]==='detect_split_archive')).toBe(false);view.unmount()
+  })
   it('library1549 recreates only the saved selected range after confirming the current source',async()=>{
     const pinia=createPinia();setActivePinia(pinia)
     const saved:TaskHistoryRecord={...record,sourcePaths:['C:/source.zip'],executionConfig:{schemaVersion:1,kind:'archive-extraction',outputDirectory:'D:/out',extractToSubfolder:false,librarySourceId:'source',libraryRevision:'revision',libraryKeepStructure:false,libraryConflictPolicy:'skip',selectedEntries:['docs/合同.txt']}}

@@ -34,6 +34,7 @@ import type {
 const zipPasswordArguments = (encoding?: ZipPasswordEncoding) => encoding === undefined ? {} : { zipPasswordEncoding: encoding }
 
 export interface DecompressOptions {
+  comparisonSelection?: import('@/types/sourceComparison').ComparisonSelection
   librarySourceId?: string
   libraryRevision?: string
   libraryKeepStructure?: boolean
@@ -332,6 +333,7 @@ export const useTauriCommands = () => {
       if (options.zpaqSnapshot && !trackedTask.name.includes(`（快照 ${options.zpaqSnapshot.version}）`)) trackedTask.name += `（快照 ${options.zpaqSnapshot.version}）`
       trackedTask.zpaqCatalogId = options.zpaqCatalogId
       trackedTask.zpaqSnapshot = options.zpaqSnapshot ? { ...options.zpaqSnapshot } : undefined
+      trackedTask.comparisonSelection = options.comparisonSelection
       trackedTask.librarySourceId = options.librarySourceId
       trackedTask.libraryRevision = options.libraryRevision
       trackedTask.libraryKeepStructure = options.libraryKeepStructure
@@ -342,6 +344,7 @@ export const useTauriCommands = () => {
       // Older unguarded selections keep the existing whole-archive history policy.
       trackedTask.executionConfig = {
         schemaVersion: 1, kind: 'archive-extraction', outputDirectory: options.outputPath,
+        ...(options.comparisonSelection?{comparisonSelection:options.comparisonSelection}:{}),
         ...(options.zpaqCatalogId ? { zpaqCatalogId: options.zpaqCatalogId, selectedEntries: [...(options.selectedEntries || [])] } : {}),
         ...(options.librarySourceId ? {librarySourceId:options.librarySourceId,libraryRevision:options.libraryRevision,libraryKeepStructure:options.libraryKeepStructure??true,libraryConflictPolicy:options.libraryConflictPolicy??'rename',selectedEntries:[...(options.selectedEntries||[])]} : {}),
         ...(options.zpaqSnapshot ? { zpaqSnapshot: { ...options.zpaqSnapshot } } : {}),
@@ -354,7 +357,10 @@ export const useTauriCommands = () => {
       taskStore.updateTaskStatus(taskId, 'preparing')
       taskStore.updateTaskStatus(taskId, 'extracting')
 
-      const result = await invoke<string>('extract_file', {
+      let comparisonResult: {path:string;outputBytes:number} | undefined
+      const result = options.comparisonSelection
+        ? (comparisonResult = await invoke<{path:string;outputBytes:number}>('comparison_retrieve', {taskId,request:options.comparisonSelection,output:options.outputPath})).path
+        : await invoke<string>('extract_file', {
         taskId,
         filePath,
         outputPath: options.outputPath,
@@ -384,6 +390,12 @@ export const useTauriCommands = () => {
       if (task) {
         task.progress = 100
         task.outputPath = result
+        if (comparisonResult) {
+          // The final receipt measures published files after rename/skip. Staged
+          // bytes or late progress events must not stand in for actual output.
+          task.outputBytes = comparisonResult.outputBytes
+          task.outputBytesEstimated = false
+        }
       }
       taskStore.updateTaskStatus(taskId, 'completed')
       return result

@@ -146,3 +146,5 @@ pub mod workflow_recovery;
 pub mod workflow_triggers;
 
 pub mod workflow_schedules;
+
+pub mod source_comparison;

@@ -62,6 +62,9 @@ describe('DecompressView', () => {
     view.unmount()
   })
 
+  it('comparison1554 runs an exact comparison selection through its own source check without archive preflight',async()=>{
+    const view=mountView(),tasks=useTaskStore();const selection={source:{path:'C:/left',kind:'directory' as const,revision:'a'.repeat(64)},paths:['docs/report.txt'],keepStructure:false,conflictPolicy:'skip' as const};tasks.addTask({id:'compare',name:'selected',type:'decompression',sourceFiles:['C:/left'],outputPath:'D:/out',selectedEntries:selection.paths,comparisonSelection:selection,configurationMode:'individual'});await flushPromises();await view.get('[data-testid="start-decompression-queue"]').trigger('click');await flushPromises();expect(mocks.preflightOperationResources).not.toHaveBeenCalled();expect(mocks.decompressFile).toHaveBeenCalledWith('C:/left',expect.objectContaining({comparisonSelection:selection}),'compare');view.unmount()
+  })
   it('batch1543 scopes the original table and restores visibility for taskbar recovery', async () => {
     const wrapper=mountView();const store=useTaskStore()
     for(const id of ['pending1543','failed1543'])store.addTask({id,name:id+'.zip',type:'decompression',sourceFiles:['C:/'+id+'.zip'],outputPath:'D:/out'})
@@ -421,7 +424,7 @@ describe('DecompressView', () => {
     expect(wrapper.findAll('button').some(button => button.text().includes(useAppStore().t('decompress.start_queue')))).toBe(false)
     expect(mocks.decompressFile).toHaveBeenCalledTimes(1)
     await wrapper.get('[data-testid="show-all-decompression-tasks"]').trigger('click')
-    expect(wrapper.findComponent({ name: 'AeroTable' }).props('taskIds')).toBeUndefined()
+    expect(new Set(wrapper.findComponent({ name: 'AeroTable' }).props('taskIds'))).toEqual(new Set(store.tasks.map(task=>task.id)))
     wrapper.unmount()
   })
 

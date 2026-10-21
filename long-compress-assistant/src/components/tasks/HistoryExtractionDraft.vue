@@ -60,6 +60,15 @@ async function createDraft() {
   const confirmedEncoding = zipPasswordEncoding.value
   const recordId = props.record.id
   if (!path || !outputPath) { error.value = '请确认来源文件并选择本次输出目录'; return }
+  if(restoredConfig.value?.comparisonSelection){
+    const selection=restoredConfig.value.comparisonSelection
+    if(path!==selection.source.path){error.value='对比来源位置不可在这里替换，请返回资料对比重新读取';return}
+    busy.value=true
+    try{await invoke('comparison_validate',{request:selection,output:outputPath});if(disposed||props.record.id!==recordId)return
+      store.addTask({id:generateId(),name:props.record.name,type:'decompression',sourceFiles:[path],outputPath,configurationMode:'individual',extractToSubfolder:false,recycleSourceAfterExtract:false,comparisonSelection:JSON.parse(JSON.stringify(selection)),selectedEntries:[...selection.paths],executionConfig:{...restoredConfig.value,outputDirectory:outputPath},retryOfTaskId:recordId,format:selection.source.kind==='zip'?'ZIP':'文件夹'});created.value=true
+    }catch(cause){error.value=extractErrorMessage(cause)}finally{busy.value=false}
+    return
+  }
   if (!isDecompressArchivePath(path) && !isPotentialSplitArchivePath(path) && !isPotentialSfxPath(path)) {
     error.value = '请选择支持的归档文件或首个分卷'
     return
@@ -117,25 +126,26 @@ async function createDraft() {
     <p class="text-xs text-muted my-3">确认下方设置，再添加到队列。新任务不会自动开始。</p>
     <p v-if="restoredConfig" data-testid="history-config-restored" class="text-xs text-primary mb-3">已带入上次的解压设置，可直接使用或修改。</p>
     <p v-else data-testid="history-config-missing" class="text-xs text-muted mb-3">这条历史没有可恢复的设置，请选择输出目录，并确认是否创建同名子目录。</p>
+    <p v-if="restoredConfig?.comparisonSelection" class="text-xs text-primary mb-3" data-testid="history-comparison-selection">保留资料对比所选 {{ restoredConfig.comparisonSelection.paths.length }} 项、结构与同名策略。来源变化后请<a href="#/compare" class="underline">返回资料对比重新读取</a>。</p>
     <p v-if="restoredConfig?.librarySourceId" class="text-xs text-primary mb-3" data-testid="history-library-selection">保留资料库所选 {{ restoredConfig.selectedEntries?.length }} 个文件、目录方式和同名策略；来源变化时请返回资料库重新选择。<a href="#/library" class="underline">返回资料库</a></p>
     <p v-if="restoredConfig?.zpaqCatalogId" class="text-xs text-primary">保留所选 {{ restoredConfig.selectedEntries?.length }} 项与来源目录标识，不扩大为整包提取。来源变化后请重新比较。</p>
     <p v-if="restoredConfig?.zpaqSnapshot" class="text-xs text-primary mb-3" data-testid="history-zpaq-snapshot">沿用快照 {{ restoredConfig.zpaqSnapshot.version }}，不会改为最新内容；如需其他版本，请从归档浏览重新选择。</p>
-    <p v-if="!restoredConfig?.zpaqCatalogId && !restoredConfig?.librarySourceId" class="text-xs text-muted mb-3">本次解压整个归档并保留源文件，不恢复局部选择。密码可重新填写；留空时按当前密码设置尝试，同名文件按当前冲突设置处理。</p>
+    <p v-if="!restoredConfig?.comparisonSelection && !restoredConfig?.zpaqCatalogId && !restoredConfig?.librarySourceId" class="text-xs text-muted mb-3">本次解压整个归档并保留源文件，不恢复局部选择。密码可重新填写；留空时按当前密码设置尝试，同名文件按当前冲突设置处理。</p>
     <p v-if="record.sourcePaths.length > 1" class="text-xs text-amber-500 mb-2">原记录包含多个来源，请确认此处为归档或首个分卷；本次只创建一个任务。</p>
     <fieldset :disabled="busy || created" class="space-y-2 min-w-0">
       <label class="block text-sm">来源文件
-        <input v-model="source" data-testid="history-draft-source" class="history-control w-full mt-1" />
+        <input v-model="source" :readonly="!!restoredConfig?.comparisonSelection" data-testid="history-draft-source" class="history-control w-full mt-1" />
       </label>
-      <button class="history-control" @click="selectPath(false)">重新选择文件</button>
+      <button v-if="!restoredConfig?.comparisonSelection" class="history-control" @click="selectPath(false)">重新选择文件</button>
       <label class="block text-sm">本次输出目录
         <input v-model="destination" data-testid="history-draft-output" class="history-control w-full mt-1" placeholder="选择或输入输出目录" />
       </label>
       <button data-testid="history-draft-select-output" class="history-control" @click="selectPath(true)">选择输出目录</button>
-      <label class="flex items-center gap-2 text-sm"><input v-model="extractToSubfolder" data-testid="history-draft-subfolder" type="checkbox" />解压到同名子目录</label>
-      <label class="block text-sm">本次密码（可留空）
+      <label v-if="!restoredConfig?.comparisonSelection" class="flex items-center gap-2 text-sm"><input v-model="extractToSubfolder" data-testid="history-draft-subfolder" type="checkbox" />解压到同名子目录</label>
+      <label v-if="!restoredConfig?.comparisonSelection" class="block text-sm">本次密码（可留空）
         <input v-model="password" data-testid="history-draft-password" type="password" autocomplete="off" class="history-control w-full mt-1" />
       </label>
-      <ZipPasswordEncodingField v-if="supportsZipPasswordEncoding(source, sourceFormat)" v-model="zipPasswordEncoding" :source-path="source" :source-format="sourceFormat" :disabled="busy || created" test-id="history-draft-zip-password-encoding" />
+      <ZipPasswordEncodingField v-if="!restoredConfig?.comparisonSelection && supportsZipPasswordEncoding(source, sourceFormat)" v-model="zipPasswordEncoding" :source-path="source" :source-format="sourceFormat" :disabled="busy || created" test-id="history-draft-zip-password-encoding" />
       <ExtractionOutputPreview :source="source.trim()" :output="destination.trim()" :subfolder="extractToSubfolder" @change-output="selectPath(true)" />
       <button data-testid="history-draft-create" class="history-control w-full" @click="createDraft">{{ busy ? '正在检查来源…' : '创建待执行任务' }}</button>
     </fieldset>

@@ -1,0 +1,340 @@
+{
+  "version": "1.5.54",
+  "binarySha256": "a14800879cfa9350dd1bd3f87ee74eba1b31035658b43883c20308f7331abc26",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1554\\35f21445-1edb-4e87-a47b-db1abd31905f",
+  "checks": [
+    {
+      "kind": "folder-pair-metadata-candidates-cross-page-selection-and-scoped-copy",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "taskIds": [
+        "164fa9a1-4547-4882-81fb-c81095eca956",
+        "8e8ce441-2fab-46c3-bd27-4bd35f7dd0ce"
+      ],
+      "independentBytes": true,
+      "emptyDirectory": true,
+      "candidateNotContentEquality": true,
+      "crossPageRetained": true
+    },
+    {
+      "kind": "folder-zip-and-zip-zip-flat-rename-skip",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "taskIds": [
+        "cf2c0c38-1791-42b7-99ed-6963c324d71e",
+        "b6f420cd-49da-4e54-be20-3ea33cbbb657",
+        "16762ece-2b7b-40f2-9850-ca1a498d2f51",
+        "7105c719-8d30-4cd8-8792-222d34e22afb"
+      ],
+      "bothCombinationKinds": true,
+      "existingKept": true,
+      "flatten": true,
+      "emptyDirectory": true,
+      "zipHashesUnchanged": true
+    },
+    {
+      "kind": "queued-source-change-rejected-and-fresh-selection-can-complete",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "failedId": "3accfcc4-0372-415e-b6fe-b274fc88bf2e",
+      "freshId": "a54a59fd-a3fb-43db-b1d8-a6e905778164",
+      "noPartialPublication": true,
+      "originalFailureKept": true
+    },
+    {
+      "kind": "normal-restart-keeps-exact-pending-scope-and-history-replay",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "restoredTask": "recovered-2c129bda-dac1-43a9-8f5c-ffa41df78341",
+      "replayTask": "o4g8aeel2mvi7xj07",
+      "sameProfile": true,
+      "noAutomaticStart": true,
+      "originalScopeRetained": true,
+      "independentBytes": true
+    },
+    {
+      "kind": "unsupported-source-and-navigation-retain-usable-context",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "encryptedZipExplained": true,
+      "noPartialResult": true,
+      "selectionRetainedAcrossNavigation": true,
+      "noImplicitTask": true
+    },
+    {
+      "kind": "final-publication-bytes-and-completed-display",
+      "binarySha256": "a14800879cfa9350dd1bd3f87ee74eba1b31035658b43883c20308f7331abc26",
+      "publishedBytes": 26,
+      "skippedBytes": 0,
+      "taskIds": [
+        "8819751b-1f89-4901-9da4-e08a02e6b814",
+        "363a457b-78b1-4e66-9ab9-b479312b0cd7"
+      ],
+      "retainedFiveFlows": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "metadata-candidate",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "metadata-candidate",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "selected-pair",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "selected-pair",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "retrieval-dialog",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "retrieval-dialog",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "queued-scope",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "queued-scope",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "scoped-results",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "scoped-results",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "zip-pair",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "zip-pair",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "changed-source",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "changed-source",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "restored-scope",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "restored-scope",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "history-scope",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "history-scope",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "unsupported-source",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "unsupported-source",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "final-overview",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "final-overview",
+      "binarySha256": "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "final-actual-bytes",
+      "binarySha256": "a14800879cfa9350dd1bd3f87ee74eba1b31035658b43883c20308f7331abc26",
+      "anchorOverflow": 0,
+      "height": 700,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "final-actual-bytes",
+      "binarySha256": "a14800879cfa9350dd1bd3f87ee74eba1b31035658b43883c20308f7331abc26",
+      "anchorOverflow": 0,
+      "height": 520,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "comparison1554-metadata-candidate-1100x700.png",
+    "comparison1554-metadata-candidate-760x520.png",
+    "comparison1554-selected-pair-1100x700.png",
+    "comparison1554-selected-pair-760x520.png",
+    "comparison1554-retrieval-dialog-1100x700.png",
+    "comparison1554-retrieval-dialog-760x520.png",
+    "comparison1554-queued-scope-1100x700.png",
+    "comparison1554-queued-scope-760x520.png",
+    "comparison1554-scoped-results-1100x700.png",
+    "comparison1554-scoped-results-760x520.png",
+    "comparison1554-zip-pair-1100x700.png",
+    "comparison1554-zip-pair-760x520.png",
+    "comparison1554-changed-source-1100x700.png",
+    "comparison1554-changed-source-760x520.png",
+    "comparison1554-restored-scope-1100x700.png",
+    "comparison1554-restored-scope-760x520.png",
+    "comparison1554-history-scope-1100x700.png",
+    "comparison1554-history-scope-760x520.png",
+    "comparison1554-unsupported-source-1100x700.png",
+    "comparison1554-unsupported-source-760x520.png",
+    "comparison1554-final-overview-1100x700.png",
+    "comparison1554-final-overview-760x520.png",
+    "comparison1554-final-actual-bytes-1100x700.png",
+    "comparison1554-final-actual-bytes-760x520.png"
+  ],
+  "left": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1554\\35f21445-1edb-4e87-a47b-db1abd31905f\\左侧资料",
+  "right": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1554\\35f21445-1edb-4e87-a47b-db1abd31905f\\右侧资料",
+  "zipLeft": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1554\\35f21445-1edb-4e87-a47b-db1abd31905f\\左侧.zip",
+  "zipRight": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1554\\35f21445-1edb-4e87-a47b-db1abd31905f\\右侧.zip",
+  "passwordZip": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1554\\35f21445-1edb-4e87-a47b-db1abd31905f\\密码.zip",
+  "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1554\\35f21445-1edb-4e87-a47b-db1abd31905f\\取回结果",
+  "merged": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1554\\35f21445-1edb-4e87-a47b-db1abd31905f\\合并结果",
+  "skipped": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1554\\35f21445-1edb-4e87-a47b-db1abd31905f\\跳过结果",
+  "changed": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1554\\35f21445-1edb-4e87-a47b-db1abd31905f\\变化结果",
+  "recovered": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1554\\35f21445-1edb-4e87-a47b-db1abd31905f\\重启结果",
+  "originalZips": {
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1554\\35f21445-1edb-4e87-a47b-db1abd31905f\\左侧.zip": "e43914d6e350aced980e8c4d7658f9f3eb995aae84ded99a79e51a4549ca66ad",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\comparison-1554\\35f21445-1edb-4e87-a47b-db1abd31905f\\右侧.zip": "2e3f8862d76ec3c4c944afb75479950543976fe3cb908648b82d787f7c577bfb"
+  },
+  "fixtures": true,
+  "firstIds": [
+    "164fa9a1-4547-4882-81fb-c81095eca956",
+    "8e8ce441-2fab-46c3-bd27-4bd35f7dd0ce"
+  ],
+  "changedFailed": "3accfcc4-0372-415e-b6fe-b274fc88bf2e",
+  "restartQueued": "7d4a6146-99f8-46d2-aa2a-d8e8439c6a19",
+  "recoveredTask": "recovered-2c129bda-dac1-43a9-8f5c-ffa41df78341",
+  "previousIdentities": [
+    "9a7915d632b068a40a738fb65bd73e98ed6ff2fe01f8984462bc5fce0e3c71d6"
+  ]
+}
