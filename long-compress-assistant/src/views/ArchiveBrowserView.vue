@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ArchiveImageReader from '@/components/archive/ArchiveImageReader.vue'
 import { useArchiveLibraryStore } from '@/stores/archiveLibrary'
 import { invoke } from '@tauri-apps/api/tauri'
 import ZipEditBar from '@/components/archive/ZipEditBar.vue'
@@ -80,6 +81,17 @@ const diffVisible = ref(false)
 const openingEntryPath = ref('')
 const inputBusy = computed(() => zipEditBusy.value || loading.value || extracting.value || checkingSnapshot.value || !!openingEntryPath.value)
 const dangerousOpenEntry = ref<ArchiveEntryInfo | null>(null)
+const readerOpen=ref(false),readerInitialPath=ref('')
+let readerReturnFocus:HTMLElement|null=null
+const readerCandidates=computed(()=>files.value.filter(entry=>archiveCapabilities.entryCategory(entry.name)==='image'))
+function openImageReader(entry?:ArchiveEntryInfo){
+ const first=entry||readerCandidates.value.find(entry=>entryParent(entry)===activeDirectory.value)||readerCandidates.value[0]
+ if(!first)return;readerReturnFocus=document.activeElement as HTMLElement;readerInitialPath.value=first.path;closePreview();readerOpen.value=true
+}
+async function closeImageReader(){if(!readerOpen.value)return;readerOpen.value=false;const target=readerReturnFocus;readerReturnFocus=null;await nextTick();if(target?.isConnected)target.focus({preventScroll:true})}
+async function locateReaderImage(path:string){await closeImageReader();query.value='';typeFilter.value='all';const normalized=path.replace(/\\/g,'/'),slash=normalized.lastIndexOf('/');navigateToDirectory(slash<0?'':normalized.slice(0,slash));focusedEntryPath.value=path;await nextTick();const row=Array.from(document.querySelectorAll<HTMLElement>('[data-entry-path]')).find(row=>row.dataset.entryPath===path);row?.scrollIntoView({block:'nearest'});row?.focus({preventScroll:true})}
+async function extractReaderImage(path:string){await closeImageReader();const target=await requestOutputDirectory(outputPath.value);if(target)await extractPaths([path],target)}
+async function refreshReaderSource(){await closeImageReader();await refreshDirectory()}
 const imagePreview = ref<ArchiveImagePreview | null>(null)
 const textPreview = ref<ArchiveTextPreview | null>(null)
 const previewEntry = ref<ArchiveEntryInfo | null>(null)
@@ -280,6 +292,7 @@ const convertSnapshot = () => {
   if (selectedSnapshot.value && !inputBusy.value) conversion.openSnapshot(archivePath.value, selectedSnapshot.value, password.value)
 }
 const closePreview = () => {
+  readerOpen.value=false
   previewSequence++
   imagePreview.value = null
   textPreview.value = null
@@ -609,7 +622,7 @@ const isEditableKeyboardTarget = (target: EventTarget | null) => {
 }
 
 const handleWorkspaceKeydown = (event: KeyboardEvent) => {
-  if (event.defaultPrevented) return
+  if (event.defaultPrevented||readerOpen.value) return
   if (event.key === 'Escape') {
     if (previewEntry.value) closePreview()
     else if (dangerousOpenEntry.value) dangerousOpenEntry.value = null
@@ -686,7 +699,7 @@ watch(() => appStore.pendingArchiveBrowserPath, path => {
   }
 }, { immediate: true })
 
-watch([password, zipPasswordEncoding], () => { closePreview(); dangerousOpenEntry.value = null })
+watch([password, zipPasswordEncoding], () => { void closeImageReader();closePreview(); dangerousOpenEntry.value = null })
 
 onMounted(() => {
   if (import.meta.env.MODE === 'test') return
@@ -703,6 +716,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  readerOpen.value=false
   previewSequence++
   browseRequest.cancel(false)
   window.removeEventListener('keydown', handleWorkspaceKeydown)
@@ -811,6 +825,7 @@ const extractSelected = async () => {
 
     <template v-else>
       <section class="browser-summary shrink-0" aria-label="压缩包摘要">
+        <button class="browser-primary browser-reader-button" data-testid="archive-reader-open" :disabled="inputBusy||!readerCandidates.length" @click="openImageReader()"><i class="pi pi-images"/>阅读图片 · {{ readerCandidates.length }}</button>
         <span><b>{{ result.format }}</b> 格式</span>
         <span v-if="result.format === 'ZPAQ'" data-testid="zpaq-current-view">当前文件<HelpHint label="ZPAQ 当前文件视图">按当前所选快照显示有效文件，其他版本不会混入。日志包支持历史选择、版本对比与变化提取，普通和原生密码数字卷可继续读取；压缩中心支持另存增量更新。流式包仅显示当前内容，文件检查不能检测所有未认证头部变化。</HelpHint></span>
           <span v-if="result.format === 'ALZ'" data-testid="alz-read-view">只读<HelpHint label="ALZ 读取范围">支持已验证的存储、Deflate、ALZ 变体 Bzip2、ZipCrypto 及原生 .alz/.aNN 卷组。文件名与密码默认按 CP949，可明确选择原工具代码页，不能无损转换时会说明原因。需补齐原卷后解压；不提供 ALZ 创建或损坏修复。</HelpHint></span>
@@ -906,6 +921,7 @@ const extractSelected = async () => {
       <div><i class="pi pi-cloud-upload"></i><strong>松开即可浏览压缩包</strong><span>将替换当前打开的压缩包</span></div>
     </div>
 
+    <ArchiveImageReader v-if="readerOpen&&result" :file-path="archivePath" :entries="result.entries" :initial-path="readerInitialPath" :directory="activeDirectory" :revision="result.revision" :password="password" :encoding="inputEncoding" :snapshot="selectedSnapshot" :supported="previewRouteSupported" :image-extensions="archiveCapabilities.capabilities.value?.imagePreviewExtensions||[]" @close="closeImageReader" @locate="locateReaderImage" @extract="extractReaderImage" @refresh="refreshReaderSource"/>
     <Teleport to="body">
     <div v-if="previewEntry" class="preview-backdrop" data-testid="archive-entry-preview" @click.self="closePreview">
       <section class="preview-dialog" role="dialog" aria-modal="true" :aria-label="`预览 ${previewEntry.name}`">
@@ -920,7 +936,7 @@ const extractSelected = async () => {
           <pre v-else-if="textPreview" data-testid="archive-text-preview" class="preview-text">{{ textPreview.content }}</pre>
         </div>
         <footer v-if="imagePreview" class="preview-meta">
-          <span>{{ imagePreview.width }} × {{ imagePreview.height }}</span><span>{{ formatBytes(imagePreview.byteSize) }}</span><span>{{ imagePreview.mimeType }}</span><span>只读 · 不改原包</span>
+          <span>{{ imagePreview.width }} × {{ imagePreview.height }}</span><span>{{ formatBytes(imagePreview.byteSize) }}</span><span>{{ imagePreview.mimeType }}</span><span>只读 · 不改原包</span><button class="text-primary font-bold" data-testid="archive-preview-read-images" @click="openImageReader(previewEntry)">连续阅读这组图片 <i class="pi pi-arrow-right"/></button>
         </footer>
         <footer v-else-if="textPreview" class="preview-meta">
           <span>{{ textPreview.encoding }}</span><span>已读 {{ formatBytes(textPreview.byteSize) }} / {{ formatBytes(textPreview.totalSize) }}</span><span>{{ textPreview.lineCount }} 行</span><span>{{ textPreview.truncated ? '仅显示前 1 MiB' : '完整显示' }}</span><span>只读 · 不改原包</span>
@@ -1040,6 +1056,7 @@ const extractSelected = async () => {
 .browser-empty { flex: 1 0 auto; padding-block: 1.5rem; overflow-wrap: anywhere; cursor: pointer; transition: border-color .2s ease, background .2s ease, transform .2s ease; }
 .browser-empty:hover { border-color: var(--dynamic-accent); background: color-mix(in srgb, var(--dynamic-accent) 5%, var(--bg-card)); transform: translateY(-1px); }
 .browser-drop-hint { display: inline-flex; margin-top: 1rem; padding: .45rem .75rem; border-radius: 999px; background: color-mix(in srgb, var(--dynamic-accent) 10%, transparent); color: var(--dynamic-accent); font-size: .7rem; font-weight: 800; }
+.browser-reader-button{width:auto;min-height:2.25rem;padding:0 .85rem;flex-shrink:0;white-space:nowrap;font-size:.7rem}
 .browser-summary { display: flex; align-items: center; flex-wrap: wrap; gap: .45rem; min-height: 2.25rem; }
 .browser-summary span { display: inline-flex; align-items: center; gap: .35rem; padding: .38rem .65rem; border: 1px solid var(--border-subtle); border-radius: 999px; background: color-mix(in srgb, var(--bg-card) 82%, transparent); color: var(--text-muted); font-size: .68rem; font-weight: 800; }
 .browser-summary b { color: var(--text-content); }

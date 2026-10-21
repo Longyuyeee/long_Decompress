@@ -215,8 +215,10 @@ pub async fn preview_entry(path: &Path, entry: &str, password: Option<&str>, max
 }
 
 pub async fn preview_entry_at(path: &Path, entry: &str, password: Option<&str>, max_output: u64, keep: u64, snapshot: Option<&ZpaqSnapshot>) -> Result<(Vec<u8>, u64)> {
-    let entry = super::archive_entry_open::normalize_safe_entry_path(entry)?;
-    let flag = Arc::new(AtomicBool::new(false));
+    preview_entry_controlled_at(path,entry,password,max_output,keep,snapshot,Arc::new(AtomicBool::new(false))).await
+}
+pub async fn preview_entry_controlled_at(path:&Path,entry:&str,password:Option<&str>,max_output:u64,keep:u64,snapshot:Option<&ZpaqSnapshot>,flag:Arc<AtomicBool>)->Result<(Vec<u8>,u64)>{
+    let entry=super::archive_entry_open::normalize_safe_entry_path(entry)?;
     let listing = run_with_preview(path, password, None, false, &[], flag.clone(), Some(max_output), snapshot).await?;
     let directory = parse_directory(&listing, requires_password(path)?)?;
     let item = directory.entries.iter().find(|item| item.path == entry && !item.is_dir).context("找不到所选 ZPAQ 文件")?;

@@ -154,3 +154,5 @@ pub mod source_comparison_content;
 pub mod comparison_package;
 
 #[cfg(test)] mod comparison_package_tests;
+
+pub mod image_reader;

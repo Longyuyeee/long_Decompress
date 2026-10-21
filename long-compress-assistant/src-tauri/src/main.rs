@@ -549,6 +549,8 @@ fn main() {
             long_compress_assistant::commands::compression::check_zpaq_snapshot_catalog,
             long_compress_assistant::commands::compression::cancel_archive_browse,
             long_compress_assistant::commands::compression::preview_archive_image,
+            long_compress_assistant::commands::compression::read_archive_image,
+            long_compress_assistant::commands::compression::check_image_reader_source,
             long_compress_assistant::commands::compression::preview_archive_text,
             long_compress_assistant::commands::compression::materialize_nested_archive,
             long_compress_assistant::commands::compression::open_archive_entry,
