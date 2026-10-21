@@ -466,7 +466,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
     // 不预先添加密码，先尝试解压，只有明确要求密码时才使用保险箱
     const options = {
       outputPath: task.outputPath,
-      comparisonSelection:task.comparisonSelection,
+      comparisonSelection:task.comparisonSelection?{...task.comparisonSelection,zipPasswordEncoding:task.zipPasswordEncoding??task.comparisonSelection.zipPasswordEncoding}:undefined,
       keepStructure: task.libraryKeepStructure ?? true,
       overwrite: false,
       deleteAfter: task.recycleSourceAfterExtract ?? false,

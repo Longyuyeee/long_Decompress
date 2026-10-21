@@ -359,7 +359,7 @@ export const useTauriCommands = () => {
 
       let comparisonResult: {path:string;outputBytes:number} | undefined
       const result = options.comparisonSelection
-        ? (comparisonResult = await invoke<{path:string;outputBytes:number}>('comparison_retrieve', {taskId,request:options.comparisonSelection,output:options.outputPath})).path
+        ? (comparisonResult = await invoke<{path:string;outputBytes:number}>('comparison_retrieve', {taskId,request:{...options.comparisonSelection,...(options.zipPasswordEncoding?{zipPasswordEncoding:options.zipPasswordEncoding}:{})},output:options.outputPath,password:options.password||null})).path
         : await invoke<string>('extract_file', {
         taskId,
         filePath,

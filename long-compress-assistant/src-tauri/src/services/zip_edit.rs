@@ -70,7 +70,10 @@ fn file_revision(path: &Path, directory: bool) -> Result<String> {
 }
 // zip-rs indexes equal raw names by their last occurrence. Compare EOCD count so no older item can disappear silently.
 pub(crate) fn declared_count(file: &mut File) -> Result<u64> {
-    let length=file.metadata()?.len(); let take=length.min(65557);file.seek(SeekFrom::End(-(take as i64)))?;
+    declared_count_reader(file)
+}
+pub(crate) fn declared_count_reader<R: Read+Seek>(file: &mut R) -> Result<u64> {
+    let length=file.seek(SeekFrom::End(0))?; let take=length.min(65557);file.seek(SeekFrom::End(-(take as i64)))?;
     let mut tail=vec![0;take as usize];file.read_exact(&mut tail)?;
     let at=(0..tail.len().saturating_sub(21)).rev().find(|&at|tail[at..].starts_with(b"PK\x05\x06")&&at+22+u16::from_le_bytes(tail[at+20..at+22].try_into().unwrap()) as usize==tail.len()).context("ZIP 目录不完整，不能编辑")?;
     let u16at=|offset|u16::from_le_bytes(tail[at+offset..at+offset+2].try_into().unwrap());

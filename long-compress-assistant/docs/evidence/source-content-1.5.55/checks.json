@@ -1,0 +1,64 @@
+{
+  "version": "1.5.55",
+  "frontend": {
+    "distinctTests": 30,
+    "result": "passed",
+    "scope": [
+      "sourceComparison1555: 10",
+      "sourceComparison1554: 10 affected existing",
+      "pendingDrafts: 3 comparison cases",
+      "HistoryExtractionDraft: 2 comparison cases",
+      "useTauriCommands: 3 comparison cases",
+      "AeroTable: 1 restored encrypted comparison",
+      "DecompressView: 1 existing comparison execution"
+    ],
+    "accounting": "Only new, failed or affected cases were run. Repeated cases do not add to distinct count."
+  },
+  "rust": {
+    "distinctTests": 17,
+    "result": "passed",
+    "scope": "comparison155 filter: 8 new and 9 affected existing; no old format matrix"
+  },
+  "build": [
+    "final TypeScript/Vite",
+    "Shell extension",
+    "eight release identifiers",
+    "Windows custom-protocol/desktop-e2e binaries"
+  ],
+  "desktop": {
+    "result": "passed",
+    "compositeFlows": 5,
+    "incrementalDisplayFlow": 1,
+    "layoutRecords": 26,
+    "selectedViewedScreenshots": [
+      "comparison1555-source-password-1100x700.png",
+      "comparison1555-source-password-760x520.png",
+      "comparison1555-password-unfinished-760x520.png",
+      "comparison1555-missing-standard-volume-760x520.png",
+      "comparison1555-stopped-with-confirmed-file-1100x700.png",
+      "comparison1555-remaining-completed-760x520.png",
+      "comparison1555-restored-needs-password-1100x700.png",
+      "comparison1555-history-password-scope-760x520.png",
+      "comparison1555-final-content-counts-1100x700.png",
+      "comparison1555-final-content-counts-760x520.png"
+    ],
+    "firstFourFlowBinary": "8aa7d6d09fcf99920544793fae30cb54d66310ded035eba7beb75c154bc80b7a",
+    "recoveryAndDisplayBinary": "d0652814c505d884a2a6b6dcdc9f2bf3242ef3d7d264aa821ebca2f1680623fd",
+    "incrementalScope": "First four native flows passed once. Restart exposed a missing inline password field; restored task scope was retained, field fixed with targeted unit test, then only recovery/history and count/filter/progress display continued. Final source additionally uses the existing readable-error formatter to hide internal markers; final TypeScript/Vite passed without another native rebuild for this text-only change."
+  },
+  "notRepeated": [
+    "four completed composite flows after inline-password and count display changes",
+    "old format/algorithm/password/media matrices",
+    "real disk-full",
+    "personal installation"
+  ],
+  "previousRelease": {
+    "version": "1.5.54",
+    "pr": 250,
+    "tagCommit": "2bea3d154ccd76fa4d559485e88d9d03d498426f",
+    "formalRun": 39622937568,
+    "formalConclusion": "success",
+    "assets": 4
+  },
+  "publicationReceipt": "Candidate, normal merge, exact tag and formal run follow in this version PR; no extra backfill commit."
+}

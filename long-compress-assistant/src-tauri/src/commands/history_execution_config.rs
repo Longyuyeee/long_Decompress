@@ -396,3 +396,10 @@ fn comparison1554_history_keeps_exact_scope_and_drops_extra_fields(){
  let value=serde_json::json!({"schemaVersion":1,"kind":"archive-extraction","outputDirectory":"D:/out","extractToSubfolder":false,"comparisonSelection":{"source":{"path":"C:/source.zip","kind":"zip","revision":"a".repeat(64)},"paths":["nested/合同.txt"],"keepStructure":false,"conflictPolicy":"skip","password":"must-not-persist"}});
  let clean=sanitize(value.clone(),"decompression","archive").unwrap();assert_eq!(clean["comparisonSelection"]["paths"],value["comparisonSelection"]["paths"]);assert!(!clean.to_string().contains("must-not-persist"));let mut invalid=value;invalid["comparisonSelection"]["paths"]=serde_json::json!([]);assert!(sanitize(invalid,"decompression","archive").is_none());
 }
+
+#[cfg(test)]
+#[test]
+fn comparison1555_history_keeps_encoding_and_encryption_marker_without_passwords(){
+ let value=serde_json::json!({"schemaVersion":1,"kind":"archive-extraction","outputDirectory":"D:/out","extractToSubfolder":false,"comparisonSelection":{"source":{"path":"C:/group.zip","kind":"zip","revision":"a".repeat(64),"encrypted":true,"password":"source-secret"},"paths":["one.txt"],"keepStructure":true,"conflictPolicy":"rename","zipPasswordEncoding":"cp936","password":"selection-secret"}});
+ let result=sanitize(value.clone(),"decompression","archive").unwrap();assert_eq!(result["comparisonSelection"]["zipPasswordEncoding"],"cp936");assert_eq!(result["comparisonSelection"]["source"]["encrypted"],true);assert!(!result.to_string().contains("secret"));let mut bad=value;bad["comparisonSelection"]["zipPasswordEncoding"]="invalid".into();assert!(sanitize(bad,"decompression","archive").is_none());
+}

@@ -32,14 +32,18 @@ pub async fn comparison_output(sources: Vec<SourceRef>, output: String) -> Resul
     .map_err(|e| format!("{e:#}"))
 }
 #[tauri::command]
-pub async fn comparison_validate(request: Selection, output: String) -> Result<(), String> {
+pub async fn comparison_validate(
+    request: Selection,
+    output: String,
+    password: Option<String>,
+) -> Result<(), String> {
     tauri::async_runtime::spawn_blocking(move || {
-        comparison::validate(
+        let source = comparison::validate(
             &request,
             Path::new(&output),
             Arc::new(AtomicBool::new(false)),
-        )
-        .map(|_| ())
+        )?;
+        comparison::validate_password(&request, &source, password.as_deref())
     })
     .await
     .map_err(|e| e.to_string())?
@@ -58,6 +62,7 @@ pub async fn comparison_retrieve(
     task_id: String,
     request: Selection,
     output: String,
+    password: Option<String>,
 ) -> Result<RetrievalResult, String> {
     let flag = super::compression::register_task_cancellation(&task_id)?;
     let guard = super::compression::TaskCancellationGuard::new(&task_id);
@@ -70,7 +75,7 @@ pub async fn comparison_retrieve(
             }));
         };
         log(format!("资料对比取回：精确选择 {} 项；原件保留", request.paths.len()), "info");
-        let result = comparison::retrieve(&request, Path::new(&output), flag, |progress| {
+        let result = comparison::retrieve_with_password(&request, Path::new(&output), password.as_deref(), flag, |progress| {
             let percent = if progress.total_bytes > 0 {
                 progress.processed_bytes as f64 / progress.total_bytes as f64 * 95.0
             } else { 0.0 };
@@ -93,4 +98,34 @@ pub async fn comparison_retrieve(
             }
         }
     }).await.map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn comparison_verify(
+    window: tauri::Window,
+    job_id: String,
+    request: crate::services::source_comparison_content::Request,
+) -> Result<crate::services::source_comparison_content::Batch, String> {
+    let job = crate::services::archive_library::Job::start(&job_id).map_err(|e| e.to_string())?;
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::services::source_comparison_content::run(
+            &request,
+            job.flag.clone(),
+            |progress| {
+                let _ = window.emit(
+                    "comparison-content-progress",
+                    serde_json::json!({"jobId":job_id,"progress":progress}),
+                );
+            },
+            |entry| {
+                let _ = window.emit(
+                    "comparison-content-result",
+                    serde_json::json!({"jobId":job_id,"entry":entry}),
+                );
+            },
+        )
+    })
+    .await
+    .map_err(|e| e.to_string())?
+    .map_err(|e| format!("{e:#}"))
 }
