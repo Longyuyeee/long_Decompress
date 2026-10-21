@@ -239,7 +239,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 版本变化放在这里，完整内容见 [所有 Releases](https://github.com/Longyuyeee/long_Decompress/releases)。
 
-**v1.5.47 · 归档资源库与跨包搜索**。主动加入 ZIP/TAR 或扫描指定目录确认候选，手动建库后按文件名/包内路径跨包查找，按来源与类型筛选；命中沿原浏览器定位、预览或单项取回。可停止、重启保留索引，缺失/变化来源先处理，移出只删索引。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.47.md) · [范围与记录](long-compress-assistant/docs/ARCHIVE_LIBRARY_FREEZE_1.5.47.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.47)。下一步按[五模块细分路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)推进 v1.5.48 索引维护、密码包与分卷来源。
+**v1.5.48 · 资料库维护、密码包与分卷来源**。资料库接入现有可浏览格式、密码与整组分卷，复用保险箱和原预览/提取；离线资料保留上次索引并标明来源状态，支持重新定位、仅更新变化来源与批次暂停/继续，密码仅在当前会话使用。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.48.md) · [范围与记录](long-compress-assistant/docs/LIBRARY_MAINTENANCE_FREEZE_1.5.48.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.48)。下一步按[五模块细分路线](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)推进 v1.5.49 分类、收藏与跨包批量取回。
+
+**v1.5.47 · 归档资源库与跨包搜索**。主动加入 ZIP/TAR 或扫描指定目录确认候选，手动建库后按文件名/包内路径跨包查找，按来源与类型筛选；命中沿原浏览器定位、预览或单项取回。可停止、重启保留索引，缺失/变化来源先处理，移出只删索引。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.47.md) · [范围与记录](long-compress-assistant/docs/ARCHIVE_LIBRARY_FREEZE_1.5.47.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.47)。索引维护、密码包与分卷来源已由上方 v1.5.48 接续，当前进度以最新记录为准。
 
 **v1.5.46 · 密码 ZIP 编辑与草稿恢复**。ZIP 工作区接通 AES/ZipCrypto 密码内容、保留/更换/取消输出加密与只改密码另存；未完成修改自动存为本地草稿，重启后定位缺失或变化的来源，重新填写密码再继续。已保存的草稿返回原结果，失败与原件保留。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.46.md) · [范围与记录](long-compress-assistant/docs/ZIP_PASSWORD_DRAFTS_FREEZE_1.5.46.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.46)。编辑工作区三阶段在该版收尾，资源库已由上方 v1.5.47 接续，当前进度以最新记录为准。
 

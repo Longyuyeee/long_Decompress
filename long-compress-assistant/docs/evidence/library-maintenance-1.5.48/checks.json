@@ -1,0 +1,59 @@
+{
+  "version": "1.5.48",
+  "date": "2026-10-21",
+  "frontend": {
+    "distinctPassed": 56,
+    "existingLibrary": 11,
+    "newMaintenance": 11,
+    "affectedBrowser": 34,
+    "execution": "Initial 54 passed. After source.path/source.format props were supplied to the existing encoding field, only two new ALZ/EGG encoding-default tests ran and passed."
+  },
+  "rust": {
+    "distinctPassed": 19,
+    "library": 13,
+    "migrations": 6,
+    "ignored": 1,
+    "ignoredReason": "Existing opt-in personal database snapshot test. Only isolated test profiles were used.",
+    "execution": "Initial 12 service and six migration cases passed; only one new standard-volume alias and non-first member revision case ran afterward, passed."
+  },
+  "builds": {
+    "typecheckAndVite": "passed",
+    "shellAndVersionIdentity": "passed",
+    "native": "custom-protocol,desktop-e2e; VITE_DESKTOP_E2E=1",
+    "binarySha256": "22fea6f2ba9f7d3fdf27021b6e1fdc14cb983ab516eed059de00e4b1efa80d6b",
+    "previousIdentities": [
+      "3fd340f8226ae2449b4c439f51635f512c164ba06d895f8c5c656deaf8109d17"
+    ],
+    "shellSha256": "f430e67769420b4b086494db7557613009cd5495bd90d56cd868caceec1d79cc"
+  },
+  "desktop": {
+    "passedFlows": 5,
+    "layoutRecords": 16,
+    "horizontalOverflow": 0,
+    "representativeScreenshots": 8,
+    "normalCloseSameProfile": true,
+    "upgradeFrom": "v1.5.47 isolated closed test profile, schema 13 to 14, existing 65-entry project cache preserved",
+    "pausedSourceEntries": 100000,
+    "receipt": "desktop.json",
+    "continuation": "First four flows retained on the prior binary. Final binary differs only in ALZ/EGG encoding-field source props, verified by two targeted frontend cases. Automation clicked a disabled build button during asynchronous add; waited for rows and enabled button, resumed only the fifth flow. No runtime failure or repeated first four flows."
+  },
+  "files": {
+    "zipOriginalSha256": "faa0857ce83d60eb5a680945fc0ff5a43cdaf081adb3e103dde5dd193f3fbdfb",
+    "sevenZipOriginalSha256": "b4725186a678fadd88d41e52c4eae65672f9f346c67e9c2a8a872fbe167abc98",
+    "tarBeforeChangeSha256": "d9e2950f443962a030c86b4704c3a97fcf0759d18e1a8983f9cea575eabbc38c",
+    "tarAfterDeliberateChangeSha256": "e52c4d2dcb54befe69776e925a6b6a938c412f7203dbb33e9394ea11b0225d0e",
+    "recoveredFiles": [
+      {
+        "relativePath": "密码说明.txt",
+        "size": 26,
+        "sha256": "4b933eb61e3f89aed7fa538cddce212cc1cbb737fac304d67ad993f2db8ae25c"
+      }
+    ]
+  },
+  "notRepeated": [
+    "unaffected old format/password matrices",
+    "real disk-full",
+    "media and personal installation"
+  ],
+  "releaseReceipt": "Candidate CI, normal protected merge, tag and formal assets recorded on the version PR."
+}
