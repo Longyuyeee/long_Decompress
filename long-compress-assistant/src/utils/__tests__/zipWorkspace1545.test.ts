@@ -73,7 +73,7 @@ describe('zipWorkspace1545 store and interface',()=>{
  })
  it('saves delete-only edits, retains them on failure and links a corrected save to the old task',async()=>{
    const store=useZipEditStore();await store.begin('C:/source.zip');const session=store.sessionFor('C:/source.zip')!;store.organize(session.sourcePath,'delete',op('delete','docs/',null).targets)
-   let calls=0;mocks.invoke.mockImplementation(async command=>{if(command==='save_zip_edit'){if(++calls===1)throw new Error('occupied');return {primaryPath:'C:/out.zip',files:[{path:'C:/out.zip',bytes:22}],totalBytes:22,split:false}}})
+   let calls=0;mocks.invoke.mockImplementation(async command=>{if(command==='inspect_zip_edit')return structuredClone(catalog);if(command==='check_zip_edit_inputs')return [];if(command==='save_zip_edit'){if(++calls===1)throw new Error('occupied');return {primaryPath:'C:/out.zip',files:[{path:'C:/out.zip',bytes:22}],totalBytes:22,split:false}}})
    await store.save(session.sourcePath);const failed=JSON.parse(JSON.stringify(store.taskFor(session)));expect(session.operations).toHaveLength(1)
    const args=mocks.invoke.mock.calls.find(call=>call[0]==='save_zip_edit')![1];expect(args.changes).toEqual([]);expect(args.originalEdits).toHaveLength(3)
    await store.save(session.sourcePath);expect(session.operations).toEqual([]);expect(store.taskFor(session)?.retryOfTaskId).toBe(failed.id);expect(JSON.parse(JSON.stringify(useTaskStore().tasks.find(t=>t.id===failed.id)))).toEqual(failed)

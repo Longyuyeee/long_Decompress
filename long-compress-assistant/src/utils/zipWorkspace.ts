@@ -90,7 +90,7 @@ export function resolveZipWorkspace(catalog: ZipEditCatalog, drafts: ZipEditDraf
     const node = originals.get(entry.path)
     return node?.path === entry.path ? [] : [{ sourcePath: entry.path, targetPath: node?.path ?? null }]
   })
-  const changes: ZipEditChange[] = nodes.filter(node => node.input).map(node => ({ ...node.input!, targetPath: node.path, action: 'add' }))
+  const changes: ZipEditChange[] = nodes.filter(node => node.input).map(node => ({ ...node.input!, targetPath: node.path, action: 'add', ...(node.originalAlias ? {replacesPath:node.originalAlias} : {}) }))
   const changeCount = new Set([...originalEdits.map(edit => zipPathKey(edit.sourcePath)), ...changes.map(change => zipPathKey(change.targetPath))]).size
   return { nodes, rows, structureRows, originalEdits, changes, unresolved, changeCount, hasChanges: !!(originalEdits.length || changes.length) }
 }

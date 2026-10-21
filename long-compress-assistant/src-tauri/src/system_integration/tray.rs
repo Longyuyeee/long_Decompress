@@ -47,7 +47,7 @@ pub fn handle_tray_event(app: &AppHandle, event: SystemTrayEvent) {
                     show_main_window(app);
                     let _ = app.emit_all("exit-confirmation-requested", ());
                 } else {
-                    app.exit(0);
+                    let _ = app.emit_all("exit-drafts-requested", ());
                 }
             }
             "open" => show_main_window(app),

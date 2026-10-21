@@ -55,7 +55,7 @@ const snapshotReadArguments = computed((): [ZipPasswordEncoding?, ZpaqSnapshot?]
 const conversion = useArchiveConversionStore()
 const zipEditing = useZipEditStore()
 const zipEditor = ref<InstanceType<typeof ZipEditBar> | null>(null)
-const canEditZip = computed(() => result.value?.format === 'ZIP' && !parentFrames.value.length)
+const canEditZip = computed(() => (result.value?.format === 'ZIP' || !!zipEditing.sessionFor(archivePath.value)?.editing) && !parentFrames.value.length)
 const editingZip = computed(() => canEditZip.value && zipEditing.sessionFor(archivePath.value)?.editing)
 const zipEditBusy = computed(() => !!zipEditing.sessionFor(archivePath.value)?.busy)
 const selected = ref(new Set<string>())
@@ -737,7 +737,7 @@ const extractSelected = async () => {
     </ZpaqSnapshotPicker>
     <ZpaqSnapshotDiff v-if="result?.zpaqHistory" v-model:visible="diffVisible" :path="archivePath" :password="password" :history="result.zpaqHistory" :output-directory="outputPath" />
     <p v-if="result?.format === 'WIM'" data-testid="wim-image-hint" class="text-xs leading-relaxed text-muted">固实 WIM/ESD 的预览与所选提取可能需要读取同块内容。多镜像按 1、2 等编号目录展示，可进入后选择文件；根目录的 [1].xml 为镜像说明。原生 SWM 请将同组 install.swm、install2.swm 等放在同一目录，可从任意一卷进入。提取与转换保留当前目录视图，不修改原镜像。</p>
-    <ZipEditBar v-if="canEditZip" ref="zipEditor" :source-path="archivePath" :directory="activeDirectory" :selected-paths="[...selected]" :selected-file="selected.size === 1 ? [...selected][0] : undefined" :disabled="inputBusy" @open-result="openArchivePath($event)" />
+    <ZipEditBar v-if="canEditZip" ref="zipEditor" :source-path="archivePath" :directory="activeDirectory" :password="password" :source-encoding="inputEncoding" :selected-paths="[...selected]" :selected-file="selected.size === 1 ? [...selected][0] : undefined" :disabled="inputBusy" @open-result="(path,options)=>openArchivePath(path,options)" />
 
     <section class="aero-card shrink-0 p-3 grid gap-3 browser-toolbar" :class="{'has-zip-encoding': archivePath && supportsZipPasswordEncoding(archivePath, result?.format)}">
       <div class="min-w-0 browser-field">

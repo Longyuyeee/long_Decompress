@@ -3,20 +3,41 @@ use anyhow::{ensure, Context, Result};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{collections::{BTreeMap, HashMap, HashSet}, fs::{File, OpenOptions}, io::{Read, Write, Seek, SeekFrom}, path::{Path, PathBuf}, sync::{Arc, atomic::{AtomicBool, Ordering}}};
-use zip_aes::{ZipArchive, ZipWriter, CompressionMethod, write::SimpleFileOptions};
+use zip_aes::{ZipArchive, ZipWriter, CompressionMethod, HasZipMetadata, write::{SimpleFileOptions, FullFileOptions}};
+use zip_aes::unstable::write::FileOptionsExt;
+use super::zip_password::ZipPasswordEncoding;
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all="snake_case")]
+pub enum Encryption { #[default] None, Zipcrypto, Aes128, Aes192, Aes256 }
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all="snake_case")]
+pub enum OutputMode { #[default] Keep, None, Zipcrypto, Aes256 }
+#[derive(Clone, Default, Deserialize)]
+#[serde(rename_all="camelCase",default)]
+pub struct Credentials {pub source_password:String,pub source_encoding:Option<ZipPasswordEncoding>,pub output_mode:OutputMode,pub output_password:String,pub output_encoding:ZipPasswordEncoding}
+fn entry_encryption<R:Read>(entry:&zip_aes::read::ZipFile<'_,R>)->Encryption {
+    if !entry.encrypted(){return Encryption::None}
+    match entry.get_metadata().aes_mode.map(|(mode,_,_)|mode){Some(zip_aes::AesMode::Aes128)=>Encryption::Aes128,Some(zip_aes::AesMode::Aes192)=>Encryption::Aes192,Some(zip_aes::AesMode::Aes256)=>Encryption::Aes256,None=>Encryption::Zipcrypto}
+}
+fn output_encryption(mode:OutputMode,original:Encryption)->Encryption{match mode{OutputMode::Keep=>original,OutputMode::None=>Encryption::None,OutputMode::Zipcrypto=>Encryption::Zipcrypto,OutputMode::Aes256=>Encryption::Aes256}}
+fn write_options<'a>(method:CompressionMethod,size:u64,date:Option<zip_aes::DateTime>,permissions:Option<u32>,comment:&str,encryption:Encryption,password:&'a[u8],level:Option<i64>)->Result<FullFileOptions<'a>>{
+    let mut options=SimpleFileOptions::default().compression_method(method).compression_level(level).large_file(size>=u32::MAX as u64).last_modified_time(date.filter(zip_aes::DateTime::is_valid).unwrap_or_default()).into_full_options().with_file_comment(comment.to_string());
+    if let Some(mode)=permissions{options=options.unix_permissions(mode);}
+    Ok(match encryption{Encryption::None=>options,Encryption::Zipcrypto=>options.with_deprecated_encryption(password)?,Encryption::Aes128=>options.with_aes_encryption_bytes(zip_aes::AesMode::Aes128,password),Encryption::Aes192=>options.with_aes_encryption_bytes(zip_aes::AesMode::Aes192,password),Encryption::Aes256=>options.with_aes_encryption_bytes(zip_aes::AesMode::Aes256,password)})
+}
 const MAX_ADDITIONS: usize = 10_000;
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
 pub struct Entry { pub path: String, pub is_dir: bool, pub size: u64 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
-pub struct Catalog { pub revision: String, pub entries: Vec<Entry>, pub methods: Vec<String> }
+pub struct Catalog { pub revision: String, pub entries: Vec<Entry>, pub methods: Vec<String>, pub encrypted:bool, pub default_encryption:Encryption, pub encryptions:HashMap<String,Encryption> }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
 pub struct Input { pub source_path: String, pub target_path: String, pub is_dir: bool, pub size: u64, pub source_revision: String }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
-pub struct Change { #[serde(flatten)] pub input: Input, pub action: String }
+pub struct Change { #[serde(flatten)] pub input: Input, pub action: String, #[serde(default)] pub replaces_path:Option<String> }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
 pub struct OriginalEdit { pub source_path: String, pub target_path: Option<String> }
@@ -77,17 +98,19 @@ fn open_catalog(path: &Path) -> Result<(ZipArchive<File>,Catalog)> {
     ensure!(archive.offset()==0,"自解压/带前置数据的 ZIP 暂不支持编辑");
     ensure!(archive.len() as u64==count,"ZIP 包内含重复名称，不能在另存时丢弃旧内容；请先提取整理");
     ensure!(archive.len()<=200_000,"包内条目过多，请先提取需要整理的部分");
-    let mut map=BTreeMap::new();let mut names=HashSet::new();let mut methods=HashSet::new();let mut digest=Sha256::new();digest.update(file_revision(path,false)?.as_bytes());
+    let mut map=BTreeMap::new();let mut names=HashSet::new();let mut methods=HashSet::new();let mut encryptions=HashMap::new();let mut digest=Sha256::new();digest.update(file_revision(path,false)?.as_bytes());
     for index in 0..archive.len() {
-        let file=archive.by_index_raw(index)?;ensure!(!file.encrypted(),"此 ZIP 有密码内容，本阶段不会移除加密；请继续使用浏览/提取，密码编辑按后续阶段推进");
+        let file=archive.by_index_raw(index)?;
         let mode=file.unix_mode().unwrap_or(0)&0o170000;ensure!(mode==0||mode==0o100000||mode==0o040000,"ZIP 含链接或特殊条目，暂不支持编辑：{}",file.name());
         ensure!(matches!(file.compression(),CompressionMethod::Stored|CompressionMethod::Deflated),"本阶段编辑支持原方法为 Store/Deflate 的普通 ZIP；条目 {} 使用 {:?}，仍可浏览/提取",file.name(),file.compression());
         let path=normalized_path(file.name(),file.is_dir())?;ensure!(names.insert(key(&path)),"ZIP 包内同名或大小写冲突：{path}");
         digest.update(format!("{}:{:?}:{}:{}:{}:{:?}:{:?}",path,file.compression(),file.size(),file.compressed_size(),file.crc32(),file.last_modified(),file.unix_mode()).as_bytes());
-        methods.insert(format!("{:?}",file.compression()));register_entry(&mut map,Entry{path,is_dir:file.is_dir(),size:file.size()})?;
+        encryptions.insert(path.clone(),entry_encryption(&file));methods.insert(format!("{:?}",file.compression()));register_entry(&mut map,Entry{path,is_dir:file.is_dir(),size:file.size()})?;
     }
     let mut methods:Vec<_>=methods.into_iter().collect();methods.sort();
-    Ok((archive,Catalog{revision:format!("{:x}",digest.finalize()),entries:map.into_values().collect(),methods}))
+    let schemes:HashSet<_>=encryptions.values().copied().filter(|scheme|*scheme!=Encryption::None).collect();
+    let default_encryption=if schemes.len()==1{*schemes.iter().next().unwrap()}else if schemes.is_empty(){Encryption::None}else{Encryption::Aes256};
+    Ok((archive,Catalog{revision:format!("{:x}",digest.finalize()),entries:map.into_values().collect(),methods,encrypted:!schemes.is_empty(),default_encryption,encryptions}))
 }
 pub fn inspect(path: &Path) -> Result<Catalog> {Ok(open_catalog(path)?.1)}
 pub fn prepare(sources: &[String], directory: &str) -> Result<Vec<Input>> {
@@ -104,6 +127,13 @@ pub fn prepare(sources: &[String], directory: &str) -> Result<Vec<Input>> {
     for source in sources {let source=Path::new(source);let name=source.file_name().context("请选择文件/目录而不是磁盘根目录")?.to_str().context("来源名称无效")?;walk(source,format!("{prefix}{name}"),&mut inputs)?;}
     Ok(inputs)
 }
+#[derive(Serialize)]
+#[serde(rename_all="camelCase")]
+pub struct InputIssue {pub index:usize,pub issue:String}
+pub fn check_inputs(inputs:&[Input])->Result<Vec<InputIssue>>{
+    ensure!(inputs.len()<=MAX_ADDITIONS,"编辑来源超过 10000 项");
+    Ok(inputs.iter().enumerate().filter_map(|(index,input)|match file_revision(Path::new(&input.source_path),input.is_dir){Ok(revision)if revision==input.source_revision=>None,Ok(_)=>Some(InputIssue{index,issue:"来源已变化，请重新读取或重新定位后确认".into()}),Err(_)=>Some(InputIssue{index,issue:"来源缺失或无法访问，请重新定位".into()})}).collect())
+}
 struct ControlledFile { file:File, flag:Arc<AtomicBool>, observer:Option<Observer>, position:u64, high:u64, estimate:u64 }
 impl ControlledFile {
     fn check(&self)->std::io::Result<()>{checkpoint(&self.flag).map_err(|e|std::io::Error::new(std::io::ErrorKind::Other,e.to_string()))}
@@ -115,20 +145,24 @@ impl Write for ControlledFile {
     fn flush(&mut self)->std::io::Result<()>{self.file.flush()}
 }
 struct Staging(PathBuf);impl Drop for Staging {fn drop(&mut self){let _=std::fs::remove_file(&self.0);}}
-fn validate_contents<R:Read+Seek>(archive:&mut ZipArchive<R>,flag:&Arc<AtomicBool>,observer:&Observer,phase:&'static str,start:f32,weight:f32)->Result<HashMap<String,(u64,u32)>> {
+fn validate_contents<R:Read+Seek>(archive:&mut ZipArchive<R>,flag:&Arc<AtomicBool>,observer:&Observer,phase:&'static str,start:f32,weight:f32,password:&str,encoding:Option<ZipPasswordEncoding>)->Result<HashMap<String,(u64,u32)>> {
     let total=(0..archive.len()).try_fold(0u64,|n,i|->Result<_>{Ok(n.saturating_add(archive.by_index_raw(i)?.size()))})?;
     let mut processed=0u64;let mut map=HashMap::new();let mut buffer=vec![0u8;256*1024];
-    for index in 0..archive.len(){checkpoint(flag)?;let mut entry=archive.by_index(index)?;let name=normalized_path(entry.name(),entry.is_dir())?;
-        loop {checkpoint(flag)?;let n=entry.read(&mut buffer).with_context(||format!("条目无法完整读取：{name}"))?;if n==0{break}processed+=n as u64;progress(observer,phase,start+weight*(processed as f64/total.max(1) as f64) as f32,&name,processed,total,None);}
-        ensure!(map.insert(name,(entry.size(),entry.crc32())).is_none(),"新包存在重复条目");
+    for index in 0..archive.len(){checkpoint(flag)?;let mut entry=super::zip_password::open_entry_with_encoding(archive,index,password,encoding).context("无法读取 ZIP 条目，请核对原包密码与密码编码")?;let name=normalized_path(entry.name(),entry.is_dir())?;let mut crc=crc32fast::Hasher::new();
+        loop {checkpoint(flag)?;let n=entry.read(&mut buffer).with_context(||format!("条目无法完整读取：{name}"))?;if n==0{break}crc.update(&buffer[..n]);processed+=n as u64;progress(observer,phase,start+weight*(processed as f64/total.max(1) as f64) as f32,&name,processed,total,None);}
+        ensure!(map.insert(name,(entry.size(),crc.finalize())).is_none(),"新包存在重复条目");
     }progress(observer,phase,start+weight,"",processed,total,None);Ok(map)
 }
 #[cfg(test)]
 pub fn save(source:&Path,revision:&str,changes:&[Change],output:&Path,method:&str,level:u32,flag:Arc<AtomicBool>,observer:Observer)->Result<()> {
     save_with_edits(source,revision,changes,&[],output,method,level,flag,observer)
 }
+#[cfg(test)]
 pub fn save_with_edits(source:&Path,revision:&str,changes:&[Change],original_edits:&[OriginalEdit],output:&Path,method:&str,level:u32,flag:Arc<AtomicBool>,observer:Observer)->Result<()> {
-    ensure!((!changes.is_empty()||!original_edits.is_empty())&&changes.len()<=MAX_ADDITIONS&&original_edits.len()<=200_000,"没有需要保存的修改，或一次修改超过支持范围");
+    save_encrypted(source,revision,changes,original_edits,output,method,level,&Credentials::default(),flag,observer)
+}
+pub fn save_encrypted(source:&Path,revision:&str,changes:&[Change],original_edits:&[OriginalEdit],output:&Path,method:&str,level:u32,credentials:&Credentials,flag:Arc<AtomicBool>,observer:Observer)->Result<()> {
+    ensure!((!changes.is_empty()||!original_edits.is_empty()||credentials.output_mode!=OutputMode::Keep)&&changes.len()<=MAX_ADDITIONS&&original_edits.len()<=200_000,"没有需要保存的修改，或一次修改超过支持范围");
     ensure!(matches!(method,"deflate"|"store")&&level<=9,"新增内容请使用 Deflate 0～9 或仅存储");
     ensure!(output.extension().is_some_and(|s|s.eq_ignore_ascii_case("zip")),"请另存为 .zip 文件");
     ensure!(!output.exists(),"[archive-output:Pre-checking:output-conflict] 输出文件已存在，请更换名称或保存位置；已有文件保留");
@@ -136,6 +170,9 @@ pub fn save_with_edits(source:&Path,revision:&str,changes:&[Change],original_edi
     let source_absolute=source.canonicalize()?;let target_absolute=parent.canonicalize()?.join(output.file_name().context("新包名称为空")?);
     ensure!(!source_absolute.to_string_lossy().eq_ignore_ascii_case(&target_absolute.to_string_lossy()),"请另存新名称，不能覆盖原压缩包");
     let (_,catalog)=open_catalog(source)?;ensure!(catalog.revision==revision,"原包已变化，请保留修改清单，重新打开并确认来源后再编辑");
+    ensure!(!catalog.encrypted||!credentials.source_password.is_empty(),"请填写原包密码，再保存密码 ZIP；修改清单保留");
+    let output_password=match credentials.output_mode{OutputMode::Keep=>credentials.source_password.as_str(),OutputMode::None=>"",_=>{ensure!(!credentials.output_password.is_empty(),"请填写新包密码，或明确选择不加密");credentials.output_password.as_str()}};
+    let output_bytes=if !output_password.is_empty(){super::zip_password::encode(output_password,credentials.output_encoding)?}else{Vec::new()};
     let originals:HashMap<_,_>=catalog.entries.iter().map(|e|(e.path.as_str(),e)).collect();
     let mut edits=HashMap::new();
     for edit in original_edits {
@@ -155,9 +192,10 @@ pub fn save_with_edits(source:&Path,revision:&str,changes:&[Change],original_edi
         if change.action=="replace"{expected.remove(&key(&normalized));}
         register_entry(&mut expected,Entry{path:normalized,is_dir:input.is_dir,size:input.size})?;
     }
+    if (catalog.encrypted&&credentials.output_mode==OutputMode::Keep)||matches!(credentials.output_mode,OutputMode::Zipcrypto|OutputMode::Aes256){ensure!(expected.values().any(|entry|!entry.is_dir),"空 ZIP 没有可加密文件，请明确选择新包不加密后另存");}
     checkpoint(&flag)?;
     let mut original=ZipArchive::new(ControlledFile{file:File::open(source)?,flag:flag.clone(),observer:None,position:0,high:0,estimate:0})?;
-    let original_facts=validate_contents(&mut original,&flag,&observer,"reading",0.0,0.3)?;
+    let original_facts=validate_contents(&mut original,&flag,&observer,"reading",0.0,0.3,&credentials.source_password,credentials.source_encoding)?;
     let staged=Staging(super::output_publish_transaction::staged_output_path(output,"zip-edit")?);
     let estimate=source.metadata()?.len().saturating_add(changes.iter().fold(0u64,|n,e|n.saturating_add(e.input.size)));
     let file=OpenOptions::new().create_new(true).write(true).read(true).open(&staged.0)?;
@@ -168,7 +206,15 @@ pub fn save_with_edits(source:&Path,revision:&str,changes:&[Change],original_edi
         let target=edits.get(old_path.as_str()).copied().unwrap_or(Some(old_path.as_str()));
         if let Some(path)=target {if !replacements.contains(&key(path)){
             retained_facts.insert(path.to_string(),original_facts[&old_path]);written_paths.insert(path.to_string());
-            progress(&observer,"writing",0.3,path,0,estimate,None);writer.raw_copy_file_rename(entry,path)?;
+            progress(&observer,"writing",0.3,path,0,estimate,None);
+            let encryption=output_encryption(credentials.output_mode,entry_encryption(&entry));
+            if !entry.encrypted()&&(encryption==Encryption::None||entry.is_dir()) {writer.raw_copy_file_rename(entry,path)?;}
+            else {
+                let method=entry.compression();let size=entry.size();let date=entry.last_modified();let permissions=entry.unix_mode();let comment=entry.comment().to_string();let is_dir=entry.is_dir();drop(entry);
+                let mut decoded=super::zip_password::open_entry_with_encoding(&mut original,index,&credentials.source_password,credentials.source_encoding).context("无法解锁原条目，请核对密码和编码")?;
+                let options=write_options(method,size,date,permissions,&comment,if is_dir&&credentials.output_mode!=OutputMode::Keep{Encryption::None}else{encryption},&output_bytes,None)?;
+                writer.start_file(path,options)?;let mut block=vec![0u8;256*1024];loop{checkpoint(&flag)?;let n=decoded.read(&mut block)?;if n==0{break}writer.write_all(&block[..n])?;}
+            }
         }}
     }
     let mut buffer=vec![0u8;256*1024];
@@ -178,7 +224,9 @@ pub fn save_with_edits(source:&Path,revision:&str,changes:&[Change],original_edi
         let date=chrono::DateTime::<chrono::Local>::from(metadata.modified()?);
         use chrono::{Datelike,Timelike};
         let timestamp=zip_aes::DateTime::from_date_and_time(date.year().clamp(1980,2107) as u16,date.month() as u8,date.day() as u8,date.hour() as u8,date.minute() as u8,date.second() as u8).unwrap_or_default();
-        let options=SimpleFileOptions::default().compression_method(if method=="store"{CompressionMethod::Stored}else{CompressionMethod::Deflated}).compression_level(if method=="store"{None}else{Some(level as i64)}).last_modified_time(timestamp).large_file(input.size>=u32::MAX as u64);
+        let inherited=change.replaces_path.as_ref().map(|path|catalog.encryptions.get(path).copied().with_context(||format!("替换原位置已变化：{path}"))).transpose()?.unwrap_or(catalog.default_encryption);
+        let encryption=if input.is_dir{Encryption::None}else{output_encryption(credentials.output_mode,inherited)};
+        let options=write_options(if method=="store"{CompressionMethod::Stored}else{CompressionMethod::Deflated},input.size,Some(timestamp),None,"",encryption,&output_bytes,if method=="store"{None}else{Some(level as i64)})?;
         if input.is_dir {writer.add_directory(&input.target_path,options)?;continue}
         ensure!(file_revision(Path::new(&input.source_path),false)?==input.source_revision,"添加来源已变化，请重新添加：{}",input.source_path);
         writer.start_file(&input.target_path,options)?;let mut file=File::open(&input.source_path)?;let mut copied=0u64;
@@ -192,7 +240,7 @@ pub fn save_with_edits(source:&Path,revision:&str,changes:&[Change],original_edi
     for directory in directories {checkpoint(&flag)?;if !represented.contains(&directory.path){writer.add_directory(&directory.path,SimpleFileOptions::default().compression_method(CompressionMethod::Stored))?;written_paths.insert(directory.path.clone());mark_parents(&directory.path,&mut represented);}}
     let file=writer.finish()?;file.file.sync_all()?;drop(file);checkpoint(&flag)?;
     let mut rebuilt=ZipArchive::new(ControlledFile{file:File::open(&staged.0)?,flag:flag.clone(),observer:None,position:0,high:0,estimate:0})?;
-    let facts=validate_contents(&mut rebuilt,&flag,&observer,"verifying",0.75,0.23)?;
+    let facts=validate_contents(&mut rebuilt,&flag,&observer,"verifying",0.75,0.23,output_password,Some(credentials.output_encoding))?;
     for (path,fact) in &retained_facts {ensure!(facts.get(path)==Some(fact),"保留条目的内容或新位置不一致：{path}");}
     ensure!(facts.keys().cloned().collect::<HashSet<_>>()==written_paths,"新包条目与确认的修改清单不一致");
     for change in changes{ensure!(facts.get(&change.input.target_path).is_some_and(|(size,_)|*size==change.input.size),"新增内容大小不一致：{}",change.input.target_path);}
@@ -209,7 +257,7 @@ mod tests {
         let options=SimpleFileOptions::default().compression_method(CompressionMethod::Deflated).last_modified_time(zip_aes::DateTime::from_date_and_time(2020,2,3,4,5,6).unwrap());
         writer.start_file("资料/说明.txt",options).unwrap();writer.write_all(b"keep original contents").unwrap();writer.start_file("替换.txt",options).unwrap();writer.write_all(b"old").unwrap();writer.add_directory("空目录/",options).unwrap();writer.finish().unwrap();}
     fn observer()->Observer{Arc::new(|_|{})}
-    fn changes(paths:&[String],target:&str,action:&str)->Vec<Change>{prepare(paths,target).unwrap().into_iter().map(|input|Change{input,action:action.into()}).collect()}
+    fn changes(paths:&[String],target:&str,action:&str)->Vec<Change>{prepare(paths,target).unwrap().into_iter().map(|input|Change{input,action:action.into(),replaces_path:None}).collect()}
     #[test]
     fn zip_edit1544_add_replace_retains_original_content_names_empty_directories_and_timestamp(){
         let temp=tempfile::tempdir().unwrap();let source=temp.path().join("源.zip");zip(&source);let source_bytes=std::fs::read(&source).unwrap();let catalog=inspect(&source).unwrap();
@@ -233,8 +281,8 @@ mod tests {
         let result=save(&source,&catalog.revision,&changes,&output,"store",0,flag,Arc::new(move|e|{if e.phase=="writing"{signal.store(true,Ordering::SeqCst)}}));assert!(result.is_err());assert!(!output.exists());assert!(std::fs::read_dir(temp.path()).unwrap().all(|e|!e.unwrap().file_name().to_string_lossy().starts_with(".zip-edit-")));
     }
     #[test]
-    fn zip_edit1544_rejects_encryption_duplicate_names_and_conflicting_paths(){
-        let temp=tempfile::tempdir().unwrap();let path=temp.path().join("encrypted.zip");let mut writer=ZipWriter::new(File::create(&path).unwrap());writer.start_file("secret.txt",SimpleFileOptions::default().with_aes_encryption(zip_aes::AesMode::Aes256,"password")).unwrap();writer.write_all(b"secret").unwrap();writer.finish().unwrap();assert!(inspect(&path).unwrap_err().to_string().contains("密码"));
+    fn zip_edit1544_catalog_encryption_and_rejects_duplicate_names_and_conflicting_paths(){
+        let temp=tempfile::tempdir().unwrap();let path=temp.path().join("encrypted.zip");let mut writer=ZipWriter::new(File::create(&path).unwrap());writer.start_file("secret.txt",SimpleFileOptions::default().with_aes_encryption(zip_aes::AesMode::Aes256,"password")).unwrap();writer.write_all(b"secret").unwrap();writer.finish().unwrap();assert!(inspect(&path).unwrap().encrypted);
         let mut writer=zip::ZipWriter::new(File::create(&path).unwrap());for _ in 0..2{writer.start_file("same.txt",zip::write::FileOptions::default()).unwrap();writer.write_all(b"same").unwrap();}writer.finish().unwrap();assert!(inspect(&path).unwrap_err().to_string().contains("重复"));
         for name in ["../escape","/absolute","folder/../file","folder/file.","CON.txt"]{assert!(normalized_path(name,false).is_err(),"{name}");}
     }
@@ -278,5 +326,36 @@ mod tests {
         let temp=tempfile::tempdir().unwrap();let source=temp.path().join("source.zip");zip(&source);let before=std::fs::read(&source).unwrap();let catalog=inspect(&source).unwrap();let flag=Arc::new(AtomicBool::new(false));let signal=flag.clone();let output=temp.path().join("cancelled.zip");
         assert!(save_with_edits(&source,&catalog.revision,&[],&[edit("替换.txt",Some("new.txt"))],&output,"store",0,flag,Arc::new(move|event|{if event.phase=="writing"{signal.store(true,Ordering::SeqCst)}})).is_err());assert!(!output.exists());assert_eq!(std::fs::read(source).unwrap(),before);assert!(std::fs::read_dir(temp.path()).unwrap().all(|entry|!entry.unwrap().file_name().to_string_lossy().starts_with(".zip-edit-")));
     }
+
+    fn protected_zip(path:&Path,scheme:Encryption,password:&[u8]){let mut writer=ZipWriter::new(File::create(path).unwrap());writer.set_comment("加密包备注").unwrap();for(name,content,method)in[("secret.txt","protected contents",CompressionMethod::Deflated),("stored.txt","stored contents",CompressionMethod::Stored)]{let options=write_options(method,content.len() as u64,Some(zip_aes::DateTime::from_date_and_time(2021,3,4,5,6,8).unwrap()),None,"条目备注",scheme,password,None).unwrap();writer.start_file(name,options).unwrap();writer.write_all(content.as_bytes()).unwrap();}writer.start_file("public.txt",SimpleFileOptions::default()).unwrap();writer.write_all(b"public contents").unwrap();writer.add_directory("empty/",SimpleFileOptions::default()).unwrap();writer.finish().unwrap();}
+    fn read_password(archive:&mut ZipArchive<File>,name:&str,password:&str,encoding:ZipPasswordEncoding)->String{let index=(0..archive.len()).find(|index|archive.by_index_raw(*index).unwrap().name()==name).unwrap();let mut content=String::new();super::super::zip_password::open_entry_with_encoding(archive,index,password,Some(encoding)).unwrap().read_to_string(&mut content).unwrap();content}
+    #[test]
+    fn zip_edit1546_preserves_aes_strengths_zipcrypto_mixed_public_entries_and_replacement_encryption(){
+        for scheme in [Encryption::Aes128,Encryption::Aes192,Encryption::Aes256,Encryption::Zipcrypto]{let temp=tempfile::tempdir().unwrap();let source=temp.path().join("source.zip");protected_zip(&source,scheme,b"original-password");let before=std::fs::read(&source).unwrap();let catalog=inspect(&source).unwrap();assert_eq!(catalog.default_encryption,scheme);
+            let replacement=temp.path().join("new.txt");std::fs::write(&replacement,b"replacement").unwrap();let mut changes=changes(&[replacement.to_string_lossy().into()],"","add");changes[0].input.target_path="renamed.txt".into();changes[0].replaces_path=Some("secret.txt".into());let output=temp.path().join("edited.zip");let credentials=Credentials{source_password:"original-password".into(),..Default::default()};
+            save_encrypted(&source,&catalog.revision,&changes,&[edit("secret.txt",None)],&output,"deflate",6,&credentials,Arc::new(AtomicBool::new(false)),observer()).unwrap();let output_catalog=inspect(&output).unwrap();assert_eq!(output_catalog.encryptions["renamed.txt"],scheme);assert_eq!(output_catalog.encryptions["stored.txt"],scheme);assert_eq!(output_catalog.encryptions["public.txt"],Encryption::None);
+            let mut archive=ZipArchive::new(File::open(output).unwrap()).unwrap();assert_eq!(read_password(&mut archive,"renamed.txt","original-password",ZipPasswordEncoding::Utf8),"replacement");assert_eq!(read_password(&mut archive,"stored.txt","original-password",ZipPasswordEncoding::Utf8),"stored contents");let stored_index=(0..archive.len()).find(|index|archive.by_index_raw(*index).unwrap().name()=="stored.txt").unwrap();let entry=archive.by_index_raw(stored_index).unwrap();assert_eq!(entry.compression(),CompressionMethod::Stored);assert_eq!(entry.last_modified().unwrap().year(),2021);assert_eq!(entry.comment(),"条目备注");assert_eq!(std::fs::read(&source).unwrap(),before);
+        }
+    }
+    #[test]
+    fn zip_edit1546_reencrypts_aes_as_zipcrypto_with_new_cp936_password_and_actual_content_crc(){
+        let temp=tempfile::tempdir().unwrap();let source=temp.path().join("aes.zip");protected_zip(&source,Encryption::Aes256,b"old");let catalog=inspect(&source).unwrap();let output=temp.path().join("new.zip");let credentials=Credentials{source_password:"old".into(),output_mode:OutputMode::Zipcrypto,output_password:"交付密码".into(),output_encoding:ZipPasswordEncoding::Cp936,..Default::default()};
+        save_encrypted(&source,&catalog.revision,&[],&[],&output,"deflate",6,&credentials,Arc::new(AtomicBool::new(false)),observer()).unwrap();let catalog=inspect(&output).unwrap();assert_eq!(catalog.encryptions["secret.txt"],Encryption::Zipcrypto);assert_eq!(catalog.encryptions["public.txt"],Encryption::Zipcrypto);let mut archive=ZipArchive::new(File::open(output).unwrap()).unwrap();assert_eq!(read_password(&mut archive,"secret.txt","交付密码",ZipPasswordEncoding::Cp936),"protected contents");
+    }
+    #[test]
+    fn zip_edit1546_reads_legacy_password_encoding_and_requires_explicit_plain_output(){
+        let temp=tempfile::tempdir().unwrap();let source=temp.path().join("local.zip");let password=super::super::zip_password::encode("原包密码",ZipPasswordEncoding::Cp936).unwrap();protected_zip(&source,Encryption::Zipcrypto,&password);let catalog=inspect(&source).unwrap();let output=temp.path().join("plain.zip");let credentials=Credentials{source_password:"原包密码".into(),source_encoding:Some(ZipPasswordEncoding::Cp936),output_mode:OutputMode::None,..Default::default()};
+        save_encrypted(&source,&catalog.revision,&[],&[edit("secret.txt",Some("renamed.txt"))],&output,"store",0,&credentials,Arc::new(AtomicBool::new(false)),observer()).unwrap();assert!(!inspect(&output).unwrap().encrypted);let mut archive=ZipArchive::new(File::open(output).unwrap()).unwrap();let mut content=String::new();archive.by_name("renamed.txt").unwrap().read_to_string(&mut content).unwrap();assert_eq!(content,"protected contents");assert_eq!(archive.by_name("renamed.txt").unwrap().compression(),CompressionMethod::Deflated);
+        let kept=temp.path().join("kept.zip");let mut keep=credentials;keep.output_mode=OutputMode::Keep;save_encrypted(&source,&catalog.revision,&[],&[edit("secret.txt",Some("renamed.txt"))],&kept,"deflate",6,&keep,Arc::new(AtomicBool::new(false)),observer()).unwrap();let mut kept=ZipArchive::new(File::open(kept).unwrap()).unwrap();assert_eq!(read_password(&mut kept,"renamed.txt","原包密码",ZipPasswordEncoding::Utf8),"protected contents");
+    }
+    #[test]
+    fn zip_edit1546_wrong_missing_password_and_unrepresentable_output_do_not_publish(){
+        let temp=tempfile::tempdir().unwrap();let source=temp.path().join("source.zip");protected_zip(&source,Encryption::Aes256,b"old");let before=std::fs::read(&source).unwrap();let catalog=inspect(&source).unwrap();let output=temp.path().join("failed.zip");
+        for credentials in [Credentials::default(),Credentials{source_password:"wrong".into(),..Default::default()},Credentials{source_password:"old".into(),output_mode:OutputMode::Aes256,..Default::default()},Credentials{source_password:"old".into(),output_mode:OutputMode::Aes256,output_password:"密码😀".into(),output_encoding:ZipPasswordEncoding::Cp936,..Default::default()}]{assert!(save_encrypted(&source,&catalog.revision,&[],&[edit("secret.txt",Some("renamed.txt"))],&output,"deflate",6,&credentials,Arc::new(AtomicBool::new(false)),observer()).is_err());assert!(!output.exists());assert_eq!(std::fs::read(&source).unwrap(),before);}
+    }
+    #[test]
+    fn zip_edit1546_empty_password_zip_needs_explicit_unencrypted_choice(){let temp=tempfile::tempdir().unwrap();let source=temp.path().join("source.zip");protected_zip(&source,Encryption::Aes256,b"old");let catalog=inspect(&source).unwrap();let edits:Vec<_>=catalog.entries.iter().map(|entry|edit(&entry.path,None)).collect();let output=temp.path().join("empty.zip");let mut credentials=Credentials{source_password:"old".into(),..Default::default()};assert!(save_encrypted(&source,&catalog.revision,&[],&edits,&output,"store",0,&credentials,Arc::new(AtomicBool::new(false)),observer()).unwrap_err().to_string().contains("空 ZIP"));credentials.output_mode=OutputMode::None;save_encrypted(&source,&catalog.revision,&[],&edits,&output,"store",0,&credentials,Arc::new(AtomicBool::new(false)),observer()).unwrap();assert_eq!(ZipArchive::new(File::open(output).unwrap()).unwrap().len(),0);}
+    #[test]
+    fn zip_edit1546_reports_changed_and_missing_input_references(){let temp=tempfile::tempdir().unwrap();let first=temp.path().join("first.txt");let second=temp.path().join("second.txt");std::fs::write(&first,b"one").unwrap();std::fs::write(&second,b"two").unwrap();let inputs=prepare(&[first.to_string_lossy().into(),second.to_string_lossy().into()],"").unwrap();assert!(check_inputs(&inputs).unwrap().is_empty());std::fs::write(first,b"changed").unwrap();std::fs::remove_file(second).unwrap();let issues=check_inputs(&inputs).unwrap();assert_eq!(issues.len(),2);assert_eq!(issues[0].index,0);assert!(issues[1].issue.contains("缺失"));}
 
 }

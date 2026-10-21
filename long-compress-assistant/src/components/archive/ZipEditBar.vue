@@ -3,6 +3,10 @@ import { computed, ref, watch } from 'vue'
 import { open, save } from '@tauri-apps/api/dialog'
 import Modal from '@/components/ui/Modal.vue'
 import ZipOrganizeDialog from './ZipOrganizeDialog.vue'
+import ZipEditCredentialsPanel from './ZipEditCredentialsPanel.vue'
+import ZipEditSourceStatus from './ZipEditSourceStatus.vue'
+import type { ArchiveReadOptions } from '@/stores/app'
+import type { ZipPasswordEncoding } from '@/types/zipPassword'
 import ThemedSelect from '@/components/ui/ThemedSelect.vue'
 import ArchiveOutputSummary from '@/components/compression/ArchiveOutputSummary.vue'
 import TaskFailureHint from '@/components/tasks/TaskFailureHint.vue'
@@ -11,11 +15,14 @@ import { useZipEditStore } from '@/stores/zipEdit'
 import { archiveInspectionMessageForDisplay } from '@/utils/taskFailure'
 import type { ZipStructureRow } from '@/types/zipEdit'
 import { formatFileSize } from '@/utils'
-const props = defineProps<{ sourcePath: string; directory: string; selectedFile?: string; selectedPaths?: string[]; disabled?: boolean }>()
-const emit = defineEmits<{ 'open-result': [path: string] }>()
+const props = defineProps<{ sourcePath: string; directory: string; selectedFile?: string; selectedPaths?: string[]; password?:string; sourceEncoding?:ZipPasswordEncoding; disabled?: boolean }>()
+const emit = defineEmits<{ 'open-result': [path: string, options?:ArchiveReadOptions] }>()
 const store = useZipEditStore(), review = ref(false), discardVisible = ref(false), organizer = ref(false)
 const organizePaths = ref<string[]>([]), organizeMode = ref<'rename'|'delete'>('rename'), reviewQuery = ref(''), reviewKind = ref('all')
 const session = computed(() => store.sessionFor(props.sourcePath))
+const saveHasChanges=computed(()=>resolved.value.hasChanges||!!session.value&&session.value.outputMode!=='keep')
+const beginEdit=()=>store.begin(props.sourcePath,{password:props.password,encoding:props.sourceEncoding})
+const openResult=(path:string)=>emit('open-result',path,session.value?store.resultReadOptions(session.value):{})
 const level = computed({ get: () => String(session.value?.level ?? 6), set: value => { if (session.value) session.value.level = Number(value) } })
 const task = computed(() => store.taskFor(session.value))
 const resolved = computed(() => session.value ? store.plan(session.value) : { rows: [], structureRows: [], changes: [], originalEdits: [], nodes: [], unresolved: 0, changeCount: 0, hasChanges: false })
@@ -36,7 +43,7 @@ const queuedSelection = () => import.meta.env.VITE_DESKTOP_E2E === '1' ? window.
 async function chooseInputs(folder = false, replacement?: string, targetDirectory?: string) {
   if (locked.value) return
   const source = props.sourcePath, directory = targetDirectory ?? props.directory
-  if (!await store.begin(source)) return
+  if (!await store.begin(source,{password:props.password,encoding:props.sourceEncoding})) return
   try {
     const queued = queuedSelection()
     const picked = queued === undefined ? await open({ directory: folder, multiple: !replacement, title: replacement ? '选择替换此条目的文件' : folder ? '添加文件夹到当前包内目录' : '添加文件到当前包内目录' }) : queued
@@ -63,7 +70,7 @@ const affectedRows = (row: ZipStructureRow) => row.affected.filter(item => !revi
 const labels = { add: '新增', replace: '替换', merge: '合并目录', skip: '跳过', pending: '需要选择', superseded: '由后续项替换' }
 const phase = computed(() => task.value?.status === 'completed' ? '另存完成' : task.value?.stage === 'Pre-checking' ? '读取原包' : task.value?.stage === 'Verifying' ? '确认新包内容' : task.value?.stage === 'Publishing' ? '保存新包' : '写入 ZIP 内容')
 async function organize(paths: string[] = [], mode: 'rename'|'delete' = 'rename') {
-  if (locked.value || !await store.begin(props.sourcePath)) return
+  if (locked.value || !await beginEdit()) return
   review.value=false; organizePaths.value=paths; organizeMode.value=mode; organizer.value=true
 }
 defineExpose({ organize, replace: (path: string) => chooseInputs(false, path), addDropped, addFiles: () => chooseInputs(false), addFolder: () => chooseInputs(true) })
@@ -81,8 +88,8 @@ defineExpose({ organize, replace: (path: string) => chooseInputs(false, path), a
         <button class="edit-button text-muted" :disabled="locked" @click="discard">取消编辑</button>
       </template>
       <template v-else>
-        <button v-if="task?.archiveOutput" class="edit-button" data-testid="zip-edit-open-result" @click="emit('open-result', task.archiveOutput.primaryPath)">浏览新包</button>
-        <button class="edit-button text-primary" data-testid="zip-edit-begin" :disabled="locked" @click="store.begin(sourcePath)">{{ store.opening ? '读取编辑信息…' : '编辑内容' }}</button>
+        <button v-if="task?.archiveOutput" class="edit-button" data-testid="zip-edit-open-result" @click="openResult(task.archiveOutput.primaryPath)">浏览新包</button>
+        <button class="edit-button text-primary" data-testid="zip-edit-begin" :disabled="locked" @click="beginEdit">{{ store.opening ? '读取编辑信息…' : '编辑内容' }}</button>
         <button v-if="task?.archiveOutput" class="edit-button" @click="review = true">查看结果</button>
       </template>
     </div>
@@ -126,22 +133,25 @@ defineExpose({ organize, replace: (path: string) => chooseInputs(false, path), a
         <fieldset v-if="session.editing" :disabled="session.busy" class="min-w-0 space-y-3 rounded-xl border border-subtle bg-input/20 p-3">
           <label class="block text-xs text-muted">新 ZIP 保存位置<div class="mt-2 flex min-w-0 gap-2"><input v-model="session.outputPath" data-testid="zip-edit-output" class="edit-input min-w-0 flex-1" /><button class="edit-button" data-testid="zip-edit-choose-output" @click="chooseOutput">另存为</button></div></label>
           <div class="grid min-w-0 gap-3 sm:grid-cols-2"><label class="min-w-0 text-xs text-muted">新增/替换方法<ThemedSelect v-model="session.method" :options="[{value:'deflate',label:'Deflate · 兼容 ZIP'},{value:'store',label:'Store · 仅存储'}]" test-id="zip-edit-method" floating /></label><label class="min-w-0 text-xs text-muted">压缩强度<ThemedSelect v-model="level" :disabled="session.method === 'store'" :options="Array.from({length:10},(_,n)=>({value:String(n),label:String(n)}))" test-id="zip-edit-level" floating /></label></div>
-          <p class="text-xs leading-relaxed text-muted">另存独立 ZIP，不加密、不分卷；原包保留，未修改内容沿原方法复制。修改只在点击下方“另存新 ZIP”后生效。</p>
+          <p class="text-xs leading-relaxed text-muted">另存独立 ZIP，不分卷；原包保留，内容沿原方法写出，密码条目会重新编码。修改只在点击下方“另存新 ZIP”后生效。</p>
         </fieldset>
+        <ZipEditCredentialsPanel v-if="session.editing" :source-path="sourcePath" />
+        <ZipEditSourceStatus v-if="session.editing" :source-path="sourcePath" />
+        <button v-if="session.editing" class="edit-button text-primary" :disabled="locked" data-testid="zip-edit-check-sources" @click="store.checkSources(sourcePath)">检查草稿来源</button>
         <p v-if="session.error" role="alert" class="break-words rounded-xl bg-red-500/5 p-3 text-xs text-red-500 [overflow-wrap:anywhere]">{{ session.error }}</p>
         <p v-if="task?.status === 'failed'" role="alert" class="break-words rounded-xl bg-red-500/5 p-3 text-xs text-red-500 [overflow-wrap:anywhere]">{{ archiveInspectionMessageForDisplay(task.error || '') }}</p>
         <TaskFailureHint :task="task"><button class="edit-button" :disabled="locked" data-testid="zip-edit-refresh" @click="store.refresh(sourcePath)">重新读取原包，保留修改清单</button></TaskFailureHint>
         <p v-if="task?.status === 'cancelled'" class="rounded-xl bg-input/30 p-3 text-xs text-muted">已停止，修改清单保留。确认配置后可以重新另存。</p>
         <TaskExecutionOverview v-if="task" :stage="phase" :status="task.status" :progress="task.progress" :current-file="task.currentFile" />
         <ArchiveOutputSummary v-if="task?.status === 'completed' && task.archiveOutput" :output="task.archiveOutput" @checksum="review = false" />
-        <button v-if="task?.status === 'completed' && task.archiveOutput" class="edit-button text-primary" data-testid="zip-edit-browse-result" @click="review = false; emit('open-result', task.archiveOutput.primaryPath)">浏览新 ZIP，继续预览或提取</button>
+        <button v-if="task?.status === 'completed' && task.archiveOutput" class="edit-button text-primary" data-testid="zip-edit-browse-result" @click="review = false; openResult(task.archiveOutput.primaryPath)">浏览新 ZIP，继续预览或提取</button>
         <details v-if="task?.logs.length" class="min-w-0 text-xs text-muted"><summary class="cursor-pointer">执行日志（{{ task.logs.length }}）</summary><ol class="mt-2 max-h-40 space-y-2 overflow-y-auto custom-scrollbar"><li v-for="(log,index) in task.logs" :key="index" class="break-words leading-relaxed [overflow-wrap:anywhere]">{{ log.message }}</li></ol></details>
       </section>
     </div>
     <template #footer>
       <button class="edit-button" @click="review = false">{{ session?.busy ? '后台继续' : '返回浏览' }}</button>
       <button v-if="session?.busy" class="edit-button text-red-500" data-testid="zip-edit-stop" :disabled="task?.status === 'cancelling'" @click="store.cancel(sourcePath)">{{ task?.status === 'cancelling' ? '正在停止…' : '停止另存' }}</button>
-      <button v-else-if="session?.editing" class="edit-button bg-primary text-white" data-testid="zip-edit-save" :disabled="!resolved.hasChanges || !!resolved.unresolved || locked" @click="store.save(sourcePath)">另存新 ZIP（{{ resolved.changeCount }}）</button>
+      <button v-else-if="session?.editing" class="edit-button bg-primary text-white" data-testid="zip-edit-save" :disabled="!saveHasChanges || !!resolved.unresolved || locked" @click="store.save(sourcePath)">另存新 ZIP{{ resolved.changeCount ? `（${resolved.changeCount}）` : session?.outputMode!=='keep' ? '（密码设置）' : '' }}</button>
     </template>
   </Modal>
   <Modal v-model:visible="discardVisible" title="放弃本次修改？" description="原包和已保存的新包不会改变" cancel-text="继续编辑" confirm-text="放弃修改" @confirm="store.discard(sourcePath); discardVisible = false">

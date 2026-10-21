@@ -43,6 +43,7 @@ import Modal from '@/components/ui/Modal.vue'
 import UpdateDialog from '@/components/update/UpdateDialog.vue'
 import { useTaskStore } from '@/stores/task'
 import { useCompressionStore } from '@/stores/compression'
+import { useZipEditStore } from '@/stores/zipEdit'
 import { usePendingDraftStore } from '@/stores/pendingDrafts'
 import { useAppStore } from '@/stores/app'
 import { useUIStore } from '@/stores/ui'
@@ -61,6 +62,8 @@ const taskStore = useTaskStore()
 const compressionStore = useCompressionStore()
 const pendingDrafts = usePendingDraftStore()
 pendingDrafts.initialize()
+const zipEdit=useZipEditStore()
+void zipEdit.initialize()
 const appStore = useAppStore()
 watch(() => appStore.pendingArchiveBrowserPath, path => {
   if (path) void router.push('/browser')
@@ -96,6 +99,7 @@ const cancelTasksAndExit = async () => {
   if (exitInProgress.value) return
   exitInProgress.value = true
   pendingDrafts.flush()
+  if(!await zipEdit.flush()){exitInProgress.value=false;appStore.setError(zipEdit.saveError);return}
   const unfinished = taskStore.tasks.filter(
     task => !['completed', 'failed', 'cancelled'].includes(task.status)
   )
@@ -238,6 +242,11 @@ const handleKeydown = (e: KeyboardEvent) => {
 }
 
 onMounted(async () => {
+  keepAppListener(await listen('exit-drafts-requested',async()=>{
+    pendingDrafts.flush()
+    if(await zipEdit.flush())await invoke('exit_app')
+    else appStore.setError(zipEdit.saveError)
+  }))
   window.addEventListener('keydown', handleKeydown)
   // 初始化可访问性设置
   initAccessibility()
@@ -457,6 +466,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   pendingDrafts.dispose()
+  zipEdit.dispose()
   isUnmounted = true
   window.removeEventListener('keydown', handleKeydown)
   if (saveWindowTimer) clearTimeout(saveWindowTimer)
