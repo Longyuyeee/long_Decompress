@@ -107,14 +107,14 @@ async function apply() {
     <fieldset :disabled="applying" class="space-y-4 min-w-0" data-testid="conversion-batch-fields">
       <p v-if="applyError" role="alert" class="text-xs text-red-500">{{ applyError }}</p>
       <template v-if="mode === 'defaults'">
-        <p class="text-xs text-muted">应用到尚未单独编辑的任务；已编辑条目保留自己的配置。</p>
+        <span class="context-help"><HelpHint label="全局转换设置说明">应用到尚未单独编辑的任务；已编辑条目保留自己的配置。</HelpHint></span>
         <ConversionSettingsFields :settings="defaults" @update="defaults = normalizeConversionSettings(defaults, $event)" />
         <label class="block text-sm">输出目录<input v-model="defaults.outputDirectory" class="conversion-input mt-1 w-full" placeholder="留空放在各自源文件旁" /></label>
       </template>
       <template v-else>
         <CompressionPurposePicker v-if="!hasUpdates" staged :key="String(visible)" @apply="fillPurpose" />
         <p v-if="hasUpdates" class="rounded-lg bg-primary/5 p-3 text-xs leading-relaxed text-muted">ZPAQ 更新任务沿用原格式和原密码，可统一强度、分卷、保存目录与原包密码；添加内容和归档内位置在各条目展开编辑。</p>
-        <p class="text-xs text-muted">只修改指定参数；名称、目录、密码等未指定的配置保持各自原值。</p>
+        <span class="context-help"><HelpHint label="多选转换设置说明">只修改指定参数；名称、目录、密码等未指定的配置保持各自原值。</HelpHint></span>
         <p v-if="format !== 'keep' && (!supportsNativePassword(format) || !supportsArchiveSplit(format))" class="text-xs text-amber-600">此格式不支持的密码或分卷选项会关闭，其余配置保留。</p>
         <div class="grid min-w-0 gap-4 sm:grid-cols-2">
           <div v-if="!updatesOnly" class="min-w-0 space-y-1.5 text-sm">原包读取编码 <HelpHint label="批量原包编码说明">只修改检测确认的 ZIP/ZIPX、ALZ 或 EGG 原包，清除后使用各格式默认值。EGG 默认 UTF-8，只影响密码；ALZ 默认 CP949，同时影响文件名与密码。与新包编码无关。</HelpHint><ThemedSelect v-model="sourceEncoding" :options="[keep,{value:'auto',label:'使用原包格式默认值'},...ZIP_PASSWORD_ENCODING_OPTIONS]" :disabled="applying" test-id="conversion-batch-source-encoding" floating /></div>

@@ -553,6 +553,46 @@ fn decode_text_prefix(bytes: &[u8]) -> Result<(String, String, usize)> {
     anyhow::bail!("The selected entry does not use a supported text encoding")
 }
 
+/// File-manager previews share the archive viewer's encodings and image decoder.
+/// Only a prefix is read, so opening a large log never loads the complete file.
+pub(crate) fn preview_local_text(path: &Path) -> Result<ArchiveTextPreview> {
+    let file = std::fs::File::open(path).context("无法读取此文本文件，它可能已被移动或正被其他程序占用")?;
+    let metadata = file.metadata()?;
+    anyhow::ensure!(metadata.is_file(), "请选择文本文件");
+    let mut bytes = Vec::new();
+    file.take(MAX_TEXT_PREVIEW_BYTES).read_to_end(&mut bytes)?;
+    if metadata.len() > bytes.len() as u64 {
+        // Do not mistake a UTF-8 character split at the display boundary for GBK.
+        let bom = usize::from(bytes.starts_with(&[0xef,0xbb,0xbf])) * 3;
+        if let Err(error) = std::str::from_utf8(&bytes[bom..]) {
+            if error.error_len().is_none() { bytes.truncate(bom + error.valid_up_to()); }
+        }
+        // A UTF-16 prefix may end between the two halves of a surrogate pair.
+        if bytes.len() >= 4 && (bytes.starts_with(&[0xff,0xfe]) || bytes.starts_with(&[0xfe,0xff])) {
+            let n = bytes.len();
+            let last = if bytes[0] == 0xff {u16::from_le_bytes([bytes[n-2],bytes[n-1]])} else {u16::from_be_bytes([bytes[n-2],bytes[n-1]])};
+            if (0xd800..=0xdbff).contains(&last) { bytes.truncate(n-2); }
+        }
+    }
+    let (content, encoding, consumed) = decode_text_prefix(&bytes)?;
+    let line_count = content.lines().count();
+    Ok(ArchiveTextPreview { entry_path:path.to_string_lossy().into_owned(), content, encoding,
+        byte_size:consumed as u64, total_size:metadata.len(), truncated:metadata.len()>consumed as u64, line_count })
+}
+
+pub(crate) fn preview_local_image(path: &Path) -> Result<ArchiveImagePreview> {
+    let file = std::fs::File::open(path).context("无法读取此图片，它可能已被移动")?;
+    let metadata = file.metadata()?;
+    anyhow::ensure!(metadata.is_file(), "请选择图片文件");
+    anyhow::ensure!(metadata.len() <= MAX_PREVIEW_BYTES, "图片超过 8 MB，请在资源管理器中使用图片应用查看");
+    let mut bytes = Vec::new();
+    file.take(MAX_PREVIEW_BYTES+1).read_to_end(&mut bytes)?;
+    anyhow::ensure!(bytes.len() as u64 <= MAX_PREVIEW_BYTES, "图片超过预览大小");
+    let (mime, width, height) = image_identity(&bytes)?;
+    Ok(ArchiveImagePreview {entry_path:path.to_string_lossy().into_owned(),mime_type:mime.into(),
+        data_url:format!("data:{mime};base64,{}",general_purpose::STANDARD.encode(&bytes)),byte_size:bytes.len() as u64,width,height})
+}
+
 fn preview_archive_text_sync(
     archive_path: &Path,
     entry_path: &str,
@@ -915,5 +955,29 @@ mod tests {
             .await
             .unwrap_err();
         assert!(error.to_string().contains("ZIP and TAR-family"));
+    }
+}
+
+#[cfg(test)]
+mod local_file_preview_tests {
+    use super::*;
+    #[test]
+    fn local_file_preview_reads_common_text_encodings_and_empty_files() {
+        let dir=tempfile::tempdir().unwrap();
+        for (name,bytes,expected,encoding) in [
+            ("utf8.txt","项目说明\n第二行".as_bytes().to_vec(),"项目说明\n第二行","UTF-8"),
+            ("gbk.log",vec![0xcb,0xb5,0xc3,0xf7],"说明","GBK"),
+            ("utf16.txt",vec![0xff,0xfe,0x2d,0x4e,0x87,0x65],"中文","UTF-16LE"),
+            ("empty.txt",vec![],"","UTF-8"),
+        ] {
+            let path=dir.path().join(name);std::fs::write(&path,&bytes).unwrap();
+            let preview=preview_local_text(&path).unwrap();assert_eq!(preview.content,expected);assert_eq!(preview.encoding,encoding);assert!(!preview.truncated);assert_eq!(preview.total_size,bytes.len() as u64);
+        }
+    }
+    #[test]
+    fn local_file_preview_keeps_utf8_at_the_large_log_boundary() {
+        let dir=tempfile::tempdir().unwrap();let path=dir.path().join("large.log");
+        let mut bytes=vec![b'a';MAX_TEXT_PREVIEW_BYTES as usize-1];bytes.extend_from_slice("中文".as_bytes());std::fs::write(&path,&bytes).unwrap();
+        let preview=preview_local_text(&path).unwrap();assert!(preview.truncated);assert_eq!(preview.encoding,"UTF-8");assert_eq!(preview.byte_size,MAX_TEXT_PREVIEW_BYTES-1);assert!(!preview.content.contains('�'));assert_eq!(preview.total_size,bytes.len() as u64);
     }
 }

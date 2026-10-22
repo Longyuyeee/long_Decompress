@@ -1,0 +1,312 @@
+{
+  "binarySha256": "5aa8108a4c13ad87ce5b5aa7650a68dd7d0090e3b7f1f2b57f7ac87a4e11c398",
+  "checks": [
+    "special-compression-three-modes-and-settings",
+    "final-affected-copy-and-main-content-layouts"
+  ],
+  "layouts": [
+    {
+      "name": "special-image",
+      "anchorHeight": 563.203125,
+      "documentOverflow": 0,
+      "headerHeight": 40,
+      "height": 700,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "special-image",
+      "anchorHeight": 383.203125,
+      "documentOverflow": 0,
+      "headerHeight": 40,
+      "height": 520,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "image-settings",
+      "anchorHeight": 457.59375,
+      "documentOverflow": 0,
+      "headerHeight": 40,
+      "height": 520,
+      "modal": {
+        "height": 457.59375,
+        "overflow": 0,
+        "width": 712,
+        "x": 24,
+        "y": 31.203125
+      },
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "special-video",
+      "anchorHeight": 563.203125,
+      "documentOverflow": 0,
+      "headerHeight": 40,
+      "height": 700,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "special-video",
+      "anchorHeight": 383.203125,
+      "documentOverflow": 0,
+      "headerHeight": 40,
+      "height": 520,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "video-settings",
+      "anchorHeight": 457.59375,
+      "documentOverflow": 0,
+      "headerHeight": 40,
+      "height": 520,
+      "modal": {
+        "height": 457.59375,
+        "overflow": 0,
+        "width": 712,
+        "x": 24,
+        "y": 31.203125
+      },
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "special-pdf",
+      "anchorHeight": 563.203125,
+      "documentOverflow": 0,
+      "headerHeight": 40,
+      "height": 700,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "special-pdf",
+      "anchorHeight": 383.203125,
+      "documentOverflow": 0,
+      "headerHeight": 40,
+      "height": 520,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "pdf-settings",
+      "anchorHeight": 248.5078125,
+      "documentOverflow": 0,
+      "headerHeight": 40,
+      "height": 520,
+      "modal": {
+        "height": 248.5078125,
+        "overflow": 0,
+        "width": 460,
+        "x": 150,
+        "y": 135.7421875
+      },
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "settings-processing",
+      "anchorHeight": 408.390625,
+      "documentOverflow": 0,
+      "headerHeight": 41.9921875,
+      "height": 700,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "settings-processing",
+      "anchorHeight": 408.390625,
+      "documentOverflow": 0,
+      "headerHeight": 84.5859375,
+      "height": 520,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "compression-settings",
+      "anchorHeight": 616,
+      "documentOverflow": 0,
+      "headerHeight": 36,
+      "height": 700,
+      "modal": {
+        "height": 616,
+        "overflow": 0,
+        "width": 736,
+        "x": 182,
+        "y": 42
+      },
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "compression-settings",
+      "anchorHeight": 457.59375,
+      "documentOverflow": 0,
+      "headerHeight": 36,
+      "height": 520,
+      "modal": {
+        "height": 457.59375,
+        "overflow": 0,
+        "width": 712,
+        "x": 24,
+        "y": 31.203125
+      },
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "conversion-dialog",
+      "anchorHeight": 300.390625,
+      "documentOverflow": 0,
+      "headerHeight": 36,
+      "height": 520,
+      "modal": {
+        "height": 455.5859375,
+        "overflow": 0,
+        "width": 712,
+        "x": 24,
+        "y": 32.203125
+      },
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "decompression-tasks",
+      "anchorHeight": 590,
+      "documentOverflow": 0,
+      "headerHeight": 36,
+      "height": 700,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "decompression-tasks",
+      "anchorHeight": 410,
+      "documentOverflow": 0,
+      "headerHeight": 36,
+      "height": 520,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "workflow-editor",
+      "anchorHeight": 39.1953125,
+      "documentOverflow": 0,
+      "headerHeight": 43.1953125,
+      "height": 700,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "workflow-editor",
+      "anchorHeight": 37.59375,
+      "documentOverflow": 0,
+      "headerHeight": 90.1953125,
+      "height": 520,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "library-search",
+      "anchorHeight": 20.796875,
+      "documentOverflow": 0,
+      "headerHeight": 43.1953125,
+      "height": 700,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "library-search",
+      "anchorHeight": 20.796875,
+      "documentOverflow": 0,
+      "headerHeight": 91.390625,
+      "height": 520,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "integrity-results",
+      "anchorHeight": 184.28125,
+      "documentOverflow": 0,
+      "headerHeight": 52.3984375,
+      "height": 700,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "integrity-results",
+      "anchorHeight": 184.28125,
+      "documentOverflow": 0,
+      "headerHeight": 52.3984375,
+      "height": 520,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "final-special-image-1100x700.png",
+    "final-special-image-760x520.png",
+    "final-image-settings-760x520.png",
+    "final-special-video-1100x700.png",
+    "final-special-video-760x520.png",
+    "final-video-settings-760x520.png",
+    "final-special-pdf-1100x700.png",
+    "final-special-pdf-760x520.png",
+    "final-pdf-settings-760x520.png",
+    "final-settings-processing-1100x700.png",
+    "final-settings-processing-760x520.png",
+    "final-compression-settings-1100x700.png",
+    "final-compression-settings-760x520.png",
+    "final-conversion-dialog-760x520.png",
+    "final-decompression-tasks-1100x700.png",
+    "final-decompression-tasks-760x520.png",
+    "final-workflow-editor-1100x700.png",
+    "final-workflow-editor-760x520.png",
+    "final-library-search-1100x700.png",
+    "final-library-search-760x520.png",
+    "final-integrity-results-1100x700.png",
+    "final-integrity-results-760x520.png"
+  ],
+  "completedAt": "2026-10-22T03:11:47.905Z"
+}

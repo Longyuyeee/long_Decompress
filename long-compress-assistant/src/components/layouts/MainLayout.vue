@@ -10,6 +10,7 @@ import ZipEditRecoveryNotice from '@/components/archive/ZipEditRecoveryNotice.vu
 import PendingDraftRecovery from '@/components/tasks/PendingDraftRecovery.vue'
 import { useAppStore } from '@/stores/app'
 import brandIcon from '@/assets/long-jieya-icon.png'
+import { APP_NAVIGATION } from '@/utils/navigation'
 
 const route = useRoute()
 const router = useRouter()
@@ -51,19 +52,7 @@ const startResize = (edge: ResizeEdge, event: PointerEvent) => {
   })
 }
 
-const navItems = [
-  { name: 'Decompress', icon: 'pi pi-folder-open', label: 'nav.decompress', shortcut: 'Ctrl+O' },
-  { name: 'Compress', icon: 'pi pi-box', label: 'nav.compress', shortcut: 'Ctrl+N' },
-  { name: 'SpecialCompression', icon: 'pi pi-sparkles', label: 'nav.special_compression', shortcut: 'Ctrl+Shift+S' },
-  { name: 'ArchiveBrowser', icon: 'pi pi-folder', label: 'nav.browser', shortcut: 'Ctrl+B' },
-  {name:'SourceComparison',icon:'pi pi-arrows-h',label:'nav.compare',shortcut:''},
-  { name: 'Workflows', icon: 'pi pi-sitemap', label: 'nav.workflows', shortcut: '' },
-  { name: 'ArchiveLibrary', icon: 'pi pi-database', label: 'nav.library', shortcut: '' },
-  { name: 'Vault', icon: 'pi pi-shield', label: 'nav.vault', shortcut: 'Ctrl+Shift+V' },
-  { name: 'FileIntegrity', icon: 'pi pi-verified', label: 'nav.integrity', shortcut: 'Ctrl+I' },
-  { name: 'History', icon: 'pi pi-history', label: 'nav.history', shortcut: 'Ctrl+H' },
-  { name: 'Settings', icon: 'pi pi-cog', label: 'nav.settings', shortcut: 'Ctrl+,' }
-]
+const navItems = APP_NAVIGATION
 
 const navigateTo = (name: string) => {
   router.push({ name })
@@ -99,6 +88,7 @@ const navigateTo = (name: string) => {
                   @click="navigateTo(item.name)"
                   :data-testid="`nav-${item.name}`"
                   :aria-label="item.shortcut ? `${appStore.t(item.label)} (${item.shortcut})` : appStore.t(item.label)"
+                 :title="`${appStore.t(item.label)} (${item.shortcut})`"
                  :aria-current="route.name === item.name ? 'page' : undefined"
                  class="nav-entry group relative w-full h-12 flex items-center gap-3 px-3 rounded-xl cursor-pointer transition-all duration-200 text-left"
                  :class="route.name === item.name ? 'bg-primary/20 shadow-sm text-primary' : 'text-muted hover:bg-primary/8 hover:text-content'">
@@ -106,13 +96,13 @@ const navigateTo = (name: string) => {
               <div class="absolute left-0 w-1 h-7 rounded-full bg-gradient-to-b from-primary to-primary/50 transition-all duration-300 shadow-[0_0_8px_var(--dynamic-accent)]"
                    :class="route.name === item.name ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'"></div>
 
-              <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
+              <div class="sidebar-nav-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
                    :class="route.name === item.name ? 'bg-primary/15' : 'bg-input/70 group-hover:bg-primary/10'">
                 <i :class="[item.icon, 'text-base transition-all duration-200', route.name === item.name ? 'text-primary' : 'text-muted group-hover:text-content']"></i>
               </div>
               <div class="sidebar-copy flex-1 min-w-0">
-                <div class="text-xs font-extrabold truncate">{{ appStore.t(item.label) }}</div>
-                <div v-if="item.shortcut" class="text-xs text-dim font-mono mt-0.5">{{ item.shortcut }}</div>
+                <div class="sidebar-nav-label text-xs font-extrabold truncate">{{ appStore.t(item.label) }}</div>
+                <div v-if="item.shortcut" class="sidebar-shortcut text-xs text-dim font-mono mt-0.5">{{ item.shortcut }}</div>
               </div>
             </button>
           </nav>
@@ -220,6 +210,12 @@ html, body, #app {
   transition: width 0.25s ease;
 }
 
+.nav-entry { flex-shrink: 0; }
+.app-sidebar > nav { scrollbar-width: none; -ms-overflow-style: none; }
+.app-sidebar > nav::-webkit-scrollbar,
+.app-sidebar > nav::-webkit-scrollbar-thumb,
+.app-sidebar > nav::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+
 .window-resize-handle{position:fixed;z-index:1000;touch-action:none}
 .resize-n,.resize-s{left:6px;right:6px;height:6px}.resize-n{top:0;cursor:n-resize}.resize-s{bottom:0;cursor:s-resize}
 .resize-e,.resize-w{top:6px;bottom:6px;width:6px}.resize-e{right:0;cursor:e-resize}.resize-w{left:0;cursor:w-resize}
@@ -238,10 +234,14 @@ html, body, #app {
 }
 
 @media (max-width: 840px) {
-  .app-sidebar { width: 4.75rem; }
-  .sidebar-copy { display: none; }
+  .app-sidebar { width: 5.5rem; }
+  .sidebar-brand .sidebar-copy { display: none; }
   .sidebar-brand { justify-content: center; padding-inline: 0.75rem; }
-  .nav-entry { justify-content: center; padding-inline: 0.5rem; }
+  .app-sidebar > nav { padding-inline: .375rem; gap: .25rem; }
+  .app-sidebar .nav-entry { flex-direction: column; justify-content: center; gap: 3px; height: 4rem; min-height: 4rem; padding: .375rem .125rem; }
+  .nav-entry .sidebar-copy { flex: none; width: 100%; text-align: center; }
+  .sidebar-nav-label { font-size: 10px; line-height: 1.5; }
+  .sidebar-shortcut { display: none; }
   .sidebar-task-area { margin-inline: 0.5rem; min-height: 3rem; }
   .sidebar-version-row { margin-inline: 0.5rem; padding-inline: 0.25rem; justify-content: center; }
   .sidebar-version-label { display: none; }
@@ -256,8 +256,14 @@ html, body, #app {
   .app-sidebar > nav::-webkit-scrollbar { display: none; width: 0; }
   .app-sidebar .nav-entry { height: 2.5rem; min-height: 2.5rem; padding-inline: .5rem; }
   .app-sidebar .nav-entry > div:nth-of-type(2) { width: 1.75rem; height: 1.75rem; }
-  .app-sidebar .nav-entry .sidebar-copy > div:last-child { display: none; }
+  .app-sidebar .sidebar-shortcut { display: none; }
   .app-sidebar .sidebar-version-row { min-height: 1.5rem; margin-bottom: .25rem; padding-block: .125rem; }
   .app-sidebar .sidebar-task-area { min-height: 3.5rem; margin-bottom: .25rem; }
+}
+
+@media (max-width: 840px) and (max-height: 640px) {
+  .app-sidebar > nav { padding-inline: .375rem; }
+  .app-sidebar .nav-entry { height: 3.25rem; min-height: 3.25rem; padding: .25rem .125rem; }
+  .app-sidebar .sidebar-nav-icon { width: 1.5rem; height: 1.5rem; }
 }
 </style>

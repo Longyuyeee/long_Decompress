@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { computed, onUnmounted, ref } from 'vue'
 import ChecksumProgressCard from './ChecksumProgressCard.vue'
 import { useChecksumOperation } from '@/composables/useChecksumOperation'
@@ -85,7 +86,7 @@ defineExpose({ verify, stage, hasWorkspace: () => !!report.value || stagedManife
   <div class="checksum-verification" data-testid="checksum-verification" :aria-busy="busy">
     <section v-if="stagedManifests.length" class="checksum-panel" data-testid="checksum-explorer-manifests">
       <h2 class="text-sm font-bold text-content">从资源管理器收到 {{ stagedManifests.length }} 份校验清单</h2>
-      <p class="checksum-note">选择一份后主动开始核对。其余清单保留在这里，打开入口不会自动读取文件。</p>
+      <span class="context-help"><HelpHint label="多份清单说明">选择一份后主动开始核对。其余清单保留在这里，打开入口不会自动读取文件。</HelpHint></span>
       <label class="checksum-staged-label">本次清单<select v-model="stagedPath" :disabled="busy" data-testid="checksum-staged-path"><option v-for="path in stagedManifests" :key="path" :value="path">{{ path.split(/[\\/]/).pop() }} · {{ path }}</option></select></label>
       <p class="checksum-note" :title="stagedPath" data-testid="checksum-staged-location">本次位置：{{ stagedPath }}</p>
       <div class="checksum-actions"><button :disabled="busy || !stagedPath" data-testid="checksum-staged-start" @click="verify(stagedPath)"><i class="pi pi-play"></i>开始核对这份清单</button></div>
@@ -108,7 +109,7 @@ defineExpose({ verify, stage, hasWorkspace: () => !!report.value || stagedManife
       <div class="checksum-counts" data-testid="checksum-counts">
         <span><strong>{{ matched }}</strong> 已匹配</span><span><strong>{{ problems.length }}</strong> 待处理</span><span><strong>{{ unchecked }}</strong> 未检查</span>
       </div>
-      <p class="checksum-note">摘要匹配仅表示与这份清单一致。复查所选时，其他项目显示上次结果；如有改动请主动复查。</p>
+      <span class="context-help"><HelpHint label="校验结果说明">摘要匹配仅表示与这份清单一致。复查所选时，其他项目显示上次结果；如有改动请主动复查。</HelpHint></span>
       <p v-if="notice" class="checksum-notice" role="status" data-testid="checksum-notice">{{ notice }}</p>
       <div class="checksum-actions">
         <button v-if="unchecked" :disabled="busy" data-testid="checksum-continue" @click="verify(report.checksumPath, entries.filter(checksumUnfinished).map(row => row.line))"><i class="pi pi-play"></i>继续未完成项（{{ unchecked }}）</button>

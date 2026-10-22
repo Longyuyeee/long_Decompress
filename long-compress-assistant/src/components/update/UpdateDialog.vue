@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import Modal from '@/components/ui/Modal.vue'
+import UpdateProgress from './UpdateProgress.vue'
 import { useTaskStore } from '@/stores/task'
 import { useUpdateStore } from '@/stores/update'
 import { useAppStore } from '@/stores/app'
@@ -41,7 +42,7 @@ const close = () => {
         {{ appStore.t('update.checking') }}
       </div>
 
-      <template v-else-if="updateStore.manifest">
+      <template v-else-if="updateStore.manifest && updateStore.status !== 'installing'">
         <div class="grid grid-cols-2 gap-3 text-xs">
           <div class="rounded-xl border border-subtle bg-input/40 p-4">
             <div class="text-muted">{{ appStore.t('update.latest') }}</div>
@@ -63,10 +64,7 @@ const close = () => {
         <span>{{ appStore.t('update.active_tasks').replace('{0}', String(taskStore.activeTaskCount)) }}</span>
       </div>
 
-      <div v-if="updateStore.status === 'installing'" class="flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/10 p-5 text-sm text-content">
-        <i class="pi pi-spin pi-spinner text-primary"></i>
-        {{ appStore.t('update.installing') }}
-      </div>
+      <UpdateProgress v-if="updateStore.status === 'installing'" />
 
       <div v-if="updateStore.status === 'up-to-date'" class="flex items-center gap-3 rounded-2xl border border-emerald-500/25 bg-emerald-500/10 p-5 text-sm text-emerald-600">
         <i class="pi pi-check-circle"></i>

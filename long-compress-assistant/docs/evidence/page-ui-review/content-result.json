@@ -1,0 +1,155 @@
+{
+  "binarySha256": "709fd55df430e9d2c78f4cecf551f9aaf7722596cbc502207c09bbddcd195839",
+  "checks": [
+    "compact-populated-results-and-library-heading"
+  ],
+  "layouts": [
+    {
+      "name": "library-search",
+      "anchorHeight": 20.796875,
+      "documentOverflow": 0,
+      "headerHeight": 43.1953125,
+      "height": 700,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "library-search",
+      "anchorHeight": 20.796875,
+      "documentOverflow": 0,
+      "headerHeight": 91.390625,
+      "height": 520,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "integrity-results",
+      "anchorHeight": 184.28125,
+      "documentOverflow": 0,
+      "headerHeight": 52.3984375,
+      "height": 700,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "integrity-results",
+      "anchorHeight": 184.28125,
+      "documentOverflow": 0,
+      "headerHeight": 52.3984375,
+      "height": 520,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "history-compact-list",
+      "anchorHeight": 668,
+      "documentOverflow": 0,
+      "headerHeight": 41.9921875,
+      "height": 700,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "history-compact-list",
+      "anchorHeight": 488,
+      "documentOverflow": 0,
+      "headerHeight": 41.9921875,
+      "height": 520,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "history-more-actions",
+      "anchorHeight": 173.984375,
+      "documentOverflow": 0,
+      "headerHeight": 41.9921875,
+      "height": 520,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "comparison-compact-results",
+      "anchorHeight": 783.5625,
+      "documentOverflow": 0,
+      "headerHeight": 37.59375,
+      "height": 700,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "comparison-compact-results",
+      "anchorHeight": 1125.125,
+      "documentOverflow": 0,
+      "headerHeight": 37.59375,
+      "height": 520,
+      "modal": null,
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "schedule-title-help",
+      "anchorHeight": 457.59375,
+      "documentOverflow": 0,
+      "headerHeight": 90.1953125,
+      "height": 520,
+      "modal": {
+        "height": 457.59375,
+        "overflow": 0,
+        "width": 712,
+        "x": 24,
+        "y": 31.203125
+      },
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "retrieval-heading-help",
+      "anchorHeight": 631.796875,
+      "documentOverflow": 0,
+      "headerHeight": 91.390625,
+      "height": 520,
+      "modal": {
+        "height": 457.59375,
+        "overflow": 0,
+        "width": 712,
+        "x": 24,
+        "y": 31.203125
+      },
+      "navScrollbar": "none",
+      "pageOverflow": 0,
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "content-library-search-1100x700.png",
+    "content-library-search-760x520.png",
+    "content-integrity-results-1100x700.png",
+    "content-integrity-results-760x520.png",
+    "content-history-compact-list-1100x700.png",
+    "content-history-compact-list-760x520.png",
+    "content-history-more-actions-760x520.png",
+    "content-comparison-compact-results-1100x700.png",
+    "content-comparison-compact-results-760x520.png",
+    "content-schedule-title-help-760x520.png",
+    "content-retrieval-heading-help-760x520.png"
+  ],
+  "completedAt": "2026-10-22T03:21:44.041Z"
+}

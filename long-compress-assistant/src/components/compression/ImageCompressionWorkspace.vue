@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineProps<{ toolbarTarget?: string }>()
 import ResultActions from '@/components/tasks/ResultActions.vue'
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
 import { useSavedLocations } from '@/composables/useSavedLocations'
@@ -220,13 +221,13 @@ const cancelImageCompression = async () => {
 
 <template>
   <section class="image-workspace" data-testid="image-compression-workspace">
-    <div class="workspace-toolbar">
+    <Teleport defer :to="toolbarTarget || 'body'" :disabled="!toolbarTarget"><div class="workspace-toolbar">
       <div class="toolbar-actions">
         <button type="button" class="secondary-action" :aria-expanded="showGlobalSettings" data-testid="image-toggle-global-settings" @click="openGlobalSettings"><i class="pi pi-sliders-h"></i>批量设置</button>
         <button v-if="isRunning" type="button" class="danger-action" @click="cancelImageCompression"><i class="pi pi-stop-circle"></i>取消图片压缩</button>
         <button v-else type="button" class="primary-action" :disabled="!canStart" :title="canStart ? '开始处理待处理或可重试图片' : '请先添加并读取可处理图片'" @click="startImageCompression"><i class="pi pi-play-circle"></i>开始图片压缩</button>
       </div>
-    </div>
+    </div></Teleport>
 
     <div v-if="batchTotal" class="batch-progress"><i class="pi pi-spin pi-spinner"></i><span>已完成 {{ batchSettled }}/{{ batchTotal }}</span><strong>{{ batchPercentage.toFixed(2) }}%</strong></div>
 
@@ -237,7 +238,7 @@ const cancelImageCompression = async () => {
         picker-title="选择图片文件"
         unfiltered-picker
         hint="拖入需要压缩的图片"
-        sub-hint="会先读取真实尺寸和格式，不会自动开始处理"
+        sub-hint="支持 JPG、PNG、WebP"
         @files-selected="onFilesSelected"
       />
     </div>
@@ -251,8 +252,8 @@ const cancelImageCompression = async () => {
             <span class="image-dimensions">{{ resultFacts(item) ? `${resultFacts(item)!.visibleWidth} × ${resultFacts(item)!.visibleHeight}` : item.width && item.height ? `${item.width} × ${item.height}` : item.status === 'rejected' ? '无法读取' : '读取中…' }}</span>
             <span class="image-size">{{ taskForItem(item)?.metrics ? formatBytes(taskForItem(item)!.metrics!.outputBytes) : formatBytes(item.inputSize) }}</span>
             <span class="image-format">{{ (resultFacts(item)?.format || targetFormat(item)).toUpperCase() }}</span>
-            <span class="image-status" :class="imageStatusClass(item)"><strong>{{ imageStatus(item) }}</strong><small>{{ taskForItem(item)?.logs.at(-1)?.message || (item.status === 'ready' ? '等待真实执行' : `${item.progress.toFixed(2)}%`) }}</small></span>
-            <span class="image-saving"><strong>{{ savingLabel(item) }}</strong><small>实际字节差</small></span>
+            <span class="image-status" :class="imageStatusClass(item)"><strong>{{ imageStatus(item) }}</strong><small>{{ taskForItem(item)?.logs.at(-1)?.message || (item.status === 'ready' ? '等待开始' : `${item.progress.toFixed(2)}%`) }}</small></span>
+            <span class="image-saving"><strong>{{ savingLabel(item) }}</strong><small>体积变化</small></span>
             <span class="row-actions"><i class="pi" :class="item.expanded ? 'pi-chevron-up' : 'pi-chevron-down'"></i></span>
           </button>
 
@@ -271,7 +272,7 @@ const cancelImageCompression = async () => {
             </div>
 
             <div class="comparison-panel custom-scrollbar">
-              <div class="settings-heading"><span><i class="pi pi-clone"></i>原图 / 结果图对比</span><small>结果来自已验证发布文件</small></div>
+              <div class="settings-heading"><span><i class="pi pi-clone"></i>原图 / 结果图对比</span></div>
               <div class="comparison-grid">
                 <div class="preview-card">
                   <span>原图</span>
@@ -284,7 +285,7 @@ const cancelImageCompression = async () => {
                   <img v-if="item.resultPreviewUrl" :src="item.resultPreviewUrl" :alt="`${item.name} 压缩结果`">
                   <div v-else class="preview-placeholder"><i class="pi" :class="taskForItem(item)?.status === 'failed' ? 'pi-exclamation-triangle' : taskForItem(item)?.status === 'cancelled' ? 'pi-ban' : 'pi-hourglass'"></i>{{ taskForItem(item)?.error || (taskForItem(item)?.status === 'cancelled' ? '任务已取消，未生成结果' : taskForItem(item)?.status === 'completed' ? '已跳过，未生成结果' : '等待真实结果') }}</div>
                   <small v-if="taskForItem(item)?.metrics">{{ resultFacts(item)?.visibleWidth }} × {{ resultFacts(item)?.visibleHeight }} · {{ formatBytes(taskForItem(item)!.metrics!.outputBytes) }}</small>
-                  <small v-else>不会使用原图或预计值伪装结果</small>
+                  <small v-else>处理完成后显示结果图</small>
                   <small v-if="taskForItem(item)?.metrics" class="result-path" :title="taskForItem(item)?.outputPath">{{ taskForItem(item)?.outputPath }}</small>
                   <ResultActions v-if="taskForItem(item)?.status === 'completed' && taskForItem(item)?.metrics" :path="taskForItem(item)!.outputPath" />
                 </div>
@@ -292,7 +293,7 @@ const cancelImageCompression = async () => {
               <div v-if="estimateFor(item) && !taskForItem(item)?.metrics" class="estimate-card">
                 <span><i class="pi pi-chart-bar"></i>前端参考区间（非实际结果）</span>
                 <strong>{{ formatBytes(estimateFor(item)!.minimum) }} – {{ formatBytes(estimateFor(item)!.maximum) }}</strong>
-                <small>仅按输入大小、压缩方式与质量给出范围；任务完成后由后端真实字节、尺寸和发布路径替代。</small>
+                <small>预计大小仅供参考，处理后显示实际大小。</small>
               </div>
               <button type="button" class="remove-item" :disabled="isRunning" @click="store.removeImageItem(item.id)"><i class="pi pi-times"></i>移除此图片</button>
             </div>
@@ -302,7 +303,7 @@ const cancelImageCompression = async () => {
       <EnhancedFileDropzone compact mode="file" accept="jpg,jpeg,png,webp" picker-title="选择图片文件" unfiltered-picker hint="继续添加图片" :native-drop="false" @files-selected="onFilesSelected" />
     </div>
 
-    <Modal :visible="showGlobalSettings" size="lg" title="图片批量设置" description="应用到尚未单独覆盖的图片" icon="pi pi-sliders-h" @update:visible="showGlobalSettings = $event" @close="cancelGlobalSettings">
+    <Modal :visible="showGlobalSettings" size="lg" title="图片批量设置" description="应用到尚未单独覆盖的图片" description-as-help icon="pi pi-sliders-h" @update:visible="showGlobalSettings = $event" @close="cancelGlobalSettings">
       <div class="special-settings-dialog" :class="{ locked: isRunning }">
         <ImageCompressionSettingsPanel :model-value="imageSettingsDraft" @update:model-value="updateGlobalSettings" />
         <div class="output-directory">

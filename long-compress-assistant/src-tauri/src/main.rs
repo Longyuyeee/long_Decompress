@@ -13,7 +13,6 @@ use interprocess::local_socket::{
     prelude::*, GenericFilePath, GenericNamespaced, ListenerOptions, Stream,
 };
 use std::io::{BufRead, BufReader, Read, Write};
-use std::sync::atomic::Ordering;
 use tauri::Manager;
 use window_shadows::set_shadow;
 
@@ -314,19 +313,10 @@ fn main() {
         .on_system_tray_event(long_compress_assistant::system_integration::handle_tray_event)
         .on_window_event(|event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event.event() {
+                api.prevent_close();
                 let state = event.window().state::<DesktopBehaviorState>();
-                if state.close_to_tray.load(Ordering::SeqCst) {
-                    api.prevent_close();
-                    let _ = event.window().hide();
-                } else if long_compress_assistant::commands::system_integration::should_confirm_exit(&state) {
-                    api.prevent_close();
-                    let _ = event.window().show();
-                    let _ = event.window().unminimize();
-                    let _ = event.window().set_focus();
-                    let _ = event.window().emit("exit-confirmation-requested", ());
-                } else {
-                    api.prevent_close();
-                    let _ = event.window().emit("exit-drafts-requested", ());
+                if let Err(error) = long_compress_assistant::commands::system_integration::handle_window_close(event.window(), &state) {
+                    eprintln!("Failed to handle window close: {}", error);
                 }
             }
         })
@@ -575,6 +565,8 @@ fn main() {
             long_compress_assistant::commands::file_manager::file_manager_create_directory,
             long_compress_assistant::commands::file_manager::file_manager_recycle,
             long_compress_assistant::commands::file_manager::file_manager_properties,
+            long_compress_assistant::commands::file_manager::file_manager_preview_text,
+            long_compress_assistant::commands::file_manager::file_manager_preview_image,
             long_compress_assistant::commands::system::get_system_info,
             long_compress_assistant::commands::system::get_resource_usage,
             long_compress_assistant::commands::system::get_disk_space,
@@ -600,6 +592,7 @@ fn main() {
             long_compress_assistant::commands::system_integration::unregister_context_menu,
             long_compress_assistant::commands::system_integration::is_context_menu_registered,
             long_compress_assistant::commands::system_integration::set_close_to_tray,
+            long_compress_assistant::commands::system_integration::request_window_close,
             long_compress_assistant::commands::system_integration::set_has_active_tasks,
             long_compress_assistant::commands::system_integration::desktop_e2e_get_behavior_state,
             long_compress_assistant::commands::system_integration::desktop_e2e_request_exit_confirmation,

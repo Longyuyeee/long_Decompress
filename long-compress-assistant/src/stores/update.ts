@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
 import { checkUpdate, installUpdate, onUpdaterEvent, type UpdateManifest } from '@tauri-apps/api/updater'
+import { listen, TauriEvent } from '@tauri-apps/api/event'
 
 export type UpdateStatus = 'idle' | 'checking' | 'available' | 'up-to-date' | 'installing' | 'error'
 
@@ -24,26 +25,62 @@ export const useUpdateStore = defineStore('update', () => {
   const manifest = ref<UpdateManifest | null>(null)
   const errorMessage = ref('')
   const dialogVisible = ref(false)
+  const installPhase = ref<'preparing' | 'downloading' | 'installing' | 'restarting'>('preparing')
+  const downloadedBytes = ref(0)
+  const totalBytes = ref<number | null>(null)
   const lastAttemptAt = ref<number | null>(readStoredTimestamp(LAST_ATTEMPT_KEY, LEGACY_LAST_CHECK_KEY))
   const lastSuccessAt = ref<number | null>(readStoredTimestamp(LAST_SUCCESS_KEY))
   let autoCheckTimer: ReturnType<typeof setTimeout> | null = null
   let unlistenUpdater: (() => void) | null = null
+  let unlistenProgress: (() => void) | null = null
+  let initializing: Promise<void> | null = null
+  let listenerGeneration = 0
 
   const busy = computed(() => status.value === 'checking' || status.value === 'installing')
   const availableVersion = computed(() => manifest.value?.version || '')
+  const downloadPercent = computed(() => totalBytes.value
+    ? Math.min(100, Math.floor(downloadedBytes.value / totalBytes.value * 100)) : null)
+  const resetProgress = () => {
+    installPhase.value = 'preparing'
+    downloadedBytes.value = 0
+    totalBytes.value = null
+  }
 
   const initialize = async () => {
     if (!isTauriRuntime() || unlistenUpdater) return
-    try {
-      unlistenUpdater = await onUpdaterEvent(({ status: eventStatus, error }) => {
-        if (eventStatus === 'ERROR') {
-          status.value = 'error'
-          errorMessage.value = error || '更新安装失败，请稍后重试。'
-        }
-      })
-    } catch (error) {
-      console.warn('Updater event listener is unavailable:', error)
-    }
+    if (initializing) return initializing
+    const generation = listenerGeneration
+    initializing = (async () => {
+      const registered: Array<() => void> = []
+      try {
+        const stopStatus = await onUpdaterEvent(({ status: eventStatus, error }) => {
+          const phase: string = eventStatus // Tauri 1.8 also emits DOWNLOADED, absent in v1 JS typings.
+          if (phase === 'ERROR' && busy.value) {
+            status.value = 'error'
+            errorMessage.value = error || '更新安装失败，请稍后重试。'
+          } else if (status.value === 'installing' && phase === 'DOWNLOADED') {
+            installPhase.value = 'installing'
+          } else if (status.value === 'installing' && phase === 'DONE') {
+            installPhase.value = 'restarting'
+          }
+        })
+        registered.push(stopStatus)
+        const stopProgress = await listen<{ chunkLength: number; contentLength?: number | null }>(TauriEvent.DOWNLOAD_PROGRESS, ({ payload }) => {
+          if (status.value !== 'installing' || !['preparing', 'downloading'].includes(installPhase.value)) return
+          installPhase.value = 'downloading'
+          if (Number.isFinite(payload.chunkLength) && payload.chunkLength > 0) downloadedBytes.value += payload.chunkLength
+          if (payload.contentLength && Number.isFinite(payload.contentLength) && payload.contentLength > 0) totalBytes.value = payload.contentLength
+        })
+        registered.push(stopProgress)
+        if (generation !== listenerGeneration) { registered.forEach(stop => stop()); return }
+        unlistenUpdater = stopStatus
+        unlistenProgress = stopProgress
+      } catch (error) {
+        registered.forEach(stop => stop())
+        console.warn('Updater event listener is unavailable:', error)
+      }
+    })().finally(() => { initializing = null })
+    return initializing
   }
 
   const checkForUpdates = async (manual = false) => {
@@ -51,6 +88,7 @@ export const useUpdateStore = defineStore('update', () => {
     lastAttemptAt.value = Date.now()
     localStorage.setItem(LAST_ATTEMPT_KEY, String(lastAttemptAt.value))
     errorMessage.value = ''
+    resetProgress()
     manifest.value = null
     status.value = 'checking'
     if (manual) dialogVisible.value = true
@@ -103,8 +141,13 @@ export const useUpdateStore = defineStore('update', () => {
 
     status.value = 'installing'
     errorMessage.value = ''
+    dialogVisible.value = true
+    resetProgress()
     try {
+      // Register before triggering the native download, including manual updates.
+      await initialize()
       await installUpdate()
+      if (status.value === 'installing') installPhase.value = 'restarting'
     } catch (error) {
       status.value = 'error'
       errorMessage.value = error instanceof Error ? error.message : String(error)
@@ -112,8 +155,9 @@ export const useUpdateStore = defineStore('update', () => {
   }
 
   const remindLater = () => {
+    if (status.value === 'installing') return
     dialogVisible.value = false
-    if (status.value !== 'installing') status.value = 'idle'
+    status.value = 'idle'
   }
 
   const skipCurrentVersion = () => {
@@ -126,11 +170,15 @@ export const useUpdateStore = defineStore('update', () => {
     autoCheckTimer = null
     unlistenUpdater?.()
     unlistenUpdater = null
+    unlistenProgress?.()
+    unlistenProgress = null
+    listenerGeneration++
   }
 
   return {
     status, manifest, errorMessage, dialogVisible, busy, availableVersion,
     lastAttemptAt, lastSuccessAt,
+    installPhase, downloadedBytes, totalBytes, downloadPercent,
     initialize, checkForUpdates, scheduleAutoCheck, install,
     remindLater, skipCurrentVersion, cleanup,
   }

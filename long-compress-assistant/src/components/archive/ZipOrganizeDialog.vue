@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { computed, reactive, ref, watch } from 'vue'
 import Modal from '@/components/ui/Modal.vue'
 import { useZipEditStore } from '@/stores/zipEdit'
@@ -47,8 +48,8 @@ function apply() {
 const locked = computed(() => session.value?.busy || store.preparing || store.opening)
 </script>
 <template>
-  <Modal :visible="visible" @update:visible="emit('update:visible',$event)" title="整理 ZIP 内容" icon="pi pi-sitemap" size="xl" cancel-text="关闭整理窗口">
-    <p class="mb-4 text-xs leading-relaxed text-muted">这里展示本次编辑后的目录结构。删除、改名和移动先进入待保存清单，原包保持不变。</p>
+  <Modal description="这里展示本次编辑后的目录结构。删除、改名和移动先进入待保存清单，原包保持不变。" description-as-help :visible="visible" @update:visible="emit('update:visible',$event)" title="整理 ZIP 内容" icon="pi pi-sitemap" size="xl" cancel-text="关闭整理窗口">
+
     <div class="grid min-w-0 gap-4 lg:grid-cols-2" data-testid="zip-organize-content">
       <section class="min-w-0 space-y-3" data-testid="zip-organize-tree">
         <div class="flex flex-wrap items-center gap-2"><strong class="mr-auto text-sm">编辑后的内容 · {{ nodes.length }} 项</strong><button class="organize-button" :disabled="locked" data-testid="zip-organize-add" @click="emit('add',directory,false)">添加文件</button></div>
@@ -76,7 +77,7 @@ const locked = computed(() => session.value?.busy || store.preparing || store.op
             <template v-else>
               <div class="grid gap-3 sm:grid-cols-2"><label class="text-xs text-muted">名称前缀<input v-model="rule.prefix" class="organize-input mt-2 w-full" data-testid="zip-organize-prefix" /></label><label class="text-xs text-muted">名称后缀<input v-model="rule.suffix" class="organize-input mt-2 w-full" data-testid="zip-organize-suffix" /></label></div>
               <div class="grid gap-3 sm:grid-cols-2"><label class="text-xs text-muted">替换名称中的文字<input v-model="rule.search" class="organize-input mt-2 w-full" data-testid="zip-organize-find" /></label><label class="text-xs text-muted">替换为<input v-model="rule.replacement" class="organize-input mt-2 w-full" data-testid="zip-organize-replacement" /></label></div>
-              <label class="block text-xs text-muted">移入包内目录（可选）<input v-model="rule.destination" class="organize-input mt-2 w-full" data-testid="zip-organize-destination" placeholder="留空时保留各自目录" /></label><p class="text-xs leading-relaxed text-muted">批量规则处理名称，文件扩展名保留；目录连同子项移动，不覆盖已有内容。</p>
+              <label class="block text-xs text-muted">移入包内目录（可选）<input v-model="rule.destination" class="organize-input mt-2 w-full" data-testid="zip-organize-destination" placeholder="留空时保留各自目录" /></label><span class="context-help"><HelpHint label="批量改名说明">批量规则处理名称，文件扩展名保留；目录连同子项移动，不覆盖已有内容。</HelpHint></span>
             </template>
           </fieldset>
           <p v-else class="rounded-xl bg-red-500/5 p-3 text-xs leading-relaxed text-red-500">所选位置及其子项将从新 ZIP 移除。当前只加入清单，保存前仍可撤销。</p>

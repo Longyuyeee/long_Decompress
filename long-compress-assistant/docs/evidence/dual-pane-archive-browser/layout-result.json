@@ -1,0 +1,197 @@
+{
+  "binarySha256": "7943d43524dd52bd930af22420be1e7b618c47bcdb057bb2fa335804b1427620",
+  "checks": [
+    "compact-archive-lists-and-floating-options",
+    "password-preview-after-options-layout-change",
+    "compact-local-text-and-hidden-nav-scrollbar"
+  ],
+  "layouts": [
+    {
+      "name": "archive-and-folder",
+      "height": 700,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": true,
+          "listHeight": 279.734375,
+          "overflow": 0,
+          "width": 420.796875
+        },
+        {
+          "archive": false,
+          "listHeight": 383.03125,
+          "overflow": 0,
+          "width": 420.8046875
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 1100
+    },
+    {
+      "name": "archive-and-folder",
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": true,
+          "listHeight": 120.9453125,
+          "overflow": 0,
+          "width": 322
+        },
+        {
+          "archive": false,
+          "listHeight": 230.2421875,
+          "overflow": 0,
+          "width": 322.0078125
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 760
+    },
+    {
+      "name": "archive-options-popover",
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": true,
+          "listHeight": 120.9453125,
+          "overflow": 0,
+          "width": 322
+        },
+        {
+          "archive": true,
+          "listHeight": 120.9453125,
+          "overflow": 0,
+          "width": 322.0078125
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 760
+    },
+    {
+      "name": "two-independent-archives",
+      "height": 700,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": true,
+          "listHeight": 279.734375,
+          "overflow": 0,
+          "width": 420.796875
+        },
+        {
+          "archive": true,
+          "listHeight": 279.734375,
+          "overflow": 0,
+          "width": 420.8046875
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 1100
+    },
+    {
+      "name": "two-independent-archives",
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": true,
+          "listHeight": 120.9453125,
+          "overflow": 0,
+          "width": 322
+        },
+        {
+          "archive": true,
+          "listHeight": 120.9453125,
+          "overflow": 0,
+          "width": 322.0078125
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 760
+    },
+    {
+      "name": "password-text-preview",
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": true,
+          "listHeight": 120.9453125,
+          "overflow": 0,
+          "width": 322
+        },
+        {
+          "archive": true,
+          "listHeight": 120.9453125,
+          "overflow": 0,
+          "width": 322.0078125
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 760
+    },
+    {
+      "name": "returned-folders-no-nav-scrollbar",
+      "height": 600,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": false,
+          "listHeight": 267.046875,
+          "overflow": 0,
+          "width": 328
+        },
+        {
+          "archive": false,
+          "listHeight": 267.046875,
+          "overflow": 0,
+          "width": 328.0078125
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 900
+    },
+    {
+      "name": "local-text-preview",
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": false,
+          "listHeight": 187.046875,
+          "overflow": 0,
+          "width": 322
+        },
+        {
+          "archive": false,
+          "listHeight": 187.046875,
+          "overflow": 0,
+          "width": 322.0078125
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "final-archive-and-folder-1100x700.png",
+    "final-archive-and-folder-760x520.png",
+    "final-archive-options-popover-760x520.png",
+    "final-two-independent-archives-1100x700.png",
+    "final-two-independent-archives-760x520.png",
+    "final-password-text-preview-760x520.png",
+    "final-returned-folders-no-nav-scrollbar-900x600.png",
+    "final-local-text-preview-760x520.png"
+  ],
+  "completedAt": "2026-10-22T02:33:35.531Z"
+}

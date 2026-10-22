@@ -494,13 +494,13 @@ const selectedUsageMax = computed(() => Math.max(...selectedUsageDays.value.map(
       <div class="flex items-center gap-6 shrink-0">
         <div>
           <h1 class="text-3xl font-black text-content tracking-tighter mb-0.5">{{ appStore.t('nav.vault') }}</h1>
-          <p class="text-muted text-xs font-bold uppercase tracking-[0.2em] ml-0.5">{{ appStore.t('vault.usage_stats') }}</p>
         </div>
         
         <div class="flex gap-2">
           <button v-if="passwordStore.isUnlocked" @click="handleAddNew" :aria-label="appStore.t('common.add')" class="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center hover:scale-105 transition-all shadow-lg hover:shadow-primary/40">
             <i class="pi pi-plus text-sm"></i>
           </button>
+<button v-if="passwordStore.isInitialized && passwordStore.isUnlocked" type="button" data-testid="vault-analytics-trigger" :aria-label="appStore.t('vault.analytics.open')" title="使用统计" class="vault-stats-action" @click="showVaultAnalytics"><i class="pi pi-chart-bar"/><span>{{ stats.total }} 个密码 · {{ stats.totalUsage }} 次使用</span></button>
           <div class="w-px h-5 bg-subtle my-auto mx-1"></div>
           <button v-if="passwordStore.isUnlocked" @click="handleExport" :disabled="isExporting || passwordStore.entries.length === 0" class="w-8 h-8 rounded-lg bg-input border border-subtle text-muted flex items-center justify-center hover:text-primary hover:bg-primary/5 transition-all disabled:opacity-85 disabled:cursor-not-allowed" :title="appStore.t('vault.export')" aria-label="Export passwords">
             <i v-if="!isExporting" class="pi pi-download text-sm"></i>
@@ -524,7 +524,7 @@ const selectedUsageMax = computed(() => Math.max(...selectedUsageDays.value.map(
       </div>
     </header>
 
-    <div class="relative flex-1 min-h-0 aero-card overflow-hidden flex flex-col mb-12">
+    <div class="relative flex-1 min-h-0 aero-card overflow-hidden flex flex-col">
       <div v-if="passwordStore.isInitialized && passwordStore.isLoading" class="absolute inset-0 z-50 bg-card/80 backdrop-blur-sm flex items-center justify-center">
         <i class="pi pi-spin pi-spinner text-primary text-2xl"></i>
       </div>
@@ -653,28 +653,7 @@ const selectedUsageMax = computed(() => Math.max(...selectedUsageDays.value.map(
       </div>
     </div>
 
-    <!-- 数据统计入口 -->
-    <button
-      v-if="passwordStore.isInitialized && passwordStore.isUnlocked"
-      type="button"
-      data-testid="vault-analytics-trigger"
-      class="fixed bottom-8 right-12 z-50 flex items-center gap-6 bg-card/90 border border-subtle px-6 py-3 rounded-2xl shadow-2xl hover:border-primary/40 hover:-translate-y-0.5 transition-all group"
-      :aria-label="appStore.t('vault.analytics.open')"
-      @click="showVaultAnalytics"
-    >
-      <div class="text-center">
-        <div class="text-sm text-muted font-black uppercase tracking-widest mb-0.5">{{ appStore.t('vault.vault_size') }}</div>
-        <div class="text-lg font-black text-primary leading-none">{{ stats.total }}</div>
-      </div>
-      <div class="w-px h-6 bg-subtle my-auto"></div>
-      <div class="text-center">
-        <div class="text-sm text-muted font-black uppercase tracking-widest mb-0.5">{{ appStore.t('vault.total_hits') }}</div>
-        <div class="text-lg font-black text-content leading-none">{{ stats.totalUsage }}</div>
-      </div>
-      <div class="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all">
-        <i class="pi pi-chart-pie text-sm"></i>
-      </div>
-    </button>
+
 
     <Teleport to="body">
       <transition name="analytics-pop">
@@ -1109,6 +1088,8 @@ const selectedUsageMax = computed(() => Math.max(...selectedUsageDays.value.map(
 </template>
 
 <style scoped>
+.password-vault{height:100%;min-height:0;padding:16px;gap:12px}.password-vault>header{gap:12px;flex-wrap:wrap}.password-vault>header>div:first-child{gap:12px}.password-vault h1{font-size:24px}.vault-stats-action{display:flex;align-items:center;gap:6px;padding:0 10px;border:1px solid var(--border-subtle);border-radius:9px;font-size:11px;color:var(--text-muted);white-space:nowrap}.vault-stats-action:hover{color:var(--dynamic-accent)}@media(max-width:900px){.vault-stats-action span{display:none}.password-vault>header>div:last-child{min-width:180px}}
+
 .password-vault {
   background: radial-gradient(circle at 100% 0%, color-mix(in srgb, var(--dynamic-accent) 5%, transparent) 0%, transparent 40%);
 }

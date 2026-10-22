@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { ArchivePaneSource } from '@/types/fileBrowser'
 import {prepareZpaqSource,type ZpaqGroup} from '@/utils/zpaqMultipart'
 import ArchiveImageReader from '@/components/archive/ArchiveImageReader.vue'
 import ReaderRetrievalDialog from '@/components/archive/ReaderRetrievalDialog.vue'
@@ -24,6 +25,16 @@ import ZpaqSnapshotPicker from '@/components/archive/ZpaqSnapshotPicker.vue'
 import ZpaqSnapshotDiff from '@/components/archive/ZpaqSnapshotDiff.vue'
 import { type ZpaqSnapshot } from '@/types/zpaqSnapshot'
 import { useArchiveConversionStore } from '@/stores/archiveConversion'
+
+const props = withDefaults(defineProps<{ embedded?: boolean; source?: ArchivePaneSource; destination?: string; active?: boolean }>(), { embedded: false, active: true })
+const emit = defineEmits<{ leave: []; extracted: [destination: string]; 'pane-state': [state: { busy: boolean; selected: number }] }>()
+const browserRoot = ref<HTMLElement | null>(null)
+const paneToolsOpen = ref(false), sourceError = ref(''), customOutput = ref(false)
+let disposed = false, sourceSequence = 0
+const leavePane = () => {
+  if (extracting.value || zipEditBusy.value || openingEntryPath.value) return
+  browseRequest.cancel(false); archiveLoadSequence++; emit('leave')
+}
 
 interface ArchiveWorkspaceFrame {
   archivePath: string
@@ -55,6 +66,7 @@ const libraryEntryPath = ref('')
 const outputPath = ref('')
 const password = ref('')
 const zipPasswordEncoding = ref<ZipPasswordEncoding>()
+const usesPeerOutput = computed(() => props.embedded && !customOutput.value && !!props.destination)
 const inputEncoding = computed(() => result.value
   ? zipPasswordEncodingForSource(archivePath.value, zipPasswordEncoding.value, result.value.format) : zipPasswordEncoding.value)
 const result = ref<ArchiveBrowseResult | null>(null)
@@ -97,7 +109,7 @@ function openImageReader(entry?:ArchiveEntryInfo,resume?:ArchiveReadingRecord){
  if(!first&&!resume)return;readerReturnFocus=document.activeElement as HTMLElement;readerInitialPath.value=resume?.path||first!.path;readerResume.value=resume;closePreview();readerOpen.value=true
 }
 async function closeImageReader(){if(!readerOpen.value)return;readerOpen.value=false;const target=readerReturnFocus;readerReturnFocus=null;await nextTick();if(target?.isConnected)target.focus({preventScroll:true})}
-async function locateReaderImage(path:string){await closeImageReader();query.value='';typeFilter.value='all';const normalized=path.replace(/\\/g,'/'),slash=normalized.lastIndexOf('/');navigateToDirectory(slash<0?'':normalized.slice(0,slash));focusedEntryPath.value=path;await nextTick();const row=Array.from(document.querySelectorAll<HTMLElement>('[data-entry-path]')).find(row=>row.dataset.entryPath===path);row?.scrollIntoView({block:'nearest'});row?.focus({preventScroll:true})}
+async function locateReaderImage(path:string){await closeImageReader();query.value='';typeFilter.value='all';const normalized=path.replace(/\\/g,'/'),slash=normalized.lastIndexOf('/');navigateToDirectory(slash<0?'':normalized.slice(0,slash));focusedEntryPath.value=path;await nextTick();const row=Array.from(browserRoot.value?.querySelectorAll<HTMLElement>('[data-entry-path]') || []).find(row=>row.dataset.entryPath===path);row?.scrollIntoView?.({block:'nearest'});row?.focus({preventScroll:true})}
 async function extractReaderImage(path:string){const selection:ReaderSelection={revision:result.value?.revision||'',paths:[path],keepStructure:true,conflictPolicy:'rename'};await closeImageReader();const target=await requestOutputDirectory(outputPath.value);if(target)await extractPaths([path],target,selection)}
 async function refreshReaderSource(){await closeImageReader();await refreshDirectory()}
 async function collectReaderImages(paths:string[],position?:ArchiveReadingRecord){readerResume.value=position;readerCollectPaths.value=[...paths];await closeImageReader()}
@@ -204,13 +216,17 @@ const cancelArchiveLoad = () => {
 
 const openArchivePath = async (path: string, options: ArchiveReadOptions = {}) => {
   if (!path || inputBusy.value) return
+  const opening = ++sourceSequence
+  sourceError.value = ''; customOutput.value = false
   try {
     if (options.librarySourceId) await invoke('library_check', { sourceId: options.librarySourceId, entryPath: options.focusEntryPath || null })
     librarySourceId.value = options.librarySourceId || ''
     libraryEntryPath.value = options.focusEntryPath || ''
     readerCollectPaths.value=null
     path=await prepareZpaqSource(path)
+    if (disposed || opening !== sourceSequence) return
     nativeZpaqGroup.value=/\.zpaq$/i.test(path)?await invoke<ZpaqGroup|null>('zpaq_multipart_details',{path}):null
+    if (disposed || opening !== sourceSequence) return
     archivePath.value = path
     password.value = options.password || ''
     zipPasswordEncoding.value = options.zipPasswordEncoding
@@ -220,10 +236,11 @@ const openArchivePath = async (path: string, options: ArchiveReadOptions = {}) =
     nestedLoadError.value = ''
     nestedLoadRevision.value = 0
     browseRequest.clearNotice()
-    outputPath.value = parentDirectory(nativeZpaqGroup.value?.members[0]?.path||path)
+    outputPath.value = props.embedded ? props.destination || '' : parentDirectory(nativeZpaqGroup.value?.members[0]?.path||path)
     query.value = ''
     typeFilter.value = 'all'
     await loadArchive()
+    if (disposed || opening !== sourceSequence) return
     if (options.focusEntryPath && result.value) {
       const entry = result.value.entries.find(row => row.path === options.focusEntryPath && !row.isDir)
       if (!entry && (options.entryAction!=='read'||!options.resumeReading)) { selected.value = new Set(); throw new Error('当前归档已找不到所选条目，请返回资源库刷新索引') }
@@ -243,6 +260,8 @@ const openArchivePath = async (path: string, options: ArchiveReadOptions = {}) =
       }
     }
   } catch (error) {
+    if (disposed || opening !== sourceSequence) return
+    sourceError.value = String(error)
     appStore.setError(`无法打开压缩包：${String(error)}`)
   }
 }
@@ -263,10 +282,11 @@ const chooseArchive = async () => {
 }
 
 let lastBrowseError = ''
-const loadArchive = async (snapshot = requestedSnapshot.value, selectAll = true) => {
+const loadArchive = async (snapshot = requestedSnapshot.value, selectAll = !props.embedded) => {
   if (!archivePath.value || loading.value) return
   const sequence = ++archiveLoadSequence
   browseRequest.clearNotice()
+  sourceError.value = ''
   result.value = null
   selected.value = new Set()
   navigation.reset()
@@ -288,7 +308,7 @@ const loadArchive = async (snapshot = requestedSnapshot.value, selectAll = true)
       nestedLoadError.value = message
       nestedLoadRevision.value++
     }
-    else { lastBrowseError = message; appStore.setError(message) }
+    else { lastBrowseError = message; sourceError.value = message; if (props.embedded) paneToolsOpen.value = true; appStore.setError(message) }
   } finally {
     if (sequence === archiveLoadSequence) loading.value = false
   }
@@ -322,6 +342,7 @@ const closePreview = () => {
 
 const openPreview = async (entry: ArchiveEntryInfo) => {
   if (!canPreviewEntry(entry) || !previewRouteSupported.value) return
+  if (props.embedded) paneToolsOpen.value = false
   const sequence = ++previewSequence
   previewEntry.value = entry
   imagePreview.value = null
@@ -350,7 +371,7 @@ const openPreview = async (entry: ArchiveEntryInfo) => {
 
 const chooseOutput = async () => {
   const picked = await requestOutputDirectory(outputPath.value)
-  if (picked) outputPath.value = picked
+  if (picked) { outputPath.value = picked; customOutput.value = picked !== props.destination }
 }
 
 const requestOutputDirectory = async (initialPath: string) => {
@@ -502,6 +523,7 @@ const activateEntry = (entry: ArchiveEntryInfo) => {
   focusedEntryPath.value = entry.path
   if (entry.isDir) navigateToDirectory(entry.path.replace(/\/+$/, ''))
   else if (isNestedArchiveEntry(entry)) void enterNestedArchive(entry)
+  else if (props.embedded && canPreviewEntry(entry) && previewRouteSupported.value) void openPreview(entry)
   else void openWithDefaultApplication(entry)
 }
 
@@ -590,6 +612,7 @@ const extractPaths = async (paths: string[], destination: string, readerSelectio
       conflictPolicy: 'rename'
     })
     appStore.setSuccess(`已解压 ${paths.length} 个所选文件`)
+    emit('extracted', destination)
   } catch (error) {
     appStore.setError(String(error))
   } finally {
@@ -646,7 +669,8 @@ const isEditableKeyboardTarget = (target: EventTarget | null) => {
 }
 
 const handleWorkspaceKeydown = (event: KeyboardEvent) => {
-  if (event.defaultPrevented||readerOpen.value) return
+  if (event.defaultPrevented || readerOpen.value || props.embedded && !props.active) return
+  if (document.querySelector('[role="dialog"], [role="alertdialog"]') && !previewEntry.value && !dangerousOpenEntry.value && !detailEntries.value.length) return
   if (event.key === 'Escape') {
     if (previewEntry.value) closePreview()
     else if (dangerousOpenEntry.value) dangerousOpenEntry.value = null
@@ -658,10 +682,12 @@ const handleWorkspaceKeydown = (event: KeyboardEvent) => {
   const focusedEntry = [...directoryEntries.value, ...files.value].find(entry => entry.path === focusedEntryPath.value) ?? null
   const keyboardEntries = contextEntriesFor(focusedEntry)
   const keyboardDisplayEntries = focusedEntry?.isDir ? [focusedEntry] : keyboardEntries
-  if ((event.shiftKey && event.key === 'F10') || event.key === 'ContextMenu') {
+  if (props.embedded && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
+    event.preventDefault(); selected.value = new Set(visibleFiles.value.map(entry => entry.path))
+  } else if ((event.shiftKey && event.key === 'F10') || event.key === 'ContextMenu') {
     event.preventDefault()
     const focusedElement = focusedEntryPath.value
-      ? Array.from(document.querySelectorAll<HTMLElement>('[data-entry-path]'))
+      ? Array.from(browserRoot.value?.querySelectorAll<HTMLElement>('[data-entry-path]') || [])
           .find(element => element.dataset.entryPath === focusedEntryPath.value) ?? null
       : null
     const rect = focusedElement?.getBoundingClientRect()
@@ -704,7 +730,8 @@ const handleWorkspaceKeydown = (event: KeyboardEvent) => {
     goForward()
   } else if (event.key === 'Backspace') {
     event.preventDefault()
-    goUp()
+    if (props.embedded && !canNavigateUp.value) { if (parentFrames.value.length) restoreFrame(parentFrames.value.length-1); else leavePane() }
+    else goUp()
   }
 }
 
@@ -717,11 +744,16 @@ const droppedBrowserFiles = (event: DragEvent) => {
 }
 
 watch(() => appStore.pendingArchiveBrowserPath, path => {
-  if (path) {
+  if (path && !props.embedded) {
     const options = appStore.takeArchiveBrowserOptions()
     void openArchivePath(appStore.takeArchiveBrowserPath(), options)
   }
 }, { immediate: true })
+
+watch(() => props.source, source => { if (props.embedded && source) void openArchivePath(source.path, source.options) }, { immediate: true })
+watch(() => props.destination, value => { if (props.embedded && !customOutput.value) outputPath.value = value || '' })
+watch(() => props.active, active => { if (!active) { closeContextMenu(); isDraggingArchive.value = false; paneToolsOpen.value = false } })
+watch([inputBusy, () => selected.value.size], () => emit('pane-state', { busy: inputBusy.value, selected: selected.value.size }), { immediate: true })
 
 watch([password, zipPasswordEncoding], () => { void closeImageReader();closePreview(); dangerousOpenEntry.value = null })
 
@@ -729,17 +761,19 @@ onMounted(() => {
   if (import.meta.env.MODE === 'test') return
   window.addEventListener('keydown', handleWorkspaceKeydown)
   void Promise.all([
-    listen('tauri://file-drop-hover', () => { isDraggingArchive.value = true }).then(value => { unlistenHover = value }),
+    listen('tauri://file-drop-hover', () => { if (!props.embedded || props.active) isDraggingArchive.value = true }).then(value => { if (disposed) value(); else unlistenHover = value }),
     listen<string[]>('tauri://file-drop', event => {
       isDraggingArchive.value = false
+      if (props.embedded && !props.active) return
       if (editingZip.value) void zipEditor.value?.addDropped(event.payload)
       else if (event.payload[0]) void openArchivePath(event.payload[0])
-    }).then(value => { unlistenDrop = value }),
-    listen('tauri://file-drop-cancelled', () => { isDraggingArchive.value = false }).then(value => { unlistenCancel = value })
+    }).then(value => { if (disposed) value(); else unlistenDrop = value }),
+    listen('tauri://file-drop-cancelled', () => { isDraggingArchive.value = false }).then(value => { if (disposed) value(); else unlistenCancel = value })
   ]).catch(error => console.warn('Archive browser drag-and-drop is unavailable:', error))
 })
 
 onUnmounted(() => {
+  disposed = true; sourceSequence++; archiveLoadSequence++
   readerOpen.value=false
   previewSequence++
   browseRequest.cancel(false)
@@ -768,6 +802,9 @@ const extractSelected = async () => {
 
 <template>
   <div
+    ref="browserRoot"
+    :class="{ 'archive-pane-browser': embedded }"
+    :data-testid="embedded ? 'archive-pane-browser' : undefined"
     class="browser-page relative h-full min-w-0 overflow-hidden p-responsive p-8 flex flex-col gap-3"
     @dragenter.prevent="isDraggingArchive = true"
     @dragover.prevent="isDraggingArchive = true"
@@ -775,7 +812,7 @@ const extractSelected = async () => {
     @drop="droppedBrowserFiles"
     @keydown="handleWorkspaceKeydown"
   >
-    <header class="shrink-0 flex flex-wrap items-center justify-between gap-3">
+    <header v-if="!embedded" class="shrink-0 flex flex-wrap items-center justify-between gap-3">
       <div class="min-w-0">
         <h1 class="browser-title font-black text-content tracking-tighter">压缩包浏览中心</h1>
         <p class="text-muted text-xs font-bold mt-1">像文件夹一样浏览压缩包，只解压真正需要的内容</p>
@@ -789,11 +826,18 @@ const extractSelected = async () => {
       </div>
     </header>
 
-    <section v-if="!result&&!loading&&reading.records.length" class="reading-history shrink-0" data-testid="archive-reading-history"><div><strong><i class="pi pi-bookmark"/>继续上次阅读</strong><small>本机阅读位置 · 不保存密码或图片数据</small><button v-if="reading.records.length>4" class="text-primary" @click="showAllReading=!showAllReading">{{ showAllReading?'收起':'更多阅读记录' }}</button></div><div class="reading-recent"><article v-for="row in reading.records.slice(0,showAllReading?30:4)" :key="row.filePath+String(row.snapshot?.version||'')"><button class="reading-recent-open" :disabled="inputBusy" :title="row.filePath" data-testid="reading-recent-open" @click="continueReading(row)"><strong>{{ row.filePath.replace(/\\/g,'/').split('/').pop() }}<small v-if="row.snapshot"> · 快照 {{ row.snapshot.version }}</small></strong><span>{{ row.path }}</span></button><button class="reading-recent-remove" aria-label="移除此阅读记录" @click="reading.remove(row)"><i class="pi pi-times"/></button></article></div></section>
+    <header v-if="embedded" class="pane-archive-nav">
+      <button type="button" data-testid="archive-pane-leave" :disabled="extracting || zipEditBusy || !!openingEntryPath" title="返回此栏文件夹" @click="leavePane"><i class="pi pi-arrow-left"/></button>
+      <span class="pane-archive-location" :title="nativeZpaqGroup?.members[0]?.path || archivePath"><i class="pi pi-box"/><strong>{{ archiveName || source?.path.replace(/\\/g,'/').split('/').pop() || '正在打开压缩包' }}</strong></span>
+      <button type="button" :disabled="inputBusy" title="重新读取压缩包" @click="loadArchive()"><i class="pi pi-refresh"/></button>
+      <button type="button" data-testid="archive-pane-tools" :aria-expanded="paneToolsOpen" title="密码与压缩包选项" :class="{active:paneToolsOpen}" @click="paneToolsOpen=!paneToolsOpen"><i class="pi pi-sliders-h"/></button>
+    </header>
+    <div v-if="embedded && result" class="pane-archive-status"><span>{{ result.format }} · {{ result.totalFiles }} 个文件 · {{ formatBytes(result.totalUncompressedSize) }}<i v-if="result.encrypted" class="pi pi-lock" title="密码压缩包"/></span><button v-if="readerCandidates.length" type="button" :disabled="inputBusy" @click="openImageReader()"><i class="pi pi-images"/>阅读图片</button></div>
+    <section v-if="!embedded&&!result&&!loading&&reading.records.length" class="reading-history shrink-0" data-testid="archive-reading-history"><div><strong><i class="pi pi-bookmark"/>继续上次阅读</strong><small>本机阅读位置 · 不保存密码或图片数据</small><button v-if="reading.records.length>4" class="text-primary" @click="showAllReading=!showAllReading">{{ showAllReading?'收起':'更多阅读记录' }}</button></div><div class="reading-recent"><article v-for="row in reading.records.slice(0,showAllReading?30:4)" :key="row.filePath+String(row.snapshot?.version||'')"><button class="reading-recent-open" :disabled="inputBusy" :title="row.filePath" data-testid="reading-recent-open" @click="continueReading(row)"><strong>{{ row.filePath.replace(/\\/g,'/').split('/').pop() }}<small v-if="row.snapshot"> · 快照 {{ row.snapshot.version }}</small></strong><span>{{ row.path }}</span></button><button class="reading-recent-remove" aria-label="移除此阅读记录" @click="reading.remove(row)"><i class="pi pi-times"/></button></article></div></section>
     <p v-if="result && browseNotice" class="shrink-0 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-primary" data-testid="archive-result-notice">{{ browseNotice }}</p>
     <div v-if="librarySourceId" class="shrink-0 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs" data-testid="archive-library-origin"><span class="min-w-0 break-all text-muted">来自归档资源库 · {{ libraryEntryPath }}</span><RouterLink to="/library" class="font-bold text-primary">返回搜索结果</RouterLink></div>
 
-    <nav v-if="archivePath" class="archive-chain shrink-0" aria-label="嵌套归档链" data-testid="archive-chain">
+    <nav v-if="archivePath && (!embedded || parentFrames.length)" class="archive-chain shrink-0" aria-label="嵌套归档链" data-testid="archive-chain">
       <template v-for="(item, index) in archiveChain" :key="`${item.index}-${item.name}`">
         <i v-if="index > 0" class="pi pi-angle-right" aria-hidden="true"></i>
         <button type="button" :disabled="item.current" :class="{ current: item.current }" :title="item.name" @click="restoreFrame(item.index)">
@@ -803,6 +847,8 @@ const extractSelected = async () => {
       <span class="archive-depth">{{ archiveDepth }} / 3 层</span>
     </nav>
 
+    <div v-show="!embedded || paneToolsOpen" class="archive-options custom-scrollbar">
+      <div v-if="embedded && result && !parentFrames.length" class="pane-option-actions"><button class="browser-secondary" type="button" data-testid="browser-add-library" :disabled="inputBusy || addingToLibrary" @click="addToLibrary"><i class="pi pi-database"/>加入 / 刷新资料库</button><RouterLink v-if="addedToLibrary" to="/library">前往资料库</RouterLink></div>
     <details v-if="nativeZpaqGroup && !parentFrames.length" class="native-zpaq-source shrink-0" data-testid="zpaq-multipart-source"><summary><i class="pi pi-link"/> 已确认 ZPAQ 来源 · {{nativeZpaqGroup.members.length}} 个部分 <span>查看成员</span></summary><ul><li v-for="member in nativeZpaqGroup.members" :key="member.path">{{member.path}}</li></ul></details>
     <ZpaqSnapshotPicker v-if="result?.zpaqHistory && result.zpaqHistory.snapshots.length > 1" :history="result.zpaqHistory" :disabled="inputBusy" class="shrink-0" @change="changeSnapshot">
       <button type="button" data-testid="zpaq-snapshot-diff" class="browser-secondary" :disabled="inputBusy" @click="diffVisible=true">对比快照</button>
@@ -830,6 +876,20 @@ const extractSelected = async () => {
       <ZipPasswordEncodingField v-if="archivePath && supportsZipPasswordEncoding(archivePath, result?.format)" v-model="zipPasswordEncoding" :source-path="archivePath" :source-format="result?.format" :disabled="inputBusy" test-id="browser-zip-password-encoding" />
     </section>
 
+      <section v-if="result" class="browser-summary shrink-0" aria-label="压缩包摘要">
+        <button v-if="currentReadingRecord" class="browser-input browser-continue-reading" data-testid="archive-reader-continue" :disabled="inputBusy" :title="currentReadingRecord.path" @click="continueCurrentReading"><i class="pi pi-bookmark"/>继续上次阅读</button>
+        <button class="browser-primary browser-reader-button" data-testid="archive-reader-open" :disabled="inputBusy||!readerCandidates.length" @click="openImageReader()"><i class="pi pi-images"/>阅读图片 · {{ readerCandidates.length }}</button>
+        <span><b>{{ result.format }}</b> 格式</span>
+        <span v-if="result.format === 'ZPAQ'" data-testid="zpaq-current-view">当前文件<HelpHint label="ZPAQ 当前文件视图">按当前所选快照显示有效文件，其他版本不会混入。日志包支持历史选择、版本对比与变化提取，普通和原生密码数字卷可继续读取；压缩中心支持另存增量更新。流式包仅显示当前内容，文件检查不能检测所有未认证头部变化。</HelpHint></span>
+          <span v-if="result.format === 'ALZ'" data-testid="alz-read-view">只读<HelpHint label="ALZ 读取范围">支持已验证的存储、Deflate、ALZ 变体 Bzip2、ZipCrypto 及原生 .alz/.aNN 卷组。文件名与密码默认按 CP949，可明确选择原工具代码页，不能无损转换时会说明原因。需补齐原卷后解压；不提供 ALZ 创建或损坏修复。</HelpHint></span>
+          <span v-if="result.format === 'EGG'" data-testid="egg-read-view">只读<HelpHint label="EGG 读取范围">支持已验证的存储、Deflate、Bzip2、LZMA、AZO、固实及 ZipCrypto、AES/LEA 密码读取。UTF-8 名称与原生 .volN.egg 卷组按真实组合支持，需补齐原卷。固实所选提取仍要读取共享流，单个文件的压缩体积不单独计算。不提供 EGG 创建、文件名/全局加密或损坏修复。</HelpHint></span>
+          <span><b>{{ result.totalFiles }}</b> 个文件</span>
+        <span>展开后 <b>{{ result.entries.some(entry => entry.sizeKnown === false && !entry.isDir) ? '大小未知' : formatBytes(result.totalUncompressedSize) }}</b></span>
+        <span><i :class="result.encrypted ? 'pi pi-lock' : 'pi pi-lock-open'"></i> {{ result.encrypted ? '已加密' : '未加密' }}</span>
+      </section>
+
+      <details v-if="embedded && result" class="pane-directory-options"><summary>目录树</summary><ArchiveDirectoryPane :active-directory="activeDirectory" :directories="visibleDirectories" :expanded-directories="expandedDirectories" @select="selectDirectory" @toggle="toggleDirectory"/></details>
+    </div>
     <div v-if="loading" class="aero-card flex-1 min-h-0 grid place-items-center">
       <div class="text-center text-muted">
         <i class="pi pi-spin pi-spinner text-primary text-3xl"></i>
@@ -845,25 +905,14 @@ const extractSelected = async () => {
       <div class="max-w-lg text-center px-6"><i class="pi pi-lock text-amber-500 text-5xl"></i><h2 class="mt-5 text-xl font-black text-content">内层归档尚未打开</h2><p class="mt-2 text-sm text-muted leading-6 break-words" data-testid="archive-nested-error" :data-error-revision="nestedLoadRevision">{{ nestedLoadError || '如果内层归档已加密，请只输入这一层的密码后重试；外层密码不会自动继承。' }}</p><div class="mt-5 flex justify-center gap-3"><button class="browser-primary" data-testid="archive-nested-retry" type="button" @click="loadArchive()"><i class="pi pi-refresh"></i><span>使用当前内层密码重试</span></button><button class="browser-icon-button nested-return" type="button" title="返回上一层" @click="restoreFrame(parentFrames.length - 1)"><i class="pi pi-arrow-left"></i></button></div></div>
     </div>
 
+    <div v-else-if="!result && embedded" class="pane-read-error"><i :class="sourceError ? 'pi pi-info-circle' : 'pi pi-box'"/><strong>{{ sourceError ? '暂时无法读取此压缩包' : '尚未读取压缩包' }}</strong><p data-testid="archive-pane-error">{{ sourceError || browseNotice || '可以重新读取，或返回此栏文件夹。' }}</p><div><button class="browser-secondary" @click="paneToolsOpen=true">填写密码 / 调整编码</button><button class="browser-secondary" :disabled="inputBusy" @click="loadArchive()">重新读取</button></div></div>
     <div v-else-if="!result" class="aero-card browser-empty flex-1 min-h-0 grid place-items-center border-dashed" @click="chooseArchive">
       <div class="max-w-md text-center px-6"><i class="pi pi-cloud-upload text-primary text-5xl"></i><h2 class="mt-5 text-xl font-black text-content">把压缩包拖到这里直接浏览</h2><p v-if="browseNotice" class="mt-2 text-sm font-bold text-primary" data-testid="archive-browse-notice">{{ browseNotice }}</p><p class="mt-2 text-sm text-muted leading-6">也可以点击此区域选择文件。内容只在本机读取，密码不会写入命令行。</p><span class="browser-drop-hint">支持 ZIP、7Z、RAR、TAR 等已接入格式</span></div>
     </div>
 
     <template v-else>
-      <section class="browser-summary shrink-0" aria-label="压缩包摘要">
-        <button v-if="currentReadingRecord" class="browser-input browser-continue-reading" data-testid="archive-reader-continue" :disabled="inputBusy" :title="currentReadingRecord.path" @click="continueCurrentReading"><i class="pi pi-bookmark"/>继续上次阅读</button>
-        <button class="browser-primary browser-reader-button" data-testid="archive-reader-open" :disabled="inputBusy||!readerCandidates.length" @click="openImageReader()"><i class="pi pi-images"/>阅读图片 · {{ readerCandidates.length }}</button>
-        <span><b>{{ result.format }}</b> 格式</span>
-        <span v-if="result.format === 'ZPAQ'" data-testid="zpaq-current-view">当前文件<HelpHint label="ZPAQ 当前文件视图">按当前所选快照显示有效文件，其他版本不会混入。日志包支持历史选择、版本对比与变化提取，普通和原生密码数字卷可继续读取；压缩中心支持另存增量更新。流式包仅显示当前内容，文件检查不能检测所有未认证头部变化。</HelpHint></span>
-          <span v-if="result.format === 'ALZ'" data-testid="alz-read-view">只读<HelpHint label="ALZ 读取范围">支持已验证的存储、Deflate、ALZ 变体 Bzip2、ZipCrypto 及原生 .alz/.aNN 卷组。文件名与密码默认按 CP949，可明确选择原工具代码页，不能无损转换时会说明原因。需补齐原卷后解压；不提供 ALZ 创建或损坏修复。</HelpHint></span>
-          <span v-if="result.format === 'EGG'" data-testid="egg-read-view">只读<HelpHint label="EGG 读取范围">支持已验证的存储、Deflate、Bzip2、LZMA、AZO、固实及 ZipCrypto、AES/LEA 密码读取。UTF-8 名称与原生 .volN.egg 卷组按真实组合支持，需补齐原卷。固实所选提取仍要读取共享流，单个文件的压缩体积不单独计算。不提供 EGG 创建、文件名/全局加密或损坏修复。</HelpHint></span>
-          <span><b>{{ result.totalFiles }}</b> 个文件</span>
-        <span>展开后 <b>{{ result.entries.some(entry => entry.sizeKnown === false && !entry.isDir) ? '大小未知' : formatBytes(result.totalUncompressedSize) }}</b></span>
-        <span><i :class="result.encrypted ? 'pi pi-lock' : 'pi pi-lock-open'"></i> {{ result.encrypted ? '已加密' : '未加密' }}</span>
-      </section>
-
       <section class="aero-card flex-1 min-h-0 min-w-0 overflow-hidden browser-workspace">
-        <ArchiveDirectoryPane
+        <ArchiveDirectoryPane v-if="!embedded"
           :active-directory="activeDirectory"
           :directories="visibleDirectories"
           :expanded-directories="expandedDirectories"
@@ -876,7 +925,7 @@ const extractSelected = async () => {
             <div class="browser-navigation-actions">
               <button type="button" data-testid="archive-nav-back" :disabled="!canNavigateBack" title="后退 (Alt+左箭头)" aria-label="后退" @click="goBack"><i class="pi pi-arrow-left"></i></button>
               <button type="button" data-testid="archive-nav-forward" :disabled="!canNavigateForward" title="前进 (Alt+右箭头)" aria-label="前进" @click="goForward"><i class="pi pi-arrow-right"></i></button>
-              <button type="button" data-testid="archive-nav-up" :disabled="!canNavigateUp" title="上一级 (Backspace)" aria-label="上一级" @click="goUp"><i class="pi pi-arrow-up"></i></button>
+              <button type="button" data-testid="archive-nav-up" :disabled="!canNavigateUp && !embedded" title="上一级 (Backspace)" aria-label="上一级" @click="canNavigateUp ? goUp() : parentFrames.length ? restoreFrame(parentFrames.length-1) : leavePane()"><i class="pi pi-arrow-up"></i></button>
               <button type="button" data-testid="archive-nav-refresh" title="刷新当前目录" aria-label="刷新当前目录" @click="refreshDirectory"><i class="pi pi-refresh"></i></button>
             </div>
             <div class="browser-breadcrumbs" data-testid="archive-breadcrumbs">
@@ -913,7 +962,7 @@ const extractSelected = async () => {
               <button v-if="!entry.isDir" type="button" class="browser-checkbox" :class="{ checked: selected.has(entry.path) }" :aria-label="selected.has(entry.path) ? `取消选择 ${entry.name}` : `选择 ${entry.name}`" @click.stop="focusedEntryPath = entry.path; toggleEntry(entry)"><i v-if="selected.has(entry.path)" class="pi pi-check"></i></button>
               <span v-else class="browser-directory-marker"><i class="pi pi-folder"></i></span>
               <span class="min-w-0 text-left flex items-center gap-2">
-                <span class="min-w-0 flex-1"><strong class="block truncate text-content">{{ entry.name }}</strong><small class="block truncate text-muted mt-0.5">{{ entry.path }}</small></span>
+                <span class="min-w-0 flex-1"><strong class="block truncate text-content">{{ entry.name }}</strong><small v-if="!embedded || query" class="block truncate text-muted mt-0.5">{{ entry.path }}</small></span>
                 <button
                   v-if="canPreviewEntry(entry)"
                   type="button"
@@ -939,7 +988,7 @@ const extractSelected = async () => {
           <button class="output-target" type="button" :title="outputPath" @click="chooseOutput"><i class="pi pi-folder"></i><span class="truncate">解压到：{{ outputPath || '选择输出目录' }}</span><i class="pi pi-pencil"></i></button>
         </div>
         <button class="browser-primary" type="button" :disabled="selected.size === 0 || !outputPath || extracting" @click="extractSelected">
-          <i :class="extracting ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i><span>{{ extracting ? '正在解压' : '解压所选文件' }}</span>
+          <i :class="extracting ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i><span>{{ extracting ? '正在解压' : usesPeerOutput ? '解压到另一栏' : '解压所选文件' }}</span>
         </button>
       </footer>
     </template>
@@ -954,23 +1003,22 @@ const extractSelected = async () => {
     <div v-if="previewEntry" class="preview-backdrop" data-testid="archive-entry-preview" @click.self="closePreview">
       <section class="preview-dialog" role="dialog" aria-modal="true" :aria-label="`预览 ${previewEntry.name}`">
         <header class="preview-header">
-          <div class="min-w-0"><p class="text-xs font-black tracking-widest text-primary">{{ previewKind(previewEntry) === 'image' ? '归档内图片预览' : '归档内文本预览' }}</p><h2 class="mt-1 truncate text-lg font-black text-content">{{ previewEntry.name }}</h2></div>
+          <div class="min-w-0 flex items-center gap-2"><h2 class="truncate text-lg font-black text-content">{{ previewEntry.name }}</h2><HelpHint label="预览说明">只读查看，不修改原文件。大文本显示前 1 MB；需要编辑时，可以提取后用默认应用打开。</HelpHint></div>
           <button type="button" class="preview-close" aria-label="关闭预览" @click="closePreview"><i class="pi pi-times"></i></button>
         </header>
         <div class="preview-stage">
-          <div v-if="previewLoading" class="text-center text-muted"><i class="pi pi-spin pi-spinner text-3xl text-primary"></i><p class="mt-3 text-sm font-bold">正在进行有界读取与安全检查…</p></div>
+          <div v-if="previewLoading" class="text-center text-muted"><i class="pi pi-spin pi-spinner text-3xl text-primary"></i><p class="mt-3 text-sm font-bold">正在读取预览…</p></div>
           <div v-else-if="previewError" class="max-w-md text-center"><i class="pi pi-exclamation-triangle text-3xl text-amber-500"></i><p class="mt-3 break-words text-sm font-bold text-content">无法预览</p><p class="mt-2 break-words text-xs leading-5 text-muted">{{ previewError }}</p></div>
           <div v-else-if="imagePreview" data-testid="archive-image-preview" class="contents"><img :src="imagePreview.dataUrl" :alt="previewEntry.name" class="preview-image"></div>
           <pre v-else-if="textPreview" data-testid="archive-text-preview" class="preview-text">{{ textPreview.content }}</pre>
         </div>
         <footer v-if="imagePreview" class="preview-meta">
-          <span>{{ imagePreview.width }} × {{ imagePreview.height }}</span><span>{{ formatBytes(imagePreview.byteSize) }}</span><span>{{ imagePreview.mimeType }}</span><span>只读 · 不改原包</span><button class="text-primary font-bold" data-testid="archive-preview-read-images" @click="openImageReader(previewEntry)">连续阅读这组图片 <i class="pi pi-arrow-right"/></button>
+          <span>{{ imagePreview.width }} × {{ imagePreview.height }}</span><span>{{ formatBytes(imagePreview.byteSize) }}</span><span>{{ imagePreview.mimeType }}</span><span>只读</span><button class="text-primary font-bold" data-testid="archive-preview-read-images" @click="openImageReader(previewEntry)">连续阅读这组图片 <i class="pi pi-arrow-right"/></button>
         </footer>
         <footer v-else-if="textPreview" class="preview-meta">
-          <span>{{ textPreview.encoding }}</span><span>已读 {{ formatBytes(textPreview.byteSize) }} / {{ formatBytes(textPreview.totalSize) }}</span><span>{{ textPreview.lineCount }} 行</span><span>{{ textPreview.truncated ? '仅显示前 1 MiB' : '完整显示' }}</span><span>只读 · 不改原包</span>
+          <span>{{ textPreview.encoding }}</span><span>已读 {{ formatBytes(textPreview.byteSize) }} / {{ formatBytes(textPreview.totalSize) }}</span><span>{{ textPreview.lineCount }} 行</span><span>{{ textPreview.truncated ? '仅显示前 1 MiB' : '完整显示' }}</span><span>只读</span>
         </footer>
-        <p v-if="previewKind(previewEntry) === 'image'" class="preview-safety">内部查看器显示经魔数确认的 PNG、JPEG、GIF、WebP、BMP；解压后最大 8 MiB、最多 1600 万像素，TAR 流最多扫描 64 MiB。SVG、截断与扩展名伪装内容不会渲染。</p>
-        <p v-else class="preview-safety">内部查看器只读最多 1 MiB，并识别 UTF-8、UTF-16、GBK、Big5 与常见西文编码；二进制内容会被拒绝。需要完整编辑、播放或查看 PDF 时，请使用“默认应用打开”，文件将安全提取到隔离缓存。</p>
+
       </section>
     </div>
 
@@ -999,7 +1047,7 @@ const extractSelected = async () => {
           <button v-if="canEditZip && contextMenu.entry" type="button" role="menuitem" data-testid="archive-context-edit-delete" :disabled="inputBusy" @click="zipEditor?.organize(contextDisplayEntries.map(entry=>entry.path),'delete'); closeContextMenu()"><i class="pi pi-trash"></i><span>从新 ZIP 删除…</span></button>
           <button v-if="canEditZip && !contextMenu.entry" type="button" role="menuitem" data-testid="archive-context-edit-add" :disabled="inputBusy" @click="zipEditor?.addFiles(); closeContextMenu()"><i class="pi pi-plus"></i><span>添加文件到当前目录…</span></button>
           <div v-if="contextMenu.entries.length > 0" class="archive-context-separator"></div>
-          <button v-if="contextMenu.entries.length > 0" type="button" role="menuitem" data-testid="archive-context-extract-current" :disabled="extracting || !outputPath" @click="extractContextEntries(false)"><i class="pi pi-download"></i><span>解压到当前输出目录</span><kbd>Alt+E</kbd></button>
+          <button v-if="contextMenu.entries.length > 0" type="button" role="menuitem" data-testid="archive-context-extract-current" :disabled="extracting || !outputPath" @click="extractContextEntries(false)"><i class="pi pi-download"></i><span>{{ usesPeerOutput ? '解压到另一栏' : '解压到当前输出目录' }}</span><kbd>Alt+E</kbd></button>
           <button v-if="contextMenu.entries.length > 0" type="button" role="menuitem" data-testid="archive-context-extract-choose" :disabled="extracting" @click="extractContextEntries(true)"><i class="pi pi-folder-open"></i><span>解压到指定目录…</span><kbd>Alt+Shift+E</kbd></button>
 
           <div v-if="contextDisplayEntries.length > 0" class="archive-context-separator"></div>
@@ -1132,7 +1180,7 @@ const extractSelected = async () => {
 .preview-stage { min-height: min(54vh, 30rem); display: grid; place-items: center; padding: clamp(1rem, 3vw, 2rem); background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--dynamic-accent) 12%, transparent), transparent 65%); overflow: hidden; }
 .preview-image { display: block; max-width: 100%; max-height: min(54vh, 30rem); object-fit: contain; border-radius: 1rem; box-shadow: 0 18px 50px rgba(0, 0, 0, .25); }
 .preview-text { width: 100%; min-height: min(46vh, 24rem); max-height: min(54vh, 30rem); overflow: auto; border: 1px solid var(--border-subtle); border-radius: 1rem; background: color-mix(in srgb, var(--bg-input) 92%, transparent); padding: 1rem; color: var(--text-content); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .75rem; line-height: 1.65; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
-.preview-meta { display: flex; flex-wrap: wrap; gap: .5rem; padding: .9rem 1.25rem 0; }
+.preview-meta { padding-bottom:1rem; display: flex; flex-wrap: wrap; gap: .5rem; padding: .9rem 1.25rem 0; }
 .preview-meta span { border-radius: 999px; padding: .35rem .65rem; background: var(--bg-input); color: var(--text-muted); font-size: .68rem; font-weight: 800; }
 .preview-safety { padding: .8rem 1.25rem 1.15rem; color: var(--text-muted); font-size: .68rem; line-height: 1.55; }
 .archive-context-layer { position: fixed; inset: 0; z-index: 80; }
@@ -1183,4 +1231,18 @@ const extractSelected = async () => {
 }
 @media (max-width: 760px) { .browser-page { padding: 1rem; overflow-y: auto; overflow-x: hidden; } .browser-workspace { flex: 0 0 34rem; min-height: 34rem; grid-template-columns: 1fr; grid-template-rows: minmax(7rem, 10rem) minmax(22rem, 1fr); } .browser-toolbar { grid-template-columns: 1fr; } .browser-table-head, .browser-row { grid-template-columns: 1.5rem minmax(0, 1fr); } .output-target { max-width: 80vw; } .archive-details-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .archive-details-grid { grid-template-columns: 1fr; } }
 .reading-history{border:1px solid var(--border-subtle);border-radius:16px;padding:16px;background:var(--bg-card);max-height:40%;overflow:auto}.reading-history>div:first-child{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;font-size:12px}.reading-history strong i{color:var(--dynamic-accent);margin-right:7px}.reading-history small{font-size:10px;font-weight:400;color:var(--text-muted)}.reading-recent{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.reading-recent article{display:flex;gap:9px;align-items:center;padding:10px 12px;border:1px solid var(--border-subtle);border-radius:11px;min-width:0}.reading-recent-open{flex:1;text-align:left;min-width:0;font-size:11px}.reading-recent-open strong,.reading-recent-open span{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.reading-recent-open span{color:var(--text-muted);font-size:10px;margin-top:5px}.reading-recent-open:hover strong{color:var(--dynamic-accent)}.reading-recent-remove{color:var(--text-muted);font-size:10px;padding:5px}.browser-continue-reading{white-space:nowrap;font-size:.7rem}@media(max-width:800px){.reading-recent{grid-template-columns:minmax(0,1fr)}.reading-history{padding:12px}}
+
+.archive-options{display:contents}
+.archive-pane-browser{container:archive-pane / inline-size;padding:0!important;gap:0!important;min-height:0;overflow:hidden!important;background:transparent}
+.archive-pane-browser .pane-archive-nav{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;padding:9px;border-bottom:1px solid var(--border-subtle);flex-shrink:0}
+.pane-archive-nav>button{display:grid;place-items:center;width:30px;height:30px;border-radius:8px;flex-shrink:0;color:var(--text-muted);font-size:12px}.pane-archive-nav>button:hover,.pane-archive-nav>button.active{color:var(--dynamic-accent);background:var(--bg-input)}.pane-archive-nav>button:disabled{opacity:.4}
+.pane-archive-location{display:flex;align-items:center;gap:8px;min-width:0;flex:1;background:var(--bg-input);border:1px solid var(--border-subtle);border-radius:9px;padding:8px 10px;font-size:11px}.pane-archive-location>i{color:var(--dynamic-accent);flex-shrink:0}.pane-archive-location strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pane-archive-status{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;border-bottom:1px solid var(--border-subtle);font-size:10px;color:var(--text-muted);flex-shrink:0}.pane-archive-status>span{min-width:0;overflow-wrap:anywhere}.pane-archive-status i{margin-left:5px}.pane-archive-status>button{color:var(--dynamic-accent);flex-shrink:0;font-weight:700}
+.archive-pane-browser .archive-options{position:absolute;z-index:20;top:56px;left:8px;right:8px;display:flex;flex-direction:column;gap:10px;min-width:0;min-height:0;max-height:calc(100% - 72px);overflow-y:auto;padding:12px;border:1px solid var(--border-subtle);border-radius:12px;background:var(--bg-card);box-shadow:0 14px 40px rgb(0 0 0 / .3)}
+.archive-pane-browser .archive-options>*{flex-shrink:0;min-width:0;max-width:100%}.pane-option-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:11px;color:var(--dynamic-accent)}.archive-pane-browser .browser-toolbar,.archive-pane-browser .browser-toolbar.has-zip-encoding{grid-template-columns:minmax(0,1fr);padding:0;background:transparent;border:0;box-shadow:none}.archive-pane-browser .browser-toolbar>.browser-field:first-child{display:none}.archive-pane-browser .browser-toolbar.has-zip-encoding>:first-child{grid-column:auto}
+.archive-pane-browser .browser-input,.archive-pane-browser .browser-search,.archive-pane-browser .browser-select,.archive-pane-browser .browser-icon-button{height:34px;font-size:11px;border-radius:9px}.archive-pane-browser .browser-summary{gap:6px}.archive-pane-browser .browser-summary>span{font-size:10px;padding:5px 8px}.archive-pane-browser .browser-primary{font-size:11px;min-height:34px;padding:7px 10px;border-radius:9px;box-shadow:none}
+.archive-pane-browser .browser-workspace{display:flex;flex:1 1 0;min-height:0;border:0;border-radius:0;background:transparent}.archive-pane-browser .browser-workspace>div{flex:1}.archive-pane-browser .browser-navigation{padding:8px;gap:7px}.archive-pane-browser .browser-navigation-actions{gap:3px}.archive-pane-browser .browser-navigation-actions button{width:26px;height:26px;font-size:10px}.archive-pane-browser .browser-breadcrumbs{font-size:10px}.archive-pane-browser .browser-search{padding:0 9px}.archive-pane-browser .browser-select{max-width:7rem;min-width:0;flex:0 1 6rem;padding:0 6px}.archive-pane-browser .browser-search{min-width:0;flex:1 1 0}
+.archive-pane-browser .browser-table-head,.archive-pane-browser .browser-row{grid-template-columns:20px minmax(0,1fr) 55px;gap:7px;padding:9px 10px;font-size:11px}.archive-pane-browser .browser-table-head>span:nth-last-child(-n+2),.archive-pane-browser .browser-row>span:nth-last-child(-n+2){display:none}.archive-pane-browser .browser-table-head>span:nth-child(3),.archive-pane-browser .browser-row>span:nth-child(3){display:block!important;font-size:10px}.archive-pane-browser .browser-row small{font-size:10px}.archive-pane-browser .browser-checkbox{width:16px;height:16px;border-radius:5px}.archive-pane-browser .preview-trigger{width:24px;height:26px;font-size:11px;border-radius:7px}
+.archive-pane-browser>footer{padding:9px 10px;border-top:1px solid var(--border-subtle);gap:8px;flex-wrap:nowrap}.archive-pane-browser>footer>.browser-primary{flex-shrink:0;white-space:nowrap}.archive-pane-browser .footer-status{display:flex;flex-direction:column;align-items:stretch;gap:3px;flex:1 1 0;min-width:0}.archive-pane-browser .footer-status>span{font-size:10px}.archive-pane-browser .output-target{width:100%;max-width:100%;font-size:10px;padding:4px 6px;min-height:26px}.archive-pane-browser .archive-chain{padding:6px 10px}.archive-pane-browser .archive-chain button{font-size:10px;padding:4px 7px}.pane-directory-options{font-size:11px;color:var(--text-muted)}.pane-directory-options>summary{cursor:pointer;padding:6px}.pane-directory-options :deep(aside){max-height:180px;overflow:auto}.pane-read-error{flex:1;min-height:0;overflow:auto;display:flex;align-items:center;flex-direction:column;justify-content:center;gap:12px;text-align:center;padding:16px;font-size:12px}.pane-read-error>i{font-size:24px;color:var(--dynamic-accent)}.pane-read-error>p{font-size:11px;color:var(--text-muted);line-height:1.8;overflow-wrap:anywhere}.pane-read-error>div{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+@container archive-pane (max-width:360px){.archive-pane-browser .browser-table-head,.archive-pane-browser .browser-row{grid-template-columns:18px minmax(0,1fr) 44px;gap:5px;padding:8px}.archive-pane-browser .browser-navigation{flex-wrap:wrap}.archive-pane-browser .browser-navigation-actions{flex-shrink:0}.archive-pane-browser .browser-breadcrumbs{flex:1;min-width:0}}
 </style>

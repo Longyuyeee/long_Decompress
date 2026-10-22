@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { ref } from 'vue'
 import { open } from '@tauri-apps/api/dialog'
 import Modal from '@/components/ui/Modal.vue'
@@ -18,9 +19,9 @@ async function choose(target:'files'|'folder'|'output'){
 }
 </script>
 <template>
- <Modal :visible="true" :title="rule?'编辑定时规则':'添加定时规则'" icon="pi pi-clock" size="lg" :show-footer="true" :show-close-button="!busy" :close-on-backdrop="!busy" :close-on-escape="!busy" @update:visible="emit('close')">
+ <Modal description="按电脑本地时间执行，应用需保持运行或托盘驻留。关闭应用后不会唤醒电脑；错过的时段由你选择补跑或跳过。" description-as-help :visible="true" :title="rule?'编辑定时规则':'添加定时规则'" icon="pi pi-clock" size="lg" :show-footer="true" :show-close-button="!busy" :close-on-backdrop="!busy" :close-on-escape="!busy" @update:visible="emit('close')">
   <fieldset :disabled="busy||picking" class="schedule-form" data-testid="workflow-schedule-dialog">
-   <p class="introduction">按电脑本地时间执行，应用需保持运行或托盘驻留。关闭应用后不会唤醒电脑；错过的时段由你选择补跑或跳过。</p>
+
    <div class="form-grid"><label>规则名称<input v-model="draft.name" maxlength="60" data-testid="workflow-schedule-name"></label><label>使用方案<select v-model="draft.planId" data-testid="workflow-schedule-plan"><option v-for="plan in plans" :key="plan.id" :value="plan.id">{{ plan.name }}</option></select></label></div>
    <div><div class="source-heading"><strong>固定来源 · {{ draft.paths.length }} 份</strong><div class="buttons"><button class="button" data-testid="workflow-schedule-files" @click="choose('files')">添加文件 / 分卷</button><button class="button" data-testid="workflow-schedule-folder" @click="choose('folder')">添加文件夹</button></div></div><div class="sources custom-scrollbar"><div v-for="(path,index) in draft.paths" :key="path" class="source"><span>{{ path }}</span><button class="link" :aria-label="'移除来源 '+path" @click="draft.paths.splice(index,1)">移除</button></div><p v-if="!draft.paths.length" class="muted">选择日常需要处理的固定文件或文件夹，最多 32 份。</p></div><small>触发时使用当前资料；整组分卷会自动识别。已排队后资料发生变化，会提示重新加入。</small></div>
    <label>保存位置<div class="path-field"><input v-model="draft.outputDirectory" data-testid="workflow-schedule-output" placeholder="每次使用独立的运行目录"><button class="button" @click="choose('output')">选择</button></div><small>请放在来源文件夹以外，避免下一次把结果再次打包。</small></label>

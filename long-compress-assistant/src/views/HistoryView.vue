@@ -254,11 +254,11 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
 
 <template>
   <div class="history-view h-full min-w-0 overflow-y-auto overflow-x-hidden custom-scrollbar p-responsive p-6 lg:p-8">
-    <div class="mx-auto w-full max-w-[1500px] space-y-5 pb-8">
-      <header class="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+    <div class="mx-auto w-full max-w-[1500px] space-y-3 pb-4">
+      <header class="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div class="flex items-center gap-3">
-            <h1 class="text-3xl lg:text-4xl font-black text-content tracking-tight">{{ appStore.t('nav.history') }}</h1>
+            <h1 class="text-2xl font-black text-content tracking-tight">{{ appStore.t('nav.history') }}</h1>
             <HelpHint label="历史记录说明"><span data-testid="history-retention-policy">搜索和筛选覆盖全部已保存历史。页面最多显示 500 条，更早和更新记录均可继续浏览，不会删除历史。新完成的任务请刷新；统计仅针对当前显示记录。</span></HelpHint>
           </div>
         </div>
@@ -301,7 +301,6 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
       <section class="history-panel p-4 sm:p-5">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-5">
           <div>
-            <p class="text-xs font-black uppercase tracking-[0.18em] text-primary">{{ appStore.t('history.trend_eyebrow') }}</p>
             <h2 class="font-black text-content mt-1">{{ appStore.t('history.trend_title') }}</h2>
           </div>
           <div class="flex flex-wrap gap-3 text-xs font-bold text-muted">
@@ -326,12 +325,12 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
       </div>
       </Modal>
 
-      <section class="history-panel p-3 sm:p-4 flex flex-col xl:flex-row gap-3" aria-label="History filters">
-        <label class="relative flex-1 min-w-0">
+      <section class="history-panel history-filters p-3 flex flex-wrap items-center gap-2" aria-label="History filters">
+        <label class="relative flex-1 min-w-[180px]">
           <i class="pi pi-search absolute left-4 top-1/2 -translate-y-1/2 text-dim"></i>
           <input v-model="query" data-testid="history-search" class="history-control w-full" style="padding-left: 2.75rem" placeholder="搜索全部历史：文件名、路径或失败原因" aria-label="搜索全部历史：文件名、路径或失败原因">
         </label>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 xl:flex xl:shrink-0">
+        <div class="flex flex-wrap gap-2">
           <select v-model="failureFilter" class="history-control min-w-0 xl:max-w-48" data-testid="history-failure-filter" aria-label="失败类别">
             <option value="all">全部失败类别</option>
             <option v-for="(label, value) in failureCategories" :key="value" :value="value">{{ label }}</option>
@@ -380,7 +379,7 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
                 <input v-if="canBatchRetry(record)" type="checkbox" :aria-label="`选择再次执行：${record.name}`" data-testid="history-select-retry" :checked="selectedRetries.has(record.id)" :disabled="batchBusy" @click.stop @keydown.enter.stop @change="toggleRetry(record.id)" />
                 <div class="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0"><i :class="record.taskType === 'compression' ? 'pi pi-box' : 'pi pi-folder-open'"></i></div>
                 <div class="min-w-0"><h3 class="font-black text-content truncate">{{ record.name }}</h3><p class="text-xs text-muted truncate mt-0.5">{{ record.outputPath || record.sourcePaths[0] }}</p>
-                  <ResultActions v-if="resultLocation(record)" class="mt-2" :path="record.archiveOutput?.primaryPath || record.outputPath" :directory="record.taskType === 'decompression'" :split="record.archiveOutput?.split" :output="record.archiveOutput" @keydown.enter.stop />
+                  <ResultActions compact v-if="resultLocation(record)" class="mt-2" :path="record.archiveOutput?.primaryPath || record.outputPath" :directory="record.taskType === 'decompression'" :split="record.archiveOutput?.split" :output="record.archiveOutput" @keydown.enter.stop />
                   <button v-if="record.taskType === 'decompression' && (!record.workloadKind || record.workloadKind === 'archive')" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-retry" @click.stop="openRetry(record)" @keydown.enter.stop>再次解压</button>
                   <button v-if="isEdit(record)" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-edit-source" @click.stop="openEditSource(record)">打开原包编辑</button>
                   <button v-else-if="isConversion(record)" :disabled="conversion.busy" class="text-xs text-primary font-bold mt-1 hover:underline" data-testid="history-conversion-retry" @click.stop="retryConversion(record)">{{ record.executionConfig?.kind === 'archive-conversion' && record.executionConfig.operation === 'zpaq-update' ? '再次更新' : '再次转换' }}</button>
@@ -413,7 +412,7 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
       <transition name="history-drawer">
         <div v-if="selectedRecord" class="fixed inset-0 z-[360] bg-slate-950/35 backdrop-blur-sm flex justify-end" @click.self="selectedRecord = null">
           <aside class="history-detail history-detail-solid h-full w-full max-w-[520px] overflow-y-auto overflow-x-hidden custom-scrollbar p-5 sm:p-7" data-testid="history-detail">
-            <header class="flex items-start justify-between gap-4 mb-6"><div class="min-w-0"><p class="text-xs font-black text-primary uppercase tracking-[0.2em]">{{ appStore.t('history.detail_eyebrow') }}</p><h2 class="text-2xl font-black text-content truncate mt-2">{{ selectedRecord.name }}</h2><p class="text-sm text-muted mt-1">{{ typeLabel(selectedRecord) }} · {{ selectedRecord.format?.toUpperCase() || '—' }}</p></div><button class="history-icon-button" :aria-label="appStore.t('common.close')" @click="selectedRecord = null"><i class="pi pi-times"></i></button></header>
+            <header class="flex items-start justify-between gap-4 mb-6"><div class="min-w-0"><h2 class="text-2xl font-black text-content truncate mt-2">{{ selectedRecord.name }}</h2><p class="text-sm text-muted mt-1">{{ typeLabel(selectedRecord) }} · {{ selectedRecord.format?.toUpperCase() || '—' }}</p></div><button class="history-icon-button" :aria-label="appStore.t('common.close')" @click="selectedRecord = null"><i class="pi pi-times"></i></button></header>
             <section v-if="selectedFailure" class="detail-section border-red-500/20 bg-red-500/5 mb-5" data-testid="history-final-failure" aria-label="最终失败原因">
               <h3 class="text-red-500">最终失败原因</h3>
               <p class="text-sm text-red-500 font-bold mt-2">{{ selectedFailure.categoryLabel }} · {{ selectedFailure.stageLabel }}</p>
@@ -456,6 +455,8 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
 </template>
 
 <style scoped>
+.history-view{padding:16px}.history-filters select{max-width:11rem;flex:1 1 100px}.history-filters>div{flex:2 1 420px}.history-filters>label{flex:1 1 200px}.history-filters .history-control{height:34px;min-height:34px;padding-top:5px;padding-bottom:5px}
+
 .history-panel,.history-detail{background:color-mix(in srgb,var(--bg-card) 92%,transparent);border:1px solid var(--border-subtle);box-shadow:0 18px 45px rgba(22,30,55,.08);backdrop-filter:blur(24px)}
 .history-panel{border-radius:1.5rem}.history-detail{background:var(--bg-modal);backdrop-filter:none}.history-detail-solid{box-shadow:-18px 0 48px rgba(15,23,42,.2)}
 .history-kpi{min-width:0;padding:1.05rem;border-radius:1.35rem;border:1px solid var(--border-subtle);background:linear-gradient(145deg,color-mix(in srgb,var(--bg-card) 94%,transparent),color-mix(in srgb,var(--dynamic-accent) 4%,var(--bg-card)));box-shadow:0 12px 28px rgba(20,30,60,.06)}
@@ -468,4 +469,6 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
 @media(max-width:1050px){.history-row{grid-template-columns:minmax(0,1fr) minmax(5.5rem,auto) minmax(15rem,auto)}.history-row>div:nth-child(2){display:none}}
 @media(max-width:700px){.history-row{grid-template-columns:minmax(0,1fr) minmax(7rem,auto)}.history-row>div:nth-child(3){display:none}.history-status-cluster{grid-template-columns:auto auto}.history-completed-at{display:none}.history-kpi{padding:.85rem}.history-kpi strong{font-size:1.45rem}.history-kpi small{display:none}}
 @media(prefers-reduced-motion:reduce){.history-chart *,.history-drawer-enter-active .history-detail,.history-drawer-leave-active .history-detail{transition:none!important}}
+
+.history-row{padding:12px;gap:10px}.history-row>div:first-child>div.min-w-0{flex:1}@media(max-width:1050px){.history-row{grid-template-columns:minmax(0,1fr) auto auto}.history-status-cluster{grid-template-columns:auto auto;gap:8px}.history-completed-at{display:none}}
 </style>

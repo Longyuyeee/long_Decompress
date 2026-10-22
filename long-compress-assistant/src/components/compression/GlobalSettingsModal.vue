@@ -54,7 +54,7 @@ const handleTemplateDraftCreated = () => {
     @close="handleCancel"
     size="lg"
     title="全局压缩设置"
-    description="全局模式下应用到当前批次，并作为单独配置的初始值"
+    description="用于尚未单独编辑的任务，也作为新任务的初始设置" description-as-help
     icon="pi pi-cog"
   >
     <div class="space-y-4">

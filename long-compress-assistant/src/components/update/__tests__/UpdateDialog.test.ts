@@ -142,4 +142,23 @@ describe('UpdateDialog', () => {
     expect(laterSpy).not.toHaveBeenCalled()
     expect(updateStore.status).toBe('installing')
   })
+
+  it('shows bytes and a real percentage, then an indeterminate installation phase', async () => {
+    const pinia = createPinia()
+    setActivePinia(pinia)
+    const update = useUpdateStore()
+    update.$patch({ status: 'installing', dialogVisible: true, installPhase: 'downloading', downloadedBytes: 512, totalBytes: 1024 })
+    const wrapper = mount(UpdateDialog, { global: { plugins: [pinia], stubs: { Modal: modalStub } } })
+    expect(wrapper.get('[role="progressbar"]').attributes('aria-valuenow')).toBe('50')
+    expect(wrapper.text()).toContain('512 B / 1 KB')
+    update.totalBytes = null
+    await nextTick()
+    expect(wrapper.get('[role="progressbar"]').attributes('aria-valuenow')).toBeUndefined()
+    expect(wrapper.text()).not.toContain('50%')
+    update.installPhase = 'installing'
+    await nextTick()
+    expect(wrapper.text()).toContain('下载完成，正在验证并安装')
+    expect(wrapper.find('.update-progress-bytes').exists()).toBe(false)
+    wrapper.unmount()
+  })
 })

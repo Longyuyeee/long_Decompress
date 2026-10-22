@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import HelpHint from '@/components/ui/HelpHint.vue'
 import type { ZpaqSnapshot } from '@/types/zpaqSnapshot'
 import { useChecksumOperation } from '@/composables/useChecksumOperation'
 import ChecksumProgressCard from '@/components/integrity/ChecksumProgressCard.vue'
@@ -506,10 +507,39 @@ onUnmounted(() => {
     <!-- 顶部标题栏 -->
     <header class="integrity-header shrink-0">
       <div>
-        <h1>{{ appStore.t('integrity.title') }}</h1>
-        <p>{{ appStore.t('integrity.subtitle') }}</p>
+        <div class="flex items-center gap-2"><h1>{{ appStore.t('integrity.title') }}</h1><HelpHint label="完整性工具说明">计算文件摘要、核对校验清单，或检查与修复压缩包。</HelpHint></div>
       </div>
-    </header>
+            <nav class="integrity-mode-switch" aria-label="文件完整性工具">
+          <button
+            @click="activeMode = 'calculate'"
+            :disabled="isDiagnosing || isRepairing || isCalculating || isExporting || isVerifying"
+            :class="{ active: activeMode === 'calculate' }"
+          >
+            <span class="mode-icon"><i class="pi pi-hashtag"></i></span>
+            <span><strong>{{ appStore.t('integrity.mode.calculate') }}</strong></span>
+            <i class="pi pi-chevron-right mode-arrow"></i>
+          </button>
+          <button
+            data-testid="checksum-verify-mode"
+            @click="activeMode = 'verify'"
+            :disabled="isDiagnosing || isRepairing || isCalculating || isExporting || isVerifying"
+            :class="{ active: activeMode === 'verify' }"
+          >
+            <span class="mode-icon"><i class="pi pi-check-circle"></i></span>
+            <span><strong>{{ appStore.t('integrity.mode.verify') }}</strong></span>
+            <i class="pi pi-chevron-right mode-arrow"></i>
+          </button>
+          <button
+            data-testid="archive-diagnostic-mode"
+            @click="openArchiveMode"
+            :disabled="isDiagnosing || isRepairing || isCalculating || isExporting || isVerifying"
+            :class="{ active: activeMode === 'archive' }"
+          >
+            <span class="mode-icon"><i class="pi pi-search"></i></span>
+            <span><strong>归档诊断</strong></span>
+            <i class="pi pi-chevron-right mode-arrow"></i>
+          </button>
+        </nav></header>
 
     <!-- 主内容区 -->
     <div class="integrity-scroll custom-scrollbar min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
@@ -531,43 +561,13 @@ onUnmounted(() => {
           <button class="archive-secondary" :disabled="recoveryWorkspace.busy || recoveryWorkspace.preparing" data-testid="archive-recovery-discard" @click="recoveryWorkspace.discardPrevious">丢弃上次记录</button>
         </div>
         <!-- 模式切换 -->
-        <nav class="integrity-mode-switch" aria-label="文件完整性工具">
-          <button
-            @click="activeMode = 'calculate'"
-            :disabled="isDiagnosing || isRepairing || isCalculating || isExporting || isVerifying"
-            :class="{ active: activeMode === 'calculate' }"
-          >
-            <span class="mode-icon"><i class="pi pi-hashtag"></i></span>
-            <span><strong>{{ appStore.t('integrity.mode.calculate') }}</strong><small>生成文件指纹</small></span>
-            <i class="pi pi-chevron-right mode-arrow"></i>
-          </button>
-          <button
-            data-testid="checksum-verify-mode"
-            @click="activeMode = 'verify'"
-            :disabled="isDiagnosing || isRepairing || isCalculating || isExporting || isVerifying"
-            :class="{ active: activeMode === 'verify' }"
-          >
-            <span class="mode-icon"><i class="pi pi-check-circle"></i></span>
-            <span><strong>{{ appStore.t('integrity.mode.verify') }}</strong><small>核对校验文件</small></span>
-            <i class="pi pi-chevron-right mode-arrow"></i>
-          </button>
-          <button
-            data-testid="archive-diagnostic-mode"
-            @click="openArchiveMode"
-            :disabled="isDiagnosing || isRepairing || isCalculating || isExporting || isVerifying"
-            :class="{ active: activeMode === 'archive' }"
-          >
-            <span class="mode-icon"><i class="pi pi-search"></i></span>
-            <span><strong>归档诊断</strong><small>识别损坏与缺卷</small></span>
-            <i class="pi pi-chevron-right mode-arrow"></i>
-          </button>
-        </nav>
+
 
         <!-- 计算模式 -->
         <div v-if="activeMode === 'calculate'" class="integrity-calculate-grid">
           <!-- 选择算法 -->
           <section class="integrity-panel algorithm-panel">
-            <header class="panel-heading"><span><i class="pi pi-sliders-h"></i>{{ appStore.t('integrity.algorithm') }}</span><small>选择摘要算法</small></header>
+            <header class="panel-heading"><span><i class="pi pi-sliders-h"></i>{{ appStore.t('integrity.algorithm') }}</span><HelpHint label="摘要算法说明">MD5、SHA-1 用于兼容旧清单；新清单建议使用 SHA-256。</HelpHint></header>
             <div class="algorithm-options">
               <button
                 v-for="algo in algorithms"
@@ -576,15 +576,15 @@ onUnmounted(() => {
                 :disabled="isCalculating || isExporting"
                 :class="{ active: selectedAlgorithm === algo.value }"
               >
-                <span><strong>{{ algo.label }}</strong><small>{{ algo.description }}</small></span>
+                <span><strong>{{ algo.label }}</strong></span>
                 <i v-if="selectedAlgorithm === algo.value" class="pi pi-check"></i>
               </button>
             </div>
           </section>
 
           <!-- 选择文件 -->
-          <section class="integrity-panel file-panel">
-            <header class="panel-heading"><span><i class="pi pi-file"></i>{{ appStore.t('integrity.files') }}</span><small>{{ selectedFiles.length ? `${selectedFiles.length} 个文件待处理` : '支持批量选择' }}</small></header>
+          <section class="integrity-panel file-panel" :class="{'has-results':checksumResults.length>0}">
+            <header v-if="!checksumResults.length" class="panel-heading"><span><i class="pi pi-file"></i>{{ appStore.t('integrity.files') }}</span><small>{{ selectedFiles.length ? `${selectedFiles.length} 个文件待处理` : '支持批量选择' }}</small></header>
             <button
               @click="selectFiles"
               :disabled="isCalculating || isExporting"
@@ -598,14 +598,14 @@ onUnmounted(() => {
                   ? `已选择 ${selectedFiles.length} 个文件`
                   : appStore.t('integrity.select_files') }}
                 </strong>
-                <small>{{ selectedFiles.length ? '再次选择可替换当前列表' : '从本地选择一个或多个文件' }}</small>
+
               </span>
               <i class="pi pi-plus"></i>
             </button>
 
             <div v-if="selectedFiles.length" class="checksum-source-summary" data-testid="checksum-source-summary">
               <p v-if="sourceLabel" class="break-words">来源：{{ sourceLabel }} · 已带入整组 {{ selectedFiles.length }} 个文件</p>
-              <p>点击开始计算后读取文件；导出仅使用已完成摘要。清单请保存到这些文件的共同上级目录。</p>
+              <HelpHint label="计算与导出说明">点击开始计算后读取文件，导出仅使用已完成摘要。清单保存到文件的共同上级目录，分享时保留目录结构。</HelpHint>
               <button class="checksum-source-toggle" :aria-expanded="showSources" data-testid="checksum-source-toggle" @click="showSources = !showSources">{{ showSources ? '收起' : '查看' }}文件路径 <i :class="showSources ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"></i></button>
               <ul v-if="showSources" class="checksum-source-paths custom-scrollbar"><li v-for="path in selectedFiles" :key="path">{{ path }}</li></ul>
             </div>
@@ -637,7 +637,7 @@ onUnmounted(() => {
             <div v-if="exportedManifest" class="checksum-export-receipt" data-testid="checksum-export-receipt">
               <strong><i class="pi pi-check-circle"></i> 已保存 {{ exportedCount }} 项{{ exportedCount < selectedFiles.length ? `，其余 ${selectedFiles.length - exportedCount} 项未写入` : '' }}</strong>
               <code>{{ exportedManifest }}</code>
-              <small>路径相对于清单所在目录。分享时请保留文件与清单的目录结构。</small>
+
               <button class="integrity-secondary" data-testid="checksum-verify-exported" @click="verifyExportedManifest">核对这份清单</button>
             </div>
           </section>
@@ -874,4 +874,8 @@ onUnmounted(() => {
 .diagnostic-issue p { margin-top: .25rem; color: var(--text-muted); font-size: .7rem; line-height: 1.45; }
 @media (max-width: 850px) { .integrity-calculate-grid { grid-template-columns: 1fr; } .result-panel { grid-column: auto; } .diagnostic-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .archive-inputs { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 620px) { .integrity-view { padding-inline: .75rem; } .integrity-mode-switch { grid-template-columns: 1fr; } .integrity-mode-switch button { min-height: 3rem; } .checksum-row { grid-template-columns: 1.7rem minmax(0,1fr) 1.8rem; } .checksum-algorithm { display: none; } }
+
+.integrity-header{gap:10px;flex-wrap:wrap;padding-bottom:10px}.integrity-mode-switch{display:flex;gap:4px;padding:3px;flex-wrap:wrap}.integrity-mode-switch button{display:flex;gap:7px;min-height:32px;padding:5px 10px}.integrity-mode-switch button>span:first-child{width:auto;height:auto;background:transparent}.integrity-mode-switch strong{font-size:12px}.integrity-header h1{font-size:23px}.integrity-calculate-grid{grid-template-columns:minmax(0,1fr)}.algorithm-panel{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.algorithm-panel .panel-heading{margin:0}.algorithm-options{display:flex;gap:6px;flex:1;flex-wrap:wrap}.algorithm-options button{min-height:30px;padding:5px 12px;gap:10px}.algorithm-options strong{font-size:12px}.integrity-dropzone{padding:8px 10px}.integrity-workspace{gap:10px}.integrity-source-summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.result-panel{grid-column:1/-1}@media(max-width:620px){.integrity-mode-switch{display:flex;flex-wrap:wrap}.integrity-mode-switch button{min-height:32px}}
+
+.file-panel.has-results{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap}.file-panel.has-results>.integrity-dropzone{width:auto;flex:1 1 165px;min-height:36px;padding:5px 8px;grid-template-columns:24px minmax(0,1fr) 14px}.file-panel.has-results .dropzone-icon{width:24px;height:24px;font-size:12px}.file-panel.has-results .checksum-source-summary{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0}.file-panel.has-results .checksum-source-summary>ul{flex-basis:100%}.file-panel.has-results>.integrity-actions{margin:0 0 0 auto;flex-wrap:wrap}.file-panel.has-results>.checksum-export-receipt,.file-panel.has-results>[role=alert]{flex-basis:100%}
 </style>

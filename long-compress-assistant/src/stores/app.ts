@@ -1,6 +1,7 @@
 import { uniqueContextPaths, type ExplorerChecksumRequest } from '@/utils/contextActions'
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onScopeDispose } from 'vue'
+import { APP_THEMES, parseAppTheme, accentForeground, type AppTheme } from '@/utils/themes'
 import { translations } from '../i18n'
 import { invoke } from '@tauri-apps/api/tauri'
 import type { ZipPasswordEncoding } from '@/types/zipPassword'
@@ -31,7 +32,7 @@ export interface DecompressTask {
 }
 
 export interface AppSettings {
-  theme: 'light' | 'dark' | 'auto' | 'cyberpunk' | 'twilight' | 'sepia'
+  theme: AppTheme
   language: string
   accentColor: string
   defaultOutputPath: string
@@ -74,7 +75,7 @@ export interface AppSettings {
 }
 
 export const useAppStore = defineStore('app', () => {
-  const theme = ref<'light' | 'dark' | 'auto' | 'cyberpunk' | 'twilight' | 'sepia'>('auto')
+  const theme = ref<AppTheme>('auto')
   const language = ref('zh-CN')
   const accentColor = ref('#0ea5e9')
   const error = ref<string | null>(null)
@@ -95,21 +96,22 @@ export const useAppStore = defineStore('app', () => {
     return translations[language.value]?.[key] || translations['zh-CN']?.[key] || fallback || key
   }
 
-  const currentTheme = computed(() => {
-    if (theme.value === 'auto') return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-    return theme.value
-  })
+  const systemScheme = window.matchMedia('(prefers-color-scheme: dark)')
+  const systemDark = ref(systemScheme.matches)
+  const followSystemScheme = (event: MediaQueryListEvent) => { systemDark.value = event.matches }
+  systemScheme.addEventListener?.('change', followSystemScheme)
+  onScopeDispose(() => systemScheme.removeEventListener?.('change', followSystemScheme))
+  const currentTheme = computed(() => theme.value === 'auto' ? (systemDark.value ? 'dark' : 'light') : theme.value)
 
-  watch([accentColor, theme], () => {
+  watch([accentColor, currentTheme], () => {
     const root = document.documentElement
     root.style.setProperty('--dynamic-accent', accentColor.value)
-    root.classList.remove('light', 'dark', 'mode-cyberpunk', 'mode-twilight', 'mode-sepia')
-    
-    let mode = theme.value === 'auto' ? currentTheme.value : theme.value
-    if (mode === 'cyberpunk') root.classList.add('mode-cyberpunk')
-    else if (mode === 'twilight') root.classList.add('mode-twilight')
-    else if (mode === 'sepia') root.classList.add('mode-sepia')
-    else root.classList.add(mode)
+    root.style.setProperty('--accent-ink', accentForeground(accentColor.value))
+    root.classList.remove(...APP_THEMES.map(item => ['light', 'dark'].includes(item.value) ? item.value : `mode-${item.value}`))
+    const mode = currentTheme.value
+    root.classList.add(mode === 'light' || mode === 'dark' ? mode : `mode-${mode}`)
+    root.dataset.colorScheme = ['light', 'sepia', 'glacier'].includes(mode) ? 'light' : 'dark'
+    root.style.colorScheme = root.dataset.colorScheme
   }, { immediate: true })
 
   const settings = ref<AppSettings>({
@@ -221,6 +223,9 @@ export const useAppStore = defineStore('app', () => {
     // Resetting application preferences must not silently change a Windows
     // persistence choice. Only the dedicated auto-start switch may do that.
     const autoStart = settings.value.autoStart
+    theme.value = 'auto'
+    accentColor.value = '#0ea5e9'
+    language.value = 'zh-CN'
     settings.value = {
       smartExtractionDirectory: false,
       parallelZipExtraction: false,
@@ -247,6 +252,9 @@ export const useAppStore = defineStore('app', () => {
 
   const saveSettingsToStorage = () => {
     try {
+      settings.value.theme = theme.value
+      settings.value.language = language.value
+      settings.value.accentColor = accentColor.value
       const json = JSON.stringify(settings.value)
       localStorage.setItem('app-settings', json)
       localStorage.setItem('app-theme', theme.value)
@@ -279,17 +287,19 @@ export const useAppStore = defineStore('app', () => {
 
   const loadSettingsFromStorage = () => {
     try {
+      let needsMigration = false
       const savedSettings = localStorage.getItem('app-settings')
       if (savedSettings) {
         const parsed = JSON.parse(savedSettings)
         settings.value = mergeStoredSettings(parsed)
         if (parsed.archiveTaskConcurrencyVersion !== 1) {
-          saveSettingsToStorage()
+          needsMigration = true
         }
       }
-      theme.value = (localStorage.getItem('app-theme') as any) || 'auto'
-      language.value = localStorage.getItem('app-language') || 'zh-CN'
-      accentColor.value = localStorage.getItem('app-accent') || '#0ea5e9'
+      theme.value = parseAppTheme(localStorage.getItem('app-theme') || settings.value.theme)
+      language.value = localStorage.getItem('app-language') || settings.value.language
+      accentColor.value = localStorage.getItem('app-accent') || settings.value.accentColor
+      if (needsMigration) saveSettingsToStorage()
     } catch (e) { console.error(e) }
     // 如果 localStorage 为空，尝试从后端恢复
     if (!localStorage.getItem('app-settings')) {
@@ -297,6 +307,9 @@ export const useAppStore = defineStore('app', () => {
         if (json && json !== '{}') {
           const parsed = JSON.parse(json)
           settings.value = mergeStoredSettings(parsed)
+          theme.value = parseAppTheme(parsed.theme)
+          language.value = parsed.language || 'zh-CN'
+          accentColor.value = parsed.accentColor || '#0ea5e9'
           saveSettingsToStorage()
           void synchronizeContextMenu(settings.value.contextMenuEnabled).catch(e => {
             console.warn('Failed to synchronize Explorer context menu:', e)

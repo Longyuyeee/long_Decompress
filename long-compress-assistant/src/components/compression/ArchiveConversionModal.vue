@@ -102,7 +102,7 @@ function toggle(id: string) {
     <div data-testid="archive-conversion" class="min-w-0 space-y-4">
       <div class="flex flex-wrap items-center gap-2 text-xs text-muted">
         <span class="mr-auto">{{ store.contextIntent === 'zpaq-update' ? '添加与更新内容 · 保留历史 · 另存新包' : '转换格式 · 修改密码 · 调整分卷' }}</span>
-        <HelpHint v-if="store.contextIntent !== 'zpaq-update'" label="转换说明">保留原压缩包并生成新包。同一组分卷只添加一个任务，可选择任意卷；新包密码留空表示不加密。</HelpHint>
+        <HelpHint v-if="store.contextIntent !== 'zpaq-update'" label="转换说明">点击条目展开编辑，多选后在弹窗统一修改。保留原包，生成新包；同组分卷只添加一次，新包密码留空表示不加密。</HelpHint>
         <button type="button" class="conversion-button" :disabled="store.busy || store.preparing" data-testid="conversion-choose-source" @click="chooseSource()"><i class="pi pi-plus" aria-hidden="true"></i>{{ store.contextIntent === 'zpaq-update' ? '添加 ZPAQ 备份' : '添加压缩包' }}</button>
       </div>
       <ConversionBatchConfig />
@@ -112,7 +112,7 @@ function toggle(id: string) {
       <div v-if="!store.items.length" class="rounded-2xl border border-dashed border-primary/30 bg-primary/5 py-10 text-center">
         <i class="pi pi-file-export mb-3 text-3xl text-primary" aria-hidden="true"></i>
         <p class="text-sm font-semibold">{{ store.contextIntent === 'zpaq-update' ? '让已有备份继续保存新内容' : '一次处理多个压缩包' }}</p>
-        <p class="mt-2 px-4 text-xs text-muted">添加原包后，点击条目展开编辑；多选后在弹窗统一修改配置。</p>
+
         <button type="button" class="conversion-button mt-4 bg-primary text-white" @click="chooseSource()">选择压缩包</button>
       </div>
       <div v-else class="min-w-0 overflow-hidden rounded-2xl border border-subtle">

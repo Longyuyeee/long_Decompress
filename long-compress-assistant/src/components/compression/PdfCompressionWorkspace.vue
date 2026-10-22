@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineProps<{ toolbarTarget?: string }>()
 import ResultActions from '@/components/tasks/ResultActions.vue'
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
 import { useSavedLocations } from '@/composables/useSavedLocations'
@@ -188,20 +189,20 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
 
 <template>
   <section class="pdf-workspace" data-testid="pdf-compression-workspace">
-    <header class="workspace-toolbar">
+    <Teleport defer :to="toolbarTarget || 'body'" :disabled="!toolbarTarget"><header class="workspace-toolbar">
       <div class="header-actions">
         <span v-if="items.length" class="ready-summary">{{ readyCount }} / {{ items.length }} 已锁定</span>
         <button type="button" class="secondary-action" :aria-expanded="showBatchSettings" data-testid="pdf-toggle-batch-settings" @click="openBatchSettings"><i class="pi pi-sliders-h"></i>批量设置</button>
         <button v-if="isRunning" type="button" class="danger-action" data-testid="pdf-cancel-batch" @click="pdfBatch.cancelPdfBatch()"><i class="pi pi-stop-circle"></i>取消 PDF 压缩</button>
         <button v-else type="button" class="primary-action" data-testid="pdf-start-batch" :disabled="!canStart" @click="startPdfOptimization"><i class="pi pi-play-circle"></i>开始 PDF 压缩</button>
       </div>
-    </header>
+    </header></Teleport>
 
     <EnhancedFileDropzone
       :compact="items.length > 0"
       accept="pdf"
       hint="添加需要分析的 PDF"
-      sub-hint="只读调用已校验的 qpdf；支持加密 PDF 密码验证"
+      sub-hint="支持加密 PDF，添加后可填写密码"
       picker-title="选择 PDF"
       @files-selected="onFilesSelected"
     />
@@ -231,7 +232,7 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
           </div>
 
           <div v-if="item.status === 'password-required'" class="password-panel">
-            <div><strong>需要正确密码才能完成结构分析</strong><p>密码只通过标准输入传给 qpdf，不写入命令参数或配置草稿。</p></div>
+            <div><strong>需要正确密码才能完成结构分析</strong><p>填写密码后重新分析。</p></div>
             <input v-model="item.password" data-testid="pdf-password-input" type="password" autocomplete="off" placeholder="输入 PDF 密码" @keyup.enter="item.password && analyze(item, item.password)" />
             <button type="button" data-testid="pdf-password-analyze" :disabled="!item.password" @click="analyze(item, item.password)">验证并继续分析</button>
           </div>
@@ -248,7 +249,7 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
 
             <label v-if="item.mode === 'compatible-image-optimization'" class="risk-confirmation">
               <input v-model="item.riskConfirmed" data-testid="pdf-risk-confirmation" type="checkbox" :disabled="item.frozen" />
-              <span>我已理解图片优化是有损操作，未来执行时可能改变图片像素与编码数据。</span>
+              <span>我已了解：图片优化可能改变画质，无法还原。</span>
             </label>
 
             <label class="larger-output-confirmation">
@@ -262,7 +263,7 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
             </div>
 
             <div v-if="item.report.hasDigitalSignature" class="signature-warning">
-              <i class="pi pi-ban"></i><div><strong>含数字签名：当前仅可分析</strong><p>任何重写都可能使现有签名失效，因此本阶段禁止锁定执行配置。</p></div>
+              <i class="pi pi-ban"></i><div><strong>含数字签名：当前仅可分析</strong><p>修改会使签名失效，因此仅显示分析结果。</p></div>
             </div>
             <ul v-if="draftFor(item)?.blockingReasons.length" class="blocking-list">
               <li v-for="reason in draftFor(item)?.blockingReasons" :key="reason">{{ reason }}</li>
@@ -284,7 +285,7 @@ const openPublishedPdf = async (item: PdfWorkspaceItem) => {
       </article>
     </div>
 
-    <Modal :visible="showBatchSettings" size="md" title="PDF 批量设置" description="统一设置结果保存位置" icon="pi pi-sliders-h" @update:visible="showBatchSettings = $event" @close="cancelBatchSettings">
+    <Modal :visible="showBatchSettings" size="md" title="PDF 批量设置" description="统一设置结果保存位置" description-as-help icon="pi pi-sliders-h" @update:visible="showBatchSettings = $event" @close="cancelBatchSettings">
       <SavedLocationPicker :current="outputDirectoryDraft" :disabled="isRunning" @select="outputDirectoryDraft = $event" />
       <div class="output-directory dialog-directory">
         <div><span>输出目录</span><strong :title="outputDirectoryDraft">{{ outputDirectoryDraft || '与源文件同目录' }}</strong></div>

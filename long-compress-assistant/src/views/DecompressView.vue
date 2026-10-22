@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import HelpHint from '@/components/ui/HelpHint.vue'
 import {archiveSourceDirectory} from '@/utils/zpaqMultipart'
 import TaskScopeBar from '@/components/tasks/TaskScopeBar.vue'
 import BatchResultActions from '@/components/tasks/BatchResultActions.vue'
@@ -671,8 +672,7 @@ watch(() => taskStore.recoveryTaskId, id => {
   <div class="decompress-view p-3 sm:p-4 h-full flex flex-col gap-2.5 transition-colors duration-700 relative overflow-hidden">
     <header data-testid="decompression-header" class="compact-workspace-header flex flex-wrap justify-between items-center gap-2 shrink-0">
       <div>
-        <h1 class="text-xl md:text-2xl font-black text-content tracking-tight">{{ appStore.t('nav.decompress') }}</h1>
-        <p class="text-xs text-muted font-semibold mt-0.5">{{ appStore.t('decompress.subtitle') }}</p>
+        <div class="flex items-center gap-2"><h1 class="text-xl md:text-2xl font-black text-content tracking-tight">{{ appStore.t('nav.decompress') }}</h1><HelpHint label="使用说明">{{ appStore.t('decompress.subtitle') }}</HelpHint></div>
       </div>
       <div class="ml-auto flex max-w-full flex-wrap justify-end gap-2">
         <button
@@ -760,7 +760,7 @@ watch(() => taskStore.recoveryTaskId, id => {
             @files-selected="onFilesSelected"
             :accept="supportedArchiveAccept"
             :hint="appStore.t('decompress.drop_hint')"
-            :sub-hint="supportedArchiveHint"
+            sub-hint="ZIP、7Z、RAR 等常见格式，支持分卷和密码包"
             picker-title="选择压缩包"
             class="w-full max-w-lg shadow-sm"
           />
@@ -787,7 +787,7 @@ watch(() => taskStore.recoveryTaskId, id => {
               <span class="sm:hidden">同目录</span>
             </button>
 
-            <span class="text-xs font-mono text-content font-bold truncate flex-1 min-w-0" :title="isGlobalSameDir ? appStore.t('decompress.config.output_auto') : (globalOutputPath || appStore.t('decompress.config.output_auto'))">
+            <span v-if="!isGlobalSameDir && globalOutputPath" class="text-xs font-mono text-content font-bold truncate flex-1 min-w-0" :title="isGlobalSameDir ? appStore.t('decompress.config.output_auto') : (globalOutputPath || appStore.t('decompress.config.output_auto'))">
               {{ isGlobalSameDir ? appStore.t('decompress.config.output_auto') : (globalOutputPath || appStore.t('decompress.config.output_auto')) }}
             </span>
 
@@ -822,7 +822,7 @@ watch(() => taskStore.recoveryTaskId, id => {
           :compact="true"
           :accept="supportedArchiveAccept"
           :hint="appStore.t('compress.add_files')"
-          :sub-hint="supportedArchiveHint"
+          sub-hint="ZIP、7Z、RAR 等常见格式，支持分卷和密码包"
           picker-title="选择压缩包"
           class="flex-1 min-w-[8rem] h-9"
         />

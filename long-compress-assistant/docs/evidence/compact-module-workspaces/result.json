@@ -1,0 +1,2675 @@
+{
+  "binarySha256": "839800fff68af4d2e98014ea9e3ba988c8d6413b065a7fe44015a09a0e250dfc",
+  "checks": [
+    "library-search-management-inline-source-saved-search-and-batch-dialog",
+    "workflow-template-plan-dialog-inline-settings-and-real-two-step-run",
+    "workflow-automation-queue-schedule-and-directory-secondary-views",
+    "comparison-collapsed-sources-real-content-check-inline-details-and-multi-select-dialog"
+  ],
+  "layouts": [
+    {
+      "name": "library-sources",
+      "outerWidth": 1100,
+      "outerHeight": 700,
+      "documentOverflow": 0,
+      "height": 700,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 113
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "library-sources",
+      "outerWidth": 900,
+      "outerHeight": 600,
+      "documentOverflow": 0,
+      "height": 600,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 139
+        }
+      ],
+      "width": 900
+    },
+    {
+      "name": "library-sources",
+      "outerWidth": 760,
+      "outerHeight": 520,
+      "documentOverflow": 0,
+      "height": 520,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 71
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "library-search",
+      "outerWidth": 1100,
+      "outerHeight": 700,
+      "documentOverflow": 0,
+      "height": 700,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 113
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "library-search",
+      "outerWidth": 900,
+      "outerHeight": 600,
+      "documentOverflow": 0,
+      "height": 600,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 139
+        }
+      ],
+      "width": 900
+    },
+    {
+      "name": "library-search",
+      "outerWidth": 760,
+      "outerHeight": 520,
+      "documentOverflow": 0,
+      "height": 520,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 71
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "library-batch-dialog",
+      "outerWidth": 1100,
+      "outerHeight": 700,
+      "documentOverflow": 0,
+      "height": 700,
+      "modal": {
+        "height": 546,
+        "overflow": 0,
+        "width": 928,
+        "x": 86,
+        "y": 77
+      },
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 113
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "library-batch-dialog",
+      "outerWidth": 760,
+      "outerHeight": 520,
+      "documentOverflow": 0,
+      "height": 520,
+      "modal": {
+        "height": 405.59375,
+        "overflow": 0,
+        "width": 712,
+        "x": 24,
+        "y": 57.203125
+      },
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 71
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "workflow-templates",
+      "outerWidth": 1100,
+      "outerHeight": 700,
+      "documentOverflow": 0,
+      "height": 700,
+      "modal": {
+        "height": 368.78125,
+        "overflow": 0,
+        "width": 512,
+        "x": 294,
+        "y": 165.609375
+      },
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 113
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "workflow-templates",
+      "outerWidth": 760,
+      "outerHeight": 520,
+      "documentOverflow": 0,
+      "height": 520,
+      "modal": {
+        "height": 368.78125,
+        "overflow": 0,
+        "width": 460,
+        "x": 150,
+        "y": 75.609375
+      },
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 71
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "workflow-editor",
+      "outerWidth": 1100,
+      "outerHeight": 700,
+      "documentOverflow": 0,
+      "height": 700,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 113
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "workflow-editor",
+      "outerWidth": 900,
+      "outerHeight": 600,
+      "documentOverflow": 0,
+      "height": 600,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 139
+        }
+      ],
+      "width": 900
+    },
+    {
+      "name": "workflow-editor",
+      "outerWidth": 760,
+      "outerHeight": 520,
+      "documentOverflow": 0,
+      "height": 520,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 71
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "workflow-inline-settings",
+      "outerWidth": 1100,
+      "outerHeight": 700,
+      "documentOverflow": 0,
+      "height": 700,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 113
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "workflow-inline-settings",
+      "outerWidth": 760,
+      "outerHeight": 520,
+      "documentOverflow": 0,
+      "height": 520,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 71
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "workflow-plans",
+      "outerWidth": 1100,
+      "outerHeight": 700,
+      "documentOverflow": 0,
+      "height": 700,
+      "modal": {
+        "height": 179.1953125,
+        "overflow": 0,
+        "width": 512,
+        "x": 294,
+        "y": 260.3984375
+      },
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 113
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "workflow-plans",
+      "outerWidth": 760,
+      "outerHeight": 520,
+      "documentOverflow": 0,
+      "height": 520,
+      "modal": {
+        "height": 179.1953125,
+        "overflow": 0,
+        "width": 460,
+        "x": 150,
+        "y": 170.3984375
+      },
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 71
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "workflow-results",
+      "outerWidth": 1100,
+      "outerHeight": 700,
+      "documentOverflow": 0,
+      "height": 700,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 113
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "workflow-results",
+      "outerWidth": 900,
+      "outerHeight": 600,
+      "documentOverflow": 0,
+      "height": 600,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 139
+        }
+      ],
+      "width": 900
+    },
+    {
+      "name": "workflow-results",
+      "outerWidth": 760,
+      "outerHeight": 520,
+      "documentOverflow": 0,
+      "height": 520,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 71
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "workflow-automation-queue",
+      "outerWidth": 1100,
+      "outerHeight": 700,
+      "documentOverflow": 0,
+      "height": 700,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 113
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "workflow-automation-queue",
+      "outerWidth": 900,
+      "outerHeight": 600,
+      "documentOverflow": 0,
+      "height": 600,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 139
+        }
+      ],
+      "width": 900
+    },
+    {
+      "name": "workflow-automation-queue",
+      "outerWidth": 760,
+      "outerHeight": 520,
+      "documentOverflow": 0,
+      "height": 520,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 71
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "workflow-schedule-dialog",
+      "outerWidth": 760,
+      "outerHeight": 520,
+      "documentOverflow": 0,
+      "height": 520,
+      "modal": {
+        "height": 405.59375,
+        "overflow": 0,
+        "width": 712,
+        "x": 24,
+        "y": 57.203125
+      },
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 71
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "comparison-results",
+      "outerWidth": 1100,
+      "outerHeight": 700,
+      "documentOverflow": 0,
+      "height": 700,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 113
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "comparison-results",
+      "outerWidth": 900,
+      "outerHeight": 600,
+      "documentOverflow": 0,
+      "height": 600,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 139
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 139
+        }
+      ],
+      "width": 900
+    },
+    {
+      "name": "comparison-results",
+      "outerWidth": 760,
+      "outerHeight": 520,
+      "documentOverflow": 0,
+      "height": 520,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 71
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "comparison-sources",
+      "outerWidth": 1100,
+      "outerHeight": 700,
+      "documentOverflow": 0,
+      "height": 700,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 113
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "comparison-sources",
+      "outerWidth": 760,
+      "outerHeight": 520,
+      "documentOverflow": 0,
+      "height": 520,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 71
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "comparison-content-check",
+      "outerWidth": 1100,
+      "outerHeight": 700,
+      "documentOverflow": 0,
+      "height": 700,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 113
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "comparison-content-check",
+      "outerWidth": 760,
+      "outerHeight": 520,
+      "documentOverflow": 0,
+      "height": 520,
+      "modal": null,
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 71
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "comparison-selection-dialog",
+      "outerWidth": 1100,
+      "outerHeight": 700,
+      "documentOverflow": 0,
+      "height": 700,
+      "modal": {
+        "height": 546,
+        "overflow": 0,
+        "width": 928,
+        "x": 86,
+        "y": 77
+      },
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 113
+        },
+        {
+          "height": 16,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 113
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "comparison-selection-dialog",
+      "outerWidth": 760,
+      "outerHeight": 520,
+      "documentOverflow": 0,
+      "height": 520,
+      "modal": {
+        "height": 405.59375,
+        "overflow": 0,
+        "width": 712,
+        "x": 24,
+        "y": 57.203125
+      },
+      "pageOverflow": 0,
+      "titles": [
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "解压中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "压缩中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "特殊压缩",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件浏览器",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "资料对比",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "工作流中心",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "归档资源库",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "密码保险箱",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "文件完整性",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "历史任务",
+          "width": 71
+        },
+        {
+          "height": 15,
+          "overflow": 0,
+          "text": "设置中心",
+          "width": 71
+        }
+      ],
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "library-sources-1100x700.png",
+    "library-sources-900x600.png",
+    "library-sources-760x520.png",
+    "library-search-1100x700.png",
+    "library-search-900x600.png",
+    "library-search-760x520.png",
+    "library-batch-dialog-1100x700.png",
+    "library-batch-dialog-760x520.png",
+    "workflow-templates-1100x700.png",
+    "workflow-templates-760x520.png",
+    "workflow-editor-1100x700.png",
+    "workflow-editor-900x600.png",
+    "workflow-editor-760x520.png",
+    "workflow-inline-settings-1100x700.png",
+    "workflow-inline-settings-760x520.png",
+    "workflow-plans-1100x700.png",
+    "workflow-plans-760x520.png",
+    "workflow-results-1100x700.png",
+    "workflow-results-900x600.png",
+    "workflow-results-760x520.png",
+    "workflow-automation-queue-1100x700.png",
+    "workflow-automation-queue-900x600.png",
+    "workflow-automation-queue-760x520.png",
+    "workflow-schedule-dialog-760x520.png",
+    "comparison-results-1100x700.png",
+    "comparison-results-900x600.png",
+    "comparison-results-760x520.png",
+    "comparison-sources-1100x700.png",
+    "comparison-sources-760x520.png",
+    "comparison-content-check-1100x700.png",
+    "comparison-content-check-760x520.png",
+    "comparison-selection-dialog-1100x700.png",
+    "comparison-selection-dialog-760x520.png"
+  ],
+  "completedAt": "2026-10-22T01:30:44.808Z"
+}

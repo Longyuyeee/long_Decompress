@@ -34,6 +34,7 @@
 </template>
 
 <script setup lang="ts">
+import { navigationPathForShortcut } from '@/utils/navigation'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import MainLayout from '@/components/layouts/MainLayout.vue'
@@ -229,27 +230,11 @@ const restoreWindowState = async () => {
   }
 }
 
-const handleKeydown = (e: KeyboardEvent) => {
-  const target = e.target
-  const isEditable = target instanceof Element &&
-    target.matches('input, textarea, select, [contenteditable="true"]')
-  if (isEditable) return
-  // 全局快捷键
-  if (e.ctrlKey || e.metaKey) {
-    switch (e.key.toLowerCase()) {
-      case 'o': e.preventDefault(); router.push('/decompress'); break  // Ctrl+O → 解压
-      case 'n': e.preventDefault(); router.push('/compress'); break   // Ctrl+N → 压缩
-      case 's': if (e.shiftKey) { e.preventDefault(); router.push('/special-compression') }; break
-      case 'b': e.preventDefault(); router.push('/browser'); break   // Ctrl+B → 浏览压缩包
-      case 'v': if (e.shiftKey) { e.preventDefault(); router.push('/vault') }; break
-      case 'i': e.preventDefault(); router.push('/integrity'); break
-      case 'h': e.preventDefault(); router.push('/history'); break
-      case ',': e.preventDefault(); router.push('/settings'); break  // Ctrl+, → 设置
-    }
-  }
-  if (e.key === 'Escape') {
-    // Esc 关闭当前聚焦的弹窗由各组件自行处理
-  }
+const handleKeydown = (event: KeyboardEvent) => {
+  const path = navigationPathForShortcut(event)
+  if (!path) return
+  event.preventDefault()
+  void router.push(path)
 }
 
 onMounted(async () => {

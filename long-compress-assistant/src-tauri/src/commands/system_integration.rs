@@ -40,6 +40,26 @@ pub fn set_close_to_tray(state: State<'_, DesktopBehaviorState>, enabled: bool) 
     state.close_to_tray.store(enabled, Ordering::SeqCst);
 }
 
+// Tauri v1 Window::close destroys the window without CloseRequested. Both the
+// custom title bar and OS close requests must pass through this same policy.
+pub fn handle_window_close(window: &Window, state: &DesktopBehaviorState) -> Result<(), String> {
+    if state.close_to_tray.load(Ordering::SeqCst) {
+        window.hide().map_err(|error| error.to_string())
+    } else if should_confirm_exit(state) {
+        window.show().map_err(|error| error.to_string())?;
+        window.unminimize().map_err(|error| error.to_string())?;
+        window.set_focus().map_err(|error| error.to_string())?;
+        window.emit("exit-confirmation-requested", ()).map_err(|error| error.to_string())
+    } else {
+        window.emit("exit-drafts-requested", ()).map_err(|error| error.to_string())
+    }
+}
+
+#[command]
+pub fn request_window_close(window: Window, state: State<'_, DesktopBehaviorState>) -> Result<(), String> {
+    handle_window_close(&window, &state)
+}
+
 #[command]
 pub fn set_has_active_tasks(state: State<'_, DesktopBehaviorState>, active: bool) {
     state.has_active_tasks.store(active, Ordering::SeqCst);

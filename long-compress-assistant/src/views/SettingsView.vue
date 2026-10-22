@@ -4,8 +4,10 @@ import { getVersion } from '@tauri-apps/api/app'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useArchiveEngine } from '@/composables/useArchiveEngine'
-import { FORMAT_CAPABILITIES } from '@/utils/compressionFormat'
+import { FORMAT_CAPABILITIES, EXTRACT_ONLY_FORMATS, type CompressionFormatCapability } from '@/utils/compressionFormat'
+import { APP_THEMES } from '@/utils/themes'
 import AccessibilitySettings from '@/components/settings/AccessibilitySettings.vue'
+import WorkspaceHeader from '@/components/ui/WorkspaceHeader.vue'
 import HelpHint from '@/components/ui/HelpHint.vue'
 import { useUpdateStore } from '@/stores/update'
 
@@ -14,21 +16,44 @@ const updateStore = useUpdateStore()
 const tauriCommands = useTauriCommands()
 const { capabilities: archiveEngine, loading: archiveEngineLoading, refresh: refreshArchiveEngine } = useArchiveEngine()
 const showResetConfirm = ref(false)
+const settingsSection = ref('appearance')
+const settingsScroll = ref<HTMLElement>()
+const settingsSections = [
+  { id:'appearance', label:'外观', icon:'pi pi-palette' },
+  { id:'accessibility', label:'辅助显示', icon:'pi pi-eye' },
+  { id:'processing', label:'压缩与解压', icon:'pi pi-sliders-h' },
+  { id:'behavior', label:'行为', icon:'pi pi-cog' },
+  { id:'updates', label:'软件更新', icon:'pi pi-refresh' },
+  { id:'formats', label:'格式支持', icon:'pi pi-box' },
+]
+const selectSettings = (section: string) => { settingsSection.value = section; settingsScroll.value?.scrollTo?.({ top:0 }) }
+
 const rarEncoder = ref<{ available: boolean; message: string } | null>(null)
 const currentVersion = ref('—')
 const diagnosticsLoading = computed(() => archiveEngineLoading.value)
-const readableExtensionCount = computed(() => new Set(archiveEngine.value?.formats.flatMap(format => format.extensions) || []).size)
-const creatableFormatCount = computed(() => archiveEngine.value?.formats.filter(format => format.canCreate).length || 0)
-const passwordCompressionFormats = computed(() => FORMAT_CAPABILITIES
+const engineSupports = (format: CompressionFormatCapability, create = false) => !format.engineFormat || archiveEngine.value?.formats.some(item =>
+  (!create || item.canCreate) && [item.name, ...item.extensions].some(value => value.toLowerCase() === format.engineFormat?.toLowerCase()))
+const readableFormats = computed(() => FORMAT_CAPABILITIES.filter(format => format.canExtract && engineSupports(format) && (!format.requires7za || archiveEngine.value?.available)))
+const creatableFormats = computed(() => FORMAT_CAPABILITIES.filter(format => format.canCompress && engineSupports(format, true) && (!format.requiresWinRar || rarEncoder.value?.available)))
+const readableExtensions = computed(() => [...new Set([
+  ...readableFormats.value.flatMap(format => format.extensions),
+  ...EXTRACT_ONLY_FORMATS.filter(format => {
+    if (['ALZ', 'EGG'].includes(format.displayName)) return archiveEngine.value?.formats.some(item => item.name === format.displayName)
+    return !format.requires7za || archiveEngine.value?.available
+  }).flatMap(format => format.extensions),
+  ...(archiveEngine.value?.formats.flatMap(format => format.extensions) || []),
+].map(extension => extension.toLowerCase()))].sort())
+const readableExtensionCount = computed(() => readableExtensions.value.length)
+const passwordCompressionFormats = computed(() => creatableFormats.value
   .filter(format => format.supportsPasswordCompress)
   .map(format => format.displayName)
   .join(' · '))
-const passwordExtractionFormats = computed(() => FORMAT_CAPABILITIES
-  .filter(format => format.supportsPasswordExtract && (format.format !== 'zpaq' || archiveEngine.value?.formats.some(item => item.name === 'ZPAQ')))
+const passwordExtractionNames = computed(() => readableFormats.value
+  .filter(format => format.supportsPasswordExtract)
   .map(format => format.displayName)
   .concat(archiveEngine.value?.formats.some(item => item.name === 'ALZ') ? ['ALZ（只读）'] : [])
-  .concat(archiveEngine.value?.formats.some(item => item.name === 'EGG') ? ['EGG（只读）'] : [])
-  .join(' · '))
+  .concat(archiveEngine.value?.formats.some(item => item.name === 'EGG') ? ['EGG（只读）'] : []))
+const passwordExtractionFormats = computed(() => passwordExtractionNames.value.join(' · '))
 
 const refreshEngineDiagnostics = async () => {
   await refreshArchiveEngine()
@@ -47,14 +72,12 @@ const themeColors = {
   slate: '#64748b'
 }
 
-const themeModes = [
-  { value: 'light', icon: 'pi pi-sun', label: 'settings.theme.light' },
-  { value: 'dark', icon: 'pi pi-moon', label: 'settings.theme.dark' },
-  { value: 'cyberpunk', icon: 'pi pi-bolt', label: 'settings.theme.cyberpunk' },
-  { value: 'twilight', icon: 'pi pi-star', label: 'settings.theme.twilight' },
-  { value: 'sepia', icon: 'pi pi-book', label: 'settings.theme.sepia' },
-  { value: 'auto', icon: 'pi pi-desktop', label: 'settings.theme.auto' }
-]
+const themeModes = APP_THEMES
+const selectTheme = (mode: typeof APP_THEMES[number]) => {
+  appStore.theme = mode.value
+  if ('accent' in mode) appStore.accentColor = mode.accent
+  appStore.saveSettingsToStorage()
+}
 
 const selectedAccentName = computed(() =>
   Object.entries(themeColors).find(([, hex]) => hex === appStore.accentColor)?.[0] || 'custom'
@@ -185,35 +208,37 @@ const removeWordlist = (index: number) => {
 
 <template>
   <div class="settings-view flex flex-col transition-colors duration-700 overflow-hidden">
-    <header class="shrink-0">
-      <h1 class="text-4xl font-black text-content tracking-tighter mb-2">{{ appStore.t('settings.title') }}</h1>
-      <p class="text-muted text-sm font-bold uppercase tracking-[0.3em] ml-1">{{ appStore.t('settings.subtitle') }}</p>
-    </header>
+    <WorkspaceHeader :title="appStore.t('settings.title')" icon="pi pi-cog">
+      <button class="settings-reset-action" @click="showResetConfirm=true"><i class="pi pi-replay"/>恢复默认</button>
+      <template #navigation><nav class="module-tabs settings-tabs" aria-label="设置分类"><button v-for="section in settingsSections" :key="section.id" :data-settings-section="section.id" :class="{active:settingsSection===section.id}" :aria-pressed="settingsSection===section.id" @click="selectSettings(section.id)"><i :class="section.icon"/>{{section.label}}</button></nav></template>
+    </WorkspaceHeader>
 
-    <div class="settings-scroll flex-1 overflow-y-auto custom-scrollbar">
+    <div ref="settingsScroll" class="settings-scroll flex-1 overflow-y-auto custom-scrollbar">
       <div class="settings-content">
         <!-- 外观：标签与控件对齐，窄窗口自动单列 -->
-        <section class="aero-card settings-appearance">
+        <section v-show="settingsSection==='appearance'" data-settings-panel="appearance" class="aero-card settings-appearance">
           <div class="settings-group">
             <div class="settings-group-heading">
-              <h2 class="text-base font-black text-content uppercase tracking-widest">{{ appStore.t('settings.appearance') }}</h2>
-              <p class="text-sm text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('settings.appearance.desc') }}</p>
+              <div class="flex items-center gap-2"><h2 class="text-base font-black text-content uppercase tracking-widest">{{ appStore.t('settings.appearance') }}</h2><HelpHint :label="appStore.t('settings.appearance')">{{ appStore.t('settings.appearance.desc') }}</HelpHint></div>
             </div>
             
             <div class="settings-group-body">
               <!-- 模式切换 -->
-              <div class="settings-option-row">
+              <div class="settings-option-row settings-theme-row">
                 <label class="text-xs font-black text-muted uppercase tracking-[0.2em] block ml-1">{{ appStore.t('settings.theme') }}</label>
                 <div class="settings-theme-options">
                   <button
                     v-for="m in themeModes" :key="m.value"
                     :aria-pressed="appStore.theme === m.value"
-                    @click="appStore.theme = m.value as any; appStore.saveSettingsToStorage()"
-                    class="py-3 rounded-xl text-xs font-black uppercase transition-all flex items-center justify-center gap-2"
+                    :data-theme="m.value"
+                    :title="'accent' in m ? appStore.t(`settings.theme.desc.${m.value}`) : undefined"
+                    :style="{ '--preview-bg': m.preview[0], '--preview-panel': m.preview[1], '--preview-accent': m.preview[2] }"
+                    @click="selectTheme(m)"
+                    class="settings-theme-card"
                     :class="appStore.theme === m.value ? 'bg-primary text-white shadow-lg' : 'text-muted hover:bg-white/5'"
                   >
-                    <i :class="m.icon"></i>
-                    {{ appStore.t(m.label) }}
+                    <span class="settings-theme-preview" aria-hidden="true"><span></span><span><b></b><b></b><b></b></span></span>
+                    <span class="settings-theme-name"><i :class="m.icon" aria-hidden="true"></i>{{ appStore.t(`settings.theme.${m.value}`) }}<i v-if="appStore.theme === m.value" class="pi pi-check" aria-hidden="true"></i></span>
                   </button>
                 </div>
               </div>
@@ -255,7 +280,7 @@ const removeWordlist = (index: number) => {
                 <div class="flex justify-between items-center">
                   <div>
                     <span class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.ui_scale') }}</span>
-                    <div class="text-xs text-muted mt-0.5">{{ appStore.t('settings.ui_scale.desc') }}</div>
+                    <HelpHint label="设置说明">{{ appStore.t('settings.ui_scale.desc') }}</HelpHint>
                   </div>
                   <span class="px-2 py-0.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm font-black font-mono">
                     {{ appStore.settings.uiScale }}%
@@ -278,11 +303,10 @@ const removeWordlist = (index: number) => {
         </section>
 
         <!-- 可访问性设置 -->
-        <section class="aero-card">
+        <section v-show="settingsSection==='accessibility'" data-settings-panel="accessibility" class="aero-card">
           <div class="settings-group">
             <div class="settings-group-heading">
-              <h2 class="text-base font-black text-content uppercase tracking-widest">{{ appStore.t('accessibility.title') }}</h2>
-              <p class="text-sm text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('accessibility.subtitle') }}</p>
+              <div class="flex items-center gap-2"><h2 class="text-base font-black text-content uppercase tracking-widest">{{ appStore.t('accessibility.title') }}</h2><HelpHint :label="appStore.t('accessibility.title')">{{ appStore.t('accessibility.subtitle') }}</HelpHint></div>
             </div>
 
             <div class="settings-group-body">
@@ -292,11 +316,11 @@ const removeWordlist = (index: number) => {
         </section>
 
         <!-- 核心功能：常规与性能 -->
-        <div class="settings-performance-grid">
-          <section class="aero-card">
+        <div v-show="settingsSection==='processing' || settingsSection==='behavior'" class="settings-performance-grid">
+          <section v-show="settingsSection==='processing'" data-settings-panel="processing" class="aero-card">
             <h2 class="text-sm font-black text-primary uppercase tracking-[0.3em] mb-8">{{ appStore.t('settings.performance') }}</h2>
             <div class="space-y-6">
-              <button
+              <div class="settings-switch-row"><button
                 type="button"
                 role="switch"
                 data-testid="auto-start-switch"
@@ -308,12 +332,12 @@ const removeWordlist = (index: number) => {
               >
                 <div class="min-w-0">
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.performance.auto_start') }}</div>
-                  <div class="text-xs text-muted mt-1 leading-5">{{ appStore.t('settings.performance.auto_start.desc') }}</div>
+
                 </div>
                 <div class="settings-toggle-track shrink-0" :class="{ 'is-on': appStore.settings.autoStart }">
                   <span class="settings-toggle-knob"></span>
                 </div>
-              </button>
+              </button><HelpHint :label="appStore.t('settings.performance.auto_start')+'说明'">{{ appStore.t('settings.performance.auto_start.desc') }}</HelpHint></div>
 
               <!-- 并行线程设置 -->
               <div class="space-y-4 pt-6 border-t border-subtle">
@@ -331,13 +355,13 @@ const removeWordlist = (index: number) => {
                   @change="validateAndUpdateThreads(appStore.settings.maxConcurrentTasks)"
                   class="w-full h-1.5 bg-input border border-subtle rounded-full appearance-none cursor-pointer accent-primary"
                 />
-                <div class="text-xs text-muted uppercase tracking-tighter">{{ appStore.t('settings.performance.threads.desc') }}</div>
+                <HelpHint label="归档默认设置说明">{{ appStore.t('settings.performance.threads.desc') }}</HelpHint>
               </div>
 
               <div class="space-y-4 pt-6 border-t border-subtle" data-testid="archive-default-settings">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.archive_defaults') }}</div>
-                  <div class="text-xs text-muted mt-1 leading-5">{{ appStore.t('settings.archive_defaults.desc') }}</div>
+                  <HelpHint label="归档默认设置说明">{{ appStore.t('settings.archive_defaults.desc') }}</HelpHint>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                   <label class="space-y-1.5 text-xs font-bold text-muted">
@@ -362,7 +386,7 @@ const removeWordlist = (index: number) => {
                     />
                   </label>
                 </div>
-                <button
+                <div class="settings-switch-row"><button
                   type="button"
                   role="switch"
                   :aria-checked="appStore.settings.defaultExtractToSubfolder"
@@ -371,44 +395,44 @@ const removeWordlist = (index: number) => {
                 >
                   <div class="min-w-0">
                     <div class="text-xs font-bold text-content">{{ appStore.t('settings.archive_defaults.subfolder') }}</div>
-                    <div class="text-xs text-muted mt-1">{{ appStore.t('settings.archive_defaults.subfolder.desc') }}</div>
+
                   </div>
                   <div class="settings-toggle-track shrink-0" :class="{ 'is-on': appStore.settings.defaultExtractToSubfolder }">
                     <span class="settings-toggle-knob"></span>
                   </div>
-                </button>
+                </button><HelpHint :label="appStore.t('settings.archive_defaults.subfolder')+'说明'">{{ appStore.t('settings.archive_defaults.subfolder.desc') }}</HelpHint></div>
               </div>
             </div>
           </section>
 
-          <section class="aero-card">
-            <button type="button" role="switch" data-testid="smart-directory-switch"
+          <section v-show="settingsSection==='processing'" data-settings-panel="processing" class="aero-card">
+            <div class="settings-switch-row"><button type="button" role="switch" data-testid="smart-directory-switch"
               :aria-checked="appStore.settings.smartExtractionDirectory"
               class="w-full flex items-center justify-between gap-4 text-left"
               @click="appStore.updateSettings({ smartExtractionDirectory: !appStore.settings.smartExtractionDirectory })">
               <div class="min-w-0">
                 <div class="text-sm font-bold text-content">{{ appStore.t('settings.smart_directory') }}</div>
-                <p class="text-xs text-muted mt-2">{{ appStore.t('settings.smart_directory.desc') }}</p>
+
               </div>
               <div class="settings-toggle-track shrink-0" :class="{ 'is-on': appStore.settings.smartExtractionDirectory }"><span class="settings-toggle-knob"></span></div>
-            </button>
+            </button><HelpHint :label="appStore.t('settings.smart_directory')+'说明'">{{ appStore.t('settings.smart_directory.desc') }}</HelpHint></div>
           </section>
 
-          <section class="aero-card">
-            <button type="button" role="switch" data-testid="parallel-zip-switch"
+          <section v-show="settingsSection==='processing'" data-settings-panel="processing" class="aero-card">
+            <div class="settings-switch-row"><button type="button" role="switch" data-testid="parallel-zip-switch"
               :aria-checked="appStore.settings.parallelZipExtraction"
               class="w-full flex items-center justify-between gap-4 text-left"
               @click="appStore.updateSettings({ parallelZipExtraction: !appStore.settings.parallelZipExtraction })">
               <div class="min-w-0">
                 <div class="text-sm font-bold text-content">{{ appStore.t('settings.parallel_zip') }}</div>
-                <p class="text-xs text-muted mt-2">{{ appStore.t('settings.parallel_zip.desc') }}</p>
+
               </div>
               <div class="settings-toggle-track shrink-0" :class="{ 'is-on': appStore.settings.parallelZipExtraction }"><span class="settings-toggle-knob"></span></div>
-            </button>
+            </button><HelpHint :label="appStore.t('settings.parallel_zip')+'说明'">{{ appStore.t('settings.parallel_zip.desc') }}</HelpHint></div>
           </section>
 
           <!-- 暴力破解引擎设置 -->
-          <section class="aero-card">
+          <section v-show="settingsSection==='processing'" data-settings-panel="processing" class="aero-card">
             <div class="flex justify-between items-center mb-8">
               <h2 class="text-sm font-black text-muted uppercase tracking-[0.3em]">{{ appStore.t('settings.bruteforce') }}</h2>
               <button type="button" role="switch" :aria-checked="appStore.settings.enableBruteForce" :aria-label="appStore.t('settings.bruteforce')" class="settings-toggle-track cursor-pointer"
@@ -444,18 +468,18 @@ const removeWordlist = (index: number) => {
             </div>
           </section>
           <!-- 行为设置 -->
-          <section class="aero-card settings-behavior">
+          <section v-show="settingsSection==='behavior'" data-settings-panel="behavior" class="aero-card settings-behavior">
             <h2 class="text-sm font-black text-primary uppercase tracking-[0.3em] mb-6">{{ appStore.t('settings.behavior') }}</h2>
             <div class="settings-behavior-options">
-              <button type="button" role="switch" :aria-checked="appStore.settings.closeToTray" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ closeToTray: !appStore.settings.closeToTray })">
+              <div class="settings-switch-row"><button type="button" role="switch" data-testid="close-to-tray-switch" :aria-checked="appStore.settings.closeToTray" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ closeToTray: !appStore.settings.closeToTray })">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.close_to_tray') }}</div>
-                  <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.close_to_tray.desc') }}</div>
+
                 </div>
                 <div class="settings-toggle-track" :class="{ 'is-on': appStore.settings.closeToTray }">
                   <span class="settings-toggle-knob"></span>
                 </div>
-              </button>
+              </button><HelpHint :label="appStore.t('settings.behavior.close_to_tray')+'说明'">{{ appStore.t('settings.behavior.close_to_tray.desc') }}</HelpHint></div>
               <button type="button" role="switch" :aria-checked="appStore.settings.autoDeleteSource" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ autoDeleteSource: !appStore.settings.autoDeleteSource })">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.auto_delete') }}</div>
@@ -465,43 +489,42 @@ const removeWordlist = (index: number) => {
                   <span class="settings-toggle-knob"></span>
                 </div>
               </button>
-              <button type="button" role="switch" data-testid="preserve-mark-of-web-switch" :aria-checked="appStore.settings.preserveMarkOfWeb" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ preserveMarkOfWeb: !appStore.settings.preserveMarkOfWeb })">
+              <div class="settings-switch-row"><button type="button" role="switch" data-testid="preserve-mark-of-web-switch" :aria-checked="appStore.settings.preserveMarkOfWeb" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ preserveMarkOfWeb: !appStore.settings.preserveMarkOfWeb })">
                 <div class="min-w-0 pr-4">
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.preserve_motw') }}</div>
-                  <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.preserve_motw.desc') }}</div>
+
                 </div>
                 <div class="settings-toggle-track shrink-0" :class="{ 'is-on': appStore.settings.preserveMarkOfWeb }">
                   <span class="settings-toggle-knob"></span>
                 </div>
-              </button>
-              <button type="button" role="switch" :aria-checked="appStore.settings.savePasswords" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ savePasswords: !appStore.settings.savePasswords })">
+              </button><HelpHint :label="appStore.t('settings.behavior.preserve_motw')+'说明'">{{ appStore.t('settings.behavior.preserve_motw.desc') }}</HelpHint></div>
+              <div class="settings-switch-row"><button type="button" role="switch" :aria-checked="appStore.settings.savePasswords" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ savePasswords: !appStore.settings.savePasswords })">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.save_passwords') }}</div>
-                  <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.save_passwords.desc') }}</div>
+
                 </div>
                 <div class="settings-toggle-track" :class="{ 'is-on': appStore.settings.savePasswords }">
                   <span class="settings-toggle-knob"></span>
                 </div>
-              </button>
-              <button v-if="contextMenuSupported" type="button" role="switch" :aria-checked="appStore.settings.contextMenuEnabled" :disabled="contextMenuBusy" class="w-full flex items-center justify-between group cursor-pointer text-left disabled:opacity-60" @click="toggleContextMenu">
+              </button><HelpHint :label="appStore.t('settings.behavior.save_passwords')+'说明'">{{ appStore.t('settings.behavior.save_passwords.desc') }}</HelpHint></div>
+              <div class="settings-switch-row"><button v-if="contextMenuSupported" type="button" role="switch" :aria-checked="appStore.settings.contextMenuEnabled" :disabled="contextMenuBusy" class="w-full flex items-center justify-between group cursor-pointer text-left disabled:opacity-60" @click="toggleContextMenu">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.context_menu') }}</div>
-                  <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.context_menu.desc') }}</div>
+
                 </div>
                 <div class="settings-toggle-track" :class="{ 'is-on': appStore.settings.contextMenuEnabled }">
                   <span class="settings-toggle-knob"></span>
                 </div>
-              </button>
+              </button><HelpHint :label="appStore.t('settings.behavior.context_menu')+'说明'">{{ appStore.t('settings.behavior.context_menu.desc') }}</HelpHint></div>
             </div>
           </section>
         </div>
 
         <!-- 软件更新 -->
-        <section class="aero-card">
+        <section v-show="settingsSection==='updates'" data-settings-panel="updates" class="aero-card">
           <div class="settings-group">
             <div class="settings-group-heading">
-              <h2 class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.update.title') }}</h2>
-              <p class="text-sm text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('settings.update.desc') }}</p>
+              <div class="flex items-center gap-2"><h2 class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.update.title') }}</h2><HelpHint :label="appStore.t('settings.update.title')">{{ appStore.t('settings.update.desc') }}</HelpHint></div>
             </div>
             <div class="settings-group-body">
               <div class="flex flex-col gap-4 rounded-2xl border border-subtle bg-input/30 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -537,29 +560,25 @@ const removeWordlist = (index: number) => {
               <div v-if="updateStore.status === 'error' && updateStore.errorMessage" class="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-xs leading-5 text-red-500">
                 {{ updateStore.errorMessage }}
               </div>
-              <button type="button" role="switch" :aria-checked="appStore.settings.autoCheckUpdates" class="w-full flex items-center justify-between gap-4 text-left" @click="toggleAutoCheckUpdates">
+              <div class="settings-switch-row"><button type="button" role="switch" :aria-checked="appStore.settings.autoCheckUpdates" class="w-full flex items-center justify-between gap-4 text-left" @click="toggleAutoCheckUpdates">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.update.auto') }}</div>
-                  <div class="mt-1 text-xs text-muted uppercase tracking-tighter">{{ appStore.t('settings.update.auto.desc') }}</div>
+
                 </div>
                 <div class="settings-toggle-track" :class="{ 'is-on': appStore.settings.autoCheckUpdates }">
                   <span class="settings-toggle-knob"></span>
                 </div>
-              </button>
-              <div class="flex items-start gap-3 rounded-xl border border-primary/15 bg-primary/5 p-4 text-xs leading-5 text-muted">
-                <i class="pi pi-shield mt-0.5 text-primary"></i>
-                <span>{{ appStore.t('settings.update.security') }}</span>
-              </div>
+              </button><HelpHint :label="appStore.t('settings.update.auto')+'说明'">{{ appStore.t('settings.update.auto.desc') }}</HelpHint></div>
+              <HelpHint label="更新下载说明">{{ appStore.t('settings.update.security') }}</HelpHint>
             </div>
           </div>
         </section>
 
         <!-- 格式支持统计 -->
-        <section class="aero-card">
+        <section v-show="settingsSection==='formats'" data-settings-panel="formats" class="aero-card">
           <div class="settings-group">
             <div class="settings-group-heading">
-              <h2 class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.formats.title') }}</h2>
-              <p class="text-sm text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('settings.formats.desc') }}</p>
+              <div class="flex items-center gap-2"><h2 class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.formats.title') }}</h2><HelpHint :label="appStore.t('settings.formats.title')">{{ appStore.t('settings.formats.desc') }} {{ appStore.t('settings.formats.count_description') }}</HelpHint></div>
             </div>
 
             <div class="settings-group-body">
@@ -579,9 +598,7 @@ const removeWordlist = (index: number) => {
                     <i class="pi mr-2" :class="diagnosticsLoading ? 'pi-spin pi-spinner' : 'pi-refresh'"></i>{{ appStore.t('settings.engine.refresh') }}
                   </button>
                 </div>
-                <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
-                  <div class="rounded-xl border border-subtle px-3 py-2 text-xs text-muted"><span class="font-black text-content">{{ readableExtensionCount }}</span> {{ appStore.t('settings.engine.readable') }}</div>
-                  <div class="rounded-xl border border-subtle px-3 py-2 text-xs text-muted"><span class="font-black text-content">{{ creatableFormatCount }}</span> {{ appStore.t('settings.engine.creatable') }}</div>
+                <div class="mt-3 flex">
                   <div class="rounded-xl border px-3 py-2 text-xs" :class="rarEncoder?.available ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500' : 'border-amber-500/30 bg-amber-500/10 text-amber-500'">
                     RAR {{ rarEncoder?.available ? appStore.t('settings.engine.ready') : appStore.t('settings.engine.external') }}
                   </div>
@@ -591,53 +608,24 @@ const removeWordlist = (index: number) => {
               <!-- 统计卡片组 -->
               <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="p-6 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20">
-                  <div class="text-3xl font-black text-emerald-500 mb-1">37+</div>
-                  <div class="text-xs font-black text-emerald-600/80 uppercase tracking-widest">{{ appStore.t('settings.formats.decompress') }}</div>
+                  <div class="text-3xl font-black text-emerald-500 mb-1" data-testid="settings-extraction-count">{{ archiveEngine ? readableExtensionCount : '—' }}</div>
+                  <div class="text-xs font-black text-secondary uppercase tracking-widest">{{ appStore.t('settings.formats.decompress') }}</div>
                 </div>
                 <div class="p-6 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                  <div class="text-3xl font-black text-primary mb-1">16</div>
-                  <div class="text-xs font-black text-primary/80 uppercase tracking-widest">{{ appStore.t('settings.formats.compress') }}</div>
+                  <div class="text-3xl font-black text-primary mb-1" data-testid="settings-creation-count">{{ archiveEngine ? creatableFormats.length : '—' }}</div>
+                  <div class="text-xs font-black text-secondary uppercase tracking-widest">{{ appStore.t('settings.formats.compress') }}</div>
                 </div>
                 <div class="p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 to-amber-500/5 border border-amber-500/20">
-                  <div class="text-3xl font-black text-amber-500 mb-1">3</div>
-                  <div class="text-xs font-black text-amber-600/80 uppercase tracking-widest">{{ appStore.t('settings.formats.password') }}</div>
+                  <div class="text-3xl font-black text-amber-500 mb-1" data-testid="settings-password-count">{{ archiveEngine ? passwordExtractionNames.length : '—' }}</div>
+                  <div class="text-xs font-black text-secondary uppercase tracking-widest">{{ appStore.t('settings.formats.password') }}</div>
                 </div>
               </div>
 
               <!-- 解压格式详细列表 -->
-              <div class="space-y-3">
-                <h3 class="text-xs font-black text-primary uppercase tracking-[0.2em] ml-1">{{ appStore.t('settings.formats.decompress_list') }}</h3>
+              <details class="settings-format-details">
+                <summary class="text-xs font-black text-primary uppercase tracking-[0.2em]">{{ appStore.t('settings.formats.decompress_list') }}</summary>
                 <div class="p-5 rounded-xl bg-input/30 border border-subtle space-y-3">
-                  <div>
-                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.archives') }}</div>
-                    <div class="text-xs text-content leading-relaxed font-mono">
-                      ZIP · ZIPX · 7Z · RAR · ZPAQ · TAR · TAR.GZ · TGZ · TAR.BZ2 · TBZ · TAR.XZ · TXZ · TAR.ZST · TZST · GZ · GZIP · BZ2 · BZIP2 · XZ · ZST · ZSTD · LZMA · TAR.LZMA · LZMA.AES · TAR.LZMA.AES · LZ4 · Brotli · TAR.LZ4 · TAR.BR · LZIP · TAR.LZIP · TLZ · OVA
-                    </div>
-                  </div>
-                  <div>
-                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.containers') }}</div>
-                    <div class="text-xs text-content leading-relaxed font-mono">
-                      JAR · XPI · ODT · ODS · DOCX · XLSX · PPTX · EPUB · IPA · APK · APPX
-                    </div>
-                  </div>
-                  <div>
-                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.disk_images') }}</div>
-                    <div class="text-xs text-content leading-relaxed font-mono">
-                      ISO · IMG · DMG · WIM · VHD · VHDX · QCOW · QCOW2 · VDI · VMDK
-                    </div>
-                  </div>
-                  <div>
-                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.installers') }}</div>
-                    <div class="text-xs text-content leading-relaxed font-mono">
-                      CAB · DEB · UDEB · RPM · MSI · MSP · MSM · NSIS · PPKG
-                    </div>
-                  </div>
-                  <div>
-                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.legacy') }}</div>
-                    <div class="text-xs text-content leading-relaxed font-mono">
-                      AR · A · LZH · LHA · ARJ · CHM · SQUASHFS · SFS · XAR · CPIO · UDF · FAT · NTFS · HFS · APFS · EXT2 · EXT3 · EXT4 · GPT · MBR · CRAMFS · ARC
-                    </div>
-                  </div>
+                  <div class="text-xs text-content leading-relaxed font-mono" data-testid="settings-readable-extensions">{{ readableExtensions.map(extension => extension.toUpperCase()).join(' · ') }}</div>
                   <div v-if="archiveEngine?.formats.some(format => format.name === 'EGG')" data-testid="settings-egg-read">
                     <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">EGG 随附只读引擎<HelpHint label="EGG 支持范围">已验证存储、Deflate、Bzip2、LZMA、AZO、固实及传统 ZipCrypto、AES/LEA 密码读取，支持 UTF-8 名称和已验证的原生 .volN.egg 卷组。固实所选提取仍需读取共享流，缺卷必须补齐。不提供 EGG 创建、文件名/全局加密或损坏修复；具体组合与资源边界见版本说明。</HelpHint></div>
                     <div class="text-xs text-content leading-relaxed">EGG · 密码与固实读取 · 原生分卷 · 检查与转换</div>
@@ -647,72 +635,43 @@ const removeWordlist = (index: number) => {
                     <div class="text-xs text-content leading-relaxed">ALZ · 密码解压 · 原生分卷 · 检查与转换</div>
                   </div>
                 </div>
-              </div>
+              </details>
 
               <!-- 压缩格式详细列表 -->
-              <div class="space-y-3">
-                <h3 class="text-xs font-black text-primary uppercase tracking-[0.2em] ml-1">{{ appStore.t('settings.formats.compress_list') }}</h3>
+              <details class="settings-format-details">
+                <summary class="text-xs font-black text-primary uppercase tracking-[0.2em]">{{ appStore.t('settings.formats.compress_list') }}</summary>
                   <div class="p-5 rounded-xl bg-input/30 border border-subtle space-y-3">
                   <div v-if="archiveEngine?.formats.some(format => format.name === 'ZPAQ' && format.canCreate)" data-testid="settings-zpaq-creation">
                     <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">ZPAQ 随附引擎</div>
-                    <div class="text-xs text-content leading-relaxed">日志式创建与原生密码；不提供固定大小分卷或增量备份。</div>
+                    <div class="text-xs text-content leading-relaxed">日志式创建与原生密码；支持数字切片分卷，解压需集齐成员。</div>
                   </div>
-                  <div>
-                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.native_rust') }}</div>
-                    <div class="text-xs text-content leading-relaxed font-mono">
-                      ZIP · 7Z · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · GZ · BZ2 · XZ
-                    </div>
-                  </div>
-                  <div>
-                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.via_7z') }}</div>
-                    <div class="text-xs text-content leading-relaxed font-mono">
-                      TAR.ZST · ZST · ZSTD · LZMA · TAR.LZMA · LZMA.AES · TAR.LZMA.AES · LZ4 · Brotli · TAR.LZ4 · TAR.BR · LZIP · TAR.LZIP · WIM
-                    </div>
-                  </div>
-                  <div>
-                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.via_winrar') }}</div>
-                    <div class="text-xs text-content leading-relaxed font-mono">
-                      RAR ({{ appStore.t('settings.formats.requires_winrar') }})
-                    </div>
-                  </div>
-                  <div>
-                    <div class="text-xs font-black text-muted uppercase tracking-widest mb-2">{{ appStore.t('settings.formats.category.split') }}</div>
-                    <div class="text-xs text-content leading-relaxed font-mono">
-                      ZIP ({{ appStore.t('settings.formats.multipart') }})
-                    </div>
-                  </div>
+                  <div class="text-xs text-content leading-relaxed font-mono" data-testid="settings-creation-formats">{{ creatableFormats.map(format => format.displayName).join(' · ') }}</div>
                 </div>
-              </div>
+              </details>
 
               <!-- 密码支持说明 -->
-              <div class="space-y-3">
-                <h3 class="text-xs font-black text-amber-600 uppercase tracking-[0.2em] ml-1">{{ appStore.t('settings.formats.password_support') }}</h3>
+              <details class="settings-format-details">
+                <summary class="text-xs font-black text-primary uppercase tracking-[0.2em]">{{ appStore.t('settings.formats.password_support') }}</summary>
                 <div class="p-5 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-2">
                   <div class="flex items-start gap-3">
                     <i class="pi pi-lock text-amber-500 text-xs mt-0.5 shrink-0"></i>
-                    <div class="text-xs text-amber-700 leading-relaxed">
+                    <div class="text-xs text-secondary leading-relaxed">
                       <span class="font-black">{{ appStore.t('settings.formats.password_compress') }}:</span> {{ passwordCompressionFormats }}
                     </div>
                   </div>
                   <div class="flex items-start gap-3">
                     <i class="pi pi-unlock text-amber-500 text-xs mt-0.5 shrink-0"></i>
-                    <div class="text-xs text-amber-700 leading-relaxed" data-testid="settings-password-extraction-formats">
+                    <div class="text-xs text-secondary leading-relaxed" data-testid="settings-password-extraction-formats">
                       <span class="font-black">{{ appStore.t('settings.formats.password_decompress') }}:</span> {{ passwordExtractionFormats }}
                     </div>
                   </div>
                 </div>
-              </div>
+              </details>
             </div>
           </div>
         </section>
 
-        <!-- 重置按钮 -->
-        <div class="pt-8 border-t border-subtle flex justify-end">
-          <button @click="showResetConfirm = true"
-                  class="px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all text-sm font-black uppercase tracking-widest">
-            {{ appStore.t('settings.reset.button') }}
-          </button>
-        </div>
+
       </div>
     </div>
 

@@ -8,17 +8,18 @@ import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { checksumSources } from '@/utils/checksumSources'
 import type { PublishedArchiveOutput } from '@/types/archiveOutput'
-const props = withDefaults(defineProps<{ path: string; directory?: boolean; split?: boolean; showPath?: boolean; output?: PublishedArchiveOutput | null }>(), { directory: false, split: false, showPath: false })
+const props = withDefaults(defineProps<{ path: string; directory?: boolean; split?: boolean; showPath?: boolean; compact?: boolean; output?: PublishedArchiveOutput | null }>(), { directory: false, split: false, showPath: false })
 const router = useRouter(), app = useAppStore()
 const emit = defineEmits<{ checksum: [] }>()
 const busy = ref(false)
 const preparingChecksum = ref(false)
 const error = ref('')
 const copied = ref(false)
+const moreOpen = ref(false)
 const label = computed(() => props.directory ? '打开输出目录' : props.split ? '定位首卷' : '打开结果位置')
 let request = 0
 onBeforeUnmount(() => { request++ })
-watch(() => [props.path, props.directory, props.output], () => { request++; busy.value = false; preparingChecksum.value = false; error.value = ''; copied.value = false })
+watch(() => [props.path, props.directory, props.output], () => { request++; busy.value = false; preparingChecksum.value = false; error.value = ''; copied.value = false; moreOpen.value = false })
 async function openOutput() {
   if (busy.value || !props.path.trim()) return
   const token = ++request
@@ -73,9 +74,10 @@ async function generateManifest() {
     <p v-if="showPath" class="select-text break-words text-xs leading-relaxed text-muted [overflow-wrap:anywhere]" :title="path">{{ path || '未记录输出位置' }}</p>
     <div class="flex flex-wrap items-center gap-2">
       <button type="button" class="result-button bg-primary text-white hover:brightness-110" :disabled="busy || !path.trim()" @click.stop="openOutput"><i class="pi pi-folder-open" aria-hidden="true"></i>{{ busy && !preparingChecksum ? '正在打开…' : label }}</button>
-      <button type="button" class="result-button border border-subtle text-muted hover:bg-input hover:text-content" :disabled="!path.trim()" @click.stop="copyPath"><i :class="copied ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>{{ copied ? '已复制' : '复制路径' }}</button>
-      <button v-if="!directory && (isDecompressArchivePath(path) || isPotentialSplitArchivePath(path))" type="button" data-testid="result-add-library" class="result-button border border-subtle text-primary" :disabled="busy || !path.trim()" @click.stop="addToLibrary"><i class="pi pi-database"/>加入 / 刷新资料库</button>
-      <button v-if="!directory" type="button" data-testid="result-generate-checksums" class="result-button border border-subtle text-muted hover:bg-input hover:text-content" :disabled="busy || !path.trim()" @click.stop="generateManifest"><i class="pi pi-hashtag" aria-hidden="true"></i>{{ preparingChecksum ? '正在带入…' : '生成校验清单' }}</button>
+      <button v-if="!compact || moreOpen" type="button" class="result-button border border-subtle text-muted hover:bg-input hover:text-content" :disabled="!path.trim()" @click.stop="copyPath"><i :class="copied ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>{{ copied ? '已复制' : '复制路径' }}</button>
+      <button v-if="(!compact || moreOpen) && !directory && (isDecompressArchivePath(path) || isPotentialSplitArchivePath(path))" type="button" data-testid="result-add-library" class="result-button border border-subtle text-primary" :disabled="busy || !path.trim()" @click.stop="addToLibrary"><i class="pi pi-database"/>加入 / 刷新资料库</button>
+      <button v-if="(!compact || moreOpen) && !directory" type="button" data-testid="result-generate-checksums" class="result-button border border-subtle text-muted hover:bg-input hover:text-content" :disabled="busy || !path.trim()" @click.stop="generateManifest"><i class="pi pi-hashtag" aria-hidden="true"></i>{{ preparingChecksum ? '正在带入…' : '生成校验清单' }}</button>
+      <button v-if="compact" type="button" class="result-button border border-subtle text-muted" aria-label="更多结果操作" title="更多结果操作" :aria-expanded="moreOpen" @click.stop="moreOpen=!moreOpen"><i class="pi pi-ellipsis-h"/></button>
     </div>
     <p v-if="error" role="alert" class="break-words rounded-lg border border-subtle bg-input/50 px-3 py-2 text-xs leading-relaxed text-content">{{ error }}</p>
   </div>

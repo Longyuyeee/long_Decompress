@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { useAppStore } from '../app'
 
@@ -150,5 +151,33 @@ describe('App Store Explorer context menu synchronization', () => {
     expect(mocks.invoke).not.toHaveBeenCalledWith('set_auto_start', expect.anything())
     expect(mocks.invoke).not.toHaveBeenCalledWith('check_auto_start')
     expect(JSON.parse(localStorage.getItem('app-settings') || '{}').autoStart).toBe(true)
+  })
+
+  it('restores a signature theme from portable settings and switches without leftover classes', async () => {
+    localStorage.setItem('app-settings', JSON.stringify({ theme: 'forest', accentColor: '#6bd4a1' }))
+    const store = useAppStore()
+    await nextTick()
+    expect(store.theme).toBe('forest')
+    expect(document.documentElement.classList.contains('mode-forest')).toBe(true)
+    store.theme = 'glacier'
+    await nextTick()
+    expect(document.documentElement.classList.contains('mode-forest')).toBe(false)
+    expect(document.documentElement.dataset.colorScheme).toBe('light')
+    store.saveSettingsToStorage()
+    expect(JSON.parse(localStorage.getItem('app-settings')!).theme).toBe('glacier')
+    store.resetSettings()
+    expect(store.theme).toBe('auto')
+    expect(store.accentColor).toBe('#0ea5e9')
+  })
+
+  it('restores theme and accent when only backend settings survive an update', async () => {
+    const fallback = mocks.invoke.getMockImplementation()!
+    mocks.invoke.mockImplementation((command: string) => command === 'load_app_settings'
+      ? Promise.resolve(JSON.stringify({ theme: 'obsidian', accentColor: '#d9b76f' })) : fallback(command))
+    const store = useAppStore()
+    await new Promise(resolve => setTimeout(resolve, 0))
+    expect(store.theme).toBe('obsidian')
+    expect(store.accentColor).toBe('#d9b76f')
+    expect(localStorage.getItem('app-theme')).toBe('obsidian')
   })
 })

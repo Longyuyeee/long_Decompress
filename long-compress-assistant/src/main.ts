@@ -7,9 +7,12 @@ import { translations } from './i18n'
 
 import './assets/css/main.css'
 import './styles/design-tokens.css'
+import './styles/signature-themes.css'
 import './styles/accessibility.css'
 import './styles/responsive-utilities.css'
 import './styles/animation-utilities.css'
+import './styles/module-workspaces.css'
+import './styles/workspace-density.css'
 import 'primeicons/primeicons.css'
 import { installOverflowTitles } from './utils/overflowTitle'
 

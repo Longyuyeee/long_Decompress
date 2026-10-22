@@ -1,0 +1,401 @@
+{
+  "startedAt": "2026-10-22T06:40:49.292Z",
+  "binarySha256": "1b1b855d291db67bd5a5dad89a4fa5107ea246602d6a33419c3d7d38aeb7e0b5",
+  "checks": [
+    {
+      "shortcut": "Ctrl+Shift+D",
+      "route": "/compare"
+    },
+    {
+      "shortcut": "Ctrl+Shift+L",
+      "route": "/library"
+    },
+    {
+      "shortcut": "Ctrl+Shift+W",
+      "route": "/workflows"
+    },
+    "shortcuts-do-not-navigate-while-typing",
+    "all-eleven-main-pages-and-media-modes-wide-narrow",
+    "password-format-disclosure-and-readable-text",
+    "shared-compression-options-and-update-progress",
+    "all-navigation-labels-readable-without-scrollbar"
+  ],
+  "layouts": [
+    {
+      "name": "Decompress",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 800,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "Decompress",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "Compress",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 800,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "Compress",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "SpecialCompression",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 800,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "SpecialCompression",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "ArchiveBrowser",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 800,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "ArchiveBrowser",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "SourceComparison",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 800,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "SourceComparison",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "Workflows",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 800,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "Workflows",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "ArchiveLibrary",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 800,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "ArchiveLibrary",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "Vault",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 800,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "Vault",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "FileIntegrity",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 800,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "FileIntegrity",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "History",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 800,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "History",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "Settings",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 800,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "Settings",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "themes",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 800,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "themes",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "format-counts",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 800,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "format-counts",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "password-formats",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "special-video",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 800,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "special-video",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "special-pdf",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 800,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "special-pdf",
+      "clippedLabels": [],
+      "dialog": null,
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "compression-options",
+      "clippedLabels": [],
+      "dialog": {
+        "height": 457.59375,
+        "width": 712,
+        "x": 24,
+        "y": 31.203125
+      },
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "update-progress",
+      "clippedLabels": [],
+      "dialog": {
+        "height": 251.5859375,
+        "width": 712,
+        "x": 24,
+        "y": 134.203125
+      },
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "Decompress-1100x800.png",
+    "Decompress-760x520.png",
+    "Compress-1100x800.png",
+    "Compress-760x520.png",
+    "SpecialCompression-1100x800.png",
+    "SpecialCompression-760x520.png",
+    "ArchiveBrowser-1100x800.png",
+    "ArchiveBrowser-760x520.png",
+    "SourceComparison-1100x800.png",
+    "SourceComparison-760x520.png",
+    "Workflows-1100x800.png",
+    "Workflows-760x520.png",
+    "ArchiveLibrary-1100x800.png",
+    "ArchiveLibrary-760x520.png",
+    "Vault-1100x800.png",
+    "Vault-760x520.png",
+    "FileIntegrity-1100x800.png",
+    "FileIntegrity-760x520.png",
+    "History-1100x800.png",
+    "History-760x520.png",
+    "Settings-1100x800.png",
+    "Settings-760x520.png",
+    "themes-1100x800.png",
+    "themes-760x520.png",
+    "format-counts-1100x800.png",
+    "format-counts-760x520.png",
+    "password-formats-760x520.png",
+    "special-video-1100x800.png",
+    "special-video-760x520.png",
+    "special-pdf-1100x800.png",
+    "special-pdf-760x520.png",
+    "compression-options-760x520.png",
+    "update-progress-760x520.png"
+  ],
+  "completedAt": "2026-10-22T06:41:40.039Z"
+}

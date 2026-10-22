@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import HelpHint from '@/components/ui/HelpHint.vue'
 import {computed,ref,watchEffect} from 'vue'
 import {open} from '@tauri-apps/api/dialog'
 import {useZipEditStore} from '@/stores/zipEdit'
@@ -19,7 +20,7 @@ async function accept(origin:string,locate=false){
 <template>
  <section v-if="sources.length&&session" class="space-y-3 min-w-0" data-testid="comparison-package-sources">
   <strong class="block text-xs text-content">组包来源 · {{ sources.length }} 份</strong>
-  <p class="text-xs leading-relaxed text-muted">按草稿引用读取，不保存解密文件。来源变化后重新读取并确认；不会加入新出现的文件。重启后请补充密码。</p>
+  <span class="context-help"><HelpHint label="草稿来源说明">按草稿引用读取，不保存解密文件。来源变化后重新读取并确认；不会加入新出现的文件。重启后请补充密码。</HelpHint></span>
   <article v-for="(source,index) in sources" :key="source.path" class="min-w-0 space-y-3 rounded-xl border border-subtle bg-input/20 p-3" :data-package-source="source.path">
    <div class="flex min-w-0 items-start gap-2"><i :class="source.kind==='zip'?'pi pi-box':'pi pi-folder'" class="mt-1 shrink-0 text-primary"/><strong class="min-w-0 break-words text-xs [overflow-wrap:anywhere]" :title="source.path">{{ source.path.replace(/\\/g,'/').split('/').pop() }}</strong><span class="ml-auto shrink-0 text-xs text-muted">{{ session.drafts.filter(row=>row.comparison?.source.path===source.path).length }} 项</span></div><details class="min-w-0 text-xs text-muted"><summary class="cursor-pointer">查看来源路径</summary><p class="mt-2 break-words leading-relaxed [overflow-wrap:anywhere]">{{ source.path }}</p></details>
    <p v-if="session.drafts.some(row=>row.comparison?.source.path===source.path&&session!.inputIssues[row.id])" class="text-xs text-amber-600">此来源已变化、缺失或不可访问，请处理后继续。</p>

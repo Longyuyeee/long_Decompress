@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { computed, ref, watch } from 'vue'
 import Modal from '@/components/ui/Modal.vue'
 import ZipPasswordEncodingField from '@/components/ui/ZipPasswordEncodingField.vue'
@@ -21,7 +22,7 @@ async function choose(entry: PasswordEntry) { try { password.value = await vault
       <div class="rounded-xl border border-subtle bg-input/30 p-3"><strong class="block break-all text-sm">{{ source.name }}</strong><p class="mt-2 break-all text-xs text-muted">{{ source.path }}</p></div>
       <label class="block text-xs font-bold text-muted">来源密码<div class="mt-2 flex min-w-0 gap-2"><input v-model="password" type="password" autocomplete="off" class="library-password min-w-0 flex-1" data-testid="library-password" placeholder="填写密码，或从保险箱选择" :disabled="busy"><button class="library-password text-primary" data-testid="library-vault" :disabled="busy" @click="openVault">保险箱</button></div></label>
       <ZipPasswordEncodingField v-if="supportsZipPasswordEncoding(source.path) || supportsZipPasswordEncoding(source.path, source.format)" v-model="encoding" :source-path="source.path" :source-format="source.format" label="来源密码编码" test-id="library-password-encoding" :disabled="busy" />
-      <p class="text-xs leading-relaxed text-muted">密码只在当前应用会话使用，不写入资料库或索引。重新打开应用后，需要再次填写或从保险箱选择。读取加密内容可能需要一些时间，可以从资源库停止。</p>
+      <span class="context-help"><HelpHint label="资料密码说明">密码只在当前应用会话使用，不写入资料库或索引。重新打开应用后，需要再次填写或从保险箱选择。读取加密内容可能需要一些时间，可以从资源库停止。</HelpHint></span>
       <p v-if="error" class="break-all text-xs leading-relaxed text-red-500" role="alert" data-testid="library-credential-error">{{ error }}</p>
     </div>
     <template #footer><button v-if="busy" class="library-password" data-testid="library-credential-stop" @click="emit('stop')">停止读取</button><button class="library-password" :disabled="busy" @click="emit('close')">返回</button><button class="library-password bg-primary text-white" data-testid="library-credential-apply" :disabled="busy" @click="emit('apply', { password, encoding })">{{ busy ? '正在读取…' : action || '读取并更新索引' }}</button></template>

@@ -1,0 +1,34 @@
+/* Full surface palettes. Accent remains independently adjustable in Settings. */
+.mode-glacier {
+  --bg-main:#eef7fc;--bg-card:#f7fcff;--bg-input:#e3eff5;--bg-modal:#f8fcff;
+  --text-base:#173d51;--text-secondary:#315a6c;--text-muted:#486979;--text-dim:#597989;
+  --border-subtle:rgba(42,105,135,.19);--shadow-base:0 10px 28px rgba(35,108,143,.09);--shadow-elevated:0 18px 40px rgba(35,108,143,.15);
+  --signature-sidebar:linear-gradient(155deg,#f7fcff,#dceff5);
+  --signature-backdrop:radial-gradient(ellipse at 95% 0%,rgba(97,196,219,.16),transparent 53%),linear-gradient(145deg,transparent 45%,rgba(255,255,255,.55) 85%);
+}
+.mode-forest {
+  --bg-main:#0d1a17;--bg-card:#152820;--bg-input:#102019;--bg-modal:#192e25;
+  --text-base:#e3f0df;--text-secondary:#c6dfce;--text-muted:#adccbb;--text-dim:#92b49f;
+  --border-subtle:rgba(148,194,142,.2);--shadow-base:0 16px 35px rgba(0,15,8,.35);--shadow-elevated:0 24px 48px rgba(0,15,8,.5);
+  --signature-sidebar:linear-gradient(160deg,#1b3024,#0c1c17);
+  --signature-backdrop:radial-gradient(ellipse at 100% 0%,rgba(160,184,96,.12),transparent 48%),radial-gradient(ellipse at 0% 100%,rgba(37,112,86,.16),transparent 55%);
+}
+.mode-nebula {
+  --bg-main:#171226;--bg-card:#241c38;--bg-input:#1b152d;--bg-modal:#2b2041;
+  --text-base:#f1e9ff;--text-secondary:#dbceee;--text-muted:#c1afd8;--text-dim:#aa98c3;
+  --border-subtle:rgba(191,151,233,.22);--shadow-base:0 10px 38px rgba(25,4,51,.45),0 0 24px rgba(176,97,211,.06);--shadow-elevated:0 20px 48px rgba(25,4,51,.6);
+  --signature-sidebar:linear-gradient(170deg,#332344,#201a38 60%,#211a31);
+  --signature-backdrop:radial-gradient(ellipse at 85% 5%,rgba(193,92,167,.17),transparent 48%),radial-gradient(ellipse at 10% 95%,rgba(106,99,209,.2),transparent 55%);
+}
+.mode-obsidian {
+  --bg-main:#141414;--bg-card:#20201e;--bg-input:#181817;--bg-modal:#272622;
+  --text-base:#f1eadb;--text-secondary:#ddd3bf;--text-muted:#c3b79f;--text-dim:#aa9d85;
+  --border-subtle:rgba(196,170,111,.23);--shadow-base:0 12px 30px rgba(0,0,0,.4);--shadow-elevated:0 22px 42px rgba(0,0,0,.55);
+  --signature-sidebar:linear-gradient(165deg,#2a2720,#191917 60%);
+  --signature-backdrop:radial-gradient(ellipse at 100% 0%,rgba(173,137,65,.08),transparent 52%),repeating-linear-gradient(135deg,transparent 0 29px,rgba(206,178,117,.025) 29px 30px);
+}
+:is(.mode-glacier,.mode-forest,.mode-nebula,.mode-obsidian) .app-sidebar{background:var(--signature-sidebar)}
+:is(.mode-glacier,.mode-forest,.mode-nebula,.mode-obsidian) .app-main{background-image:var(--signature-backdrop)}
+:is(.mode-glacier,.mode-forest,.mode-nebula,.mode-obsidian) .app-main::before{background:none}
+html[data-color-scheme="dark"] .schedule-form{color-scheme:dark}
+:is(.mode-glacier,.mode-forest,.mode-nebula,.mode-obsidian) .bg-primary.text-white{color:var(--accent-ink)}

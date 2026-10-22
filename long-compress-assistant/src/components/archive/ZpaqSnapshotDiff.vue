@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { computed, onUnmounted, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import { listen } from '@tauri-apps/api/event'
@@ -95,7 +96,7 @@ const date=(snapshot:ZpaqSnapshot)=>`第 ${snapshot.version} 版 · ${snapshotDa
         <label class="min-w-0 text-xs font-semibold">较新版本<select v-model.number="to" class="diff-input mt-1 w-full" :disabled="busy" data-testid="zpaq-diff-after" @change="clear"><option v-for="s in history.snapshots" :key="s.version" :value="s.version">{{ date(s) }}</option></select></label>
       </div>
       <div class="flex min-w-0 flex-wrap items-center gap-2"><button class="diff-button bg-primary text-white" type="button" data-testid="zpaq-diff-compare" :disabled="busy" @click="compare()">比较目录</button><button v-if="request" class="diff-button" type="button" data-testid="zpaq-diff-stop" @click="stop">停止比较</button><span v-if="request" class="min-w-0 text-xs text-primary">{{ phaseText }}<template v-if="progress?.phase.endsWith('hash')"> · {{ formatFileSize(progress.processedBytes) }} / {{ formatFileSize(progress.totalBytes) }}</template></span></div>
-      <p class="rounded-xl border border-primary/15 bg-primary/5 p-3 text-xs leading-relaxed text-muted">先比较目录和内容片段引用，引用变化标为“内容候选”，不当作逐字节结论。精确核对会依次临时提取两版所选候选，计算 SHA256，支持停止并清理临时文件。原包不改动。</p>
+      <span class="context-help"><HelpHint label="快照核对说明">先比较目录和内容片段引用，引用变化标为“内容候选”，不当作逐字节结论。精确核对会依次临时提取两版所选候选，计算 SHA256，支持停止并清理临时文件。原包不改动。</HelpHint></span>
       <p v-if="error" role="alert" class="break-words rounded-lg bg-red-500/5 p-2 text-xs text-red-500">{{ error }}</p>
       <p v-if="notice" role="status" class="break-words text-xs text-primary" data-testid="zpaq-diff-notice">{{ notice }}</p>
       <template v-if="result">
