@@ -1,0 +1,115 @@
+{
+  "version": "1.6.15",
+  "applicationSha256": "f23ed8108a6daa597e77bff7fe03eaae565668e0dd144a4f78e47e5d71db9de5",
+  "helperSha256": "62d4c997d42f0e29530c8aca68d25b4e126a8fb0b53371779335a2d84e816fa1",
+  "controlled": true,
+  "newProducerOriginal": false,
+  "checks": [
+    {
+      "name": "single image opens in the original equal-pane preview",
+      "png": [
+        320,
+        240
+      ],
+      "sameDualPane": true,
+      "solidSharedStream": true
+    },
+    {
+      "name": "existing reader turns pages and skips bad content",
+      "reader": true,
+      "skip": true,
+      "zoom": true,
+      "selectedImageOverTextLimit": true
+    },
+    {
+      "name": "current page extraction retains the exact selected EGG path",
+      "currentPageOnly": true,
+      "sha256": "70ad46ff1f1def1d2420bb9c01702ced9de2eb9b2ba4fc949aa46423f94a111e"
+    },
+    {
+      "name": "complete native middle member uses the single and continuous production routes",
+      "controlledNative": true,
+      "bytes": 2097152,
+      "sha256": "70ad46ff1f1def1d2420bb9c01702ced9de2eb9b2ba4fc949aa46423f94a111e",
+      "singleAndReader": true
+    },
+    {
+      "name": "bad shared dependencies, cancelled reads and stale sources never publish partial pixels",
+      "errors": {
+        "shared-crc": "[archive-inspection:damaged] EGG 固实流处理失败：EGG solid block CRC mismatch",
+        "encrypted-dependency": "EGG 加密固实图片暂不支持预览，请先提取后打开",
+        "shared-output-limit": "EGG 固实图片预览的完整共享压缩数据和解码总量须分别不超过 64 MiB，请先提取后打开"
+      },
+      "displayed": "无法预览\nEGG 固实流处理失败：EGG solid block CRC mismatch",
+      "changed": "IMAGE_READER_CHANGED|来源无法确认，请返回刷新来源后重新阅读: [archive-inspection:damaged] EGG 末卷缺少结束标记，文件可能下载不完整",
+      "cancelled": "IMAGE_READER_CANCELLED|已停止读取图片"
+    }
+  ],
+  "layouts": [
+    {
+      "name": "image-wide",
+      "closeVisible": true,
+      "dialog": {
+        "height": 467.390625,
+        "width": 832,
+        "x": 134,
+        "y": 91.3046875
+      },
+      "height": 650,
+      "image": {
+        "height": 240,
+        "width": 320
+      },
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "image-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 401.984375,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 59.0078125
+      },
+      "height": 520,
+      "image": {
+        "height": 240,
+        "width": 320
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    },
+    {
+      "name": "reader-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 504,
+        "width": 744,
+        "x": 8,
+        "y": 8
+      },
+      "height": 520,
+      "image": {
+        "height": 256,
+        "width": 256
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\egg-solid-image-1615\\5338ffb7-9d71-46d6-9a16-7000ae5ebbca",
+  "passed": true
+}

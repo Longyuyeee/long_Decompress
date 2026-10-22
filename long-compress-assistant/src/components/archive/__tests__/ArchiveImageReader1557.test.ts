@@ -19,3 +19,21 @@ it('reader1557 component skips unsupported images and offers exact original extr
 it('reader1557 component shows native progress and stopping cancels only its registered image request',async()=>{
  let complete!:(value:any)=>void;mocks.invoke.mockImplementation(async(command)=>command==='read_archive_image'?new Promise(resolve=>complete=resolve):undefined);const w=mount(ArchiveImageReader,{props,global:{stubs:{Teleport:true}}});await flushPromises();const call=mocks.invoke.mock.calls.find(([c])=>c==='read_archive_image')!;mocks.callback({payload:{requestId:call[1].requestId,progress:{phase:'reading',processedBytes:1024,totalBytes:2048}}});await flushPromises();expect(w.get('[data-testid="reader-progress"]').text()).toContain('1.0 KiB');await w.get('[data-testid="reader-stop"]').trigger('click');expect(mocks.invoke).toHaveBeenCalledWith('cancel_archive_browse',{browseId:call[1].requestId});expect(w.get('[data-testid="reader-error"]').text()).toContain('读取已停止');complete(preview('pages/2.png'));await flushPromises();expect(w.find('[data-testid="reader-image"]').exists()).toBe(false);await w.get('[role="dialog"]').trigger('keydown',{key:'Escape'});expect(w.emitted('close')).toHaveLength(1);w.unmount()
 })
+
+it('egg1615 solid reader loads only demanded pages and validates cached pages without speculative shared reads',async()=>{
+ const w=mount(ArchiveImageReader,{props:{...props,format:'EGG'},global:{stubs:{Teleport:true}}});await flushPromises()
+ const reads=()=>mocks.invoke.mock.calls.filter(([cmd])=>cmd==='read_archive_image')
+ expect(reads()).toHaveLength(1);expect(reads()[0][1].entryPath).toBe('pages/2.png')
+ await w.get('[data-testid="reader-next"]').trigger('click');await flushPromises();expect(reads()).toHaveLength(2);expect(reads()[1][1].entryPath).toBe('pages/10.png')
+ await w.get('[data-testid="reader-previous"]').trigger('click');await flushPromises();expect(reads()).toHaveLength(2)
+ expect(mocks.invoke).toHaveBeenCalledWith('check_image_reader_source',expect.objectContaining({revision:'version'}));expect(w.get('[data-testid="reader-current-path"]').text()).toBe('pages/2.png');w.unmount()
+})
+it('egg1615 shared read has an explicit wait message and stopping discards late pixels',async()=>{
+ let finish!:(value:any)=>void
+ mocks.invoke.mockImplementation(async cmd=>cmd==='read_archive_image'?new Promise(resolve=>finish=resolve):undefined)
+ const w=mount(ArchiveImageReader,{props:{...props,format:'EGG'},global:{stubs:{Teleport:true}}});await flushPromises()
+ expect(w.get('[data-testid="reader-progress"]').text()).toContain('正在读取固实包共享内容')
+ const request=mocks.invoke.mock.calls.find(([cmd])=>cmd==='read_archive_image')![1]
+ await w.get('[data-testid="reader-stop"]').trigger('click');expect(mocks.invoke).toHaveBeenCalledWith('cancel_archive_browse',{browseId:request.requestId})
+ finish(preview('pages/2.png'));await flushPromises();expect(w.find('[data-testid="reader-image"]').exists()).toBe(false);w.unmount()
+})

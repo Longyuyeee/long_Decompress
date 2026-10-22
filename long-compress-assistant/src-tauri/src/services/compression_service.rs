@@ -1569,8 +1569,12 @@ impl CompressionService {
             if let Some(version)=revision.as_deref(){crate::services::image_reader::check_source(Path::new(file_path),version)?;}
             let listing=crate::services::egg_engine::browse(Path::new(file_path),control.flag.clone()).await?;
             let selected=listing.entries.iter().find(|e|e.path==entry&&!e.is_dir).context("所选 EGG 图片已不存在，请刷新目录")?;
-            anyhow::ensure!(selected.compressed_size.is_some(),"EGG 固实条目暂不支持图片预览，请先提取后打开");
             anyhow::ensure!(selected.size<=8*1024*1024,"EGG 图片超过 8 MiB 预览范围，请先提取后打开");
+            if selected.compressed_size.is_none(){
+                anyhow::ensure!(!listing.encrypted && !listing.entries.iter().any(|e|e.encrypted),"EGG 加密固实图片暂不支持预览，请先提取后打开");
+                anyhow::ensure!(listing.total_compressed_size<=64*1024*1024 && listing.total_uncompressed_size<=64*1024*1024,"EGG 固实图片预览的完整共享压缩数据和解码总量须分别不超过 64 MiB，请先提取后打开");
+                return crate::services::archive_preview::preview_archive_image_bound_at(Path::new(file_path),entry,None,encoding,None,control.clone(),revision.clone()).await;
+            }
             anyhow::ensure!(selected.compressed_size.unwrap()<=64*1024*1024,"EGG 所选图片压缩数据超过 64 MiB，请先提取后打开");
             let supplied=password.filter(|p|!p.is_empty());
             let candidates:Vec<Option<String>>=if let Some(p)=supplied{vec![Some(p.to_string())]}else if !selected.encrypted{vec![None]}else{self.password_book_candidates().await.unwrap_or_default().into_iter().map(|(_,_,key)|Some(key)).collect()};

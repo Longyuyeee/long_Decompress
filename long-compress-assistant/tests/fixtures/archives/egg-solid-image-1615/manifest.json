@@ -1,0 +1,96 @@
+{
+  "version": "1.6.15",
+  "controlled": true,
+  "historicalProducer": false,
+  "description": "Two blocks of one shared Deflate/LZMA stream. Only selected image retained. All pixels are self-authored; native headers and shared framing controlled.",
+  "images": [
+    {
+      "path": "gallery/01-cover.png",
+      "bytes": 51773,
+      "sha256": "4caaa6a30b6523e24d1f57ab3e4ae54ce0465885ed246da539cfc217740e57b7"
+    },
+    {
+      "path": "gallery/02-grid.bmp",
+      "bytes": 2097152,
+      "sha256": "70ad46ff1f1def1d2420bb9c01702ced9de2eb9b2ba4fc949aa46423f94a111e"
+    }
+  ],
+  "exactLimitSha256": "bb949956bd5e42dad0491e2f190e55ab0f377ad8a6ca176ed452b4a7a9451bee",
+  "files": [
+    {
+      "name": "controlled-native.vol1.egg",
+      "bytes": 76196,
+      "sha256": "7260f4a13a7b67ad667ae6294cda74b4a531398fe9c67ddc2756251a51790b05"
+    },
+    {
+      "name": "controlled-native.vol2.egg",
+      "bytes": 76197,
+      "sha256": "f77af7dff8f032058be2234a256f0386854ef1d56da1041bf6df760c6d4cdb04"
+    },
+    {
+      "name": "controlled-native.vol3.egg",
+      "bytes": 76197,
+      "sha256": "f7f964a9e45ac1a5f4ea764edf66fcd0d15762945841344cd903d124041f1d61"
+    },
+    {
+      "name": "deflate.egg",
+      "bytes": 228495,
+      "sha256": "dfdbd7b2343858c0b3580927cfabec0b89f0325c71eefeb0d7ba484cfe1992b0"
+    },
+    {
+      "name": "dimensions.egg",
+      "bytes": 39594,
+      "sha256": "b4274e4be5a98a8c80508f4b534091baa01f28d814ecea27dd71f51389ae29b4"
+    },
+    {
+      "name": "encrypted-dependency.egg",
+      "bytes": 228519,
+      "sha256": "d943ab1c2c8743d288adad73bd26f3f7d82bab8b63883518a4f46fb196ea7012"
+    },
+    {
+      "name": "exact-limit.egg",
+      "bytes": 195575,
+      "sha256": "6d399700a9362ae99868af8c1f59a49c6db86e172b33269d5f49e950385a95c7"
+    },
+    {
+      "name": "lzma.egg",
+      "bytes": 178505,
+      "sha256": "b9fdff6c2e48b52d52728275e7c25ab3e7b1de2c4a1c6da435ef47e93d2b2a6c"
+    },
+    {
+      "name": "oversize.egg",
+      "bytes": 195581,
+      "sha256": "13dcef44c8f5a886364b34b4f0454ffc382fe11910608f7785f2cc6be61f41b5"
+    },
+    {
+      "name": "shared-crc.egg",
+      "bytes": 228495,
+      "sha256": "39709a7d05bf47ec80b84307140247c7bcd071642d4ca0f6dac0551ac2b38ad0"
+    },
+    {
+      "name": "shared-output-limit.egg",
+      "bytes": 228495,
+      "sha256": "fe93d82e343343ad727076e85641ee1b3b6fe25df443cd6d41e6cbddccad9da6"
+    },
+    {
+      "name": "trailing.egg",
+      "bytes": 228496,
+      "sha256": "ebaa6e82682a4a42d7b1558d427b0e13493d3c5868c8394c26df348549480339"
+    },
+    {
+      "name": "truncated.egg",
+      "bytes": 228492,
+      "sha256": "bfc2971bb535a4cee7da4add601b2d80e8ad51507cd7220cfec2fb8800832edc"
+    },
+    {
+      "name": "ui.egg",
+      "bytes": 228495,
+      "sha256": "dfdbd7b2343858c0b3580927cfabec0b89f0325c71eefeb0d7ba484cfe1992b0"
+    },
+    {
+      "name": "unknown-dependency.egg",
+      "bytes": 228495,
+      "sha256": "a1abd1bb2c724207665dd540a30b4f8ccb4811efb4198b85a36fc793b2c2012d"
+    }
+  ]
+}

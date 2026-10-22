@@ -1,0 +1,30 @@
+{
+  "version": "1.6.15",
+  "applicationSha256": "f23ed8108a6daa597e77bff7fe03eaae565668e0dd144a4f78e47e5d71db9de5",
+  "helperSha256": "62d4c997d42f0e29530c8aca68d25b4e126a8fb0b53371779335a2d84e816fa1",
+  "helperVersion": "0.7.0",
+  "builds": {
+    "helper": true,
+    "vueTypesAndVite": true,
+    "shellExtension": true,
+    "nativeDesktopCandidate": true,
+    "eightVersionIdentitiesAndEngineInventory": true
+  },
+  "localCandidate": {
+    "features": [
+      "custom-protocol",
+      "desktop-e2e"
+    ],
+    "optLevel": 1,
+    "lto": false,
+    "formalReleaseConfigUnchanged": true
+  },
+  "checks": {
+    "rustNew": 4,
+    "frontendRelatedDifferentPassed": 6,
+    "helperNewOperation": 15,
+    "actualDesktopGroups": 5,
+    "viewedScreenshots": 3
+  },
+  "reuse": "Existing full codec/password/native-volume matrices, installation and real disk-full evidence not repeated. Reader component changed: three existing plus two new cases and one new modal case."
+}
