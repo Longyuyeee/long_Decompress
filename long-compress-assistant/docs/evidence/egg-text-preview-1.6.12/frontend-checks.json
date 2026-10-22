@@ -1,0 +1,214 @@
+{
+  "uniquePassed": 52,
+  "allPassed": true,
+  "tests": [
+    {
+      "name": "useArchiveBrowserCapabilities uses backend workspace policy for nested and preview decisions",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView library1547 waits for the initial engine capabilities before deciding preview support",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView library1547 focuses just the matching internal file and opens the original preview",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView library1547 asks for output and extracts only the hit; destination=null",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView library1547 asks for output and extracts only the hit; destination=C:/recovered",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView library1547 rejects stale source before preview or extraction and missing hits never select everything",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView zpaq1530 switches snapshots with empty selection and keeps preview, refresh, extraction and conversion bound",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView clears only its own failed-browse message after successful password correction; unrelated=false",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView clears only its own failed-browse message after successful password correction; unrelated=true",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView uses cp932 for preview, refresh, open and selected extraction without changing the source password",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView uses cp936 for preview, refresh, open and selected extraction without changing the source password",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView uses cp950 for preview, refresh, open and selected extraction without changing the source password",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView gives a nested ZIP its own automatic input choice and restores the parent choice on return",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView does not show a late preview after changing its input encoding",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView EGG text uses the existing modal and source context while images stay disabled",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView EGG closing a pending preview cancels it and ignores late content",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView EGG preview errors give the cause without internal classification tags",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView ALZ large text explicitly shows partial content without whole-file verification",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView ALZ prefix scan limit gives an extraction hint without internal I/O markers",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView ALZ stale preview asks to refresh without exposing an internal marker",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView ALZ text and image open inside the existing preview with a bound source",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView ALZ closes its in-flight native preview and ignores a late result",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView ALZ image close cancels its own request and never shows a late image",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView keeps parent navigation actions inside the wrapping header",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView loads structured entries and extracts only the checked files",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView shows unknown Z expanded size without treating the single file as empty",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView cancels an active archive metadata read and shows a clear idle result",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView shows object-specific context actions without changing selection",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView opens ordinary entries with the Windows default application route",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView keeps active content unopened until the explicit warning is confirmed",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView routes context extraction and details through existing safe entry semantics",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView provides keyboard equivalents for context menu actions",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView uses file-manager focus, multiselect and directory navigation semantics",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView filters entries by directory, search text and type without horizontal overflow containers",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView renders archive folders as a collapsible hierarchy instead of full-path rows",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView previews a bounded raster entry without changing its selection",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView explains the exact native preview error without relabeling damage: provided password is incorrect",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView explains the exact native preview error without relabeling damage: CRC32 checksum failed",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView explains the exact native preview error without relabeling damage: unsupported compression method",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView previews bounded decoded text and explains internal versus default opening",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView keeps preview disabled when the archive route cannot prove bounded reading",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView enters nested archives, preserves outer state, and enforces the three-layer UI boundary",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView does not inherit an outer password when an inner archive requires its own password",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView ignores a late inner browse result after the user returns to the outer archive",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView reader1557 passes the current source revision to reading and locates without changing selection",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView reader1557 actual reader mounts from the browser and closed readers do not steal password focus",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView reader1558 recent reading reloads the canonical source and passes path-based resume even if original page is missing=false",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView reader1558 recent reading reloads the canonical source and passes path-based resume even if original page is missing=true",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView reader1558 current single image keeps its exact reference in the original immediate extraction flow",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView dual panes use independent sources, passwords and selections and extract to the opposite directory",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView dual-pane text opens internally and keyboard refresh affects only the active pane",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView closing a loading archive pane ignores the late result and never opens the requested preview",
+      "status": "passed"
+    }
+  ]
+}

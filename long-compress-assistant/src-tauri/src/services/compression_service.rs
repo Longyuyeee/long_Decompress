@@ -1529,6 +1529,34 @@ impl CompressionService {
         }
     }
 
+    /// A password candidate is checked only against the bounded selected text.
+    pub(crate) async fn preview_egg_text_with_vault(&self,file_path:&str,entry:&str,password:Option<&str>,encoding:Option<ZipPasswordEncoding>,revision:Option<String>)->Result<crate::services::archive_preview::ArchiveTextPreview>{
+        let work=async{
+            self.check_cancellation()?;
+            if let Some(version)=revision.as_deref(){crate::services::image_reader::check_source(Path::new(file_path),version)?;}
+            let listing=crate::services::egg_engine::browse(Path::new(file_path),self.cancellation_flag.clone()).await?;
+            let selected=listing.entries.iter().find(|e|e.path==entry&&!e.is_dir).context("所选 EGG 文本已不存在，请刷新目录")?;
+            anyhow::ensure!(selected.compressed_size.is_some(),"EGG 固实条目暂不支持文本预览，请先提取后打开");
+            anyhow::ensure!(selected.size<=1024*1024,"EGG 文本预览支持 1 MiB 以内的完整文件，请先提取后打开");
+            anyhow::ensure!(selected.compressed_size.unwrap()<=64*1024*1024,"EGG 所选文本压缩数据超过 64 MiB，请先提取后打开");
+            let supplied=password.filter(|p|!p.is_empty());
+            let candidates:Vec<Option<String>>=if let Some(p)=supplied{vec![Some(p.to_string())]}else if !selected.encrypted{vec![None]}else{self.password_book_candidates().await.unwrap_or_default().into_iter().map(|(_,_,key)|Some(key)).collect()};
+            anyhow::ensure!(!candidates.is_empty(),"EGG 所选文本需要密码，请填写密码后重试");
+            for key in candidates{
+                self.check_cancellation()?;
+                match crate::services::archive_preview::preview_archive_text_controlled_at(Path::new(file_path),entry,key.as_deref(),encoding,None,self.cancellation_flag.clone(),revision.clone()).await{
+                    Ok(value)=>return Ok(value),
+                    Err(error) if supplied.is_none()&&selected.encrypted&&{let detail=format!("{error:#}");detail.contains("[egg-password]")||detail.contains("[archive-inspection:ambiguous-data]")||detail.contains("[egg-password-encoding]")}=>continue,
+                    Err(error)=>return Err(error),
+                }
+            }
+            anyhow::bail!("密码保险箱未能读取所选 EGG 文本，请核对密码与来源完整性，或先提取后打开")
+        };
+        match tokio::time::timeout(std::time::Duration::from_secs(30),work).await{
+            Ok(value)=>value,Err(_)=>{self.cancellation_flag.store(true,Ordering::Release);anyhow::bail!("EGG 文本预览超过 30 秒，已停止；请先提取后打开")}
+        }
+    }
+
     fn recommended_dictionary(file_path: &str) -> Vec<String> {
         let file_name = Path::new(file_path)
             .file_name()

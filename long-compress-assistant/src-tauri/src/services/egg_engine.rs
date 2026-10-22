@@ -19,7 +19,9 @@ async fn run(op:&str,path:&Path,pwd:Option<&str>,output:Option<&Path>,selected:&
     let tool=command_path().context("[archive-inspection:engine-unavailable] 缺少随附 EGG 读取引擎，请修复安装")?;
     let mut cmd=crate::utils::process::async_command(tool);cmd.arg(op).arg(group.first);
     let input=serde_json::to_vec(&serde_json::json!({"password":pwd,"output":output,"selected":selected,"preserve_timestamps":preserve_timestamps,"encoding":source_encoding(encoding)?}))?;
-    let result=crate::utils::process::cancellable_archive_output_with_stdin(&mut cmd,&cancelled,Duration::from_secs(24*60*60),Some(input)).await.context("EGG 引擎取消或运行失败")?;
+    let result=if op=="preview-text" {
+        crate::utils::process::cancellable_output_with_stdin(&mut cmd,&cancelled,Duration::from_secs(30),Some(input)).await
+    } else {crate::utils::process::cancellable_archive_output_with_stdin(&mut cmd,&cancelled,Duration::from_secs(24*60*60),Some(input)).await}.context("EGG 引擎取消或运行失败")?;
     let response:serde_json::Value=serde_json::from_slice(&result.stdout).context("EGG 引擎没有返回有效结果")?;
     if let Some(e)=response.get("error").and_then(|v|v.as_str()){anyhow::bail!("{e}")}
     anyhow::ensure!(result.status.success(),"EGG 引擎异常退出：{}",String::from_utf8_lossy(&result.stderr));
@@ -48,6 +50,18 @@ pub async fn try_password(path:&Path,pwd:&str,options:&DecompressOptions,cancell
 pub async fn extract(path:&Path,output:&Path,pwd:Option<&str>,options:&DecompressOptions,cancelled:Arc<AtomicBool>)->Result<()>{
     let d=plan(path,options,cancelled.clone()).await?;let selected=d.entries.iter().map(|e|e.path.clone()).collect::<Vec<_>>();
     run("extract",path,pwd,Some(output),&selected,cancelled,options.preserve_timestamps,options.zip_password_encoding).await?;Ok(())
+}
+
+/// Complete selected non-solid text, validated in memory by the bounded helper.
+pub async fn preview_text_entry(path:&Path,entry:&str,password:Option<&str>,encoding:Option<ZipPasswordEncoding>,cancelled:Arc<AtomicBool>)->Result<(Vec<u8>,u64)>{
+    anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Acquire),"EGG 文本预览已取消");
+    let entry=super::archive_entry_open::normalize_safe_entry_path(entry)?;
+    let value=run("preview-text",path,password,None,&[entry],cancelled.clone(),false,encoding).await?;
+    let bytes:Vec<u8>=serde_json::from_value(value["bytes"].clone())?;
+    let size=value["totalSize"].as_u64().context("EGG 文本大小缺失")?;
+    anyhow::ensure!(size<=1024*1024&&bytes.len() as u64==size&&value["inputBytes"].as_u64().is_some_and(|n|n<=64*1024*1024),"EGG 文本预览大小不符，请刷新后重试");
+    anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Acquire),"EGG 文本预览已取消");
+    Ok((bytes,size))
 }
 
 #[cfg(test)]mod tests{

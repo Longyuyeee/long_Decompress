@@ -1,0 +1,102 @@
+{
+  "version": "1.6.12",
+  "helperSha256": "6c0c1c26b0d4eda62a421a1f844675e3a45166013d0a0cf9def09e8c7b2720b3",
+  "checks": [
+    {
+      "archive": "tests/fixtures/archives/egg-153/upstream/store.egg",
+      "entry": "hello.txt",
+      "methods": [
+        "Store"
+      ],
+      "encryption": null,
+      "bytes": 131,
+      "sha256": "d18ec9260c5c6902d8fc74c07cc092f45a2c4e6074e4a5b3cdeaf760eb96e7ce",
+      "matchesFrozenIndependentPayload": true,
+      "receipt": "Passed before initial harness used hello.txt instead of text.txt in the next fixture; retained without repeating."
+    },
+    {
+      "archive": "tests/fixtures/archives/egg-153/upstream/deflate5.egg",
+      "entry": "text.txt",
+      "methods": [
+        "Deflate"
+      ],
+      "encryption": null,
+      "bytes": 3150,
+      "sha256": "b2a9316bdcae0fd397a8430e94a6294a4ea720c4faf9e1f77d4e4e30787ba6ac",
+      "matchesFrozenIndependentPayload": true,
+      "inputBytes": 68
+    },
+    {
+      "archive": "tests/fixtures/archives/egg-153/upstream/lzma5.egg",
+      "entry": "text.txt",
+      "methods": [
+        "LZMA"
+      ],
+      "encryption": null,
+      "bytes": 3150,
+      "sha256": "b2a9316bdcae0fd397a8430e94a6294a4ea720c4faf9e1f77d4e4e30787ba6ac",
+      "matchesFrozenIndependentPayload": true,
+      "inputBytes": 78
+    },
+    {
+      "archive": "tests/fixtures/archives/egg-153/upstream/enc_zip20_bzip2.egg",
+      "entry": "text.txt",
+      "methods": [
+        "Bzip2"
+      ],
+      "encryption": "ZipCrypto",
+      "bytes": 9000,
+      "sha256": "2c44089c1478988b4f2d75dcce66a08008c0ab65e71877a8064ec93154e8b380",
+      "matchesFrozenIndependentPayload": true,
+      "inputBytes": 145
+    },
+    {
+      "archive": "tests/fixtures/archives/egg-1511/originals/ordinary-zipcrypto-m3-volumes/ordinary-zipcrypto-m3-volumes.vol3.egg",
+      "entry": "文档/99最后.txt",
+      "methods": [
+        "LZMA"
+      ],
+      "encryption": "ZipCrypto",
+      "bytes": 22500,
+      "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3",
+      "matchesFrozenIndependentPayload": true,
+      "inputBytes": 161
+    },
+    {
+      "archive": "tests/fixtures/archives/egg-1511/originals/ordinary-aes256-m3-volumes/ordinary-aes256-m3-volumes.vol3.egg",
+      "entry": "文档/99最后.txt",
+      "methods": [
+        "LZMA"
+      ],
+      "encryption": "AES-256",
+      "bytes": 22500,
+      "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3",
+      "matchesFrozenIndependentPayload": true,
+      "inputBytes": 322
+    },
+    {
+      "archive": "tests/fixtures/archives/egg-1511/originals/ordinary-lea256-m3-volumes/ordinary-lea256-m3-volumes.vol3.egg",
+      "entry": "文档/99最后.txt",
+      "methods": [
+        "LZMA"
+      ],
+      "encryption": "LEA-256",
+      "bytes": 22500,
+      "sha256": "c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3",
+      "matchesFrozenIndependentPayload": true,
+      "inputBytes": 322
+    },
+    {
+      "archive": "tests/fixtures/archives/egg-154/../egg-153/upstream/azo.egg",
+      "entry": "azo_fix.sys",
+      "methods": [
+        "AZO"
+      ],
+      "encryption": null,
+      "bytes": 1602,
+      "sha256": "3a151d5e99db53bd84d824a55f0f998386bb2128a073f495a98695fd2aa3c610",
+      "matchesFrozenIndependentPayload": true,
+      "inputBytes": 53
+    }
+  ]
+}
