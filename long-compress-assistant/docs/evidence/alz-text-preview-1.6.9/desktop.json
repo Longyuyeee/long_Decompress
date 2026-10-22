@@ -1,0 +1,113 @@
+{
+  "version": "1.6.9",
+  "applicationSha256": "aa1841484dd4d5f30be07082f8932afa84bc892580c052d129eee4628594139c",
+  "helperSha256": "dcbe8ff673ff375ad5ea3eb129da4ce6e98515a418ccb6ba72272cf7ecb6c58a",
+  "checks": [
+    {
+      "name": "small ALZ text opens internally with equal panes; image preview stays unavailable",
+      "controlled": true,
+      "internalPreview": true,
+      "imageDisabled": true,
+      "applicationSha256": "d4d468e949148e1628a1eae2c670cb431264bb57e78ee3b375ebeb4a0fe105bc"
+    },
+    {
+      "name": "existing Bzip2 original previews only its chosen text",
+      "bytes": 2340,
+      "complete": true,
+      "applicationSha256": "d4d468e949148e1628a1eae2c670cb431264bb57e78ee3b375ebeb4a0fe105bc"
+    },
+    {
+      "name": "actual original Chinese password and middle native volume work with the vault",
+      "original": true,
+      "middleMember": true,
+      "vaultSelectedOnly": true,
+      "bytes": 38000,
+      "wrongKey": "[alz-password] ALZ 密码短头不匹配，也可能加密头损坏；请核对密码和来源完整性",
+      "applicationSha256": "d4d468e949148e1628a1eae2c670cb431264bb57e78ee3b375ebeb4a0fe105bc"
+    },
+    {
+      "name": "oversize text gives an extraction hint rather than a partial success",
+      "noPartialText": true,
+      "applicationSha256": "d4d468e949148e1628a1eae2c670cb431264bb57e78ee3b375ebeb4a0fe105bc"
+    },
+    {
+      "name": "source change, early cancellation and a new preview keep correct outcomes",
+      "applicationSha256": "aa1841484dd4d5f30be07082f8932afa84bc892580c052d129eee4628594139c",
+      "sourceChanged": "IMAGE_READER_CHANGED|来源无法确认，请返回刷新来源后重新阅读: [archive-inspection:damaged] ALZ 卷尾损坏或下载不完整：E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-text-169\\04158adb-10d3-4c75-98ee-d10298e19675\\changed.alz",
+      "cancelled": "文本预览已取消",
+      "newPreview": true
+    },
+    {
+      "name": "small note previews without decoding the unrelated 270 MiB entry",
+      "applicationSha256": "aa1841484dd4d5f30be07082f8932afa84bc892580c052d129eee4628594139c",
+      "controlled": true,
+      "seconds": 0.5394816000000001,
+      "bytes": 70,
+      "unrelatedCompressedBytes": 282956568
+    }
+  ],
+  "layouts": [
+    {
+      "name": "small-text-wide",
+      "closeVisible": true,
+      "dialog": {
+        "height": 479.390625,
+        "width": 832,
+        "x": 134,
+        "y": 85.3046875
+      },
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100,
+      "applicationSha256": "d4d468e949148e1628a1eae2c670cb431264bb57e78ee3b375ebeb4a0fe105bc"
+    },
+    {
+      "name": "small-text-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 401.1796875,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 59.40625
+      },
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760,
+      "applicationSha256": "d4d468e949148e1628a1eae2c670cb431264bb57e78ee3b375ebeb4a0fe105bc"
+    },
+    {
+      "name": "oversize-text-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 354.1953125,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 82.8984375
+      },
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760,
+      "applicationSha256": "d4d468e949148e1628a1eae2c670cb431264bb57e78ee3b375ebeb4a0fe105bc"
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-text-169\\04158adb-10d3-4c75-98ee-d10298e19675",
+  "previousCandidates": [
+    {
+      "sha256": "d4d468e949148e1628a1eae2c670cb431264bb57e78ee3b375ebeb4a0fe105bc",
+      "retained": "Already-passed normal preview/layout flows; only source precheck ordering and its error wording changed."
+    }
+  ],
+  "passed": true
+}

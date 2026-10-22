@@ -43,6 +43,7 @@ vi.mock('@/composables/useArchiveEngine', () => ({
       browseExtensions: ['zip', '7z', 'rar', 'tar', 'zst'],
       nestedExtensions: ['zip', '7z', 'rar', 'tar', 'zst'],
       boundedPreviewFormats: ['ZIP', 'TAR', 'ZPAQ'],
+      boundedTextPreviewFormats: ['ZIP', 'TAR', 'ZPAQ', 'ALZ'],
       imagePreviewExtensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'],
       textPreviewExtensions: ['txt', 'md', 'log'],
       message: 'ready',
@@ -229,6 +230,42 @@ describe('ArchiveBrowserView', () => {
       entryPath: 'nested.7z', cachePath: 'C:/cache/nested.7z',
       parentSha256: 'parent-hash', contentSha256: 'child-hash', depth: 2,
     })
+  })
+
+  it('ALZ stale preview asks to refresh without exposing an internal marker', async () => {
+    mocks.browseArchive.mockResolvedValueOnce({format:'ALZ',revision:'a'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:10,totalCompressedSize:8,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:10,isDir:false}]})
+    mocks.previewArchiveText.mockRejectedValueOnce(new Error('IMAGE_READER_CHANGED|来源无法确认'))
+    const wrapper=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:169,path:'C:/sample.alz'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
+    await wrapper.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises()
+    expect(wrapper.get('.preview-stage').text()).toContain('刷新此栏后重试')
+    expect(wrapper.get('.preview-stage').text()).not.toContain('IMAGE_READER_CHANGED')
+    expect(wrapper.find('[data-testid="archive-text-preview"]').exists()).toBe(false);wrapper.unmount()
+  })
+
+  it('ALZ text opens inside the existing preview while image reading stays disabled', async () => {
+    mocks.browseArchive.mockResolvedValueOnce({format:'ALZ',revision:'a'.repeat(64),totalFiles:2,totalDirectories:0,totalUncompressedSize:30,totalCompressedSize:20,encrypted:false,entries:[
+      {path:'readme.txt',name:'readme.txt',size:10,isDir:false}, {path:'image.png',name:'image.png',size:20,isDir:false},
+    ]})
+    const wrapper=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:169,path:'C:/sample.alz'}},global:{stubs:{Teleport:true,RouterLink:true}}})
+    await flushPromises()
+    expect(wrapper.get('[data-entry-path="image.png"] .preview-trigger').attributes('disabled')).toBeDefined()
+    await wrapper.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises()
+    expect(mocks.previewArchiveText).toHaveBeenCalledWith('C:/sample.alz','readme.txt','',undefined,undefined,expect.objectContaining({previewId:expect.stringContaining('alz-text-'),sourceRevision:'a'.repeat(64)}))
+    expect(wrapper.get('[data-testid="archive-text-preview"]').text()).toContain('你好，归档文本')
+    expect(mocks.previewArchiveImage).not.toHaveBeenCalled();wrapper.unmount()
+  })
+
+  it('ALZ closes its in-flight native preview and ignores a late result', async () => {
+    mocks.browseArchive.mockResolvedValueOnce({format:'ALZ',revision:'a'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:10,totalCompressedSize:8,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:10,isDir:false}]})
+    let finish!:(value:any)=>void
+    mocks.previewArchiveText.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve}))
+    const wrapper=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:169,path:'C:/sample.alz'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
+    await wrapper.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises()
+    const id=mocks.previewArchiveText.mock.calls.at(-1)![5].previewId
+    await wrapper.get('.preview-close').trigger('click');await flushPromises()
+    expect(mocks.cancelArchiveBrowse).toHaveBeenCalledWith(id)
+    finish({content:'late response',encoding:'UTF-8',byteSize:13,totalSize:13,truncated:false,lineCount:1});await flushPromises()
+    expect(wrapper.find('[data-testid="archive-entry-preview"]').exists()).toBe(false);wrapper.unmount()
   })
 
   it('keeps parent navigation actions inside the wrapping header', () => {
@@ -483,7 +520,7 @@ describe('ArchiveBrowserView', () => {
     const preview = new DOMWrapper(document.body)
     expect(preview.get('[data-testid="archive-image-preview"] img').attributes('src'))
       .toBe('data:image/png;base64,c2FmZQ==')
-    expect(preview.get('[data-testid="archive-entry-preview"]').text()).toContain('只读 · 不改原包')
+    expect(preview.get('[data-testid="archive-entry-preview"]').text()).toContain('只读')
     expect(wrapper.find('footer').text()).toContain('已选择 2 / 2 个文件')
 
     await preview.get('[aria-label="关闭预览"]').trigger('click')
@@ -526,7 +563,7 @@ describe('ArchiveBrowserView', () => {
     expect(preview.get('[data-testid="archive-text-preview"]').text()).toContain('你好，归档文本')
     expect(preview.get('[data-testid="archive-entry-preview"]').text()).toContain('UTF-8')
     expect(preview.get('[data-testid="archive-entry-preview"]').text()).toContain('完整显示')
-    expect(preview.get('[data-testid="archive-entry-preview"]').text()).toContain('默认应用打开')
+    expect(mocks.openArchiveEntry).not.toHaveBeenCalled()
     await wrapper.get('.browser-page').trigger('keydown', { key: 'Escape' })
     expect(preview.find('[data-testid="archive-entry-preview"]').exists()).toBe(false)
     wrapper.unmount()
@@ -543,7 +580,7 @@ describe('ArchiveBrowserView', () => {
     await flushPromises()
 
     expect(wrapper.get('.preview-trigger').attributes('disabled')).toBeDefined()
-    expect(wrapper.get('.preview-trigger').attributes('title')).toContain('ZIP 与 TAR')
+    expect(wrapper.get('.preview-trigger').attributes('title')).toContain('暂不支持此类预览')
     expect(mocks.previewArchiveImage).not.toHaveBeenCalled()
   })
 

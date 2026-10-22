@@ -6,6 +6,7 @@ const state = vi.hoisted(() => ({
       browseExtensions: ['zip', '7z', 'zst', 'qcow2', 'alz'],
       nestedExtensions: ['zip', '7z', 'zst'],
       boundedPreviewFormats: ['ZIP', 'TAR'],
+      boundedTextPreviewFormats: ['ZIP', 'TAR', 'ALZ'],
       imagePreviewExtensions: ['png', 'jpg'],
       textPreviewExtensions: ['txt', 'md'],
     },
@@ -39,5 +40,8 @@ describe('useArchiveBrowserCapabilities', () => {
     expect(capabilities.previewKind('readme.md')).toBe('text')
     expect(capabilities.supportsBoundedPreview('TAR.ZST')).toBe(true)
     expect(capabilities.supportsBoundedPreview('7Z')).toBe(false)
+    expect(capabilities.supportsTextPreview('ALZ')).toBe(true)
+    expect(capabilities.supportsBoundedPreview('ALZ')).toBe(false)
+    expect(capabilities.supportsTextPreview('7Z')).toBe(false)
   })
 })

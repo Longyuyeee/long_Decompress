@@ -189,7 +189,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷、ZPAQ 原生密码数字切卷及原生多部分只读；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM / ESD / SWM、ZPAQ（含改密与数字分卷）；密码和分卷随目标格式提供 |
 | 清单校验 | SFV/MD5/SHA256 逐文件状态与原因、待补列表、按需复查；匹配表示与清单一致 |
-| 内部预览 | ZIP/TAR 系列及普通 GZIP/BZIP2/XZ/Zstandard 流、ZPAQ 日志式所选快照中的受支持图片与文本；预览超出读取范围时可先提取后打开 |
+| 内部预览 | ZIP/TAR 系列及普通 GZIP/BZIP2/XZ/Zstandard 流、ZPAQ 日志式所选快照中的受支持图片与文本；ALZ Store/Deflate/Bzip2 新增 1 MiB 以内完整文本预览，密码和完整原生卷沿原入口使用；预览超出读取范围时可先提取后打开 |
 | 图片压缩 | JPEG、PNG、WebP；质量、尺寸与格式按对应编码能力调整 |
 | 视频压缩 | MP4、MOV、AVI、WMV、WebM、MKV、M4V 等受支持输入，输出 MP4 / H.264 |
 | PDF 优化 | 分析结构、优化体积；是否适合处理会在分析后显示 |
@@ -275,7 +275,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.6.8 · ALZ Bzip2 按块读取**。不再先收集整条压缩数据，移除旧 256 MiB 单条限制；保留密码状态、跨块位对齐、完整性和原任务操作。大包边界经明确标注的受控归档与独立回解核对，历史原工具大包仍待取得。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.8.md) · [范围与记录](long-compress-assistant/docs/ALZ_BOUNDED_FREEZE_1.6.8.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.8)。下一版 [ALZ 包内预览](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.9.md)仅规划。
+**v1.6.9 · ALZ 包内文本预览**。在原双栏直接查看说明、日志与配置，接通现有密码保险箱、显式编码和完整原生卷组；只读所选完整小文件，关闭取消，来源变化提示刷新，大文件给提取指引。保留原弹层和左右等宽布局。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.9.md) · [范围与记录](long-compress-assistant/docs/ALZ_TEXT_PREVIEW_FREEZE_1.6.9.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.9)。下一阶段 [ALZ 图片预览](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.10.md)仅规划。
+
+**v1.6.8 · ALZ Bzip2 按块读取**。不再先收集整条压缩数据，移除旧 256 MiB 单条限制；保留密码状态、跨块位对齐、完整性和原任务操作。大包边界经明确标注的受控归档与独立回解核对，历史原工具大包仍待取得。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.8.md) · [范围与记录](long-compress-assistant/docs/ALZ_BOUNDED_FREEZE_1.6.8.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.8)。小文本预览已由上方 v1.6.9 接续，图片与大文本前缀继续分阶段推进。
 
 **v1.6.7 · 工具中心**。资料对比、工作流中心、归档资源库和文件完整性集中到四个分类页签，侧边栏统一为八个入口；`Ctrl+Shift+T` 打开工具中心，原四种快捷键继续直达。切换分类保留输入、选择、展开和结果，界面沿用原有样式。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.7.md) · [范围与记录](long-compress-assistant/docs/TOOLS_CENTER_FREEZE_1.6.7.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.7)。
 

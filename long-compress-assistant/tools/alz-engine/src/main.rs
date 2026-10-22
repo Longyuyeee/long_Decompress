@@ -169,9 +169,34 @@ fn decode<W: Write>(archive: &mut AlzArchive, e: &AlzFileEntry, password: Option
     Ok(())
 }
 
+const MAX_TEXT_PREVIEW: u64 = 1024 * 1024;
+const MAX_TEXT_PREVIEW_INPUT: u64 = 64 * 1024 * 1024;
+
+struct PreviewBuffer(Vec<u8>);
+impl Write for PreviewBuffer {
+    fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+        if bytes.len() > MAX_TEXT_PREVIEW as usize - self.0.len() {
+            return Err(io::Error::other("ALZ 文本超过 1 MiB，请先提取后打开"));
+        }
+        self.0.extend_from_slice(bytes);
+        Ok(bytes.len())
+    }
+    fn flush(&mut self) -> io::Result<()> { Ok(()) }
+}
+
+fn preview_text(archive: &mut AlzArchive, entries: &[AlzFileEntry], password: Option<&str>, codec: &'static encoding_rs::Encoding) -> Result<Value> {
+    ensure!(entries.len() == 1 && !entries[0].is_directory(), "请选择一份 ALZ 文本预览");
+    let entry = &entries[0];
+    ensure!(entry.uncompressed_size <= MAX_TEXT_PREVIEW, "ALZ 文本预览支持 1 MiB 以内的完整文件；此文件较大，请先提取后打开");
+    ensure!(entry.compressed_size <= MAX_TEXT_PREVIEW_INPUT, "所选 ALZ 文本压缩数据超过 64 MiB 预览范围，请先提取后打开");
+    let mut buffer = PreviewBuffer(Vec::with_capacity(entry.uncompressed_size as usize));
+    decode(archive, entry, password, codec, &mut buffer)?;
+    Ok(json!({"bytes":buffer.0,"totalSize":entry.uncompressed_size}))
+}
+
 fn run() -> Result<Value> {
     let args = std::env::args_os().skip(1).collect::<Vec<_>>();
-    ensure!(args.len() == 2, "Usage: long-alz list|plan|verify|extract archive (request on stdin)");
+    ensure!(args.len() == 2, "Usage: long-alz list|plan|verify|extract|preview-text archive (request on stdin)");
     let operation = args[0].to_str().context("Invalid operation")?;
     let mut data = Vec::new(); io::stdin().take(32 * 1024 * 1024 + 1).read_to_end(&mut data)?;
     ensure!(data.len() <= 32 * 1024 * 1024, "ALZ 请求过大");
@@ -188,6 +213,10 @@ fn run() -> Result<Value> {
         }
     }
     if operation == "plan" { return metadata(&entries); }
+    if operation == "preview-text" {
+        ensure!(request.selected.len() == 1, "ALZ 文本预览必须指定一个精确条目");
+        return preview_text(&mut archive, &entries, request.password.as_deref(), codec);
+    }
     ensure!(matches!(operation, "verify" | "extract"), "Unsupported operation");
     // Plain corruption is definitive evidence; inspect it before password trials.
     let mut entries = entries;

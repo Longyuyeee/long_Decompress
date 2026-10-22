@@ -1,0 +1,5 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[alz-text-169] source change, early cancellation and a new preview keep correct outcomes
+[alz-text-169] small note previews without decoding the unrelated 270 MiB entry
