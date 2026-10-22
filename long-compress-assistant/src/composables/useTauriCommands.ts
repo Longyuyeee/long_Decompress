@@ -206,6 +206,7 @@ export interface ArchiveDiagnosticIssue {
 }
 
 export interface ArchiveDiagnosticReport {
+  zpaqBlocks?: import('@/types/zpaqBlocks').ZpaqBlockReport
   filePath: string
   fileSize: number
   actualFormat: string

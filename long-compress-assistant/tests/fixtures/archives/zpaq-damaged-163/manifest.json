@@ -1,0 +1,497 @@
+{
+  "upstream": "ZPAQ 7.15 official x64",
+  "packageUrl": "https://www.mattmahoney.net/dc/zpaq715.zip",
+  "toolSha256": "7a94b4f1d6323a758c7b0b6344036f166bff0fd44f1c3c86f05b3688023496cb",
+  "engineSha256": "8e56d89b5fb61bc79ffd524df57f7099ff03991a0e17707347aa78d299bba570",
+  "password": "多部分 密码1564",
+  "cases": [
+    {
+      "name": "plain-single",
+      "native": false,
+      "encrypted": false,
+      "damage": "Controlled XOR in compressed data payload; directory and transaction bytes preserved",
+      "mutation": {
+        "member": "backup.zpaq",
+        "memberOffset": 346500,
+        "logicalOffset": 346500,
+        "xor": 64
+      },
+      "targetBlock": {
+        "id": 3,
+        "offset": 280868,
+        "compressedSize": 131265,
+        "state": "verified",
+        "files": 2
+      },
+      "parts": [
+        {
+          "file": "plain-single/backup.zpaq",
+          "size": 412846,
+          "sha256": "babd23e23384279c1c53d7d93ad8e66986bd6c122de356c382ff195875582211"
+        }
+      ],
+      "snapshot": {
+        "version": 3,
+        "date": 20261021211950
+      },
+      "snapshots": [
+        {
+          "version": 1,
+          "expected": {
+            "资料/后来删除.txt": "44c36666125789bd1b1ab5dd852a35ddfbee023ad5eaa146354d0d3142c34b86",
+            "资料/图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+            "资料/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "资料/说明.txt": "434e8add4d0bd19e8b2932a932203f8b165ba0ad1c1e447028d3831478952f93",
+            "资料/项目/数据.bin": "02d5ccd680eb1bdc61a7bf6c5434c1d62e3f6a48ee041ba15c47de8aa2307d6f"
+          },
+          "directories": [
+            "资料",
+            "资料/空目录",
+            "资料/项目"
+          ],
+          "date": 20261021211948
+        },
+        {
+          "version": 2,
+          "expected": {
+            "资料/图标.png": "a05744ba7e9ae216d5e74e94b0616008652d4f50c4b4b2d4a61102f8dc7b697b",
+            "资料/新增.txt": "bfcd8fde4b87ffc6282efac5060df122d23ce9106eed00d2d549db0d1cb1bf03",
+            "资料/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "资料/说明.txt": "a88e6db90b5e0e4413cd156793eec7b1f76524d1fb6433a3e3ee3e6e3acab482",
+            "资料/项目/数据.bin": "a9fe6d201483e10ecbb3e0da817d5e69df9062b1ed0f377610acf4eb7d04c57c"
+          },
+          "directories": [
+            "资料",
+            "资料/空目录",
+            "资料/项目"
+          ],
+          "date": 20261021211949
+        },
+        {
+          "version": 3,
+          "expected": {
+            "资料/图标.png": "a05744ba7e9ae216d5e74e94b0616008652d4f50c4b4b2d4a61102f8dc7b697b",
+            "资料/已改名.txt": "bfcd8fde4b87ffc6282efac5060df122d23ce9106eed00d2d549db0d1cb1bf03",
+            "资料/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "资料/说明.txt": "88fc75047a1378d2f77a304956ea078a59963288968f420c86178d50644e64b6",
+            "资料/项目/数据.bin": "eb694f0f7566e1f702517f8df72b9e04924589d445a94a462cdba943817f39a1"
+          },
+          "directories": [
+            "资料",
+            "资料/空目录",
+            "资料/项目"
+          ],
+          "date": 20261021211950
+        }
+      ],
+      "affected": [
+        "资料/说明.txt",
+        "资料/项目/数据.bin"
+      ],
+      "independent": [
+        {
+          "path": "资料/图标.png",
+          "exitCode": 0,
+          "completeHashMatched": true,
+          "state": "verified"
+        },
+        {
+          "path": "资料/已改名.txt",
+          "exitCode": 0,
+          "completeHashMatched": true,
+          "state": "verified"
+        },
+        {
+          "path": "资料/空文件.txt",
+          "exitCode": 0,
+          "completeHashMatched": true,
+          "state": "verified"
+        },
+        {
+          "path": "资料/说明.txt",
+          "exitCode": 1,
+          "completeHashMatched": false,
+          "state": "affected"
+        },
+        {
+          "path": "资料/项目/数据.bin",
+          "exitCode": 1,
+          "completeHashMatched": false,
+          "state": "affected"
+        }
+      ],
+      "olderSnapshotVerified": true
+    },
+    {
+      "name": "plain-native",
+      "native": true,
+      "encrypted": false,
+      "damage": "Controlled XOR in compressed data payload; directory and transaction bytes preserved",
+      "mutation": {
+        "member": "backup.part3.zpaq",
+        "memberOffset": 65736,
+        "logicalOffset": 346500,
+        "xor": 64
+      },
+      "targetBlock": {
+        "id": 3,
+        "offset": 280868,
+        "compressedSize": 131265,
+        "state": "verified",
+        "files": 2
+      },
+      "parts": [
+        {
+          "file": "plain-native/backup.part1.zpaq",
+          "size": 134061,
+          "sha256": "de68f4762fce5145632c8a32f4b7510261491f0e09768dfd7016bf768fc86c1d"
+        },
+        {
+          "file": "plain-native/backup.part2.zpaq",
+          "size": 146703,
+          "sha256": "df6683551a631ac6941767b88095daa3383293f19abb75c0abf075cf0ade3f62"
+        },
+        {
+          "file": "plain-native/backup.part3.zpaq",
+          "size": 132082,
+          "sha256": "e969b870b9bdf4e92f56bdf4182cdd3dd08d7dbc5f585d80ecb407d1ee9bcbde"
+        }
+      ],
+      "snapshot": {
+        "version": 3,
+        "date": 20261021211950
+      },
+      "snapshots": [
+        {
+          "version": 1,
+          "expected": {
+            "资料/后来删除.txt": "44c36666125789bd1b1ab5dd852a35ddfbee023ad5eaa146354d0d3142c34b86",
+            "资料/图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+            "资料/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "资料/说明.txt": "434e8add4d0bd19e8b2932a932203f8b165ba0ad1c1e447028d3831478952f93",
+            "资料/项目/数据.bin": "02d5ccd680eb1bdc61a7bf6c5434c1d62e3f6a48ee041ba15c47de8aa2307d6f"
+          },
+          "directories": [
+            "资料",
+            "资料/空目录",
+            "资料/项目"
+          ],
+          "date": 20261021211948
+        },
+        {
+          "version": 2,
+          "expected": {
+            "资料/图标.png": "a05744ba7e9ae216d5e74e94b0616008652d4f50c4b4b2d4a61102f8dc7b697b",
+            "资料/新增.txt": "bfcd8fde4b87ffc6282efac5060df122d23ce9106eed00d2d549db0d1cb1bf03",
+            "资料/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "资料/说明.txt": "a88e6db90b5e0e4413cd156793eec7b1f76524d1fb6433a3e3ee3e6e3acab482",
+            "资料/项目/数据.bin": "a9fe6d201483e10ecbb3e0da817d5e69df9062b1ed0f377610acf4eb7d04c57c"
+          },
+          "directories": [
+            "资料",
+            "资料/空目录",
+            "资料/项目"
+          ],
+          "date": 20261021211949
+        },
+        {
+          "version": 3,
+          "expected": {
+            "资料/图标.png": "a05744ba7e9ae216d5e74e94b0616008652d4f50c4b4b2d4a61102f8dc7b697b",
+            "资料/已改名.txt": "bfcd8fde4b87ffc6282efac5060df122d23ce9106eed00d2d549db0d1cb1bf03",
+            "资料/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "资料/说明.txt": "88fc75047a1378d2f77a304956ea078a59963288968f420c86178d50644e64b6",
+            "资料/项目/数据.bin": "eb694f0f7566e1f702517f8df72b9e04924589d445a94a462cdba943817f39a1"
+          },
+          "directories": [
+            "资料",
+            "资料/空目录",
+            "资料/项目"
+          ],
+          "date": 20261021211950
+        }
+      ],
+      "affected": [
+        "资料/说明.txt",
+        "资料/项目/数据.bin"
+      ],
+      "independent": [
+        {
+          "path": "资料/图标.png",
+          "exitCode": 0,
+          "completeHashMatched": true,
+          "state": "verified"
+        },
+        {
+          "path": "资料/已改名.txt",
+          "exitCode": 0,
+          "completeHashMatched": true,
+          "state": "verified"
+        },
+        {
+          "path": "资料/空文件.txt",
+          "exitCode": 0,
+          "completeHashMatched": true,
+          "state": "verified"
+        },
+        {
+          "path": "资料/说明.txt",
+          "exitCode": 1,
+          "completeHashMatched": false,
+          "state": "affected"
+        },
+        {
+          "path": "资料/项目/数据.bin",
+          "exitCode": 1,
+          "completeHashMatched": false,
+          "state": "affected"
+        }
+      ],
+      "olderSnapshotVerified": true
+    },
+    {
+      "name": "key-single",
+      "native": false,
+      "encrypted": true,
+      "damage": "Controlled XOR in compressed data payload; directory and transaction bytes preserved",
+      "mutation": {
+        "member": "backup.zpaq",
+        "memberOffset": 346532,
+        "logicalOffset": 346532,
+        "xor": 64
+      },
+      "targetBlock": {
+        "id": 3,
+        "offset": 280900,
+        "compressedSize": 131265,
+        "state": "verified",
+        "files": 2
+      },
+      "parts": [
+        {
+          "file": "key-single/backup.zpaq",
+          "size": 412878,
+          "sha256": "ad7546f54962a5310f27afbf9fb3df4c65a759d84dd715f215d41181fd592f09"
+        }
+      ],
+      "snapshot": {
+        "version": 3,
+        "date": 20261021212010
+      },
+      "snapshots": [
+        {
+          "version": 1,
+          "expected": {
+            "资料/后来删除.txt": "44c36666125789bd1b1ab5dd852a35ddfbee023ad5eaa146354d0d3142c34b86",
+            "资料/图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+            "资料/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "资料/说明.txt": "434e8add4d0bd19e8b2932a932203f8b165ba0ad1c1e447028d3831478952f93",
+            "资料/项目/数据.bin": "02d5ccd680eb1bdc61a7bf6c5434c1d62e3f6a48ee041ba15c47de8aa2307d6f"
+          },
+          "directories": [
+            "资料",
+            "资料/空目录",
+            "资料/项目"
+          ],
+          "date": 20261021212008
+        },
+        {
+          "version": 2,
+          "expected": {
+            "资料/图标.png": "a05744ba7e9ae216d5e74e94b0616008652d4f50c4b4b2d4a61102f8dc7b697b",
+            "资料/新增.txt": "bfcd8fde4b87ffc6282efac5060df122d23ce9106eed00d2d549db0d1cb1bf03",
+            "资料/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "资料/说明.txt": "a88e6db90b5e0e4413cd156793eec7b1f76524d1fb6433a3e3ee3e6e3acab482",
+            "资料/项目/数据.bin": "a9fe6d201483e10ecbb3e0da817d5e69df9062b1ed0f377610acf4eb7d04c57c"
+          },
+          "directories": [
+            "资料",
+            "资料/空目录",
+            "资料/项目"
+          ],
+          "date": 20261021212009
+        },
+        {
+          "version": 3,
+          "expected": {
+            "资料/图标.png": "a05744ba7e9ae216d5e74e94b0616008652d4f50c4b4b2d4a61102f8dc7b697b",
+            "资料/已改名.txt": "bfcd8fde4b87ffc6282efac5060df122d23ce9106eed00d2d549db0d1cb1bf03",
+            "资料/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "资料/说明.txt": "88fc75047a1378d2f77a304956ea078a59963288968f420c86178d50644e64b6",
+            "资料/项目/数据.bin": "eb694f0f7566e1f702517f8df72b9e04924589d445a94a462cdba943817f39a1"
+          },
+          "directories": [
+            "资料",
+            "资料/空目录",
+            "资料/项目"
+          ],
+          "date": 20261021212010
+        }
+      ],
+      "affected": [
+        "资料/说明.txt",
+        "资料/项目/数据.bin"
+      ],
+      "independent": [
+        {
+          "path": "资料/图标.png",
+          "exitCode": 0,
+          "completeHashMatched": true,
+          "state": "verified"
+        },
+        {
+          "path": "资料/已改名.txt",
+          "exitCode": 0,
+          "completeHashMatched": true,
+          "state": "verified"
+        },
+        {
+          "path": "资料/空文件.txt",
+          "exitCode": 0,
+          "completeHashMatched": true,
+          "state": "verified"
+        },
+        {
+          "path": "资料/说明.txt",
+          "exitCode": 1,
+          "completeHashMatched": false,
+          "state": "affected"
+        },
+        {
+          "path": "资料/项目/数据.bin",
+          "exitCode": 1,
+          "completeHashMatched": false,
+          "state": "affected"
+        }
+      ],
+      "olderSnapshotVerified": true
+    },
+    {
+      "name": "key-native",
+      "native": true,
+      "encrypted": true,
+      "damage": "Controlled XOR in compressed data payload; directory and transaction bytes preserved",
+      "mutation": {
+        "member": "backup.part3.zpaq",
+        "memberOffset": 65736,
+        "logicalOffset": 346532,
+        "xor": 64
+      },
+      "targetBlock": {
+        "id": 3,
+        "offset": 280900,
+        "compressedSize": 131265,
+        "state": "verified",
+        "files": 2
+      },
+      "parts": [
+        {
+          "file": "key-native/backup.part1.zpaq",
+          "size": 134093,
+          "sha256": "eb562a887f35cbe35f1f55ae40e792eba333a4ddb4ac72f57412a94dba2c040b"
+        },
+        {
+          "file": "key-native/backup.part2.zpaq",
+          "size": 146703,
+          "sha256": "ddc9c7cc32928aa40c0eab95ed9d93ef4c5c3e83a6d67e4798b2509b0012a7da"
+        },
+        {
+          "file": "key-native/backup.part3.zpaq",
+          "size": 132082,
+          "sha256": "adce8420b2171550a2cf6ddd99451baade757ee548e43fb89ca972424a04f61a"
+        }
+      ],
+      "snapshot": {
+        "version": 3,
+        "date": 20261021212010
+      },
+      "snapshots": [
+        {
+          "version": 1,
+          "expected": {
+            "资料/后来删除.txt": "44c36666125789bd1b1ab5dd852a35ddfbee023ad5eaa146354d0d3142c34b86",
+            "资料/图标.png": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+            "资料/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "资料/说明.txt": "434e8add4d0bd19e8b2932a932203f8b165ba0ad1c1e447028d3831478952f93",
+            "资料/项目/数据.bin": "02d5ccd680eb1bdc61a7bf6c5434c1d62e3f6a48ee041ba15c47de8aa2307d6f"
+          },
+          "directories": [
+            "资料",
+            "资料/空目录",
+            "资料/项目"
+          ],
+          "date": 20261021212008
+        },
+        {
+          "version": 2,
+          "expected": {
+            "资料/图标.png": "a05744ba7e9ae216d5e74e94b0616008652d4f50c4b4b2d4a61102f8dc7b697b",
+            "资料/新增.txt": "bfcd8fde4b87ffc6282efac5060df122d23ce9106eed00d2d549db0d1cb1bf03",
+            "资料/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "资料/说明.txt": "a88e6db90b5e0e4413cd156793eec7b1f76524d1fb6433a3e3ee3e6e3acab482",
+            "资料/项目/数据.bin": "a9fe6d201483e10ecbb3e0da817d5e69df9062b1ed0f377610acf4eb7d04c57c"
+          },
+          "directories": [
+            "资料",
+            "资料/空目录",
+            "资料/项目"
+          ],
+          "date": 20261021212009
+        },
+        {
+          "version": 3,
+          "expected": {
+            "资料/图标.png": "a05744ba7e9ae216d5e74e94b0616008652d4f50c4b4b2d4a61102f8dc7b697b",
+            "资料/已改名.txt": "bfcd8fde4b87ffc6282efac5060df122d23ce9106eed00d2d549db0d1cb1bf03",
+            "资料/空文件.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "资料/说明.txt": "88fc75047a1378d2f77a304956ea078a59963288968f420c86178d50644e64b6",
+            "资料/项目/数据.bin": "eb694f0f7566e1f702517f8df72b9e04924589d445a94a462cdba943817f39a1"
+          },
+          "directories": [
+            "资料",
+            "资料/空目录",
+            "资料/项目"
+          ],
+          "date": 20261021212010
+        }
+      ],
+      "affected": [
+        "资料/说明.txt",
+        "资料/项目/数据.bin"
+      ],
+      "independent": [
+        {
+          "path": "资料/图标.png",
+          "exitCode": 0,
+          "completeHashMatched": true,
+          "state": "verified"
+        },
+        {
+          "path": "资料/已改名.txt",
+          "exitCode": 0,
+          "completeHashMatched": true,
+          "state": "verified"
+        },
+        {
+          "path": "资料/空文件.txt",
+          "exitCode": 0,
+          "completeHashMatched": true,
+          "state": "verified"
+        },
+        {
+          "path": "资料/说明.txt",
+          "exitCode": 1,
+          "completeHashMatched": false,
+          "state": "affected"
+        },
+        {
+          "path": "资料/项目/数据.bin",
+          "exitCode": 1,
+          "completeHashMatched": false,
+          "state": "affected"
+        }
+      ],
+      "olderSnapshotVerified": true
+    }
+  ]
+}

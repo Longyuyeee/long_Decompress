@@ -1,0 +1,167 @@
+{
+  "version": "1.6.3",
+  "binarySha256": "a42db95c0e27aceb950268219811b796ba1926bca165426d64afb90de8bb110e",
+  "candidateOptimization": "app opt-level=1; CI and release unchanged",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-block-163\\10f8d93c-a656-4326-847b-782eb6e3d36c",
+  "checks": [
+    {
+      "name": "diagnosis-plain-single",
+      "affected": [
+        "资料/说明.txt",
+        "资料/项目/数据.bin"
+      ],
+      "sharedBlock": 3,
+      "noPartialExtraction": true,
+      "sourceNamesVisible": true,
+      "binarySha256": "34cba223bc6a0246a82cc3a936185aecfacadfcf9a9d2aaa129dbb12b56fa0b8"
+    },
+    {
+      "name": "diagnosis-plain-native",
+      "affected": [
+        "资料/说明.txt",
+        "资料/项目/数据.bin"
+      ],
+      "sharedBlock": 3,
+      "noPartialExtraction": true,
+      "sourceNamesVisible": true,
+      "binarySha256": "34cba223bc6a0246a82cc3a936185aecfacadfcf9a9d2aaa129dbb12b56fa0b8"
+    },
+    {
+      "name": "diagnosis-key-single",
+      "affected": [
+        "资料/说明.txt",
+        "资料/项目/数据.bin"
+      ],
+      "sharedBlock": 3,
+      "noPartialExtraction": true,
+      "sourceNamesVisible": true,
+      "binarySha256": "34cba223bc6a0246a82cc3a936185aecfacadfcf9a9d2aaa129dbb12b56fa0b8"
+    },
+    {
+      "name": "diagnosis-key-native",
+      "affected": [
+        "资料/说明.txt",
+        "资料/项目/数据.bin"
+      ],
+      "sharedBlock": 3,
+      "noPartialExtraction": true,
+      "sourceNamesVisible": true,
+      "binarySha256": "34cba223bc6a0246a82cc3a936185aecfacadfcf9a9d2aaa129dbb12b56fa0b8"
+    },
+    {
+      "name": "older-snapshot-browser-entry",
+      "binarySha256": "a42db95c0e27aceb950268219811b796ba1926bca165426d64afb90de8bb110e",
+      "snapshot": 1,
+      "doesNotClaimWholeArchiveHealthy": true
+    },
+    {
+      "name": "interrupted-tail-browser-recovery-entry",
+      "binarySha256": "a42db95c0e27aceb950268219811b796ba1926bca165426d64afb90de8bb110e",
+      "noEntryInference": true,
+      "noAutomaticRecovery": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "summary",
+      "file": "summary-1100x700.png",
+      "dialogs": [],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "34cba223bc6a0246a82cc3a936185aecfacadfcf9a9d2aaa129dbb12b56fa0b8"
+    },
+    {
+      "name": "summary",
+      "file": "summary-760x520.png",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "34cba223bc6a0246a82cc3a936185aecfacadfcf9a9d2aaa129dbb12b56fa0b8"
+    },
+    {
+      "name": "files",
+      "file": "files-1100x700.png",
+      "dialogs": [
+        {
+          "overflow": 0,
+          "right": 918,
+          "x": 182
+        }
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "34cba223bc6a0246a82cc3a936185aecfacadfcf9a9d2aaa129dbb12b56fa0b8"
+    },
+    {
+      "name": "files",
+      "file": "files-760x520.png",
+      "dialogs": [
+        {
+          "overflow": 0,
+          "right": 736,
+          "x": 24
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "34cba223bc6a0246a82cc3a936185aecfacadfcf9a9d2aaa129dbb12b56fa0b8"
+    },
+    {
+      "name": "blocks",
+      "file": "blocks-1100x700.png",
+      "dialogs": [
+        {
+          "overflow": 0,
+          "right": 918,
+          "x": 182
+        }
+      ],
+      "height": 700,
+      "overflow": 0,
+      "width": 1100,
+      "binarySha256": "34cba223bc6a0246a82cc3a936185aecfacadfcf9a9d2aaa129dbb12b56fa0b8"
+    },
+    {
+      "name": "blocks",
+      "file": "blocks-760x520.png",
+      "dialogs": [
+        {
+          "overflow": 0,
+          "right": 736,
+          "x": 24
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "width": 760,
+      "binarySha256": "34cba223bc6a0246a82cc3a936185aecfacadfcf9a9d2aaa129dbb12b56fa0b8"
+    }
+  ],
+  "parts": [
+    [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-block-163\\10f8d93c-a656-4326-847b-782eb6e3d36c\\plain-single\\backup.zpaq"
+    ],
+    [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-block-163\\10f8d93c-a656-4326-847b-782eb6e3d36c\\plain-native\\backup.part1.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-block-163\\10f8d93c-a656-4326-847b-782eb6e3d36c\\plain-native\\backup.part2.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-block-163\\10f8d93c-a656-4326-847b-782eb6e3d36c\\plain-native\\backup.part3.zpaq"
+    ],
+    [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-block-163\\10f8d93c-a656-4326-847b-782eb6e3d36c\\key-single\\backup.zpaq"
+    ],
+    [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-block-163\\10f8d93c-a656-4326-847b-782eb6e3d36c\\key-native\\backup.part1.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-block-163\\10f8d93c-a656-4326-847b-782eb6e3d36c\\key-native\\backup.part2.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-block-163\\10f8d93c-a656-4326-847b-782eb6e3d36c\\key-native\\backup.part3.zpaq"
+    ]
+  ],
+  "previousIdentities": [
+    "34cba223bc6a0246a82cc3a936185aecfacadfcf9a9d2aaa129dbb12b56fa0b8"
+  ],
+  "continuationReason": "Only FileIntegrity old-snapshot initialization guard changed; resume affected entry flows, retain completed diagnosis and layout evidence",
+  "completedAt": "2026-10-22T12:44:30.962Z"
+}

@@ -20,6 +20,11 @@ beforeEach(() => {
   mocks.diagnose.mockImplementation(async (_id,path,password) => path.endsWith('.rar') ? report('RAR',password ? 'damaged' : 'password_required',!!password) : report('ZIP','directory_lost',true))
 })
 describe('archive batch recovery user flow', () => {
+  it('zpaq163 keeps detailed checks in memory and restores a compact report requiring recheck',async()=>{
+    setActivePinia(createPinia());mocks.group.mockResolvedValue([{path:'C:/backup.zpaq',selectedMembers:1}]);mocks.diagnose.mockResolvedValue({...report('ZPAQ','zpaq_affected',false),zpaqBlocks:{snapshot:{version:3,date:20261020150000},revision:'a'.repeat(64),blocks:[],entries:[{path:'long-list-163.txt',size:1,state:'affected',blocks:[]}]}})
+    const store=useArchiveRecoveryStore();await store.load(['C:/backup.zpaq']);store.rows[0].password='session-key-163';await store.check();expect(store.rows[0].report?.zpaqBlocks?.entries).toHaveLength(1)
+    const saved=localStorage.getItem(ARCHIVE_RECOVERY_DRAFT_KEY)||'';expect(saved).toContain('zpaq_affected');expect(saved).not.toContain('long-list-163.txt');expect(saved).not.toContain('session-key-163');setActivePinia(createPinia());const restored=useArchiveRecoveryStore();restored.restore();expect(restored.rows[0]).toMatchObject({needsRecheck:true,password:''});expect(restored.rows[0].report?.zpaqBlocks).toBeUndefined()
+  })
   it('preserves separate original and repaired encodings through recheck, queue and restart without passwords', async () => {
     const wrapper=setup(); await flushPromises()
     const store=useArchiveRecoveryStore(), row=store.rows[1]

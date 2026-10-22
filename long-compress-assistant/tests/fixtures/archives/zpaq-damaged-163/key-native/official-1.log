@@ -1,0 +1,6 @@
+zpaq v7.15 journaling archiver, compiled Aug 17 2016
+E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/tests/fixtures/archives/zpaq-damaged-163/key-native/backup.part*.zpaq -until 3: 3 versions, 22 files, 18 fragments, 0.412878 MB
+Extracting 0.000036 MB in 1 files -threads 1
+[11..15] -> 145658
+> C:/Users/39633/AppData/Local/Temp/long-zpaq-163-official-9t8p1bku/key-native-1/资料/已改名.txt
+0.078 seconds (all OK)

@@ -1,0 +1,12 @@
+zpaq v7.15 journaling archiver, compiled Aug 17 2016
+E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/tests/fixtures/archives/zpaq-damaged-163/plain-single/backup.zpaq -until 3: 3 versions, 22 files, 18 fragments, 0.412846 MB
+Extracting 0.000061 MB in 1 files -threads 1
+[17..18] -> 131149
+Job 1: fragment 17 size 131072 checksum failed
+Job 1: skipping [17..18] at 280868: bad checksum
+
+Failed (extracted/total fragments, file):
+0/1 C:/Users/39633/AppData/Local/Temp/long-zpaq-163-official-9t8p1bku/plain-single-3/资料/说明.txt
+
+Extracted 0 of 1 files OK (1 errors) using 0.068 MB x 1 threads
+0.000 seconds (with warnings)

@@ -32,7 +32,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
     </td>
     <td width="50%" valign="top">
       <h3>🧭 先看内容，再决定解压什么</h3>
-      <p>在当前栏像浏览文件夹一样查看压缩包，另一栏的位置与选择保留；搜索、筛选和选择文件。支持本地常用文本与图片预览、部分归档格式的包内预览，也能进入嵌套压缩包、确认 ZPAQ 原生多部分来源、选择和对比历史快照，按版本取出所选变化。ZPAQ 写入中断时，可明确选择完整旧快照另存取回。Store/Deflate/Bzip2/LZMA/Zstandard/PPMd ZIP、ZIPX（XZ） 支持普通包与 AES/ZipCrypto 密码内容编辑，可补入、替换、删除、改名和批量整理，复核后另存新包；未完成修改可从草稿恢复，原包保留。</p>
+      <p>在当前栏像浏览文件夹一样查看压缩包，另一栏的位置与选择保留；搜索、筛选和选择文件。支持本地常用文本与图片预览、部分归档格式的包内预览，也能进入嵌套压缩包、确认 ZPAQ 原生多部分来源、选择和对比历史快照，按版本取出所选变化。ZPAQ 写入中断时，可明确选择完整旧快照另存取回；内容校验失败时可定位受损块与关联文件，明细按需展开。Store/Deflate/Bzip2/LZMA/Zstandard/PPMd ZIP、ZIPX（XZ） 支持普通包与 AES/ZipCrypto 密码内容编辑，可补入、替换、删除、改名和批量整理，复核后另存新包；未完成修改可从草稿恢复，原包保留。</p>
     </td>
   </tr>
   <tr>
@@ -279,7 +279,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.6.2 · 中断备份的完整旧快照取回**。识别 ZPAQ 未完成事务，在当前栏选择完整旧快照另存取回；普通/密码、单包/已确认多部分贯通原队列、草稿与历史，结果明确排除中断更新。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.2.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_TAIL_RECOVERY_FREEZE_1.6.2.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.2)。下一步 [v1.6.3 受损数据块诊断与受影响条目定位](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.3.md)，仅规划。
+**v1.6.3 · ZPAQ 受损块与文件影响定位**。按所选快照检查共享数据块，分清通过、受影响和未检查；明细、筛选与关联放进二级弹窗，普通/密码及原生组入口接通。本版只诊断定位。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.3.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_BLOCK_DIAGNOSIS_FREEZE_1.6.3.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.3)。下一步 [v1.6.4 已校验文件的部分取回](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.4.md)，仅规划。
+
+**v1.6.2 · 中断备份的完整旧快照取回**。识别 ZPAQ 未完成事务，在当前栏选择完整旧快照另存取回；普通/密码、单包/已确认多部分贯通原队列、草稿与历史，结果明确排除中断更新。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.2.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_TAIL_RECOVERY_FREEZE_1.6.2.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.2)。已由上方 v1.6.3 接续。
 
 **v1.6.1 · 原生 ZPAQ 多部分备份继续更新**。添加新资料，另存完整独立新组，保留原件、全部旧快照和未选内容；普通包、密码包、草稿恢复、失败重试和产物清单贯通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.1.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_NATIVE_UPDATE_FREEZE_1.6.1.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.1)。已由上方 v1.6.2 接续。
 
