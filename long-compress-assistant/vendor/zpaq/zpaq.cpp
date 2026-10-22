@@ -64,6 +64,7 @@ Possible options:
 // Long read adapter: transport only; upstream codecs and cryptography unchanged.
 static bool long_json=false;
 static bool long_refs=false;
+static bool long_diagnose=false;
 static bool long_streaming=false;
 static bool long_journaling=false;
 static int long_scan_errors=0;
@@ -1162,6 +1163,7 @@ private:
   int add();                // add, return 1 if error else 0
   int extract();            // extract, return 1 if error else 0
   int list();               // list, return 0
+  int diagnose_blocks();    // read-only selected-snapshot block verification
   void usage();             // help
 
   // Support functions
@@ -1362,6 +1364,7 @@ int Jidac::doCommand(int argc, const char** argv) {
     else if (opt[1]=='s') summary=atoi(argv[i]+2);
     else if (opt=="-long-json") long_json=true;
     else if (opt=="-long-refs") long_refs=true;
+    else if (opt=="-long-diagnose") long_diagnose=true;
     else if (opt=="-long-snapshot" && i+2<argc) {
       long_snapshot=strtoull(argv[++i], 0, 10);
       long_snapshot_date=strtoll(argv[++i], 0, 10);
@@ -1475,6 +1478,8 @@ int Jidac::doCommand(int argc, const char** argv) {
   }
 
   // Set threads
+  if (long_diagnose && command!='l')
+    error("LONG_ZPAQ_DIAGNOSTIC: read-only list command required");
   if (long_snapshot && (command!='l' && command!='x'))
     error("LONG_ZPAQ_SNAPSHOT: history is read-only");
   if (long_snapshot && (all || repack || version!=DEFAULT_VERSION))
@@ -3780,6 +3785,99 @@ bool compareName(DTMap::const_iterator p, DTMap::const_iterator q) {
   return p->second.data<q->second.data;
 }
 
+// Check each referenced block once. Never create files or use extraction's
+// partial-output path. A failed shared block marks all its referencing files
+// as affected, not as proven individually corrupt or recoverable.
+int Jidac::diagnose_blocks() {
+  if (long_scan_errors || !long_journaling || long_streaming || ver.size()<2)
+    error("LONG_ZPAQ_DIAGNOSTIC: complete journaling metadata required");
+  if (dt.size()>100000 || block.size()>100000)
+    error("LONG_ZPAQ_DIAGNOSTIC: catalog exceeds diagnostic scope");
+  vector<DTMap::iterator> files;
+  vector<vector<unsigned> > refs;
+  vector<unsigned> counts(block.size(),0);
+  uint64_t reference_count=0, name_bytes=0;
+  for (DTMap::iterator p=dt.begin(); p!=dt.end(); ++p) {
+    if (!p->second.date || p->first.empty() || p->first[p->first.size()-1]=='/') continue;
+    name_bytes+=p->first.size(); reference_count+=p->second.ptr.size();
+    if (name_bytes>16*1024*1024 || reference_count>2000000)
+      error("LONG_ZPAQ_DIAGNOSTIC: catalog exceeds diagnostic scope");
+    vector<unsigned> used;
+    int64_t size=0;
+    for (unsigned k=0; k<p->second.ptr.size(); ++k) {
+      unsigned fragment=p->second.ptr[k];
+      if (!fragment || fragment>=ht.size() || ht[fragment].usize<0 || block.empty())
+        error("invalid diagnostic fragment reference");
+      unsigned lo=0, hi=block.size()-1;
+      while (lo<hi) { unsigned mid=(lo+hi+1)/2; if (block[mid].start<=fragment) lo=mid; else hi=mid-1; }
+      const Block& b=block[lo];
+      if (fragment<b.start || uint64_t(fragment)>=uint64_t(b.start)+b.frags)
+        error("invalid diagnostic block reference");
+      used.push_back(lo); size+=ht[fragment].usize;
+    }
+    if (size!=p->second.size) error("invalid diagnostic file size");
+    std::sort(used.begin(),used.end()); used.erase(std::unique(used.begin(),used.end()),used.end());
+    for (unsigned k=0; k<used.size(); ++k) ++counts[used[k]];
+    files.push_back(p); refs.push_back(used);
+  }
+  vector<int> states(block.size(),0); // unchecked, verified, failed
+  InputArchive in(archive.c_str(),password);
+  if (!in.isopen()) error("diagnostic source unavailable");
+  class BoundedBlock: public libzpaq::Reader {
+    InputArchive& in; int64_t remaining;
+  public:
+    BoundedBlock(InputArchive& input,int64_t bytes): in(input),remaining(bytes) {}
+    int read(char* p,int n) { n=int(std::min<int64_t>(n,remaining)); int r=n>0?in.read(p,n):0; remaining-=r; return r; }
+    int get() { char c; return read(&c,1)?(unsigned char)c:-1; }
+  };
+  for (unsigned i=0; i<block.size(); ++i) if (counts[i]) {
+    const Block& b=block[i];
+    if (!b.start || !b.frags || uint64_t(b.start)+b.frags>ht.size()
+        || b.usize<8 || b.bsize<=0 || b.offset<0 || b.bsize>in.size()-b.offset)
+      error("invalid diagnostic block bounds");
+    if (b.usize>512LL*1024*1024) continue;
+    try {
+      in.seek(b.offset,SEEK_SET); BoundedBlock input(in,b.bsize);
+      libzpaq::Decompresser d; d.setInput(&input); double memory=0;
+      if (!d.findBlock(&memory)) error("diagnostic block not found");
+      if (memory>256.0*1024*1024) continue;
+      StringBuffer out; out.setLimit(b.usize); d.setOutput(&out);
+      while (d.findFilename()) {
+        d.readComment(); libzpaq::SHA1 segment; d.setSHA1(&segment); d.decompress();
+        char digest[21]={0}; d.readSegmentEnd(digest);
+        if (digest[0] && memcmp(digest+1,segment.result(),20)) error("diagnostic segment checksum failed");
+      }
+      if (int64_t(out.size())!=b.usize) error("diagnostic block size mismatch");
+      uint64_t offset=0;
+      for (unsigned j=b.start; j<b.start+b.frags; ++j) {
+        if (ht[j].usize<0 || offset+ht[j].usize>out.size()) error("incomplete diagnostic fragment");
+        libzpaq::SHA1 fragment; fragment.write(out.c_str()+offset,ht[j].usize);
+        if (memcmp(fragment.result(),ht[j].sha1,20)) error("diagnostic fragment checksum failed");
+        offset+=ht[j].usize;
+      }
+      states[i]=1;
+    } catch (std::bad_alloc&) { states[i]=0; }
+      catch (std::exception&) { states[i]=2; }
+  }
+  const unsigned selected=long_snapshot?unsigned(long_snapshot):unsigned(ver.size()-1);
+  printf("\nLONG_ZPAQ_BLOCKS\n{\"snapshot\":{\"version\":%u,\"date\":%lld},\"blocks\":[",selected,(long long)ver[selected].date);
+  bool comma=false;
+  for (unsigned i=0; i<block.size(); ++i) if (counts[i]) {
+    if (comma) putchar(','); comma=true;
+    printf("{\"id\":%u,\"offset\":%lld,\"compressedSize\":%lld,\"state\":\"%s\",\"files\":%u}",i+1,(long long)block[i].offset,(long long)block[i].bsize,states[i]==1?"verified":states[i]==2?"failed":"unchecked",counts[i]);
+  }
+  printf("],\"entries\":[");
+  for (unsigned i=0; i<files.size(); ++i) {
+    if (i) putchar(','); int state=1;
+    for (unsigned k=0; k<refs[i].size(); ++k) { int s=states[refs[i][k]]; if (s==2) { state=2; break; } if (s==0) state=0; }
+    printf("{\"path\":"); long_json_string(files[i]->first);
+    printf(",\"size\":%lld,\"state\":\"%s\",\"blocks\":[",(long long)files[i]->second.size,state==1?"verified":state==2?"affected":"unchecked");
+    for (unsigned k=0; k<refs[i].size(); ++k) { if (k) putchar(','); printf("%u",refs[i][k]+1); }
+    printf("]}");
+  }
+  printf("]}\n"); return 0;
+}
+
 // List contents
 int Jidac::list() {
 
@@ -3790,6 +3888,7 @@ int Jidac::list() {
     && long_journaling && !long_streaming && ver.size()>1;
   if ((long_scan_errors && !recoverable_tail) || csize<1)
     error("damaged or incomplete ZPAQ metadata; no confirmed complete snapshot");
+  if (long_diagnose) return diagnose_blocks();
   if (long_json) {
     printf("\nLONG_ZPAQ_JSON\n{\"kind\":\"%s\",\"versions\":%u,\"entries\":[",
       long_journaling ? (long_streaming ? "mixed" : "journaling") : "streaming", unsigned(ver.size()-1));

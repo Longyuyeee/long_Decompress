@@ -1,0 +1,5 @@
+
+running 1 test
+test services::zpaq_1530_tests::zpaq_1530_contract_diagnosis_and_resource_plan_use_the_chosen_snapshot ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1071 filtered out; finished in 0.92s

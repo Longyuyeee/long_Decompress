@@ -5,6 +5,7 @@ import { useTauriCommands, type ArchiveDiagnosticReport, type ZipRepairResult } 
 import { useTaskStore } from '@/stores/task'
 import { generateId } from '@/utils'
 import { parentDirectory } from '@/utils/resultLocation'
+import { prepareZpaqSource } from '@/utils/zpaqMultipart'
 import { archiveSourceStem } from '@/utils/archiveSource'
 import { isZipPasswordEncoding, zipPasswordEncodingArguments, type ZipPasswordEncoding } from '@/types/zipPassword'
 import { supportsZipPasswordEncoding, zipPasswordEncodingForSource } from '@/utils/zipPasswordSource'
@@ -46,7 +47,7 @@ export const useArchiveRecoveryStore = defineStore('archiveRecovery', () => {
     try {
       if (!rows.value.length) localStorage.removeItem(ARCHIVE_RECOVERY_DRAFT_KEY)
       else localStorage.setItem(ARCHIVE_RECOVERY_DRAFT_KEY, JSON.stringify({version:1, paths:sourcePaths.value, rootDirectory:rootDirectory.value,
-        rows:rows.value.map(({password: _password, resultPassword: _resultPassword, ...row}) => row)}))
+        rows:rows.value.map(({password: _password, resultPassword: _resultPassword, ...row}) => ({...row,report:row.report?{...row.report,zpaqBlocks:undefined}:undefined}))}))
       saveError.value = ''
     } catch { saveError.value = '检查修复进度未能保存，请勿依赖重启恢复' }
   }
@@ -88,7 +89,8 @@ export const useArchiveRecoveryStore = defineStore('archiveRecovery', () => {
     const current = ++generation
     preparing.value = true
     try {
-      const groups = await commands.groupArchiveDiagnosisSources(paths)
+      const prepared=await Promise.all(paths.map(prepareZpaqSource))
+      const groups = await commands.groupArchiveDiagnosisSources(prepared)
       if (current !== generation) return
       for (const row of rows.value) { row.password = ''; row.resultPassword = '' }
       sourcePaths.value = [...paths]

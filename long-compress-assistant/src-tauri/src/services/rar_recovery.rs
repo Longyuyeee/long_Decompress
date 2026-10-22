@@ -338,6 +338,7 @@ pub async fn diagnose(
             .unwrap_or_default();
         for name in recovery_missing(&group) { if !missing.iter().any(|p| p.eq_ignore_ascii_case(&name)) { missing.push(name); } }
         let mut report = ArchiveDiagnosticReport {
+            zpaq_blocks: None,
             file_path: path.to_string_lossy().to_string(),
             file_size: group
                 .data

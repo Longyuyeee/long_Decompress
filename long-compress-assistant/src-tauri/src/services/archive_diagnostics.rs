@@ -31,6 +31,8 @@ pub struct DiagnosticIssue {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ArchiveDiagnosticReport {
+    #[serde(skip_serializing_if="Option::is_none")]
+    pub zpaq_blocks: Option<super::zpaq_engine::blocks::Report>,
     pub file_path: String,
     pub file_size: u64,
     pub actual_format: String,
@@ -366,6 +368,7 @@ pub async fn diagnose_archive_at(
         .map(|part| part.file_name().unwrap_or_default().to_string_lossy().to_string())
         .collect()).unwrap_or_default();
     let mut report = ArchiveDiagnosticReport {
+        zpaq_blocks: None,
         file_path: path.to_string_lossy().to_string(),
         file_size: group.as_ref().map(|group| group.total_size).unwrap_or(path.metadata()?.len()),
         actual_format: format_label(logical, &[]),
@@ -480,6 +483,7 @@ pub async fn diagnose_archive_at(
     };
 
     anyhow::ensure!(snapshot.is_none() || report.actual_format == "ZPAQ", "所选快照只适用于 ZPAQ 日志归档");
+    let zpaq_stamp=if report.actual_format=="ZPAQ" {Some(super::zpaq_engine::catalog_source_stamp(source)?)}else{None};
     let metadata = archive_browser::browse_archive_cancellable_at(source, password, cancelled.clone(), zip_password_encoding, snapshot).await;
     if let Some(error) = metadata.as_ref().err().filter(|e|format!("{e:#}").contains("[archive-inspection:snapshot-unavailable]")) {
         report.status = "snapshot_unavailable".into();
@@ -591,6 +595,36 @@ pub async fn diagnose_archive_at(
             detail: "归档已加密；报告不会记录密码内容".to_string(),
         });
         return Ok(report);
+    }
+
+    if actual_format=="ZPAQ" {
+        if let Err(error)=&metadata {record_failure(&mut report,error,password.is_some(),false,source);return Ok(report);}
+        if let Ok(directory)=&metadata {
+            if let Some(history)=directory.zpaq_history.as_ref() {
+                if history.interrupted_tail.is_some() {
+                    report.status="interrupted_tail".into();
+                    report.recoverability="complete_snapshots".into();
+                    report.issues.push(DiagnosticIssue{code:"interrupted_tail".into(),severity:"warning".into(),title:"尾部更新中断，可选择完整旧快照".into(),detail:"中断事务目录未完成，不推断其文件范围。请在浏览器明确选择完整旧快照取回；未把旧版本作为最新备份完整成功。".into()});
+                    return Ok(report);
+                }
+                match super::zpaq_engine::blocks::diagnose(source,password,snapshot.as_ref(),zpaq_stamp.as_deref(),cancelled.clone()).await {
+                    Ok(blocks)=>{
+                        report.integrity_tested=blocks.unchecked()==0;
+                        report.status=if blocks.affected()>0 {"zpaq_affected"}else if blocks.unchecked()>0 {"structure_only"}else{"healthy"}.into();
+                        report.evidence.push(format!("ZPAQ snapshot {} ({}); referenced blocks checked once; revision {}",blocks.snapshot.version,blocks.snapshot.date,blocks.revision));
+                        if blocks.affected()>0 {report.issues.push(DiagnosticIssue{code:"zpaq_affected".into(),severity:"warning".into(),title:format!("{} 个文件受到失败数据块影响",blocks.affected()),detail:"共享数据块未通过解码或内容校验，关联文件暂不能判为可用；不表示每个关联文件都已证实损坏。本版仅定位，未提取部分文件。".into()});}
+                        if blocks.unchecked()>0 {report.issues.push(DiagnosticIssue{code:"zpaq_unchecked".into(),severity:"warning".into(),title:format!("{} 个文件仍未检查",blocks.unchecked()),detail:"关联块超过本次解码范围或可用内存；未检查内容不会计入检查通过。".into()});}
+                        report.zpaq_blocks=Some(blocks);
+                    }
+                    Err(error)=>{
+                        check_cancelled(&cancelled)?;
+                        if format!("{error:#}").contains("verification-unavailable") {report.status="structure_only".into();report.issues.push(DiagnosticIssue{code:"verification_unavailable".into(),severity:"warning".into(),title:"未完成逐块诊断".into(),detail:format!("{error:#}")});}
+                        else {record_failure(&mut report,&error,password.is_some(),true,source);}
+                    }
+                }
+                return Ok(report);
+            }
+        }
     }
 
     let route = compression_route(&requested_format);

@@ -40,6 +40,21 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('FileIntegrityView', () => {
+  it('zpaq163 preserves a requested old snapshot through page initialization and repeated diagnosis', async () => {
+    const pinia=createPinia();setActivePinia(pinia)
+    const snapshot={version:1,date:20261020100000}
+    mocks.diagnoseArchive.mockResolvedValue({actualFormat:'ZPAQ',status:'healthy',issues:[],evidence:[],missingVolumes:[],canRepair:false,zpaqBlocks:{snapshot,entries:[],blocks:[],revision:'a'.repeat(64)}})
+    const app=useAppStore();app.openArchiveForDiagnosis({path:'C:/backup.zpaq',password:'session password',zpaqSnapshot:snapshot})
+    const wrapper=mount(FileIntegrityView,{global:{plugins:[pinia]}});await flushPromises()
+    expect(mocks.diagnoseArchive).toHaveBeenLastCalledWith(expect.any(String),'C:/backup.zpaq','session password',undefined,snapshot)
+    expect(wrapper.get('[data-testid="diagnostic-report"] h2').text()).toBe('快照 1 检查通过')
+    await wrapper.get('[data-testid="start-archive-diagnosis"]').trigger('click');await flushPromises()
+    expect(mocks.diagnoseArchive).toHaveBeenLastCalledWith(expect.any(String),'C:/backup.zpaq','session password',undefined,snapshot)
+    await wrapper.get('[data-testid="zpaq-diagnosis-browse"]').trigger('click')
+    expect(app.takeArchiveBrowserOptions()).toMatchObject({password:'session password',zpaqSnapshot:snapshot})
+    wrapper.unmount()
+  })
+
   it('does not offer recovery-volume creation for a read-only SFX group opened from a middle member', async () => {
     const pinia=createPinia();setActivePinia(pinia)
     mocks.diagnoseArchive.mockResolvedValue({filePath:'C:/parts.r02',actualFormat:'RAR',status:'healthy',splitArchive:true,volumesFound:6,missingVolumes:[],totalFiles:3,totalDirectories:1,totalUncompressedSize:100,integrityTested:true,canRepair:false,recoverability:'sfx_readonly',issues:[],evidence:['自解压包仅做只读完整性检查']})

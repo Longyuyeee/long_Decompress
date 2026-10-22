@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import HelpHint from '@/components/ui/HelpHint.vue'
+import ZpaqBlockDetails from '@/components/archive/ZpaqBlockDetails.vue'
+import {zpaqReportLines} from '@/types/zpaqBlocks'
+import {prepareZpaqSource,type ZpaqGroup} from '@/utils/zpaqMultipart'
 import type { ZpaqSnapshot } from '@/types/zpaqSnapshot'
 import { useChecksumOperation } from '@/composables/useChecksumOperation'
 import ChecksumProgressCard from '@/components/integrity/ChecksumProgressCard.vue'
@@ -59,6 +62,10 @@ const recoveryWorkspace = useArchiveRecoveryStore()
 const activeMode = ref<'calculate' | 'verify' | 'archive'>(recoveryWorkspace.rows.length ? 'archive' : 'calculate')
 const isVerifying = ref(false)
 const archivePath = ref(recoveryWorkspace.sourcePaths[0] || '')
+const nativeZpaqSource=ref<ZpaqGroup|null>(null)
+const archiveDisplayPath=computed(()=>nativeZpaqSource.value?.members[0]?.path||archivePath.value)
+let sourceDisplaySequence=0
+watch(archivePath,async path=>{const sequence=++sourceDisplaySequence;nativeZpaqSource.value=null;if(!/\.zpaq$/i.test(path))return;try{const value=await tauriCommands.invoke<ZpaqGroup|null>('zpaq_multipart_details',{path});if(sequence===sourceDisplaySequence)nativeZpaqSource.value=value}catch{/* Keep the actual diagnosis responsible for source errors. */}},{immediate:true})
 const diagnosticSources = ref<string[]>([...recoveryWorkspace.sourcePaths])
 const batchBusy = computed(() => recoveryWorkspace.busy || recoveryWorkspace.preparing)
 const batchDetailOpen = ref(false), recoveryVolumesVisible = ref(false)
@@ -254,7 +261,9 @@ const selectArchive = async () => {
   const queued = import.meta.env.VITE_DESKTOP_E2E === '1'
     ? window.__LONG_DECOMPRESS_DESKTOP_E2E__?.takeDesktopDialogSelection() : undefined
   const file = queued === undefined ? await open({ multiple: true, title: '选择要诊断的压缩包，可多选' }) : queued
-  const paths = Array.isArray(file) ? file : typeof file === 'string' ? [file] : []
+  let paths = Array.isArray(file) ? file : typeof file === 'string' ? [file] : []
+  try {paths=[...new Set(await Promise.all(paths.map(prepareZpaqSource)))]}
+  catch(error){if(!String(error).includes('已取消'))appStore.setError(String(error));return}
   if (paths.length) archiveSnapshot.value = undefined
   if (paths.length) {
     if (paths.length === 1) recoveryWorkspace.clear()
@@ -280,12 +289,14 @@ const diagnoseArchive = async () => {
   repairResult.value = null
   diagnosticId.value = `diagnostic-${Date.now()}-${Math.random().toString(36).slice(2)}`
   try {
+    const prepared=await prepareZpaqSource(archivePath.value)
+    if(prepared!==archivePath.value){archivePath.value=prepared;diagnosticSources.value=[prepared]}
     diagnosticReport.value = archiveSnapshot.value
       ? await tauriCommands.diagnoseArchive(diagnosticId.value, archivePath.value, archivePassword.value, sourceEncoding.value, archiveSnapshot.value)
       : await tauriCommands.diagnoseArchive(diagnosticId.value, archivePath.value, archivePassword.value, ...zipPasswordEncodingArguments(sourceEncoding.value))
     sourceFormat.value = diagnosticReport.value.actualFormat
   } catch (error) {
-    if (!String(error).toLocaleLowerCase().includes('cancel')) {
+    if (!/cancel|已取消/i.test(String(error))) {
       appStore.setError(`归档诊断失败：${String(error)}`)
     }
   } finally {
@@ -361,7 +372,8 @@ const browseRepair = () => {
 }
 
 const statusLabel = (status: string) => ({
-  healthy: '完整性正常', password_required: '需要密码', wrong_password: '密码错误',
+  healthy: diagnosticReport.value?.zpaqBlocks?`快照 ${diagnosticReport.value.zpaqBlocks.snapshot.version} 检查通过`:'完整性正常', password_required: '需要密码', wrong_password: '密码错误',
+  zpaq_affected:'发现受损数据块', interrupted_tail:'尾部更新中断',
   password_encoding: diagnosticReport.value?.actualFormat === 'ZIP' ? 'ZIP 密码编码不兼容' : '原包编码不兼容',
   directory_lost: '目录信息丢失，可尝试救援',
   partial_recovery: '缺少分卷，可尝试部分救援',
@@ -390,7 +402,7 @@ const reportText = () => {
   if (!report) return ''
   return [
     'Long解压 · 归档诊断报告',
-    `文件：${report.filePath}`,
+    `文件：${archiveDisplayPath.value||report.filePath}`,
     `格式：${report.actualFormat}`,
     `状态：${statusLabel(report.status)}`,
     `大小：${report.fileSize} bytes`,
@@ -398,6 +410,7 @@ const reportText = () => {
     `分卷：${report.splitArchive ? `是（发现 ${report.volumesFound} 卷）` : '否'}`,
     `条目：${report.totalFiles} 个文件 / ${report.totalDirectories} 个目录`,
     ...report.issues.map(issue => `[${issue.severity}] ${issue.title}：${issue.detail}`),
+    ...(report.zpaqBlocks?zpaqReportLines(report.zpaqBlocks):[]),
     ...report.evidence.map(item => `证据：${item}`),
   ].join('\n')
 }
@@ -478,10 +491,10 @@ function rememberSingleResult() {
     extractToSubfolder:recoveryOptions.value.extractToSubfolder ?? original?.extractToSubfolder ?? true})
 }
 function restoreSingleResult() {
-  archiveSnapshot.value = undefined
   if (diagnosticSources.value.length !== 1 || recoveryWorkspace.rows.length !== 1) return
   const row = recoveryWorkspace.rows[0]!
   if (!row.result) return
+  archiveSnapshot.value = undefined
   archivePath.value = row.path; archivePassword.value = row.password
   archiveZipPasswordEncoding.value = row.zipPasswordEncoding; sourceFormat.value = row.sourceFormat
   diagnosticReport.value = null; repairResult.value = row.result
@@ -683,12 +696,13 @@ onUnmounted(() => {
           <div v-if="recoveryTaskId" class="repair-password-note" data-testid="recovery-task-context"><i class="pi pi-wrench"></i><span>正在处理失败的解压任务。救回新包后可直接加入解压队列，原输出设置会保留。</span></div>
           <section v-show="diagnosticSources.length < 2 || batchDetailOpen" class="integrity-panel min-w-0 overflow-hidden">
             <div class="archive-inputs">
-              <button type="button" class="archive-select" :disabled="isDiagnosing || isRepairing" @click="selectArchive">
+              <button type="button" class="archive-select" data-testid="diagnostic-choose-archive" :disabled="isDiagnosing || isRepairing" @click="selectArchive">
                 <i class="pi pi-folder-open"></i>
-                <span class="min-w-0 truncate">{{ archivePath ? archivePath.split(/[\\/]/).pop() : '选择压缩包' }}</span>
+                <span class="min-w-0 truncate">{{ archiveDisplayPath ? archiveDisplayPath.split(/[\\/]/).pop() : '选择压缩包' }}<template v-if="nativeZpaqSource"> · {{nativeZpaqSource.members.length}} 个部分</template></span>
               </button>
               <input
                 v-model="archivePassword"
+                data-testid="diagnostic-password"
                 type="password"
                 autocomplete="off"
                 class="archive-password"
@@ -697,7 +711,7 @@ onUnmounted(() => {
               />
             </div>
             <ZipPasswordEncodingField v-if="archivePath && (supportsZipPasswordEncoding(archivePath, sourceFormat) || (!sourceFormat && archiveZipPasswordEncoding !== undefined))" v-model="archiveZipPasswordEncoding" :source-path="archivePath" :source-format="sourceFormat" :disabled="isDiagnosing || isRepairing" class="mt-3 max-w-sm" test-id="diagnosis-zip-password-encoding" />
-            <p v-if="archivePath" class="mt-3 text-xs text-muted break-all">{{ archivePath }}</p>
+            <p v-if="archivePath" class="mt-3 text-xs text-muted break-all">{{ archiveDisplayPath }}</p>
             <div class="mt-5 flex flex-wrap gap-3">
               <button v-if="!isDiagnosing" data-testid="start-archive-diagnosis" type="button" class="archive-primary" :disabled="!archivePath || isRepairing" @click="diagnoseArchive">
                 <i class="pi pi-search"></i>开始诊断
@@ -715,13 +729,15 @@ onUnmounted(() => {
             <div class="flex flex-wrap items-start justify-between gap-4">
               <div>
                 <p class="text-xs font-black tracking-[.22em] text-muted">诊断结论</p>
-                <h2 class="mt-2 text-2xl font-black" :class="diagnosticReport.status === 'healthy' ? 'text-green-500' : ['password_required', 'partial_recovery'].includes(diagnosticReport.status) ? 'text-amber-500' : 'text-red-500'">
+                <h2 class="mt-2 text-2xl font-black" :class="diagnosticReport.status === 'healthy' ? 'text-green-500' : ['password_required', 'partial_recovery', 'interrupted_tail', 'structure_only'].includes(diagnosticReport.status) ? 'text-amber-500' : 'text-red-500'">
                   {{ statusLabel(diagnosticReport.status) }}
                 </h2>
               </div>
               <span class="diagnostic-format">{{ diagnosticReport.actualFormat }}</span>
             </div>
 
+            <ZpaqBlockDetails v-if="diagnosticReport.zpaqBlocks" :report="diagnosticReport.zpaqBlocks" />
+            <button v-if="diagnosticReport.actualFormat==='ZPAQ'" class="archive-secondary mt-3" data-testid="zpaq-diagnosis-browse" @click="appStore.openArchiveInBrowser(archivePath,{password:archivePassword,zpaqSnapshot:diagnosticReport.zpaqBlocks?.snapshot||archiveSnapshot})"><i class="pi pi-folder-open"/>{{diagnosticReport.status==='interrupted_tail'?'选择完整旧快照取回':'在浏览器选择快照'}}</button>
             <button v-if="isRar && diagnosticReport.status === 'healthy' && diagnosticReport.volumesFound > 1 && diagnosticReport.recoverability !== 'sfx_readonly'" class="archive-secondary mt-4" data-testid="open-create-recovery-volumes" @click="showRecoveryVolumes(archivePath, archivePassword)"><i class="pi pi-shield"></i>为这组分包创建恢复卷</button>
             <div class="diagnostic-metrics mt-6">
               <div><span>归档大小</span><strong>{{ formatBytes(diagnosticReport.fileSize) }}</strong></div>
@@ -735,10 +751,10 @@ onUnmounted(() => {
                 <strong>{{ issue.title }}</strong><p>{{ archiveInspectionMessageForDisplay(issue.detail) }}</p>
               </article>
             </div>
-            <div class="mt-6 rounded-2xl bg-input/30 p-4 min-w-0">
-              <p class="text-xs font-black text-content">诊断证据</p>
+            <details class="mt-4 rounded-xl bg-input/30 p-3 min-w-0">
+              <summary class="cursor-pointer text-xs font-bold text-muted">诊断依据</summary>
               <ul class="mt-2 space-y-1 text-xs text-muted break-all"><li v-for="item in diagnosticReport.evidence" :key="item">· {{ item }}</li></ul>
-            </div>
+            </details>
 
             <div v-if="diagnosticReport.canRepair" class="mt-6 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5">
               <strong class="text-sm text-content">{{ isRar ? diagnosticReport.recoverability === 'rar_recovery_volumes' ? '可尝试使用恢复卷补齐或修复 RAR' : '可尝试修复 RAR' : diagnosticReport.encrypted ? '可尝试救回密码 ZIP 中的完整文件' : '可尝试恢复 ZIP 中的完整文件' }}</strong>
