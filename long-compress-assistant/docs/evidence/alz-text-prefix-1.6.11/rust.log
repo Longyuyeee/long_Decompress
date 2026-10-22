@@ -1,0 +1,36 @@
+    Blocking waiting for file lock on package cache
+   Compiling long-compress-assistant v1.6.11 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 17s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-30197f52f54f5c2c.exe)
+
+running 4 tests
+test services::archive_preview::alz_prefix1611_tests::alz_prefix1611_cancel_and_replaced_source_do_not_deliver_a_prefix ... ok
+test services::archive_preview::alz_prefix1611_tests::alz_prefix1611_partial_content_never_relaxes_full_integrity_or_other_previews ... ok
+test services::archive_preview::alz_prefix1611_tests::alz_prefix1611_vault_uses_only_the_prefix_without_marking_full_password_success ... ok
+test services::archive_preview::alz_prefix1611_tests::alz_prefix1611_methods_native_password_and_character_boundaries ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 1085 filtered out; finished in 7.48s

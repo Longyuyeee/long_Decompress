@@ -1500,6 +1500,35 @@ impl CompressionService {
         Ok(None)
     }
 
+    /// Preview candidates using only the selected prefix. This is not a full
+    /// archive/password verification and must never enter brute-force extraction.
+    pub(crate) async fn preview_alz_text_prefix_with_vault(&self, file_path:&str, entry:&str, password:Option<&str>, encoding:Option<ZipPasswordEncoding>, encrypted:bool, revision:Option<String>) -> Result<crate::services::archive_preview::ArchiveTextPreview> {
+        let work=async {
+            self.check_cancellation()?;
+            let supplied=password.filter(|value|!value.is_empty());
+            let candidates:Vec<Option<String>>=if let Some(value)=supplied {vec![Some(value.to_string())]}
+                else if !encrypted {vec![None]}
+                else {self.password_book_candidates().await.unwrap_or_default().into_iter().map(|(_,_,key)|Some(key)).collect()};
+            anyhow::ensure!(!candidates.is_empty(),"ALZ 所选文本需要密码，请填写密码后重试；前缀预览不运行完整密码验证");
+            for candidate in candidates {
+                self.check_cancellation()?;
+                match crate::services::archive_preview::preview_archive_text_controlled_at(Path::new(file_path),entry,candidate.as_deref(),encoding,None,self.cancellation_flag.clone(),revision.clone()).await {
+                    Ok(value)=>return Ok(value),
+                    Err(error) if supplied.is_none() && encrypted && {
+                        let detail=format!("{error:#}");
+                        detail.contains("[alz-password]") || detail.contains("[archive-inspection:ambiguous-data]") || detail.contains("[alz-encoding]") || detail.contains("appears to be binary") || detail.contains("supported text encoding")
+                    }=>continue,
+                    Err(error)=>return Err(error),
+                }
+            }
+            anyhow::bail!("密码保险箱未能读到所选文本前缀，请填写密码或先提取后打开；未验证整文件")
+        };
+        match tokio::time::timeout(std::time::Duration::from_secs(30),work).await {
+            Ok(result)=>result,
+            Err(_)=>{self.cancellation_flag.store(true,Ordering::Release);anyhow::bail!("ALZ 文本前缀读取超过 30 秒范围，已停止；请填写密码或先提取后打开")}
+        }
+    }
+
     fn recommended_dictionary(file_path: &str) -> Vec<String> {
         let file_name = Path::new(file_path)
             .file_name()

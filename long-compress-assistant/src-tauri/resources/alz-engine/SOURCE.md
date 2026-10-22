@@ -9,7 +9,7 @@ the complete resolved dependency inventory is `dependencies.json`.
 Long adapter modifications to unalz are explicit `AlzArchive::from_reader`,
 `MultiVolumeReader::from_paths` constructors, original filename-byte retention,
 and rejecting unterminated Deflate/Bzip2 or unconsumed declared compressed bytes.
-The 0.6.0 helper reports definitive termination/trailing-data corruption only after the
+The 0.7.0 helper reports definitive termination/trailing-data corruption only after the
 decoded content matches both its original length and CRC, including encrypted
 entries. Obfuscated Deflate (method 3) remains unsupported pending original
 producer evidence; no decoder from XADMaster or another project is incorporated.
@@ -43,3 +43,11 @@ input budget. It returns only after length, CRC and stream termination checks;
 the application validates raster type, dimensions and pixels before rendering.
 Existing decoders and extraction behavior are unchanged. Neither operation
 publishes a partial entry as fully validated or creates a temporary extraction.
+
+preview-text-prefix is a separate partial-read operation for declared large text.
+It stops at 1 MiB of decoded bytes using a private typed writer boundary, with
+at most 64 MiB of actual selected compressed input and a 64 MiB Bzip2 block
+expansion ceiling. Partial output never sets verified, checks a whole-entry CRC,
+or certifies stream termination. Other decoder/I/O errors are not accepted as
+the intentional stop. The full verify/extract and small complete-preview routes
+retain their existing integrity checks; no vendor decoder is changed.

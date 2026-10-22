@@ -1,0 +1,59 @@
+{
+  "helperSha256": "dcf5e376527db48c0faa42d55c227f07265e37f11c9e8af8b7a3aab98adbadd8",
+  "checks": [
+    {
+      "name": "store",
+      "partial": true,
+      "inputBytes": 1048576,
+      "totalSize": 2600000,
+      "prefixBytes": 1048576
+    },
+    {
+      "name": "deflate",
+      "partial": true,
+      "inputBytes": 8917,
+      "totalSize": 2600000,
+      "prefixBytes": 1048576
+    },
+    {
+      "name": "bzip2",
+      "partial": true,
+      "inputBytes": 1542,
+      "totalSize": 2600000,
+      "prefixBytes": 1048576
+    },
+    {
+      "name": "password",
+      "partial": true,
+      "inputBytes": 8917,
+      "totalSize": 2600000,
+      "prefixBytes": 1048576
+    },
+    {
+      "name": "password-volumes.a00",
+      "partial": true,
+      "inputBytes": 8917,
+      "totalSize": 2600000,
+      "prefixBytes": 1048576
+    },
+    {
+      "name": "bad-crc-later",
+      "partial": true,
+      "inputBytes": 8917,
+      "totalSize": 2600000,
+      "prefixBytes": 1048576
+    },
+    {
+      "name": "large-store",
+      "fileBytes": 73400404,
+      "inputBytes": 1048576,
+      "partial": true
+    },
+    {
+      "name": "scan-budget",
+      "fileBytes": 67117849,
+      "error": "[archive-inspection:io] [alz-io] ALZ 文件读写失败: ALZ 文本前缀读取超过 64 MiB 范围，请先提取后打开"
+    }
+  ],
+  "controlled": true
+}

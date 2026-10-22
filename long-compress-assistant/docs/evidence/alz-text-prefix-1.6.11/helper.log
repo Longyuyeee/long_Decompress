@@ -1,0 +1,23 @@
+   Compiling long-alz v0.7.0 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\tools\alz-engine)
+warning: fields `first`, `total`, `bytes`, and `stem` are never read
+  --> src\..\..\..\src-tauri\src\services\alz_volumes.rs:7:9
+   |
+ 6 | pub struct Group {
+   |            ----- fields in this struct
+ 7 |     pub first: PathBuf,
+   |         ^^^^^
+...
+10 |     pub total: usize,
+   |         ^^^^^
+11 |     pub bytes: u64,
+   |         ^^^^^
+12 |     pub virtual_bytes: u64,
+13 |     pub stem: String,
+   |         ^^^^
+   |
+   = note: `Group` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `long-alz` (bin "long-alz") generated 1 warning
+    Finished `release` profile [optimized] target(s) in 23.14s
+Locked ALZ helper and 64 dependency notices

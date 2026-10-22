@@ -232,6 +232,26 @@ describe('ArchiveBrowserView', () => {
     })
   })
 
+  it('ALZ large text explicitly shows partial content without whole-file verification',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'ALZ',revision:'b'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:3000000,totalCompressedSize:8000,encrypted:false,entries:[{path:'session.txt',name:'session.txt',size:3000000,isDir:false}]})
+    mocks.previewArchiveText.mockResolvedValueOnce({entryPath:'session.txt',content:'INFO 日志开头',encoding:'UTF-8',byteSize:1048574,totalSize:3000000,truncated:true,lineCount:1})
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1611,path:'C:/logs.alz'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
+    await w.get('[data-entry-path="session.txt"]').trigger('dblclick');await flushPromises()
+    expect(w.get('[data-testid="archive-text-preview"]').text()).toContain('日志开头')
+    expect(w.get('.preview-meta').text()).toContain('部分内容 · 未校验整文件');expect(w.get('.preview-meta').text()).not.toContain('完整显示')
+    expect(mocks.previewArchiveText).toHaveBeenCalledWith('C:/logs.alz','session.txt','',undefined,undefined,expect.objectContaining({sourceRevision:'b'.repeat(64)}));w.unmount()
+  })
+
+  it('ALZ prefix scan limit gives an extraction hint without internal I/O markers', async () => {
+    mocks.browseArchive.mockResolvedValueOnce({format:'ALZ',revision:'b'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:3000000,totalCompressedSize:70000000,encrypted:false,entries:[{path:'session.txt',name:'session.txt',size:3000000,isDir:false}]})
+    mocks.previewArchiveText.mockRejectedValueOnce(new Error('[archive-inspection:io] [alz-io] ALZ 文件读写失败: ALZ 文本前缀读取超过 64 MiB 范围，请先提取后打开'))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1611,path:'C:/logs.alz'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
+    await w.get('[data-entry-path="session.txt"]').trigger('dblclick');await flushPromises()
+    expect(w.get('.preview-stage').text()).toContain('读取这段文本需要扫描超过 64 MiB，已停止预览。请先提取后打开。')
+    expect(w.get('.preview-stage').text()).not.toMatch(/archive-inspection|alz-io|文件读写失败/)
+    expect(w.find('[data-testid="archive-text-preview"]').exists()).toBe(false);w.unmount()
+  })
+
   it('ALZ stale preview asks to refresh without exposing an internal marker', async () => {
     mocks.browseArchive.mockResolvedValueOnce({format:'ALZ',revision:'a'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:10,totalCompressedSize:8,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:10,isDir:false}]})
     mocks.previewArchiveText.mockRejectedValueOnce(new Error('IMAGE_READER_CHANGED|来源无法确认'))

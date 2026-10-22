@@ -1,0 +1,64 @@
+{
+  "version": "1.6.11",
+  "helperVersion": "0.7.0",
+  "controlled": true,
+  "applicationSha256": "d5ed7c9681e068773f50de6624f2dc7c23e2b43283d0dc41c0209f7620e40b3e",
+  "helperSha256": "dcf5e376527db48c0faa42d55c227f07265e37f11c9e8af8b7a3aab98adbadd8",
+  "rust": {
+    "passed": 4,
+    "filtered": 1085,
+    "command": "cargo test --locked --manifest-path src-tauri/Cargo.toml --lib alz_prefix1611 -- --nocapture"
+  },
+  "frontend": {
+    "uniquePassed": 48,
+    "initial": 47,
+    "focusedCopyContinuation": 1,
+    "oldPassesRetained": true
+  },
+  "helper": {
+    "checks": 8,
+    "actualLargeInputBytes": [
+      73400404,
+      67117849
+    ]
+  },
+  "desktop": {
+    "initialFunctionalGroups": 5,
+    "finalCopyOnlyContinuation": 1,
+    "screenshotsInspected": 4,
+    "finalCopyScreenshot": "scan-limit-final-narrow.png",
+    "sourceReplacedAndEarlyCancellation": true
+  },
+  "builds": {
+    "helper": "passed",
+    "shell": "passed",
+    "typeCheckViteInitial": "passed",
+    "typeCheckViteFinal": "passed",
+    "nativeInitial": "passed",
+    "nativeFinal": "passed",
+    "nativeFeatures": "custom-protocol,desktop-e2e",
+    "optLevel": "1",
+    "lto": false,
+    "formalReleaseProfileUnchanged": true,
+    "releaseIdentity": "passed (eight version identities and engine inventories)"
+  },
+  "previousRelease": {
+    "version": "1.6.10",
+    "runId": 39835205346,
+    "status": "completed",
+    "conclusion": "success",
+    "assets": [
+      "latest.json",
+      "Long-Decompress_1.6.10_x64-setup.exe",
+      "Long-Decompress_1.6.10_x64-setup.nsis.zip",
+      "Long-Decompress_1.6.10_x64-setup.nsis.zip.sig"
+    ]
+  },
+  "notRepeated": [
+    "old codec/format matrix",
+    "independent full large-file decoding",
+    "installation",
+    "actual disk-full checks",
+    "five unchanged desktop groups after copy-only change"
+  ]
+}

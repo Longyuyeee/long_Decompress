@@ -621,7 +621,7 @@ fn preview_archive_text_sync(
     }
     let entry_path = normalized_entry_path(entry_path)?;
     let format = if super::archive_browser::detect_format(archive_path)? == ArchiveFormat::Alz { "ALZ" } else { preview_format(archive_path)? };
-    let text_bytes = match format {
+    let mut text_bytes = match format {
         "ALZ" => {
             let (bytes, total_size) = tauri::async_runtime::block_on(super::alz_engine::preview_text_entry(archive_path, &entry_path, password, password_encoding, cancelled))?;
             TextBytes { bytes, total_size }
@@ -643,6 +643,15 @@ fn preview_archive_text_sync(
             "Safe bounded text preview is currently available for ZIP and TAR-family archives only"
         ),
     };
+    if format=="ALZ" && text_bytes.total_size>text_bytes.bytes.len() as u64 {
+        let bytes=&mut text_bytes.bytes;
+        let bom=usize::from(bytes.starts_with(&[0xef,0xbb,0xbf]))*3;
+        if let Err(error)=std::str::from_utf8(&bytes[bom..]) { if error.error_len().is_none(){bytes.truncate(bom+error.valid_up_to());} }
+        if bytes.len()>=4 && (bytes.starts_with(&[0xff,0xfe])||bytes.starts_with(&[0xfe,0xff])) {
+            let n=bytes.len();let unit=if bytes[0]==0xff{u16::from_le_bytes([bytes[n-2],bytes[n-1]])}else{u16::from_be_bytes([bytes[n-2],bytes[n-1]])};
+            if (0xd800..=0xdbff).contains(&unit){bytes.truncate(n-2);}
+        }
+    }
     let (content, encoding, consumed) = decode_text_prefix(&text_bytes.bytes)?;
     let truncated = text_bytes.total_size > consumed as u64;
     let line_count = if content.is_empty() {
@@ -1051,10 +1060,13 @@ mod alz_text169_tests {
     #[tokio::test]
     async fn alz_text169_limits_bad_content_and_original_errors_stay_distinct() {
         let root=fixtures();
-        for (name,reason) in [("too-large","1 MiB"),("crc-damage","CRC"),("binary","binary")] {
+        for (name,reason) in [("crc-damage","CRC"),("binary","binary")] {
             let result=preview_archive_text(&root.join(format!("alz-text-169/{name}.alz")),"docs/readme.txt",None).await.unwrap_err();
             assert!(format!("{result:#}").to_lowercase().contains(&reason.to_lowercase()),"{result:#}");
         }
+        // v1.6.11 intentionally supports large text as an explicitly partial prefix.
+        let large=preview_archive_text(&root.join("alz-text-169/too-large.alz"),"docs/readme.txt",None).await.unwrap();
+        assert!(large.truncated && large.byte_size==1024*1024);
         let error=preview_archive_text(&root.join("alz-bzip2-165/plain-missing-end-single.alz"),"a.txt",None).await.unwrap_err();
         assert!(format!("{error:#}").contains("缺少结束标记"));
         let path=root.join("alz-1512/originals/m1-key-single/m1-key-single.alz");
@@ -1123,5 +1135,55 @@ mod alz_image1610_tests {
         assert!(format!("{error:#}").contains("IMAGE_READER_CHANGED"));
         let error=preview_archive_image_bound_at(&path,"gallery/01-cover.png",None,None,None,Default::default(),Some(revision)).await.unwrap_err();
         assert!(format!("{error:#}").contains("IMAGE_READER_CHANGED"));
+    }
+}
+
+#[cfg(test)]
+mod alz_prefix1611_tests {
+    use super::*;
+    use std::sync::{Arc, atomic::AtomicBool};
+    fn fixtures()->std::path::PathBuf{Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives")}
+    #[tokio::test]
+    async fn alz_prefix1611_methods_native_password_and_character_boundaries(){
+        let root=fixtures().join("alz-prefix-1611");
+        for name in ["store.alz","deflate.alz","bzip2.alz","password.alz","password-volumes.a00"] {
+            let key=name.starts_with("password").then_some("日志密码1611!");
+            let value=preview_archive_text_with_encoding(&root.join(name),"logs/session.txt",key,Some(ZipPasswordEncoding::Utf8)).await.unwrap();
+            assert!(value.truncated && value.byte_size<=1024*1024 && value.byte_size>1024*1024-4,"{name}");
+            assert!(value.content.starts_with("INFO 2026-10-23"));assert!(!value.content.contains('�'));assert_eq!(value.encoding,"UTF-8");
+        }
+        for (name,size,encoding) in [("utf8-boundary",1024*1024-1,"UTF-8"),("utf16-boundary",1024*1024-2,"UTF-16LE"),("gbk-boundary",1024*1024-1,"GBK")] {
+            let value=preview_archive_text(&root.join(format!("{name}.alz")),"logs/session.txt",None).await.unwrap();
+            assert!(value.truncated && !value.content.contains('�'));assert_eq!(value.byte_size,size,"{name}");assert_eq!(value.encoding,encoding,"{name}");
+        }
+    }
+    #[tokio::test]
+    async fn alz_prefix1611_partial_content_never_relaxes_full_integrity_or_other_previews(){
+        let path=fixtures().join("alz-prefix-1611/bad-crc-later.alz");
+        let value=preview_archive_text(&path,"logs/session.txt",None).await.unwrap();assert!(value.truncated);
+        let options=crate::models::compression::DecompressOptions{selected_entries:vec!["logs/session.txt".into()],..Default::default()};
+        let error=super::super::alz_engine::verify(&path,None,&options,Arc::new(AtomicBool::new(false))).await.unwrap_err();assert!(format!("{error:#}").contains("CRC"));
+        let error=preview_archive_text(&fixtures().join("alz-prefix-1611/short-before-prefix.alz"),"logs/session.txt",None).await.unwrap_err();assert!(format!("{error:#}").contains("声明大小不符"));
+        let text=preview_archive_text(&fixtures().join("alz-text-169/store.alz"),"docs/readme.txt",None).await.unwrap();assert!(!text.truncated && text.content.contains("包内说明"));
+        let image=preview_archive_image_with_encoding(&fixtures().join("alz-image-1610/password.alz"),"相册/01-封面.png",Some("图片密码1610!"),Some(ZipPasswordEncoding::Utf8)).await.unwrap();assert_eq!((image.width,image.height),(320,240));
+    }
+    #[tokio::test]
+    async fn alz_prefix1611_cancel_and_replaced_source_do_not_deliver_a_prefix(){
+        let dir=tempfile::tempdir().unwrap();let path=dir.path().join("logs.alz");std::fs::copy(fixtures().join("alz-prefix-1611/deflate.alz"),&path).unwrap();
+        let version=super::super::image_reader::revision(&path).unwrap();
+        let error=preview_archive_text_controlled_at(&path,"logs/session.txt",None,None,None,Arc::new(AtomicBool::new(true)),Some(version.clone())).await.unwrap_err();assert!(format!("{error:#}").contains("取消"));
+        std::fs::write(&path,b"replaced source").unwrap();
+        let error=preview_archive_text_controlled_at(&path,"logs/session.txt",None,None,None,Arc::new(AtomicBool::new(false)),Some(version)).await.unwrap_err();assert!(format!("{error:#}").contains("IMAGE_READER_CHANGED"));
+    }
+    #[tokio::test]
+    async fn alz_prefix1611_vault_uses_only_the_prefix_without_marking_full_password_success(){
+        use crate::services::{compression_service::{CompressionService,CompressionServiceConfig},encrypted_password_service::EncryptedPasswordService,io_buffer_pool::IOBufferPool,rar_support::RarSupportService,universal_engine::UniversalCliEngine};
+        use crate::models::password::{PasswordEntry,PasswordCategory};
+        let dir=tempfile::tempdir().unwrap();let mut vault=EncryptedPasswordService::new(dir.path());vault.initialize("public-owned-test-key").await.unwrap();
+        for (name,key) in [("a wrong","wrong"),("b public","日志密码1611!")] {vault.add_password(PasswordEntry::new(name.into(),key.into(),PasswordCategory::Other)).await.unwrap();}
+        let service=CompressionService::new(CompressionServiceConfig::default(),Arc::new(IOBufferPool::default()),Arc::new(RarSupportService::new()),Arc::new(UniversalCliEngine::new()),Arc::new(vault));
+        let path=fixtures().join("alz-prefix-1611/password-volumes.a00");
+        let value=service.preview_alz_text_prefix_with_vault(path.to_str().unwrap(),"logs/session.txt",None,Some(ZipPasswordEncoding::Utf8),true,None).await.unwrap();assert!(value.truncated && value.content.starts_with("INFO"));
+        assert!(service.encrypted_password_service.list_passwords().await.unwrap().iter().all(|e|e.use_count==0));
     }
 }
