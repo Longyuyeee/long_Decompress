@@ -166,6 +166,7 @@ struct Segments<'a> {
     password: Option<&'a str>,
     encoding: Option<&'a str>,
     error: Option<anyhow::Error>,
+    read: u64,
 }
 impl Read for Segments<'_> {
     fn read(&mut self, out: &mut [u8]) -> io::Result<usize> {
@@ -205,6 +206,7 @@ impl Read for Segments<'_> {
                 c.decrypt(&mut out[..size]);
             }
             self.used += size as u64;
+            self.read += size as u64;
             return Ok(size);
         }
         Ok(0)
@@ -237,6 +239,7 @@ struct SolidSink<'a> {
     hash: crc32fast::Hasher,
     file: Option<File>,
     preserve: bool,
+    memory: Option<Vec<u8>>,
 }
 impl SolidSink<'_> {
     fn advance_files(&mut self) -> Result<()> {
@@ -306,6 +309,14 @@ impl Write for SolidSink<'_> {
             if let Some(f) = self.file.as_mut() {
                 f.write_all(&data[..n])?;
             }
+            if self.selected.contains(&self.files[self.fi].file_name) {
+                if let Some(memory) = self.memory.as_mut() {
+                    if memory.len() + n > MAX_TEXT as usize {
+                        return Err(io::Error::new(io::ErrorKind::InvalidData, "EGG selected text exceeds preview limit"));
+                    }
+                    memory.extend_from_slice(&data[..n]);
+                }
+            }
             self.hash.update(&data[..n]);
             self.fp += n as u64;
             self.bp += n as u64;
@@ -327,6 +338,39 @@ pub fn solid(
     req: &Request,
     extract: bool,
 ) -> Result<()> {
+    solid_output(a, chosen, req, extract, false).map(|_| ())
+}
+
+/// Decode the complete bounded shared stream; only the chosen text is retained.
+pub fn preview_solid_text(
+    a: &mut EggArchive<egg_volumes::Reader>,
+    chosen: &[EggFileEntry],
+    req: &Request,
+) -> Result<Value> {
+    ensure!(!a.entries.iter().any(|e| e.encrypt_info.is_some()),
+        "EGG 加密固实文本暂不支持预览，请先提取后打开");
+    let blocks = a.entries.iter().flat_map(|e| &e.blocks).collect::<Vec<_>>();
+    let packed = blocks.iter().map(|b| b.compressed_size as u64).sum::<u64>();
+    let expanded = blocks.iter().map(|b| b.uncompressed_size as u64).sum::<u64>();
+    let files = a.entries.iter().filter(|e| !e.is_directory()).map(|e| e.uncompressed_size).sum::<u64>();
+    ensure!(packed <= MAX_TEXT_INPUT && expanded <= MAX_TEXT_INPUT && files <= MAX_TEXT_INPUT,
+        "EGG 固实文本预览的完整共享压缩数据和解码总量须分别不超过 64 MiB，请先提取后打开");
+    ensure!(blocks.iter().all(|b| matches!(b.compression_method, CompressionMethod::Deflate | CompressionMethod::Lzma)),
+        "EGG 固实文本预览目前支持 Deflate / LZMA，请先提取后打开");
+    validate(a, chosen)?;
+    let (bytes, read) = solid_output(a, chosen, req, false, true)?;
+    ensure!(read == packed && bytes.len() as u64 == chosen[0].uncompressed_size,
+        "[archive-inspection:damaged] EGG 固实文本共享数据未完整读取或所选大小不符");
+    Ok(json!({"bytes": bytes, "totalSize": chosen[0].uncompressed_size, "inputBytes": read}))
+}
+
+fn solid_output(
+    a: &mut EggArchive<egg_volumes::Reader>,
+    chosen: &[EggFileEntry],
+    req: &Request,
+    extract: bool,
+    capture: bool,
+) -> Result<(Vec<u8>, u64)> {
     let all = a.entries.clone();
     let encrypted = all.iter().any(|e| e.encrypt_info.is_some());
     let output = if extract {
@@ -361,6 +405,7 @@ pub fn solid(
         password: req.password.as_deref(),
         encoding: req.encoding.as_deref(),
         error: None,
+        read: 0,
     };
     let mut out = SolidSink {
         files: all.iter().filter(|e| !e.is_directory()).collect(),
@@ -374,6 +419,7 @@ pub fn solid(
         hash: crc32fast::Hasher::new(),
         file: None,
         preserve: req.preserve_timestamps,
+        memory: capture.then(|| Vec::with_capacity(chosen[0].uncompressed_size as usize)),
     };
     let result = stream(&mut input, &mut out, method, packed, expanded, None);
     if let Some(error) = input.error.take() {
@@ -398,5 +444,5 @@ pub fn solid(
             }
         )
     })?;
-    Ok(())
+    Ok((out.memory.unwrap_or_default(), input.read))
 }

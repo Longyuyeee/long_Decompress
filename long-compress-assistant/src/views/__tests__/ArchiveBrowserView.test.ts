@@ -232,6 +232,23 @@ describe('ArchiveBrowserView', () => {
     })
   })
 
+  it('egg1614 solid text keeps the original complete preview and its bounded shared-stream hint',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'EGG',revision:'d'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:10,totalCompressedSize:8,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:10,isDir:false,compressedSize:null}]})
+    mocks.previewArchiveText.mockResolvedValueOnce({entryPath:'readme.txt',content:'固实包内说明',encoding:'UTF-8',byteSize:10,totalSize:10,truncated:false,lineCount:1})
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1614,path:'C:/solid.egg'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
+    await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises()
+    expect(w.get('[data-testid="archive-text-preview"]').text()).toContain('固实包内说明');expect(w.get('.preview-meta').text()).toContain('完整显示')
+    const help=w.findAll('button').find(b=>b.attributes('aria-label')==='预览说明')!;await help.trigger('mouseenter');await flushPromises();expect(w.text()).toContain('共享压缩数据与解码总量');expect(w.text()).toContain('64 MiB');w.unmount()
+  })
+
+  it('egg1614 unsupported shared text gives an extraction hint without showing partial content',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'EGG',revision:'d'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:10,totalCompressedSize:8,encrypted:true,entries:[{path:'readme.txt',name:'readme.txt',size:10,isDir:false,compressedSize:null}]})
+    mocks.previewArchiveText.mockRejectedValueOnce(new Error('EGG 加密固实文本暂不支持预览，请先提取后打开'))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1614,path:'C:/solid.egg'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
+    await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises()
+    expect(w.get('.preview-stage').text()).toContain('先提取后打开');expect(w.find('[data-testid="archive-text-preview"]').exists()).toBe(false);w.unmount()
+  })
+
   it('EGG text and images use the existing modal with their own source context',async()=>{
     mocks.browseArchive.mockResolvedValueOnce({format:'EGG',revision:'c'.repeat(64),totalFiles:2,totalDirectories:0,totalUncompressedSize:30,totalCompressedSize:20,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:10,isDir:false},{path:'cover.png',name:'cover.png',size:20,isDir:false}]})
     mocks.previewArchiveText.mockResolvedValueOnce({entryPath:'readme.txt',content:'EGG 包内说明',encoding:'UTF-8',byteSize:10,totalSize:10,truncated:false,lineCount:1})

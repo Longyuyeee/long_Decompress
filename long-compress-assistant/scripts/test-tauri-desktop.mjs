@@ -103,6 +103,7 @@ import { runAlzImage1610Gate } from './alz-image-1610-gate.mjs'
 import { runAlzPrefix1611Gate } from './alz-prefix-1611-gate.mjs'
 import { runEggText1612Gate } from './egg-text-1612-gate.mjs'
 import { runEggImage1613Gate } from './egg-image-1613-gate.mjs'
+import { runEggSolidText1614Gate } from './egg-solid-text-1614-gate.mjs'
 import { runCompactModulesUiGate } from './compact-modules-ui-gate.mjs'
 import { runPageUiReview } from './page-ui-review-gate.mjs'
 import { runSettingsUpdateThemesGate } from './settings-update-themes-gate.mjs'
@@ -5026,6 +5027,9 @@ try {
     completedSuccessfully = true
   } else if ((process.argv.includes('--compact-modules-only') || process.argv.includes('--compact-modules-layout-only'))) {
     await runCompactModulesUiGate({driver,bridge:callDesktopBridge,application,root,dataDirectory:e2eDataDirectory})
+    completedSuccessfully = true
+  } else if (process.argv.includes('--egg-solid-text-1614-only')) {
+    await runEggSolidText1614Gate({driver,bridge:callDesktopBridge,root,application})
     completedSuccessfully = true
   } else if (process.argv.includes('--egg-image-1613-only')) {
     await runEggImage1613Gate({driver,bridge:callDesktopBridge,root,application})

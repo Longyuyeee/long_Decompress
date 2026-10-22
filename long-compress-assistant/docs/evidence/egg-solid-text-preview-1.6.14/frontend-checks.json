@@ -1,0 +1,17 @@
+{
+  "version": "1.6.14",
+  "differentPassedChecks": 2,
+  "checks": [
+    {
+      "name": "ArchiveBrowserView egg1614 unsupported shared text gives an extraction hint without showing partial content",
+      "report": "frontend.json",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView egg1614 solid text keeps the original complete preview and its bounded shared-stream hint",
+      "report": "frontend-repair.json",
+      "status": "passed"
+    }
+  ],
+  "harnessRepair": "First attempt asserted a closed hover hint. Opened the actual HelpHint using mouseenter and reran only that one failed test; product unchanged. Skipped tests not counted."
+}

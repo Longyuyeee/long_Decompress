@@ -1,0 +1,91 @@
+{
+  "version": "1.6.14",
+  "applicationSha256": "1f2cf8f380e824461209a828071deb8320b7a67f7cca73292448a4617658a703",
+  "helperSha256": "3a0310cb1d1507c3c427f8daba4f4e08b7b5072760f539bbed1ac58d919fd467",
+  "checks": [
+    {
+      "name": "solid selected text remains scrollable in the original wide and narrow equal panes",
+      "content": {
+        "scroll": true,
+        "start": "固实包内说明：保持双栏，只显示所选文本。\n固实包内说明：保持双栏，只显示所选文本。\n固实包内说明：保持双栏，只显示所选文本。\n固实包内说明：保持双栏，只显示所选"
+      },
+      "complete": true
+    },
+    {
+      "name": "genuine LZMA Chinese text and controlled middle native stream use the production command",
+      "genuineOriginalLzma": true,
+      "nativeHeadersControlled": true,
+      "nativeOriginalPayloadUnchanged": true,
+      "bytes": 45
+    },
+    {
+      "name": "shared-tail CRC and encrypted-solid hints never display incomplete text",
+      "messages": {
+        "shared-crc": "无法预览\nEGG 固实流处理失败：EGG solid block CRC mismatch",
+        "encrypted-dependency": "无法预览\nEGG 加密固实文本暂不支持预览，请先提取后打开"
+      },
+      "limit": "EGG 固实文本预览的完整共享压缩数据和解码总量须分别不超过 64 MiB，请先提取后打开"
+    },
+    {
+      "name": "cancelled or stale solid requests cannot replace a fresh complete result",
+      "stale": "IMAGE_READER_CHANGED|来源无法确认，请返回刷新来源后重新阅读: [archive-inspection:damaged] EGG 末卷缺少结束标记，文件可能下载不完整",
+      "cancelled": "文本预览已取消",
+      "freshBytes": 73200
+    }
+  ],
+  "layouts": [
+    {
+      "name": "solid-text-wide",
+      "closeVisible": true,
+      "dialog": {
+        "height": 531.390625,
+        "width": 832,
+        "x": 134,
+        "y": 59.3046875
+      },
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "solid-text-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 442.78125,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 38.609375
+      },
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    },
+    {
+      "name": "original-lzma-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 442.78125,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 38.609375
+      },
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\egg-solid-text-1614\\bc2aa607-5fe2-4def-9189-fd1712ae93cd",
+  "passed": true
+}

@@ -1,0 +1,105 @@
+{
+  "version": "1.6.14",
+  "helperSha256": "3a0310cb1d1507c3c427f8daba4f4e08b7b5072760f539bbed1ac58d919fd467",
+  "checks": [
+    {
+      "name": "solid",
+      "originalArchive": true,
+      "entry": "hello.txt",
+      "archiveSha256": "c6aaaa529a4adaea66d8b6f97529e95f1938d56f39b9e1c5fb04c3a22b0be053",
+      "bytes": 45,
+      "sha256": "b47cc0f104b62d4c7c30bcd68fd8e67613e287dc4ad8c310ef10cbadea9c4380",
+      "matchesFrozenIndependentPayload": true,
+      "inputBytes": 4265
+    },
+    {
+      "name": "solid-empty",
+      "originalArchive": true,
+      "entry": "empty.txt",
+      "archiveSha256": "c6aaaa529a4adaea66d8b6f97529e95f1938d56f39b9e1c5fb04c3a22b0be053",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "matchesFrozenIndependentPayload": true,
+      "inputBytes": 4265
+    },
+    {
+      "name": "original-deflate",
+      "originalArchive": true,
+      "entry": "文档/说明 文件.txt",
+      "archiveSha256": "3f449951202faceb84ada0e626c612973eb290a828dc6a4764fb1a628e453605",
+      "bytes": 21500,
+      "sha256": "fa0a640e110667fc47056120b2dd20a7faa377f49afb19af557ad1463f912021",
+      "matchesFrozenIndependentPayload": true,
+      "inputBytes": 262538
+    },
+    {
+      "name": "original-high",
+      "originalArchive": true,
+      "entry": "文档/说明 文件.txt",
+      "archiveSha256": "d4b5253394c1bb720b3823026ec41189e34b2a814fab38ddfdc3e6d09383821b",
+      "bytes": 21500,
+      "sha256": "fa0a640e110667fc47056120b2dd20a7faa377f49afb19af557ad1463f912021",
+      "matchesFrozenIndependentPayload": true,
+      "inputBytes": 265875
+    },
+    {
+      "name": "controlled-native-middle",
+      "originalArchive": false,
+      "entry": "hello.txt",
+      "archiveSha256": "b115a270571dc29ccdbc17095b7c2be2a9a703b2bba88967583d9184c8ac9e43",
+      "bytes": 45,
+      "sha256": "b47cc0f104b62d4c7c30bcd68fd8e67613e287dc4ad8c310ef10cbadea9c4380",
+      "matchesFrozenIndependentPayload": true,
+      "inputBytes": 4265
+    },
+    {
+      "name": "shared-crc",
+      "controlled": true,
+      "rejected": true,
+      "reason": "[archive-inspection:damaged] EGG 固实流处理失败：EGG solid block CRC mismatch"
+    },
+    {
+      "name": "shared-output-limit",
+      "controlled": true,
+      "rejected": true,
+      "reason": "EGG 固实文本预览的完整共享压缩数据和解码总量须分别不超过 64 MiB，请先提取后打开"
+    },
+    {
+      "name": "selected-limit",
+      "controlled": true,
+      "rejected": true,
+      "reason": "EGG 文本预览支持 1 MiB 以内的完整文件，请先提取后打开"
+    },
+    {
+      "name": "unknown-dependency",
+      "controlled": true,
+      "rejected": true,
+      "reason": "EGG 固实文本预览目前支持 Deflate / LZMA，请先提取后打开"
+    },
+    {
+      "name": "encrypted-dependency",
+      "controlled": true,
+      "rejected": true,
+      "reason": "EGG 加密固实文本暂不支持预览，请先提取后打开"
+    },
+    {
+      "name": "truncated",
+      "controlled": true,
+      "rejected": true,
+      "reason": "[archive-inspection:damaged] EGG 内容、大小或 CRC 校验失败：inflate failed: truncated Deflate stream (no StreamEnd)"
+    },
+    {
+      "name": "trailing",
+      "controlled": true,
+      "rejected": true,
+      "reason": "[archive-inspection:damaged] EGG 内容、大小或 CRC 校验失败：inflate failed: trailing data after Deflate end"
+    },
+    {
+      "name": "input-limit",
+      "controlled": true,
+      "rejected": true,
+      "reason": "EGG 固实文本预览的完整共享压缩数据和解码总量须分别不超过 64 MiB，请先提取后打开"
+    }
+  ],
+  "passed": true
+}
