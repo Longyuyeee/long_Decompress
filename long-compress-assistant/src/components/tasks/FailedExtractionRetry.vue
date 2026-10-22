@@ -33,6 +33,7 @@ const rows = ref(props.taskIds.flatMap(id => {
     password: props.taskIds.length === 1 ? props.suppliedPassword || '' : '',
     extractToSubfolder: task.extractToSubfolder ?? true,
     zipPasswordEncoding: draft ? draft.zipPasswordEncoding : task.zipPasswordEncoding,
+    zpaqRetrieval:draft?.zpaqRetrieval||task.zpaqRetrieval,
     zpaqSnapshot: draft?.zpaqSnapshot || task.zpaqSnapshot, zpaqCatalogId: draft?.zpaqCatalogId || task.zpaqCatalogId, selectedEntries: draft?.selectedEntries || task.selectedEntries,
     readerSelection:draft?.readerSelection || task.readerSelection,librarySourceId:task.librarySourceId,libraryRevision:task.libraryRevision,libraryKeepStructure:task.libraryKeepStructure,libraryConflictPolicy:task.libraryConflictPolicy,
     originalSource: task.sourceFiles[0], sourceFormat: task.format,
@@ -123,11 +124,12 @@ async function createDrafts() {
         if (!store.tasks.includes(parent) || !['failed','cancelled'].includes(parent.status)) throw new Error('原任务状态已变化，请重新打开处理窗口。')
         if (parent.retryDraftId) { row.createdId = parent.retryDraftId; continue }
         const id = store.addTask({
-          id: generateId(), name: result.name, type: 'decompression', workloadKind: 'archive',
+          id: generateId(), name: row.zpaqRetrieval?parent.name:result.name, type: 'decompression', workloadKind: 'archive',
           retryOfTaskId: parent.id, sourceFiles: [result.path], outputPath: result.outputPath,
           configurationMode: 'individual', extractToSubfolder: row.extractToSubfolder,
           recycleSourceAfterExtract: false, password: row.password || undefined,
           zipPasswordEncoding: result.zipPasswordEncoding, format: result.format, zpaqSnapshot: row.zpaqSnapshot, zpaqCatalogId: row.zpaqCatalogId, selectedEntries: row.selectedEntries,
+          zpaqRetrieval:row.zpaqRetrieval,
           readerSelection:row.readerSelection,librarySourceId:row.librarySourceId,libraryRevision:row.libraryRevision,libraryKeepStructure:row.libraryKeepStructure,libraryConflictPolicy:row.libraryConflictPolicy,
           ...(row.zpaqCatalogId ? {executionConfig:{schemaVersion:1,kind:'archive-extraction',outputDirectory:result.outputPath,extractToSubfolder:row.extractToSubfolder,zpaqSnapshot:row.zpaqSnapshot,zpaqCatalogId:row.zpaqCatalogId,selectedEntries:[...(row.selectedEntries || [])]}} : {}),
         })
@@ -181,7 +183,7 @@ function close() {
             <button class="retry-button" :disabled="busy || pickerBusy" @click="openSourceFolder(row)"><i class="pi pi-folder-open mr-1"></i>打开分卷目录</button>
           </div>
           <button v-if="['damaged', 'ambiguous-data', 'unknown', 'missing-volume', 'incomplete'].includes(row.policy.category || '')" data-testid="retry-rescue" class="retry-button text-primary" :disabled="busy || pickerBusy" @click="rescueSource(row)"><i class="pi pi-wrench mr-1"></i>检查并尝试救援</button>
-          <p v-if="row.policy.requireIntegrity" data-testid="retry-guidance" class="text-xs text-muted">请重新选择下载完整的文件。添加前会检查完整性，大文件可能需要一些时间。</p>
+          <p v-if="row.policy.requireIntegrity" data-testid="retry-guidance" class="text-xs text-muted">{{ row.zpaqRetrieval?'重新检查原快照和所选文件，其他受影响内容不会混入。':'请重新选择下载完整的文件。' }}添加前会检查完整性，大文件可能需要一些时间。</p>
           <p v-else-if="recoveryStep(row)" data-testid="retry-guidance" class="text-xs text-muted">{{ recoveryStep(row) }}</p>
           <fieldset :disabled="busy || pickerBusy || !row.selected" class="retry-fields grid grid-cols-1 sm:grid-cols-2 gap-3 min-w-0">
             <div class="min-w-0 space-y-2">
@@ -200,8 +202,9 @@ function close() {
               <input v-model="row.password" type="password" autocomplete="off" data-testid="retry-password" class="retry-input" />
             </label>
             <ZipPasswordEncodingField v-if="supportsZipPasswordEncoding(row.source, row.source === row.originalSource ? row.sourceFormat : undefined)" v-model="row.zipPasswordEncoding" :source-path="row.source" :source-format="row.source === row.originalSource ? row.sourceFormat : undefined" :disabled="busy || pickerBusy || !row.selected" test-id="retry-zip-password-encoding" />
-            <label class="flex items-center gap-2 text-xs"><input v-model="row.extractToSubfolder" data-testid="retry-subfolder" type="checkbox" />解压到同名子目录</label>
-            <ExtractionOutputPreview class="sm:col-span-2" :source="row.source.trim()" :output="row.output.trim()" :subfolder="row.extractToSubfolder" @change-output="choosePath(true, row)" />
+            <label v-if="!row.zpaqRetrieval" class="flex items-center gap-2 text-xs"><input v-model="row.extractToSubfolder" data-testid="retry-subfolder" type="checkbox" />解压到同名子目录</label>
+            <p v-if="row.zpaqRetrieval" class="text-xs text-primary sm:col-span-2">保留所选文件与快照，另存独立结果目录，原包与已有结果保留。</p>
+            <ExtractionOutputPreview v-else class="sm:col-span-2" :source="row.source.trim()" :output="row.output.trim()" :subfolder="row.extractToSubfolder" @change-output="choosePath(true, row)" />
           </fieldset>
         </template>
         <p v-if="row.checking" role="status" class="text-sm text-primary">正在检查来源和目录…</p>

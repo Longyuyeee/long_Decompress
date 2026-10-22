@@ -433,6 +433,8 @@ pub(crate) async fn catalog(path: &Path,password: Option<&str>,snapshot: &ZpaqSn
 
 #[path="zpaq_blocks.rs"]
 pub mod blocks;
+#[path="zpaq_retrieval.rs"]
+pub mod retrieval;
 pub async fn check_catalog(path:&Path,password:Option<&str>,snapshot:&ZpaqSnapshot,expected:&str,flag:Arc<AtomicBool>)->Result<()> {
     anyhow::ensure!(expected.len()==64&&expected.bytes().all(|b|b.is_ascii_hexdigit()),"快照目录标识无效，请重新对比");
     anyhow::ensure!(catalog(path,password,snapshot,flag).await?.id==expected,"[archive-inspection:snapshot-unavailable] 归档目录或历史已变化，请重新对比并选择；未改为提取其他版本");Ok(())

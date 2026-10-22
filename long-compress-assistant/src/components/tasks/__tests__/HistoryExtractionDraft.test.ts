@@ -23,6 +23,17 @@ const setup = async () => {
   return { wrapper, store: useTaskStore() }
 }
 describe('history extraction draft', () => {
+  it('zpaq164 history retains the selected files and diagnosis identity without whole-archive fallback',async()=>{
+    const selection={snapshot:{version:3,date:20261020150000},revision:'a'.repeat(64),paths:['docs/good.txt']}
+    const pinia=createPinia();setActivePinia(pinia)
+    const saved:TaskHistoryRecord={...record,name:'部分取回',sourcePaths:['C:/backup.zpaq'],executionConfig:{schemaVersion:1,kind:'archive-extraction',outputDirectory:'D:/out',extractToSubfolder:false,zpaqSnapshot:selection.snapshot,zpaqRetrieval:selection}}
+    mocks.invoke.mockImplementation(async(cmd,args)=>cmd==='diagnose_archive'?{status:'zpaq_affected',zpaqBlocks:{revision:selection.revision,entries:[{path:'docs/good.txt',state:'verified'},{path:'bad.txt',state:'affected'}]}}:cmd==='get_file_info'?{name:'backup.zpaq',is_dir:args.path==='D:/out',size:100}:null)
+    const view=mount(HistoryExtractionDraft,{props:{record:saved},global:{plugins:[pinia],stubs:{ExtractionOutputPreview:true}}})
+    expect(view.get('[data-testid="history-zpaq-retrieval"]').text()).toContain('1 个所选文件');await view.get('[data-testid="history-draft-password"]').setValue('fresh-164');await view.get('[data-testid="history-draft-create"]').trigger('click');await flushPromises()
+    expect(useTaskStore().tasks[0]).toMatchObject({zpaqRetrieval:selection,zpaqSnapshot:selection.snapshot,selectedEntries:selection.paths,status:'pending',password:'fresh-164'})
+    expect(mocks.invoke.mock.calls.some(([cmd])=>cmd==='extract_file')).toBe(false);view.unmount()
+  })
+
   it('comparison1555 historical encrypted selections ask for a fresh password and retain their original encoding',async()=>{
     const pinia=createPinia();setActivePinia(pinia);const comparisonSelection={source:{path:'C:/group.zip',kind:'zip' as const,revision:'a'.repeat(64),encrypted:true},paths:['one.txt'],keepStructure:true,conflictPolicy:'skip' as const,zipPasswordEncoding:'cp936' as const};const saved:TaskHistoryRecord={...record,sourcePaths:['C:/group.zip'],executionConfig:{schemaVersion:1,kind:'archive-extraction',outputDirectory:'D:/out',extractToSubfolder:false,comparisonSelection}};mocks.invoke.mockResolvedValue(undefined);const view=mount(HistoryExtractionDraft,{props:{record:saved},global:{plugins:[pinia],stubs:{ExtractionOutputPreview:true}}});await view.get('[data-testid="history-comparison-password"]').setValue('fresh-1555');await view.get('[data-testid="history-draft-create"]').trigger('click');await flushPromises();expect(mocks.invoke).toHaveBeenCalledWith('comparison_validate',expect.objectContaining({password:'fresh-1555',request:expect.objectContaining({zipPasswordEncoding:'cp936'})}));expect(useTaskStore().tasks[0]).toMatchObject({password:'fresh-1555',comparisonSelection,status:'pending'});view.unmount()
   })

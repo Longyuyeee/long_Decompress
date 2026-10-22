@@ -352,7 +352,7 @@ const copyToClipboard = async (text: string) => {
                   <div class="text-xs text-dim font-mono mt-1 truncate opacity-85" :title="task.outputPath">
                     → {{ task.outputPath || appStore.t('decompress.config.output_auto') }}
                   </div>
-                  <ResultActions v-if="resultLocation(task)" class="mt-2" :path="task.archiveOutput?.primaryPath || task.outputPath" :directory="task.type === 'decompression'" :split="task.archiveOutput?.split" :output="task.archiveOutput" @checksum="isExpanded = false" />
+                  <ResultActions v-if="resultLocation(task)" class="mt-2" :path="task.archiveOutput?.primaryPath || task.outputPath" :directory="task.type === 'decompression'" :split="task.archiveOutput?.split" :output="task.archiveOutput" :retrieval="task.zpaqRetrieval" @checksum="isExpanded = false" />
                 </div>
 
                 <!-- 操作按钮组 -->

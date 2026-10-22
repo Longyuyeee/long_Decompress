@@ -538,6 +538,7 @@ fn main() {
             long_compress_assistant::commands::compression::compare_zpaq_snapshots,
             long_compress_assistant::commands::compression::check_zpaq_snapshot_catalog,
             long_compress_assistant::commands::compression::zpaq_snapshot_catalog_id,
+            long_compress_assistant::commands::compression::read_zpaq_retrieval_result,
             long_compress_assistant::commands::compression::cancel_archive_browse,
             long_compress_assistant::commands::compression::preview_archive_image,
             long_compress_assistant::commands::compression::read_archive_image,

@@ -1,5 +1,6 @@
 import {copyReaderSelection} from './archiveReading'
 import {copyComparisonSelection,type ComparisonSelection} from './sourceComparison'
+import {copyZpaqRetrieval} from './zpaqRetrieval'
 import { isZpaqSnapshot, type ZpaqSnapshot } from './zpaqSnapshot'
 import type { CompressionOptions } from '@/stores/compression'
 import type { ImageCompressionSettings } from '@/utils/imageCompressionWorkspace'
@@ -16,6 +17,7 @@ export interface ExtractionConfigV1 {
   libraryConflictPolicy?: 'rename' | 'skip'
 
   zpaqCatalogId?: string
+  zpaqRetrieval?: import('@/types/zpaqRetrieval').ZpaqRetrievalSelection
   selectedEntries?: string[]
   zpaqSnapshot?: ZpaqSnapshot
   zipPasswordEncoding?: ZipPasswordEncoding
@@ -98,6 +100,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
       || !config.selectedEntries.every(path=>typeof path==='string'&&path.length>0&&path.length<=32768)
       || typeof config.libraryKeepStructure !== 'boolean' || !['rename','skip'].includes(config.libraryConflictPolicy || ''))) return null
   if (config.kind === 'archive-extraction' && config.zpaqSnapshot != null && !isZpaqSnapshot(config.zpaqSnapshot)) return null
+  if(config.kind==='archive-extraction'&&config.zpaqRetrieval!==undefined&&(!copyZpaqRetrieval(config.zpaqRetrieval)||(config.zpaqSnapshot?.version!==config.zpaqRetrieval.snapshot.version||config.zpaqSnapshot?.date!==config.zpaqRetrieval.snapshot.date)||config.readerSelection||config.comparisonSelection||config.librarySourceId||config.zpaqCatalogId))return null
   if (config.kind === 'archive-conversion' && config.sourceZpaqSnapshot != null && !isZpaqSnapshot(config.sourceZpaqSnapshot)) return null
   if (config.kind === 'archive-extraction' && config.zipPasswordEncoding != null
       && !isZipPasswordEncoding(config.zipPasswordEncoding)) return null
@@ -127,6 +130,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
       rarRecoveryVolumes: config.rarRecoveryVolumes ?? 0,
       splitSize: config.splitSize, encryptFilenames: config.encryptFilenames, passwordRequired: config.passwordRequired }
     case 'archive-extraction': return { schemaVersion: 1, kind: config.kind,
+      ...(config.zpaqRetrieval?{zpaqRetrieval:copyZpaqRetrieval(config.zpaqRetrieval)!}:{}),
       ...(config.readerSelection?{readerSelection:copyReaderSelection(config.readerSelection)!}:{}),
       ...(config.comparisonSelection?{comparisonSelection:copyComparisonSelection(config.comparisonSelection)!}:{}),
       ...(config.librarySourceId ? {librarySourceId:config.librarySourceId,libraryRevision:config.libraryRevision,libraryKeepStructure:config.libraryKeepStructure,libraryConflictPolicy:config.libraryConflictPolicy,selectedEntries:[...(config.selectedEntries||[])]} : {}),

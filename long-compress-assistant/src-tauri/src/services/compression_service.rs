@@ -430,7 +430,7 @@ impl CompressionService {
             &format!("解压数据统计完成：实际产出 {} 字节", final_expanded_bytes),
             TaskLogSeverity::Success,
         );
-        self.emit_log(window, task_id, "全部解压任务已完成", TaskLogSeverity::Success);
+        self.emit_log(window, task_id, if options.zpaq_retrieval.is_some(){"所选文件部分取回完成；不代表整包已恢复，请查看取回说明"}else{"全部解压任务已完成"}, TaskLogSeverity::Success);
         Ok(final_output.to_string_lossy().to_string())
     }
 
@@ -2128,7 +2128,9 @@ impl CompressionService {
             )).into());
         }
         Self::validate_recycle_bin_options(&options)?;
-        let final_out_dir = Self::extraction_output_path(path, output_dir.as_deref(), options.create_subdirectory);
+        if let Some(selection)=&options.zpaq_retrieval {selection.validate_options(&options)?;}
+        let base_out_dir = Self::extraction_output_path(path, output_dir.as_deref(), options.create_subdirectory);
+        let final_out_dir = if options.zpaq_retrieval.is_some(){crate::services::zpaq_engine::retrieval::result_directory(&base_out_dir)}else{base_out_dir};
 
         if final_out_dir.exists() && !final_out_dir.is_dir() {
             return Err(CompressionError::ExtractionFailed(format!(
@@ -2189,6 +2191,7 @@ impl CompressionService {
         anyhow::ensure!(options.zpaq_catalog_id.is_none() || (format==ArchiveFormat::Zpaq&&options.zpaq_snapshot.is_some()), "变化提取必须使用原ZPAQ快照，请重新对比");
         anyhow::ensure!(options.zpaq_snapshot.is_none() || format == ArchiveFormat::Zpaq,
             "所选快照只适用于 ZPAQ 日志归档，请重新选择原归档");
+        anyhow::ensure!(options.zpaq_retrieval.is_none() || format==ArchiveFormat::Zpaq,"部分取回必须使用原 ZPAQ 来源");
         let native_seven_zip = Self::uses_native_seven_zip_volumes(path, &format);
         let native_stream = matches!(format, ArchiveFormat::Wim | ArchiveFormat::Zpaq | ArchiveFormat::AesEncrypted | ArchiveFormat::Tar | ArchiveFormat::Gzip | ArchiveFormat::Bzip2 | ArchiveFormat::Xz | ArchiveFormat::Zstd | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip | ArchiveFormat::Lzma);
         if is_split_archive && !native_seven_zip && !native_stream && format != ArchiveFormat::Zip && format != ArchiveFormat::Unknown && format != ArchiveFormat::Universal {
@@ -2460,6 +2463,7 @@ impl CompressionService {
         let effective_format = format;
 
         executing.store(true, Ordering::Relaxed);
+        let mut retrieval_receipt=None;
         let result = match effective_format {
             ArchiveFormat::Egg => crate::services::egg_engine::extract(
                 path, &out_dir, final_password.as_deref(), &options, service.cancellation_flag.clone()).await,
@@ -2471,7 +2475,9 @@ impl CompressionService {
                     anyhow::ensure!(options.zpaq_snapshot.is_some(),"尾部更新中断，请先在浏览器明确选择完整快照取回；未自动回退或改动原件");
                     service.emit_log(&window,&task_id,&format!("取回完整旧快照 {}（{}）；中断事务的新增、修改和删除未取回，具体条目范围无法确定。原件保留。",history.selected.version,history.selected.date),TaskLogSeverity::Warning);
                 }
-                crate::services::zpaq_engine::extract_checked_at(path, &out_dir, final_password.as_deref(), &options.selected_entries, options.zpaq_snapshot.as_ref(), options.zpaq_catalog_id.as_deref(), service.cancellation_flag.clone()).await
+                if let Some(selection)=&options.zpaq_retrieval {
+                    match crate::services::zpaq_engine::retrieval::extract(path,&out_dir,final_password.as_deref(),selection,service.cancellation_flag.clone()).await {Ok(receipt)=>{retrieval_receipt=Some(receipt);Ok(())},Err(e)=>Err(e)}
+                }else{crate::services::zpaq_engine::extract_checked_at(path, &out_dir, final_password.as_deref(), &options.selected_entries, options.zpaq_snapshot.as_ref(), options.zpaq_catalog_id.as_deref(), service.cancellation_flag.clone()).await}
             },
             ArchiveFormat::Zip => {
                 let srv = service.clone();
@@ -2738,6 +2744,10 @@ impl CompressionService {
             let _ = staging.cleanup();
             return Err(error);
         }
+        if let (Some(selection),Some(receipt))=(&options.zpaq_retrieval,&retrieval_receipt) {
+            crate::services::zpaq_engine::retrieval::write_receipt(&out_dir,selection,receipt)?;
+            service.emit_log(&window,&task_id,&format!("部分取回：已校验所选 {} 个文件；其余 {} 个文件未取回。具体范围保存在独立取回说明，原包保持不变。",selection.paths.len(),receipt.entries.len()-selection.paths.len()),TaskLogSeverity::Warning);
+        }
         service.check_cancellation()?;
         if let Some(mark) = mark_of_web.as_ref() {
             match mark_of_web::propagate_to_tree(&out_dir, mark, || {
@@ -2944,7 +2954,12 @@ impl CompressionService {
                 if let Some(expected)=options.zpaq_catalog_id.as_deref(){crate::services::zpaq_engine::check_catalog(archive_path,password,options.zpaq_snapshot.as_ref().context("变化提取缺少来源快照")?,expected,self.cancellation_flag.clone()).await?;}
                 let directory = crate::services::zpaq_engine::browse_at(archive_path, password, options.zpaq_snapshot.as_ref(), self.cancellation_flag.clone()).await?;
                 if directory.entries.iter().all(|e| e.size_known != Some(false)) {
-                    Some((directory.entries.len(), directory.total_uncompressed_size))
+                    if let Some(selection)=&options.zpaq_retrieval {
+                        selection.validate_options(options)?;
+                        let entries=directory.entries.iter().filter(|e|!e.is_dir&&selection.paths.contains(&e.path)).collect::<Vec<_>>();
+                        anyhow::ensure!(entries.len()==selection.paths.len(),"所选文件不在此快照，请重新诊断");
+                        Some((entries.len(),entries.iter().map(|e|e.size).sum()))
+                    }else{Some((directory.entries.len(), directory.total_uncompressed_size))}
                 } else { None }
             }
             ArchiveFormat::Zip => {
@@ -3612,6 +3627,10 @@ impl CompressionService {
     }
 
     pub(crate) async fn test_extraction_password(&self, file_path: &str, password: &str, options: &DecompressOptions) -> Result<bool> {
+        if let Some(selection)=&options.zpaq_retrieval {
+            selection.validate_options(options)?;
+            return crate::services::zpaq_engine::retrieval::try_password(Path::new(file_path),password,selection,self.cancellation_flag.clone()).await;
+        }
         if Self::detect_password_format(file_path)? == ArchiveFormat::Egg {
             return crate::services::egg_engine::try_password(Path::new(file_path), password, options, self.cancellation_flag.clone()).await;
         }

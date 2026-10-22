@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import ZpaqRetrievalResult from '@/components/archive/ZpaqRetrievalResult.vue'
 import { useArchiveLibraryStore } from '@/stores/archiveLibrary'
 import { isDecompressArchivePath, isPotentialSplitArchivePath } from '@/utils/compressionFormat'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
@@ -8,7 +9,7 @@ import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { checksumSources } from '@/utils/checksumSources'
 import type { PublishedArchiveOutput } from '@/types/archiveOutput'
-const props = withDefaults(defineProps<{ path: string; directory?: boolean; split?: boolean; showPath?: boolean; compact?: boolean; output?: PublishedArchiveOutput | null }>(), { directory: false, split: false, showPath: false })
+const props = withDefaults(defineProps<{ path: string; retrieval?: import('@/types/zpaqRetrieval').ZpaqRetrievalSelection; directory?: boolean; split?: boolean; showPath?: boolean; compact?: boolean; output?: PublishedArchiveOutput | null }>(), { directory: false, split: false, showPath: false })
 const router = useRouter(), app = useAppStore()
 const emit = defineEmits<{ checksum: [] }>()
 const busy = ref(false)
@@ -73,6 +74,7 @@ async function generateManifest() {
   <div class="min-w-0 space-y-2" data-testid="result-actions">
     <p v-if="showPath" class="select-text break-words text-xs leading-relaxed text-muted [overflow-wrap:anywhere]" :title="path">{{ path || '未记录输出位置' }}</p>
     <div class="flex flex-wrap items-center gap-2">
+      <ZpaqRetrievalResult v-if="retrieval" :path="path" :selection="retrieval"/>
       <button type="button" class="result-button bg-primary text-white hover:brightness-110" :disabled="busy || !path.trim()" @click.stop="openOutput"><i class="pi pi-folder-open" aria-hidden="true"></i>{{ busy && !preparingChecksum ? '正在打开…' : label }}</button>
       <button v-if="!compact || moreOpen" type="button" class="result-button border border-subtle text-muted hover:bg-input hover:text-content" :disabled="!path.trim()" @click.stop="copyPath"><i :class="copied ? 'pi pi-check' : 'pi pi-copy'" aria-hidden="true"></i>{{ copied ? '已复制' : '复制路径' }}</button>
       <button v-if="(!compact || moreOpen) && !directory && (isDecompressArchivePath(path) || isPotentialSplitArchivePath(path))" type="button" data-testid="result-add-library" class="result-button border border-subtle text-primary" :disabled="busy || !path.trim()" @click.stop="addToLibrary"><i class="pi pi-database"/>加入 / 刷新资料库</button>

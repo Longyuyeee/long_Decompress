@@ -96,7 +96,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.6.3 · ZPAQ 受损块与文件影响定位**。按所选快照检查共享数据块，分清通过、受影响和未检查；明细、筛选与关联放进二级弹窗，普通/密码及原生组入口接通。本版只诊断定位。[中文说明](docs/RELEASE_NOTES_1.6.3.md) · [范围与记录](docs/ZPAQ_BLOCK_DIAGNOSIS_FREEZE_1.6.3.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.3)。下一步 [v1.6.4 已校验文件的部分取回](docs/ARCHIVE_ROADMAP_1.6.4.md)，仅规划。
+**v1.6.4 · 从受损 ZPAQ 取回已校验文件**。在诊断详情勾选文件，二级弹窗确认后加入原队列；按所选范围验证密码，独立目录保留原路径，结果区分已取回与未取回原因。草稿、补密码、失败新任务及历史保留范围。[中文说明](docs/RELEASE_NOTES_1.6.4.md) · [范围与记录](docs/ZPAQ_RETRIEVAL_FREEZE_1.6.4.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.4)。下一步 [v1.6.5 ALZ 方法 3](docs/ARCHIVE_ROADMAP_1.6.5.md)，仅规划。
+
+**v1.6.3 · ZPAQ 受损块与文件影响定位**。按所选快照检查共享数据块，分清通过、受影响和未检查；明细、筛选与关联放进二级弹窗，普通/密码及原生组入口接通。本版只诊断定位。[中文说明](docs/RELEASE_NOTES_1.6.3.md) · [范围与记录](docs/ZPAQ_BLOCK_DIAGNOSIS_FREEZE_1.6.3.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.3)。已由上方 v1.6.4 接续。
 
 **v1.6.2 · 中断备份的完整旧快照取回**。识别 ZPAQ 未完成事务，在当前栏选择完整旧快照另存取回；普通/密码、单包/已确认多部分贯通原队列、草稿与历史，结果明确排除中断更新。[中文说明](docs/RELEASE_NOTES_1.6.2.md) · [范围与记录](docs/ZPAQ_TAIL_RECOVERY_FREEZE_1.6.2.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.2)。已由上方 v1.6.3 接续。
 

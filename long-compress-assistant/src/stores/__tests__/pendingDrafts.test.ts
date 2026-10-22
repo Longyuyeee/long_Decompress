@@ -14,6 +14,12 @@ afterEach(() => { session?.dispose(); session = undefined })
 function file(path: string) { return { path, name: path.split('/').pop()!, size: 20, type: 'file', isDirectory: false } }
 function reopen() { session?.dispose(); setActivePinia(createPinia()); session = usePendingDraftStore(); session.initialize(); return session }
 describe('pending archive draft recovery', () => {
+  it('zpaq164 restores partial retrieval identity and requires the session password without auto-start',async()=>{
+    session=usePendingDraftStore();session.initialize();const selection={snapshot:{version:3,date:20261020150000},revision:'a'.repeat(64),paths:['docs/good.txt']}
+    useTaskStore().addTask({id:'partial',name:'部分取回',type:'decompression',sourceFiles:['C:/backup.zpaq'],outputPath:'D:/out',configurationMode:'individual',zpaqRetrieval:selection,zpaqSnapshot:selection.snapshot,selectedEntries:selection.paths,password:'private-164'})
+    session.flush();expect(localStorage.getItem(PENDING_DRAFTS_KEY)).not.toContain('private-164');await reopen().restore();expect(useTaskStore().tasks[0]).toMatchObject({zpaqRetrieval:selection,zpaqSnapshot:selection.snapshot,selectedEntries:selection.paths,status:'pending',draftPasswordRequired:true});expect(mocks.invoke.mock.calls.some(([cmd])=>cmd==='extract_file')).toBe(false)
+  })
+
   it('zpaq161 restores native output mode before editing while asking again for the original password',async()=>{
     const reference='C:/profile/zpaq-sources/id/journal01.zpaq',parts=['D:/received/journal01.zpaq','D:/received/journal02.zpaq','D:/received/journal03.zpaq']
     mocks.invoke.mockImplementation(async cmd=>cmd==='suggest_zpaq_multipart'?null:cmd==='detect_split_archive'?{is_split:true,format:'ZpaqNativeSplit',archive_format:'ZPAQ',first_part:reference,parts,total_size:400000,is_complete:true,missing_parts:[]}:{name:'file',size:20,is_dir:false})
