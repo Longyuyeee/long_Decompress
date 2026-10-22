@@ -42,7 +42,7 @@ vi.mock('@/composables/useArchiveEngine', () => ({
       formats: [],
       browseExtensions: ['zip', '7z', 'rar', 'tar', 'zst'],
       nestedExtensions: ['zip', '7z', 'rar', 'tar', 'zst'],
-      boundedPreviewFormats: ['ZIP', 'TAR', 'ZPAQ'],
+      boundedPreviewFormats: ['ZIP', 'TAR', 'ZPAQ', 'ALZ'],
       boundedTextPreviewFormats: ['ZIP', 'TAR', 'ZPAQ', 'ALZ'],
       imagePreviewExtensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'],
       textPreviewExtensions: ['txt', 'md', 'log'],
@@ -242,17 +242,21 @@ describe('ArchiveBrowserView', () => {
     expect(wrapper.find('[data-testid="archive-text-preview"]').exists()).toBe(false);wrapper.unmount()
   })
 
-  it('ALZ text opens inside the existing preview while image reading stays disabled', async () => {
+  it('ALZ text and image open inside the existing preview with a bound source', async () => {
     mocks.browseArchive.mockResolvedValueOnce({format:'ALZ',revision:'a'.repeat(64),totalFiles:2,totalDirectories:0,totalUncompressedSize:30,totalCompressedSize:20,encrypted:false,entries:[
       {path:'readme.txt',name:'readme.txt',size:10,isDir:false}, {path:'image.png',name:'image.png',size:20,isDir:false},
     ]})
     const wrapper=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:169,path:'C:/sample.alz'}},global:{stubs:{Teleport:true,RouterLink:true}}})
     await flushPromises()
-    expect(wrapper.get('[data-entry-path="image.png"] .preview-trigger').attributes('disabled')).toBeDefined()
+    expect(wrapper.get('[data-entry-path="image.png"] .preview-trigger').attributes('disabled')).toBeUndefined()
     await wrapper.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises()
     expect(mocks.previewArchiveText).toHaveBeenCalledWith('C:/sample.alz','readme.txt','',undefined,undefined,expect.objectContaining({previewId:expect.stringContaining('alz-text-'),sourceRevision:'a'.repeat(64)}))
     expect(wrapper.get('[data-testid="archive-text-preview"]').text()).toContain('你好，归档文本')
-    expect(mocks.previewArchiveImage).not.toHaveBeenCalled();wrapper.unmount()
+    expect(mocks.previewArchiveImage).not.toHaveBeenCalled()
+    await wrapper.get('.preview-close').trigger('click')
+    await wrapper.get('[data-entry-path="image.png"]').trigger('dblclick');await flushPromises()
+    expect(mocks.previewArchiveImage).toHaveBeenCalledWith('C:/sample.alz','image.png','',undefined,undefined,expect.objectContaining({previewId:expect.stringContaining('alz-image-'),sourceRevision:'a'.repeat(64)}))
+    expect(wrapper.find('[data-testid="archive-entry-preview"]').exists()).toBe(true);wrapper.unmount()
   })
 
   it('ALZ closes its in-flight native preview and ignores a late result', async () => {
@@ -266,6 +270,18 @@ describe('ArchiveBrowserView', () => {
     expect(mocks.cancelArchiveBrowse).toHaveBeenCalledWith(id)
     finish({content:'late response',encoding:'UTF-8',byteSize:13,totalSize:13,truncated:false,lineCount:1});await flushPromises()
     expect(wrapper.find('[data-testid="archive-entry-preview"]').exists()).toBe(false);wrapper.unmount()
+  })
+
+  it('ALZ image close cancels its own request and never shows a late image', async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'ALZ',revision:'a'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:20,totalCompressedSize:8,encrypted:false,entries:[{path:'cover.png',name:'cover.png',size:20,isDir:false}]})
+    let finish!:(value:any)=>void
+    mocks.previewArchiveImage.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve}))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1610,path:'C:/pictures.alz'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
+    await w.get('[data-entry-path="cover.png"]').trigger('dblclick');await flushPromises()
+    const id=mocks.previewArchiveImage.mock.calls.at(-1)![5].previewId
+    await w.get('.preview-close').trigger('click');await flushPromises();expect(mocks.cancelArchiveBrowse).toHaveBeenCalledWith(id)
+    finish({entryPath:'cover.png',dataUrl:'data:image/png;base64,AA==',mimeType:'image/png',byteSize:20,width:1,height:1});await flushPromises()
+    expect(w.find('[data-testid="archive-entry-preview"]').exists()).toBe(false);w.unmount()
   })
 
   it('keeps parent navigation actions inside the wrapping header', () => {

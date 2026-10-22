@@ -894,9 +894,9 @@ export const useTauriCommands = () => {
     await invoke('cancel_archive_browse', { browseId })
   }
 
-  const previewArchiveImage = async (filePath: string, entryPath: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding, zpaqSnapshot?: ZpaqSnapshot) => {
+  const previewArchiveImage = async (filePath: string, entryPath: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding, zpaqSnapshot?: ZpaqSnapshot, context?: { previewId: string; sourceRevision?: string }) => {
     return await invoke<ArchiveImagePreview>('preview_archive_image', {
-      filePath, entryPath, password: password || null, ...zipPasswordArguments(zipPasswordEncoding), ...snapshotArguments(zpaqSnapshot),
+      filePath, entryPath, password: password || null, ...zipPasswordArguments(zipPasswordEncoding), ...snapshotArguments(zpaqSnapshot), ...(context ?? {}),
     })
   }
 

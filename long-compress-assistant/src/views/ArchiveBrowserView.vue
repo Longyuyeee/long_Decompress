@@ -168,8 +168,8 @@ const visibleFiles = computed(() => filteredEntries.value.filter(entry => !entry
 const visibleSelected = computed(() => visibleFiles.value.length > 0 && visibleFiles.value.every(entry => selected.value.has(entry.path)))
 const previewRouteSupported = computed(() => archiveCapabilities.supportsBoundedPreview(result.value?.format))
 const entryPreviewSupported = (entry: ArchiveEntryInfo) => previewKind(entry) === 'text' ? archiveCapabilities.supportsTextPreview(result.value?.format) : previewRouteSupported.value
-let textPreviewRequestId: string | undefined
-const cancelTextPreview = () => { if (textPreviewRequestId) { void commands.cancelArchiveBrowse(textPreviewRequestId).catch(() => {}); textPreviewRequestId = undefined } }
+let entryPreviewRequestId: string | undefined
+const cancelEntryPreview = () => { if (entryPreviewRequestId) { void commands.cancelArchiveBrowse(entryPreviewRequestId).catch(() => {}); entryPreviewRequestId = undefined } }
 const detailFiles = computed(() => detailEntries.value.flatMap(entry => entry.isDir
   ? files.value.filter(file => file.path.replace(/\\/g, '/').startsWith(entry.path.replace(/\\/g, '/')))
   : [entry]))
@@ -337,7 +337,7 @@ const convertSnapshot = () => {
   if (selectedSnapshot.value && !inputBusy.value) conversion.openSnapshot(archivePath.value, selectedSnapshot.value, password.value)
 }
 const closePreview = () => {
-  cancelTextPreview()
+  cancelEntryPreview()
   readerOpen.value=false
   previewSequence++
   imagePreview.value = null
@@ -350,7 +350,7 @@ const closePreview = () => {
 const openPreview = async (entry: ArchiveEntryInfo) => {
   if (!canPreviewEntry(entry) || !entryPreviewSupported(entry)) return
   if (props.embedded) paneToolsOpen.value = false
-  cancelTextPreview()
+  cancelEntryPreview()
   const sequence = ++previewSequence
   previewEntry.value = entry
   imagePreview.value = null
@@ -359,13 +359,15 @@ const openPreview = async (entry: ArchiveEntryInfo) => {
   previewLoading.value = true
   try {
     if (librarySourceId.value) await invoke('library_check', { sourceId: librarySourceId.value, entryPath: entry.path })
+    const context = result.value?.format.toUpperCase() === 'ALZ'
+      ? { previewId: 'alz-'+previewKind(entry)+'-'+crypto.randomUUID(), sourceRevision: result.value?.revision } : undefined
+    entryPreviewRequestId = context?.previewId
     if (previewKind(entry) === 'image') {
-      const value = await commands.previewArchiveImage(archivePath.value, entry.path, password.value, ...snapshotReadArguments.value)
+      const value = context
+        ? await commands.previewArchiveImage(archivePath.value, entry.path, password.value, inputEncoding.value, selectedSnapshot.value, context)
+        : await commands.previewArchiveImage(archivePath.value, entry.path, password.value, ...snapshotReadArguments.value)
       if (sequence === previewSequence) imagePreview.value = value
     } else {
-      const context = result.value?.format.toUpperCase() === 'ALZ'
-        ? { previewId: 'alz-text-'+crypto.randomUUID(), sourceRevision: result.value?.revision } : undefined
-      textPreviewRequestId = context?.previewId
       const value = context
         ? await commands.previewArchiveText(archivePath.value, entry.path, password.value, inputEncoding.value, selectedSnapshot.value, context)
         : await commands.previewArchiveText(archivePath.value, entry.path, password.value, ...snapshotReadArguments.value)
@@ -379,7 +381,7 @@ const openPreview = async (entry: ArchiveEntryInfo) => {
         ? '密码不正确，请修改密码后重试。' : String(error)
     }
   } finally {
-    if (sequence === previewSequence) { previewLoading.value = false; textPreviewRequestId = undefined }
+    if (sequence === previewSequence) { previewLoading.value = false; entryPreviewRequestId = undefined }
   }
 }
 
@@ -788,7 +790,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  cancelTextPreview()
+  cancelEntryPreview()
   disposed = true; sourceSequence++; archiveLoadSequence++
   readerOpen.value=false
   previewSequence++
@@ -1024,7 +1026,7 @@ const extractSelected = async () => {
     <div v-if="previewEntry" class="preview-backdrop" data-testid="archive-entry-preview" @click.self="closePreview">
       <section class="preview-dialog" role="dialog" aria-modal="true" :aria-label="`预览 ${previewEntry.name}`">
         <header class="preview-header">
-          <div class="min-w-0 flex items-center gap-2"><h2 class="truncate text-lg font-black text-content">{{ previewEntry.name }}</h2><HelpHint label="预览说明">只读查看，不修改原文件。ALZ 支持 1 MiB 以内且通过完整校验的文本；其他已支持格式的大文本显示前 1 MiB。需要编辑时，可以提取后打开。</HelpHint></div>
+          <div class="min-w-0 flex items-center gap-2"><h2 class="truncate text-lg font-black text-content">{{ previewEntry.name }}</h2><HelpHint label="预览说明"><template v-if="previewKind(previewEntry) === 'image'">只读查看，不修改原文件。支持 PNG、JPEG、GIF、WebP、BMP；图片不超过 8 MiB，单边不超过 8192、总像素不超过 1600 万。超出范围可先提取后查看。</template><template v-else>只读查看，不修改原文件。ALZ 支持 1 MiB 以内且通过完整校验的文本；其他已支持格式的大文本显示前 1 MiB。需要编辑时，可以提取后打开。</template></HelpHint></div>
           <button type="button" class="preview-close" aria-label="关闭预览" @click="closePreview"><i class="pi pi-times"></i></button>
         </header>
         <div class="preview-stage">

@@ -1,0 +1,125 @@
+{
+  "version": "1.6.10",
+  "controlled": true,
+  "interpretation": "Self-authored ALZ image regression inputs; controlled framing, not producer originals.",
+  "password": "图片密码1610!",
+  "encoding": "utf8",
+  "cases": [
+    {
+      "name": "store",
+      "method": 0,
+      "controlled": true,
+      "historicalProducer": false,
+      "password": null,
+      "path": "store.alz"
+    },
+    {
+      "name": "deflate",
+      "method": 2,
+      "controlled": true,
+      "historicalProducer": false,
+      "password": null,
+      "path": "deflate.alz"
+    },
+    {
+      "name": "bzip2",
+      "method": 1,
+      "controlled": true,
+      "historicalProducer": false,
+      "password": null,
+      "path": "bzip2.alz"
+    },
+    {
+      "name": "password",
+      "method": 2,
+      "controlled": true,
+      "historicalProducer": false,
+      "password": "图片密码1610!",
+      "path": "password.alz"
+    }
+  ],
+  "images": [
+    {
+      "path": "相册/01-封面.png",
+      "bytes": 51773,
+      "sha256": "4caaa6a30b6523e24d1f57ab3e4ae54ce0465885ed246da539cfc217740e57b7"
+    },
+    {
+      "path": "相册/02-网格.bmp",
+      "bytes": 196662,
+      "sha256": "76a4ae37e7731dacde16f4cc5a63ef37f76342f7484a8eebcf84667a1ce0c832"
+    }
+  ],
+  "files": [
+    {
+      "path": "at-limit.alz",
+      "bytes": 195175,
+      "sha256": "5877e2608cb98674c9742760821d6c1d021cf4bdd47e77066902628f95366638"
+    },
+    {
+      "path": "bzip2.alz",
+      "bytes": 130403,
+      "sha256": "5b6fd403758aa7b9f61501663947b08e36e1efded5114da4458db979cd4bd348"
+    },
+    {
+      "path": "crc.alz",
+      "bytes": 39219,
+      "sha256": "906b7ccca126384651aa0c455b023923c882e9fe437a2675bfe5299554c4aaeb"
+    },
+    {
+      "path": "deflate.alz",
+      "bytes": 225738,
+      "sha256": "0ded17b513e0eb9862acc913e0154488d581364ce48e52cf1e2fa7dc2f9ff7da"
+    },
+    {
+      "path": "dimensions.alz",
+      "bytes": 39220,
+      "sha256": "86067b6bd279c6d5d0fbc3b3d46d9d704b1ffdab32b6b3a5df574997d334e74e"
+    },
+    {
+      "path": "missing-end.alz",
+      "bytes": 41228,
+      "sha256": "7dc0a955920c174e67aabccf0fc9e2644e796908063abb7460d9442b29cd63f5"
+    },
+    {
+      "path": "not-image.alz",
+      "bytes": 76,
+      "sha256": "ba8491018ce59afb5872cee0d8c1d6551c94a3875dfd8b0bf7234db81abc7d3e"
+    },
+    {
+      "path": "oversize.alz",
+      "bytes": 8219,
+      "sha256": "44915a5e52517650948b52971bb72394c3716cd7a6a9173ca80f204f74ab5f71"
+    },
+    {
+      "path": "password-volumes.a00",
+      "bytes": 20026,
+      "sha256": "ece144aa6cb419909bd8702e88db7fd055626a7c91bed60d8616c6fb81519a04"
+    },
+    {
+      "path": "password-volumes.a01",
+      "bytes": 185759,
+      "sha256": "cc95278aa9195a4cf43a32e97446a4648f17c16642adf499102b418f71ff20b0"
+    },
+    {
+      "path": "password-volumes.alz",
+      "bytes": 20025,
+      "sha256": "9a4a8414f7290898cac843d6d604d102edcade82282275a7b7ebbd31015ec419"
+    },
+    {
+      "path": "password.alz",
+      "bytes": 225762,
+      "sha256": "60e85404d890781411ee2c6566e55402411536988d12be95c5430705be4bc292"
+    },
+    {
+      "path": "store.alz",
+      "bytes": 248621,
+      "sha256": "6b75930af25d8bf8c6686f59530dfafa55238b6473dff5e611b7dd15201766ca"
+    },
+    {
+      "path": "ui.alz",
+      "bytes": 225728,
+      "sha256": "18a325f9dd2ad0d983d5a8ed986f9fa8e1cc25e276c098d78650add4fe7cdb3c"
+    }
+  ]
+}

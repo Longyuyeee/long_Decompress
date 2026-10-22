@@ -1474,11 +1474,29 @@ pub async fn preview_archive_image(
     password: Option<String>,
     zip_password_encoding: Option<ZipPasswordEncoding>,
     zpaq_snapshot: Option<crate::models::compression::ZpaqSnapshot>,
+    preview_id: Option<String>,
+    source_revision: Option<String>,
 ) -> Result<crate::services::archive_preview::ArchiveImagePreview, String> {
+    let browse_id = preview_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+    if browse_id.is_empty() || browse_id.len() > 128 { return Err("预览请求无效".into()); }
+    let flag = Arc::new(AtomicBool::new(false));
+    match ARCHIVE_BROWSE_FLAGS.entry(browse_id.clone()) {
+        Entry::Vacant(entry) => { entry.insert(flag.clone()); }
+        Entry::Occupied(entry) => {
+            if entry.get().load(Ordering::Acquire) { entry.remove(); return Err("IMAGE_READER_CANCELLED|已停止读取图片".into()); }
+            return Err("同一个预览请求已在执行".into());
+        }
+    }
+    let _guard = ArchiveBrowseGuard { browse_id };
+    if let Some(revision) = source_revision.as_deref() { crate::services::image_reader::check_source(Path::new(&file_path), revision).map_err(|e|format!("{e:#}"))?; }
+    if crate::services::archive_browser::detect_format(Path::new(&file_path)).is_ok_and(|f| f == crate::services::archive_format::ArchiveFormat::Alz) {
+        crate::services::alz_engine::plan_image_preview(Path::new(&file_path), &entry_path, zip_password_encoding, flag.clone()).await.map_err(|e|format!("{e:#}"))?;
+    }
     let resolved_password = match password.filter(|value| !value.is_empty()) {
         Some(password) => Some(password),
         None => {
-            let service = CompressionService::new_with_defaults().await;
+            let mut service = CompressionService::new_with_defaults().await;
+            service.cancellation_flag = flag.clone();
             service
                 .resolve_archive_password_silent(&file_path, &DecompressOptions {
                     zip_password_encoding, selected_entries: vec![entry_path.clone()], ..Default::default()
@@ -1486,12 +1504,14 @@ pub async fn preview_archive_image(
                 .await.map_err(|error| error.to_string())?
         }
     };
-    crate::services::archive_preview::preview_archive_image_at(
+    crate::services::archive_preview::preview_archive_image_bound_at(
         std::path::Path::new(&file_path),
         &entry_path,
         resolved_password.as_deref(),
         zip_password_encoding,
         zpaq_snapshot,
+        crate::services::image_reader::Control { flag, ..Default::default() },
+        source_revision,
     )
     .await
     .map_err(|error| format!("{error:#}"))
@@ -1510,6 +1530,9 @@ pub async fn read_archive_image(window:Window,file_path:String,entry_path:String
  }
  let _guard=ArchiveBrowseGuard{browse_id:request_id.clone()};
  crate::services::image_reader::check_source(Path::new(&file_path),&revision).map_err(|e|format!("{e:#}"))?;
+ if crate::services::archive_browser::detect_format(Path::new(&file_path)).is_ok_and(|f| f == crate::services::archive_format::ArchiveFormat::Alz) {
+  crate::services::alz_engine::plan_image_preview(Path::new(&file_path), &entry_path, zip_password_encoding, flag.clone()).await.map_err(|e|format!("{e:#}"))?;
+ }
  let password=match password.filter(|p|!p.is_empty()){Some(p)=>Some(p),None=>{let mut service=CompressionService::new_with_defaults().await;service.cancellation_flag=flag.clone();service.resolve_archive_password_silent(&file_path,&DecompressOptions{zip_password_encoding,selected_entries:vec![entry_path.clone()],..Default::default()}).await.map_err(|e|format!("{e:#}"))?}};
  let last=std::sync::Mutex::new(("",crate::services::progress_gate::ProgressGate::new()));
  let observer=Arc::new(move|event:crate::services::image_reader::Progress|{let mut last=last.lock().unwrap_or_else(|e|e.into_inner());if last.0!=event.phase||last.1.allow(event.phase=="decoding"){last.0=event.phase;let _=window.emit("image-reader-progress",serde_json::json!({"requestId":request_id,"progress":event}));}});
