@@ -78,7 +78,7 @@ pub fn confirm(root:&Path,group:Group)->Result<PathBuf>{
     let name=group.members[0].path.file_name().context("来源名称无效")?;
     let reference=directory.join(name);
     if reference.exists(){ensure!(fs::read(&reference)?==[MAGIC,bytes.as_slice()].concat(),"已确认的 ZPAQ 来源记录不一致，请重新选择整组");}
-    else{let mut temporary=tempfile::NamedTempFile::new_in(directory)?;temporary.write_all(MAGIC)?;temporary.write_all(&bytes)?;temporary.as_file().sync_all()?;temporary.persist_noclobber(&reference).map_err(|e|e.error)?;}
+    else{let directory=directory.canonicalize()?;let target=directory.join(name);let mut temporary=tempfile::NamedTempFile::new_in(directory)?;temporary.write_all(MAGIC)?;temporary.write_all(&bytes)?;temporary.as_file().sync_all()?;temporary.persist_noclobber(target).map_err(|e|e.error)?;}
     Ok(reference)
 }
 pub fn inspect(path:&Path)->Result<Option<SplitArchiveInfo>>{

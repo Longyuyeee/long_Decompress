@@ -199,6 +199,11 @@ export const usePendingDraftStore = defineStore('pendingDrafts', () => {
       }
       // Never restore the Explorer auto-start flag or resume an operation.
       compression.autoStartRequested = false
+      await conversion.refreshPendingSources()
+      for (const item of conversion.pending) {
+        const absent = [item.sourcePath, ...(item.settings?.updateSources || [])].filter(path => missing.has(path))
+        if (absent.length) item.sourceIssue ||= '来源不存在或无法访问，请重新选择：' + absent.map(path => path.split(/[\\/]/).pop()).join('、')
+      }
       recovery.value = null
       feedback.value = '已恢复 ' + restored + ' 项待处理任务' + (missing.size ? '，有 ' + missing.size + ' 个来源需要重新选择。' : '，可核对后开始。')
       flush()

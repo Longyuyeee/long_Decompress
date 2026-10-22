@@ -436,7 +436,10 @@ pub async fn update_zpaq_archive(window: Window, task_id: String, source_path: S
     });
     let summary=crate::services::zpaq_update::update(Path::new(&source_path),&sources,&archive_prefix,Path::new(&output_path),source_password.as_deref().filter(|p|!p.is_empty()),level,split_size,service.cancellation_flag.clone(),progress)
         .await.map_err(|e|crate::services::archive_io::message(&e))?;
-    let mut output=published_archive_output(Path::new(&output_path),split_size.is_some_and(|n|n>0)).map_err(|e|e.to_string())?;
+    let mut output=if let Some(count)=summary.native_parts {
+        crate::services::zpaq_update::native_update::output_paths(Path::new(&output_path),count)
+            .and_then(|paths|published_archive_output_paths(paths,true))
+    }else{published_archive_output(Path::new(&output_path),split_size.is_some_and(|n|n>0))}.map_err(|e|e.to_string())?;
     service.emit_log(&window,&task_id,&if summary.unchanged {"所选内容和时间未变化，已另存同内容副本；未新增快照。".into()}else{format!("已添加/更新 {} 项，历史快照 {} → {}；未选内容保留。",summary.updated_entries,summary.base_snapshots,summary.snapshots)},TaskLogSeverity::Success);
     output.update_summary=Some(summary);Ok(output)
 }
@@ -527,6 +530,11 @@ fn published_archive_output(output: &Path, split: bool) -> anyhow::Result<Publis
     } else { vec![output.to_path_buf()] };
     if split && paths.last().is_some_and(|path| path == output) { paths.rotate_right(1); }
     if split { paths.extend(crate::services::archive_volumes::recovery_volume_paths(output)?); }
+    let split=split&&(paths.len()>1||paths.first().is_some_and(|path|path!=output));
+    published_archive_output_paths(paths,split)
+}
+
+fn published_archive_output_paths(paths: Vec<PathBuf>, split: bool) -> anyhow::Result<PublishedArchiveOutput> {
     let mut files = Vec::new();
     let mut total_bytes = 0u64;
     for path in paths {
@@ -537,7 +545,6 @@ fn published_archive_output(output: &Path, split: bool) -> anyhow::Result<Publis
         files.push(PublishedArchiveFile { path: path.to_string_lossy().into_owned(), bytes: metadata.len() });
     }
     let primary_path = files.first().ok_or_else(|| anyhow::anyhow!("产物清单为空"))?.path.clone();
-    let split = split && (files.len() > 1 || primary_path != output.to_string_lossy());
     Ok(PublishedArchiveOutput { primary_path, files, total_bytes, split, update_summary: None })
 }
 

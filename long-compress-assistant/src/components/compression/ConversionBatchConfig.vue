@@ -113,7 +113,7 @@ async function apply() {
       </template>
       <template v-else>
         <CompressionPurposePicker v-if="!hasUpdates" staged :key="String(visible)" @apply="fillPurpose" />
-        <p v-if="hasUpdates" class="rounded-lg bg-primary/5 p-3 text-xs leading-relaxed text-muted">ZPAQ 更新任务沿用原格式和原密码，可统一强度、分卷、保存目录与原包密码；添加内容和归档内位置在各条目展开编辑。</p>
+        <p v-if="hasUpdates" class="rounded-lg bg-primary/5 p-3 text-xs leading-relaxed text-muted">ZPAQ 更新沿用原格式和原密码；添加内容和归档内位置在各条目展开编辑。原生多部分组按事务生成部分，不应用数字分卷大小。</p>
         <span class="context-help"><HelpHint label="多选转换设置说明">只修改指定参数；名称、目录、密码等未指定的配置保持各自原值。</HelpHint></span>
         <p v-if="format !== 'keep' && (!supportsNativePassword(format) || !supportsArchiveSplit(format))" class="text-xs text-amber-600">此格式不支持的密码或分卷选项会关闭，其余配置保留。</p>
         <div class="grid min-w-0 gap-4 sm:grid-cols-2">

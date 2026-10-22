@@ -90,6 +90,7 @@ import { runZipLzma1560Gate } from './zip-lzma-1560-gate.mjs'
 import { runZipZstd1561Gate } from './zip-zstd-1561-gate.mjs'
 import { runZipPpmd1562Gate } from './zip-ppmd-1562-gate.mjs'
 import { runZpaqNative1564Gate } from './zpaq-native-1564-gate.mjs'
+import { runZpaqNative161Gate } from './zpaq-native-161-gate.mjs'
 import { runCompactModulesUiGate } from './compact-modules-ui-gate.mjs'
 import { runPageUiReview } from './page-ui-review-gate.mjs'
 import { runSettingsUpdateThemesGate } from './settings-update-themes-gate.mjs'
@@ -5012,6 +5013,9 @@ try {
     completedSuccessfully = true
   } else if ((process.argv.includes('--compact-modules-only') || process.argv.includes('--compact-modules-layout-only'))) {
     await runCompactModulesUiGate({driver,bridge:callDesktopBridge,application,root,dataDirectory:e2eDataDirectory})
+    completedSuccessfully = true
+  } else if (process.argv.includes('--zpaq-native-161-only')) {
+    await runZpaqNative161Gate({driver,bridge:callDesktopBridge,application,root})
     completedSuccessfully = true
   } else if (process.argv.includes('--zpaq-native-1564-only')) {
     await runZpaqNative1564Gate({driver,getDriver:()=>driver,restart:restartDesktopSession,bridge:callDesktopBridge,artifactDirectory,application,root,dataDirectory:e2eDataDirectory})

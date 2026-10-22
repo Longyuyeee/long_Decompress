@@ -28,6 +28,17 @@ jobs:
       - name: Verify release version identity
         shell: pwsh
         run: npm run test:release-identity -- --tag "$env:GITHUB_REF_NAME"
+      - name: Read version release notes
+        id: notes
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $config = Get-Content -LiteralPath 'src-tauri/tauri.conf.json' -Raw | ConvertFrom-Json
+          $notesPath = Join-Path 'docs' "RELEASE_NOTES_$($config.package.version).md"
+          $notes = [IO.File]::ReadAllText((Resolve-Path -LiteralPath $notesPath), [Text.Encoding]::UTF8)
+          if ([string]::IsNullOrWhiteSpace($notes)) { throw 'Version release notes are empty.' }
+          $delimiter = 'release_notes_' + [Guid]::NewGuid().ToString('N')
+          [IO.File]::AppendAllText($env:GITHUB_OUTPUT, "body<<$delimiter`n$notes`n$delimiter`n", [Text.UTF8Encoding]::new($false))
       - run: npm ci
       - uses: tauri-apps/tauri-action@v0
         id: tauri
@@ -39,7 +50,8 @@ jobs:
           projectPath: long-compress-assistant
           tagName: v__VERSION__
           releaseName: Long解压 v__VERSION__
-          generateReleaseNotes: true
+          releaseBody: ${{ steps.notes.outputs.body }}
+          generateReleaseNotes: false
           releaseDraft: false
           prerelease: false
           includeUpdaterJson: true

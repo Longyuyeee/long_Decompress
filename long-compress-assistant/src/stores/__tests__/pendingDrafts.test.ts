@@ -14,6 +14,15 @@ afterEach(() => { session?.dispose(); session = undefined })
 function file(path: string) { return { path, name: path.split('/').pop()!, size: 20, type: 'file', isDirectory: false } }
 function reopen() { session?.dispose(); setActivePinia(createPinia()); session = usePendingDraftStore(); session.initialize(); return session }
 describe('pending archive draft recovery', () => {
+  it('zpaq161 restores native output mode before editing while asking again for the original password',async()=>{
+    const reference='C:/profile/zpaq-sources/id/journal01.zpaq',parts=['D:/received/journal01.zpaq','D:/received/journal02.zpaq','D:/received/journal03.zpaq']
+    mocks.invoke.mockImplementation(async cmd=>cmd==='suggest_zpaq_multipart'?null:cmd==='detect_split_archive'?{is_split:true,format:'ZpaqNativeSplit',archive_format:'ZPAQ',first_part:reference,parts,total_size:400000,is_complete:true,missing_parts:[]}:{name:'file',size:20,is_dir:false})
+    session=usePendingDraftStore();session.initialize();const store=useArchiveConversionStore();store.defaults.splitMiB=16;store.showUpdate(['C:/saved.zpaq']);await store.refreshPendingSources()
+    store.updateItem(store.pending[0].id,{updateSources:['C:/new.txt'],sourcePassword:'native-session-161'});session.flush()
+    expect(localStorage.getItem(PENDING_DRAFTS_KEY)).not.toContain('native-session-161');await reopen().restore();const restored=useArchiveConversionStore(),item=restored.pending[0]
+    expect(item.sourceNativeParts).toBe(3);expect(restored.effectiveSettings(item)).toMatchObject({splitMiB:0,updateSources:['C:/new.txt'],sourcePassword:''});expect(restored.passwordRequirements(item).source).toBe(true)
+    expect(mocks.invoke.mock.calls.some(([cmd])=>cmd==='update_zpaq_archive')).toBe(false)
+  })
   it('comparison1555 restores encrypted scope and encoding but asks again for the session password',async()=>{
     session=usePendingDraftStore();session.initialize();const comparisonSelection={source:{path:'C:/group.zip',kind:'zip' as const,revision:'a'.repeat(64),encrypted:true},paths:['one.txt'],keepStructure:true,conflictPolicy:'rename' as const,zipPasswordEncoding:'cp936' as const};useTaskStore().addTask({id:'protected',name:'protected',type:'decompression',sourceFiles:['C:/group.zip'],outputPath:'D:/out',password:'private-1555',zipPasswordEncoding:'cp936',comparisonSelection,selectedEntries:comparisonSelection.paths});session.flush();expect(localStorage.getItem(PENDING_DRAFTS_KEY)).not.toContain('private-1555');const recovery=reopen();await recovery.restore();const task=useTaskStore().tasks[0];expect(task).toMatchObject({comparisonSelection,draftPasswordRequired:true,zipPasswordEncoding:'cp936',status:'pending'});expect(task.password).toBeUndefined()
   })
