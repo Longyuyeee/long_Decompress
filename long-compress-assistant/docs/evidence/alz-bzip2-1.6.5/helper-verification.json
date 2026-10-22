@@ -1,0 +1,55 @@
+{
+  "faults": [
+    {
+      "name": "plain-trailing-single",
+      "response": {
+        "error": "[archive-inspection:damaged] ALZ 条目「a.txt」内容已通过大小和 CRC 校验，但压缩流尾部仍有 5 字节异常数据；归档不完整或已损坏，请重新获取完整原包，不必反复尝试密码"
+      }
+    },
+    {
+      "name": "plain-trailing-volumes",
+      "response": {
+        "error": "[archive-inspection:damaged] ALZ 条目「a.txt」内容已通过大小和 CRC 校验，但压缩流尾部仍有 5 字节异常数据；归档不完整或已损坏，请重新获取完整原包，不必反复尝试密码"
+      }
+    },
+    {
+      "name": "key-trailing-single",
+      "response": {
+        "error": "[archive-inspection:damaged] ALZ 条目「a.txt」内容已通过大小和 CRC 校验，但压缩流尾部仍有 5 字节异常数据；归档不完整或已损坏，请重新获取完整原包，不必反复尝试密码"
+      }
+    },
+    {
+      "name": "key-trailing-volumes",
+      "response": {
+        "error": "[archive-inspection:damaged] ALZ 条目「a.txt」内容已通过大小和 CRC 校验，但压缩流尾部仍有 5 字节异常数据；归档不完整或已损坏，请重新获取完整原包，不必反复尝试密码"
+      }
+    },
+    {
+      "name": "plain-missing-end-single",
+      "response": {
+        "error": "[archive-inspection:damaged] ALZ 条目「a.txt」内容已通过大小和 CRC 校验，但Bzip2 压缩流缺少结束标记；归档不完整或已损坏，请重新获取完整原包，不必反复尝试密码"
+      }
+    },
+    {
+      "name": "plain-missing-end-volumes",
+      "response": {
+        "error": "[archive-inspection:damaged] ALZ 条目「a.txt」内容已通过大小和 CRC 校验，但Bzip2 压缩流缺少结束标记；归档不完整或已损坏，请重新获取完整原包，不必反复尝试密码"
+      }
+    },
+    {
+      "name": "key-missing-end-single",
+      "response": {
+        "error": "[archive-inspection:damaged] ALZ 条目「a.txt」内容已通过大小和 CRC 校验，但Bzip2 压缩流缺少结束标记；归档不完整或已损坏，请重新获取完整原包，不必反复尝试密码"
+      }
+    },
+    {
+      "name": "key-missing-end-volumes",
+      "response": {
+        "error": "[archive-inspection:damaged] ALZ 条目「a.txt」内容已通过大小和 CRC 校验，但Bzip2 压缩流缺少结束标记；归档不完整或已损坏，请重新获取完整原包，不必反复尝试密码"
+      }
+    }
+  ],
+  "uncertain": {
+    "error": "[archive-inspection:ambiguous-data] ALZ 内容、大小或 CRC 校验失败：ALZ bzip2 stream is missing its end marker"
+  }
+}

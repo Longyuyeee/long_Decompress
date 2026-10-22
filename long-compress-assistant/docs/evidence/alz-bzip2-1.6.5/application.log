@@ -1,0 +1,190 @@
+   Compiling long-compress-assistant v1.6.5 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+warning: unused import: `File`
+ --> src\services\aes_wrapper.rs:8:15
+  |
+8 | use std::fs::{File, OpenOptions};
+  |               ^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `prepare_staging_layout` is never used
+    --> src\services\compression_service.rs:3016:8
+     |
+ 298 | impl CompressionService {
+     | ----------------------- method in this implementation
+...
+3016 |     fn prepare_staging_layout(
+     |        ^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `prepare_staging_layout` is never used
+   --> src\services\extraction_transaction.rs:428:15
+    |
+428 | pub(crate) fn prepare_staging_layout(
+    |               ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `stats` is never used
+ --> src\services\rar_preflight.rs:7:15
+  |
+7 | pub(crate) fn stats(
+  |               ^^^^^
+
+warning: `long-compress-assistant` (lib) generated 4 warnings (run `cargo fix --lib -p long-compress-assistant` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4m 51s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-632a7bffb4ff7e93.exe)
+
+running 1 test
+test services::alz_engine::tests::alz_bzip2_termination_causes_survive_password_and_selected_entry_routes ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 1075 filtered out; finished in 8.24s
+
+     Running unittests src\main.rs (src-tauri\target\debug\deps\long_compress_assistant-a5b0bbcc130693de.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests\aes_stream_performance.rs (src-tauri\target\debug\deps\aes_stream_performance-e616e2b7d196538f.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests\archive_browser_matrix_test.rs (src-tauri\target\debug\deps\archive_browser_matrix_test-ec07ed7e15100019.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests\archive_engine_matrix_test.rs (src-tauri\target\debug\deps\archive_engine_matrix_test-07a13f159473bccc.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests\archive_performance_regression.rs (src-tauri\target\debug\deps\archive_performance_regression-21e31a9addfd1827.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests\archive_smoke_matrix_test.rs (src-tauri\target\debug\deps\archive_smoke_matrix_test-ca83cb60d6dee85b.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 1 filtered out; finished in 0.00s
+
+     Running tests\compression_capabilities_regression.rs (src-tauri\target\debug\deps\compression_capabilities_regression-6bd2531367b8cced.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 15 filtered out; finished in 0.00s
+
+     Running tests\config_comprehensive_test.rs (src-tauri\target\debug\deps\config_comprehensive_test-d1899530a5fdf7a3.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+
+     Running tests\config_file_loader_test.rs (src-tauri\target\debug\deps\config_file_loader_test-83ccf0d949010ee5.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+     Running tests\config_integration_test.rs (src-tauri\target\debug\deps\config_integration_test-6b52a5eae0ea47c3.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 7 filtered out; finished in 0.00s
+
+     Running tests\config_system_smoke_test.rs (src-tauri\target\debug\deps\config_system_smoke_test-7f9d5de7ac31280d.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+     Running tests\fixes_validation_test.rs (src-tauri\target\debug\deps\fixes_validation_test-d2142a926fd580ba.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+     Running tests\full_format_roundtrip_test.rs (src-tauri\target\debug\deps\full_format_roundtrip_test-69a4b43a365ed69d.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 19 filtered out; finished in 0.00s
+
+     Running tests\memory_usage_test.rs (src-tauri\target\debug\deps\memory_usage_test-9c831c707b26afea.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s
+
+     Running tests\password_auto_attempt_flow_test.rs (src-tauri\target\debug\deps\password_auto_attempt_flow_test-7fac5d5a64295676.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 6 filtered out; finished in 0.00s
+
+     Running tests\password_zip_test.rs (src-tauri\target\debug\deps\password_zip_test-87482ac60fd345af.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+     Running tests\rar_enhanced_test.rs (src-tauri\target\debug\deps\rar_enhanced_test-fbc6c1755a45e7a0.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests\rar_support_test.rs (src-tauri\target\debug\deps\rar_support_test-69ca81118cb29a72.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 8 filtered out; finished in 0.00s
+
+     Running tests\real_archive_pipeline_test.rs (src-tauri\target\debug\deps\real_archive_pipeline_test-5ed45bd0c7c3221a.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 2 filtered out; finished in 0.00s
+
+     Running tests\split_compression_test.rs (src-tauri\target\debug\deps\split_compression_test-d414878e4186833c.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 14 filtered out; finished in 0.00s
+
+     Running tests\zip_compression_test.rs (src-tauri\target\debug\deps\zip_compression_test-5df226b06fce4707.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 5 filtered out; finished in 0.00s

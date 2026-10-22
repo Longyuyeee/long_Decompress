@@ -1,7 +1,12 @@
 # 文档导航与维护规则
 
-- **此前正式版 v1.5.39**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.39)，准确开发状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
-- **当前开发路线**：v1.5.40 [原生 SWM 创建](NATIVE_SWM_CREATE_1.5.40.md)已完成功能封板，发布在本版 PR 接续，后续按[近期 v1.5.40～v1.5.43](ARCHIVE_ROADMAP_1.5.40_TO_1.5.43.md) → [五模块分阶段 v1.5.44～v1.5.58，v1.5.59 起主线回归](ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)。大模块拆成可独立使用的功能阶段，小阶段可合并。
+- **当前版本 v1.6.5**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.5)、[中文说明](RELEASE_NOTES_1.6.5.md)与[封板记录](ALZ_BZIP2_INTEGRITY_FREEZE_1.6.5.md)。正式附件按 PR/标签流水线生成，此前 v1.6.4 已发布且四附件齐全。
+- **当前接续 v1.6.5**：[ALZ Bzip2 完整性路线](ARCHIVE_ROADMAP_1.6.5.md)、[本版记录](ALZ_BZIP2_INTEGRITY_FREEZE_1.6.5.md)；原方法 3 候选仍缺真实来源，单独保留。[下一阶段 v1.6.6](ARCHIVE_ROADMAP_1.6.6.md)仅规划，准确封板/发布状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
+
+以下为历史阶段记录。
+
+- **历史正式版 v1.5.39**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.39)，准确开发状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
+- **历史开发路线**：v1.5.40 [原生 SWM 创建](NATIVE_SWM_CREATE_1.5.40.md)已完成功能封板，发布在本版 PR 接续，后续按[近期 v1.5.40～v1.5.43](ARCHIVE_ROADMAP_1.5.40_TO_1.5.43.md) → [五模块分阶段 v1.5.44～v1.5.58，v1.5.59 起主线回归](ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)。大模块拆成可独立使用的功能阶段，小阶段可合并。
 
 以下为历史阶段记录，不覆盖上述当前状态与路线。
 

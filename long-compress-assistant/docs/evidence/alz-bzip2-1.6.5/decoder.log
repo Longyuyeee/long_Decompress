@@ -1,0 +1,17 @@
+   Compiling unalz v0.2.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\vendor\unalz)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.88s
+     Running unittests src\lib.rs (tools\alz-engine\target\debug\deps\unalz-9f013c54059b1683.exe)
+
+running 4 tests
+test decompress::bzip2::tests::bzip2_reads_only_declared_input_and_reports_real_short_reads ... ok
+test decompress::bzip2::tests::bzip2_original_multiblock_empty_and_alignment_remain_readable ... ok
+test decompress::bzip2::tests::bzip2_short_chunks_and_io_errors_preserve_the_original_cause ... ok
+test decompress::bzip2::tests::bzip2_rejects_missing_end_and_trailing_bytes_after_complete_content ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 25 filtered out; finished in 0.00s
+
+     Running unittests src\main.rs (tools\alz-engine\target\debug\deps\unalz-eb5097f83ec204e4.exe)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s

@@ -1,0 +1,25 @@
+{
+  "version": "1.6.5",
+  "applicationSha256": "1ebcf6540b1f6c50d1adf685dc4adc0da7615bc9b41560c635fb879e2f20bc57",
+  "helperSha256": "f5e74b6420da0f46239c943700fbe53e39efde6b178592b96b56a4366a304cd7",
+  "parentSource": "1349ee64e66fe5bde6c49ca73b08255d4d3f8781",
+  "runtimeScope": "ALZ Bzip2 termination, trailing bytes and declared read boundary; no frontend behavior change",
+  "decoderTests": 4,
+  "applicationServiceTests": 1,
+  "desktopRecords": 5,
+  "actualUiFlows": 2,
+  "layouts": 4,
+  "allLayoutsViewed": true,
+  "ordinaryFrontendBuild": "passed",
+  "desktopBuild": "VITE_DESKTOP_E2E=1 vite build; cargo build --locked --release --features custom-protocol,desktop-e2e; local CARGO_PROFILE_RELEASE_OPT_LEVEL=1, LTO=false",
+  "releaseOptimization": "unchanged; required package CI and formal Release use repository defaults",
+  "setupFailuresNotProductRegressions": [
+    "Initial desktop build omitted VITE_DESKTOP_E2E=1; no flow executed",
+    "Harness initially sent cp949 as a public ZIP enum; changed to null, preserving the existing ALZ default CP949. No product code or assertion relaxed."
+  ],
+  "scopeLimits": [
+    "256 MiB compressed input cap unchanged",
+    "Method 3 remains unsupported",
+    "Controlled encryption/native derivatives are negative regression inputs only"
+  ]
+}

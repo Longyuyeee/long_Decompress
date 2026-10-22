@@ -1,0 +1,68 @@
+   Compiling rustversion v1.0.23
+   Compiling proc-macro2 v1.0.107
+   Compiling quote v1.0.47
+   Compiling windows-link v0.2.1
+   Compiling unicode-ident v1.0.27
+   Compiling autocfg v1.5.1
+   Compiling crc32fast v1.5.2
+   Compiling cfg-if v1.0.5
+   Compiling serde_core v1.0.229
+   Compiling simd-adler32 v0.3.10
+   Compiling zmij v1.0.23
+   Compiling adler2 v2.0.1
+   Compiling serde_json v1.0.154
+   Compiling simdutf8 v0.1.5
+   Compiling scopeguard v1.2.0
+   Compiling serde v1.0.229
+   Compiling windows-sys v0.61.2
+   Compiling multiversion_no_op v1.0.0
+   Compiling libbz2-rs-sys v0.2.5
+   Compiling miniz_oxide v0.9.1
+   Compiling core_detect v1.0.0
+   Compiling anyhow v1.0.104
+   Compiling num-traits v0.2.19
+   Compiling itoa v1.0.18
+   Compiling memchr v2.8.3
+   Compiling wildmatch v2.6.1
+   Compiling bzip2 v0.6.1
+   Compiling flate2 v1.1.10
+   Compiling encoding_rs v0.8.42
+   Compiling syn v3.0.9
+   Compiling rtoolbox v0.0.6
+   Compiling rpassword v7.5.4
+   Compiling chrono v0.4.45
+   Compiling unalz v0.2.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\vendor\unalz)
+   Compiling serde_derive v1.0.229
+   Compiling long-alz v0.3.0 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\tools\alz-engine)
+warning: fields `first`, `total`, `bytes`, and `stem` are never read
+  --> src\..\..\..\src-tauri\src\services\alz_volumes.rs:7:9
+   |
+ 6 | pub struct Group {
+   |            ----- fields in this struct
+ 7 |     pub first: PathBuf,
+   |         ^^^^^
+...
+10 |     pub total: usize,
+   |         ^^^^^
+11 |     pub bytes: u64,
+   |         ^^^^^
+12 |     pub virtual_bytes: u64,
+13 |     pub stem: String,
+   |         ^^^^
+   |
+   = note: `Group` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `long-alz` (bin "long-alz") generated 1 warning
+    Finished `release` profile [optimized] target(s) in 21.20s
+ Downloading crates ...
+  Downloaded find-msvc-tools v0.1.14
+  Downloaded wasm-bindgen-macro v0.2.129
+  Downloaded android_system_properties v0.1.6
+  Downloaded wasm-bindgen-shared v0.2.129
+  Downloaded js-sys v0.3.106
+  Downloaded libc v0.2.191
+  Downloaded wasm-bindgen v0.2.129
+  Downloaded wasm-bindgen-macro-support v0.2.129
+  Downloaded cc v1.8.0
+Locked ALZ helper and 64 dependency notices

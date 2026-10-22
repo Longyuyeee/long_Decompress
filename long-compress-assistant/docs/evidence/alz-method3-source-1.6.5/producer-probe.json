@@ -1,0 +1,497 @@
+{
+  "createdAt": "2026-10-22T14:22:26.838297+00:00",
+  "purpose": "Source investigation only, not method-3 compatibility or product release evidence",
+  "sourceLicense": "CC0-1.0 self-authored payload",
+  "sourceConstruction": "seed=(b\"Long ALZ original producer probe. Public self-authored text.\\r\\n\"+bytes(range(32,127)))*100; first 4096+i bytes for i=0..15",
+  "expected": [
+    {
+      "path": "size-mod-00.txt",
+      "bytes": 4096,
+      "sha256": "e87dd7715edc12fffe8c4a3b5e7de049f2e94964a271e47b41137cb8518e3ce4"
+    },
+    {
+      "path": "size-mod-01.txt",
+      "bytes": 4097,
+      "sha256": "f631e9477a3c6b28ef502679ec814f07cc32bb14dc3ce54d5be842d9dbf2d5a7"
+    },
+    {
+      "path": "size-mod-02.txt",
+      "bytes": 4098,
+      "sha256": "49bf7908b039e8a21fb3428bffdd3715501356fb4d4506bd6a479a2f6cb87f50"
+    },
+    {
+      "path": "size-mod-03.txt",
+      "bytes": 4099,
+      "sha256": "84da1ad9d1d56c7b0dd4092e3aab1a65e6ee430143499973272ed1a3fd3cb13d"
+    },
+    {
+      "path": "size-mod-04.txt",
+      "bytes": 4100,
+      "sha256": "6491d9bf1320e13d5b3ebd899fbe2c2821c16b616d6615ca07ce864022b3691f"
+    },
+    {
+      "path": "size-mod-05.txt",
+      "bytes": 4101,
+      "sha256": "2a99af1ab849c86aa2c756ffe3b64c122f5bcadde381cd44dfd16ba71d187930"
+    },
+    {
+      "path": "size-mod-06.txt",
+      "bytes": 4102,
+      "sha256": "aa88cd92fe6a223d333a2d93db697abf4487cf5cd1e74ea7d9be924076a2c4f0"
+    },
+    {
+      "path": "size-mod-07.txt",
+      "bytes": 4103,
+      "sha256": "ff41998a8c74154c23101049c149a1f15b73c1f0a78ad5e11fbaff15c9d118e8"
+    },
+    {
+      "path": "size-mod-08.txt",
+      "bytes": 4104,
+      "sha256": "a85817c5306089e14314a663805015d5dd4e6efb3fb5f2c46be756678e589e4c"
+    },
+    {
+      "path": "size-mod-09.txt",
+      "bytes": 4105,
+      "sha256": "e696a561e1206c1ab0540982ef9998cea0eff44d67ac27c07b481d12fac945e4"
+    },
+    {
+      "path": "size-mod-10.txt",
+      "bytes": 4106,
+      "sha256": "1f3426a1771ff7fe49c895b19598b5bb36dfe2de1c6e72cce55632ea73ab7636"
+    },
+    {
+      "path": "size-mod-11.txt",
+      "bytes": 4107,
+      "sha256": "d4f5a821b799bf6bd7f251507a1802425c14c01a0f9baa42173014a7a9acd81c"
+    },
+    {
+      "path": "size-mod-12.txt",
+      "bytes": 4108,
+      "sha256": "2d805eae60aeb11ab746880b78a9449ff13977ed854212b676f64917fb188855"
+    },
+    {
+      "path": "size-mod-13.txt",
+      "bytes": 4109,
+      "sha256": "2cbc720ad6d85e173ff06e64b16d7681dced62131b3515578d89925dd01e11ba"
+    },
+    {
+      "path": "size-mod-14.txt",
+      "bytes": 4110,
+      "sha256": "44916cac0c041e923be809f5d94b23d7f30c517c7bb862e6146b03672ade7d2e"
+    },
+    {
+      "path": "size-mod-15.txt",
+      "bytes": 4111,
+      "sha256": "efe4d7ee1cb5c3a7f730a9cf7d6ea0ca50275da09b9bee3f6e527a5c0476ed90"
+    }
+  ],
+  "installerBackupSource": "https://kippler.tistory.com/164",
+  "defaultCommandOnly": true,
+  "notExhaustiveProducerOptions": true,
+  "helperSha256": "62b086190ddd9fa9f2b02b4a3b3860078632261588025da37e76fa0c01563f12",
+  "independentMethod3Verification": false,
+  "method3Obtained": false,
+  "attempts": [
+    {
+      "backupFilename": "ALZip55.exe",
+      "reportedFileVersion": "5.3.0.378",
+      "installerSha256": "865c7e3fe593895dbe2fb0738b123f4cf5961b8b408bb536399e75b2edfa44e0",
+      "executableSha256": "fd111da63fda7e37a4a04aa103d20f47d07f8a6f2f47a7a6cf9c64ec126f378c",
+      "arguments": [
+        "-a",
+        "<self-authored-source>/*.*",
+        "<new-output>.alz"
+      ],
+      "producerExitCode": 0,
+      "archiveBytes": 3752,
+      "archiveSha256": "9a593c7ae140923e386db0e7426980c5a5978272155774d73d2fd6626f30291d",
+      "entries": [
+        {
+          "path": "size-mod-00.txt",
+          "method": 2,
+          "uncompressedSize": 4096,
+          "compressedSize": 195,
+          "sizeMod16": 0
+        },
+        {
+          "path": "size-mod-01.txt",
+          "method": 2,
+          "uncompressedSize": 4097,
+          "compressedSize": 195,
+          "sizeMod16": 1
+        },
+        {
+          "path": "size-mod-02.txt",
+          "method": 2,
+          "uncompressedSize": 4098,
+          "compressedSize": 195,
+          "sizeMod16": 2
+        },
+        {
+          "path": "size-mod-03.txt",
+          "method": 2,
+          "uncompressedSize": 4099,
+          "compressedSize": 195,
+          "sizeMod16": 3
+        },
+        {
+          "path": "size-mod-04.txt",
+          "method": 2,
+          "uncompressedSize": 4100,
+          "compressedSize": 195,
+          "sizeMod16": 4
+        },
+        {
+          "path": "size-mod-05.txt",
+          "method": 2,
+          "uncompressedSize": 4101,
+          "compressedSize": 195,
+          "sizeMod16": 5
+        },
+        {
+          "path": "size-mod-06.txt",
+          "method": 2,
+          "uncompressedSize": 4102,
+          "compressedSize": 195,
+          "sizeMod16": 6
+        },
+        {
+          "path": "size-mod-07.txt",
+          "method": 2,
+          "uncompressedSize": 4103,
+          "compressedSize": 195,
+          "sizeMod16": 7
+        },
+        {
+          "path": "size-mod-08.txt",
+          "method": 2,
+          "uncompressedSize": 4104,
+          "compressedSize": 195,
+          "sizeMod16": 8
+        },
+        {
+          "path": "size-mod-09.txt",
+          "method": 2,
+          "uncompressedSize": 4105,
+          "compressedSize": 195,
+          "sizeMod16": 9
+        },
+        {
+          "path": "size-mod-10.txt",
+          "method": 2,
+          "uncompressedSize": 4106,
+          "compressedSize": 195,
+          "sizeMod16": 10
+        },
+        {
+          "path": "size-mod-11.txt",
+          "method": 2,
+          "uncompressedSize": 4107,
+          "compressedSize": 195,
+          "sizeMod16": 11
+        },
+        {
+          "path": "size-mod-12.txt",
+          "method": 2,
+          "uncompressedSize": 4108,
+          "compressedSize": 195,
+          "sizeMod16": 12
+        },
+        {
+          "path": "size-mod-13.txt",
+          "method": 2,
+          "uncompressedSize": 4109,
+          "compressedSize": 195,
+          "sizeMod16": 13
+        },
+        {
+          "path": "size-mod-14.txt",
+          "method": 2,
+          "uncompressedSize": 4110,
+          "compressedSize": 195,
+          "sizeMod16": 14
+        },
+        {
+          "path": "size-mod-15.txt",
+          "method": 2,
+          "uncompressedSize": 4111,
+          "compressedSize": 195,
+          "sizeMod16": 15
+        }
+      ],
+      "helperContentHashesMatch": true,
+      "backupDownloadUrl": "https://t1.daumcdn.net/cfile/tistory/267E154458475C7413"
+    },
+    {
+      "backupFilename": "ALZip_eng_55.exe",
+      "reportedFileVersion": "5.5.0.645",
+      "installerSha256": "b3e356a9b4e855b5c10c266f4118bbde822317a4fea8382900201de4eeadee09",
+      "executableSha256": "506d9881279ea84fc30242d836709d24ddd2b5ff9e29e55af91c11db6b10a410",
+      "arguments": [
+        "-a",
+        "<self-authored-source>/*.*",
+        "<new-output>.alz"
+      ],
+      "producerExitCode": 0,
+      "archiveBytes": 3752,
+      "archiveSha256": "9a593c7ae140923e386db0e7426980c5a5978272155774d73d2fd6626f30291d",
+      "entries": [
+        {
+          "path": "size-mod-00.txt",
+          "method": 2,
+          "uncompressedSize": 4096,
+          "compressedSize": 195,
+          "sizeMod16": 0
+        },
+        {
+          "path": "size-mod-01.txt",
+          "method": 2,
+          "uncompressedSize": 4097,
+          "compressedSize": 195,
+          "sizeMod16": 1
+        },
+        {
+          "path": "size-mod-02.txt",
+          "method": 2,
+          "uncompressedSize": 4098,
+          "compressedSize": 195,
+          "sizeMod16": 2
+        },
+        {
+          "path": "size-mod-03.txt",
+          "method": 2,
+          "uncompressedSize": 4099,
+          "compressedSize": 195,
+          "sizeMod16": 3
+        },
+        {
+          "path": "size-mod-04.txt",
+          "method": 2,
+          "uncompressedSize": 4100,
+          "compressedSize": 195,
+          "sizeMod16": 4
+        },
+        {
+          "path": "size-mod-05.txt",
+          "method": 2,
+          "uncompressedSize": 4101,
+          "compressedSize": 195,
+          "sizeMod16": 5
+        },
+        {
+          "path": "size-mod-06.txt",
+          "method": 2,
+          "uncompressedSize": 4102,
+          "compressedSize": 195,
+          "sizeMod16": 6
+        },
+        {
+          "path": "size-mod-07.txt",
+          "method": 2,
+          "uncompressedSize": 4103,
+          "compressedSize": 195,
+          "sizeMod16": 7
+        },
+        {
+          "path": "size-mod-08.txt",
+          "method": 2,
+          "uncompressedSize": 4104,
+          "compressedSize": 195,
+          "sizeMod16": 8
+        },
+        {
+          "path": "size-mod-09.txt",
+          "method": 2,
+          "uncompressedSize": 4105,
+          "compressedSize": 195,
+          "sizeMod16": 9
+        },
+        {
+          "path": "size-mod-10.txt",
+          "method": 2,
+          "uncompressedSize": 4106,
+          "compressedSize": 195,
+          "sizeMod16": 10
+        },
+        {
+          "path": "size-mod-11.txt",
+          "method": 2,
+          "uncompressedSize": 4107,
+          "compressedSize": 195,
+          "sizeMod16": 11
+        },
+        {
+          "path": "size-mod-12.txt",
+          "method": 2,
+          "uncompressedSize": 4108,
+          "compressedSize": 195,
+          "sizeMod16": 12
+        },
+        {
+          "path": "size-mod-13.txt",
+          "method": 2,
+          "uncompressedSize": 4109,
+          "compressedSize": 195,
+          "sizeMod16": 13
+        },
+        {
+          "path": "size-mod-14.txt",
+          "method": 2,
+          "uncompressedSize": 4110,
+          "compressedSize": 195,
+          "sizeMod16": 14
+        },
+        {
+          "path": "size-mod-15.txt",
+          "method": 2,
+          "uncompressedSize": 4111,
+          "compressedSize": 195,
+          "sizeMod16": 15
+        }
+      ],
+      "helperContentHashesMatch": true,
+      "backupDownloadUrl": "https://t1.daumcdn.net/cfile/tistory/2468574458475C7725"
+    },
+    {
+      "backupFilename": "ALZip56.exe",
+      "reportedFileVersion": "5.6.1.9",
+      "installerSha256": "832bf556e7450e52b76f450f5e896ddbc73e0e11d4155f09718c073d5d82ed2d",
+      "executableSha256": "779dff403206d11c1863db34747017668a5d8baeb6dd0db73fe41910bd855fcf",
+      "arguments": [
+        "-a",
+        "<self-authored-source>/*.*",
+        "<new-output>.alz"
+      ],
+      "producerExitCode": 0,
+      "archiveBytes": 3752,
+      "archiveSha256": "9a593c7ae140923e386db0e7426980c5a5978272155774d73d2fd6626f30291d",
+      "entries": [
+        {
+          "path": "size-mod-00.txt",
+          "method": 2,
+          "uncompressedSize": 4096,
+          "compressedSize": 195,
+          "sizeMod16": 0
+        },
+        {
+          "path": "size-mod-01.txt",
+          "method": 2,
+          "uncompressedSize": 4097,
+          "compressedSize": 195,
+          "sizeMod16": 1
+        },
+        {
+          "path": "size-mod-02.txt",
+          "method": 2,
+          "uncompressedSize": 4098,
+          "compressedSize": 195,
+          "sizeMod16": 2
+        },
+        {
+          "path": "size-mod-03.txt",
+          "method": 2,
+          "uncompressedSize": 4099,
+          "compressedSize": 195,
+          "sizeMod16": 3
+        },
+        {
+          "path": "size-mod-04.txt",
+          "method": 2,
+          "uncompressedSize": 4100,
+          "compressedSize": 195,
+          "sizeMod16": 4
+        },
+        {
+          "path": "size-mod-05.txt",
+          "method": 2,
+          "uncompressedSize": 4101,
+          "compressedSize": 195,
+          "sizeMod16": 5
+        },
+        {
+          "path": "size-mod-06.txt",
+          "method": 2,
+          "uncompressedSize": 4102,
+          "compressedSize": 195,
+          "sizeMod16": 6
+        },
+        {
+          "path": "size-mod-07.txt",
+          "method": 2,
+          "uncompressedSize": 4103,
+          "compressedSize": 195,
+          "sizeMod16": 7
+        },
+        {
+          "path": "size-mod-08.txt",
+          "method": 2,
+          "uncompressedSize": 4104,
+          "compressedSize": 195,
+          "sizeMod16": 8
+        },
+        {
+          "path": "size-mod-09.txt",
+          "method": 2,
+          "uncompressedSize": 4105,
+          "compressedSize": 195,
+          "sizeMod16": 9
+        },
+        {
+          "path": "size-mod-10.txt",
+          "method": 2,
+          "uncompressedSize": 4106,
+          "compressedSize": 195,
+          "sizeMod16": 10
+        },
+        {
+          "path": "size-mod-11.txt",
+          "method": 2,
+          "uncompressedSize": 4107,
+          "compressedSize": 195,
+          "sizeMod16": 11
+        },
+        {
+          "path": "size-mod-12.txt",
+          "method": 2,
+          "uncompressedSize": 4108,
+          "compressedSize": 195,
+          "sizeMod16": 12
+        },
+        {
+          "path": "size-mod-13.txt",
+          "method": 2,
+          "uncompressedSize": 4109,
+          "compressedSize": 195,
+          "sizeMod16": 13
+        },
+        {
+          "path": "size-mod-14.txt",
+          "method": 2,
+          "uncompressedSize": 4110,
+          "compressedSize": 195,
+          "sizeMod16": 14
+        },
+        {
+          "path": "size-mod-15.txt",
+          "method": 2,
+          "uncompressedSize": 4111,
+          "compressedSize": 195,
+          "sizeMod16": 15
+        }
+      ],
+      "helperContentHashesMatch": true,
+      "backupDownloadUrl": "https://t1.daumcdn.net/cfile/tistory/2270E34458475C761E"
+    }
+  ],
+  "archiveFixture": "original-default-method2.alz",
+  "interpretation": "48 entries from three backed-up producer builds all use method 2. This does not rule out other builds, options, passwords or volumes, and does not satisfy the method-3 original-source condition.",
+  "archiveSourceBytesRetained": true,
+  "producerDistribution": "Historical backup linked by unalz author, not a currently signed official download; file versions are executable metadata, not inferred from backup filenames.",
+  "extractionTool": {
+    "url": "https://constexpr.org/innoextract/files/innoextract-1.9-windows.zip",
+    "version": "1.9",
+    "sha256": "6989342c9b026a00a72a38f23b62a8e6a22cc5de69805cf47d68ac2fec993065",
+    "installerExecuted": false,
+    "extractedSysFilesCopiedWithinWorkspaceAppOnly": true
+  }
+}

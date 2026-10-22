@@ -1,0 +1,194 @@
+{
+  "original": "tests/fixtures/archives/alz-152/bzip2.alz",
+  "originalSha256": "3f9d77364199bf0fec4265af0c21d3080211d760967013ff1d2640511bbe1ea6",
+  "dataLicense": "CC0-1.0 inherited from the original fixture; controlled derivatives are not original-producer evidence",
+  "interpretation": "Only negative regression inputs. No new encryption/method/native-volume compatibility claim.",
+  "expected": [
+    {
+      "path": "a.txt",
+      "bytes": 2340,
+      "sha256": "fa80a13de5c796b12cd4689588599fc15d85540369114d3cafff16edfed42f27"
+    },
+    {
+      "path": "b.txt",
+      "bytes": 2160,
+      "sha256": "388048314e46e0249d96324a220754c01c1c728821fbabb1bf88f7314bd2dea5"
+    }
+  ],
+  "cases": [
+    {
+      "name": "plain-trailing-single",
+      "derived": true,
+      "controlledEncryption": false,
+      "controlledNativeFraming": false,
+      "fault": "trailing",
+      "password": null,
+      "archive": "plain-trailing-single.alz",
+      "members": [
+        {
+          "name": "plain-trailing-single.alz",
+          "bytes": 277,
+          "sha256": "0afae359635f7fe45b4ef2af7f2f0ee7bb9840602a42cfb4e82fad5b20277cee"
+        }
+      ]
+    },
+    {
+      "name": "plain-trailing-volumes",
+      "derived": true,
+      "controlledEncryption": false,
+      "controlledNativeFraming": true,
+      "fault": "trailing",
+      "password": null,
+      "archive": "plain-trailing-volumes/plain-trailing-volumes.alz",
+      "members": [
+        {
+          "name": "plain-trailing-volumes/plain-trailing-volumes.alz",
+          "bytes": 109,
+          "sha256": "6a6c677eaeda742a4b96c400bb108a5ba0d09fb7127faeb34377400a6c7d0ead"
+        },
+        {
+          "name": "plain-trailing-volumes/plain-trailing-volumes.a00",
+          "bytes": 109,
+          "sha256": "4064e0ece514ce7c4986ec8cf89e53a284cf77be6a7abc07ba6fe5e51aee5da3"
+        },
+        {
+          "name": "plain-trailing-volumes/plain-trailing-volumes.a01",
+          "bytes": 107,
+          "sha256": "c56a6a345befb5bdb9103559d11aa2622b536339e66f750b6e09101dca0ea4a3"
+        }
+      ]
+    },
+    {
+      "name": "key-trailing-single",
+      "derived": true,
+      "controlledEncryption": true,
+      "controlledNativeFraming": false,
+      "fault": "trailing",
+      "password": "Public ALZ Bzip2 165!",
+      "archive": "key-trailing-single.alz",
+      "members": [
+        {
+          "name": "key-trailing-single.alz",
+          "bytes": 289,
+          "sha256": "4fcfc27450365ab11dc0df09a10494c3ea599fb872f0eb192deeac051105f80a"
+        }
+      ]
+    },
+    {
+      "name": "key-trailing-volumes",
+      "derived": true,
+      "controlledEncryption": true,
+      "controlledNativeFraming": true,
+      "fault": "trailing",
+      "password": "Public ALZ Bzip2 165!",
+      "archive": "key-trailing-volumes/key-trailing-volumes.alz",
+      "members": [
+        {
+          "name": "key-trailing-volumes/key-trailing-volumes.alz",
+          "bytes": 113,
+          "sha256": "25beb5d13b2791421d4d3d2a8861cf75a166446fc65cd66c86040bc6fadee632"
+        },
+        {
+          "name": "key-trailing-volumes/key-trailing-volumes.a00",
+          "bytes": 113,
+          "sha256": "02e02f81f91b7208b239ecda5b819b76bf699fc427263f35c82e466e3619f41a"
+        },
+        {
+          "name": "key-trailing-volumes/key-trailing-volumes.a01",
+          "bytes": 111,
+          "sha256": "2d819328e0172e2499947bba39e3a67656f45849ebf45a8424837c43a3016c9a"
+        }
+      ]
+    },
+    {
+      "name": "plain-missing-end-single",
+      "derived": true,
+      "controlledEncryption": false,
+      "controlledNativeFraming": false,
+      "fault": "missing-end",
+      "password": null,
+      "archive": "plain-missing-end-single.alz",
+      "members": [
+        {
+          "name": "plain-missing-end-single.alz",
+          "bytes": 268,
+          "sha256": "8c5909500c5377c1f5c0a56a70f85199314f4495344c473b82d2defd8d127854"
+        }
+      ]
+    },
+    {
+      "name": "plain-missing-end-volumes",
+      "derived": true,
+      "controlledEncryption": false,
+      "controlledNativeFraming": true,
+      "fault": "missing-end",
+      "password": null,
+      "archive": "plain-missing-end-volumes/plain-missing-end-volumes.alz",
+      "members": [
+        {
+          "name": "plain-missing-end-volumes/plain-missing-end-volumes.alz",
+          "bytes": 106,
+          "sha256": "0f130636404a32fdd3cd2b433669a7ff9237867f01ea89b4c84e5ca376852efd"
+        },
+        {
+          "name": "plain-missing-end-volumes/plain-missing-end-volumes.a00",
+          "bytes": 106,
+          "sha256": "b06772d9cc6e571522df1309972f2349887b1c0c742c4c7fb6ce26487109c4c0"
+        },
+        {
+          "name": "plain-missing-end-volumes/plain-missing-end-volumes.a01",
+          "bytes": 104,
+          "sha256": "32a93dfb3586c1c65c4d1c9ff621e1aefc8f421befe46ea98ad08828399d6cfb"
+        }
+      ]
+    },
+    {
+      "name": "key-missing-end-single",
+      "derived": true,
+      "controlledEncryption": true,
+      "controlledNativeFraming": false,
+      "fault": "missing-end",
+      "password": "Public ALZ Bzip2 165!",
+      "archive": "key-missing-end-single.alz",
+      "members": [
+        {
+          "name": "key-missing-end-single.alz",
+          "bytes": 280,
+          "sha256": "fea5628cf1a300f068245424311e82576e79bf28c7949d588866083bbd25fd05"
+        }
+      ]
+    },
+    {
+      "name": "key-missing-end-volumes",
+      "derived": true,
+      "controlledEncryption": true,
+      "controlledNativeFraming": true,
+      "fault": "missing-end",
+      "password": "Public ALZ Bzip2 165!",
+      "archive": "key-missing-end-volumes/key-missing-end-volumes.alz",
+      "members": [
+        {
+          "name": "key-missing-end-volumes/key-missing-end-volumes.alz",
+          "bytes": 110,
+          "sha256": "4c788b44e7359243cb30167ac33235d9c0bffea17d44d683c8815cc3533feb52"
+        },
+        {
+          "name": "key-missing-end-volumes/key-missing-end-volumes.a00",
+          "bytes": 110,
+          "sha256": "7b9184fbf182a01fd525d7c865ba95b5e76ffe19403dad69b1c6f3a763777005"
+        },
+        {
+          "name": "key-missing-end-volumes/key-missing-end-volumes.a01",
+          "bytes": 108,
+          "sha256": "f3dcfcf3133ce21e374f01044d5c7afd48eaaaea67b571081fdc0ddf1ba80c20"
+        }
+      ]
+    }
+  ],
+  "uncertain": {
+    "name": "key-missing-end-crc-mismatch.alz",
+    "bytes": 280,
+    "sha256": "ee1de41da33a7a2cac9fa29f883fd5d24a105bba39e11c4b6007a6841ddb0943",
+    "password": "Public ALZ Bzip2 165!"
+  }
+}

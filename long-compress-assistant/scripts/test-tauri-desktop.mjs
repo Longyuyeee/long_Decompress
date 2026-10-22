@@ -94,6 +94,7 @@ import { runZpaqNative161Gate } from './zpaq-native-161-gate.mjs'
 import { runZpaqTail162Gate } from './zpaq-tail-162-gate.mjs'
 import { runZpaqBlock163Gate } from './zpaq-block-163-gate.mjs'
 import { runZpaqRetrieval164Gate } from './zpaq-retrieval-164-gate.mjs'
+import { runAlzBzip2165Gate } from './alz-bzip2-165-gate.mjs'
 import { runCompactModulesUiGate } from './compact-modules-ui-gate.mjs'
 import { runPageUiReview } from './page-ui-review-gate.mjs'
 import { runSettingsUpdateThemesGate } from './settings-update-themes-gate.mjs'
@@ -5016,6 +5017,9 @@ try {
     completedSuccessfully = true
   } else if ((process.argv.includes('--compact-modules-only') || process.argv.includes('--compact-modules-layout-only'))) {
     await runCompactModulesUiGate({driver,bridge:callDesktopBridge,application,root,dataDirectory:e2eDataDirectory})
+    completedSuccessfully = true
+  } else if (process.argv.includes('--alz-bzip2-165-only')) {
+    await runAlzBzip2165Gate({driver,bridge:callDesktopBridge,waitForElement,application,root})
     completedSuccessfully = true
   } else if (process.argv.includes('--zpaq-retrieval-164-only')) {
     await runZpaqRetrieval164Gate({driver,getDriver:()=>driver,restart:restartDesktopSession,bridge:callDesktopBridge,application,root})
