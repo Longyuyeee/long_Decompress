@@ -109,115 +109,102 @@ fn decode_probe(std_stream: &[u8], out: &mut Vec<u8>, cap: u64) -> AlzResult<u64
     Ok(produced_total)
 }
 
-/// Extract ALZ-modified bzip2 data, streaming decoded output to `writer` and
-/// stopping if more than `max_output` bytes would be produced.
-/// Returns the CRC32 of the decompressed data.
+// A BZh9 block contains at most 900,000 RLE/MTF symbols, each using at
+// most 20 Huffman bits, plus selectors and tables. 4 MiB leaves ample room
+// for that encoded block and lookahead, independent of the entry length.
+const MAX_BLOCK_INPUT: usize = 4 * 1024 * 1024;
+const INPUT_CHUNK: usize = 32 * 1024;
+
+fn read_chunk<R: Read>(input: &mut io::Take<R>, bytes: &mut [u8]) -> AlzResult<usize> {
+    loop {
+        match input.read(bytes) {
+            Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
+            Err(error) => return Err(AlzError::Io(error)),
+            Ok(0) if input.limit() != 0 => return Err(AlzError::Io(io::ErrorKind::UnexpectedEof.into())),
+            Ok(size) => return Ok(size),
+        }
+    }
+}
+
+fn fill_window<R: Read>(input: &mut io::Take<R>, data: &mut Vec<u8>, crypto: &mut Option<&mut ZipCrypto>) -> AlzResult<bool> {
+    if input.limit() == 0 { return Ok(false); }
+    let room = MAX_BLOCK_INPUT.saturating_sub(data.len()).min(INPUT_CHUNK);
+    if room == 0 { return Err(AlzError::Bzip2Failed("bzip2 block exceeds bounded input window".into())); }
+    let mut chunk = [0u8; INPUT_CHUNK];
+    let size = read_chunk(input, &mut chunk[..room])?;
+    if let Some(cipher) = crypto { cipher.decrypt(&mut chunk[..size]); }
+    data.extend_from_slice(&chunk[..size]);
+    Ok(size != 0)
+}
+
+/// Extract using one bounded compressed block window, retaining the partial
+/// byte at each boundary. Cipher state continues across reads. Success requires
+/// the actual EOS and declared input boundary, and returns the output CRC32.
 pub fn extract_bzip2<R: Read, W: Write>(
-    reader: &mut R,
-    writer: &mut W,
-    compressed_size: u64,
-    max_output: u64,
+    reader: &mut R, writer: &mut W, compressed_size: u64, max_output: u64,
     mut crypto: Option<&mut ZipCrypto>,
 ) -> AlzResult<u32> {
-    // Bound the in-memory compressed copy. 256 MiB keeps `len * 8` (below)
-    // within a 32-bit usize.
-    const MAX_BZ2_COMPRESSED: u64 = 256 * 1024 * 1024;
-    // Guard against a payload packed with spurious DLZ markers forcing many
-    // decode attempts for one block.
     const MAX_CANDIDATES_PER_BLOCK: u32 = 4096;
-
-    let mut alz_data = Vec::new();
-    let read = reader
-        .take(compressed_size.min(MAX_BZ2_COMPRESSED + 1))
-        .read_to_end(&mut alz_data)?;
-    if read as u64 > MAX_BZ2_COMPRESSED {
-        return Err(AlzError::Bzip2Failed(
-            "compressed size exceeds limit".into(),
-        ));
-    }
-    // read_to_end never errors on a short read, so a truncated entry surfaces as
-    // fewer bytes than the header declared. Report it as EOF so the truncation
-    // recovery path (which store and deflate reach via read_exact) also applies.
-    if compressed_size > 0 && (read as u64) < compressed_size {
-        return Err(AlzError::Io(io::Error::from(io::ErrorKind::UnexpectedEof)));
-    }
-    if let Some(ref mut c) = crypto {
-        c.decrypt(&mut alz_data);
-    }
-
-    let total_bits = alz_data.len() * 8;
-    // Each probe re-copies the block up to the candidate cut, so false DLZ
-    // markers make the search quadratic. Cap the total bytes copied; a valid
-    // archive stays far under the cap.
-    let probe_budget = (alz_data.len() as u64).saturating_mul(32).max(1 << 20);
-    let mut probe_bytes: u64 = 0;
+    let mut input = reader.take(compressed_size);
+    let mut data = Vec::with_capacity(INPUT_CHUNK * 2);
     let mut hasher = crc32fast::Hasher::new();
-    let mut produced_total: u64 = 0;
-    let mut pos = 0usize; // bit position
-
-    // Complete output and its CRC do not prove the stream itself terminated.
-    // Only an actual EOS marker may end it; at most seven alignment bits follow.
+    let mut produced_total = 0u64;
+    let mut pos = 0usize;
     loop {
-        let marker = peek32(&alz_data, pos).ok_or(AlzError::Bzip2MissingEnd)?;
+        let marker = loop {
+            if let Some(marker) = peek32(&data, pos) { break marker; }
+            if !fill_window(&mut input, &mut data, &mut crypto)? { return Err(AlzError::Bzip2MissingEnd); }
+        };
         pos += 32;
         if marker == ALZ_EOS_MAGIC_U32 {
-            let remaining = ((total_bits - pos) / 8) as u64;
-            if remaining != 0 {
-                return Err(AlzError::TrailingCompressedData { remaining });
+            let remaining = ((data.len() * 8 - pos) / 8) as u64 + input.limit();
+            // Drain without retaining the tail: real short reads / I/O errors
+            // remain distinguishable. Never read beyond this entry.
+            let mut tail = [0u8; INPUT_CHUNK];
+            while input.limit() != 0 {
+                let size = read_chunk(&mut input, &mut tail)?;
+                if let Some(cipher) = &mut crypto { cipher.decrypt(&mut tail[..size]); }
             }
+            if remaining != 0 { return Err(AlzError::TrailingCompressedData { remaining }); }
             return Ok(hasher.finalize());
         }
         if marker != ALZ_BLOCK_MAGIC_U32 {
-            return Err(AlzError::Bzip2Failed(format!(
-                "expected ALZ block header, got {marker:08x}"
-            )));
+            return Err(AlzError::Bzip2Failed(format!("expected ALZ block header, got {marker:08x}")));
         }
-
-        // Find the true end of this block by decoding candidate cuts.
         let block_start = pos;
         let mut search_from = block_start;
         let mut attempts = 0u32;
+        let mut probe_bytes = 0u64;
         let mut block_out = Vec::new();
         let block_end = loop {
+            let cand = if let Some(cand) = next_marker(&data, search_from) { cand }
+            else {
+                let old_bits = data.len() * 8;
+                if fill_window(&mut input, &mut data, &mut crypto)? {
+                    search_from = search_from.max(old_bits.saturating_sub(31));
+                    continue;
+                }
+                old_bits
+            };
             attempts += 1;
-            if attempts > MAX_CANDIDATES_PER_BLOCK {
-                return Err(AlzError::Bzip2Failed("block boundary not found".into()));
-            }
-            let cand = next_marker(&alz_data, search_from).unwrap_or(total_bits);
-            probe_bytes += ((cand - block_start) / 8) as u64;
-            if probe_bytes > probe_budget {
-                return Err(AlzError::Bzip2Failed(
-                    "bzip2 boundary search exceeded work budget".into(),
-                ));
+            probe_bytes += (cand - block_start).div_ceil(8) as u64;
+            // Budget each block against actual buffered input, not a large
+            // untrusted declaration. False markers cannot buy unlimited work.
+            if attempts > MAX_CANDIDATES_PER_BLOCK || probe_bytes > (data.len() as u64 * 32).max(1 << 20) {
+                return Err(AlzError::Bzip2Failed("bzip2 boundary search exceeded work budget".into()));
             }
             block_out.clear();
-            let produced = decode_probe(
-                &build_block_probe(&alz_data, block_start, cand),
-                &mut block_out,
-                max_output.saturating_sub(produced_total),
-            )?;
-            if produced > 0 {
-                break cand; // real boundary: a complete block emitted output
-            }
-            // Truncated (false marker before the true end): try the next one.
-            if cand >= total_bits {
-                return Err(AlzError::Bzip2Failed("could not decode bzip2 block".into()));
-            }
+            let produced = decode_probe(&build_block_probe(&data, block_start, cand), &mut block_out, max_output.saturating_sub(produced_total))?;
+            if produced > 0 { break cand; }
+            if cand >= data.len() * 8 { return Err(AlzError::Bzip2Failed("could not decode bzip2 block".into())); }
             search_from = cand + 1;
         };
-
         produced_total += block_out.len() as u64;
-        if produced_total > max_output {
-            return Err(AlzError::UncompressedSizeExceeded { limit: max_output });
-        }
         hasher.update(&block_out);
-        writer
-            .write_all(&block_out)
-            .map_err(AlzError::CantOpenDestFile)?;
-
-        pos = block_end;
+        writer.write_all(&block_out).map_err(AlzError::CantOpenDestFile)?;
+        data.drain(..block_end / 8);
+        pos = block_end % 8;
     }
-
 }
 
 /// Read the 32 bits starting at `bit` as a big-endian u32, or None if fewer
@@ -422,6 +409,45 @@ mod tests {
             assert_eq!(out, plain);
             assert_eq!(crc, crc32fast::hash(&plain));
         }
+    }
+
+    #[test]
+    fn bzip2_outputs_before_reading_whole_entry_and_bounds_each_read() {
+        use std::{cell::Cell, rc::Rc};
+        let bytes = original();
+        let end = next_marker(&bytes, 32).unwrap();
+        let mut stream = BitWriter::new();
+        for _ in 0..1024 { append_bits(&mut stream, &bytes, end); }
+        stream.write_bits(ALZ_EOS_MAGIC_U32, 32); stream.flush();
+        let compressed = stream.into_bytes();
+        let read = Rc::new(Cell::new(0usize));
+        struct Measured { cursor: Cursor<Vec<u8>>, read: Rc<Cell<usize>> }
+        impl Read for Measured {
+            fn read(&mut self, bytes: &mut [u8]) -> io::Result<usize> {
+                assert!(bytes.len() <= INPUT_CHUNK);
+                let n = self.cursor.read(bytes)?; self.read.set(self.read.get()+n); Ok(n)
+            }
+        }
+        struct Output { read: Rc<Cell<usize>>, first: Option<usize>, crc: crc32fast::Hasher, size: u64 }
+        impl Write for Output {
+            fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+                self.first.get_or_insert(self.read.get());
+                self.crc.update(bytes); self.size += bytes.len() as u64; Ok(bytes.len())
+            }
+            fn flush(&mut self) -> io::Result<()> { Ok(()) }
+        }
+        let length = compressed.len();
+        let mut source = Measured { cursor: Cursor::new(compressed), read: read.clone() };
+        let mut out = Output { read, first: None, crc: crc32fast::Hasher::new(), size: 0 };
+        let crc = extract_bzip2(&mut source, &mut out, length as u64, 2340*1024, None).unwrap();
+        assert_eq!(out.size, 2340*1024);
+        assert_eq!(crc, crc32fast::hash(&expected().repeat(1024)));
+        assert_eq!(crc, out.crc.finalize());
+        assert!(out.first.unwrap() <= INPUT_CHUNK, "Output must precede reading the whole entry");
+        assert!(length > INPUT_CHUNK*3);
+        let mut invalid = Cursor::new([ALZ_BLOCK_MAGIC_U32.to_be_bytes().to_vec(), vec![0; MAX_BLOCK_INPUT+1]].concat());
+        assert!(matches!(extract_bzip2(&mut invalid, &mut io::sink(), u64::MAX, u64::MAX, None), Err(AlzError::Bzip2Failed(_))));
+        assert_eq!(invalid.position(), MAX_BLOCK_INPUT as u64);
     }
 
     #[test]

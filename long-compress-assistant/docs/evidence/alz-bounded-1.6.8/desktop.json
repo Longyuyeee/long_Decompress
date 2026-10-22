@@ -1,0 +1,88 @@
+{
+  "version": "1.6.8",
+  "applicationSha256": "5f50ebf3b298e246bb2a31e6e39a7b1233336f11fdd223ce439d40d0b4960674",
+  "helperSha256": "74ab4ce964858986d29e655b3331ea2b03a6ff6fc9bd8c9555da211d0ba9cebe",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bounded-168\\desktop-fc8de022-3b73-4858-a16c-935f5f638554",
+  "checks": [
+    {
+      "name": "large archive stays in dual-pane browser with correct entries and size",
+      "controlled": true,
+      "compressedBytes": 282956568,
+      "entries": [
+        "payload.bin",
+        "note.txt"
+      ],
+      "layout": {
+        "height": 620,
+        "overflow": 0,
+        "panes": [
+          332.796875,
+          332.8046875
+        ],
+        "width": 920
+      }
+    },
+    {
+      "name": "large selected extraction publishes exact payload without unrelated note",
+      "hashes": [
+        {
+          "path": "payload.bin",
+          "sha256": "1cd9e04ede64a5a9423fbe61011d5ab11363bf8c132179615a4686b371d9a328"
+        }
+      ]
+    },
+    {
+      "name": "password and middle native member retain cipher state; plain selection needs no key",
+      "controlled": true,
+      "wrongPassword": "解压失败: [archive-inspection:ambiguous-data] ALZ 密码未能通过完整内容校验，请核对密码，并检查加密头或内容是否损坏。",
+      "hashes": [
+        {
+          "path": "note.txt",
+          "sha256": "e3a374d84de3b812bc54a5e99dc4563404da9a545ebe5900d3eb10d0af631177"
+        },
+        {
+          "path": "payload.bin",
+          "sha256": "4a141c89e78c9096e120474ade377f7ed57ffc6259eec51ca5141a06c2bb5a96"
+        }
+      ],
+      "plainSelection": true
+    },
+    {
+      "name": "large ALZ converts to verified ZIP and independently extracts exact files",
+      "hashes": [
+        {
+          "path": "note.txt",
+          "sha256": "e3a374d84de3b812bc54a5e99dc4563404da9a545ebe5900d3eb10d0af631177"
+        },
+        {
+          "path": "payload.bin",
+          "sha256": "1cd9e04ede64a5a9423fbe61011d5ab11363bf8c132179615a4686b371d9a328"
+        }
+      ]
+    },
+    {
+      "name": "active large extraction pauses, resumes, cancels cleanly and new selection succeeds",
+      "cancelled": "ALZ 引擎读取取消或运行失败: VIDEO_COMPRESSION_CANCELLED",
+      "noPublishedPartialFiles": true,
+      "newTaskHashes": [
+        {
+          "path": "note.txt",
+          "sha256": "e3a374d84de3b812bc54a5e99dc4563404da9a545ebe5900d3eb10d0af631177"
+        }
+      ]
+    }
+  ],
+  "layouts": [
+    {
+      "name": "large-browser",
+      "height": 620,
+      "overflow": 0,
+      "panes": [
+        332.796875,
+        332.8046875
+      ],
+      "width": 920
+    }
+  ],
+  "passed": true
+}

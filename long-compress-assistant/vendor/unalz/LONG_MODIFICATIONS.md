@@ -16,3 +16,12 @@ Bzip2 reads no further than the supplied entry length; short input and output
 I/O errors retain their original type. The adapter distinguishes an incomplete
 Bzip2 terminator after fully size/CRC-verified content from uncertain decryption.
 The existing 256 MiB compressed-input bound is unchanged. Method 3 is not added.
+
+v1.6.8 replaces whole-entry Bzip2 collection with a 32 KiB read / 4 MiB
+compressed-block window. Consumed whole bytes are discarded without losing
+bit alignment or cipher state. Candidate probes and their work budget are
+per block and charged against actual buffered input. The 256 MiB entry limit
+is removed; termination, tail, declared-range, I/O and output limits remain.
+The large stream used for this boundary is controlled Python/libbzip2 data,
+independently decoded, not historical ALZip producer evidence. Method 3 and
+new producer password/volume combinations are not claimed.

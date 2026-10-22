@@ -1,0 +1,198 @@
+{
+  "version": "1.6.8",
+  "controlled": true,
+  "historicalProducer": false,
+  "checks": [
+    {
+      "name": "old-whole-entry-limit",
+      "executableSha256": "f5e74b6420da0f46239c943700fbe53e39efde6b178592b96b56a4366a304cd7",
+      "arguments": [
+        "verify",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bounded-168\\fixtures\\large.alz"
+      ],
+      "exitCode": 2,
+      "seconds": 0.344,
+      "peakWorkingSet": 542498816,
+      "peakPrivateBytes": 808779776,
+      "stdout": "{\"error\":\"[archive-inspection:damaged] ALZ \u5185\u5bb9\u3001\u5927\u5c0f\u6216 CRC \u6821\u9a8c\u5931\u8d25\uff1abzip2 decompress failed: compressed size exceeds limit\"}\n",
+      "stderr": "",
+      "receiptNote": "First harness assertion expected stderr, but the helper reports errors on stdout. Observed process outcome retained without repeating the old run."
+    },
+    {
+      "name": "candidate-small",
+      "executableSha256": "74ab4ce964858986d29e655b3331ea2b03a6ff6fc9bd8c9555da211d0ba9cebe",
+      "arguments": [
+        "verify",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bounded-168\\fixtures\\small.alz"
+      ],
+      "exitCode": 0,
+      "seconds": 0.578,
+      "peakWorkingSet": 11239424,
+      "peakPrivateBytes": 8634368,
+      "stdout": "{\"result\":{\"verified\":true}}\n",
+      "stderr": ""
+    },
+    {
+      "name": "independent-small",
+      "executableSha256": "2d733a26500a8cff7db04291c396b3d48e9d7275753e2a06bf3564c9f9591dc8",
+      "arguments": [
+        "x",
+        "-y",
+        "-cp:949",
+        "-o:E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bounded-168\\independent-small",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bounded-168\\fixtures\\small.alz"
+      ],
+      "exitCode": 0,
+      "seconds": 3.156,
+      "peakWorkingSet": 109789184,
+      "peakPrivateBytes": 65794048,
+      "stdout": "",
+      "stderr": "libpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: tRNS: invalid with alpha channel\r\nlibpng warning: tRNS: invalid with alpha channel\r\nlibpng warning: tRNS: invalid with alpha channel\r\n",
+      "outputHashes": [
+        {
+          "path": "note.txt",
+          "bytes": 70,
+          "sha256": "e3a374d84de3b812bc54a5e99dc4563404da9a545ebe5900d3eb10d0af631177"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 3200000,
+          "sha256": "4a141c89e78c9096e120474ade377f7ed57ffc6259eec51ca5141a06c2bb5a96"
+        }
+      ]
+    },
+    {
+      "name": "candidate-key",
+      "executableSha256": "74ab4ce964858986d29e655b3331ea2b03a6ff6fc9bd8c9555da211d0ba9cebe",
+      "arguments": [
+        "verify",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bounded-168\\fixtures\\key.alz"
+      ],
+      "exitCode": 0,
+      "seconds": 1.125,
+      "peakWorkingSet": 11268096,
+      "peakPrivateBytes": 8626176,
+      "stdout": "{\"result\":{\"verified\":true}}\n",
+      "stderr": ""
+    },
+    {
+      "name": "independent-key",
+      "executableSha256": "2d733a26500a8cff7db04291c396b3d48e9d7275753e2a06bf3564c9f9591dc8",
+      "arguments": [
+        "x",
+        "-y",
+        "-cp:949",
+        "-o:E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bounded-168\\independent-key",
+        "-p:Public ALZ Bounded 168!",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bounded-168\\fixtures\\key.alz"
+      ],
+      "exitCode": 0,
+      "seconds": 3.953,
+      "peakWorkingSet": 102518784,
+      "peakPrivateBytes": 64548864,
+      "stdout": "",
+      "stderr": "libpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: tRNS: invalid with alpha channel\r\nlibpng warning: tRNS: invalid with alpha channel\r\nlibpng warning: tRNS: invalid with alpha channel\r\n",
+      "outputHashes": [
+        {
+          "path": "note.txt",
+          "bytes": 70,
+          "sha256": "e3a374d84de3b812bc54a5e99dc4563404da9a545ebe5900d3eb10d0af631177"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 3200000,
+          "sha256": "4a141c89e78c9096e120474ade377f7ed57ffc6259eec51ca5141a06c2bb5a96"
+        }
+      ]
+    },
+    {
+      "name": "candidate-key-volumes",
+      "executableSha256": "74ab4ce964858986d29e655b3331ea2b03a6ff6fc9bd8c9555da211d0ba9cebe",
+      "arguments": [
+        "verify",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bounded-168\\fixtures\\key-volumes.a00"
+      ],
+      "exitCode": 0,
+      "seconds": 0.625,
+      "peakWorkingSet": 11214848,
+      "peakPrivateBytes": 8658944,
+      "stdout": "{\"result\":{\"verified\":true}}\n",
+      "stderr": ""
+    },
+    {
+      "name": "independent-key-volumes",
+      "executableSha256": "2d733a26500a8cff7db04291c396b3d48e9d7275753e2a06bf3564c9f9591dc8",
+      "arguments": [
+        "x",
+        "-y",
+        "-cp:949",
+        "-o:E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bounded-168\\independent-key-volumes",
+        "-p:Public ALZ Bounded 168!",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bounded-168\\fixtures\\key-volumes.a00"
+      ],
+      "exitCode": 0,
+      "seconds": 2.016,
+      "peakWorkingSet": 102514688,
+      "peakPrivateBytes": 65695744,
+      "stdout": "",
+      "stderr": "libpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: tRNS: invalid with alpha channel\r\nlibpng warning: tRNS: invalid with alpha channel\r\nlibpng warning: tRNS: invalid with alpha channel\r\n",
+      "outputHashes": [
+        {
+          "path": "note.txt",
+          "bytes": 70,
+          "sha256": "e3a374d84de3b812bc54a5e99dc4563404da9a545ebe5900d3eb10d0af631177"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 3200000,
+          "sha256": "4a141c89e78c9096e120474ade377f7ed57ffc6259eec51ca5141a06c2bb5a96"
+        }
+      ]
+    },
+    {
+      "name": "candidate-large",
+      "executableSha256": "74ab4ce964858986d29e655b3331ea2b03a6ff6fc9bd8c9555da211d0ba9cebe",
+      "arguments": [
+        "verify",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bounded-168\\fixtures\\large.alz"
+      ],
+      "exitCode": 0,
+      "seconds": 40.156,
+      "peakWorkingSet": 11264000,
+      "peakPrivateBytes": 8663040,
+      "stdout": "{\"result\":{\"verified\":true}}\n",
+      "stderr": ""
+    },
+    {
+      "name": "independent-large",
+      "executableSha256": "2d733a26500a8cff7db04291c396b3d48e9d7275753e2a06bf3564c9f9591dc8",
+      "arguments": [
+        "x",
+        "-y",
+        "-cp:949",
+        "-o:E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bounded-168\\independent-large",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bounded-168\\fixtures\\large.alz"
+      ],
+      "exitCode": 0,
+      "seconds": 34.813,
+      "peakWorkingSet": 106033152,
+      "peakPrivateBytes": 64557056,
+      "stdout": "",
+      "stderr": "libpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: iCCP: known incorrect sRGB profile\r\nlibpng warning: tRNS: invalid with alpha channel\r\nlibpng warning: tRNS: invalid with alpha channel\r\nlibpng warning: tRNS: invalid with alpha channel\r\n",
+      "outputHashes": [
+        {
+          "path": "note.txt",
+          "bytes": 70,
+          "sha256": "e3a374d84de3b812bc54a5e99dc4563404da9a545ebe5900d3eb10d0af631177"
+        },
+        {
+          "path": "payload.bin",
+          "bytes": 281600000,
+          "sha256": "1cd9e04ede64a5a9423fbe61011d5ab11363bf8c132179615a4686b371d9a328"
+        }
+      ]
+    }
+  ],
+  "passed": true,
+  "fixtureManifestSha256": "4776d9528db91cc0c865523e1d7901e5d4e64c95f5ec01385f86ac6217c0a911"
+}
