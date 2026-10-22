@@ -96,11 +96,13 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.6.7 · 工具中心**。资料对比、工作流中心、归档资源库和文件完整性集中到四个分类页签，侧边栏统一为八个入口；`Ctrl+Shift+T` 打开工具中心，原四种快捷键继续直达。切换分类保留输入、选择、展开和结果，界面沿用原有样式。[中文说明](docs/RELEASE_NOTES_1.6.7.md) · [范围与记录](docs/TOOLS_CENTER_FREEZE_1.6.7.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.7)。后续 [ALZ 大包候选](docs/ARCHIVE_ROADMAP_1.6.8.md)仅规划。
+**v1.6.8 · ALZ Bzip2 按块读取**。不再先收集整条压缩数据，移除旧 256 MiB 单条限制；保留密码状态、跨块位对齐、完整性和原任务操作。大包边界经明确标注的受控归档与独立回解核对，历史原工具大包仍待取得。[中文说明](docs/RELEASE_NOTES_1.6.8.md) · [范围与记录](docs/ALZ_BOUNDED_FREEZE_1.6.8.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.8)。下一版 [ALZ 包内预览](docs/ARCHIVE_ROADMAP_1.6.9.md)仅规划。
 
-**v1.6.6 · 窗口位置与大小记忆**。调整好的窗口在重启后自动恢复，最大化保留还原尺寸，最小化/托盘不覆盖正常位置；换屏或降低分辨率时调整到可见区域，无需额外设置。回应 [#248](https://github.com/Longyuyeee/long_Decompress/issues/248)。[中文说明](docs/RELEASE_NOTES_1.6.6.md) · [范围与记录](docs/WINDOW_MEMORY_FREEZE_1.6.6.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.6)。后续 [ALZ 大包兼容](docs/ARCHIVE_ROADMAP_1.6.8.md)仅规划。
+**v1.6.7 · 工具中心**。资料对比、工作流中心、归档资源库和文件完整性集中到四个分类页签，侧边栏统一为八个入口；`Ctrl+Shift+T` 打开工具中心，原四种快捷键继续直达。切换分类保留输入、选择、展开和结果，界面沿用原有样式。[中文说明](docs/RELEASE_NOTES_1.6.7.md) · [范围与记录](docs/TOOLS_CENTER_FREEZE_1.6.7.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.7)。
 
-**v1.6.5 · ALZ Bzip2 完整性修复**。缺少结束标记或声明压缩范围内夹入尾随数据时，不再把完整解出内容当作检查、解压或转换成功；大小和 CRC 均匹配后给出明确来源损坏原因，沿原失败新任务和历史继续处理。[中文说明](docs/RELEASE_NOTES_1.6.5.md) · [范围与记录](docs/ALZ_BZIP2_INTEGRITY_FREEZE_1.6.5.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.5)。方法 3 仍待真实原包；后续 [ALZ Bzip2 大包读取](docs/ALZ_BZIP2_BOUNDED_READ_PLAN.md)仅规划。
+**v1.6.6 · 窗口位置与大小记忆**。调整好的窗口在重启后自动恢复，最大化保留还原尺寸，最小化/托盘不覆盖正常位置；换屏或降低分辨率时调整到可见区域，无需额外设置。回应 [#248](https://github.com/Longyuyeee/long_Decompress/issues/248)。[中文说明](docs/RELEASE_NOTES_1.6.6.md) · [范围与记录](docs/WINDOW_MEMORY_FREEZE_1.6.6.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.6)。
+
+**v1.6.5 · ALZ Bzip2 完整性修复**。缺少结束标记或声明压缩范围内夹入尾随数据时，不再把完整解出内容当作检查、解压或转换成功；大小和 CRC 均匹配后给出明确来源损坏原因，沿原失败新任务和历史继续处理。[中文说明](docs/RELEASE_NOTES_1.6.5.md) · [范围与记录](docs/ALZ_BZIP2_INTEGRITY_FREEZE_1.6.5.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.5)。方法 3 仍待真实原包。
 
 **v1.6.4 · 从受损 ZPAQ 取回已校验文件**。在诊断详情勾选文件，二级弹窗确认后加入原队列；按所选范围验证密码，独立目录保留原路径，结果区分已取回与未取回原因。草稿、补密码、失败新任务及历史保留范围。[中文说明](docs/RELEASE_NOTES_1.6.4.md) · [范围与记录](docs/ZPAQ_RETRIEVAL_FREEZE_1.6.4.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.4)。正式安装与更新附件已生成。已由上方 v1.6.5 接续；方法 3 [来源调查](docs/ALZ_METHOD3_SOURCE_1.6.5.md)仍保留未完成。
 

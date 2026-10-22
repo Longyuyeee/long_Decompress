@@ -1,0 +1,13 @@
+{
+  "version": "1.6.8",
+  "decoderCommand": "cargo test --locked --manifest-path vendor/unalz/Cargo.toml --lib bzip2",
+  "decoderTests": 5,
+  "decoderFailed": 0,
+  "serviceCommand": "cargo test --locked --manifest-path src-tauri/Cargo.toml --lib alz_bzip2_termination_causes_survive_password_and_selected_entry_routes",
+  "serviceTests": 1,
+  "serviceFailed": 0,
+  "serviceCases": "Existing eight controlled termination/password/native framing faults, unrelated selected entry, and uncertain CRC case",
+  "helperSha256": "74ab4ce964858986d29e655b3331ea2b03a6ff6fc9bd8c9555da211d0ba9cebe",
+  "decoderSourceSha256": "01abedaf5d60376167e760a3cd9dc0d918fe47edcdec5a34d6e6604009735e17",
+  "note": "Observed command results retained; unchanged passed checks not repeated for documentation or newline normalization."
+}

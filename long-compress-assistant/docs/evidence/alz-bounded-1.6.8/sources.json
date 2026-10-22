@@ -1,0 +1,30 @@
+{
+  "scope": "v1.6.8 actual source attempt; historical producer large Bzip2 original not obtained",
+  "backupSource": "https://kippler.tistory.com/164",
+  "downloadUrl": "https://t1.daumcdn.net/cfile/tistory/21669E4458475C6A25",
+  "bytes": 1475619,
+  "sha256": "fcf936a625ea3a65d76cf715c6228910164d316f658b74fa4694726383a0ced4",
+  "installerExecuted": false,
+  "reportedFileVersion": "4.99.0.1",
+  "executableSha256": "2935dbfd9a278fca19dbc7d9726521a24c0848de36b6fdb8b3677dac187afb13",
+  "executableRun": true,
+  "arguments": [
+    "-a",
+    "<self-authored source-small.txt>",
+    "<new small.alz>"
+  ],
+  "result": "4.99.0.1 treated -a as a filename; observed Korean error: 오류 : -a 파일을 찾을 수 없습니다. First command timed out after 30 seconds; second observed compatibility assistant and error. No archive produced; no associations installed. Only these owned processes were stopped.",
+  "newProducerOriginal": false,
+  "independentDecoder": {
+    "source": "https://www.bandisoft.com/bandizip/",
+    "download": "https://www.bandisoft.com/bandizip/dl.php?portable=",
+    "resolvedDownload": "https://bandisoft.app/bandizip/BANDIZIP-PORTABLE.ZIP?db74f866",
+    "zipBytes": 8517753,
+    "zipSha256": "97e575262b2ecb0a403cb9d878c878a540a3fa03b189e1979c16f93b3bda32c9",
+    "executableSha256": "2d733a26500a8cff7db04291c396b3d48e9d7275753e2a06bf3564c9f9591dc8",
+    "used": "x -y -cp:949 -o:<new owned output> [public fixture password] <controlled archive>",
+    "interpretation": "Independent complete decoding of controlled streams, not historical ALZip producer compatibility",
+    "fileVersion": "7.47.0.1"
+  },
+  "haozipNote": "Installed HaoZipC returned exit 0 with explicit data errors for both the controlled stream and the unchanged upstream bzip2.alz; its exit status alone is not accepted as verification. Bandizip complete output hashes were used instead."
+}

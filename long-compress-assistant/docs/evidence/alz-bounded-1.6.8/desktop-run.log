@@ -1,0 +1,8 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[alz-bounded-168] large archive stays in dual-pane browser with correct entries and size
+[alz-bounded-168] large selected extraction publishes exact payload without unrelated note
+[alz-bounded-168] password and middle native member retain cipher state; plain selection needs no key
+[alz-bounded-168] large ALZ converts to verified ZIP and independently extracts exact files
+[alz-bounded-168] active large extraction pauses, resumes, cancels cleanly and new selection succeeds

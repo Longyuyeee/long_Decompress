@@ -1,0 +1,133 @@
+{
+  "version": "1.6.8",
+  "interpretation": "Controlled ALZ Bzip2 streams, NOT historical-producer interoperability evidence.\n\nEncode self-authored deterministic data with Python/libbzip2, retain its actual\nsingle-block Huffman/BWT payload, then frame repeated blocks as ALZ. Large mode\ncontains >256 MiB of real compressed data, not a rewritten size declaration.\nNo downloaded producer is run. Output stays in ignored test-results/.",
+  "encoder": "Python bz2 / libbzip2 standard single block, explicitly reframed by this generator",
+  "plainBlockBytes": 800000,
+  "plainBlockSha256": "64c3f5b16cd6d223e37bed9aea9fa11704dd9f2915891478135bc30facadfcf0",
+  "standardBlockSha256": "64d3f8aed776e30c60938318f0541883896c8cfa5130b4e328f9dddeac1a520f",
+  "blockBits": 6430831,
+  "cases": [
+    {
+      "name": "small",
+      "archive": "test-results/alz-bounded-168/fixtures/small.alz",
+      "controlled": true,
+      "historicalProducer": false,
+      "repeats": 4,
+      "compressedBytes": 3215420,
+      "password": null,
+      "members": [
+        {
+          "name": "small.alz",
+          "bytes": 3215587,
+          "sha256": "8ed1a9ab62491f8e16c8d873ea07ac0839700a0a201c54f70fb0465c6b5dfba6"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 3200000,
+          "sha256": "4a141c89e78c9096e120474ade377f7ed57ffc6259eec51ca5141a06c2bb5a96"
+        },
+        {
+          "path": "note.txt",
+          "bytes": 70,
+          "sha256": "e3a374d84de3b812bc54a5e99dc4563404da9a545ebe5900d3eb10d0af631177"
+        }
+      ]
+    },
+    {
+      "name": "key",
+      "archive": "test-results/alz-bounded-168/fixtures/key.alz",
+      "controlled": true,
+      "historicalProducer": false,
+      "repeats": 4,
+      "compressedBytes": 3215420,
+      "password": "Public ALZ Bounded 168!",
+      "members": [
+        {
+          "name": "key.alz",
+          "bytes": 3215599,
+          "sha256": "96be26330f7bd9407e3825289398910efd57939017f69eb6a5137a465a0456f1"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 3200000,
+          "sha256": "4a141c89e78c9096e120474ade377f7ed57ffc6259eec51ca5141a06c2bb5a96"
+        },
+        {
+          "path": "note.txt",
+          "bytes": 70,
+          "sha256": "e3a374d84de3b812bc54a5e99dc4563404da9a545ebe5900d3eb10d0af631177"
+        }
+      ]
+    },
+    {
+      "name": "key-volumes",
+      "archive": "test-results/alz-bounded-168/fixtures/key-volumes.a00",
+      "controlled": true,
+      "historicalProducer": false,
+      "repeats": 4,
+      "compressedBytes": 3215420,
+      "password": "Public ALZ Bounded 168!",
+      "members": [
+        {
+          "name": "key-volumes.alz",
+          "bytes": 120025,
+          "sha256": "34d52bcd194343206828c98879a104ba024b85fa5dcb1ede8a8b52e39910ed88"
+        },
+        {
+          "name": "key-volumes.a00",
+          "bytes": 1480026,
+          "sha256": "83ff5b5494a4ecad3f06554511a23af7004cc4339bb0bede9e6cc63d8da711da"
+        },
+        {
+          "name": "key-volumes.a01",
+          "bytes": 1615596,
+          "sha256": "fe562eb5adddb0be536595820d0c970998ec583e0fb83ecf9a1542191b292717"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 3200000,
+          "sha256": "4a141c89e78c9096e120474ade377f7ed57ffc6259eec51ca5141a06c2bb5a96"
+        },
+        {
+          "path": "note.txt",
+          "bytes": 70,
+          "sha256": "e3a374d84de3b812bc54a5e99dc4563404da9a545ebe5900d3eb10d0af631177"
+        }
+      ]
+    },
+    {
+      "name": "large",
+      "archive": "test-results/alz-bounded-168/fixtures/large.alz",
+      "controlled": true,
+      "historicalProducer": false,
+      "repeats": 352,
+      "compressedBytes": 282956568,
+      "password": null,
+      "members": [
+        {
+          "name": "large.alz",
+          "bytes": 282956735,
+          "sha256": "3c0cc00d8619bae0d8c7aa78966c73b502298bf7f55755942417149335cfdcfd"
+        }
+      ],
+      "expected": [
+        {
+          "path": "payload.bin",
+          "bytes": 281600000,
+          "sha256": "1cd9e04ede64a5a9423fbe61011d5ab11363bf8c132179615a4686b371d9a328"
+        },
+        {
+          "path": "note.txt",
+          "bytes": 70,
+          "sha256": "e3a374d84de3b812bc54a5e99dc4563404da9a545ebe5900d3eb10d0af631177"
+        }
+      ]
+    }
+  ]
+}
