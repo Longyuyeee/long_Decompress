@@ -279,7 +279,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.6.4 · 从受损 ZPAQ 取回已校验文件**。在诊断详情勾选文件，二级弹窗确认后加入原队列；按所选范围验证密码，独立目录保留原路径，结果区分已取回与未取回原因。草稿、补密码、失败新任务及历史保留范围。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.4.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_RETRIEVAL_FREEZE_1.6.4.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.4)。下一步 [v1.6.5 ALZ 方法 3](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.5.md)，仅规划。
+**v1.6.4 · 从受损 ZPAQ 取回已校验文件**。在诊断详情勾选文件，二级弹窗确认后加入原队列；按所选范围验证密码，独立目录保留原路径，结果区分已取回与未取回原因。草稿、补密码、失败新任务及历史保留范围。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.4.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_RETRIEVAL_FREEZE_1.6.4.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.4)。正式安装与更新附件已生成。下一步 [v1.6.5 ALZ 方法 3](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.5.md) 已进入来源调查，仍缺真实方法 3 原包，尚未实现或封板；见 [调查记录](long-compress-assistant/docs/ALZ_METHOD3_SOURCE_1.6.5.md)。
 
 **v1.6.3 · ZPAQ 受损块与文件影响定位**。按所选快照检查共享数据块，分清通过、受影响和未检查；明细、筛选与关联放进二级弹窗，普通/密码及原生组入口接通。本版只诊断定位。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.3.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_BLOCK_DIAGNOSIS_FREEZE_1.6.3.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.3)。已由上方 v1.6.4 接续。
 

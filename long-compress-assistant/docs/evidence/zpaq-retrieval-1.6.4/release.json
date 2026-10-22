@@ -1,0 +1,30 @@
+{
+  "version": "1.6.4",
+  "checkedAt": "2026-10-22T14:27:14.894653+00:00",
+  "sourceCommit": "a4c50eea3fbba12b70ff19758def7b46d46e4ae3",
+  "tagCommit": "9531957e244eded5734708e0e6b7151a29f11a33",
+  "pr": "https://github.com/Longyuyeee/long_Decompress/pull/265",
+  "releaseRun": 39792692412,
+  "releaseRunConclusion": "success",
+  "url": "https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.4",
+  "draft": false,
+  "assets": [
+    {
+      "name": "latest.json",
+      "bytes": 2548
+    },
+    {
+      "name": "Long-Decompress_1.6.4_x64-setup.exe",
+      "bytes": 23859081
+    },
+    {
+      "name": "Long-Decompress_1.6.4_x64-setup.nsis.zip",
+      "bytes": 23859239
+    },
+    {
+      "name": "Long-Decompress_1.6.4_x64-setup.nsis.zip.sig",
+      "bytes": 428
+    }
+  ],
+  "verificationScope": "GitHub completed release workflow and published asset metadata only; existing passed code, desktop, package and installation evidence reused. No repeated download, install or format matrix."
+}

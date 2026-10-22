@@ -1,7 +1,12 @@
 # 文档导航与维护规则
 
-- **此前正式版 v1.5.39**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.39)，准确开发状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
-- **当前开发路线**：v1.5.40 [原生 SWM 创建](NATIVE_SWM_CREATE_1.5.40.md)已完成功能封板，发布在本版 PR 接续，后续按[近期 v1.5.40～v1.5.43](ARCHIVE_ROADMAP_1.5.40_TO_1.5.43.md) → [五模块分阶段 v1.5.44～v1.5.58，v1.5.59 起主线回归](ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)。大模块拆成可独立使用的功能阶段，小阶段可合并。
+- **当前正式版 v1.6.4**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.4)，正式流水线成功，四附件齐全。
+- **当前接续 v1.6.5**：[ALZ 方法 3 路线](ARCHIVE_ROADMAP_1.6.5.md)与[真实来源调查](ALZ_METHOD3_SOURCE_1.6.5.md)；仍缺方法 3 原包，未实现或封板，不升级空版本。准确状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
+
+以下为历史阶段记录。
+
+- **历史正式版 v1.5.39**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.39)，准确开发状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
+- **历史开发路线**：v1.5.40 [原生 SWM 创建](NATIVE_SWM_CREATE_1.5.40.md)已完成功能封板，发布在本版 PR 接续，后续按[近期 v1.5.40～v1.5.43](ARCHIVE_ROADMAP_1.5.40_TO_1.5.43.md) → [五模块分阶段 v1.5.44～v1.5.58，v1.5.59 起主线回归](ARCHIVE_ROADMAP_1.5.44_TO_1.5.59.md)。大模块拆成可独立使用的功能阶段，小阶段可合并。
 
 以下为历史阶段记录，不覆盖上述当前状态与路线。
 
