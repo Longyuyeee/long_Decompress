@@ -1,6 +1,6 @@
 export interface ZpaqSnapshot { version: number; date: number }
 export interface ZpaqSnapshotInfo extends ZpaqSnapshot { updates: number; deletes: number }
-export interface ZpaqHistory { selected: ZpaqSnapshot; snapshots: ZpaqSnapshotInfo[] }
+export interface ZpaqHistory { selected: ZpaqSnapshot; snapshots: ZpaqSnapshotInfo[]; interruptedTail?: { offset: number; date: number } }
 export const isZpaqSnapshot = (value: unknown): value is ZpaqSnapshot => {
   const item = value as ZpaqSnapshot | null
   return !!item && Number.isInteger(item.version) && item.version > 0 && item.version <= 9999999

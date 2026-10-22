@@ -22,6 +22,7 @@ import { describeArchiveBrowseError, useArchiveBrowseRequest } from '@/composabl
 import { useArchiveWorkspaceNavigation } from '@/composables/useArchiveWorkspaceNavigation'
 import ArchiveDirectoryPane from '@/components/archive/ArchiveDirectoryPane.vue'
 import ZpaqSnapshotPicker from '@/components/archive/ZpaqSnapshotPicker.vue'
+import ZpaqRecoveryDialog from '@/components/archive/ZpaqRecoveryDialog.vue'
 import ZpaqSnapshotDiff from '@/components/archive/ZpaqSnapshotDiff.vue'
 import { type ZpaqSnapshot } from '@/types/zpaqSnapshot'
 import { useArchiveConversionStore } from '@/stores/archiveConversion'
@@ -95,6 +96,7 @@ const loading = browseRequest.loading
 const extracting = ref(false)
 const checkingSnapshot = ref(false)
 const diffVisible = ref(false)
+const recoveryVisible = ref(false)
 const openingEntryPath = ref('')
 const inputBusy = computed(() => zipEditBusy.value || loading.value || extracting.value || checkingSnapshot.value || !!openingEntryPath.value)
 const dangerousOpenEntry = ref<ArchiveEntryInfo | null>(null)
@@ -297,6 +299,7 @@ const loadArchive = async (snapshot = requestedSnapshot.value, selectAll = !prop
     if (lastBrowseError && appStore.error === lastBrowseError) appStore.clearError()
     lastBrowseError = ''
     result.value = loaded
+    if (props.embedded && loaded.zpaqHistory?.interruptedTail) paneToolsOpen.value = false
     requestedSnapshot.value = loaded.zpaqHistory?.selected
     selected.value = new Set(selectAll ? loaded.entries.filter(entry => !entry.isDir).map(entry => entry.path) : [])
     nestedLoadError.value = ''
@@ -591,6 +594,7 @@ async function addToLibrary(){
 }
 const extractPaths = async (paths: string[], destination: string, readerSelection?:ReaderSelection) => {
   if (!archivePath.value || !destination || paths.length === 0 || extracting.value) return
+  if(result.value?.zpaqHistory?.interruptedTail){recoveryVisible.value=true;return}
   extracting.value = true
   closeContextMenu()
   try {
@@ -833,6 +837,10 @@ const extractSelected = async () => {
       <button type="button" data-testid="archive-pane-tools" :aria-expanded="paneToolsOpen" title="密码与压缩包选项" :class="{active:paneToolsOpen}" @click="paneToolsOpen=!paneToolsOpen"><i class="pi pi-sliders-h"/></button>
     </header>
     <div v-if="embedded && result" class="pane-archive-status"><span>{{ result.format }} · {{ result.totalFiles }} 个文件 · {{ formatBytes(result.totalUncompressedSize) }}<i v-if="result.encrypted" class="pi pi-lock" title="密码压缩包"/></span><button v-if="readerCandidates.length" type="button" :disabled="inputBusy" @click="openImageReader()"><i class="pi pi-images"/>阅读图片</button></div>
+    <section v-if="result?.zpaqHistory?.interruptedTail" class="mx-2 mb-2 flex shrink-0 flex-wrap items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs" data-testid="zpaq-interrupted-tail">
+      <i class="pi pi-exclamation-triangle text-amber-400"/><strong>尾部更新中断</strong><span class="text-muted">当前显示旧快照 {{result.zpaqHistory.selected.version}}</span><HelpHint label="ZPAQ 中断尾部">当前列表来自中断之前的完整快照。中断更新的内容与条目范围无法确定；不代表最新备份完整，也不会自动拼入未知尾卷。</HelpHint>
+      <button class="browser-secondary ml-auto" :disabled="inputBusy" data-testid="zpaq-recovery-open" @click="recoveryVisible=true">取回完整快照</button>
+    </section>
     <section v-if="!embedded&&!result&&!loading&&reading.records.length" class="reading-history shrink-0" data-testid="archive-reading-history"><div><strong><i class="pi pi-bookmark"/>继续上次阅读</strong><small>本机阅读位置 · 不保存密码或图片数据</small><button v-if="reading.records.length>4" class="text-primary" @click="showAllReading=!showAllReading">{{ showAllReading?'收起':'更多阅读记录' }}</button></div><div class="reading-recent"><article v-for="row in reading.records.slice(0,showAllReading?30:4)" :key="row.filePath+String(row.snapshot?.version||'')"><button class="reading-recent-open" :disabled="inputBusy" :title="row.filePath" data-testid="reading-recent-open" @click="continueReading(row)"><strong>{{ row.filePath.replace(/\\/g,'/').split('/').pop() }}<small v-if="row.snapshot"> · 快照 {{ row.snapshot.version }}</small></strong><span>{{ row.path }}</span></button><button class="reading-recent-remove" aria-label="移除此阅读记录" @click="reading.remove(row)"><i class="pi pi-times"/></button></article></div></section>
     <p v-if="result && browseNotice" class="shrink-0 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-primary" data-testid="archive-result-notice">{{ browseNotice }}</p>
     <div v-if="librarySourceId" class="shrink-0 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs" data-testid="archive-library-origin"><span class="min-w-0 break-all text-muted">来自归档资源库 · {{ libraryEntryPath }}</span><RouterLink to="/library" class="font-bold text-primary">返回搜索结果</RouterLink></div>
@@ -850,12 +858,12 @@ const extractSelected = async () => {
     <div v-show="!embedded || paneToolsOpen" class="archive-options custom-scrollbar">
       <div v-if="embedded && result && !parentFrames.length" class="pane-option-actions"><button class="browser-secondary" type="button" data-testid="browser-add-library" :disabled="inputBusy || addingToLibrary" @click="addToLibrary"><i class="pi pi-database"/>加入 / 刷新资料库</button><RouterLink v-if="addedToLibrary" to="/library">前往资料库</RouterLink></div>
     <details v-if="nativeZpaqGroup && !parentFrames.length" class="native-zpaq-source shrink-0" data-testid="zpaq-multipart-source"><summary><i class="pi pi-link"/> 已确认 ZPAQ 来源 · {{nativeZpaqGroup.members.length}} 个部分 <span>查看成员</span></summary><ul><li v-for="member in nativeZpaqGroup.members" :key="member.path">{{member.path}}</li></ul></details>
-    <ZpaqSnapshotPicker v-if="result?.zpaqHistory && result.zpaqHistory.snapshots.length > 1" :history="result.zpaqHistory" :disabled="inputBusy" class="shrink-0" @change="changeSnapshot">
+    <ZpaqSnapshotPicker v-if="result?.zpaqHistory && !result.zpaqHistory.interruptedTail && result.zpaqHistory.snapshots.length > 1" :history="result.zpaqHistory" :disabled="inputBusy" class="shrink-0" @change="changeSnapshot">
       <button type="button" data-testid="zpaq-snapshot-diff" class="browser-secondary" :disabled="inputBusy" @click="diffVisible=true">对比快照</button>
       <button type="button" data-testid="zpaq-snapshot-check" class="browser-secondary" :disabled="inputBusy" @click="checkSnapshot">{{ checkingSnapshot ? '检查中…' : '检查此快照' }}</button>
       <button type="button" data-testid="zpaq-snapshot-convert" class="browser-secondary" :disabled="inputBusy" @click="convertSnapshot">转换此快照</button>
     </ZpaqSnapshotPicker>
-    <ZpaqSnapshotDiff v-if="result?.zpaqHistory" v-model:visible="diffVisible" :path="archivePath" :password="password" :history="result.zpaqHistory" :output-directory="outputPath" />
+    <ZpaqSnapshotDiff v-if="result?.zpaqHistory && !result.zpaqHistory.interruptedTail" v-model:visible="diffVisible" :path="archivePath" :password="password" :history="result.zpaqHistory" :output-directory="outputPath" />
     <p v-if="result?.format === 'WIM'" data-testid="wim-image-hint" class="text-xs leading-relaxed text-muted">固实 WIM/ESD 的预览与所选提取可能需要读取同块内容。多镜像按 1、2 等编号目录展示，可进入后选择文件；根目录的 [1].xml 为镜像说明。原生 SWM 请将同组 install.swm、install2.swm 等放在同一目录，可从任意一卷进入。提取与转换保留当前目录视图，不修改原镜像。</p>
     <ZipEditBar v-if="canEditZip" ref="zipEditor" :source-path="archivePath" :directory="activeDirectory" :password="password" :source-encoding="inputEncoding" :selected-paths="[...selected]" :selected-file="selected.size === 1 ? [...selected][0] : undefined" :disabled="inputBusy" @open-result="(path,options)=>openArchivePath(path,options)" />
 
@@ -880,7 +888,7 @@ const extractSelected = async () => {
         <button v-if="currentReadingRecord" class="browser-input browser-continue-reading" data-testid="archive-reader-continue" :disabled="inputBusy" :title="currentReadingRecord.path" @click="continueCurrentReading"><i class="pi pi-bookmark"/>继续上次阅读</button>
         <button class="browser-primary browser-reader-button" data-testid="archive-reader-open" :disabled="inputBusy||!readerCandidates.length" @click="openImageReader()"><i class="pi pi-images"/>阅读图片 · {{ readerCandidates.length }}</button>
         <span><b>{{ result.format }}</b> 格式</span>
-        <span v-if="result.format === 'ZPAQ'" data-testid="zpaq-current-view">当前文件<HelpHint label="ZPAQ 当前文件视图">按当前所选快照显示有效文件，其他版本不会混入。日志包支持历史选择、版本对比与变化提取，普通和原生密码数字卷可继续读取；压缩中心支持另存增量更新。流式包仅显示当前内容，文件检查不能检测所有未认证头部变化。</HelpHint></span>
+        <span v-if="result.format === 'ZPAQ'" data-testid="zpaq-current-view">{{result.zpaqHistory?.interruptedTail?`完整旧快照 ${selectedSnapshot?.version}`:'当前文件'}}<HelpHint label="ZPAQ 当前文件视图">按当前所选快照显示有效文件，其他版本不会混入。日志包支持历史选择、版本对比与变化提取，普通和原生密码数字卷可继续读取；压缩中心支持另存增量更新。流式包仅显示当前内容，文件检查不能检测所有未认证头部变化。</HelpHint></span>
           <span v-if="result.format === 'ALZ'" data-testid="alz-read-view">只读<HelpHint label="ALZ 读取范围">支持已验证的存储、Deflate、ALZ 变体 Bzip2、ZipCrypto 及原生 .alz/.aNN 卷组。文件名与密码默认按 CP949，可明确选择原工具代码页，不能无损转换时会说明原因。需补齐原卷后解压；不提供 ALZ 创建或损坏修复。</HelpHint></span>
           <span v-if="result.format === 'EGG'" data-testid="egg-read-view">只读<HelpHint label="EGG 读取范围">支持已验证的存储、Deflate、Bzip2、LZMA、AZO、固实及 ZipCrypto、AES/LEA 密码读取。UTF-8 名称与原生 .volN.egg 卷组按真实组合支持，需补齐原卷。固实所选提取仍要读取共享流，单个文件的压缩体积不单独计算。不提供 EGG 创建、文件名/全局加密或损坏修复。</HelpHint></span>
           <span><b>{{ result.totalFiles }}</b> 个文件</span>
@@ -997,6 +1005,7 @@ const extractSelected = async () => {
       <div><i class="pi pi-cloud-upload"></i><strong>松开即可浏览压缩包</strong><span>将替换当前打开的压缩包</span></div>
     </div>
 
+    <ZpaqRecoveryDialog v-if="recoveryVisible && result?.zpaqHistory?.interruptedTail" :key="archivePath" :path="archivePath" :password="password" :history="result.zpaqHistory" :output-path="outputPath" @close="recoveryVisible=false" />
     <ReaderRetrievalDialog v-if="readerCollectPaths&&result" :file-path="readingSource" :format="result.format" :revision="result.revision||''" :paths="readerCollectPaths" :output-path="outputPath" :password="password" :encoding="inputEncoding" :snapshot="selectedSnapshot" :password-required="result.entries.some(entry=>readerCollectPaths!.includes(entry.path)&&entry.encrypted)" @close="closeReaderCollection" @selection="readerResume&&(readerResume.selected=$event)"/>
     <ArchiveImageReader v-if="readerOpen&&result" :resume="readerResume" :remember="!parentFrames.length" :format="result.format" :file-path="readingSource" :entries="result.entries" :initial-path="readerInitialPath" :directory="activeDirectory" :revision="result.revision" :password="password" :encoding="inputEncoding" :snapshot="selectedSnapshot" :supported="previewRouteSupported" :image-extensions="archiveCapabilities.capabilities.value?.imagePreviewExtensions||[]" @close="closeImageReader" @locate="locateReaderImage" @extract="extractReaderImage" @refresh="refreshReaderSource" @collect="collectReaderImages"/>
     <Teleport to="body">

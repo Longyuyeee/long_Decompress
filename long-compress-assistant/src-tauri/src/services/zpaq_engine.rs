@@ -247,12 +247,21 @@ pub async fn verify_at(path: &Path, password: Option<&str>, snapshot: Option<&Zp
 
 pub async fn try_password(path: &Path, password: &str, cancelled: Arc<AtomicBool>) -> Result<bool> {
     if !requires_password(path)? { return Ok(false); }
-    match verify(path, Some(password), cancelled).await {
+    let verification=async {
+        let directory=browse(path,Some(password),cancelled.clone()).await?;
+        let recovery=directory.zpaq_history.as_ref().filter(|h|h.interrupted_tail.is_some()).map(|h|h.selected);
+        verify_at(path,Some(password),recovery.as_ref(),cancelled).await
+    }.await;
+    match verification {
         Ok(()) => Ok(true),
         Err(e) if e.to_string().contains("[archive-inspection:ambiguous-data]") => Ok(false),
         Err(e) => Err(e),
     }
 }
+
+#[cfg(test)]
+#[path="zpaq_tail_162_tests.rs"]
+mod tail_162_tests;
 
 pub async fn extract(path: &Path, output: &Path, password: Option<&str>, selected: &[String], cancelled: Arc<AtomicBool>) -> Result<()> {
     extract_at(path, output, password, selected, None, cancelled).await

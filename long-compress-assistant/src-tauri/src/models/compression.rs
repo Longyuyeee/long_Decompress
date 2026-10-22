@@ -299,7 +299,14 @@ pub struct ZpaqSnapshotInfo {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
-pub struct ZpaqHistory { pub selected: ZpaqSnapshot, pub snapshots: Vec<ZpaqSnapshotInfo> }
+pub struct ZpaqHistory {
+    pub selected: ZpaqSnapshot, pub snapshots: Vec<ZpaqSnapshotInfo>,
+    #[serde(default, rename="interruptedTail", skip_serializing_if="Option::is_none")]
+    pub interrupted_tail: Option<ZpaqInterruptedTail>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ZpaqInterruptedTail { pub offset: u64, pub date: i64 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum CompressionStatus {
