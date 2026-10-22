@@ -32,7 +32,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
     </td>
     <td width="50%" valign="top">
       <h3>🧭 先看内容，再决定解压什么</h3>
-      <p>像浏览文件夹一样查看压缩包，搜索、筛选和选择文件。支持部分格式的图片与文本预览，也能进入嵌套压缩包、确认 ZPAQ 原生多部分来源、选择和对比历史快照，按版本取出所选变化。Store/Deflate/Bzip2/LZMA/Zstandard/PPMd ZIP、ZIPX（XZ） 支持普通包与 AES/ZipCrypto 密码内容编辑，可补入、替换、删除、改名和批量整理，复核后另存新包；未完成修改可从草稿恢复，原包保留。</p>
+      <p>在当前栏像浏览文件夹一样查看压缩包，另一栏的位置与选择保留；搜索、筛选和选择文件。支持本地常用文本与图片预览、部分归档格式的包内预览，也能进入嵌套压缩包、确认 ZPAQ 原生多部分来源、选择和对比历史快照，按版本取出所选变化。Store/Deflate/Bzip2/LZMA/Zstandard/PPMd ZIP、ZIPX（XZ） 支持普通包与 AES/ZipCrypto 密码内容编辑，可补入、替换、删除、改名和批量整理，复核后另存新包；未完成修改可从草稿恢复，原包保留。</p>
     </td>
   </tr>
   <tr>
@@ -71,7 +71,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
   </td></tr>
 </table>
 
-**还有这些贴近日常的小细节：** 常用目录与书签、资源管理器右键、托盘后台任务、历史搜索与再次执行、多主题与强调色、界面缩放和减少动效。
+**还有这些贴近日常的小细节：** 常用目录与书签、资源管理器右键、托盘后台任务、历史搜索与再次执行、冰川/雨林/星云/曜石鎏金特色主题与强调色、界面缩放和减少动效、带下载进度的更新，以及按设置关闭到托盘。
 
 <a id="screenshots"></a>
 
@@ -116,6 +116,14 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 
 <sub>上方任务与弹窗图片使用演示数据；批量配置弹窗随 v1.4.2 交付，单条详情仍行内展开。点击图片可查看大图。</sub>
 
+<details>
+<summary><strong>展开查看：双栏浏览与特色主题</strong></summary>
+
+<a href="docs/screenshots/dual-pane-1.6.0.png"><img src="docs/screenshots/dual-pane-1.6.0.png" width="100%" alt="v1.6.0 双栏文件浏览器：归档在当前栏打开，另一栏继续保留"></a>
+<a href="docs/screenshots/themes-1.6.0.png"><img src="docs/screenshots/themes-1.6.0.png" width="100%" alt="v1.6.0 曜石鎏金主题与完整主题色板"></a>
+
+</details>
+
 <a id="quick-start"></a>
 
 ## 🚀 三步开始使用
@@ -141,6 +149,23 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 **运行环境：** Windows 10 1809 及以上 / Windows 11，x64。视频功能暂不保证兼容 Windows N。
 
 后续更新可在设置中心检查；正在处理任务时，请先完成或停止任务再安装更新。
+
+<details>
+<summary><strong>常用快捷键：直接前往工作区</strong></summary>
+
+| 工作区 | 快捷键 |
+| --- | --- |
+| 解压中心 / 压缩中心 | `Ctrl+O` / `Ctrl+N` |
+| 特殊压缩 / 文件浏览器 | `Ctrl+Shift+S` / `Ctrl+B` |
+| 资料对比 | `Ctrl+Shift+D` |
+| 归档资源库 | `Ctrl+Shift+L` |
+| 工作流中心 | `Ctrl+Shift+W` |
+| 密码保险箱 / 文件完整性 | `Ctrl+Shift+V` / `Ctrl+I` |
+| 历史任务 / 设置 | `Ctrl+H` / `Ctrl+,` |
+
+在输入框中编辑文字时，不会触发工作区跳转。窄窗口可以悬停导航查看快捷键。
+
+</details>
 
 <a id="formats"></a>
 
@@ -253,7 +278,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.5.64 · ZPAQ 原生多部分与旧快照取回**。明确确认来源组，普通/密码组接通浏览预览、完整检查、精确取回与快照转换，重启及失败重试保留原选择。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.64.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_NATIVE_MULTIPART_FREEZE_1.5.64.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.64)。下一步 [v1.5.65 原生多部分另存增量更新](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.5.65.md)，仅规划，继续格式、密码、分卷与容错主线。
+**v1.6.0 · 界面与操作体验升级**。双栏内浏览归档与常用文本预览，全部页面的信息收纳、四种特色主题、完整导航快捷键、动态格式统计、更新进度和关闭到托盘修正。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.0.md) · [范围与记录](long-compress-assistant/docs/UI_EXPERIENCE_FREEZE_1.6.0.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.0)。下一步 [v1.6.1 原生多部分另存增量更新](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.1.md)，仅规划。
+
+**v1.5.64 · ZPAQ 原生多部分与旧快照取回**。明确确认来源组，普通/密码组接通浏览预览、完整检查、精确取回与快照转换，重启及失败重试保留原选择。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.64.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_NATIVE_MULTIPART_FREEZE_1.5.64.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.64)。原后续计划已顺延为上方 v1.6.1。
 
 **v1.5.63 · ZIPX（XZ）继续整理与对比**。方法 95 接通原编辑、内容核对、密码分卷取材及精确取回；默认另存后缀和提示更准确，XZ 尾部与大小异常不误报完成，保留原交互。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.63.md) · [范围与记录](long-compress-assistant/docs/ZIP_XZ_COMPATIBILITY_FREEZE_1.5.63.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.63)。
 

@@ -10,6 +10,7 @@ import ZipEditRecoveryNotice from '@/components/archive/ZipEditRecoveryNotice.vu
 import PendingDraftRecovery from '@/components/tasks/PendingDraftRecovery.vue'
 import { useAppStore } from '@/stores/app'
 import brandIcon from '@/assets/long-jieya-icon.png'
+import { APP_NAVIGATION } from '@/utils/navigation'
 
 const route = useRoute()
 const router = useRouter()
@@ -51,19 +52,7 @@ const startResize = (edge: ResizeEdge, event: PointerEvent) => {
   })
 }
 
-const navItems = [
-  { name: 'Decompress', icon: 'pi pi-folder-open', label: 'nav.decompress', shortcut: 'Ctrl+O' },
-  { name: 'Compress', icon: 'pi pi-box', label: 'nav.compress', shortcut: 'Ctrl+N' },
-  { name: 'SpecialCompression', icon: 'pi pi-sparkles', label: 'nav.special_compression', shortcut: 'Ctrl+Shift+S' },
-  { name: 'ArchiveBrowser', icon: 'pi pi-folder', label: 'nav.browser', shortcut: 'Ctrl+B' },
-  {name:'SourceComparison',icon:'pi pi-arrows-h',label:'nav.compare',shortcut:''},
-  { name: 'Workflows', icon: 'pi pi-sitemap', label: 'nav.workflows', shortcut: '' },
-  { name: 'ArchiveLibrary', icon: 'pi pi-database', label: 'nav.library', shortcut: '' },
-  { name: 'Vault', icon: 'pi pi-shield', label: 'nav.vault', shortcut: 'Ctrl+Shift+V' },
-  { name: 'FileIntegrity', icon: 'pi pi-verified', label: 'nav.integrity', shortcut: 'Ctrl+I' },
-  { name: 'History', icon: 'pi pi-history', label: 'nav.history', shortcut: 'Ctrl+H' },
-  { name: 'Settings', icon: 'pi pi-cog', label: 'nav.settings', shortcut: 'Ctrl+,' }
-]
+const navItems = APP_NAVIGATION
 
 const navigateTo = (name: string) => {
   router.push({ name })
@@ -99,6 +88,7 @@ const navigateTo = (name: string) => {
                   @click="navigateTo(item.name)"
                   :data-testid="`nav-${item.name}`"
                   :aria-label="item.shortcut ? `${appStore.t(item.label)} (${item.shortcut})` : appStore.t(item.label)"
+                 :title="`${appStore.t(item.label)} (${item.shortcut})`"
                  :aria-current="route.name === item.name ? 'page' : undefined"
                  class="nav-entry group relative w-full h-12 flex items-center gap-3 px-3 rounded-xl cursor-pointer transition-all duration-200 text-left"
                  :class="route.name === item.name ? 'bg-primary/20 shadow-sm text-primary' : 'text-muted hover:bg-primary/8 hover:text-content'">

@@ -132,6 +132,11 @@ describe('MainLayout', () => {
     expect(mocks.t).toHaveBeenCalledWith('nav.browser')
     expect(mocks.t).toHaveBeenCalledWith('nav.workflows')
     expect(mocks.t).toHaveBeenCalledWith('nav.library')
+    for (const [name, shortcut] of [['SourceComparison', 'Ctrl+Shift+D'], ['ArchiveLibrary', 'Ctrl+Shift+L'], ['Workflows', 'Ctrl+Shift+W']]) {
+      const entry = wrapper.get(`[data-testid="nav-${name}"]`)
+      expect(entry.get('.sidebar-shortcut').text()).toBe(shortcut)
+      expect(entry.attributes('title')).toContain(shortcut)
+    }
     expect(mocks.t).toHaveBeenCalledWith('nav.vault')
     expect(mocks.t).toHaveBeenCalledWith('nav.integrity')
     expect(mocks.t).toHaveBeenCalledWith('nav.history')

@@ -650,23 +650,23 @@ const removeWordlist = (index: number) => {
               </details>
 
               <!-- 密码支持说明 -->
-              <div class="space-y-3">
-                <h3 class="text-xs font-black text-amber-600 uppercase tracking-[0.2em] ml-1">{{ appStore.t('settings.formats.password_support') }}</h3>
+              <details class="settings-format-details">
+                <summary class="text-xs font-black text-primary uppercase tracking-[0.2em]">{{ appStore.t('settings.formats.password_support') }}</summary>
                 <div class="p-5 rounded-xl bg-amber-500/10 border border-amber-500/20 space-y-2">
                   <div class="flex items-start gap-3">
                     <i class="pi pi-lock text-amber-500 text-xs mt-0.5 shrink-0"></i>
-                    <div class="text-xs text-amber-700 leading-relaxed">
+                    <div class="text-xs text-secondary leading-relaxed">
                       <span class="font-black">{{ appStore.t('settings.formats.password_compress') }}:</span> {{ passwordCompressionFormats }}
                     </div>
                   </div>
                   <div class="flex items-start gap-3">
                     <i class="pi pi-unlock text-amber-500 text-xs mt-0.5 shrink-0"></i>
-                    <div class="text-xs text-amber-700 leading-relaxed" data-testid="settings-password-extraction-formats">
+                    <div class="text-xs text-secondary leading-relaxed" data-testid="settings-password-extraction-formats">
                       <span class="font-black">{{ appStore.t('settings.formats.password_decompress') }}:</span> {{ passwordExtractionFormats }}
                     </div>
                   </div>
                 </div>
-              </div>
+              </details>
             </div>
           </div>
         </section>
