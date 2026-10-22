@@ -2465,8 +2465,14 @@ impl CompressionService {
                 path, &out_dir, final_password.as_deref(), &options, service.cancellation_flag.clone()).await,
             ArchiveFormat::Alz => crate::services::alz_engine::extract(
                 path, &out_dir, final_password.as_deref(), &options, service.cancellation_flag.clone()).await,
-            ArchiveFormat::Zpaq => crate::services::zpaq_engine::extract_checked_at(
-                path, &out_dir, final_password.as_deref(), &options.selected_entries, options.zpaq_snapshot.as_ref(), options.zpaq_catalog_id.as_deref(), service.cancellation_flag.clone()).await,
+            ArchiveFormat::Zpaq => {
+                let directory=crate::services::zpaq_engine::browse_at(path,final_password.as_deref(),options.zpaq_snapshot.as_ref(),service.cancellation_flag.clone()).await?;
+                if let Some(history)=directory.zpaq_history.as_ref().filter(|h|h.interrupted_tail.is_some()) {
+                    anyhow::ensure!(options.zpaq_snapshot.is_some(),"尾部更新中断，请先在浏览器明确选择完整快照取回；未自动回退或改动原件");
+                    service.emit_log(&window,&task_id,&format!("取回完整旧快照 {}（{}）；中断事务的新增、修改和删除未取回，具体条目范围无法确定。原件保留。",history.selected.version,history.selected.date),TaskLogSeverity::Warning);
+                }
+                crate::services::zpaq_engine::extract_checked_at(path, &out_dir, final_password.as_deref(), &options.selected_entries, options.zpaq_snapshot.as_ref(), options.zpaq_catalog_id.as_deref(), service.cancellation_flag.clone()).await
+            },
             ArchiveFormat::Zip => {
                 let srv = service.clone();
                 let f_path = file_path.clone();

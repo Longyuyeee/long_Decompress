@@ -67,6 +67,7 @@ static bool long_refs=false;
 static bool long_streaming=false;
 static bool long_journaling=false;
 static int long_scan_errors=0;
+static long long long_tail_offset=-1, long_tail_date=0;
 static unsigned long long long_snapshot=0;
 static long long long_snapshot_date=0;
 #include <stdio.h>
@@ -758,6 +759,11 @@ public:
   // Like ftello()
   int64_t tell() {
     return off;
+  }
+  int64_t size() const {
+    int64_t total=0;
+    for (unsigned i=0; i<sz.size(); ++i) total+=sz[i];
+    return total;
   }
 };
 
@@ -1516,6 +1522,7 @@ int Jidac::doCommand(int argc, const char** argv) {
 // append. If errors is not NULL then set it to number of errors found.
 int64_t Jidac::read_archive(const char* arc, int *errors) {
   long_scan_errors=0;
+  long_tail_offset=-1; long_tail_date=0;
   if (errors) *errors=0;
   dcsize=dhsize=0;
   assert(ver.size()==1);
@@ -1641,7 +1648,11 @@ int64_t Jidac::read_archive(const char* arc, int *errors) {
               data_offset=in.tell()+1-d.buffered();
               const char* s=os.c_str();
               int64_t jmp=btol(s);
-              if (jmp<0) { ++long_scan_errors; printf("Incomplete transaction ignored\n"); }
+              if (jmp<0) {
+                ++long_scan_errors;
+                long_tail_offset=block_offset; long_tail_date=fdate;
+                printf("Incomplete transaction ignored\n");
+              }
               if (jmp<0
                   || (version<19000000000000LL && int64_t(ver.size())>version)
                   || (version>=19000000000000LL && version<fdate)) {
@@ -1815,6 +1826,10 @@ int64_t Jidac::read_archive(const char* arc, int *errors) {
     }
 endblock:;
   }  // end while !done
+  // A readable negative transaction header is the only recovery boundary we
+  // expose. An unexplained suffix or a cut index is not a complete latest view.
+  if (long_journaling && !long_streaming && long_tail_offset<0
+      && block_offset!=in.size()) ++long_scan_errors;
   if (in.tell()>32*(password!=0) && !found_data)
     error("archive contains no data");
   if (long_snapshot && (!long_journaling || long_streaming || long_snapshot>=ver.size()
@@ -3350,7 +3365,9 @@ int Jidac::extract() {
 
   // Read archive
   const int64_t sz=read_archive(archive.c_str());
-  if (long_scan_errors) error("damaged or incomplete ZPAQ metadata");
+  if (long_scan_errors && !(long_snapshot && long_tail_offset>=0
+      && long_scan_errors==1 && long_journaling && !long_streaming && ver.size()>1))
+    error("damaged or incomplete ZPAQ metadata; choose a confirmed complete snapshot");
   if (sz<1) error("archive not found");
   if (long_preview_max_output) {
     if (long_selected.size()!=1) error("LONG_ZPAQ_PREVIEW: select one file");
@@ -3769,7 +3786,10 @@ int Jidac::list() {
   // Read archive into dt, which may be "" for empty.
   int64_t csize=0;
   if (archive!="") csize=read_archive(archive.c_str());
-  if (long_scan_errors || csize<1) error("damaged or incomplete ZPAQ metadata");
+  const bool recoverable_tail=long_tail_offset>=0 && long_scan_errors==1
+    && long_journaling && !long_streaming && ver.size()>1;
+  if ((long_scan_errors && !recoverable_tail) || csize<1)
+    error("damaged or incomplete ZPAQ metadata; no confirmed complete snapshot");
   if (long_json) {
     printf("\nLONG_ZPAQ_JSON\n{\"kind\":\"%s\",\"versions\":%u,\"entries\":[",
       long_journaling ? (long_streaming ? "mixed" : "journaling") : "streaming", unsigned(ver.size()-1));
@@ -3809,7 +3829,11 @@ int Jidac::list() {
         printf("{\"version\":%u,\"date\":%lld,\"updates\":%d,\"deletes\":%d}",
           i,(long long)ver[i].date,ver[i].updates,ver[i].deletes);
       }
-      printf("]}");
+      printf("]");
+      if (recoverable_tail)
+        printf(",\"interruptedTail\":{\"offset\":%lld,\"date\":%lld}",
+          long_tail_offset, long_tail_date);
+      printf("}");
     }
     printf("}\n");
     return 0;

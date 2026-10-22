@@ -1,0 +1,32 @@
+{
+  "recordedAt": "2026-10-22T11:24:20.435199+00:00",
+  "engineSha256": "4fc7a2cc11b5b045d40e2c073e48ee0c5ae1a19882d2e8bde76fd422ca4d4fdb",
+  "rustTestBinarySha256": "e579707259dba78152102bd4ac855ee9c9495ba3e215ee92d4b024e9177323e3",
+  "checks": [
+    {
+      "command": "cargo test --lib -j 1 --manifest-path src-tauri/Cargo.toml zpaq162_ -- --nocapture",
+      "exitCode": 0,
+      "passed": 2,
+      "scope": "four real interrupted originals / twelve snapshot hashes; separate artificial boundary and missing-member/cancellation checks"
+    },
+    {
+      "command": "long_compress_assistant-028e005d80e30bb4.exe zpaq_1530_historical_text_image_and_exact_selection --nocapture",
+      "exitCode": 0,
+      "passed": 1
+    },
+    {
+      "command": "npx vitest run src/components/archive/__tests__/ZpaqRecovery162.test.ts",
+      "exitCode": 0,
+      "passed": 2
+    },
+    {
+      "command": "npm run build (VITE_DESKTOP_E2E=1)",
+      "exitCode": 0
+    },
+    {
+      "command": "node scripts/check-release-identity.mjs --expected 1.6.2",
+      "exitCode": 0
+    }
+  ],
+  "note": "Behavior tests preceded version identity bump; final desktop and production builds use 1.6.2. No claim of full repository test suite."
+}

@@ -1,0 +1,17 @@
+zpaq v7.15 journaling archiver, compiled Aug 17 2016
+E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/tests/fixtures/archives/zpaq-interrupted-162/key-native/backup.part*.zpaq: Incomplete transaction ignored
+3 versions, 22 files, 18 fragments, 0.412878 MB
+
+- 2026-10-21 21:20:08       145626 D     资料/
+- 2026-10-20 13:00:00        14457 A     资料/图标.png
+- 2026-10-20 13:00:00           36 A     资料/已改名.txt
+- 2026-10-20 13:00:00            0 A     资料/空文件.txt
+- 2026-10-20 13:00:00            0 D     资料/空目录/
+- 2026-10-20 13:00:00           61 A     资料/说明.txt
+- 2026-10-20 13:00:00       131072 D     资料/项目/
+- 2026-10-20 13:00:00       131072 A     资料/项目/数据.bin
+
+0.145626 MB of 0.145626 MB (8 files) shown
+  -> 0.145626 MB (5 refs to 5 of 18 frags) after dedupe
+  -> 0.412878 MB compressed.
+0.047 seconds (all OK)

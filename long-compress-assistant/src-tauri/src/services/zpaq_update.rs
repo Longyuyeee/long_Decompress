@@ -116,6 +116,7 @@ pub async fn update(source: &Path, sources: &[String], prefix: &str, output: &Pa
     notify(&progress,"reading",0,0);
     let old=zpaq_engine::browse(&source,password,flag.clone()).await?;
     let history=old.zpaq_history.as_ref().context("仅能更新完整的日志式ZPAQ；流式归档请先转换为新的ZPAQ")?;
+    anyhow::ensure!(history.interrupted_tail.is_none(),"原备份尾部写入中断，请先在浏览器选择完整快照取回；未追加或修改原件");
     validate_mapping(&entries,&old.entries)?;
     let copied_bytes=old.total_compressed_size;let base_snapshots=history.snapshots.len();
     let parent=output.parent().context("请选择新备份保存目录")?;
