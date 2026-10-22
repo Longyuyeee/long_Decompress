@@ -1,0 +1,16 @@
+/* Shared presentation for the three file workspaces; colors follow the active theme. */
+.module-page{container:module / inline-size}
+.module-page .module-tabs{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding:4px;border:1px solid var(--border-subtle);border-radius:12px;background:var(--bg-card);margin-bottom:18px;width:fit-content;max-width:100%}
+.module-page .module-tabs>button{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:9px 13px;border-radius:9px;font-size:12px;color:var(--text-muted);transition:background .16s,color .16s}
+.module-page .module-tabs>button:hover{background:var(--bg-input);color:var(--text-content)}
+.module-page .module-tabs>button.active{background:color-mix(in srgb,var(--dynamic-accent) 12%,var(--bg-input));color:var(--dynamic-accent);font-weight:800}
+.module-page .module-count{font-size:10px;border-radius:6px;padding:1px 6px;background:var(--bg-input);color:var(--text-muted);font-variant-numeric:tabular-nums}
+.module-page .module-help{border:1px solid var(--border-subtle);border-radius:12px;background:var(--bg-card);margin:14px 0;color:var(--text-muted);font-size:11px;line-height:1.8}
+.module-page .module-help>summary{cursor:pointer;padding:10px 14px;font-weight:700;list-style:none;display:flex;align-items:center;gap:8px}
+.module-page .module-help>summary::-webkit-details-marker{display:none}
+.module-page .module-help>summary::after{content:'\e901';font-family:primeicons;margin-left:auto;font-size:9px;transition:transform .16s}
+.module-page .module-help[open]>summary::after{transform:rotate(180deg)}
+.module-page .module-help>p{padding:0 14px 12px;overflow-wrap:anywhere}
+.module-page button:focus-visible,.module-page summary:focus-visible{outline:2px solid var(--dynamic-accent);outline-offset:3px}
+@media(prefers-reduced-motion:reduce){.module-page *{transition:none!important}}
+@container module (max-width:600px){.module-page .module-tabs{width:100%}.module-page .module-tabs>button{flex:1;padding:9px 7px;font-size:11px}}

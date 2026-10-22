@@ -8,7 +8,7 @@ export const useArchiveLibraryStore = defineStore('archiveLibrary', () => {
   const hits = ref<LibraryHit[]>([])
   const organization = ref<LibraryOrganizationState>({ sources: [], searches: [] })
   const tag = ref(''), favoritesOnly = ref(false)
-  const workspace = ref({ expanded: '', sourcePage: 1, sourceSearch: '', scrollTop: 0 })
+  const workspace = ref<{ expanded: string; sourcePage: number; sourceSearch: string; scrollTop: number; view?: 'search' | 'sources' }>({ expanded: '', sourcePage: 1, sourceSearch: '', scrollTop: 0 })
   const tags = computed(() => [...new Set(organization.value.sources.flatMap(row => row.tags))].sort((a,b) => a.localeCompare(b)))
   const query = ref(''), sourceId = ref(''), category = ref('all'), page = ref(1), total = ref(0)
   const error = ref(''), searchError = ref(''), notice = ref('')
@@ -28,7 +28,7 @@ export const useArchiveLibraryStore = defineStore('archiveLibrary', () => {
     const saved = JSON.parse(localStorage.getItem(workspaceKey) || 'null')
     if (saved && typeof saved.query === 'string' && saved.query.length <= 512) {
       query.value=saved.query; sourceId.value=typeof saved.sourceId==='string'?saved.sourceId:''; category.value=typeof saved.category==='string'?saved.category:'all'; tag.value=typeof saved.tag==='string'?saved.tag:''; favoritesOnly.value=saved.favoritesOnly===true; page.value=Number.isInteger(saved.page)&&saved.page>0?saved.page:1
-      if(saved.workspace) { const w=saved.workspace; workspace.value={expanded:typeof w.expanded==='string'?w.expanded:'',sourceSearch:typeof w.sourceSearch==='string'?w.sourceSearch:'',sourcePage:Number.isInteger(w.sourcePage)&&w.sourcePage>0?w.sourcePage:1,scrollTop:typeof w.scrollTop==='number'?Math.max(0,w.scrollTop):0} }
+      if(saved.workspace) { const w=saved.workspace; workspace.value={view:w.view==='sources'?'sources':'search',expanded:typeof w.expanded==='string'?w.expanded:'',sourceSearch:typeof w.sourceSearch==='string'?w.sourceSearch:'',sourcePage:Number.isInteger(w.sourcePage)&&w.sourcePage>0?w.sourcePage:1,scrollTop:w.view&&typeof w.scrollTop==='number'?Math.max(0,w.scrollTop):0} }
     }
   } catch { /* A missing or old view preference does not block the library. */ }
   function filters(): LibrarySearchFilter { return { query:query.value,sourceId:sourceId.value,category:category.value,tag:tag.value,favoritesOnly:favoritesOnly.value,page:page.value } }
