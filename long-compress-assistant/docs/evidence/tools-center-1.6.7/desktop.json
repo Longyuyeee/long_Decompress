@@ -1,0 +1,287 @@
+{
+  "version": "1.6.7",
+  "candidateSha256": "c5494492911de90b86abba018c0dba4b806646538cf3674e60f2ab15cf145c26",
+  "checks": [
+    "eight sidebar entries and tool-center shortcut, with all four original shortcuts retained",
+    "comparison native reads, selection and inline expansion survive category switching",
+    "workflow draft and expanded step retained; modal review blocks navigation shortcuts",
+    "library adds and indexes a real archive, with search retained across tool categories",
+    "checksum native result and expanded details retained while changing tool category",
+    "Explorer checksum handoff opens the correct tool inside the center"
+  ],
+  "layouts": [
+    {
+      "name": "SourceComparison-glacier-1100x650",
+      "color": "light",
+      "cutLabels": [],
+      "headings": [
+        "工具中心"
+      ],
+      "height": 650,
+      "invisibleNav": [],
+      "navScrollbar": "none",
+      "overflow": [],
+      "stageHeight": 544,
+      "tabs": [
+        {
+          "active": "page",
+          "text": "资料对比"
+        },
+        {
+          "active": null,
+          "text": "工作流中心"
+        },
+        {
+          "active": null,
+          "text": "归档资源库"
+        },
+        {
+          "active": null,
+          "text": "文件完整性"
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "Workflows-glacier-1100x650",
+      "color": "light",
+      "cutLabels": [],
+      "headings": [
+        "工具中心"
+      ],
+      "height": 650,
+      "invisibleNav": [],
+      "navScrollbar": "none",
+      "overflow": [],
+      "stageHeight": 544,
+      "tabs": [
+        {
+          "active": null,
+          "text": "资料对比"
+        },
+        {
+          "active": "page",
+          "text": "工作流中心"
+        },
+        {
+          "active": null,
+          "text": "归档资源库"
+        },
+        {
+          "active": null,
+          "text": "文件完整性"
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "ArchiveLibrary-glacier-1100x650",
+      "color": "light",
+      "cutLabels": [],
+      "headings": [
+        "工具中心"
+      ],
+      "height": 650,
+      "invisibleNav": [],
+      "navScrollbar": "none",
+      "overflow": [],
+      "stageHeight": 544,
+      "tabs": [
+        {
+          "active": null,
+          "text": "资料对比"
+        },
+        {
+          "active": null,
+          "text": "工作流中心"
+        },
+        {
+          "active": "page",
+          "text": "归档资源库"
+        },
+        {
+          "active": null,
+          "text": "文件完整性"
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "FileIntegrity-glacier-1100x650",
+      "color": "light",
+      "cutLabels": [],
+      "headings": [
+        "工具中心"
+      ],
+      "height": 650,
+      "invisibleNav": [],
+      "navScrollbar": "none",
+      "overflow": [],
+      "stageHeight": 544,
+      "tabs": [
+        {
+          "active": null,
+          "text": "资料对比"
+        },
+        {
+          "active": null,
+          "text": "工作流中心"
+        },
+        {
+          "active": null,
+          "text": "归档资源库"
+        },
+        {
+          "active": "page",
+          "text": "文件完整性"
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "SourceComparison-obsidian-760x520",
+      "color": "dark",
+      "cutLabels": [],
+      "headings": [
+        "工具中心"
+      ],
+      "height": 520,
+      "invisibleNav": [],
+      "navScrollbar": "none",
+      "overflow": [],
+      "stageHeight": 418,
+      "tabs": [
+        {
+          "active": "page",
+          "text": "资料对比"
+        },
+        {
+          "active": null,
+          "text": "工作流中心"
+        },
+        {
+          "active": null,
+          "text": "归档资源库"
+        },
+        {
+          "active": null,
+          "text": "文件完整性"
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "Workflows-obsidian-760x520",
+      "color": "dark",
+      "cutLabels": [],
+      "headings": [
+        "工具中心"
+      ],
+      "height": 520,
+      "invisibleNav": [],
+      "navScrollbar": "none",
+      "overflow": [],
+      "stageHeight": 418,
+      "tabs": [
+        {
+          "active": null,
+          "text": "资料对比"
+        },
+        {
+          "active": "page",
+          "text": "工作流中心"
+        },
+        {
+          "active": null,
+          "text": "归档资源库"
+        },
+        {
+          "active": null,
+          "text": "文件完整性"
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "ArchiveLibrary-obsidian-760x520",
+      "color": "dark",
+      "cutLabels": [],
+      "headings": [
+        "工具中心"
+      ],
+      "height": 520,
+      "invisibleNav": [],
+      "navScrollbar": "none",
+      "overflow": [],
+      "stageHeight": 418,
+      "tabs": [
+        {
+          "active": null,
+          "text": "资料对比"
+        },
+        {
+          "active": null,
+          "text": "工作流中心"
+        },
+        {
+          "active": "page",
+          "text": "归档资源库"
+        },
+        {
+          "active": null,
+          "text": "文件完整性"
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "FileIntegrity-obsidian-760x520",
+      "color": "dark",
+      "cutLabels": [],
+      "headings": [
+        "工具中心"
+      ],
+      "height": 520,
+      "invisibleNav": [],
+      "navScrollbar": "none",
+      "overflow": [],
+      "stageHeight": 418,
+      "tabs": [
+        {
+          "active": null,
+          "text": "资料对比"
+        },
+        {
+          "active": null,
+          "text": "工作流中心"
+        },
+        {
+          "active": null,
+          "text": "归档资源库"
+        },
+        {
+          "active": "page",
+          "text": "文件完整性"
+        }
+      ],
+      "width": 760
+    }
+  ],
+  "layoutCandidateSha256": "c5494492911de90b86abba018c0dba4b806646538cf3674e60f2ab15cf145c26",
+  "passed": true,
+  "completedAt": "2026-10-22T16:18:26.821Z",
+  "viewedScreenshots": [
+    "SourceComparison-glacier-1100x650.png",
+    "Workflows-glacier-1100x650.png",
+    "ArchiveLibrary-glacier-1100x650.png",
+    "FileIntegrity-glacier-1100x650.png",
+    "SourceComparison-obsidian-760x520.png",
+    "Workflows-obsidian-760x520.png",
+    "ArchiveLibrary-obsidian-760x520.png",
+    "FileIntegrity-obsidian-760x520.png"
+  ],
+  "notes": [
+    "200% native DPI; each capture verifies the named actual viewport.",
+    "Six functional checkpoints reused for the focused four narrow-layout completion; no passed functional cases rerun."
+  ]
+}

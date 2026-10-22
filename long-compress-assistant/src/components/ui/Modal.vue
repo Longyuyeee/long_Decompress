@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
-  <Transition name="fade">
-    <div v-if="visible" class="fixed inset-0 overflow-y-auto" :class="layerClass" role="dialog" aria-modal="true" :aria-labelledby="title ? modalTitleId : undefined">
+  <Transition name="fade" :css="active">
+    <div v-if="visible && active" class="fixed inset-0 overflow-y-auto" :class="layerClass" role="dialog" aria-modal="true" :aria-labelledby="title ? modalTitleId : undefined">
       <div class="fixed inset-0 bg-black/60 transition-opacity" @click="handleBackdropClick"></div>
 
       <div class="flex min-h-full items-center justify-center p-4 text-center">
@@ -64,7 +64,7 @@
 
 <script setup lang="ts">
 import HelpHint from './HelpHint.vue'
-import { computed, nextTick, onMounted, onUnmounted, ref, useId, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, onActivated, onDeactivated, ref, useId, watch } from 'vue'
 
 export interface Props {
   visible: boolean
@@ -97,17 +97,20 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits(['update:visible', 'close', 'cancel', 'confirm'])
 const modalContent = ref<HTMLElement | null>(null)
 const modalTitleId = `modal-title-${useId()}`
+const active = ref(true)
+onActivated(() => { active.value = true })
+onDeactivated(() => { active.value = false })
 let previouslyFocused: HTMLElement | null = null
 
 // 打开模态时自动聚焦到内容区域
-watch(() => props.visible, (isVisible) => {
+watch(() => props.visible && active.value, (isVisible) => {
   if (isVisible) {
     previouslyFocused = document.activeElement as HTMLElement | null
     void nextTick(() => modalContent.value?.focus())
   } else if (previouslyFocused) {
     const target = previouslyFocused
     previouslyFocused = null
-    void nextTick(() => target.focus())
+    if (active.value) void nextTick(() => target.focus())
   }
 })
 
@@ -137,7 +140,7 @@ const handleConfirm = () => { emit('confirm'); }
 const handleBackdropClick = () => { if (props.closeOnBackdrop) handleClose(); }
 
 const handleKeydown = (e: KeyboardEvent) => {
-  if (!props.visible || e.defaultPrevented) return
+  if (!props.visible || !active.value || e.defaultPrevented) return
   const ownDialog = modalContent.value?.closest('[role="dialog"]')
   const dialogs = Array.from(document.querySelectorAll<HTMLElement>('[role="dialog"][aria-modal="true"]')).filter(dialog => dialog.getClientRects().length)
   const topDialog = dialogs.reduce<HTMLElement | undefined>((top, dialog) => !top || Number(getComputedStyle(dialog).zIndex) >= Number(getComputedStyle(top).zIndex) ? dialog : top, undefined)

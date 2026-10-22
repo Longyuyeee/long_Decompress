@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, useId } from 'vue'
+import { nextTick, onMounted, onUnmounted, onDeactivated, ref, useId } from 'vue'
 
 defineProps<{ label: string }>()
 const id = useId()
@@ -44,6 +44,7 @@ function dismiss(event: Event) {
   if (event.type === 'scroll' && panel.value?.contains(event.target as Node)) return
   close()
 }
+onDeactivated(() => close())
 onMounted(() => {
   document.addEventListener('pointerdown', outside)
   document.addEventListener('keydown', key)

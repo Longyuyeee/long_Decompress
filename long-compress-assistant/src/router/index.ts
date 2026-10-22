@@ -38,9 +38,16 @@ const routes: Array<RouteRecordRaw> = [
       title: '双栏文件浏览器'
     }
   },
-  { path:'/compare',name:'SourceComparison',component:()=>import('@/views/SourceComparisonView.vue'),meta:{title:'资料对比'} },
-  { path: '/workflows', name: 'Workflows', component: () => import('@/views/WorkflowView.vue'), meta: { title: '工作流中心' } },
-  { path: '/library', name: 'ArchiveLibrary', component: () => import('@/views/ArchiveLibraryView.vue'), meta: { title: '归档资源库' } },
+  {
+    path: '/tools', name: 'ToolsCenter', component: () => import('@/views/ToolsCenterView.vue'),
+    redirect: { name: 'SourceComparison' }, meta: { title: '工具中心' },
+    children: [
+      { path: 'compare', alias: '/compare', name: 'SourceComparison', component: () => import('@/views/SourceComparisonView.vue'), meta: { title: '资料对比 · 工具中心' } },
+      { path: 'workflows', alias: '/workflows', name: 'Workflows', component: () => import('@/views/WorkflowView.vue'), meta: { title: '工作流中心 · 工具中心' } },
+      { path: 'library', alias: '/library', name: 'ArchiveLibrary', component: () => import('@/views/ArchiveLibraryView.vue'), meta: { title: '归档资源库 · 工具中心' } },
+      { path: 'integrity', alias: '/integrity', name: 'FileIntegrity', component: () => import('@/views/FileIntegrityView.vue'), meta: { title: '文件完整性 · 工具中心' } },
+    ],
+  },
   {
     path: '/vault',
     name: 'Vault',
@@ -63,14 +70,6 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('@/views/SettingsView.vue'),
     meta: {
       title: '全局设置'
-    }
-  },
-  {
-    path: '/integrity',
-    name: 'FileIntegrity',
-    component: () => import('@/views/FileIntegrityView.vue'),
-    meta: {
-      title: '文件完整性校验'
     }
   },
   {

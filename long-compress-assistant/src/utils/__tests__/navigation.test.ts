@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import { APP_NAVIGATION, navigationPathForShortcut } from '../navigation'
+import { APP_NAVIGATION, TOOL_NAVIGATION, navigationPathForShortcut } from '../navigation'
 
 describe('product navigation shortcuts', () => {
   it('has unique keyboard combinations and routes every displayed shortcut', () => {
-    expect(new Set(APP_NAVIGATION.map(item => item.shortcut)).size).toBe(APP_NAVIGATION.length)
-    for (const item of APP_NAVIGATION) {
+    const all = [...APP_NAVIGATION, ...TOOL_NAVIGATION]
+    expect(APP_NAVIGATION).toHaveLength(8)
+    expect(new Set(all.map(item => item.shortcut)).size).toBe(all.length)
+    for (const item of all) {
       expect(navigationPathForShortcut(new KeyboardEvent('keydown', { key: item.key, ctrlKey: true, shiftKey: Boolean(item.shift) }))).toBe(item.path)
     }
   })

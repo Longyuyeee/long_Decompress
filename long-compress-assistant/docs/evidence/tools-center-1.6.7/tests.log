@@ -1,0 +1,104 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ ❯ src/components/ui/__tests__/Modal.test.ts (2 tests | 1 failed) 98ms
+     × removes a cached tool dialog from the active page and restores it only when the tool returns 65ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/components/ui/__tests__/Modal.test.ts > Modal > removes a cached tool dialog from the active page and restores it only when the tool returns
+AssertionError: expected <div data-v-feab276a …(4)>…(2)</div> to be null
+
+- Expected:
+null
+
++ Received:
+<div
+  aria-labelledby="modal-title-v-0"
+  aria-modal="true"
+  class="fixed inset-0 overflow-y-auto z-[300] fade-leave-from fade-leave-active"
+  data-v-feab276a=""
+  role="dialog"
+>
+  <div
+    class="fixed inset-0 bg-black/60 transition-opacity"
+    data-v-feab276a=""
+  />
+  <div
+    class="flex min-h-full items-center justify-center p-4 text-center"
+    data-v-feab276a=""
+  >
+    <div
+      class="app-dialog modal-no-glass relative flex max-h-[min(88vh,48rem)] w-full transform flex-col overflow-hidden rounded-[1.4rem] bg-modal border border-subtle text-left shadow-2xl transition-all outline-none max-w-[460px] md:max-w-lg"
+      data-v-feab276a=""
+      tabindex="-1"
+    >
+      <button
+        aria-label="Close dialog"
+        class="absolute right-6 top-6 z-10 rounded-full p-2 hover:bg-input transition-all"
+        data-v-feab276a=""
+      >
+        <i
+          class="pi pi-times text-muted hover:text-content text-xs"
+          data-v-feab276a=""
+        />
+      </button>
+      <div
+        class="shrink-0 px-6 pt-6 pb-3"
+        data-v-feab276a=""
+      >
+        <div
+          class="flex items-center gap-4"
+          data-v-feab276a=""
+        >
+          <!--v-if-->
+          <div
+            class="min-w-0 flex-1"
+            data-v-feab276a=""
+          >
+            <div
+              class="dialog-title-copy"
+              data-v-feab276a=""
+            >
+              <h3
+                class="text-lg font-black text-content tracking-tight leading-none mb-1"
+                data-v-feab276a=""
+                id="modal-title-v-0"
+              >
+
+                待确认配置
+
+              </h3>
+              <!--v-if-->
+            </div>
+            <!--v-if-->
+          </div>
+        </div>
+      </div>
+      <div
+        class="min-h-0 overflow-y-auto px-6 py-4 text-content custom-scrollbar"
+        data-v-feab276a=""
+      >
+
+
+      </div>
+      <!--v-if-->
+    </div>
+  </div>
+</div>
+
+ ❯ src/components/ui/__tests__/Modal.test.ts:20:55
+     18|     expect(document.querySelector('[role="dialog"]')).not.toBeNull()
+     19|     selected.value = false; await nextTick(); await nextTick()
+     20|     expect(document.querySelector('[role="dialog"]')).toBeNull()
+       |                                                       ^
+     21|     selected.value = true; await nextTick(); await nextTick()
+     22|     expect(document.querySelector('[role="dialog"]')?.textContent).toC…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 4 passed (5)
+      Tests  1 failed | 15 passed (16)
+   Start at  00:04:50
+   Duration  18.81s (transform 1.41s, setup 1.68s, import 2.30s, tests 568ms, environment 82.78s)

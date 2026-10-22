@@ -71,11 +71,20 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
   </td></tr>
 </table>
 
+**工具中心：** 资料对比、工作流中心、归档资源库和文件完整性收纳到同一个入口。顶部切换分类时保留手头的输入、选择和结果；原快捷键和历史入口继续直达。
+
 **还有这些贴近日常的小细节：** 常用目录与书签、资源管理器右键、托盘后台任务、历史搜索与再次执行、冰川/雨林/星云/曜石鎏金特色主题与强调色、界面缩放和减少动效、带下载进度的更新，以及按设置关闭到托盘、重启恢复窗口位置与大小。
 
 <a id="screenshots"></a>
 
 ## 🖼️ 界面一览
+
+### 工具集中，四类功能按需切换
+
+![工具中心与归档资源库](long-compress-assistant/docs/evidence/tools-center-1.6.7/ArchiveLibrary-glacier-1100x650.png)
+
+资料对比、工作流、资源库与完整性工具共享一个入口；原有操作和快捷直达保留。
+
 
 ### 任务就在眼前，单条展开，批量集中调整
 
@@ -158,10 +167,11 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | --- | --- |
 | 解压中心 / 压缩中心 | `Ctrl+O` / `Ctrl+N` |
 | 特殊压缩 / 文件浏览器 | `Ctrl+Shift+S` / `Ctrl+B` |
-| 资料对比 | `Ctrl+Shift+D` |
-| 归档资源库 | `Ctrl+Shift+L` |
-| 工作流中心 | `Ctrl+Shift+W` |
-| 密码保险箱 / 文件完整性 | `Ctrl+Shift+V` / `Ctrl+I` |
+| 工具中心 | `Ctrl+Shift+T` |
+| 工具中心 · 资料对比 | `Ctrl+Shift+D` |
+| 工具中心 · 归档资源库 | `Ctrl+Shift+L` |
+| 工具中心 · 工作流中心 | `Ctrl+Shift+W` |
+| 密码保险箱 / 工具中心·文件完整性 | `Ctrl+Shift+V` / `Ctrl+I` |
 | 历史任务 / 设置 | `Ctrl+H` / `Ctrl+,` |
 
 在输入框中编辑文字时，不会触发工作区跳转。窄窗口可以悬停导航查看快捷键。
@@ -219,21 +229,7 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 部分恢复不代表全部找回。缺卷救援仍需要完整可读的目录；终卷或目录缺失、未知数字切卷长度及无法确定的加密边界需补齐来源后再处理。具体范围见 [格式支持说明](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)。
 
-<details>
-<summary><strong>常用快捷键</strong></summary>
 
-| 快捷键 | 工作区 |
-| --- | --- |
-| `Ctrl+O` | 解压中心 |
-| `Ctrl+N` | 压缩中心 |
-| `Ctrl+Shift+S` | 特殊压缩 |
-| `Ctrl+B` | 文件浏览器 |
-| `Ctrl+Shift+V` | 密码保险箱 |
-| `Ctrl+I` | 文件完整性 |
-| `Ctrl+H` | 历史任务 |
-| `Ctrl+,` | 设置中心 |
-
-</details>
 
 <a id="faq"></a>
 
@@ -279,7 +275,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.6.6 · 窗口位置与大小记忆**。调整好的窗口在重启后自动恢复，最大化保留还原尺寸，最小化/托盘不覆盖正常位置；换屏或降低分辨率时调整到可见区域，无需额外设置。回应 [#248](https://github.com/Longyuyeee/long_Decompress/issues/248)。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.6.md) · [范围与记录](long-compress-assistant/docs/WINDOW_MEMORY_FREEZE_1.6.6.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.6)。下一阶段 [ALZ 大包兼容](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.7.md)仅规划。
+**v1.6.7 · 工具中心**。资料对比、工作流中心、归档资源库和文件完整性集中到四个分类页签，侧边栏统一为八个入口；`Ctrl+Shift+T` 打开工具中心，原四种快捷键继续直达。切换分类保留输入、选择、展开和结果，界面沿用原有样式。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.7.md) · [范围与记录](long-compress-assistant/docs/TOOLS_CENTER_FREEZE_1.6.7.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.7)。后续 [ALZ 大包候选](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.8.md)仅规划。
+
+**v1.6.6 · 窗口位置与大小记忆**。调整好的窗口在重启后自动恢复，最大化保留还原尺寸，最小化/托盘不覆盖正常位置；换屏或降低分辨率时调整到可见区域，无需额外设置。回应 [#248](https://github.com/Longyuyeee/long_Decompress/issues/248)。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.6.md) · [范围与记录](long-compress-assistant/docs/WINDOW_MEMORY_FREEZE_1.6.6.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.6)。后续 [ALZ 大包兼容](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.8.md)仅规划。
 
 **v1.6.5 · ALZ Bzip2 完整性修复**。缺少结束标记或声明压缩范围内夹入尾随数据时，不再把完整解出内容当作检查、解压或转换成功；大小和 CRC 均匹配后给出明确来源损坏原因，沿原失败新任务和历史继续处理。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.5.md) · [范围与记录](long-compress-assistant/docs/ALZ_BZIP2_INTEGRITY_FREEZE_1.6.5.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.5)。方法 3 仍待真实原包；后续 [ALZ Bzip2 大包读取](long-compress-assistant/docs/ALZ_BZIP2_BOUNDED_READ_PLAN.md)仅规划。
 

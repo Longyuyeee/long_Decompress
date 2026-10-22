@@ -96,6 +96,7 @@ import { runZpaqBlock163Gate } from './zpaq-block-163-gate.mjs'
 import { runZpaqRetrieval164Gate } from './zpaq-retrieval-164-gate.mjs'
 import { runAlzBzip2165Gate } from './alz-bzip2-165-gate.mjs'
 import { runWindowMemory166Gate } from './window-memory-166-gate.mjs'
+import { runToolsCenter167Gate } from './tools-center-167-gate.mjs'
 import { runCompactModulesUiGate } from './compact-modules-ui-gate.mjs'
 import { runPageUiReview } from './page-ui-review-gate.mjs'
 import { runSettingsUpdateThemesGate } from './settings-update-themes-gate.mjs'
@@ -4773,7 +4774,7 @@ try {
   await waitForDesktopReady()
 
   let navigation = await driver.findElements(By.css('aside nav > button'))
-  assert.equal(navigation.length, 11, 'the real desktop shell must expose eleven navigation buttons')
+  assert.equal(navigation.length, 8, 'the desktop shell must expose eight navigation buttons including the tool center')
   const versionBadge = await waitForElement('[data-testid="sidebar-version-badge"]')
   assert.equal(
     (await versionBadge.getAttribute('textContent')).trim(),
@@ -5019,6 +5020,9 @@ try {
     completedSuccessfully = true
   } else if ((process.argv.includes('--compact-modules-only') || process.argv.includes('--compact-modules-layout-only'))) {
     await runCompactModulesUiGate({driver,bridge:callDesktopBridge,application,root,dataDirectory:e2eDataDirectory})
+    completedSuccessfully = true
+  } else if (process.argv.includes('--tools-center-167-only') || process.argv.includes('--tools-center-167-layout-only')) {
+    await runToolsCenter167Gate({driver,bridge:callDesktopBridge,root,application,bundledSevenZip,forwardContextAction})
     completedSuccessfully = true
   } else if (process.argv.includes('--window-memory-166-only') || process.argv.includes('--window-memory-166-resize-only')) {
     await runWindowMemory166Gate({getDriver:()=>driver,restart:restartDesktopSession,bridge:callDesktopBridge,root,application,dataDirectory:e2eDataDirectory,readNativeRect:readNativeApplicationWindowRect,forwardContextAction})
