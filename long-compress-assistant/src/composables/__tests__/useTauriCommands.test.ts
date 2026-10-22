@@ -28,6 +28,15 @@ const decompressionOptions = {
 } as const
 
 describe('useTauriCommands', () => {
+  it('zpaq164 sends subset intent through extraction and retains it in the final execution record',async()=>{
+    const selection={snapshot:{version:3,date:20261020150000},revision:'a'.repeat(64),paths:['docs/good.txt']}
+    mocks.invoke.mockImplementation(async cmd=>cmd==='extract_file'?'D:/out/ZPAQ-partial':undefined)
+    await useTauriCommands().decompressFile('C:/backup.zpaq',{...decompressionOptions,zpaqRetrieval:selection,zpaqSnapshot:selection.snapshot,selectedEntries:selection.paths,password:'private-164'})
+    expect(mocks.invoke).toHaveBeenCalledWith('extract_file',expect.objectContaining({options:expect.objectContaining({zpaq_retrieval:selection,zpaq_snapshot:selection.snapshot,selected_entries:selection.paths})}))
+    expect(useTaskStore().tasks[0]).toMatchObject({status:'completed',zpaqRetrieval:selection,executionConfig:{zpaqRetrieval:selection}})
+    expect(JSON.stringify(useTaskStore().tasks[0].executionConfig)).not.toContain('private-164')
+  })
+
   it('comparison1555 invokes scoped password retrieval with explicit input encoding, without broad extraction fallback',async()=>{
     mocks.invoke.mockImplementation(async command=>command==='comparison_retrieve'?{path:'D:/out',outputBytes:4}:undefined);const comparisonSelection={source:{path:'C:/group.zip',kind:'zip' as const,revision:'a'.repeat(64),encrypted:true},paths:['one.txt'],keepStructure:true,conflictPolicy:'rename' as const};await useTauriCommands().decompressFile('C:/group.zip',{...decompressionOptions,comparisonSelection,password:'session-1555',zipPasswordEncoding:'cp936'});expect(mocks.invoke).toHaveBeenCalledWith('comparison_retrieve',expect.objectContaining({password:'session-1555',request:expect.objectContaining({zipPasswordEncoding:'cp936',paths:['one.txt']})}));expect(JSON.stringify(useTaskStore().tasks[0].executionConfig)).not.toContain('session-1555');expect(mocks.invoke.mock.calls.some(([command])=>command==='extract_file')).toBe(false)
   })

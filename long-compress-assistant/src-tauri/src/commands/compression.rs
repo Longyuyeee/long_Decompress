@@ -1670,6 +1670,7 @@ pub async fn materialize_nested_archive(
         .create_entry_dir(expected_bytes)
         .map_err(|error| error.to_string())?;
     let options = DecompressOptions {
+        zpaq_retrieval: None,
         reader_selection: None,
         library_source_id: None,
         library_revision: None,
@@ -1796,6 +1797,7 @@ pub async fn open_archive_entry(
         .map_err(|error| error.to_string())?;
 
     let options = DecompressOptions {
+        zpaq_retrieval: None,
         reader_selection: None,
         library_source_id: None,
         library_revision: None,
@@ -2677,4 +2679,9 @@ mod cancellation_tests {
         }
         assert!(!ZIP_REPAIR_FLAGS.contains_key(&repair_id));
     }
+}
+
+#[command]
+pub async fn read_zpaq_retrieval_result(path:String,selection:crate::services::zpaq_engine::retrieval::Selection)->Result<crate::services::zpaq_engine::retrieval::Receipt,String>{
+    crate::services::zpaq_engine::retrieval::read_receipt(Path::new(&path),&selection).map_err(|e|format!("取回说明无法读取，可能已移动或删除：{e:#}"))
 }

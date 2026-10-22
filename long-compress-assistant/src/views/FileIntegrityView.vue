@@ -736,7 +736,7 @@ onUnmounted(() => {
               <span class="diagnostic-format">{{ diagnosticReport.actualFormat }}</span>
             </div>
 
-            <ZpaqBlockDetails v-if="diagnosticReport.zpaqBlocks" :report="diagnosticReport.zpaqBlocks" />
+            <ZpaqBlockDetails v-if="diagnosticReport.zpaqBlocks" :report="diagnosticReport.zpaqBlocks" :source-path="archivePath" :password="archivePassword" :encrypted="diagnosticReport.encrypted" />
             <button v-if="diagnosticReport.actualFormat==='ZPAQ'" class="archive-secondary mt-3" data-testid="zpaq-diagnosis-browse" @click="appStore.openArchiveInBrowser(archivePath,{password:archivePassword,zpaqSnapshot:diagnosticReport.zpaqBlocks?.snapshot||archiveSnapshot})"><i class="pi pi-folder-open"/>{{diagnosticReport.status==='interrupted_tail'?'选择完整旧快照取回':'在浏览器选择快照'}}</button>
             <button v-if="isRar && diagnosticReport.status === 'healthy' && diagnosticReport.volumesFound > 1 && diagnosticReport.recoverability !== 'sfx_readonly'" class="archive-secondary mt-4" data-testid="open-create-recovery-volumes" @click="showRecoveryVolumes(archivePath, archivePassword)"><i class="pi pi-shield"></i>为这组分包创建恢复卷</button>
             <div class="diagnostic-metrics mt-6">

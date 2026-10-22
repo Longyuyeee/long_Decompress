@@ -1,0 +1,45 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling long-compress-assistant v1.6.4 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3m 19s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-4bccf9988e05ec84.exe)
+
+running 3 tests
+test commands::history_execution_config::zpaq164_history_retains_subset_intent_without_credentials ... ok
+test services::zpaq_engine::retrieval::tests_164::zpaq164_stale_bad_selection_cancel_and_missing_member_publish_nothing ... ok
+
+thread 'services::zpaq_engine::retrieval::tests_164::zpaq164_four_modes_scoped_password_extract_and_transactional_receipt' (97644) panicked at src\services\zpaq_retrieval_164_tests.rs:6:70:
+called `Result::unwrap()` on an `Err` value: Os { code: 3, kind: NotFound, message: "系统找不到指定的路径。" }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::zpaq_engine::retrieval::tests_164::zpaq164_four_modes_scoped_password_extract_and_transactional_receipt ... FAILED
+
+failures:
+
+failures:
+    services::zpaq_engine::retrieval::tests_164::zpaq164_four_modes_scoped_password_extract_and_transactional_receipt
+
+test result: FAILED. 2 passed; 1 failed; 0 ignored; 0 measured; 1072 filtered out; finished in 2.72s
+
+error: test failed, to rerun pass `--lib`

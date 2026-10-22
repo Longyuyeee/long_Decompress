@@ -11,7 +11,7 @@ fn zpaq1537_final_history_preserves_guarded_selection_and_rejects_missing_identi
 // Persist only the supported snapshot schema. A bad/unknown snapshot must not
 // prevent saving the task's final error and logs.
 pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<Value> {
-    if value.get("schemaVersion")?.as_u64()? != 1 || value.to_string().len() > if value.get("operation").and_then(Value::as_str)==Some("zpaq-update") || value.get("zpaqCatalogId").is_some() || value.get("librarySourceId").is_some() || value.get("comparisonSelection").is_some() || value.get("readerSelection").is_some() {262_144} else {16_384} { return None; }
+    if value.get("schemaVersion")?.as_u64()? != 1 || value.to_string().len() > if value.get("operation").and_then(Value::as_str)==Some("zpaq-update") || value.get("zpaqCatalogId").is_some() || value.get("librarySourceId").is_some() || value.get("comparisonSelection").is_some() || value.get("readerSelection").is_some() || value.get("zpaqRetrieval").is_some() {262_144} else {16_384} { return None; }
     let kind = value.get("kind")?.as_str()?;
     let expected = match kind {
         "archive-extraction" => ("decompression", "archive"),
@@ -55,6 +55,11 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
             output.insert(key.into(), serde_json::to_value(snapshot).ok()?);
         }
     }
+    if kind=="archive-extraction" {if let Some(selection)=value.get("zpaqRetrieval") {
+        let selection:crate::services::zpaq_engine::retrieval::Selection=serde_json::from_value(selection.clone()).ok()?;selection.validate().ok()?;
+        if output.get("zpaqSnapshot")!=Some(&serde_json::to_value(selection.snapshot).ok()?){return None}
+        output.insert("zpaqRetrieval".into(),serde_json::to_value(selection).ok()?);
+    }}
     if kind=="archive-extraction" {if let Some(selection)=value.get("readerSelection") {
         let selection:crate::services::image_reader::Selection=serde_json::from_value(selection.clone()).ok()?;
         selection.validate().ok()?;
@@ -422,4 +427,11 @@ fn reader1558_history_rejects_empty_duplicate_and_unbound_ranges(){
  let value=serde_json::json!({"schemaVersion":1,"kind":"archive-extraction","outputDirectory":"D:/out","extractToSubfolder":false,"readerSelection":{"revision":"a".repeat(64),"paths":["pages/1.png"],"keepStructure":true,"conflictPolicy":"rename"}});
  for paths in [serde_json::json!([]),serde_json::json!(["a.png","a.png"])]{let mut invalid=value.clone();invalid["readerSelection"]["paths"]=paths;assert!(sanitize(invalid,"decompression","archive").is_none());}
  let mut invalid=value;invalid["readerSelection"]["revision"]="".into();assert!(sanitize(invalid,"decompression","archive").is_none());
+}
+
+#[test]
+fn zpaq164_history_retains_subset_intent_without_credentials(){
+ let selection=serde_json::json!({"snapshot":{"version":3,"date":20261020150000i64},"revision":"a".repeat(64),"paths":["docs/kept.txt"],"password":"not-saved"});
+ let value=serde_json::json!({"schemaVersion":1,"kind":"archive-extraction","outputDirectory":"D:/out","extractToSubfolder":false,"zpaqSnapshot":selection["snapshot"],"zpaqRetrieval":selection,"password":"not-saved"});
+ let saved=sanitize(value.clone(),"decompression","archive").unwrap();assert_eq!(saved["zpaqRetrieval"]["paths"],value["zpaqRetrieval"]["paths"]);assert!(!saved.to_string().contains("not-saved"));let mut bad=value;bad["zpaqRetrieval"]["paths"]=serde_json::json!([]);assert!(sanitize(bad,"decompression","archive").is_none());
 }

@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 import { useTaskStore, type TaskStatus } from './task'
 
 interface BatchResult {
+  zpaqRetrieval?: import('@/types/zpaqRetrieval').ZpaqRetrievalSelection
   id: string
   name: string
   outputPath: string
@@ -20,7 +21,7 @@ export const useDecompressionBatchStore = defineStore('decompressionBatch', () =
   const showingFailures = ref(false)
   const currentTasks = computed(() => new Map(tasks.tasks
     .filter(task => task.type === 'decompression' && (!task.workloadKind || task.workloadKind === 'archive'))
-    .map(task => [task.id, { name: task.name, outputPath: task.status === 'completed' ? task.outputPath : '', status: task.status, needsConflictChoice: task.conflicts.length > 0 }])))
+    .map(task => [task.id, { zpaqRetrieval:task.zpaqRetrieval, name: task.name, outputPath: task.status === 'completed' ? task.outputPath : '', status: task.status, needsConflictChoice: task.conflicts.length > 0 }])))
 
   watch(currentTasks, current => {
     for (const result of results.value) {

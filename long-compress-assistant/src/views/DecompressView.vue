@@ -104,7 +104,7 @@ async function applySelectedConfiguration(patch: BatchConfigPatch, complete?: (e
       task.outputPath = directory
       changed = true
     }
-    if (patch.extractToSubfolder !== undefined && !task.comparisonSelection) { task.extractToSubfolder = patch.extractToSubfolder; changed = true }
+    if (patch.extractToSubfolder !== undefined && !task.comparisonSelection && !task.zpaqRetrieval) { task.extractToSubfolder = patch.extractToSubfolder; changed = true }
     if (changed) {
       // Encoding is task-local; changing only it must not detach output defaults.
       if (patch.outputDirectory !== undefined || patch.extractToSubfolder !== undefined) task.configurationMode = 'individual'
@@ -394,6 +394,7 @@ const deselectAll = () => {
 const isProcessing = ref(false)
 
 const runDecompressionResourcePreflight = async (task: Task) => {
+  if(task.zpaqRetrieval){task.executionConfig={schemaVersion:1,kind:'archive-extraction',outputDirectory:task.outputPath,extractToSubfolder:false,zpaqSnapshot:task.zpaqRetrieval.snapshot,zpaqRetrieval:task.zpaqRetrieval};return task.status!=='cancelled'&&task.status!=='cancelling'}
   if(task.comparisonSelection){
     task.executionConfig={schemaVersion:1,kind:'archive-extraction',outputDirectory:task.outputPath,extractToSubfolder:false,comparisonSelection:task.comparisonSelection}
     return task.status!=='cancelled'&&task.status!=='cancelling'
@@ -470,17 +471,18 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
     // 不预先添加密码，先尝试解压，只有明确要求密码时才使用保险箱
     const options = {
       outputPath: task.outputPath,
+      zpaqRetrieval:task.zpaqRetrieval,
       readerSelection:task.readerSelection,
       comparisonSelection:task.comparisonSelection?{...task.comparisonSelection,zipPasswordEncoding:task.zipPasswordEncoding??task.comparisonSelection.zipPasswordEncoding}:undefined,
       keepStructure: task.readerSelection?.keepStructure ?? task.libraryKeepStructure ?? true,
       overwrite: false,
-      deleteAfter: task.recycleSourceAfterExtract ?? false,
-      createSubdirectory: task.extractToSubfolder ?? false,
+      deleteAfter: task.zpaqRetrieval?false:task.recycleSourceAfterExtract ?? false,
+      createSubdirectory: task.zpaqRetrieval?false:task.extractToSubfolder ?? false,
       password: task.password || undefined, // 只使用用户手动输入的密码
       zipPasswordEncoding: zipPasswordEncodingForSource(task.sourceFiles[0], task.zipPasswordEncoding, task.format),
       zpaqSnapshot: task.zpaqSnapshot, zpaqCatalogId: task.zpaqCatalogId, selectedEntries: task.selectedEntries,
       librarySourceId:task.librarySourceId,libraryRevision:task.libraryRevision,libraryKeepStructure:task.libraryKeepStructure,libraryConflictPolicy:task.libraryConflictPolicy,
-      fileFilter: task.fileFilter || null
+      fileFilter: task.zpaqRetrieval?null:task.fileFilter || null
       ,conflictPolicy: task.readerSelection?.conflictPolicy || task.libraryConflictPolicy || appStore.settings.conflictPolicy
     }
 

@@ -43,6 +43,7 @@ export interface DecompressOptions {
 
   zpaqSnapshot?: ZpaqSnapshot
   zpaqCatalogId?: string
+  zpaqRetrieval?: import('@/types/zpaqRetrieval').ZpaqRetrievalSelection
   /** Actual browse format for task/history presentation, not a backend override. */
   sourceFormat?: string
   /** ZIP automatic compatibility; ALZ CP949 default for names and password. */
@@ -335,6 +336,7 @@ export const useTauriCommands = () => {
     const trackedTask = taskStore.tasks.find(item => item.id === taskId)
     if (trackedTask) {
       if (options.zpaqSnapshot && !trackedTask.name.includes(`（快照 ${options.zpaqSnapshot.version}）`)) trackedTask.name += `（快照 ${options.zpaqSnapshot.version}）`
+      trackedTask.zpaqRetrieval = options.zpaqRetrieval
       trackedTask.zpaqCatalogId = options.zpaqCatalogId
       trackedTask.zpaqSnapshot = options.zpaqSnapshot ? { ...options.zpaqSnapshot } : undefined
       trackedTask.readerSelection = options.readerSelection
@@ -349,6 +351,7 @@ export const useTauriCommands = () => {
       // Older unguarded selections keep the existing whole-archive history policy.
       trackedTask.executionConfig = {
         schemaVersion: 1, kind: 'archive-extraction', outputDirectory: options.outputPath,
+        ...(options.zpaqRetrieval?{zpaqRetrieval:options.zpaqRetrieval}:{}),
         ...(options.readerSelection?{readerSelection:options.readerSelection}:{}),
         ...(options.comparisonSelection?{comparisonSelection:options.comparisonSelection}:{}),
         ...(options.zpaqCatalogId ? { zpaqCatalogId: options.zpaqCatalogId, selectedEntries: [...(options.selectedEntries || [])] } : {}),
@@ -374,6 +377,7 @@ export const useTauriCommands = () => {
         options: {
           ...(options.readerSelection?{reader_selection:options.readerSelection}:{}),
           ...(options.librarySourceId ? {library_source_id:options.librarySourceId,library_revision:options.libraryRevision} : {}),
+          ...(options.zpaqRetrieval?{zpaq_retrieval:options.zpaqRetrieval}:{}),
           ...(options.zpaqCatalogId ? { zpaq_catalog_id: options.zpaqCatalogId } : {}),
           ...(options.zpaqSnapshot ? { zpaq_snapshot: options.zpaqSnapshot } : {}),
           ...(options.zipPasswordEncoding === undefined ? {} : { zip_password_encoding: options.zipPasswordEncoding }),

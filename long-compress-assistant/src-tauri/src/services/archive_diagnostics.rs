@@ -612,7 +612,7 @@ pub async fn diagnose_archive_at(
                         report.integrity_tested=blocks.unchecked()==0;
                         report.status=if blocks.affected()>0 {"zpaq_affected"}else if blocks.unchecked()>0 {"structure_only"}else{"healthy"}.into();
                         report.evidence.push(format!("ZPAQ snapshot {} ({}); referenced blocks checked once; revision {}",blocks.snapshot.version,blocks.snapshot.date,blocks.revision));
-                        if blocks.affected()>0 {report.issues.push(DiagnosticIssue{code:"zpaq_affected".into(),severity:"warning".into(),title:format!("{} 个文件受到失败数据块影响",blocks.affected()),detail:"共享数据块未通过解码或内容校验，关联文件暂不能判为可用；不表示每个关联文件都已证实损坏。本版仅定位，未提取部分文件。".into()});}
+                        if blocks.affected()>0 {report.issues.push(DiagnosticIssue{code:"zpaq_affected".into(),severity:"warning".into(),title:format!("{} 个文件受到失败数据块影响",blocks.affected()),detail:"共享数据块未通过解码或内容校验，关联文件暂不能判为可用；不表示每个关联文件都已证实损坏。可在文件明细选择检查通过的文件另存取回。".into()});}
                         if blocks.unchecked()>0 {report.issues.push(DiagnosticIssue{code:"zpaq_unchecked".into(),severity:"warning".into(),title:format!("{} 个文件仍未检查",blocks.unchecked()),detail:"关联块超过本次解码范围或可用内存；未检查内容不会计入检查通过。".into()});}
                         report.zpaq_blocks=Some(blocks);
                     }

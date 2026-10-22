@@ -47,7 +47,7 @@ const emit = defineEmits<{ 'show-failures': []; 'show-all': []; 'retry-failures'
       <p class="text-sm text-muted">已完成 {{ batch.completedResults.length }} 项，选择需要查看的输出目录。</p>
       <BatchResultActions :locations="batch.completedResults.map(result => ({ path: result.outputPath, directory: true }))" />
       <CompletedExtractionOutput v-for="result in batch.completedResults" :key="result.id"
-        :title="result.name" :path="result.outputPath" />
+        :title="result.name" :path="result.outputPath" :retrieval="result.zpaqRetrieval" />
     </div>
   </Modal>
 </template>

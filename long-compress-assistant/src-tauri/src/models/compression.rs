@@ -162,6 +162,8 @@ pub struct CompressionOptions {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DecompressOptions {
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub zpaq_retrieval: Option<crate::services::zpaq_engine::retrieval::Selection>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reader_selection: Option<crate::services::image_reader::Selection>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub library_source_id: Option<String>,
@@ -236,6 +238,7 @@ fn default_true() -> bool {
 impl Default for DecompressOptions {
     fn default() -> Self {
         Self {
+            zpaq_retrieval: None,
             reader_selection: None,
             library_source_id: None,
             library_revision: None,

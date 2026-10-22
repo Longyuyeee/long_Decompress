@@ -1,3 +1,4 @@
+import {checkZpaqRetrieval} from './zpaqRetrieval'
 import {detectArchiveGroup} from '@/utils/archiveSource'
 import { snapshotArguments } from '@/types/zpaqSnapshot'
 import { invoke } from '@tauri-apps/api/tauri'
@@ -15,12 +16,13 @@ export function extractionRetryPolicy(task: Task) {
     || !['failed','cancelled'].includes(task.status) ? '仅支持已失败或已取消的归档解压任务。'
     : task.comparisonSelection ? '此任务保留资料对比的精确范围，请返回资料对比重新读取来源，或从历史记录按原范围创建任务。'
     : category === 'rollback-incomplete' ? '请先保留并人工核对原输出和恢复目录；此处不能直接重试回滚不完整的任务。'
-    : task.sourceFiles.length !== 1 || task.fileFilter || (task.selectedEntries?.length && !(task.zpaqSnapshot && task.zpaqCatalogId) && !task.librarySourceId && !task.readerSelection)
+    : task.sourceFiles.length !== 1 || task.fileFilter || (task.selectedEntries?.length && !(task.zpaqSnapshot && task.zpaqCatalogId) && !task.zpaqRetrieval && !task.librarySourceId && !task.readerSelection)
       ? '此任务包含特殊来源或局部解压范围，请返回归档浏览重新选择范围。' : ''
   return { blocked, category, guidance: getTaskRecoveryGuidance(record), requireIntegrity: category === 'damaged' }
 }
 
 export interface ExtractionRetryInput {
+  zpaqRetrieval?: import('@/types/zpaqRetrieval').ZpaqRetrievalSelection
   readerSelection?: import('@/types/archiveReading').ReaderSelection
   librarySourceId?: string
   libraryRevision?: string
@@ -87,7 +89,8 @@ export async function validateExtractionRetry(
     await invoke('browse_archive', { filePath: path, password: input.password || null, ...snapshotArguments(input.zpaqSnapshot) })
     check()
   }
-  if (requireIntegrity) {
+  if(input.zpaqRetrieval){await checkZpaqRetrieval(path,input.password,input.zpaqRetrieval,diagnosticId);check()}
+  if (requireIntegrity && !input.zpaqRetrieval) {
     const report = await invoke<ArchiveDiagnosticReport>('diagnose_archive', {
       diagnosticId, filePath: path, password: input.password || null, ...snapshotArguments(input.zpaqSnapshot),
       ...(zipPasswordEncoding !== undefined ? { zipPasswordEncoding } : {}),
