@@ -651,7 +651,7 @@ fn preview_archive_text_sync(
             "Safe bounded text preview is currently available for ZIP and TAR-family archives only"
         ),
     };
-    if format=="ALZ" && text_bytes.total_size>text_bytes.bytes.len() as u64 {
+    if matches!(format,"ALZ"|"EGG") && text_bytes.total_size>text_bytes.bytes.len() as u64 {
         let bytes=&mut text_bytes.bytes;
         let bom=usize::from(bytes.starts_with(&[0xef,0xbb,0xbf]))*3;
         if let Err(error)=std::str::from_utf8(&bytes[bom..]) { if error.error_len().is_none(){bytes.truncate(bom+error.valid_up_to());} }
@@ -661,7 +661,7 @@ fn preview_archive_text_sync(
         }
     }
     let (content, encoding, consumed) = decode_text_prefix(&text_bytes.bytes)?;
-    anyhow::ensure!(format!="EGG"||consumed==text_bytes.bytes.len(),"EGG 文本编码末尾不完整，请先提取后打开");
+    anyhow::ensure!(format!="EGG"||text_bytes.total_size>text_bytes.bytes.len() as u64||consumed==text_bytes.bytes.len(),"EGG 文本编码末尾不完整，请先提取后打开");
     let truncated = text_bytes.total_size > consumed as u64;
     let line_count = if content.is_empty() {
         0
@@ -1217,7 +1217,7 @@ mod egg_text1612_tests{
     }
     #[tokio::test]
     async fn egg_text1612_bad_content_solid_limits_and_wrong_keys_never_display_as_complete(){
-        for (name,reason) in [("crc-damage","CRC"),("trailing-deflate","校验失败"),("short-deflate","校验失败"),("binary","binary"),("utf16-odd","编码末尾不完整"),("too-large","1 MiB")]{
+        for (name,reason) in [("crc-damage","CRC"),("trailing-deflate","校验失败"),("short-deflate","校验失败"),("binary","binary"),("utf16-odd","编码末尾不完整")]{
             let error=preview_archive_text(&root().join(format!("egg-text-1612/{name}.egg")),"readme.txt",None).await.unwrap_err();assert!(format!("{error:#}").contains(reason),"{name}: {error:#}");
         }
         let value=preview_archive_text(&root().join("egg-153/upstream/solid.egg"),"hello.txt",None).await.unwrap();assert!(!value.truncated && value.total_size==45);
@@ -1431,5 +1431,60 @@ mod egg_solid_image1615_tests {
         for n in [1,3] {std::fs::copy(source(&format!("controlled-native.vol{n}")),dir.path().join(format!("controlled-native.vol{n}.egg"))).unwrap();}
         let error=service.preview_egg_image_with_vault(dir.path().join("controlled-native.vol3.egg").to_str().unwrap(),"gallery/01-cover.png",None,None,None,Default::default()).await.unwrap_err();
         assert!(format!("{error:#}").contains("incomplete"));
+    }
+}
+
+
+#[cfg(test)]
+mod egg_prefix1616_tests {
+    use super::*;
+    use std::sync::{Arc,atomic::AtomicBool};
+    fn fixtures()->std::path::PathBuf{Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives")}
+    fn source(name:&str)->std::path::PathBuf{fixtures().join(format!("egg-prefix-1616/{name}.egg"))}
+    #[tokio::test]
+    async fn egg_prefix1616_methods_keys_native_and_character_boundaries_are_explicitly_partial(){
+        for name in ["store","deflate","bzip2","lzma","zipcrypto","aes256","password-volumes.vol2"]{
+            let key=matches!(name,"zipcrypto"|"aes256"|"password-volumes.vol2").then_some("日志密码1616!");
+            let value=preview_archive_text_with_encoding(&source(name),"logs/session.txt",key,Some(ZipPasswordEncoding::Cp936)).await.unwrap();
+            assert!(value.truncated && value.byte_size<=1024*1024 && value.byte_size>1024*1024-4 && value.total_size>value.byte_size);
+            assert!(value.content.starts_with("INFO 2026-10-23") && !value.content.contains('�'));
+        }
+        for (name,bytes,encoding) in [("utf8-boundary",1048575,"UTF-8"),("utf16-boundary",1048574,"UTF-16LE"),("gbk-boundary",1048575,"GBK")]{
+            let value=preview_archive_text(&source(name),"logs/session.txt",None).await.unwrap();
+            assert!(value.truncated && !value.content.contains('�'));assert_eq!(value.byte_size,bytes,"{name}");assert_eq!(value.encoding,encoding,"{name}");
+        }
+    }
+    #[tokio::test]
+    async fn egg_prefix1616_partial_bytes_never_replace_complete_integrity_or_small_content(){
+        let p=source("bad-crc-later");let value=preview_archive_text(&p,"logs/session.txt",None).await.unwrap();assert!(value.truncated);
+        let opts=crate::models::compression::DecompressOptions{selected_entries:vec!["logs/session.txt".into()],..Default::default()};
+        let error=super::super::egg_engine::verify(&p,None,&opts,Arc::new(AtomicBool::new(false))).await.unwrap_err();assert!(format!("{error:#}").contains("CRC"));
+        for (name,reason) in [("short-before-prefix","大小或 CRC"),("bad-first-block","CRC"),("unknown-method","目前支持"),("binary","binary")]{
+            let error=preview_archive_text(&source(name),"logs/session.txt",None).await.unwrap_err();assert!(format!("{error:#}").contains(reason),"{name}: {error:#}");
+        }
+        let small=preview_archive_text(&fixtures().join("egg-153/upstream/solid.egg"),"hello.txt",None).await.unwrap();assert!(!small.truncated && small.total_size==45);
+        let error=preview_archive_text(&fixtures().join("egg-solid-image-1615/ui.egg"),"gallery/02-grid.bmp",None).await.unwrap_err();assert!(format!("{error:#}").contains("1 MiB"));
+    }
+    #[tokio::test]
+    async fn egg_prefix1616_cancel_stale_group_and_missing_members_discard_the_prefix(){
+        let dir=tempfile::tempdir().unwrap();
+        for n in 1..=3{let name=format!("password-volumes.vol{n}.egg");std::fs::copy(source(&format!("password-volumes.vol{n}")),dir.path().join(name)).unwrap();}
+        let p=dir.path().join("password-volumes.vol2.egg");let revision=super::super::image_reader::revision(&p).unwrap();
+        let error=preview_archive_text_controlled_at(&p,"logs/session.txt",None,None,None,Arc::new(AtomicBool::new(true)),Some(revision.clone())).await.unwrap_err();assert!(format!("{error:#}").contains("取消"));
+        std::fs::remove_file(dir.path().join("password-volumes.vol3.egg")).unwrap();
+        let error=preview_archive_text_controlled_at(&p,"logs/session.txt",None,None,None,Arc::new(AtomicBool::new(false)),Some(revision)).await.unwrap_err();assert!(format!("{error:#}").contains("IMAGE_READER_CHANGED"));
+        let error=preview_archive_text(&p,"logs/session.txt",None).await.unwrap_err();assert!(format!("{error:#}").contains("incomplete"));
+    }
+    #[tokio::test]
+    async fn egg_prefix1616_vault_uses_only_the_selected_prefix_without_marking_complete_password_success(){
+        use crate::services::{compression_service::{CompressionService,CompressionServiceConfig},encrypted_password_service::EncryptedPasswordService,io_buffer_pool::IOBufferPool,rar_support::RarSupportService,universal_engine::UniversalCliEngine};
+        use crate::models::password::{PasswordEntry,PasswordCategory};
+        let dir=tempfile::tempdir().unwrap();let mut vault=EncryptedPasswordService::new(dir.path());vault.initialize("owned-public-test-key").await.unwrap();
+        for(name,key)in[("a wrong","wrong"),("b public","日志密码1616!")]{vault.add_password(PasswordEntry::new(name.into(),key.into(),PasswordCategory::Other)).await.unwrap();}
+        let service=CompressionService::new(CompressionServiceConfig::default(),Arc::new(IOBufferPool::default()),Arc::new(RarSupportService::new()),Arc::new(UniversalCliEngine::new()),Arc::new(vault));
+        let p=source("password-volumes.vol2");let value=service.preview_egg_text_with_vault(p.to_str().unwrap(),"logs/session.txt",None,Some(ZipPasswordEncoding::Cp936),None).await.unwrap();
+        assert!(value.truncated && value.content.starts_with("INFO"));
+        assert!(service.encrypted_password_service.list_passwords().await.unwrap().iter().all(|entry|entry.use_count==0));
+        let error=service.preview_egg_text_with_vault(p.to_str().unwrap(),"logs/session.txt",Some("wrong manual"),Some(ZipPasswordEncoding::Cp936),None).await.unwrap_err();assert!(format!("{error:#}").contains("密码"));
     }
 }

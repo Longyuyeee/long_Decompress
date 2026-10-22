@@ -1,0 +1,122 @@
+{
+  "version": "1.6.16",
+  "helperSha256": "5bb50ac3170f64631237fd1198f0a038d480f27c1875b7a660d9d05723777904",
+  "controlled": true,
+  "checks": [
+    {
+      "name": "store",
+      "bytes": 1048576,
+      "totalSize": 2640000,
+      "sha256": "a31ac6854b5308354af7ec5d23ac31a66a08c133c12813e699312388ed955ac4",
+      "inputBytes": 1048576,
+      "partial": true
+    },
+    {
+      "name": "deflate",
+      "bytes": 1048576,
+      "totalSize": 2640000,
+      "sha256": "a31ac6854b5308354af7ec5d23ac31a66a08c133c12813e699312388ed955ac4",
+      "inputBytes": 4096,
+      "partial": true
+    },
+    {
+      "name": "bzip2",
+      "bytes": 1048576,
+      "totalSize": 2640000,
+      "sha256": "a31ac6854b5308354af7ec5d23ac31a66a08c133c12813e699312388ed955ac4",
+      "inputBytes": 868,
+      "partial": true
+    },
+    {
+      "name": "lzma",
+      "bytes": 1048576,
+      "totalSize": 2640000,
+      "sha256": "a31ac6854b5308354af7ec5d23ac31a66a08c133c12813e699312388ed955ac4",
+      "inputBytes": 527,
+      "partial": true
+    },
+    {
+      "name": "zipcrypto",
+      "bytes": 1048576,
+      "totalSize": 2640000,
+      "sha256": "a31ac6854b5308354af7ec5d23ac31a66a08c133c12813e699312388ed955ac4",
+      "inputBytes": 4096,
+      "partial": true
+    },
+    {
+      "name": "aes256",
+      "bytes": 1048576,
+      "totalSize": 2640000,
+      "sha256": "a31ac6854b5308354af7ec5d23ac31a66a08c133c12813e699312388ed955ac4",
+      "inputBytes": 13148,
+      "partial": true
+    },
+    {
+      "name": "password-volumes.vol2",
+      "bytes": 1048576,
+      "totalSize": 2640000,
+      "sha256": "a31ac6854b5308354af7ec5d23ac31a66a08c133c12813e699312388ed955ac4",
+      "inputBytes": 13148,
+      "partial": true
+    },
+    {
+      "name": "bad-crc-later",
+      "bytes": 1048576,
+      "totalSize": 2640000,
+      "sha256": "a31ac6854b5308354af7ec5d23ac31a66a08c133c12813e699312388ed955ac4",
+      "inputBytes": 4096,
+      "partial": true
+    },
+    {
+      "name": "multi-block",
+      "bytes": 1048576,
+      "totalSize": 3688576,
+      "sha256": "4e29ad18ab9f42d7c233500771a39d7c852b200baf328fd00fbbe3fecea1eb56",
+      "inputBytes": 4622,
+      "partial": true
+    },
+    {
+      "name": "large-store",
+      "bytes": 1048576,
+      "totalSize": 67108865,
+      "sha256": "b8824ab1d764167b60ec900ed95085d72dc8768660469a74effe79a0c22154e6",
+      "inputBytes": 1048576,
+      "partial": true
+    },
+    {
+      "name": "bad-first-block",
+      "rejected": true,
+      "reason": "[archive-inspection:damaged] EGG 文本前缀之前的数据块大小或 CRC 校验失败"
+    },
+    {
+      "name": "short-before-prefix",
+      "rejected": true,
+      "reason": "[archive-inspection:damaged] EGG 文本前缀之前的数据块大小或 CRC 校验失败"
+    },
+    {
+      "name": "unknown-method",
+      "rejected": true,
+      "reason": "EGG 大文本前缀目前支持存储、Deflate、Bzip2 和 LZMA，请先提取后打开"
+    },
+    {
+      "name": "actual-input-limit",
+      "rejected": true,
+      "reason": "EGG 文本前缀读取超过 64 MiB 范围，请先提取后打开"
+    },
+    {
+      "name": "wrong-password",
+      "rejected": true,
+      "reason": "[egg-password] EGG 密码短头不匹配，也可能是加密头损坏；请核对密码和原文件完整性"
+    },
+    {
+      "name": "wrong-codepage",
+      "rejected": true,
+      "reason": "[egg-password] EGG 密码短头不匹配，也可能是加密头损坏；请核对密码和原文件完整性"
+    }
+  ],
+  "authenticatedReReadCounted": {
+    "packed": 9052,
+    "actual": 13148
+  },
+  "passed": true
+}

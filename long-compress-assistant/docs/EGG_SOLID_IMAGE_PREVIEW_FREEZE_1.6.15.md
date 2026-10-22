@@ -24,6 +24,6 @@ helper 0.7.0 将已有固实文本内存收集参数化：文本保持 1 MiB，�
 
 ## 发布与后续
 
-已达到可发版程度。README、Release、支持口径和版本身份同步，按正常受保护 PR / Windows package / 正常合并 / v1.6.15 标签发布；正式身份在本版 PR 接续。[v1.6.16 非固实大文本前缀](ARCHIVE_ROADMAP_1.6.16.md)仅规划、未开发。EGG 加密固实、创建/修复，ALZ 方法 3、原工具图片/历史 Bzip2 大包各自保留来源条件。
+已达到可发版程度。README、Release、支持口径和版本身份同步，按正常受保护 PR / Windows package / 正常合并 / v1.6.15 标签发布；正式身份在本版 PR 接续。[v1.6.16 非固实大文本前缀](ARCHIVE_ROADMAP_1.6.16.md)已接续开发。EGG 加密固实、创建/修复，ALZ 方法 3、原工具图片/历史 Bzip2 大包各自保留来源条件。
 
 前版 v1.6.14 已由 [PR #275](https://github.com/Longyuyeee/long_Decompress/pull/275) 正常合并并推送标签；封板时[正式运行 39853009550](https://github.com/Longyuyeee/long_Decompress/actions/runs/39853009550)仍在打包，附件未确认生成。同树 master CI 39852938781 已确认取消，正式最新状态在发布回执接续。

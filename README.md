@@ -275,7 +275,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.6.15 · EGG 固实图片与连续阅读**。在原双栏查看小型未加密 Deflate / LZMA 固实图片，沿原阅读器翻页、缩放、跳过和准确提取当前页；完整共享依赖检查后显示，按需读取、明确等待，保留有限缓存与取消/来源刷新。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.15.md) · [范围与记录](long-compress-assistant/docs/EGG_SOLID_IMAGE_PREVIEW_FREEZE_1.6.15.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.15)。下一阶段 [EGG 非固实大文本前缀](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.16.md)仅规划。
+**v1.6.16 · EGG 大文本前缀预览**。原双栏可直接阅读非固实大日志开头，最多前 1 MiB，明确“部分内容 · 未校验整文件”，保留字符边界；密码/原生卷、取消和来源刷新沿旧入口使用，完整操作保持原校验条件。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.16.md) · [范围与记录](long-compress-assistant/docs/EGG_TEXT_PREFIX_FREEZE_1.6.16.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.16)。下一阶段 [7Z 非固实小文本](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.17.md)仅规划。
+
+**v1.6.15 · EGG 固实图片与连续阅读**。在原双栏查看小型未加密 Deflate / LZMA 固实图片，沿原阅读器翻页、缩放、跳过和准确提取当前页；完整共享依赖检查后显示，按需读取、明确等待，保留有限缓存与取消/来源刷新。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.15.md) · [范围与记录](long-compress-assistant/docs/EGG_SOLID_IMAGE_PREVIEW_FREEZE_1.6.15.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.15)。EGG 非固实大文本前缀已由上方 v1.6.16 接续。
 
 **v1.6.14 · EGG 固实包内文本预览**。在原双栏直接查看未加密 Deflate / LZMA 固实包内的小文本；约束完整共享流读取，全部依赖检查通过后显示，损坏/超限/加密固实给下一步。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.14.md) · [范围与记录](long-compress-assistant/docs/EGG_SOLID_TEXT_PREVIEW_FREEZE_1.6.14.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.14)。EGG 小型固实图片已由上方 v1.6.15 接续。
 

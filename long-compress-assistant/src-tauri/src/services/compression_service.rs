@@ -1536,14 +1536,14 @@ impl CompressionService {
             if let Some(version)=revision.as_deref(){crate::services::image_reader::check_source(Path::new(file_path),version)?;}
             let listing=crate::services::egg_engine::browse(Path::new(file_path),self.cancellation_flag.clone()).await?;
             let selected=listing.entries.iter().find(|e|e.path==entry&&!e.is_dir).context("所选 EGG 文本已不存在，请刷新目录")?;
-            anyhow::ensure!(selected.size<=1024*1024,"EGG 文本预览支持 1 MiB 以内的完整文件，请先提取后打开");
             if selected.compressed_size.is_none(){
                 // Solid dependencies include data owned by other entries. Do not consult the vault.
+                anyhow::ensure!(selected.size<=1024*1024,"EGG 固实文本预览支持 1 MiB 以内的完整文件，请先提取后打开");
                 anyhow::ensure!(!listing.encrypted && !listing.entries.iter().any(|e|e.encrypted),"EGG 加密固实文本暂不支持预览，请先提取后打开");
                 anyhow::ensure!(listing.total_compressed_size<=64*1024*1024 && listing.total_uncompressed_size<=64*1024*1024,"EGG 固实文本预览的完整共享压缩数据和解码总量须分别不超过 64 MiB，请先提取后打开");
                 return crate::services::archive_preview::preview_archive_text_controlled_at(Path::new(file_path),entry,None,encoding,None,self.cancellation_flag.clone(),revision.clone()).await;
             }
-            anyhow::ensure!(selected.compressed_size.unwrap()<=64*1024*1024,"EGG 所选文本压缩数据超过 64 MiB，请先提取后打开");
+            anyhow::ensure!(selected.size>1024*1024 || selected.compressed_size.unwrap()<=64*1024*1024,"EGG 所选文本压缩数据超过 64 MiB，请先提取后打开");
             let supplied=password.filter(|p|!p.is_empty());
             let candidates:Vec<Option<String>>=if let Some(p)=supplied{vec![Some(p.to_string())]}else if !selected.encrypted{vec![None]}else{self.password_book_candidates().await.unwrap_or_default().into_iter().map(|(_,_,key)|Some(key)).collect()};
             anyhow::ensure!(!candidates.is_empty(),"EGG 所选文本需要密码，请填写密码后重试");
@@ -1551,7 +1551,7 @@ impl CompressionService {
                 self.check_cancellation()?;
                 match crate::services::archive_preview::preview_archive_text_controlled_at(Path::new(file_path),entry,key.as_deref(),encoding,None,self.cancellation_flag.clone(),revision.clone()).await{
                     Ok(value)=>return Ok(value),
-                    Err(error) if supplied.is_none()&&selected.encrypted&&{let detail=format!("{error:#}");detail.contains("[egg-password]")||detail.contains("[archive-inspection:ambiguous-data]")||detail.contains("[egg-password-encoding]")}=>continue,
+                    Err(error) if supplied.is_none()&&selected.encrypted&&{let detail=format!("{error:#}");!detail.contains("64 MiB") && (detail.contains("[egg-password]")||detail.contains("[archive-inspection:ambiguous-data]")||detail.contains("[egg-password-encoding]") || (selected.size>1024*1024 && (detail.contains("appears to be binary") || detail.contains("supported text encoding") || detail.contains("Invalid UTF-"))))}=>continue,
                     Err(error)=>return Err(error),
                 }
             }

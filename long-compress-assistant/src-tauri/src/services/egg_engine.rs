@@ -52,7 +52,7 @@ pub async fn extract(path:&Path,output:&Path,pwd:Option<&str>,options:&Decompres
     run("extract",path,pwd,Some(output),&selected,cancelled,options.preserve_timestamps,options.zip_password_encoding).await?;Ok(())
 }
 
-/// Complete selected content, validated in memory by the bounded helper.
+/// Complete content, or an explicitly partial non-solid text prefix, in memory.
 async fn preview_entry(path:&Path,entry:&str,password:Option<&str>,encoding:Option<ZipPasswordEncoding>,cancelled:Arc<AtomicBool>,image:bool)->Result<(Vec<u8>,u64)>{
     anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Acquire),"EGG 预览已取消");
     let entry=super::archive_entry_open::normalize_safe_entry_path(entry)?;
@@ -60,7 +60,9 @@ async fn preview_entry(path:&Path,entry:&str,password:Option<&str>,encoding:Opti
     let bytes:Vec<u8>=serde_json::from_value(value["bytes"].clone())?;
     let size=value["totalSize"].as_u64().context("EGG 内容大小缺失")?;
     let limit=if image{8*1024*1024}else{1024*1024};
-    anyhow::ensure!(size<=limit&&bytes.len() as u64==size&&value["inputBytes"].as_u64().is_some_and(|n|n<=64*1024*1024),"EGG 预览大小不符，请刷新后重试");
+    let content_ok=if !image && size>limit {value["partial"]==true && bytes.len() as u64==limit}
+        else {value["partial"]!=true && size<=limit && bytes.len() as u64==size};
+    anyhow::ensure!(content_ok&&value["inputBytes"].as_u64().is_some_and(|n|n<=64*1024*1024),"EGG 预览大小不符，请刷新后重试");
     anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Acquire),"EGG 预览已取消");
     Ok((bytes,size))
 }
