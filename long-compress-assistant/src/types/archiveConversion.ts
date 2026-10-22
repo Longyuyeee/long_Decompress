@@ -26,6 +26,8 @@ export interface ConversionDraft {
   sourcePath: string
   sourceParts?: string[]
   sourceBytes?: number
+  /** Derived from the confirmed source reference, rechecked before execution. */
+  sourceNativeParts?: number
   sourceReference?: string
   /** Content detection, never inferred from a filename suffix. Rechecked before execution. */
   sourceFormat?: string

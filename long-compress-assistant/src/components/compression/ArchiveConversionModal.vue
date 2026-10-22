@@ -147,7 +147,7 @@ function toggle(id: string) {
                   <button type="button" class="conversion-button" data-testid="conversion-load-snapshots" :disabled="store.busy || store.preparing || !!historyBusy" @click="loadSnapshots(item.id)">{{ historyBusy === item.id ? '读取中…' : '读取历史快照' }}</button>
                 </div>
               </div>
-              <ZpaqUpdateFields v-if="item.intent === 'zpaq-update'" :settings="store.effectiveSettings(item)" :base-bytes="item.sourceBytes" :disabled="store.busy || store.preparing" :source-password-required="store.passwordRequirements(item).source" @update="store.updateItem(item.id, $event)" />
+              <ZpaqUpdateFields v-if="item.intent === 'zpaq-update'" :settings="store.effectiveSettings(item)" :native-parts="item.sourceNativeParts" :base-bytes="item.sourceBytes" :disabled="store.busy || store.preparing" :source-password-required="store.passwordRequirements(item).source" @update="store.updateItem(item.id, $event)" />
               <ConversionSettingsFields v-else :settings="store.effectiveSettings(item)" :source-path="item.sourcePath" :source-format="item.sourceFormat" :disabled="store.busy || store.preparing"
                 :source-password-required="store.passwordRequirements(item).source" :target-password-required="store.passwordRequirements(item).target"
                 @update="store.updateItem(item.id, $event)" />

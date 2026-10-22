@@ -1,0 +1,682 @@
+{
+  "version": "1.6.1",
+  "binarySha256": "4d1e79ef1b31de560855b822d59b3033d30997ef0c648886dec75ef7af8d00d3",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b",
+  "checks": [
+    {
+      "kind": "bulk-configuration",
+      "inlineToggle": true,
+      "modalLevel": 3,
+      "binarySha256": "155c70b154946a81af584ef1dc20548cceaaef1bebdca4fe50fc34d4a9d57b85"
+    },
+    {
+      "kind": "drafts-and-bulk",
+      "passwordNotPersisted": true,
+      "noImplicitStart": true,
+      "nativeModeRestored": true,
+      "binarySha256": "155c70b154946a81af584ef1dc20548cceaaef1bebdca4fe50fc34d4a9d57b85"
+    },
+    {
+      "kind": "plain-and-password-failure",
+      "binarySha256": "4d1e79ef1b31de560855b822d59b3033d30997ef0c648886dec75ef7af8d00d3",
+      "plain": "conversion-ce5d9811-1347-47dd-9c24-f5f19151559c",
+      "failed": "conversion-2a75a7af-8984-4580-bc61-314d47ccda56",
+      "evidence": {
+        "allHashes": true,
+        "parts": 4,
+        "snapshots": 4
+      }
+    },
+    {
+      "kind": "password-retry-and-results",
+      "binarySha256": "4d1e79ef1b31de560855b822d59b3033d30997ef0c648886dec75ef7af8d00d3",
+      "id": "conversion-0ea3fb01-44a4-47c3-8023-b3734a61affd",
+      "failedPreserved": true,
+      "evidence": {
+        "allHashes": true,
+        "parts": 4,
+        "snapshots": 4
+      }
+    }
+  ],
+  "layouts": [
+    {
+      "name": "bulk",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "right": 1014,
+          "x": 86
+        },
+        {
+          "overflow": 0,
+          "right": 918,
+          "x": 182
+        }
+      ],
+      "width": 1100,
+      "binarySha256": "afdcb7221683b0ef31873a9d342258018c50a2ee9133000d77407df41fe8178d"
+    },
+    {
+      "name": "bulk",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "right": 736,
+          "x": 24
+        },
+        {
+          "overflow": 0,
+          "right": 736,
+          "x": 24
+        }
+      ],
+      "width": 760,
+      "binarySha256": "afdcb7221683b0ef31873a9d342258018c50a2ee9133000d77407df41fe8178d"
+    },
+    {
+      "name": "mapping",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "right": 1014,
+          "x": 86
+        }
+      ],
+      "width": 1100,
+      "binarySha256": "155c70b154946a81af584ef1dc20548cceaaef1bebdca4fe50fc34d4a9d57b85"
+    },
+    {
+      "name": "mapping",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "right": 736,
+          "x": 24
+        }
+      ],
+      "width": 760,
+      "binarySha256": "155c70b154946a81af584ef1dc20548cceaaef1bebdca4fe50fc34d4a9d57b85"
+    },
+    {
+      "name": "result",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "right": 1014,
+          "x": 86
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "result",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "right": 736,
+          "x": 24
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "parts",
+      "height": 700,
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "right": 1014,
+          "x": 86
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "parts",
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "overflow": 0,
+          "right": 736,
+          "x": 24
+        }
+      ],
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\bulk-1100x700.png",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\bulk-760x520.png",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\mapping-1100x700.png",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\mapping-760x520.png",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\result-1100x700.png",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\result-760x520.png",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\parts-1100x700.png",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\parts-760x520.png"
+  ],
+  "parts": [
+    [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal\\journal01.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal\\journal02.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal\\journal03.zpaq"
+    ],
+    [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key\\journal-key01.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key\\journal-key02.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key\\journal-key03.zpaq"
+    ]
+  ],
+  "added": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\本次新增.txt",
+  "outputs": [
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b/journal01_更新.zpaq",
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\密码新组.zpaq"
+  ],
+  "previousIdentities": [
+    "afdcb7221683b0ef31873a9d342258018c50a2ee9133000d77407df41fe8178d",
+    "155c70b154946a81af584ef1dc20548cceaaef1bebdca4fe50fc34d4a9d57b85"
+  ],
+  "drafts": {
+    "compression": {
+      "defaults": {
+        "createSolidArchive": false,
+        "deleteAfter": false,
+        "filename": "",
+        "format": "zip",
+        "keepStructure": true,
+        "level": 6,
+        "password": "",
+        "splitArchive": false,
+        "splitSize": "1024",
+        "verifyAfter": true
+      },
+      "files": [],
+      "groups": [],
+      "outputDirectory": ""
+    },
+    "conversion": {
+      "defaults": {
+        "encryptFilenames": false,
+        "format": "7z",
+        "level": 6,
+        "outputDirectory": "",
+        "outputPath": "",
+        "password": "",
+        "sourcePassword": "",
+        "splitMiB": 0,
+        "zipEncryption": "aes256",
+        "zipMethod": "deflate",
+        "zipPasswordEncoding": "utf8",
+        "zipSplitMode": "numeric"
+      },
+      "items": [
+        {
+          "expanded": true,
+          "id": "recovered-e3902d2f-0fb2-45e5-8994-ed12cb648ca7",
+          "intent": "zpaq-update",
+          "passwordRequired": false,
+          "selected": true,
+          "settings": {
+            "archivePrefix": "资料",
+            "encryptFilenames": false,
+            "format": "zpaq",
+            "level": 3,
+            "outputDirectory": "",
+            "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\普通新组.zpaq",
+            "password": "",
+            "sourcePassword": "",
+            "splitMiB": 0,
+            "updateSources": [
+              "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\本次新增.txt"
+            ],
+            "zipEncryption": "aes256",
+            "zipMethod": "deflate",
+            "zipPasswordEncoding": "utf8",
+            "zipSplitMode": "numeric"
+          },
+          "sourceParts": [
+            "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal\\journal01.zpaq",
+            "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal\\journal02.zpaq",
+            "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal\\journal03.zpaq"
+          ],
+          "sourcePasswordRequired": false,
+          "sourcePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\profile-final\\zpaq-sources\\0148ec918a89b78877b7bca7f4f8206a7af9e671345eb7970af0c7031a715897\\journal01.zpaq",
+          "sourceReference": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\profile-final\\zpaq-sources\\0148ec918a89b78877b7bca7f4f8206a7af9e671345eb7970af0c7031a715897\\journal01.zpaq",
+          "targetPasswordRequired": false
+        },
+        {
+          "expanded": true,
+          "id": "recovered-01c5fa89-ca29-401b-b0f6-395137863ae2",
+          "intent": "zpaq-update",
+          "passwordRequired": true,
+          "selected": true,
+          "settings": {
+            "archivePrefix": "资料",
+            "encryptFilenames": false,
+            "format": "zpaq",
+            "level": 3,
+            "outputDirectory": "",
+            "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\密码新组.zpaq",
+            "password": "",
+            "sourcePassword": "",
+            "splitMiB": 0,
+            "updateSources": [
+              "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\本次新增.txt"
+            ],
+            "zipEncryption": "aes256",
+            "zipMethod": "deflate",
+            "zipPasswordEncoding": "utf8",
+            "zipSplitMode": "numeric"
+          },
+          "sourceParts": [
+            "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key\\journal-key01.zpaq",
+            "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key\\journal-key02.zpaq",
+            "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key\\journal-key03.zpaq"
+          ],
+          "sourcePasswordRequired": true,
+          "sourcePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\profile-final\\zpaq-sources\\9b7e709b11566ce05ed305447ccc80a9a05c0987ec6a6817db221803adb1a5df\\journal-key01.zpaq",
+          "sourceReference": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\profile-final\\zpaq-sources\\9b7e709b11566ce05ed305447ccc80a9a05c0987ec6a6817db221803adb1a5df\\journal-key01.zpaq",
+          "targetPasswordRequired": false
+        }
+      ]
+    },
+    "extraction": {
+      "defaults": {
+        "extractToSubfolder": false,
+        "outputPath": "",
+        "recycleSource": false,
+        "sameDirectory": true
+      },
+      "items": []
+    },
+    "savedAt": "2026-10-22T10:22:14.992Z",
+    "version": 1
+  },
+  "candidateOptimization": "1 (local candidate; production CI uses default release optimization)",
+  "sourceFailure": {
+    "archiveOutput": null,
+    "completedAt": "2026-10-22T10:22:19.824Z",
+    "durationMs": 577,
+    "errorMessage": "[archive-io:io] 文件读写未完成，请按原始路径检查来源、输出目录和设备连接，处理后创建新任务。原始原因：系统找不到指定的路径。 (os error 3)",
+    "executionConfig": {
+      "archivePrefix": "资料",
+      "encryptFilenames": false,
+      "format": "zpaq",
+      "kind": "archive-conversion",
+      "level": 3,
+      "operation": "zpaq-update",
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\普通新组.zpaq",
+      "passwordRequired": false,
+      "rarRecoveryPercent": 0,
+      "rarRecoveryVolumes": 0,
+      "schemaVersion": 1,
+      "sourcePasswordRequired": false,
+      "splitSize": 0,
+      "updateSources": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\本次新增.txt"
+      ],
+      "zipEncryption": "aes256",
+      "zipMethod": "deflate",
+      "zipPasswordEncoding": "utf8",
+      "zipSplitMode": "numeric"
+    },
+    "failure": {
+      "category": "io",
+      "evidence": "recorded-marker",
+      "schemaVersion": 1,
+      "stage": "unknown"
+    },
+    "format": "zpaq",
+    "id": "conversion-cb4731e2-ab6b-4f18-a29b-701dba30371a",
+    "logs": [
+      {
+        "message": "读取原备份及历史信息。",
+        "severity": "info",
+        "timestamp": "2026-10-22T10:22:19.409754600Z"
+      },
+      {
+        "message": "复制完整原备份：412846 字节；原件保留，新增内容还需要额外空间。",
+        "severity": "info",
+        "timestamp": "2026-10-22T10:22:19.656449700Z"
+      },
+      {
+        "message": "按内容比较并追加新增/变化数据；保留未选旧条目与全部历史。",
+        "severity": "info",
+        "timestamp": "2026-10-22T10:22:19.675028500Z"
+      },
+      {
+        "message": "最终失败原因：[archive-io:io] 文件读写未完成，请按原始路径检查来源、输出目录和设备连接，处理后创建新任务。原始原因：系统找不到指定的路径。 (os error 3)",
+        "severity": "error",
+        "timestamp": "2026-10-22T10:22:19.824Z"
+      }
+    ],
+    "metrics": null,
+    "name": "ZPAQ 增量更新 · journal01.zpaq",
+    "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\普通新组.zpaq",
+    "processedBytes": 34,
+    "retryOfTaskId": null,
+    "sourcePaths": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\profile-final\\zpaq-sources\\0148ec918a89b78877b7bca7f4f8206a7af9e671345eb7970af0c7031a715897\\journal01.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal\\journal01.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal\\journal02.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal\\journal03.zpaq"
+    ],
+    "startedAt": "2026-10-22T10:22:19.247Z",
+    "status": "failed",
+    "taskType": "compression",
+    "totalBytes": 34,
+    "workloadKind": "archive"
+  },
+  "failed": {
+    "archiveOutput": null,
+    "completedAt": "2026-10-22T10:22:20.119Z",
+    "durationMs": 258,
+    "errorMessage": "[archive-inspection:ambiguous-data] ZPAQ 密码不匹配或文件头已损坏，无法仅凭解密头确定原因",
+    "executionConfig": {
+      "archivePrefix": "资料",
+      "encryptFilenames": false,
+      "format": "zpaq",
+      "kind": "archive-conversion",
+      "level": 3,
+      "operation": "zpaq-update",
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\密码新组.zpaq",
+      "passwordRequired": true,
+      "rarRecoveryPercent": 0,
+      "rarRecoveryVolumes": 0,
+      "schemaVersion": 1,
+      "sourcePasswordRequired": true,
+      "splitSize": 0,
+      "updateSources": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\本次新增.txt"
+      ],
+      "zipEncryption": "aes256",
+      "zipMethod": "deflate",
+      "zipPasswordEncoding": "utf8",
+      "zipSplitMode": "numeric"
+    },
+    "failure": {
+      "category": "ambiguous-data",
+      "evidence": "recorded-marker",
+      "schemaVersion": 1,
+      "stage": "inspection"
+    },
+    "format": "zpaq",
+    "id": "conversion-2a75a7af-8984-4580-bc61-314d47ccda56",
+    "logs": [
+      {
+        "message": "读取原备份及历史信息。",
+        "severity": "info",
+        "timestamp": "2026-10-22T10:22:19.887813Z"
+      },
+      {
+        "message": "最终失败原因：[archive-inspection:ambiguous-data] ZPAQ 密码不匹配或文件头已损坏，无法仅凭解密头确定原因",
+        "severity": "error",
+        "timestamp": "2026-10-22T10:22:20.119Z"
+      }
+    ],
+    "metrics": null,
+    "name": "ZPAQ 增量更新 · journal-key01.zpaq",
+    "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\密码新组.zpaq",
+    "processedBytes": 0,
+    "retryOfTaskId": null,
+    "sourcePaths": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\profile-final\\zpaq-sources\\9b7e709b11566ce05ed305447ccc80a9a05c0987ec6a6817db221803adb1a5df\\journal-key01.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key\\journal-key01.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key\\journal-key02.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key\\journal-key03.zpaq"
+    ],
+    "startedAt": "2026-10-22T10:22:19.861Z",
+    "status": "failed",
+    "taskType": "compression",
+    "totalBytes": 0,
+    "workloadKind": "archive"
+  },
+  "plain": {
+    "archiveOutput": {
+      "files": [
+        {
+          "bytes": 134061,
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal01_更新.part1.zpaq"
+        },
+        {
+          "bytes": 146703,
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal01_更新.part2.zpaq"
+        },
+        {
+          "bytes": 132082,
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal01_更新.part3.zpaq"
+        },
+        {
+          "bytes": 1135,
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal01_更新.part4.zpaq"
+        }
+      ],
+      "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal01_更新.part1.zpaq",
+      "split": true,
+      "totalBytes": 413981,
+      "updateSummary": {
+        "baseSnapshots": 3,
+        "copiedBytes": 412846,
+        "inputBytes": 34,
+        "nativeParts": 4,
+        "newFragments": 1,
+        "snapshots": 4,
+        "unchanged": false,
+        "updatedEntries": 1
+      }
+    },
+    "completedAt": "2026-10-22T10:43:37.045Z",
+    "durationMs": 963,
+    "errorMessage": null,
+    "executionConfig": {
+      "archivePrefix": "资料",
+      "encryptFilenames": false,
+      "format": "zpaq",
+      "kind": "archive-conversion",
+      "level": 3,
+      "operation": "zpaq-update",
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b/journal01_更新.zpaq",
+      "passwordRequired": false,
+      "rarRecoveryPercent": 0,
+      "rarRecoveryVolumes": 0,
+      "schemaVersion": 1,
+      "sourcePasswordRequired": false,
+      "splitSize": 0,
+      "updateSources": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\本次新增.txt"
+      ],
+      "zipEncryption": "aes256",
+      "zipMethod": "deflate",
+      "zipPasswordEncoding": "utf8",
+      "zipSplitMode": "numeric"
+    },
+    "failure": null,
+    "format": "zpaq",
+    "id": "conversion-ce5d9811-1347-47dd-9c24-f5f19151559c",
+    "logs": [
+      {
+        "message": "读取原备份及历史信息。",
+        "severity": "info",
+        "timestamp": "2026-10-22T10:43:36.203043500Z"
+      },
+      {
+        "message": "复制完整原备份：412846 字节；原件保留，新增内容还需要额外空间。",
+        "severity": "info",
+        "timestamp": "2026-10-22T10:43:36.437571100Z"
+      },
+      {
+        "message": "按内容比较并追加新增/变化数据；保留未选旧条目与全部历史。",
+        "severity": "info",
+        "timestamp": "2026-10-22T10:43:36.456528100Z"
+      },
+      {
+        "message": "检查完整更新包，包括原有内容。",
+        "severity": "info",
+        "timestamp": "2026-10-22T10:43:36.559922500Z"
+      },
+      {
+        "message": "正在提交新备份。",
+        "severity": "info",
+        "timestamp": "2026-10-22T10:43:37.020045800Z"
+      },
+      {
+        "message": "新备份已完成。",
+        "severity": "info",
+        "timestamp": "2026-10-22T10:43:37.036578600Z"
+      },
+      {
+        "message": "已添加/更新 1 项，历史快照 3 → 4；未选内容保留。",
+        "severity": "success",
+        "timestamp": "2026-10-22T10:43:37.042537100Z"
+      }
+    ],
+    "metrics": null,
+    "name": "ZPAQ 增量更新 · journal01.zpaq",
+    "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal01_更新.part1.zpaq",
+    "processedBytes": 34,
+    "retryOfTaskId": "conversion-cb4731e2-ab6b-4f18-a29b-701dba30371a",
+    "sourcePaths": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\profile-final\\zpaq-sources\\0148ec918a89b78877b7bca7f4f8206a7af9e671345eb7970af0c7031a715897\\journal01.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal\\journal01.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal\\journal02.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal\\journal03.zpaq"
+    ],
+    "startedAt": "2026-10-22T10:43:36.082Z",
+    "status": "completed",
+    "taskType": "compression",
+    "totalBytes": 34,
+    "workloadKind": "archive"
+  },
+  "password": {
+    "archiveOutput": {
+      "files": [
+        {
+          "bytes": 134093,
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key01_更新.part1.zpaq"
+        },
+        {
+          "bytes": 146703,
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key01_更新.part2.zpaq"
+        },
+        {
+          "bytes": 132082,
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key01_更新.part3.zpaq"
+        },
+        {
+          "bytes": 1135,
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key01_更新.part4.zpaq"
+        }
+      ],
+      "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key01_更新.part1.zpaq",
+      "split": true,
+      "totalBytes": 414013,
+      "updateSummary": {
+        "baseSnapshots": 3,
+        "copiedBytes": 412878,
+        "inputBytes": 34,
+        "nativeParts": 4,
+        "newFragments": 1,
+        "snapshots": 4,
+        "unchanged": false,
+        "updatedEntries": 1
+      }
+    },
+    "completedAt": "2026-10-22T10:43:40.370Z",
+    "durationMs": 1168,
+    "errorMessage": null,
+    "executionConfig": {
+      "archivePrefix": "资料",
+      "encryptFilenames": false,
+      "format": "zpaq",
+      "kind": "archive-conversion",
+      "level": 3,
+      "operation": "zpaq-update",
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b/journal-key01_更新.zpaq",
+      "passwordRequired": true,
+      "rarRecoveryPercent": 0,
+      "rarRecoveryVolumes": 0,
+      "schemaVersion": 1,
+      "sourcePasswordRequired": true,
+      "splitSize": 0,
+      "updateSources": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\本次新增.txt"
+      ],
+      "zipEncryption": "aes256",
+      "zipMethod": "deflate",
+      "zipPasswordEncoding": "utf8",
+      "zipSplitMode": "numeric"
+    },
+    "failure": null,
+    "format": "zpaq",
+    "id": "conversion-0ea3fb01-44a4-47c3-8023-b3734a61affd",
+    "logs": [
+      {
+        "message": "读取原备份及历史信息。",
+        "severity": "info",
+        "timestamp": "2026-10-22T10:43:39.219455600Z"
+      },
+      {
+        "message": "复制完整原备份：412878 字节；原件保留，新增内容还需要额外空间。",
+        "severity": "info",
+        "timestamp": "2026-10-22T10:43:39.453980300Z"
+      },
+      {
+        "message": "按内容比较并追加新增/变化数据；保留未选旧条目与全部历史。",
+        "severity": "info",
+        "timestamp": "2026-10-22T10:43:39.472162700Z"
+      },
+      {
+        "message": "检查完整更新包，包括原有内容。",
+        "severity": "info",
+        "timestamp": "2026-10-22T10:43:39.720280100Z"
+      },
+      {
+        "message": "正在提交新备份。",
+        "severity": "info",
+        "timestamp": "2026-10-22T10:43:40.357441Z"
+      },
+      {
+        "message": "新备份已完成。",
+        "severity": "info",
+        "timestamp": "2026-10-22T10:43:40.364695700Z"
+      },
+      {
+        "message": "已添加/更新 1 项，历史快照 3 → 4；未选内容保留。",
+        "severity": "success",
+        "timestamp": "2026-10-22T10:43:40.368256400Z"
+      }
+    ],
+    "metrics": null,
+    "name": "ZPAQ 增量更新 · journal-key01.zpaq",
+    "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key01_更新.part1.zpaq",
+    "processedBytes": 34,
+    "retryOfTaskId": "conversion-2a75a7af-8984-4580-bc61-314d47ccda56",
+    "sourcePaths": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\profile-final\\zpaq-sources\\9b7e709b11566ce05ed305447ccc80a9a05c0987ec6a6817db221803adb1a5df\\journal-key01.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key\\journal-key01.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key\\journal-key02.zpaq",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zpaq-native-161\\2369e439-f9ea-4bd1-9cff-106240cb673b\\journal-key\\journal-key03.zpaq"
+    ],
+    "startedAt": "2026-10-22T10:43:39.202Z",
+    "status": "completed",
+    "taskType": "compression",
+    "totalBytes": 34,
+    "workloadKind": "archive"
+  },
+  "completedAt": "2026-10-22T10:43:43.002Z",
+  "temporaryGroupsLeft": []
+}

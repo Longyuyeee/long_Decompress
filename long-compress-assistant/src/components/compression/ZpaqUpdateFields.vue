@@ -3,7 +3,8 @@ import { open } from '@tauri-apps/api/dialog'
 import { ref } from 'vue'
 import type { ConversionSettings, ConversionPatch } from '@/types/archiveConversion'
 import { formatFileSize } from '@/utils'
-const props = defineProps<{ settings: ConversionSettings; disabled?: boolean; sourcePasswordRequired?: boolean; baseBytes?: number }>()
+import HelpHint from '@/components/ui/HelpHint.vue'
+const props = defineProps<{ settings: ConversionSettings; disabled?: boolean; sourcePasswordRequired?: boolean; baseBytes?: number; nativeParts?: number }>()
 const emit = defineEmits<{ update: [patch: ConversionPatch] }>()
 const selectionError = ref('')
 const name = (path: string) => path.split(/[\\/]/).pop() || path
@@ -21,7 +22,11 @@ async function choose(directory = false) {
 <template>
   <fieldset :disabled="disabled" class="min-w-0 space-y-4 disabled:opacity-60" data-testid="zpaq-update-fields">
     <p v-if="selectionError" role="alert" class="break-words text-xs text-red-500">{{ selectionError }}</p>
-    <div class="rounded-xl border border-primary/20 bg-primary/5 px-3 py-3 text-xs leading-relaxed text-muted">
+    <div v-if="nativeParts" class="rounded-xl border border-primary/20 bg-primary/5 p-3 text-xs leading-relaxed" data-testid="zpaq-native-update-mode">
+      <div class="flex flex-wrap items-center gap-2 font-semibold text-primary"><i class="pi pi-link" />另存原生多部分组 <HelpHint label="原生多部分更新说明">先复制完整原组<span v-if="baseBytes">（{{ formatFileSize(baseBytes) }}）</span>，再追加一个真实事务部分。新组独立可用，沿用原密码；不做删除同步或改密，无变化时不生成空事务。</HelpHint><span class="ml-auto rounded-full bg-input/50 px-2 py-1">{{ nativeParts }} 个原部分</span></div>
+      <p class="mt-1.5 text-muted">原件与全部历史保留；新组按“组名.part1.zpaq、part2…”保存到所选位置。</p>
+    </div>
+    <div v-else class="rounded-xl border border-primary/20 bg-primary/5 px-3 py-3 text-xs leading-relaxed text-muted">
       <p class="font-semibold text-content">另存更新包，保留原备份与全部历史快照</p>
       <p class="mt-1">先复制完整原包<span v-if="baseBytes">（{{ formatFileSize(baseBytes) }}）</span>，再比较内容，只压缩新增或变化数据。保存位置需要容纳副本和新增内容；重新分卷还需要一份切卷空间。</p>
       <p class="mt-1">更新以最新快照为基础。同路径条目会更新，其余旧内容保留；本次不做删除同步或改密。</p>
@@ -41,7 +46,7 @@ async function choose(directory = false) {
       <label class="min-w-0 space-y-1.5 text-xs">归档内位置<input :value="settings.archivePrefix || ''" data-testid="zpaq-update-prefix" class="conversion-input w-full" placeholder="留空表示备份根目录，例如 资料/项目" @input="emit('update', { archivePrefix: ($event.target as HTMLInputElement).value })" /><span class="block text-muted">例如选择“说明.txt”并填写“资料”，将更新“资料/说明.txt”。</span></label>
       <div class="min-w-0 space-y-1.5 text-xs"><label class="block">原备份密码<input :value="settings.sourcePassword" data-testid="zpaq-update-password" class="conversion-input mt-1.5 w-full" type="password" autocomplete="off" placeholder="原包未加密可留空；新包沿用原密码" @input="emit('update', { sourcePassword: ($event.target as HTMLInputElement).value })" /></label><button v-if="sourcePasswordRequired" type="button" class="text-primary hover:underline" @click="emit('update', { sourcePassword: '' })">原备份无需密码</button></div>
       <label class="min-w-0 space-y-1.5 text-xs">压缩强度 · {{ settings.level }} / 9<input type="range" min="0" max="9" :value="settings.level" class="block w-full accent-primary" data-testid="zpaq-update-level" @input="emit('update', { level: Number(($event.target as HTMLInputElement).value) })" /><span class="block text-muted">只影响本次新增数据，旧数据与快照保留。</span></label>
-      <label class="min-w-0 space-y-1.5 text-xs">新包分卷大小（MiB）<input :value="settings.splitMiB" type="number" min="0" step="any" class="conversion-input w-full" data-testid="zpaq-update-split" @change="emit('update', { splitMiB: Number(($event.target as HTMLInputElement).value) })" /><span class="block text-muted">0 为单包；其他数值生成新的数字卷，原卷组保留。</span></label>
+      <label v-if="!nativeParts" class="min-w-0 space-y-1.5 text-xs">新包分卷大小（MiB）<input :value="settings.splitMiB" type="number" min="0" step="any" class="conversion-input w-full" data-testid="zpaq-update-split" @change="emit('update', { splitMiB: Number(($event.target as HTMLInputElement).value) })" /><span class="block text-muted">0 为单包；其他数值生成新的数字卷，原卷组保留。</span></label>
     </div>
   </fieldset>
 </template>

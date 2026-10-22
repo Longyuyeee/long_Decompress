@@ -64,7 +64,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
   const active = computed(() => items.value.find(item => item.id === activeId.value))
   function effectiveSettings(item: ConversionDraft): ConversionSettings {
     const settings = item.settings || defaults.value
-    if (item.intent === 'zpaq-update') return { ...settings, format: 'zpaq', password: '', encryptFilenames: false, sourceZpaqSnapshot: undefined }
+    if (item.intent === 'zpaq-update') return { ...settings, ...(item.sourceNativeParts ? { splitMiB: 0 } : {}), format: 'zpaq', password: '', encryptFilenames: false, sourceZpaqSnapshot: undefined }
     const effective = !item.settings && item.defaultFormat ? { ...settings, format: item.defaultFormat } : { ...settings }
     if (effective.format === 'swm') return { ...effective, wimMethod: ['store','xpress','lzx'].includes(effective.wimMethod || '') ? effective.wimMethod : 'store' }
     return effective.format === 'esd' ? { ...effective, wimMethod: 'solid' } : effective
@@ -145,7 +145,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
         // Undefined is only possible in browser previews without native IPC.
         if (!group) return
         item.sourceFormat = group.archive_format?.toLowerCase() || undefined
-        if (item.intent === 'zpaq-update'&&group.format==='ZpaqNativeSplit') throw new Error('原生多部分当前可浏览、取回或转换；另存更新将在后续版本提供。')
+        item.sourceNativeParts = group.format === 'ZpaqNativeSplit' ? group.parts.length : undefined
         if (item.intent === 'zpaq-update') {
           try { item.sourceBytes = group.is_split ? group.total_size : (await invoke<{ size: number }>('get_file_info', { path: item.sourcePath }))?.size } catch { item.sourceBytes = undefined }
         }
@@ -242,9 +242,10 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     if (patch.encryptFilenames && targets.some(item => !supportsFilenameEncryption(patch.format || effectiveSettings(item).format))) {
       return '文件名加密只支持 7Z/RAR，请调整所选任务的目标格式。'
     }
-    let applied = 0, skippedSource = 0, skippedTarget = 0
+    let applied = 0, skippedSource = 0, skippedTarget = 0, skippedNative = 0
     for (const item of targets) {
       const filtered = { ...patch }, format = patch.format || effectiveSettings(item).format
+      if (item.intent === 'zpaq-update' && item.sourceNativeParts && filtered.splitMiB !== undefined) { delete filtered.splitMiB; skippedNative++ }
       if (filtered.wimMethod !== undefined && (!['wim','swm'].includes(format) || format === 'swm' && !['store','xpress','lzx'].includes(filtered.wimMethod))) delete filtered.wimMethod
       if (filtered.zipMethod !== undefined && format !== 'zip') delete filtered.zipMethod
       if (filtered.zipPasswordEncoding !== undefined && !['zip','zipx'].includes(format)) { delete filtered.zipPasswordEncoding; skippedTarget++ }
@@ -255,9 +256,15 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       if (!Object.keys(filtered).length) continue
       updateItem(item.id, filtered); applied++
     }
-    if (skippedSource || skippedTarget) batchNotice.value = `${skippedSource ? `${skippedSource} 项原包不适用读取编码或格式未确认，未修改。` : ''}${skippedTarget ? `${skippedTarget} 项目标非 ZIP/ZIPX，未修改新包编码。` : ''}`
+    if (skippedSource || skippedTarget || skippedNative) batchNotice.value = `${skippedNative ? `${skippedNative} 项原生 ZPAQ 整组按事务生成部分，不应用数字分卷大小。` : ''}${skippedSource ? `${skippedSource} 项原包不适用读取编码或格式未确认，未修改。` : ''}${skippedTarget ? `${skippedTarget} 项目标非 ZIP/ZIPX，未修改新包编码。` : ''}`
+    if (!applied && skippedNative) return batchNotice.value
     if (!applied && (sourceEncodingChanged || patch.zipPasswordEncoding !== undefined)) return '所选任务没有适用的原包读取或新包 ZIP 密码编码设置。' + batchNotice.value
     return ''
+  }
+  async function refreshPendingSources() {
+    const targets = [...pending.value]
+    for (const item of targets) queueSourceResolution(item)
+    await Promise.all(targets.map(item => sourceResolutions.get(item.id)))
   }
   function updateDefaults(patch: ConversionPatch) {
     if (busy.value || preparing.value) return
@@ -275,6 +282,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     if (item.settings) item.settings.sourceZpaqSnapshot = undefined
     item.sourcePath = path; item.sourceIssue = undefined; item.error = undefined
     item.sourceParts = undefined
+    item.sourceNativeParts = undefined
     item.sourceReference = undefined
     item.sourceFormat = undefined
     queueSourceResolution(item)
@@ -512,5 +520,5 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
     format, zipEncryption, zipPasswordEncoding, sourceZipPasswordEncoding, level, splitMiB, encryptFilenames, error, busy, task, phase,
     supportsPassword, contextIntent, contextSources, stopRequested, preparing, batchNotice, rarSupport, refreshRarSupport, effectiveSettings, outputFor, taskFor, passwordRequirements,
     addSources, chooseContextSource, selectSource, openFromExplorer, show, restore, start, cancel,
-    prepareRetry, updateItem, applySelected, updateDefaults, remove, replaceSource }
+    prepareRetry, updateItem, applySelected, updateDefaults, remove, replaceSource, refreshPendingSources }
 })

@@ -138,6 +138,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | 比较两份资料 | 资料对比 | 选择文件夹或 ZIP/完整分卷，查看候选、按需核对内容，再取回或组成新 ZIP |
 | 解压一批文件 | 解压中心 | 拖入压缩包，设置目录；常用密码可交给保险箱尝试 |
 | 打包文件和文件夹 | 压缩中心 | 按用途选兼容分享、体积优先、加密或分包方案，再微调密码、名称等参数 |
+| 继续更新 ZPAQ 备份 | 压缩中心 | 添加新资料，另存完整新包或原生多部分组，保留原件与历史 |
 | 只提取包里的几个文件 | 文件浏览器 → 打开压缩包 | 搜索并勾选条目，再解压所选内容 |
 | 不记得文件在哪个包里 | 归档资源库 → 添加资料并建索引 | 标签/收藏与保存搜索，跨包查找文件名/路径，多选后统一配置并取回 |
 | 整理 ZIP 内容 | 文件浏览器 → 打开普通 ZIP → 编辑内容 | 添加/替换、删除/改名/批量移动，复核后另存新包 |
@@ -278,7 +279,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.6.0 · 界面与操作体验升级**。双栏内浏览归档与常用文本预览，全部页面的信息收纳、四种特色主题、完整导航快捷键、动态格式统计、更新进度和关闭到托盘修正。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.0.md) · [范围与记录](long-compress-assistant/docs/UI_EXPERIENCE_FREEZE_1.6.0.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.0)。下一步 [v1.6.1 原生多部分另存增量更新](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.1.md)，仅规划。
+**v1.6.1 · 原生 ZPAQ 多部分备份继续更新**。添加新资料，另存完整独立新组，保留原件、全部旧快照和未选内容；普通包、密码包、草稿恢复、失败重试和产物清单贯通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.1.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_NATIVE_UPDATE_FREEZE_1.6.1.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.1)。下一步 [v1.6.2 中断尾部诊断与完整快照取回](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.2.md)，仅规划。
+
+**v1.6.0 · 界面与操作体验升级**。双栏内浏览归档与常用文本预览，全部页面的信息收纳、四种特色主题、完整导航快捷键、动态格式统计、更新进度和关闭到托盘修正。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.0.md) · [范围与记录](long-compress-assistant/docs/UI_EXPERIENCE_FREEZE_1.6.0.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.0)。
 
 **v1.5.64 · ZPAQ 原生多部分与旧快照取回**。明确确认来源组，普通/密码组接通浏览预览、完整检查、精确取回与快照转换，重启及失败重试保留原选择。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.64.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_NATIVE_MULTIPART_FREEZE_1.5.64.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.5.64)。原后续计划已顺延为上方 v1.6.1。
 

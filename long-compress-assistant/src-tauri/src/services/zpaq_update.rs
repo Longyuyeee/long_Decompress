@@ -7,6 +7,8 @@ use super::{compression_entries::{self, CompressionEntry}, output_publish_transa
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all="camelCase")]
 pub struct UpdateSummary {
+    #[serde(default, skip_serializing_if="Option::is_none")]
+    pub native_parts: Option<usize>,
     pub updated_entries: u64,
     pub new_fragments: u64,
     pub base_snapshots: usize,
@@ -98,7 +100,8 @@ async fn append(staged: &Path, entries: &[CompressionEntry], password: Option<&s
 
 pub async fn update(source: &Path, sources: &[String], prefix: &str, output: &Path, password: Option<&str>, level: u32, split_size: Option<u64>, flag: Arc<AtomicBool>, progress: Progress) -> Result<UpdateSummary> {
     check(&flag)?;
-    anyhow::ensure!(super::zpaq_multipart::details(source)?.is_none(),"原生多部分当前仅支持浏览、取回和转换；另存多部分更新将在后续版本提供，请先转换为新的单文件 ZPAQ");
+    let native=super::zpaq_multipart::details(source)?;
+    if native.is_some() { anyhow::ensure!(!split_size.is_some_and(|n|n>0),"原生多部分更新按事务生成新部分，无需指定数字分卷大小；请清除分卷大小后重试"); }
     anyhow::ensure!(output.is_absolute()&&output.extension().is_some_and(|e|e.to_str().is_some_and(|s|s.eq_ignore_ascii_case("zpaq"))),"新备份需要使用完整的 .zpaq 路径");
     anyhow::ensure!(!output.exists()&&super::archive_volumes::volume_paths(output)?.is_empty(),"新备份名称已存在，请另选名称");
     anyhow::ensure!(level<=9,"压缩等级应为0～9");
@@ -118,6 +121,9 @@ pub async fn update(source: &Path, sources: &[String], prefix: &str, output: &Pa
     let parent=output.parent().context("请选择新备份保存目录")?;
     let minimum=copied_bytes.checked_add(super::storage_preflight::DISK_SAFETY_RESERVE).context("备份空间需求溢出")?;
     if let Some(available)=super::storage_preflight::available_disk_space(parent) {anyhow::ensure!(available>=minimum,"复制原备份至少需要{minimum}字节，当前可用{available}字节；请更换保存位置");}
+    if let Some(group)=native {
+        return native_update::update(&source,&group,&entries,output,if old.encrypted {password}else{None},level,base_snapshots,copied_bytes,input_bytes,flag,progress).await;
+    }
     let staged=Staged(publish::staged_output_path(output,"zpaq-update")?);
     let (copy_source,copy_path,copy_flag,copy_progress)=(source.clone(),staged.0.clone(),flag.clone(),progress.clone());
     tokio::task::spawn_blocking(move||->Result<()> {
@@ -142,9 +148,16 @@ pub async fn update(source: &Path, sources: &[String], prefix: &str, output: &Pa
         check(&flag)?;notify(&progress,"publishing",0,0);publish::publish_verified_volumes(&staged.0,output,||flag.load(Ordering::Acquire))?;
     } else {check(&flag)?;notify(&progress,"publishing",0,0);publish::publish_verified_file(&staged.0,output,||flag.load(Ordering::Acquire))?;}
     notify(&progress,"completed",input_bytes,input_bytes);
-    Ok(UpdateSummary { updated_entries:result.updated_entries,new_fragments:result.new_fragments,base_snapshots,snapshots,unchanged:result.updated_entries==0,copied_bytes,input_bytes })
+    Ok(UpdateSummary { native_parts:None,updated_entries:result.updated_entries,new_fragments:result.new_fragments,base_snapshots,snapshots,unchanged:result.updated_entries==0,copied_bytes,input_bytes })
 }
+
+#[path="zpaq_native_update.rs"]
+pub(crate) mod native_update;
 
 #[cfg(test)]
 #[path="zpaq_update_1536_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path="zpaq_native_update_161_tests.rs"]
+mod native_tests;

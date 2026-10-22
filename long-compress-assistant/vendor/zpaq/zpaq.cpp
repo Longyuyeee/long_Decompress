@@ -2296,7 +2296,7 @@ int Jidac::add() {
   // update. Names come from the shared Rust entry policy, not recursive CLI
   // scanning (which would add absolute paths, ADS, or unwanted siblings).
   if (long_create && !long_update && exists(archive)) error("Long creation output already exists");
-  if (long_update && !exists(archive)) error("Long update requires an existing copied journal");
+  if (long_update && !exists(subpart(archive, 1).c_str())) error("Long update requires an existing copied journal");
 
   // Read archive or index into ht, dt, ver.
   int errors=0;

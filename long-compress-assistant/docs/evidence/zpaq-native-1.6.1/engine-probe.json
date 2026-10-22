@@ -1,0 +1,122 @@
+{
+  "engineSha256": "3d3708e1519345972b4563bc565ef44c494b542372f279d682ed95c6b2ff3809",
+  "officialSha256": "7a94b4f1d6323a758c7b0b6344036f166bff0fd44f1c3c86f05b3688023496cb",
+  "cases": [
+    {
+      "encrypted": false,
+      "writer": "official",
+      "parts": [
+        {
+          "bytes": 134061,
+          "sha256": "de68f4762fce5145632c8a32f4b7510261491f0e09768dfd7016bf768fc86c1d"
+        },
+        {
+          "bytes": 146703,
+          "sha256": "df6683551a631ac6941767b88095daa3383293f19abb75c0abf075cf0ade3f62"
+        },
+        {
+          "bytes": 132082,
+          "sha256": "62eba4c903783397ef46c1ca204cda56336ac699cc0164ac8674d1105cf2726b"
+        },
+        {
+          "bytes": 1166,
+          "sha256": "b16a599a8378397258876e108627c1662067ab504c0058540f62df7979a2fe75"
+        }
+      ],
+      "oldPartsUnchanged": true,
+      "independentSnapshots": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "encrypted": false,
+      "writer": "adapter",
+      "parts": [
+        {
+          "bytes": 134061,
+          "sha256": "de68f4762fce5145632c8a32f4b7510261491f0e09768dfd7016bf768fc86c1d"
+        },
+        {
+          "bytes": 146703,
+          "sha256": "df6683551a631ac6941767b88095daa3383293f19abb75c0abf075cf0ade3f62"
+        },
+        {
+          "bytes": 132082,
+          "sha256": "62eba4c903783397ef46c1ca204cda56336ac699cc0164ac8674d1105cf2726b"
+        },
+        {
+          "bytes": 1161,
+          "sha256": "2ee8c331d2f49cba6ef53d523b572d92a35ad453538f7937d3e7cb9edc32574b"
+        }
+      ],
+      "oldPartsUnchanged": true,
+      "independentSnapshots": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "encrypted": true,
+      "writer": "official",
+      "parts": [
+        {
+          "bytes": 134093,
+          "sha256": "eb562a887f35cbe35f1f55ae40e792eba333a4ddb4ac72f57412a94dba2c040b"
+        },
+        {
+          "bytes": 146703,
+          "sha256": "ddc9c7cc32928aa40c0eab95ed9d93ef4c5c3e83a6d67e4798b2509b0012a7da"
+        },
+        {
+          "bytes": 132082,
+          "sha256": "d44e1c2b15745032dfe4e59ae19e1342a51a519d60595d9d55c6acc57e22e09b"
+        },
+        {
+          "bytes": 1166,
+          "sha256": "3966b38191c604975978775436837058845f4d41b35f3b5b867b7d54bd204dc2"
+        }
+      ],
+      "oldPartsUnchanged": true,
+      "independentSnapshots": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "encrypted": true,
+      "writer": "adapter",
+      "parts": [
+        {
+          "bytes": 134093,
+          "sha256": "eb562a887f35cbe35f1f55ae40e792eba333a4ddb4ac72f57412a94dba2c040b"
+        },
+        {
+          "bytes": 146703,
+          "sha256": "ddc9c7cc32928aa40c0eab95ed9d93ef4c5c3e83a6d67e4798b2509b0012a7da"
+        },
+        {
+          "bytes": 132082,
+          "sha256": "d44e1c2b15745032dfe4e59ae19e1342a51a519d60595d9d55c6acc57e22e09b"
+        },
+        {
+          "bytes": 1161,
+          "sha256": "aa251367049854ea65bea0f33d6465d9a54632c227c1777527bdb162fc909fac"
+        }
+      ],
+      "oldPartsUnchanged": true,
+      "independentSnapshots": [
+        1,
+        2,
+        3,
+        4
+      ]
+    }
+  ]
+}

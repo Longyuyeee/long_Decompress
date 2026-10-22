@@ -35,9 +35,8 @@ async fn snapshots(encrypted:bool){
  let extra=t.path().join("journal-key04.zpaq");fs::write(extra,b"not a confirmed part").unwrap();assert_eq!(native::inspect(&source).unwrap().unwrap().parts.len(),3);
  let mut file=fs::OpenOptions::new().append(true).open(&parts[2]).unwrap();use std::io::Write;file.write_all(b"changed").unwrap();assert!(engine::browse_at(&source,Some(&key),Some(&old),flag()).await.unwrap_err().to_string().contains("changed"));assert!(super::image_reader::check_source(&source,&version).is_err());
 }
-#[tokio::test]async fn zpaq1564_explicit_single_is_independent_and_native_updates_are_deferred(){
+#[tokio::test]async fn zpaq1564_explicit_single_is_independent(){
  let t=tempfile::tempdir().unwrap();let(_,parts)=originals(t.path(),false);let mut group=native::suggest(&parts[0]).unwrap().unwrap();group.members.truncate(1);let source=native::confirm(&t.path().join("profile"),group).unwrap();let browse=engine::browse(&source,None,flag()).await.unwrap();assert_eq!(browse.zpaq_history.unwrap().snapshots.len(),1);
- let e=super::zpaq_update::update(&source,&[],"",&t.path().join("new.zpaq"),None,1,None,flag(),Arc::new(|_|{})).await.unwrap_err().to_string();assert!(e.contains("原生多部分"));assert!(!t.path().join("new.zpaq").exists());
 }
 
 #[tokio::test]async fn zpaq1564_date_named_independent_backups_remain_readable(){let t=tempfile::tempdir().unwrap();for day in [20261021,20261022]{let p=t.path().join(format!("backup{day}.zpaq"));fs::copy(root().join("journal01.zpaq"),&p).unwrap();assert!(native::suggest(&p).unwrap().is_none());assert_eq!(engine::browse(&p,None,flag()).await.unwrap().zpaq_history.unwrap().snapshots.len(),1);}}
