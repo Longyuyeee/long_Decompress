@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { ref } from 'vue'
 import { useWorkflowAutomationStore } from '@/stores/workflowAutomation'
 import { useWorkflowStore } from '@/stores/workflows'
@@ -15,7 +16,7 @@ const recent=(id:string)=>records(id)[0]
    <button class="rule-toggle" :data-schedule-toggle="rule.id" :aria-expanded="expanded===rule.id" @click="expanded=expanded===rule.id?'':rule.id"><i class="pi pi-clock"/><span class="label"><strong>{{ rule.name }}</strong><small>{{ workflowScheduleLabel(rule) }}</small><small class="next">{{ rule.enabled?'下次：'+format(rule.nextAt):'定时已暂停' }}</small><small v-if="recent(rule.id)">最近：{{ workflowQueueStatuses[recent(rule.id)!.state] }}</small></span><span class="badge">{{ rule.enabled?'已启用':'已暂停' }}</span><i :class="expanded===rule.id?'pi pi-chevron-up':'pi pi-chevron-down'"/></button>
    <div v-if="expanded===rule.id" class="details" :data-schedule-details="rule.id"><dl><dt>使用方案</dt><dd>{{ workflow.plans.find(p=>p.id===rule.planId)?.name||'原方案已删除' }}</dd><dt>固定来源</dt><dd v-for="path in rule.paths" :key="path">{{ path }}</dd><dt>保存位置</dt><dd>{{ rule.outputDirectory }}</dd><dt>同方案忙碌时</dt><dd>{{ rule.busyPolicy==='queue'?'排队等候':'跳过本次并保留记录' }}；相同方案及来源不重复加入。</dd></dl><p v-if="rule.note" class="failure">{{ rule.note }}</p>
     <div class="buttons"><button class="button" :disabled="automation.saving" :data-schedule-run="rule.id" @click="automation.scheduleAction(rule.id,'run');automation.tick()">立即运行</button><button class="button" :disabled="automation.saving" :data-schedule-enabled="rule.id" @click="automation.scheduleAction(rule.id,rule.enabled?'pause':'enable')">{{ rule.enabled?'暂停定时':'启用定时' }}</button><button class="button" :data-schedule-edit="rule.id" @click="emit('edit',rule)">编辑</button><button class="button" :data-schedule-credentials="rule.id" @click="emit('credentials',rule)">本次密码</button><button class="link" @click="automation.forget(rule.id)">清除本次密码</button><button class="link" @click="emit('remove',rule.id)">删除规则</button></div>
-    <p class="muted">暂停只控制未来定时；已排队的项随之等待，主动选择的立即运行或补跑仍可执行。</p>
+    <span class="context-help"><HelpHint label="暂停定时规则说明">暂停只控制未来定时；已排队的项随之等待，主动选择的立即运行或补跑仍可执行。</HelpHint></span>
     <div v-if="records(rule.id).length" class="history"><h4>最近记录</h4><div v-for="item in records(rule.id).slice(0,5)" :key="item.id" class="history-row"><span>{{ format(item.scheduledAt||item.createdAt) }} · {{ workflowQueueStatuses[item.state] }}</span><button v-if="item.runId" class="link" @click="emit('open',item.runId)">查看运行与结果</button></div></div>
    </div>
   </article>

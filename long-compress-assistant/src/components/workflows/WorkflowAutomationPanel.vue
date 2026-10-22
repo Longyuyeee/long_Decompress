@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { computed,onMounted,onUnmounted,ref,watch } from 'vue'
 import { useWorkflowAutomationStore } from '@/stores/workflowAutomation'
 import { useWorkflowStore } from '@/stores/workflows'
@@ -32,7 +33,7 @@ function ruleCredentials(rule:WorkflowDirectoryRule){const item=sample(rule);if(
 </script>
 <template>
  <section class="automation" data-testid="workflow-automation-panel">
-  <header class="automation-heading"><div><h2>自动化</h2><p class="muted">按时间或目录变化触发已保存的方案。</p></div><div class="buttons"><button class="button" data-testid="workflow-queue-pause" :disabled="automation.saving" @click="automation.pause(!automation.paused)"><i :class="automation.paused?'pi pi-play':'pi pi-pause'"/>{{ automation.paused?'继续队列':'暂停队列' }}</button><button class="button primary" data-testid="workflow-schedule-new" :disabled="!workflow.plans.length" @click="automation.error='';ruleTab='schedule';scheduleEditor={}"><i class="pi pi-clock"/>添加定时规则</button><button class="button" data-testid="workflow-rule-new" :disabled="!workflow.plans.length" @click="edit()"><i class="pi pi-plus"/>添加目录规则</button></div></header>
+  <header class="automation-heading"><div><div class="flex items-center gap-2"><h2>自动化</h2><HelpHint label="自动化说明">按时间或目录变化触发已保存的方案。应用需保持运行或托盘驻留。</HelpHint></div></div><div class="buttons"><button class="button" data-testid="workflow-queue-pause" :disabled="automation.saving" @click="automation.pause(!automation.paused)"><i :class="automation.paused?'pi pi-play':'pi pi-pause'"/>{{ automation.paused?'继续队列':'暂停队列' }}</button><button class="button primary" data-testid="workflow-schedule-new" :disabled="!workflow.plans.length" @click="automation.error='';ruleTab='schedule';scheduleEditor={}"><i class="pi pi-clock"/>添加定时规则</button><button class="button" data-testid="workflow-rule-new" :disabled="!workflow.plans.length" @click="edit()"><i class="pi pi-plus"/>添加目录规则</button></div></header>
   <p v-if="!workflow.plans.length" class="notice">先保存一套方案，再添加目录或定时规则；原来的监控草稿仍保留原行为。</p>
   <p v-if="automation.paused" class="notice" role="status">队列已暂停启动新工作流。来源仍会观察，正在运行的工作流继续处理。</p>
   <p v-if="automation.error" class="notice failure" data-testid="workflow-automation-error" role="alert">{{ automation.error }}<button class="link ml-3" @click="automation.error='';automation.tick()">重新观察</button></p>

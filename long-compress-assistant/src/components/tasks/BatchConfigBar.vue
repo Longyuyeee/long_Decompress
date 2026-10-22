@@ -121,7 +121,7 @@ function apply() {
       <p v-if="format === 'tar.lz'" class="text-xs text-muted">TAR.LZIP 无密码加密；保留各自的数字分卷设置，接收方需集齐全部卷。</p>
       <p v-if="format === 'lzma'" class="text-xs text-muted" data-testid="batch-lzma-hint">每条任务需是一个普通文件；保留各自分卷，关闭不适用的密码和文件名加密。目录或多文件请选择 TAR 组合。</p>
       <p v-if="['tar.lzma', 'lzma.aes', 'tar.lzma.aes'].includes(format)" class="text-xs leading-relaxed text-muted" data-testid="batch-lzma-combination-hint">{{ format === 'tar.lzma' ? '适合目录和多个文件；保留各自分卷，关闭不适用的加密。需要密码请选择 TAR.LZMA.AES。' : `${format === 'lzma.aes' ? '每条任务需是一个普通文件。' : '适合目录和多个文件。'}保留各自密码和分卷；未设置密码的任务请展开后填写。接收方需使用 Long解压 v1.5.24 或更新版本。` }}</p>
-      <p class="text-xs leading-relaxed text-muted">只修改下面指定的项目，其他配置保持各自原值。</p>
+      <span class="context-help"><HelpHint label="多选配置说明">只修改下面指定的项目，其他配置保持各自原值。</HelpHint></span>
       <div class="grid min-w-0 gap-3 sm:grid-cols-2">
         <label v-if="mode === 'compression'" class="min-w-0 space-y-1.5 text-xs text-muted">压缩格式 <HelpHint v-if="format === 'zipx'" label="ZIPX 分卷说明">ZIPX 使用 XZ，支持数字卷和 .zx01/…/.zipx 标准卷；卷型沿用各自设置。</HelpHint>
           <ThemedSelect v-model="format" :options="formats" aria-label="批量压缩格式" test-id="batch-format" floating />

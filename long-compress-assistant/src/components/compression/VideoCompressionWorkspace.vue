@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineProps<{ toolbarTarget?: string }>()
 import ResultActions from '@/components/tasks/ResultActions.vue'
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
 import { useSavedLocations } from '@/composables/useSavedLocations'
@@ -244,13 +245,13 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
 
 <template>
   <section class="video-workspace" data-testid="video-compression-workspace">
-    <div class="workspace-toolbar">
+    <Teleport defer :to="toolbarTarget || 'body'" :disabled="!toolbarTarget"><div class="workspace-toolbar">
       <div class="toolbar-actions">
         <button type="button" class="secondary-action" :aria-expanded="showGlobalSettings" data-testid="video-toggle-global-settings" @click="openGlobalSettings"><i class="pi pi-sliders-h"></i>批量设置</button>
         <button v-if="isRunning" type="button" class="danger-action" @click="cancelVideoCompression"><i class="pi pi-stop-circle"></i>取消视频压缩</button>
         <button v-else type="button" class="primary-action" :disabled="!canStart" @click="startVideoCompression"><i class="pi pi-play-circle"></i>开始视频压缩</button>
       </div>
-    </div>
+    </div></Teleport>
 
     <div v-if="store.videoItems.length === 0" class="video-empty">
       <EnhancedFileDropzone
@@ -259,7 +260,7 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
         picker-title="选择视频文件"
         unfiltered-picker
         hint="拖入需要分析的视频"
-        sub-hint="以真实容器探测结果为准，不按扩展名假定可处理"
+        sub-hint="支持 MP4、MOV、MKV 等常见视频"
         @files-selected="onFilesSelected"
       />
     </div>
@@ -281,7 +282,7 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
 
         <template v-if="item.plan && item.expanded">
           <div class="facts-grid">
-            <div><span>输入事实</span><strong>{{ item.plan.probe.primaryVideo.visibleWidth }}×{{ item.plan.probe.primaryVideo.visibleHeight }}</strong><small>编码矩阵 {{ item.plan.probe.primaryVideo.encodedWidth }}×{{ item.plan.probe.primaryVideo.encodedHeight }} · 旋转 {{ item.plan.probe.primaryVideo.rotationDegrees }}°</small></div>
+            <div><span>原视频</span><strong>{{ item.plan.probe.primaryVideo.visibleWidth }}×{{ item.plan.probe.primaryVideo.visibleHeight }}</strong><small>编码矩阵 {{ item.plan.probe.primaryVideo.encodedWidth }}×{{ item.plan.probe.primaryVideo.encodedHeight }} · 旋转 {{ item.plan.probe.primaryVideo.rotationDegrees }}°</small></div>
             <div><span>时长与帧率</span><strong>{{ formatDuration(item.plan.probe.durationMs) }}</strong><small>{{ frameRateLabel(item) }}</small></div>
             <div><span>流</span><strong>{{ item.plan.probe.primaryVideo.codec || '未知视频编码' }} · {{ item.plan.probe.audioStreams.length }} 音轨</strong><small>{{ item.plan.probe.subtitleStreams.length }} 字幕 · {{ item.plan.probe.chapterCount }} 章节 · {{ item.plan.probe.attachedPictureCount }} 封面</small></div>
             <div class="estimate"><span>预计输出 · 估算</span><strong>{{ formatBytes(item.plan.estimatedOutput.lowBytes) }}—{{ formatBytes(item.plan.estimatedOutput.highBytes) }}</strong><small>{{ item.plan.outputWidth }}×{{ item.plan.outputHeight }} · {{ (item.plan.targetVideoBitRate / 1_000_000).toFixed(2) }} Mbps 视频</small></div>
@@ -301,7 +302,7 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
           <VideoCompressionSettingsPanel v-if="item.settings" :model-value="item.settings" @update:model-value="updateItemSettings(item, $event)" />
           <p v-else>当前跟随批量配置：质量 {{ store.getEffectiveVideoSettings(item).quality }}，{{ store.getEffectiveVideoSettings(item).maxWidth ? `最大 ${store.getEffectiveVideoSettings(item).maxWidth}×${store.getEffectiveVideoSettings(item).maxHeight}` : '保持原尺寸' }}。</p>
           <div v-if="taskForItem(item)" class="execution-facts">
-            <div><span>执行阶段</span><strong>{{ taskForItem(item)!.stage || videoStatus(item) }}</strong><small v-if="taskForItem(item)!.heartbeatSecondsSinceProgress !== undefined">仍在编码 · {{ taskForItem(item)!.heartbeatSecondsSinceProgress }} 秒前收到真实进度</small></div>
+            <div><span>执行阶段</span><strong>{{ taskForItem(item)!.stage || videoStatus(item) }}</strong><small v-if="taskForItem(item)!.heartbeatSecondsSinceProgress !== undefined">仍在编码 · {{ taskForItem(item)!.heartbeatSecondsSinceProgress }} 秒前更新进度</small></div>
             <div><span>媒体时间</span><strong>{{ formatDuration(taskForItem(item)!.currentTimeMs || 0) }}</strong><small>{{ taskForItem(item)!.speed || '等待速度样本' }} · ETA {{ formatEta(taskForItem(item)!.etaSeconds) }}</small></div>
             <div><span>{{ taskForItem(item)!.outputBytesEstimated ? '临时输出' : '最终输出' }}</span><strong>{{ formatBytes(taskForItem(item)!.outputBytes || 0) }}</strong><small>{{ taskForItem(item)!.outputToInputRatio === undefined ? '等待真实比例' : `输入的 ${(taskForItem(item)!.outputToInputRatio! * 100).toFixed(1)}%` }}</small></div>
             <ResultActions v-if="taskForItem(item)!.status === 'completed'" :path="taskForItem(item)!.outputPath" />
@@ -313,7 +314,7 @@ const playResultWithDefaultApplication = async (item: VideoCompressionItem) => {
       <EnhancedFileDropzone compact mode="file" accept="mp4,mov,avi,wmv,webm,mkv,m4v" unfiltered-picker hint="继续添加视频" @files-selected="onFilesSelected" />
     </div>
 
-    <Modal :visible="showGlobalSettings" size="lg" title="视频批量设置" description="质量与分辨率分别控制" icon="pi pi-sliders-h" @update:visible="showGlobalSettings = $event" @close="cancelGlobalSettings">
+    <Modal :visible="showGlobalSettings" size="lg" title="视频批量设置" description="质量与分辨率分别控制" description-as-help icon="pi pi-sliders-h" @update:visible="showGlobalSettings = $event" @close="cancelGlobalSettings">
       <div class="special-settings-dialog" :class="{ locked: isRunning }">
         <VideoCompressionSettingsPanel :model-value="videoSettingsDraft" @update:model-value="updateGlobalSettings" />
         <SavedLocationPicker :current="videoOutputDirectoryDraft" :disabled="isRunning" @select="videoOutputDirectoryDraft = $event" />

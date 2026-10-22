@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import HelpHint from '@/components/ui/HelpHint.vue'
 import {computed,ref} from 'vue'
 import Modal from '@/components/ui/Modal.vue'
 import ZipPasswordEncodingField from '@/components/ui/ZipPasswordEncodingField.vue'
@@ -15,7 +16,7 @@ async function choose(entry:PasswordEntry){try{emit('update:password',await vaul
  <fieldset :disabled="disabled" class="min-w-0 space-y-3">
   <label class="block text-xs text-muted">本次 ZIP 密码<div class="mt-2 flex min-w-0 gap-2"><input :value="password" type="password" autocomplete="off" class="control min-w-0 flex-1" :data-testid="testId" placeholder="输入密码，或从保险箱选择" @input="emit('update:password',($event.target as HTMLInputElement).value)"><button class="control text-primary" :data-testid="testId+'-vault'" type="button" @click="openVault">保险箱</button></div></label>
   <ZipPasswordEncodingField :model-value="encoding" :disabled="disabled" :test-id="testId+'-encoding'" @update:model-value="emit('update:encoding',$event)"/>
-  <p class="text-xs leading-relaxed text-muted">密码仅用于本次会话；草稿和历史保留所选范围，重启后重新填写。</p>
+  <span class="context-help"><HelpHint label="密码使用说明">密码仅用于本次会话；草稿和历史保留所选范围，重启后重新填写。</HelpHint></span>
  </fieldset>
  <Modal v-model:visible="picker" title="从密码保险箱选择" size="sm" layer="nested" cancel-text="返回密码设置">
   <input v-model="query" class="control mb-3 w-full" placeholder="搜索密码名称或标签" aria-label="搜索保险箱">

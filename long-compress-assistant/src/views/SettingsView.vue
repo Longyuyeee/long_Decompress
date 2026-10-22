@@ -6,6 +6,7 @@ import { useTauriCommands } from '@/composables/useTauriCommands'
 import { useArchiveEngine } from '@/composables/useArchiveEngine'
 import { FORMAT_CAPABILITIES } from '@/utils/compressionFormat'
 import AccessibilitySettings from '@/components/settings/AccessibilitySettings.vue'
+import WorkspaceHeader from '@/components/ui/WorkspaceHeader.vue'
 import HelpHint from '@/components/ui/HelpHint.vue'
 import { useUpdateStore } from '@/stores/update'
 
@@ -14,6 +15,18 @@ const updateStore = useUpdateStore()
 const tauriCommands = useTauriCommands()
 const { capabilities: archiveEngine, loading: archiveEngineLoading, refresh: refreshArchiveEngine } = useArchiveEngine()
 const showResetConfirm = ref(false)
+const settingsSection = ref('appearance')
+const settingsScroll = ref<HTMLElement>()
+const settingsSections = [
+  { id:'appearance', label:'外观', icon:'pi pi-palette' },
+  { id:'accessibility', label:'辅助显示', icon:'pi pi-eye' },
+  { id:'processing', label:'压缩与解压', icon:'pi pi-sliders-h' },
+  { id:'behavior', label:'行为', icon:'pi pi-cog' },
+  { id:'updates', label:'软件更新', icon:'pi pi-refresh' },
+  { id:'formats', label:'格式支持', icon:'pi pi-box' },
+]
+const selectSettings = (section: string) => { settingsSection.value = section; settingsScroll.value?.scrollTo?.({ top:0 }) }
+
 const rarEncoder = ref<{ available: boolean; message: string } | null>(null)
 const currentVersion = ref('—')
 const diagnosticsLoading = computed(() => archiveEngineLoading.value)
@@ -185,19 +198,18 @@ const removeWordlist = (index: number) => {
 
 <template>
   <div class="settings-view flex flex-col transition-colors duration-700 overflow-hidden">
-    <header class="shrink-0">
-      <h1 class="text-4xl font-black text-content tracking-tighter mb-2">{{ appStore.t('settings.title') }}</h1>
-      <p class="text-muted text-sm font-bold uppercase tracking-[0.3em] ml-1">{{ appStore.t('settings.subtitle') }}</p>
-    </header>
+    <WorkspaceHeader :title="appStore.t('settings.title')" icon="pi pi-cog">
+      <button class="settings-reset-action" @click="showResetConfirm=true"><i class="pi pi-replay"/>恢复默认</button>
+      <template #navigation><nav class="module-tabs settings-tabs" aria-label="设置分类"><button v-for="section in settingsSections" :key="section.id" :data-settings-section="section.id" :class="{active:settingsSection===section.id}" :aria-pressed="settingsSection===section.id" @click="selectSettings(section.id)"><i :class="section.icon"/>{{section.label}}</button></nav></template>
+    </WorkspaceHeader>
 
-    <div class="settings-scroll flex-1 overflow-y-auto custom-scrollbar">
+    <div ref="settingsScroll" class="settings-scroll flex-1 overflow-y-auto custom-scrollbar">
       <div class="settings-content">
         <!-- 外观：标签与控件对齐，窄窗口自动单列 -->
-        <section class="aero-card settings-appearance">
+        <section v-show="settingsSection==='appearance'" data-settings-panel="appearance" class="aero-card settings-appearance">
           <div class="settings-group">
             <div class="settings-group-heading">
-              <h2 class="text-base font-black text-content uppercase tracking-widest">{{ appStore.t('settings.appearance') }}</h2>
-              <p class="text-sm text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('settings.appearance.desc') }}</p>
+              <div class="flex items-center gap-2"><h2 class="text-base font-black text-content uppercase tracking-widest">{{ appStore.t('settings.appearance') }}</h2><HelpHint :label="appStore.t('settings.appearance')">{{ appStore.t('settings.appearance.desc') }}</HelpHint></div>
             </div>
             
             <div class="settings-group-body">
@@ -255,7 +267,7 @@ const removeWordlist = (index: number) => {
                 <div class="flex justify-between items-center">
                   <div>
                     <span class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.ui_scale') }}</span>
-                    <div class="text-xs text-muted mt-0.5">{{ appStore.t('settings.ui_scale.desc') }}</div>
+                    <HelpHint label="设置说明">{{ appStore.t('settings.ui_scale.desc') }}</HelpHint>
                   </div>
                   <span class="px-2 py-0.5 rounded-lg bg-primary/10 border border-primary/20 text-primary text-sm font-black font-mono">
                     {{ appStore.settings.uiScale }}%
@@ -278,11 +290,10 @@ const removeWordlist = (index: number) => {
         </section>
 
         <!-- 可访问性设置 -->
-        <section class="aero-card">
+        <section v-show="settingsSection==='accessibility'" data-settings-panel="accessibility" class="aero-card">
           <div class="settings-group">
             <div class="settings-group-heading">
-              <h2 class="text-base font-black text-content uppercase tracking-widest">{{ appStore.t('accessibility.title') }}</h2>
-              <p class="text-sm text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('accessibility.subtitle') }}</p>
+              <div class="flex items-center gap-2"><h2 class="text-base font-black text-content uppercase tracking-widest">{{ appStore.t('accessibility.title') }}</h2><HelpHint :label="appStore.t('accessibility.title')">{{ appStore.t('accessibility.subtitle') }}</HelpHint></div>
             </div>
 
             <div class="settings-group-body">
@@ -292,11 +303,11 @@ const removeWordlist = (index: number) => {
         </section>
 
         <!-- 核心功能：常规与性能 -->
-        <div class="settings-performance-grid">
-          <section class="aero-card">
+        <div v-show="settingsSection==='processing' || settingsSection==='behavior'" class="settings-performance-grid">
+          <section v-show="settingsSection==='processing'" data-settings-panel="processing" class="aero-card">
             <h2 class="text-sm font-black text-primary uppercase tracking-[0.3em] mb-8">{{ appStore.t('settings.performance') }}</h2>
             <div class="space-y-6">
-              <button
+              <div class="settings-switch-row"><button
                 type="button"
                 role="switch"
                 data-testid="auto-start-switch"
@@ -308,12 +319,12 @@ const removeWordlist = (index: number) => {
               >
                 <div class="min-w-0">
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.performance.auto_start') }}</div>
-                  <div class="text-xs text-muted mt-1 leading-5">{{ appStore.t('settings.performance.auto_start.desc') }}</div>
+
                 </div>
                 <div class="settings-toggle-track shrink-0" :class="{ 'is-on': appStore.settings.autoStart }">
                   <span class="settings-toggle-knob"></span>
                 </div>
-              </button>
+              </button><HelpHint :label="appStore.t('settings.performance.auto_start')+'说明'">{{ appStore.t('settings.performance.auto_start.desc') }}</HelpHint></div>
 
               <!-- 并行线程设置 -->
               <div class="space-y-4 pt-6 border-t border-subtle">
@@ -331,13 +342,13 @@ const removeWordlist = (index: number) => {
                   @change="validateAndUpdateThreads(appStore.settings.maxConcurrentTasks)"
                   class="w-full h-1.5 bg-input border border-subtle rounded-full appearance-none cursor-pointer accent-primary"
                 />
-                <div class="text-xs text-muted uppercase tracking-tighter">{{ appStore.t('settings.performance.threads.desc') }}</div>
+                <HelpHint label="归档默认设置说明">{{ appStore.t('settings.performance.threads.desc') }}</HelpHint>
               </div>
 
               <div class="space-y-4 pt-6 border-t border-subtle" data-testid="archive-default-settings">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.archive_defaults') }}</div>
-                  <div class="text-xs text-muted mt-1 leading-5">{{ appStore.t('settings.archive_defaults.desc') }}</div>
+                  <HelpHint label="归档默认设置说明">{{ appStore.t('settings.archive_defaults.desc') }}</HelpHint>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                   <label class="space-y-1.5 text-xs font-bold text-muted">
@@ -362,7 +373,7 @@ const removeWordlist = (index: number) => {
                     />
                   </label>
                 </div>
-                <button
+                <div class="settings-switch-row"><button
                   type="button"
                   role="switch"
                   :aria-checked="appStore.settings.defaultExtractToSubfolder"
@@ -371,44 +382,44 @@ const removeWordlist = (index: number) => {
                 >
                   <div class="min-w-0">
                     <div class="text-xs font-bold text-content">{{ appStore.t('settings.archive_defaults.subfolder') }}</div>
-                    <div class="text-xs text-muted mt-1">{{ appStore.t('settings.archive_defaults.subfolder.desc') }}</div>
+
                   </div>
                   <div class="settings-toggle-track shrink-0" :class="{ 'is-on': appStore.settings.defaultExtractToSubfolder }">
                     <span class="settings-toggle-knob"></span>
                   </div>
-                </button>
+                </button><HelpHint :label="appStore.t('settings.archive_defaults.subfolder')+'说明'">{{ appStore.t('settings.archive_defaults.subfolder.desc') }}</HelpHint></div>
               </div>
             </div>
           </section>
 
-          <section class="aero-card">
-            <button type="button" role="switch" data-testid="smart-directory-switch"
+          <section v-show="settingsSection==='processing'" data-settings-panel="processing" class="aero-card">
+            <div class="settings-switch-row"><button type="button" role="switch" data-testid="smart-directory-switch"
               :aria-checked="appStore.settings.smartExtractionDirectory"
               class="w-full flex items-center justify-between gap-4 text-left"
               @click="appStore.updateSettings({ smartExtractionDirectory: !appStore.settings.smartExtractionDirectory })">
               <div class="min-w-0">
                 <div class="text-sm font-bold text-content">{{ appStore.t('settings.smart_directory') }}</div>
-                <p class="text-xs text-muted mt-2">{{ appStore.t('settings.smart_directory.desc') }}</p>
+
               </div>
               <div class="settings-toggle-track shrink-0" :class="{ 'is-on': appStore.settings.smartExtractionDirectory }"><span class="settings-toggle-knob"></span></div>
-            </button>
+            </button><HelpHint :label="appStore.t('settings.smart_directory')+'说明'">{{ appStore.t('settings.smart_directory.desc') }}</HelpHint></div>
           </section>
 
-          <section class="aero-card">
-            <button type="button" role="switch" data-testid="parallel-zip-switch"
+          <section v-show="settingsSection==='processing'" data-settings-panel="processing" class="aero-card">
+            <div class="settings-switch-row"><button type="button" role="switch" data-testid="parallel-zip-switch"
               :aria-checked="appStore.settings.parallelZipExtraction"
               class="w-full flex items-center justify-between gap-4 text-left"
               @click="appStore.updateSettings({ parallelZipExtraction: !appStore.settings.parallelZipExtraction })">
               <div class="min-w-0">
                 <div class="text-sm font-bold text-content">{{ appStore.t('settings.parallel_zip') }}</div>
-                <p class="text-xs text-muted mt-2">{{ appStore.t('settings.parallel_zip.desc') }}</p>
+
               </div>
               <div class="settings-toggle-track shrink-0" :class="{ 'is-on': appStore.settings.parallelZipExtraction }"><span class="settings-toggle-knob"></span></div>
-            </button>
+            </button><HelpHint :label="appStore.t('settings.parallel_zip')+'说明'">{{ appStore.t('settings.parallel_zip.desc') }}</HelpHint></div>
           </section>
 
           <!-- 暴力破解引擎设置 -->
-          <section class="aero-card">
+          <section v-show="settingsSection==='processing'" data-settings-panel="processing" class="aero-card">
             <div class="flex justify-between items-center mb-8">
               <h2 class="text-sm font-black text-muted uppercase tracking-[0.3em]">{{ appStore.t('settings.bruteforce') }}</h2>
               <button type="button" role="switch" :aria-checked="appStore.settings.enableBruteForce" :aria-label="appStore.t('settings.bruteforce')" class="settings-toggle-track cursor-pointer"
@@ -444,18 +455,18 @@ const removeWordlist = (index: number) => {
             </div>
           </section>
           <!-- 行为设置 -->
-          <section class="aero-card settings-behavior">
+          <section v-show="settingsSection==='behavior'" data-settings-panel="behavior" class="aero-card settings-behavior">
             <h2 class="text-sm font-black text-primary uppercase tracking-[0.3em] mb-6">{{ appStore.t('settings.behavior') }}</h2>
             <div class="settings-behavior-options">
-              <button type="button" role="switch" :aria-checked="appStore.settings.closeToTray" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ closeToTray: !appStore.settings.closeToTray })">
+              <div class="settings-switch-row"><button type="button" role="switch" :aria-checked="appStore.settings.closeToTray" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ closeToTray: !appStore.settings.closeToTray })">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.close_to_tray') }}</div>
-                  <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.close_to_tray.desc') }}</div>
+
                 </div>
                 <div class="settings-toggle-track" :class="{ 'is-on': appStore.settings.closeToTray }">
                   <span class="settings-toggle-knob"></span>
                 </div>
-              </button>
+              </button><HelpHint :label="appStore.t('settings.behavior.close_to_tray')+'说明'">{{ appStore.t('settings.behavior.close_to_tray.desc') }}</HelpHint></div>
               <button type="button" role="switch" :aria-checked="appStore.settings.autoDeleteSource" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ autoDeleteSource: !appStore.settings.autoDeleteSource })">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.auto_delete') }}</div>
@@ -465,43 +476,42 @@ const removeWordlist = (index: number) => {
                   <span class="settings-toggle-knob"></span>
                 </div>
               </button>
-              <button type="button" role="switch" data-testid="preserve-mark-of-web-switch" :aria-checked="appStore.settings.preserveMarkOfWeb" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ preserveMarkOfWeb: !appStore.settings.preserveMarkOfWeb })">
+              <div class="settings-switch-row"><button type="button" role="switch" data-testid="preserve-mark-of-web-switch" :aria-checked="appStore.settings.preserveMarkOfWeb" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ preserveMarkOfWeb: !appStore.settings.preserveMarkOfWeb })">
                 <div class="min-w-0 pr-4">
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.preserve_motw') }}</div>
-                  <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.preserve_motw.desc') }}</div>
+
                 </div>
                 <div class="settings-toggle-track shrink-0" :class="{ 'is-on': appStore.settings.preserveMarkOfWeb }">
                   <span class="settings-toggle-knob"></span>
                 </div>
-              </button>
-              <button type="button" role="switch" :aria-checked="appStore.settings.savePasswords" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ savePasswords: !appStore.settings.savePasswords })">
+              </button><HelpHint :label="appStore.t('settings.behavior.preserve_motw')+'说明'">{{ appStore.t('settings.behavior.preserve_motw.desc') }}</HelpHint></div>
+              <div class="settings-switch-row"><button type="button" role="switch" :aria-checked="appStore.settings.savePasswords" class="w-full flex items-center justify-between group cursor-pointer text-left" @click="appStore.updateSettings({ savePasswords: !appStore.settings.savePasswords })">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.save_passwords') }}</div>
-                  <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.save_passwords.desc') }}</div>
+
                 </div>
                 <div class="settings-toggle-track" :class="{ 'is-on': appStore.settings.savePasswords }">
                   <span class="settings-toggle-knob"></span>
                 </div>
-              </button>
-              <button v-if="contextMenuSupported" type="button" role="switch" :aria-checked="appStore.settings.contextMenuEnabled" :disabled="contextMenuBusy" class="w-full flex items-center justify-between group cursor-pointer text-left disabled:opacity-60" @click="toggleContextMenu">
+              </button><HelpHint :label="appStore.t('settings.behavior.save_passwords')+'说明'">{{ appStore.t('settings.behavior.save_passwords.desc') }}</HelpHint></div>
+              <div class="settings-switch-row"><button v-if="contextMenuSupported" type="button" role="switch" :aria-checked="appStore.settings.contextMenuEnabled" :disabled="contextMenuBusy" class="w-full flex items-center justify-between group cursor-pointer text-left disabled:opacity-60" @click="toggleContextMenu">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.behavior.context_menu') }}</div>
-                  <div class="text-xs text-muted mt-1 uppercase tracking-tighter">{{ appStore.t('settings.behavior.context_menu.desc') }}</div>
+
                 </div>
                 <div class="settings-toggle-track" :class="{ 'is-on': appStore.settings.contextMenuEnabled }">
                   <span class="settings-toggle-knob"></span>
                 </div>
-              </button>
+              </button><HelpHint :label="appStore.t('settings.behavior.context_menu')+'说明'">{{ appStore.t('settings.behavior.context_menu.desc') }}</HelpHint></div>
             </div>
           </section>
         </div>
 
         <!-- 软件更新 -->
-        <section class="aero-card">
+        <section v-show="settingsSection==='updates'" data-settings-panel="updates" class="aero-card">
           <div class="settings-group">
             <div class="settings-group-heading">
-              <h2 class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.update.title') }}</h2>
-              <p class="text-sm text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('settings.update.desc') }}</p>
+              <div class="flex items-center gap-2"><h2 class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.update.title') }}</h2><HelpHint :label="appStore.t('settings.update.title')">{{ appStore.t('settings.update.desc') }}</HelpHint></div>
             </div>
             <div class="settings-group-body">
               <div class="flex flex-col gap-4 rounded-2xl border border-subtle bg-input/30 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -537,29 +547,25 @@ const removeWordlist = (index: number) => {
               <div v-if="updateStore.status === 'error' && updateStore.errorMessage" class="rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-xs leading-5 text-red-500">
                 {{ updateStore.errorMessage }}
               </div>
-              <button type="button" role="switch" :aria-checked="appStore.settings.autoCheckUpdates" class="w-full flex items-center justify-between gap-4 text-left" @click="toggleAutoCheckUpdates">
+              <div class="settings-switch-row"><button type="button" role="switch" :aria-checked="appStore.settings.autoCheckUpdates" class="w-full flex items-center justify-between gap-4 text-left" @click="toggleAutoCheckUpdates">
                 <div>
                   <div class="text-xs font-bold text-content">{{ appStore.t('settings.update.auto') }}</div>
-                  <div class="mt-1 text-xs text-muted uppercase tracking-tighter">{{ appStore.t('settings.update.auto.desc') }}</div>
+
                 </div>
                 <div class="settings-toggle-track" :class="{ 'is-on': appStore.settings.autoCheckUpdates }">
                   <span class="settings-toggle-knob"></span>
                 </div>
-              </button>
-              <div class="flex items-start gap-3 rounded-xl border border-primary/15 bg-primary/5 p-4 text-xs leading-5 text-muted">
-                <i class="pi pi-shield mt-0.5 text-primary"></i>
-                <span>{{ appStore.t('settings.update.security') }}</span>
-              </div>
+              </button><HelpHint :label="appStore.t('settings.update.auto')+'说明'">{{ appStore.t('settings.update.auto.desc') }}</HelpHint></div>
+              <HelpHint label="更新下载说明">{{ appStore.t('settings.update.security') }}</HelpHint>
             </div>
           </div>
         </section>
 
         <!-- 格式支持统计 -->
-        <section class="aero-card">
+        <section v-show="settingsSection==='formats'" data-settings-panel="formats" class="aero-card">
           <div class="settings-group">
             <div class="settings-group-heading">
-              <h2 class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.formats.title') }}</h2>
-              <p class="text-sm text-muted leading-relaxed uppercase tracking-tighter">{{ appStore.t('settings.formats.desc') }}</p>
+              <div class="flex items-center gap-2"><h2 class="text-sm font-black text-content uppercase tracking-widest">{{ appStore.t('settings.formats.title') }}</h2><HelpHint :label="appStore.t('settings.formats.title')">{{ appStore.t('settings.formats.desc') }}</HelpHint></div>
             </div>
 
             <div class="settings-group-body">
@@ -706,13 +712,7 @@ const removeWordlist = (index: number) => {
           </div>
         </section>
 
-        <!-- 重置按钮 -->
-        <div class="pt-8 border-t border-subtle flex justify-end">
-          <button @click="showResetConfirm = true"
-                  class="px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500 hover:text-white transition-all text-sm font-black uppercase tracking-widest">
-            {{ appStore.t('settings.reset.button') }}
-          </button>
-        </div>
+
       </div>
     </div>
 

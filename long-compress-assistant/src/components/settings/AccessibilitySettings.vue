@@ -27,12 +27,9 @@
     <section class="accessibility-row">
       <div class="flex items-center justify-between mb-6">
         <div>
-          <h3 class="text-sm font-black text-content uppercase tracking-[0.3em]">
+          <div class="flex items-center gap-2"><h3 class="text-sm font-black text-content uppercase tracking-[0.3em]">
             {{ appStore.t('accessibility.highContrast') }}
-          </h3>
-          <p class="text-[0.5625rem] text-muted mt-2 uppercase tracking-tighter">
-            {{ appStore.t('accessibility.highContrast.desc') }}
-          </p>
+          </h3><HelpHint :label="appStore.t('accessibility.highContrast')">{{ appStore.t('accessibility.highContrast.desc') }}</HelpHint></div>
         </div>
         <button type="button" role="switch"
           :aria-checked="appStore.settings.accessibility?.highContrast"
@@ -75,12 +72,9 @@
     <section class="accessibility-row">
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="text-sm font-black text-content uppercase tracking-[0.3em]">
+          <div class="flex items-center gap-2"><h3 class="text-sm font-black text-content uppercase tracking-[0.3em]">
             {{ appStore.t('accessibility.reduceMotion') }}
-          </h3>
-          <p class="text-[0.5625rem] text-muted mt-2 uppercase tracking-tighter">
-            {{ appStore.t('accessibility.reduceMotion.desc') }}
-          </p>
+          </h3><HelpHint :label="appStore.t('accessibility.reduceMotion')">{{ appStore.t('accessibility.reduceMotion.desc') }}</HelpHint></div>
         </div>
         <button type="button" role="switch"
           :aria-checked="appStore.settings.accessibility?.reduceMotion"
@@ -100,12 +94,9 @@
     <section class="accessibility-row">
       <div class="flex items-center justify-between">
         <div>
-          <h3 class="text-sm font-black text-content uppercase tracking-[0.3em]">
+          <div class="flex items-center gap-2"><h3 class="text-sm font-black text-content uppercase tracking-[0.3em]">
             {{ appStore.t('accessibility.focusIndicator') }}
-          </h3>
-          <p class="text-[0.5625rem] text-muted mt-2 uppercase tracking-tighter">
-            {{ appStore.t('accessibility.focusIndicator.desc') }}
-          </p>
+          </h3><HelpHint :label="appStore.t('accessibility.focusIndicator')">{{ appStore.t('accessibility.focusIndicator.desc') }}</HelpHint></div>
         </div>
         <button type="button" role="switch"
           :aria-checked="appStore.settings.accessibility?.focusIndicator"
@@ -124,6 +115,7 @@
 </template>
 
 <script setup lang="ts">
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { useAppStore } from '@/stores/app'
 
 const appStore = useAppStore()

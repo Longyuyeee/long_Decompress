@@ -5,7 +5,7 @@
     layer="nested"
     show-footer
     :title="$t('password.generator.title', '密码生成器')"
-    description="按用途生成并立即使用"
+    description="按用途生成并立即使用" description-as-help
     icon="pi pi-key"
     @close="closeDialog"
   >

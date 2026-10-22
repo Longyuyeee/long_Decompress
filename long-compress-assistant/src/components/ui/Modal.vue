@@ -8,7 +8,7 @@
         <Transition name="pop">
           <div
             ref="modalContent"
-            class="modal-no-glass relative flex max-h-[min(78vh,42rem)] w-full transform flex-col overflow-hidden rounded-[1.4rem] bg-modal border border-subtle text-left shadow-2xl transition-all outline-none"
+            class="app-dialog modal-no-glass relative flex max-h-[min(88vh,48rem)] w-full transform flex-col overflow-hidden rounded-[1.4rem] bg-modal border border-subtle text-left shadow-2xl transition-all outline-none"
             :class="sizeClasses"
             tabindex="-1"
           >
@@ -26,14 +26,14 @@
                 <div v-if="icon" class="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
                    <i :class="[icon, 'text-primary']"></i>
                 </div>
-                <div>
+                <div class="min-w-0 flex-1"><div class="dialog-title-copy">
                   <h3 :id="modalTitleId" class="text-lg font-black text-content tracking-tight leading-none mb-1">
                     <slot name="title">{{ title }}</slot>
                   </h3>
-                  <p v-if="description" class="text-sm text-muted font-bold uppercase tracking-widest">
+                  <HelpHint v-if="description && descriptionAsHelp" :label="(title || '弹窗') + '说明'">
                     {{ description }}
-                  </p>
-                </div>
+                  </HelpHint>
+                </div><p v-if="description && !descriptionAsHelp" class="mt-1 text-xs text-muted leading-relaxed">{{description}}</p></div>
               </div>
             </div>
 
@@ -63,12 +63,14 @@
 </template>
 
 <script setup lang="ts">
+import HelpHint from './HelpHint.vue'
 import { computed, nextTick, onMounted, onUnmounted, ref, useId, watch } from 'vue'
 
 export interface Props {
   visible: boolean
   title?: string
   description?: string
+  descriptionAsHelp?: boolean
   icon?: string
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | 'full'
   showCloseButton?: boolean
@@ -170,6 +172,8 @@ defineExpose({ close: handleClose, open: () => emit('update:visible', true) })
 </script>
 
 <style scoped>
+.app-dialog>div.shrink-0{padding:16px 20px 10px}.app-dialog>div.min-h-0{padding:12px 20px}.app-dialog>div.shrink-0:last-child{padding:10px 20px 16px}.app-dialog>button.absolute{top:12px;right:12px}.dialog-title-copy{display:flex;align-items:center;gap:8px;min-width:0;padding-right:28px}.dialog-title-copy h3{margin:0;line-height:1.4;overflow-wrap:anywhere}.app-dialog>div.shrink-0:last-child>div{flex-wrap:wrap}
+
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 

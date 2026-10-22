@@ -6,13 +6,23 @@ const id = useId()
 const trigger = ref<HTMLButtonElement>()
 const panel = ref<HTMLElement>()
 const open = ref(false)
+let skipFocus = false
+let pinned = false, closeTimer: ReturnType<typeof setTimeout> | undefined
+const keepOpen = () => { if (closeTimer) clearTimeout(closeTimer); closeTimer = undefined }
+const leave = () => { keepOpen(); if (!pinned) closeTimer = setTimeout(() => close(), 160) }
 const position = ref({ left: '0px', top: '0px' })
 function close(restore = false) {
+  keepOpen(); pinned = false
   open.value = false
-  if (restore) trigger.value?.focus()
+  if (restore) { skipFocus = true; trigger.value?.focus(); skipFocus = false }
 }
-async function toggle() {
-  if (open.value) { close(); return }
+function toggle() {
+  if (pinned) { close(); return }
+  pinned = true; void show()
+}
+async function show() {
+  if (skipFocus) return
+  keepOpen()
   open.value = true
   await nextTick()
   if (!open.value || !trigger.value || !panel.value) return
@@ -42,6 +52,7 @@ onMounted(() => {
   window.addEventListener('scroll', dismiss, true)
 })
 onUnmounted(() => {
+  keepOpen()
   document.removeEventListener('pointerdown', outside)
   document.removeEventListener('keydown', key)
   document.removeEventListener('focusin', outside)
@@ -51,9 +62,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <button ref="trigger" type="button" class="help-trigger" :aria-label="label" :aria-expanded="open" :aria-controls="open ? id : undefined" @click.stop.prevent="toggle">?</button>
+  <button ref="trigger" type="button" class="help-trigger" :aria-label="label" :aria-expanded="open" :aria-controls="open ? id : undefined" @mouseenter="show" @mouseleave="leave" @focus="show" @blur="leave" @click.stop.prevent="toggle">?</button>
   <Teleport to="body">
-    <div v-if="open" :id="id" ref="panel" role="note" :aria-label="label" class="help-panel" :style="position" @click.stop><slot /></div>
+    <div v-if="open" :id="id" ref="panel" role="note" :aria-label="label" class="help-panel" :style="position" @mouseenter="keepOpen" @mouseleave="leave" @click.stop><slot /></div>
   </Teleport>
 </template>
 

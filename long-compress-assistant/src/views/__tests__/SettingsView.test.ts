@@ -198,4 +198,17 @@ describe('SettingsView archive engine diagnostics', () => {
     expect(wrapper.get('[data-testid="auto-start-switch"]').attributes('aria-checked')).toBe('false')
     expect(JSON.parse(localStorage.getItem('app-settings') || '{}').autoStart).not.toBe(true)
   })
+  it('按分类显示设置，切换分类保留控件和已有设置', async () => {
+    const wrapper=mount(SettingsView,{attachTo:document.body,global:{plugins:[createPinia()]}});await flushPromises()
+    expect(wrapper.get('.settings-appearance').isVisible()).toBe(true)
+    expect(wrapper.get('[data-settings-panel="formats"]').isVisible()).toBe(false)
+    await wrapper.get('[data-settings-section="formats"]').trigger('click')
+    expect(wrapper.get('[data-settings-panel="formats"]').isVisible()).toBe(true)
+    expect(wrapper.get('.settings-appearance').isVisible()).toBe(false)
+    await wrapper.get('[data-settings-section="appearance"]').trigger('click')
+    expect(wrapper.get('.settings-appearance').isVisible()).toBe(true)
+    expect(wrapper.get('.settings-reset-action').isVisible()).toBe(true)
+    wrapper.unmount()
+  })
+
 })

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/stores/app'
@@ -25,8 +26,7 @@ const modes: Array<{ id: SpecialCompressionMode, label: string, icon: string }> 
   <div class="special-compression-view p-3 sm:p-4 h-full flex flex-col gap-2.5 transition-colors duration-700 overflow-hidden relative" data-testid="special-compression-center">
     <header data-testid="special-compression-header" class="special-compression-header shrink-0 min-w-0">
       <div class="special-compression-heading">
-        <h1 class="text-xl md:text-2xl font-black text-content tracking-tight">{{ appStore.t('nav.special_compression') }}</h1>
-        <p class="text-xs text-muted font-semibold mt-0.5">{{ appStore.t('special_compression.subtitle') }}</p>
+        <div class="flex items-center gap-2"><h1 class="text-xl md:text-2xl font-black text-content tracking-tight">{{ appStore.t('nav.special_compression') }}</h1><HelpHint label="使用说明">{{ appStore.t('special_compression.subtitle') }}</HelpHint></div>
       </div>
       <nav class="special-compression-mode-switch" aria-label="特殊压缩类型" data-testid="special-compression-mode-switch">
         <button
@@ -42,13 +42,14 @@ const modes: Array<{ id: SpecialCompressionMode, label: string, icon: string }> 
           <span>{{ mode.label }}</span>
         </button>
       </nav>
+      <div id="special-workspace-actions" class="special-workspace-actions"/>
     </header>
 
     <main class="special-compression-shell aero-card">
       <div :key="activeMode" class="special-compression-stage">
-        <ImageCompressionWorkspace v-if="activeMode === 'image'" />
-        <VideoCompressionWorkspace v-else-if="activeMode === 'video'" />
-        <PdfCompressionWorkspace v-else />
+        <ImageCompressionWorkspace toolbar-target="#special-workspace-actions" v-if="activeMode === 'image'" />
+        <VideoCompressionWorkspace toolbar-target="#special-workspace-actions" v-else-if="activeMode === 'video'" />
+        <PdfCompressionWorkspace toolbar-target="#special-workspace-actions" v-else />
       </div>
     </main>
   </div>
@@ -157,4 +158,6 @@ const modes: Array<{ id: SpecialCompressionMode, label: string, icon: string }> 
   .special-compression-mode-switch button { transition: none; }
   .special-compression-stage { animation: none; }
 }
+
+.special-compression-header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}.special-compression-mode-switch{display:flex;gap:3px;padding:3px;border-radius:10px}.special-compression-mode-switch button{height:32px;padding:0 10px;font-size:11px}.special-workspace-actions{margin-left:auto;min-width:0;max-width:100%}.special-workspace-actions:deep(.workspace-toolbar){margin:0;gap:8px}.special-workspace-actions:deep(.toolbar-actions),.special-workspace-actions:deep(.header-actions){display:flex;flex-direction:row;gap:6px;flex-wrap:wrap;width:auto}.special-workspace-actions:deep(button){width:auto!important;height:34px;min-height:34px;padding:0 12px;white-space:nowrap}@media(max-width:900px){.special-workspace-actions{margin-left:auto}.special-compression-mode-switch{min-width:0;width:auto}}
 </style>

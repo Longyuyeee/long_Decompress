@@ -1,0 +1,707 @@
+{
+  "baselineCommit": "a46f58cd211bfe1302308cb7160c7d7347e51665",
+  "passed": 1,
+  "failed": 11,
+  "cases": [
+    {
+      "name": "CompressionView batch1543 filters real job rows, clears hidden selections and reveals new drafts",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView accepts a selected file and runs a complete compression job",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView preserves the source suffix in default single-stream names: gz",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView preserves the source suffix in default single-stream names: bz2",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView preserves the source suffix in default single-stream names: xz",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView preserves the source suffix in default single-stream names: zst",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView preserves the source suffix in default single-stream names: lz4",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView preserves the source suffix in default single-stream names: br",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView ignores retired fast-packing settings in real task payloads: false",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView ignores retired fast-packing settings in real task payloads: true",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView starts a history draft only on my click and preserves the original task link",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView passes the selected 7z solid mode to the native compression command",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView does not start filename-encrypted compression without a password",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView confirms non-native password formats before creating an encrypted 7z",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView does not create a task when encrypted 7z conversion is declined",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView aligns each draft row into archive name, source path, and status-progress columns",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView blocks compression before the engine when resource capacity is insufficient",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView batch1543 keeps one row and updates real progress and logs in place for the full lifecycle",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView opens file details from the row while the leading checkbox only selects grouping",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView shows configuration and waiting execution details side by side before compression starts",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView allows editing inline immediately and keeps edited settings when global defaults change",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView keeps a magnetic group as one task row through compression and cleanup",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView clears only finished compression tasks from the compression center",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView 我只清除归档任务，特殊压缩的图片、视频和 PDF 记录不能消失",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView 我在压缩中心取消归档，后台图片、视频和 PDF 必须继续运行",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView 只有特殊压缩任务时，归档页不要显示会误导我的批量取消和清除按钮",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView 我刚压缩完就点清除（bulk），历史没存好时任务和文件行都要留下",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView 我刚压缩完就点清除（single），历史没存好时任务和文件行都要留下",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView 历史保存失败后清除不能吞掉文件行，重试保存也不能重跑压缩",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView continues the batch after one compression fails",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView cancels the active job and queued jobs when concurrency is one",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView keeps a row cancelled when the compression command resolves during cancellation",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView does not start another active compression for the same output path",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView starts a compression request that arrives after the view is already mounted",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView packs a multi-selection into one ZIP in its current directory",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView keeps quick packs from different Explorer directories as separate archives",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView pauses missing RAR creation and can resume the same job as 7Z",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView keeps the compression center archive-only and exposes three media workspaces in special compression",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView analyzes PDF facts and requires explicit lossy confirmation before freezing a local draft",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView keeps signed PDFs analysis-only and unlocks encrypted facts only after password analysis",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView runs a frozen PDF through unified tasks, persists measured facts, and opens the published result",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView plans a real video candidate, labels estimates, and replans preset changes without creating tasks",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView confirms exact video stream changes then persists only verified publication facts",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView creates no video task or output plan when stream-change confirmation is declined",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView cancels an active video through the unified task cancellation command",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView does not start video encoding when cancellation lands during destination planning",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "CompressionView runs a ready real-fixture image through the unified batch and renders verified result facts",
+      "status": "failed",
+      "message": "Error: ENOENT: no such file or directory, stat 'E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\media-fixture-audit\\fixtures\\images\\transparent.png'"
+    },
+    {
+      "name": "CompressionView reports a real image failure as incomplete instead of showing a success summary",
+      "status": "failed",
+      "message": "Error: ENOENT: no such file or directory, stat 'E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\media-fixture-audit\\fixtures\\images\\transparent.png'"
+    },
+    {
+      "name": "DecompressView library1549 dispatches original queue with exact library selection and keeps scope even when preflight canStart=true",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView library1549 dispatches original queue with exact library selection and keeps scope even when preflight canStart=false",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView comparison1554 runs an exact comparison selection through its own source check without archive preflight",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView batch1543 scopes the original table and restores visibility for taskbar recovery",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView does not rewrite cancelling as a failure when native cancellation rejects extraction",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView does not rewrite cancelled as a failure when native cancellation rejects extraction",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView executes restored ZIP input encoding without changing ordinary automatic requests",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView re-detects reopened renamed ZIPs before execution instead of discarding the saved input choice",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView does not start a task cancelled while detecting its restored ZIP encoding",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView applies the detected EGG batch source encoding and preserves unrelated settings",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView applies the detected ALZ batch source encoding and preserves unrelated settings",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView batch encoding uses detected ZIP content without detaching global output or touching non-ZIP tasks",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView does not apply a late encoding detection after I start the task",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView does not apply a late encoding detection after I replace the task",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView does not apply a late encoding detection after I unmount the task",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView does not downgrade an unconfirmed forum volume to an ordinary ZIP",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView deduplicates genuine forum member names using the detector canonical source",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView imports only verified SFX and never queues an ordinary executable",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView deduplicates original EXE first and external RAR members after native canonicalization",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView explains the original EXE alternative when the RAR first member is absent",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView changes selected pending configuration without rewriting passwords, defaults or running tasks",
+      "status": "failed",
+      "message": "AssertionError: expected { id: 'second', …(11) } to match object { outputPath: 'C:/', …(2) }"
+    },
+    {
+      "name": "DecompressView collects my different per-file choices and commits the staged result only once",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView remembers my first choice after leaving the page and publishes it with the remaining choice",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView does not submit twice after navigating away during publication",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView does not start extraction again while staged conflicts are waiting for my choices",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView applies overwrite only to this task and waits for publication before showing the next task",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView retains failed publication details without automatically asking the same failed task again",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView does not publish from a stale dialog after I cancel the task",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView lets me inspect only this run failures and return to the full queue without starting hidden tasks",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView adds an archive task and enables smart subfolder extraction for multiple roots",
+      "status": "failed",
+      "message": "AssertionError: expected undefined to match object { name: 'bundle.zip', …(3) }"
+    },
+    {
+      "name": "DecompressView does not let a late archive listing undo my individual change",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView does not let a late archive listing undo my global change",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView does not let a late archive listing undo my source change",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView recognizes two top-level folders even when ZIP lists only their files",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView does not inspect archive structure unless I enable the setting",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView ignores outstanding analysis after disabling it, even if enabled again: false",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView ignores outstanding analysis after disabling it, even if enabled again: true",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView rejects Office document containers before creating extraction tasks",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView groups unordered numeric split volumes into one task using the first volume",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView rejects an incomplete split group with the missing volume name",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView starts pending archive tasks with the configured extraction options",
+      "status": "failed",
+      "message": "Error: Unable to get [data-testid=\"global-subfolder\"] within: <div data-v-ba73e38f=\"\" class=\"decompress-view p-3 sm:p-4 h-full flex flex-col gap-2.5 transition-colors duration-700 relative overflow-hidden\">"
+    },
+    {
+      "name": "DecompressView applies the global recycle-bin default to pending and newly added tasks",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView keeps a file-conflict task resumable without showing a false failure",
+      "status": "failed",
+      "message": "TypeError: Cannot read properties of undefined (reading 'trigger')"
+    },
+    {
+      "name": "DecompressView blocks decompression before the engine when expanded contents cannot fit",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView never displays or starts pending compression tasks from the decompression workspace",
+      "status": "failed",
+      "message": "Error: Cannot call props on an empty VueWrapper."
+    },
+    {
+      "name": "DecompressView clears only finished decompression tasks",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView runs a queued one-click extraction in a safe same-name folder",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView serially consumes every queued context action without dropping files",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView opens a new-task confirmation for a supplied password without rewriting the failed task",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView keeps the original password-required state while the correction dialog is open",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView leaves password discovery to the backend and exposes one manual retry state",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView does not rewrite a password failure already persisted by the command owner",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView keeps a non-password backend failure visible on both the task and workspace",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView keeps inspection evidence on the failed task but hides routing markers in its toast",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView reports partial cancellation when one active task cannot be stopped",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView keeps global controls on the page without a required mode switch",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "DecompressView runs the queue in the same natural-name order shown by the task table",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "FileIntegrityView does not offer recovery-volume creation for a read-only SFX group opened from a middle member",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "FileIntegrityView restores a single repaired result without secrets, preserves its own encoding and requires re-entering its password",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "FileIntegrityView keeps cp932 on rescued output even after editing the source password and encoding",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "FileIntegrityView keeps cp936 on rescued output even after editing the source password and encoding",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "FileIntegrityView keeps cp950 on rescued output even after editing the source password and encoding",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "FileIntegrityView shows a password encoding conclusion rather than an untranslated status or damage",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "FileIntegrityView offers missing-disk rescue and keeps recovery lists folded while queuing the original password",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "FileIntegrityView counts known unrecovered files separately from unknown directory contents and general notes",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "FileIntegrityView creates recovery volumes for a healthy RAR group in a compact dialog",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "FileIntegrityView opens rescue from a failed task and queues the encrypted rebuilt archive with its original output choices",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "FileIntegrityView repairs a RAR group to a new folder and queues its first volume with the original password",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "FileIntegrityView calculates mixed results, copies successful checksums, and exports them",
+      "status": "failed",
+      "message": "AssertionError: expected '文件完整性校验计算与验证校验和，诊断归档损坏、缺卷与可恢复性计算校验和生成…' to contain 'abc123'"
+    },
+    {
+      "name": "FileIntegrityView verifies a checksum file and surfaces an invalid result",
+      "status": "failed",
+      "message": "AssertionError: expected \"vi.fn()\" to be called with arguments: [ 'verify_checksum_file', …(1) ]"
+    },
+    {
+      "name": "FileIntegrityView diagnoses a damaged archive, copies evidence, and repairs to a new verified file",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "FileIntegrityView rescues encrypted entries with the entered password and shows the new package encryption",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "FileIntegrityView shows an ambiguous encrypted-content report without offering repair or silently retrying",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "SettingsView archive engine diagnostics advertises the bundled EGG read scope, never creation",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "SettingsView archive engine diagnostics advertises ALZ only as a present read engine and never as a creation format",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "SettingsView archive engine diagnostics shows live engine capabilities and can detect them again",
+      "status": "failed",
+      "message": "AssertionError: expected '设置中心环境与偏好设置外观个性化自定义您的视觉界面与主题氛围。系统主题模式…' to contain '密码解压: ZPAQ · ZIP · ZIPX（XZ） · 7Z · RA…'"
+    },
+    {
+      "name": "SettingsView archive engine diagnostics registers auto-start only after the user toggles it and persists after verification",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "SettingsView archive engine diagnostics exposes and persists archive compression and extraction defaults",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "SettingsView archive engine diagnostics lets me explicitly enable directory structure analysis in settings",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "SettingsView archive engine diagnostics keeps parallel ZIP off until I explicitly enable it",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "SettingsView archive engine diagnostics keeps the previous setting when Windows registration fails",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "SettingsView archive engine diagnostics 按分类显示设置，切换分类保留控件和已有设置",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "ProfileManager saves standard ZIPX without silently switching the volume type",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "ProfileManager previews a bounded template and imports only after explicit confirmation",
+      "status": "passed",
+      "message": ""
+    },
+    {
+      "name": "ProfileManager creates an explicit safe draft after previewing accepted and excluded sources",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "ProfileManager previews one folder and requires explicit authorization before starting a watcher",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "ProfileManager renders and pauses an active persisted watch-folder authorization",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "ProfileManager exports a profile through a user-selected file without exposing a task execution action",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "ProfileManager validates the name and saves a capability-aligned profile",
+      "status": "failed",
+      "message": "AssertionError: expected '0 个配置组保存常用格式、压缩等级、加密和分卷设置导入任务模板 新建配置组…' not to contain '将压缩包拆分为多个文件'"
+    },
+    {
+      "name": "ProfileManager explains the password requirement when filename encryption is selected",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "ProfileManager preserves an existing auto-apply enabled state while editing",
+      "status": "skipped",
+      "message": ""
+    },
+    {
+      "name": "swm1540 profile native size stays enabled and cannot be disabled",
+      "status": "skipped",
+      "message": ""
+    }
+  ]
+}

@@ -140,6 +140,7 @@ describe('ProfileManager', () => {
 
     expect(mocks.previewTaskTemplate).toHaveBeenCalledWith('C:/templates/daily.longtask.json')
     const preview = wrapper.get('[data-testid="task-template-preview"]')
+    await wrapper.get('button[aria-label="导入任务模板说明"]').trigger('mouseenter')
     expect(wrapper.text()).toContain('确认后只创建配置组')
     expect(preview.text()).toContain('固定密码、删除源文件和额外引擎参数')
     expect(preview.text()).toContain('执行时询问密码')

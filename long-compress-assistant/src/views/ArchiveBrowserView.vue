@@ -1003,7 +1003,7 @@ const extractSelected = async () => {
     <div v-if="previewEntry" class="preview-backdrop" data-testid="archive-entry-preview" @click.self="closePreview">
       <section class="preview-dialog" role="dialog" aria-modal="true" :aria-label="`预览 ${previewEntry.name}`">
         <header class="preview-header">
-          <div class="min-w-0"><p class="text-xs font-black tracking-widest text-primary">{{ previewKind(previewEntry) === 'image' ? '归档内图片预览' : '归档内文本预览' }}</p><h2 class="mt-1 truncate text-lg font-black text-content">{{ previewEntry.name }}</h2></div>
+          <div class="min-w-0 flex items-center gap-2"><h2 class="truncate text-lg font-black text-content">{{ previewEntry.name }}</h2><HelpHint label="预览说明">只读查看，不修改原文件。大文本显示前 1 MB；需要编辑时，可以提取后用默认应用打开。</HelpHint></div>
           <button type="button" class="preview-close" aria-label="关闭预览" @click="closePreview"><i class="pi pi-times"></i></button>
         </header>
         <div class="preview-stage">
@@ -1013,13 +1013,12 @@ const extractSelected = async () => {
           <pre v-else-if="textPreview" data-testid="archive-text-preview" class="preview-text">{{ textPreview.content }}</pre>
         </div>
         <footer v-if="imagePreview" class="preview-meta">
-          <span>{{ imagePreview.width }} × {{ imagePreview.height }}</span><span>{{ formatBytes(imagePreview.byteSize) }}</span><span>{{ imagePreview.mimeType }}</span><span>只读 · 不改原包</span><button class="text-primary font-bold" data-testid="archive-preview-read-images" @click="openImageReader(previewEntry)">连续阅读这组图片 <i class="pi pi-arrow-right"/></button>
+          <span>{{ imagePreview.width }} × {{ imagePreview.height }}</span><span>{{ formatBytes(imagePreview.byteSize) }}</span><span>{{ imagePreview.mimeType }}</span><span>只读</span><button class="text-primary font-bold" data-testid="archive-preview-read-images" @click="openImageReader(previewEntry)">连续阅读这组图片 <i class="pi pi-arrow-right"/></button>
         </footer>
         <footer v-else-if="textPreview" class="preview-meta">
-          <span>{{ textPreview.encoding }}</span><span>已读 {{ formatBytes(textPreview.byteSize) }} / {{ formatBytes(textPreview.totalSize) }}</span><span>{{ textPreview.lineCount }} 行</span><span>{{ textPreview.truncated ? '仅显示前 1 MiB' : '完整显示' }}</span><span>只读 · 不改原包</span>
+          <span>{{ textPreview.encoding }}</span><span>已读 {{ formatBytes(textPreview.byteSize) }} / {{ formatBytes(textPreview.totalSize) }}</span><span>{{ textPreview.lineCount }} 行</span><span>{{ textPreview.truncated ? '仅显示前 1 MiB' : '完整显示' }}</span><span>只读</span>
         </footer>
-        <p v-if="previewKind(previewEntry) === 'image'" class="preview-safety">只读查看图片，原文件保留。也可以连续阅读这一组图片。</p>
-        <p v-else class="preview-safety">只读预览，大文本显示前 1 MB。需要完整编辑或查看其他类型时，可用默认应用打开。</p>
+
       </section>
     </div>
 
@@ -1181,7 +1180,7 @@ const extractSelected = async () => {
 .preview-stage { min-height: min(54vh, 30rem); display: grid; place-items: center; padding: clamp(1rem, 3vw, 2rem); background: radial-gradient(circle at 50% 42%, color-mix(in srgb, var(--dynamic-accent) 12%, transparent), transparent 65%); overflow: hidden; }
 .preview-image { display: block; max-width: 100%; max-height: min(54vh, 30rem); object-fit: contain; border-radius: 1rem; box-shadow: 0 18px 50px rgba(0, 0, 0, .25); }
 .preview-text { width: 100%; min-height: min(46vh, 24rem); max-height: min(54vh, 30rem); overflow: auto; border: 1px solid var(--border-subtle); border-radius: 1rem; background: color-mix(in srgb, var(--bg-input) 92%, transparent); padding: 1rem; color: var(--text-content); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .75rem; line-height: 1.65; text-align: left; white-space: pre-wrap; overflow-wrap: anywhere; tab-size: 2; }
-.preview-meta { display: flex; flex-wrap: wrap; gap: .5rem; padding: .9rem 1.25rem 0; }
+.preview-meta { padding-bottom:1rem; display: flex; flex-wrap: wrap; gap: .5rem; padding: .9rem 1.25rem 0; }
 .preview-meta span { border-radius: 999px; padding: .35rem .65rem; background: var(--bg-input); color: var(--text-muted); font-size: .68rem; font-weight: 800; }
 .preview-safety { padding: .8rem 1.25rem 1.15rem; color: var(--text-muted); font-size: .68rem; line-height: 1.55; }
 .archive-context-layer { position: fixed; inset: 0; z-index: 80; }

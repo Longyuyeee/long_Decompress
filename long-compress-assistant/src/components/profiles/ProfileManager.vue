@@ -538,7 +538,7 @@ const formatDate = (timestamp: number | null) =>
     <div v-else-if="profiles.length === 0" class="flex min-h-52 flex-col items-center justify-center rounded-2xl border border-dashed border-subtle bg-input/15 px-6 text-center">
       <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-2xl">📦</div>
       <p class="font-black text-content">还没有配置组</p>
-      <p class="mt-1 max-w-sm text-xs leading-5 text-muted">创建后可以一键恢复常用的压缩格式和高级选项。</p>
+      <span class="context-help"><HelpHint label="配置组说明">创建后可以一键恢复常用的压缩格式和高级选项。</HelpHint></span>
       <button type="button" class="mt-4 h-9 rounded-lg border border-primary/30 bg-primary/10 px-4 text-xs font-black text-primary hover:bg-primary/15" @click="openCreateModal">
         {{ appStore.t('profiles.add_new') }}
       </button>
@@ -605,7 +605,7 @@ const formatDate = (timestamp: number | null) =>
     <Modal
       :visible="dialogMode !== null"
       :title="dialogTitle"
-      description="设置保存后可在压缩中心快速应用"
+      description="设置保存后可在压缩中心快速应用" description-as-help
       icon="pi pi-sliders-h"
       size="lg"
       layer="nested"
@@ -644,7 +644,7 @@ const formatDate = (timestamp: number | null) =>
         <section class="rounded-2xl border border-subtle bg-input/20 p-4">
           <div class="mb-4">
             <p class="text-xs font-black text-content">任务模板源文件规则</p>
-            <p class="mt-1 text-xs leading-5 text-muted">仅用于选择源文件和创建待确认草稿，不会开启后台监控或自动压缩。</p>
+            <span class="context-help"><HelpHint label="规则模板说明">仅用于选择源文件和创建待确认草稿，不会开启后台监控或自动压缩。</HelpHint></span>
           </div>
           <label class="block">
             <span class="mb-2 block text-xs font-black text-muted">包含方式</span>
@@ -725,7 +725,7 @@ const formatDate = (timestamp: number | null) =>
     <Modal
       :visible="Boolean(templatePreview)"
       title="导入任务模板"
-      description="审计预览 · 确认后只创建配置组"
+      description="确认后只创建配置组，不会执行任务" description-as-help
       icon="pi pi-shield"
       size="lg"
       layer="nested"

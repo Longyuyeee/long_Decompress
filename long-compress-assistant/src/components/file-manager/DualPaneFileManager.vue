@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import HelpHint from '@/components/ui/HelpHint.vue'
 import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import { open } from '@tauri-apps/api/dialog'
@@ -419,8 +420,8 @@ const activeSelectionCount = computed(() => (activePane.value === 'left' ? left 
 <template>
   <div ref="managerRoot" class="file-manager h-full min-w-0 flex flex-col gap-3 p-responsive p-6" data-testid="dual-pane-file-manager">
     <header class="manager-header shrink-0 flex items-center justify-between gap-4">
-      <div><h1 class="text-2xl font-black tracking-tight text-content">双栏文件浏览器</h1><p class="mt-1 text-xs font-bold text-muted">浏览电脑中的所有文件；在一栏选择，在另一栏落地</p></div>
-      <div class="manager-actions"><slot name="header-actions"/><div class="status-pill"><i class="pi pi-shield"></i><span>不覆盖同名项 · 复制后哈希校验 · 删除进入回收站</span></div><button data-testid="file-manager-open-archive" :disabled="activePaneState().archiveBusy" @click="chooseArchive"><i class="pi pi-box"></i><span>打开压缩包</span></button></div>
+      <div><div class="flex items-center gap-2"><h1 class="text-2xl font-black tracking-tight text-content">双栏文件浏览器</h1><HelpHint label="双栏操作说明">在一栏选择，在另一栏复制、移动、压缩或解压。双击打开文件夹或压缩包，点击眼睛预览文件。不覆盖同名文件，删除的文件进入回收站。</HelpHint></div></div>
+      <div class="manager-actions"><slot name="header-actions"/><button data-testid="file-manager-open-archive" :disabled="activePaneState().archiveBusy" @click="chooseArchive"><i class="pi pi-box"></i><span>打开压缩包</span></button></div>
     </header>
     <div v-if="notice" class="notice-bar" data-testid="file-manager-notice"><i class="pi pi-info-circle"></i><span>{{ notice }}</span><button @click="notice = ''"><i class="pi pi-times"></i></button></div>
     <p v-if="savedLocations.error.value" role="alert" class="text-sm text-red-500">{{ savedLocations.error.value }}</p>

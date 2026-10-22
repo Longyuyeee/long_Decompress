@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import HelpHint from '@/components/ui/HelpHint.vue'
 import ComparisonPackageSources from './ComparisonPackageSources.vue'
 import { computed,ref } from 'vue'
 import Modal from '@/components/ui/Modal.vue'
@@ -29,7 +30,7 @@ async function choose(entry:PasswordEntry){try{if(session.value)session.value[fi
   <ZipPasswordEncodingField v-if="encryptedOutput" v-model="session.outputEncoding" mode="output" label="新包密码编码" test-id="zip-edit-output-encoding" />
   <p v-if="session.outputMode==='keep'&&session.catalog.encrypted" class="text-xs leading-relaxed text-muted">原条目保留各自加密方案及公开状态；新增条目使用 {{ encryptionLabel(session.catalog.defaultEncryption) }}，替换沿原条目方案。密码内容会重新写入，新包密码字节按上方编码保存。</p>
   <p v-else-if="session.outputMode==='none'" class="text-xs leading-relaxed text-muted">新包不设密码，原包及其密码保持不变。</p>
-  <p class="text-xs leading-relaxed text-muted">草稿只保存修改和配置，不保存密码；恢复后请重新填写。ZIP 密码不隐藏包内名称。</p>
+  <span class="context-help"><HelpHint label="编辑密码说明">草稿只保存修改和配置，不保存密码；恢复后请重新填写。ZIP 密码不隐藏包内名称。</HelpHint></span>
  </fieldset>
  <Modal v-model:visible="picker" title="从密码保险箱选择" size="sm" layer="nested" cancel-text="返回密码设置">
   <input v-model="query" class="password-input mb-3 w-full" placeholder="搜索密码名称或标签" aria-label="搜索保险箱" />
