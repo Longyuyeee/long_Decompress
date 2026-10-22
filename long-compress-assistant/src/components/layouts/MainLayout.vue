@@ -221,6 +221,10 @@ html, body, #app {
 }
 
 .nav-entry { flex-shrink: 0; }
+.app-sidebar > nav { scrollbar-width: none; -ms-overflow-style: none; }
+.app-sidebar > nav::-webkit-scrollbar,
+.app-sidebar > nav::-webkit-scrollbar-thumb,
+.app-sidebar > nav::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
 
 .window-resize-handle{position:fixed;z-index:1000;touch-action:none}
 .resize-n,.resize-s{left:6px;right:6px;height:6px}.resize-n{top:0;cursor:n-resize}.resize-s{bottom:0;cursor:s-resize}

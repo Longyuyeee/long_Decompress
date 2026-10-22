@@ -74,6 +74,22 @@ pub async fn file_manager_properties(path: String) -> Result<FileProperties, Str
     .map_err(|error| error.to_string())?
 }
 
+#[tauri::command]
+pub async fn file_manager_preview_text(path: String) -> Result<crate::services::archive_preview::ArchiveTextPreview, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::services::archive_preview::preview_local_text(std::path::Path::new(&path))
+            .map_err(|error| error.to_string())
+    }).await.map_err(|error| error.to_string())?
+}
+
+#[tauri::command]
+pub async fn file_manager_preview_image(path: String) -> Result<crate::services::archive_preview::ArchiveImagePreview, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::services::archive_preview::preview_local_image(std::path::Path::new(&path))
+            .map_err(|error| error.to_string())
+    }).await.map_err(|error| error.to_string())?
+}
+
 fn paths(values: Vec<String>) -> Vec<PathBuf> {
     values.into_iter().map(PathBuf::from).collect()
 }

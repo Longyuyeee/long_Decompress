@@ -1,0 +1,268 @@
+{
+  "binarySha256": "03946d4d20070a44578a03a63c28e89d8a56fd5feb4d87a13df553feb008a580",
+  "checks": [
+    "local-text-gbk-and-image-previews",
+    "archive-text-and-exact-selected-extraction-to-peer",
+    "archive-image-preview-and-continuous-reader",
+    "two-archives-independent-password-and-text-preview",
+    "nested-browsing-and-return-preserve-peer"
+  ],
+  "layouts": [
+    {
+      "name": "local-text-preview",
+      "height": 700,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": false,
+          "listHeight": 331.8359375,
+          "overflow": 0,
+          "width": 420.796875
+        },
+        {
+          "archive": false,
+          "listHeight": 331.8359375,
+          "overflow": 0,
+          "width": 420.8046875
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 1100
+    },
+    {
+      "name": "local-text-preview",
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": false,
+          "listHeight": 188.6484375,
+          "overflow": 0,
+          "width": 322
+        },
+        {
+          "archive": false,
+          "listHeight": 188.6484375,
+          "overflow": 0,
+          "width": 322.0078125
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 760
+    },
+    {
+      "name": "local-image-preview",
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": false,
+          "listHeight": 188.6484375,
+          "overflow": 0,
+          "width": 322
+        },
+        {
+          "archive": false,
+          "listHeight": 188.6484375,
+          "overflow": 0,
+          "width": 322.0078125
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 760
+    },
+    {
+      "name": "archive-and-folder",
+      "height": 700,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": true,
+          "listHeight": 413.40625,
+          "overflow": 0,
+          "width": 420.796875
+        },
+        {
+          "archive": false,
+          "listHeight": 383.03125,
+          "overflow": 0,
+          "width": 420.8046875
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 1100
+    },
+    {
+      "name": "archive-and-folder",
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": true,
+          "listHeight": 212.21875,
+          "overflow": 0,
+          "width": 322
+        },
+        {
+          "archive": false,
+          "listHeight": 231.84375,
+          "overflow": 0,
+          "width": 322.0078125
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 760
+    },
+    {
+      "name": "archive-text-preview",
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": true,
+          "listHeight": 212.21875,
+          "overflow": 0,
+          "width": 322
+        },
+        {
+          "archive": false,
+          "listHeight": 231.84375,
+          "overflow": 0,
+          "width": 322.0078125
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 760
+    },
+    {
+      "name": "archive-image-reader",
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": true,
+          "listHeight": 212.21875,
+          "overflow": 0,
+          "width": 322
+        },
+        {
+          "archive": false,
+          "listHeight": 231.84375,
+          "overflow": 0,
+          "width": 322.0078125
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 760
+    },
+    {
+      "name": "two-independent-archives",
+      "height": 700,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": true,
+          "listHeight": 413.40625,
+          "overflow": 0,
+          "width": 420.796875
+        },
+        {
+          "archive": true,
+          "listHeight": 413.40625,
+          "overflow": 0,
+          "width": 420.8046875
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 1100
+    },
+    {
+      "name": "two-independent-archives",
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": true,
+          "listHeight": 210.6171875,
+          "overflow": 0,
+          "width": 322
+        },
+        {
+          "archive": true,
+          "listHeight": 210.6171875,
+          "overflow": 0,
+          "width": 322.0078125
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 760
+    },
+    {
+      "name": "nested-archive-in-pane",
+      "height": 520,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": true,
+          "listHeight": 172.6171875,
+          "overflow": 0,
+          "width": 322
+        },
+        {
+          "archive": true,
+          "listHeight": 210.6171875,
+          "overflow": 0,
+          "width": 322.0078125
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 760
+    },
+    {
+      "name": "returned-folders-no-nav-scrollbar",
+      "height": 600,
+      "navScrollbar": "none",
+      "overflow": 0,
+      "panes": [
+        {
+          "archive": false,
+          "listHeight": 267.046875,
+          "overflow": 0,
+          "width": 328
+        },
+        {
+          "archive": false,
+          "listHeight": 267.046875,
+          "overflow": 0,
+          "width": 328.0078125
+        }
+      ],
+      "webkitScrollbar": "none",
+      "width": 900
+    }
+  ],
+  "screenshots": [
+    "local-text-preview-1100x700.png",
+    "local-text-preview-760x520.png",
+    "local-image-preview-760x520.png",
+    "archive-and-folder-1100x700.png",
+    "archive-and-folder-760x520.png",
+    "archive-text-preview-760x520.png",
+    "archive-image-reader-760x520.png",
+    "two-independent-archives-1100x700.png",
+    "two-independent-archives-760x520.png",
+    "nested-archive-in-pane-760x520.png",
+    "returned-folders-no-nav-scrollbar-900x600.png"
+  ],
+  "completedAt": "2026-10-22T02:23:01.829Z"
+}

@@ -575,6 +575,8 @@ fn main() {
             long_compress_assistant::commands::file_manager::file_manager_create_directory,
             long_compress_assistant::commands::file_manager::file_manager_recycle,
             long_compress_assistant::commands::file_manager::file_manager_properties,
+            long_compress_assistant::commands::file_manager::file_manager_preview_text,
+            long_compress_assistant::commands::file_manager::file_manager_preview_image,
             long_compress_assistant::commands::system::get_system_info,
             long_compress_assistant::commands::system::get_resource_usage,
             long_compress_assistant::commands::system::get_disk_space,
