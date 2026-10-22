@@ -1,8 +1,8 @@
 # 文档导航与维护规则
 
-- **当前版本 v1.6.14**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.14)、[中文说明](RELEASE_NOTES_1.6.14.md)和[固实文本记录](EGG_SOLID_TEXT_PREVIEW_FREEZE_1.6.14.md)。正式附件按正常受保护 PR/标签流水线生成，发布身份在本版 PR 接续。
-- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.14.md)已完成，下一阶段 [v1.6.15 EGG 小型固实图片](ARCHIVE_ROADMAP_1.6.15.md)仅规划、未开发，见[开发交接](DEVELOPMENT_HANDOFF.md)。
-- **前版 v1.6.13**：[图片阅读记录](EGG_IMAGE_PREVIEW_FREEZE_1.6.13.md)；本版封板时正式运行 39848948261 仍在打包，附件未确认，同树 master CI 已确认取消。后续状态在发布回执接续。
+- **当前版本 v1.6.15**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.15)、[中文说明](RELEASE_NOTES_1.6.15.md)和[固实图片记录](EGG_SOLID_IMAGE_PREVIEW_FREEZE_1.6.15.md)。正式附件按正常受保护 PR/标签流水线生成，发布身份在本版 PR 接续。
+- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.15.md)已完成；下一阶段 [v1.6.16 非固实大文本前缀](ARCHIVE_ROADMAP_1.6.16.md)仅规划、未开发，见[开发交接](DEVELOPMENT_HANDOFF.md)。
+- **前版 v1.6.14**：[固实文本记录](EGG_SOLID_TEXT_PREVIEW_FREEZE_1.6.14.md)；封板时正式运行 39853009550 仍在打包，附件未确认，同树 master CI 已确认取消。最新状态在发布回执接续。
 
 以下为历史阶段记录。
 

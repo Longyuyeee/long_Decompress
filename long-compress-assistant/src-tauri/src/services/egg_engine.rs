@@ -52,7 +52,7 @@ pub async fn extract(path:&Path,output:&Path,pwd:Option<&str>,options:&Decompres
     run("extract",path,pwd,Some(output),&selected,cancelled,options.preserve_timestamps,options.zip_password_encoding).await?;Ok(())
 }
 
-/// Complete selected non-solid content, validated in memory by the bounded helper.
+/// Complete selected content, validated in memory by the bounded helper.
 async fn preview_entry(path:&Path,entry:&str,password:Option<&str>,encoding:Option<ZipPasswordEncoding>,cancelled:Arc<AtomicBool>,image:bool)->Result<(Vec<u8>,u64)>{
     anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Acquire),"EGG 预览已取消");
     let entry=super::archive_entry_open::normalize_safe_entry_path(entry)?;

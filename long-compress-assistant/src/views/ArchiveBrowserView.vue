@@ -1029,11 +1029,11 @@ const extractSelected = async () => {
     <div v-if="previewEntry" class="preview-backdrop" data-testid="archive-entry-preview" @click.self="closePreview">
       <section class="preview-dialog" role="dialog" aria-modal="true" :aria-label="`预览 ${previewEntry.name}`">
         <header class="preview-header">
-          <div class="min-w-0 flex items-center gap-2"><h2 class="truncate text-lg font-black text-content">{{ previewEntry.name }}</h2><HelpHint label="预览说明"><template v-if="previewKind(previewEntry) === 'image'">只读查看，不修改原文件。EGG 仅预览非固实图片；固实条目请先提取。支持 PNG、JPEG、GIF、WebP、BMP；图片不超过 8 MiB，单边不超过 8192、总像素不超过 1600 万。超出范围可先提取后查看。</template><template v-else>只读查看，不修改原文件。EGG 文本不超过 1 MiB，完整校验后显示；未加密 Deflate / LZMA 固实包的共享压缩数据与解码总量须分别不超过 64 MiB，超限或加密固实包可先提取。ALZ 小文本完整校验后显示；大文本仅显示前 1 MiB，未校验整文件，不能代替完整性检查。其他已支持格式的大文本显示前 1 MiB。需要编辑时，可以提取后打开。</template></HelpHint></div>
+          <div class="min-w-0 flex items-center gap-2"><h2 class="truncate text-lg font-black text-content">{{ previewEntry.name }}</h2><HelpHint label="预览说明"><template v-if="previewKind(previewEntry) === 'image'">只读查看，不修改原文件。EGG 未加密 Deflate / LZMA 固实包的共享压缩数据与解码总量须分别不超过 64 MiB，完整校验后显示；超限或加密固实包请先提取。支持 PNG、JPEG、GIF、WebP、BMP；图片不超过 8 MiB，单边不超过 8192、总像素不超过 1600 万。超出范围可先提取后查看。</template><template v-else>只读查看，不修改原文件。EGG 文本不超过 1 MiB，完整校验后显示；未加密 Deflate / LZMA 固实包的共享压缩数据与解码总量须分别不超过 64 MiB，超限或加密固实包可先提取。ALZ 小文本完整校验后显示；大文本仅显示前 1 MiB，未校验整文件，不能代替完整性检查。其他已支持格式的大文本显示前 1 MiB。需要编辑时，可以提取后打开。</template></HelpHint></div>
           <button type="button" class="preview-close" aria-label="关闭预览" @click="closePreview"><i class="pi pi-times"></i></button>
         </header>
         <div class="preview-stage">
-          <div v-if="previewLoading" class="text-center text-muted"><i class="pi pi-spin pi-spinner text-3xl text-primary"></i><p class="mt-3 text-sm font-bold">正在读取预览…</p></div>
+          <div v-if="previewLoading" class="text-center text-muted"><i class="pi pi-spin pi-spinner text-3xl text-primary"></i><p class="mt-3 text-sm font-bold">{{ result?.format === 'EGG' && previewEntry.compressedSize === null ? '正在读取固实包共享内容，请稍候…' : '正在读取预览…' }}</p></div>
           <div v-else-if="previewError" class="max-w-md text-center"><i class="pi pi-exclamation-triangle text-3xl text-amber-500"></i><p class="mt-3 break-words text-sm font-bold text-content">无法预览</p><p class="mt-2 break-words text-xs leading-5 text-muted">{{ previewError }}</p></div>
           <div v-else-if="imagePreview" data-testid="archive-image-preview" class="contents"><img :src="imagePreview.dataUrl" :alt="previewEntry.name" class="preview-image"></div>
           <pre v-else-if="textPreview" data-testid="archive-text-preview" class="preview-text">{{ textPreview.content }}</pre>

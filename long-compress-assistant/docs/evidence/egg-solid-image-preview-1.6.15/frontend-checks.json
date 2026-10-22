@@ -1,0 +1,37 @@
+{
+  "version": "1.6.15",
+  "differentPassedChecks": 6,
+  "checks": [
+    {
+      "name": "reader1557 component wires scope, page jump, keyboard, zoom and return location to the same source context",
+      "report": "frontend-reader.json",
+      "status": "passed"
+    },
+    {
+      "name": "reader1557 component skips unsupported images and offers exact original extraction",
+      "report": "frontend-reader.json",
+      "status": "passed"
+    },
+    {
+      "name": "reader1557 component shows native progress and stopping cancels only its registered image request",
+      "report": "frontend-reader.json",
+      "status": "passed"
+    },
+    {
+      "name": "egg1615 solid reader loads only demanded pages and validates cached pages without speculative shared reads",
+      "report": "frontend-reader.json",
+      "status": "passed"
+    },
+    {
+      "name": "egg1615 shared read has an explicit wait message and stopping discards late pixels",
+      "report": "frontend-reader.json",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView egg1615 solid image keeps the original modal, shared wait text and contextual limits",
+      "report": "frontend-view.json",
+      "status": "passed"
+    }
+  ],
+  "scope": "Changed reader component (three existing plus two new cases), one new solid-modal case. Skipped tests not counted."
+}

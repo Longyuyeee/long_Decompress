@@ -232,6 +232,16 @@ describe('ArchiveBrowserView', () => {
     })
   })
 
+  it('egg1615 solid image keeps the original modal, shared wait text and contextual limits',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'EGG',revision:'e'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:20,totalCompressedSize:8,encrypted:false,entries:[{path:'cover.png',name:'cover.png',size:20,isDir:false,compressedSize:null}]})
+    let finish!:(v:unknown)=>void;mocks.previewArchiveImage.mockReturnValueOnce(new Promise(resolve=>finish=resolve))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1615,path:'C:/solid.egg'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
+    await w.get('[data-entry-path="cover.png"]').trigger('dblclick');await flushPromises();expect(w.get('.preview-stage').text()).toContain('正在读取固实包共享内容')
+    finish({entryPath:'cover.png',dataUrl:'data:image/png;base64,AA==',mimeType:'image/png',width:320,height:240,byteSize:20});await flushPromises()
+    expect(w.find('[data-testid="archive-image-preview"]').exists()).toBe(true)
+    await w.findAll('button').find(b=>b.attributes('aria-label')==='预览说明')!.trigger('mouseenter');await flushPromises();expect(w.text()).toContain('完整校验后显示');expect(w.text()).toContain('64 MiB');w.unmount()
+  })
+
   it('egg1614 solid text keeps the original complete preview and its bounded shared-stream hint',async()=>{
     mocks.browseArchive.mockResolvedValueOnce({format:'EGG',revision:'d'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:10,totalCompressedSize:8,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:10,isDir:false,compressedSize:null}]})
     mocks.previewArchiveText.mockResolvedValueOnce({entryPath:'readme.txt',content:'固实包内说明',encoding:'UTF-8',byteSize:10,totalSize:10,truncated:false,lineCount:1})

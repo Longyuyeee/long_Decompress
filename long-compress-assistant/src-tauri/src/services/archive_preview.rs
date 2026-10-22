@@ -1265,7 +1265,7 @@ mod egg_image1613_tests{
     }
     #[tokio::test]
     async fn egg_image1613_incomplete_damaged_solid_and_limits_remain_actionable(){
-        for (file,reason) in [("crc","CRC"),("truncated","校验失败"),("trailing","校验失败"),("oversize","8 MiB"),("solid","固实"),("not-image","not a supported raster"),("dimensions","dimensions exceed")]{
+        for (file,reason) in [("crc","CRC"),("truncated","校验失败"),("trailing","校验失败"),("oversize","8 MiB"),("not-image","not a supported raster"),("dimensions","dimensions exceed")]{
             let error=preview_archive_image(&root().join(format!("{file}.egg")),"preview.png",None).await.unwrap_err();assert!(format!("{error:#}").contains(reason),"{file}: {error:#}");
         }
         let input=Path::new(env!("CARGO_MANIFEST_DIR")).join("../test-results/egg-image-1613/input-limit.egg");let error=preview_archive_image(&input,"preview.png",None).await.unwrap_err();assert!(format!("{error:#}").contains("64 MiB"));
@@ -1286,7 +1286,7 @@ mod egg_image1613_tests{
         for (name,key) in [("a wrong","wrong"),("b controlled","图片密码1613!")]{vault.add_password(PasswordEntry::new(name.into(),key.into(),PasswordCategory::Other)).await.unwrap();}
         let control=super::super::image_reader::Control::default();let mut service=CompressionService::new(CompressionServiceConfig::default(),Arc::new(IOBufferPool::default()),Arc::new(RarSupportService::new()),Arc::new(UniversalCliEngine::new()),Arc::new(vault));service.cancellation_flag=control.flag.clone();
         let path=root().join("password-volumes.vol2.egg");let value=service.preview_egg_image_with_vault(path.to_str().unwrap(),"相册/01-封面.png",None,Some(ZipPasswordEncoding::Cp936),None,control).await.unwrap();assert_eq!((value.width,value.height),(320,240));assert!(service.encrypted_password_service.list_passwords().await.unwrap().iter().all(|e|e.use_count==0));
-        let path=root().join("solid.egg");let error=service.preview_egg_image_with_vault(path.to_str().unwrap(),"preview.png",None,None,None,Default::default()).await.unwrap_err();assert!(format!("{error:#}").contains("固实"));
+        let path=root().join("solid.egg");let image=service.preview_egg_image_with_vault(path.to_str().unwrap(),"preview.png",None,None,None,Default::default()).await.unwrap();assert_eq!(image.width,320);
     }
 }
 
@@ -1350,5 +1350,86 @@ mod egg_solid_text1614_tests {
         assert!(format!("{error:#}").contains("加密固实"));
         let error=service.preview_egg_text_with_vault(controlled("shared-output-limit").to_str().unwrap(),"readme.txt",None,None,None).await.unwrap_err();
         assert!(format!("{error:#}").contains("64 MiB"));
+    }
+}
+
+
+#[cfg(test)]
+mod egg_solid_image1615_tests {
+    use super::*;
+    use std::sync::{Arc,atomic::{AtomicBool,Ordering}};
+    use sha2::Digest;
+    fn root()->std::path::PathBuf { Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/egg-solid-image-1615") }
+    fn source(name:&str)->std::path::PathBuf { root().join(format!("{name}.egg")) }
+    fn manifest()->serde_json::Value { serde_json::from_slice(&std::fs::read(root().join("manifest.json")).unwrap()).unwrap() }
+    fn image_sha(value:&ArchiveImagePreview)->String {
+        let bytes=base64::Engine::decode(&base64::engine::general_purpose::STANDARD,value.data_url.split(',').nth(1).unwrap()).unwrap();
+        format!("{:x}",sha2::Sha256::digest(bytes))
+    }
+    #[tokio::test]
+    async fn egg_solid_image1615_shared_deflate_lzma_native_pages_match_exact_owned_pixels() {
+        let m=manifest();
+        for name in ["deflate","lzma","controlled-native.vol2"] {
+            let p=source(name);
+            for entry in m["images"].as_array().unwrap() {
+                let value=preview_archive_image(&p,entry["path"].as_str().unwrap(),None).await.unwrap();
+                assert_eq!(value.byte_size,entry["bytes"].as_u64().unwrap());
+                assert_eq!(image_sha(&value),entry["sha256"].as_str().unwrap(),"{name}");
+            }
+        }
+        let value=preview_archive_image(&source("exact-limit"),"preview.bmp",None).await.unwrap();
+        assert_eq!(value.byte_size,8*1024*1024);assert_eq!(image_sha(&value),m["exactLimitSha256"].as_str().unwrap());
+        // The image capture limit must not enlarge text capture.
+        let error=preview_archive_text(&source("ui"),"gallery/02-grid.bmp",None).await.unwrap_err();
+        assert!(format!("{error:#}").contains("1 MiB"));
+    }
+    #[tokio::test]
+    async fn egg_solid_image1615_tail_crc_dependency_limits_and_encryption_never_display_partial_images() {
+        for (name,entry,reason) in [
+            ("shared-crc","gallery/01-cover.png","CRC"),
+            ("shared-output-limit","gallery/01-cover.png","64 MiB"),
+            ("encrypted-dependency","gallery/01-cover.png","加密固实图片"),
+            ("unknown-dependency","gallery/01-cover.png","Deflate / LZMA"),
+            ("truncated","gallery/01-cover.png","校验失败"),
+            ("trailing","gallery/01-cover.png","校验失败"),
+            ("oversize","preview.bmp","8 MiB"),
+            ("dimensions","preview.png","dimensions exceed"),
+            ("ui","gallery/00-broken.png","not a supported raster")
+        ] {
+            let error=preview_archive_image(&source(name),entry,None).await.unwrap_err();
+            assert!(format!("{error:#}").contains(reason),"{name}: {error:#}");
+        }
+    }
+    #[tokio::test]
+    async fn egg_solid_image1615_cancel_after_shared_read_and_source_replacement_discard_the_page() {
+        let p=source("ui");let revision=super::super::image_reader::revision(&p).unwrap();
+        let flag=Arc::new(AtomicBool::new(false));let signal=flag.clone();
+        let control=ImageControl{flag,observer:Arc::new(move|event|if event.phase=="decoding"{signal.store(true,Ordering::Release)})};
+        let error=super::super::image_reader::read(&p,"gallery/02-grid.bmp",None,None,None,&revision,control).await.unwrap_err();
+        assert!(format!("{error:#}").contains("IMAGE_READER_CANCELLED"));
+        let dir=tempfile::tempdir().unwrap();let p=dir.path().join("changed.egg");std::fs::copy(source("lzma"),&p).unwrap();
+        let revision=super::super::image_reader::revision(&p).unwrap();let changed=p.clone();
+        let control=ImageControl{observer:Arc::new(move|event|if event.phase=="decoding"{std::fs::write(&changed,b"source replaced after shared stream read").unwrap()}),..Default::default()};
+        let error=super::super::image_reader::read(&p,"gallery/01-cover.png",None,None,None,&revision,control).await.unwrap_err();
+        assert!(format!("{error:#}").contains("IMAGE_READER_CHANGED"));
+    }
+    #[tokio::test]
+    async fn egg_solid_image1615_locked_vault_middle_member_and_exact_extraction_keep_the_same_selection() {
+        use crate::services::{compression_service::{CompressionService,CompressionServiceConfig},encrypted_password_service::EncryptedPasswordService,io_buffer_pool::IOBufferPool,rar_support::RarSupportService,universal_engine::UniversalCliEngine};
+        let dir=tempfile::tempdir().unwrap();let vault=EncryptedPasswordService::new(dir.path());
+        let service=CompressionService::new(CompressionServiceConfig::default(),Arc::new(IOBufferPool::default()),Arc::new(RarSupportService::new()),Arc::new(UniversalCliEngine::new()),Arc::new(vault));
+        let p=source("controlled-native.vol2");let entry="gallery/02-grid.bmp";
+        let value=service.preview_egg_image_with_vault(p.to_str().unwrap(),entry,None,None,None,Default::default()).await.unwrap();
+        assert_eq!(image_sha(&value),manifest()["images"][1]["sha256"].as_str().unwrap());
+        let error=service.preview_egg_image_with_vault(source("encrypted-dependency").to_str().unwrap(),"gallery/01-cover.png",None,None,None,Default::default()).await.unwrap_err();
+        assert!(format!("{error:#}").contains("加密固实图片"));
+        let opts=crate::models::compression::DecompressOptions{selected_entries:vec![entry.into()],..Default::default()};
+        let out=tempfile::tempdir().unwrap();
+        super::super::egg_engine::extract(&p,out.path(),None,&opts,Arc::new(AtomicBool::new(false))).await.unwrap();
+        assert_eq!(format!("{:x}",sha2::Sha256::digest(std::fs::read(out.path().join(entry)).unwrap())),manifest()["images"][1]["sha256"].as_str().unwrap());
+        assert!(!out.path().join("gallery/01-cover.png").exists() && !out.path().join("tail.bin").exists());
+        for n in [1,3] {std::fs::copy(source(&format!("controlled-native.vol{n}")),dir.path().join(format!("controlled-native.vol{n}.egg"))).unwrap();}
+        let error=service.preview_egg_image_with_vault(dir.path().join("controlled-native.vol3.egg").to_str().unwrap(),"gallery/01-cover.png",None,None,None,Default::default()).await.unwrap_err();
+        assert!(format!("{error:#}").contains("incomplete"));
     }
 }
