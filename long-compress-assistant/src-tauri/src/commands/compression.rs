@@ -1649,7 +1649,10 @@ pub async fn preview_archive_text(
         let metadata = crate::services::alz_engine::plan(Path::new(&file_path), &options, cancelled.clone()).await.map_err(|e| format!("{e:#}"))?;
         if metadata.entries.len() != 1 || metadata.entries[0].is_dir { return Err("请选择一份 ALZ 文本预览".into()); }
         let entry = &metadata.entries[0];
-        if entry.size > 1024*1024 { return Err("ALZ 文本预览支持 1 MiB 以内的完整文件；此文件较大，请先提取后打开".into()); }
+        if entry.size > 1024*1024 {
+            let mut service=CompressionService::new_with_defaults().await;service.cancellation_flag=cancelled;
+            return service.preview_alz_text_prefix_with_vault(&file_path,&entry_path,password.as_deref(),zip_password_encoding,entry.encrypted,source_revision).await.map_err(|e|format!("{e:#}"));
+        }
         if entry.compressed_size.unwrap_or(u64::MAX) > 64*1024*1024 { return Err("所选 ALZ 文本压缩数据超过 64 MiB 预览范围，请先提取后打开".into()); }
     }
     let resolved_password = match password.filter(|value| !value.is_empty()) {

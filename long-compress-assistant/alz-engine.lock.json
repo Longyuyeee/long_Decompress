@@ -15,9 +15,9 @@
     "vendor/unalz/src/lib.rs": "738265784defd3dd27aebf101f22b7e335ce2863e8950daaaab30bcef691551d",
     "vendor/unalz/src/main.rs": "88f140392e226c1a37d56c8ee84e71d0abbf9ca3df439a9991dabc4ca94a361c",
     "vendor/unalz/src/multivolume.rs": "88243863923bd5cd59cbce8f98877faec01147f82f1d88221fbae351a97a33e1",
-    "tools/alz-engine/src/main.rs": "3242cc8a946673a161c302b813ac8d25b29d66442386be903c6d0a59a54383e4",
-    "src-tauri/resources/alz-engine/SOURCE.md": "7a3615e88806fd4b3efa5e0bee24a250beb69e870218ffb49e6c8c87801c850c",
-    "src-tauri/resources/alz-engine/dependencies.json": "1ccc22221ab50ff6c76defa313e44678bf4912485b24d79336efc868cc2bfde1",
+    "tools/alz-engine/src/main.rs": "bc3eb7ac52acd55999102ee18a09a6e757374420d66840cccbd269ddb938ff9d",
+    "src-tauri/resources/alz-engine/SOURCE.md": "cdfd7f07e942bee451583710b1771cbfbc16d8e0f0658e3f6580c42230f57cd4",
+    "src-tauri/resources/alz-engine/dependencies.json": "a02b50bd1b02415f2c9942d59f4680203a8ce4c76acc7afa9c14dbced6b6ed01",
     "src-tauri/resources/alz-engine/licenses/adler2-2.0.1-LICENSE-0BSD": "861399f8c21c042b110517e76dc6b63a2b334276c8cf17412fc3c8908ca8dc17",
     "src-tauri/resources/alz-engine/licenses/adler2-2.0.1-LICENSE-APACHE": "8ada45cd9f843acf64e4722ae262c622a2b3b3007c7310ef36ac1061a30f6adb",
     "src-tauri/resources/alz-engine/licenses/adler2-2.0.1-LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
@@ -142,12 +142,12 @@
     "src-tauri/resources/alz-engine/licenses/windows-sys-0.61.2-license-mit": "c2cfccb812fe482101a8f04597dfc5a9991a6b2748266c47ac91b6a5aae15383",
     "src-tauri/resources/alz-engine/licenses/zlib-rs-0.6.8-LICENSE": "e72111c52b7d96ebe25348dee19f0744f444d3c95ae6b1ecb6ccaecc5bce05ba",
     "src-tauri/resources/alz-engine/licenses/zmij-1.0.23-LICENSE-MIT": "23f18e03dc49df91622fe2a76176497404e46ced8a715d9d2b67a7446571cca3",
-    "src-tauri/resources/alz-engine/long-alz.exe": "558393d2e45d7fc6f8e966934115de438c20e57f851440fc9b41d8f49e57db7b",
+    "src-tauri/resources/alz-engine/long-alz.exe": "dcf5e376527db48c0faa42d55c227f07265e37f11c9e8af8b7a3aab98adbadd8",
     "vendor/unalz/Cargo.toml": "82e28ffa1e70529a3b81ce7a72ad1e1d61fbafba1240c6a8f545e126cf204936",
     "vendor/unalz/LICENSE": "3f7201d86402cbb8cb7717232f71f46ebc494b649e5532796a8fc6ac34e523ee",
     "vendor/unalz/LONG_MODIFICATIONS.md": "1b92c972c47c9c15e9312f7b0d25aacad5b4555783877c77b6f13a7e8e32188b",
-    "tools/alz-engine/Cargo.toml": "dfab84e29ec95c72e82c1eed93ee84183d2aedef82f7801e0fa4be6ed9abeccc",
-    "tools/alz-engine/Cargo.lock": "6349e54cb4f3854629e5753693d03179ce0f12c93aae0ea2f683c13710a2673b",
+    "tools/alz-engine/Cargo.toml": "eeb631e59bce1a625edf5b12602ce5d445351607a379e8cfce8593f6b7e5e2d8",
+    "tools/alz-engine/Cargo.lock": "5be39df519a534a9f86516acae5487e42acfe2cd1e96fc6c6b0314f88720e37e",
     "src-tauri/src/services/alz_volumes.rs": "1ed85e07c369156cd3f606985001f8d2a19f6637b4afeff99a609cee4084b13b"
   }
 }

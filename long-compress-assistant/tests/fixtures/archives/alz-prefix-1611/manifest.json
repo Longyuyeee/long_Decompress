@@ -1,0 +1,153 @@
+{
+  "version": "1.6.11",
+  "controlled": true,
+  "historicalProducer": false,
+  "interpretation": "Controlled ALZ text prefixes; no new historical-producer interoperability claim.",
+  "password": "日志密码1611!",
+  "encoding": "utf8",
+  "cases": [
+    {
+      "name": "store",
+      "method": 0,
+      "bytes": 2600000,
+      "totalSize": 2600000,
+      "prefixSha256": "aba7a9a644d9e7ae0de677bd87bfa6c577e9dbb2092c2dc1cc2c86fc8185c3f4",
+      "controlled": true,
+      "password": null
+    },
+    {
+      "name": "deflate",
+      "method": 2,
+      "bytes": 2600000,
+      "totalSize": 2600000,
+      "prefixSha256": "aba7a9a644d9e7ae0de677bd87bfa6c577e9dbb2092c2dc1cc2c86fc8185c3f4",
+      "controlled": true,
+      "password": null
+    },
+    {
+      "name": "bzip2",
+      "method": 1,
+      "bytes": 2600000,
+      "totalSize": 2600000,
+      "prefixSha256": "aba7a9a644d9e7ae0de677bd87bfa6c577e9dbb2092c2dc1cc2c86fc8185c3f4",
+      "controlled": true,
+      "password": null
+    },
+    {
+      "name": "password",
+      "method": 2,
+      "bytes": 2600000,
+      "totalSize": 2600000,
+      "prefixSha256": "aba7a9a644d9e7ae0de677bd87bfa6c577e9dbb2092c2dc1cc2c86fc8185c3f4",
+      "controlled": true,
+      "password": "日志密码1611!"
+    },
+    {
+      "name": "utf8-boundary",
+      "method": 2,
+      "bytes": 1052578,
+      "totalSize": 1052578,
+      "prefixSha256": "bbab144c31234863151c14a01c06e602aee206c8ba0420445df106aaaff1beea",
+      "controlled": true,
+      "password": null
+    },
+    {
+      "name": "utf16-boundary",
+      "method": 2,
+      "bytes": 1048582,
+      "totalSize": 1048582,
+      "prefixSha256": "4e938d3d2ad510f9f764e575a7eea8ab71a16594c18d60d2a8113631f43918cf",
+      "controlled": true,
+      "password": null
+    },
+    {
+      "name": "gbk-boundary",
+      "method": 2,
+      "bytes": 2097153,
+      "totalSize": 2097153,
+      "prefixSha256": "0f19b3b72bcc0445ecb06b91c94553bbafe3d606b459134b4838c7f27351381e",
+      "controlled": true,
+      "password": null
+    },
+    {
+      "name": "bad-crc-later",
+      "method": 2,
+      "bytes": 2600000,
+      "totalSize": 2600000,
+      "prefixSha256": "aba7a9a644d9e7ae0de677bd87bfa6c577e9dbb2092c2dc1cc2c86fc8185c3f4",
+      "controlled": true,
+      "password": null
+    },
+    {
+      "name": "short-before-prefix",
+      "method": 2,
+      "bytes": 110000,
+      "totalSize": 2600000,
+      "prefixSha256": "27b774c1799e9b834c40282847512dc5c0d9c992fe124012b84eb3dbf930feec",
+      "controlled": true,
+      "password": null
+    }
+  ],
+  "files": [
+    {
+      "path": "bad-crc-later.alz",
+      "bytes": 9031,
+      "sha256": "b0241583d304a0b9a4b5127a177ee9dcf807f385472aa388c5a8fa4353a645c4"
+    },
+    {
+      "path": "bzip2.alz",
+      "bytes": 1656,
+      "sha256": "62ca9785c5906670865adfa3ff6043de5107da096cdd34508856190eb705b904"
+    },
+    {
+      "path": "deflate.alz",
+      "bytes": 9031,
+      "sha256": "e9484d80d8bf97a561c5a2d15a6087c5b53d40a3644f023b201bd359b419baa0"
+    },
+    {
+      "path": "gbk-boundary.alz",
+      "bytes": 3191,
+      "sha256": "6758fdc5b66c54a901ed0273c609da0d559719433c47032311d98fcd95d79b11"
+    },
+    {
+      "path": "password-volumes.a00",
+      "bytes": 3030,
+      "sha256": "7f0fdcffdd3d6e22b500bc13488fbe7d11a81fe674bd4f7ba89b10008daefcb1"
+    },
+    {
+      "path": "password-volumes.a01",
+      "bytes": 3031,
+      "sha256": "e90919afcb0287c63a6d316b2ac4a44330b6551b0d7a3fc0473346a9ec4364ec"
+    },
+    {
+      "path": "password-volumes.alz",
+      "bytes": 3030,
+      "sha256": "0c8112aaf2157b3c4e683a6ffdc3adabde6b8dc73ccf90bc9faacc4f69715065"
+    },
+    {
+      "path": "password.alz",
+      "bytes": 9043,
+      "sha256": "5d1ed4efd0998ed34b4cfa8e0bf164d6aa7b6f6b3d264ddf55dea89a74cf60e3"
+    },
+    {
+      "path": "short-before-prefix.alz",
+      "bytes": 361,
+      "sha256": "c4daba1ad56a8aa7b168f750b88cf355e73ece2ec4f0544acf8f98ed8760ba0a"
+    },
+    {
+      "path": "store.alz",
+      "bytes": 2600114,
+      "sha256": "e43b986a4354b339461db2ddbe06fbebe888f168ba5904d006e31b70f1f9217c"
+    },
+    {
+      "path": "utf16-boundary.alz",
+      "bytes": 1164,
+      "sha256": "01e232c39fe24583db6340bb48abdd34efc24fb69f3ba6c9e6a58443a55f4f8d"
+    },
+    {
+      "path": "utf8-boundary.alz",
+      "bytes": 1167,
+      "sha256": "0c4aa0b784488334cd3c54177497885a5ea6c40f217fb283cd33b36c6fe9641f"
+    }
+  ]
+}

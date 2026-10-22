@@ -101,12 +101,13 @@ async fn preview_entry(path: &Path, entry: &str, password: Option<&str>, encodin
     let entry = super::archive_entry_open::normalize_safe_entry_path(entry)?;
     let listing = browse_with_encoding(path, encoding, cancelled.clone()).await?;
     let selected = listing.entries.iter().find(|e| e.path == entry && !e.is_dir).context("所选 ALZ 文件已不存在，请刷新目录")?;
-    anyhow::ensure!(selected.size <= max_output, "{}", if image { "ALZ 图片超过 8 MiB 预览范围，请先提取后打开" } else { "ALZ 文件预览支持 1 MiB 以内的完整文件；此文件较大，请先提取后打开" });
-    anyhow::ensure!(selected.compressed_size.unwrap_or(MAX_INPUT+1) <= MAX_INPUT, "所选 ALZ 文件压缩数据超过 64 MiB 预览范围，请先提取后打开");
+    let prefix = !image && selected.size > max_output;
+    anyhow::ensure!(prefix || selected.size <= max_output, "{}", if image { "ALZ 图片超过 8 MiB 预览范围，请先提取后打开" } else { "ALZ 文件预览支持 1 MiB 以内的完整文件；此文件较大，请先提取后打开" });
+    anyhow::ensure!(prefix || selected.compressed_size.unwrap_or(MAX_INPUT+1) <= MAX_INPUT, "所选 ALZ 文件压缩数据超过 64 MiB 预览范围，请先提取后打开");
     let group = super::alz_volumes::complete(path)?;
     let tool = command_path().context("缺少随附 ALZ 读取引擎，请修复安装")?;
     let mut command = crate::utils::process::async_command(tool);
-    command.arg(if image { "preview-image" } else { "preview-text" }).arg(&group.first);
+    command.arg(if image { "preview-image" } else if prefix { "preview-text-prefix" } else { "preview-text" }).arg(&group.first);
     let input = serde_json::to_vec(&serde_json::json!({"password":password,"selected":[entry],"encoding":source_encoding(encoding)?}))?;
     let result = crate::utils::process::cancellable_output_with_stdin(&mut command, &cancelled, Duration::from_secs(30), Some(input)).await.context("ALZ 文件预览已取消或读取未完成")?;
     let response: serde_json::Value = serde_json::from_slice(&result.stdout).context("ALZ 文件预览没有返回有效结果")?;
@@ -115,7 +116,9 @@ async fn preview_entry(path: &Path, entry: &str, password: Option<&str>, encodin
     let value = response.get("result").context("ALZ 文件预览结果缺失")?;
     let bytes: Vec<u8> = serde_json::from_value(value["bytes"].clone())?;
     let size = value["totalSize"].as_u64().context("ALZ 文件大小缺失")?;
-    anyhow::ensure!(size == selected.size && bytes.len() as u64 == size && size <= max_output, "ALZ 文件预览大小不一致，请刷新后重试");
+    let valid = if prefix { value["partial"]==true && value["inputBytes"].as_u64().is_some_and(|n|n<=MAX_INPUT) && bytes.len() as u64==max_output }
+        else { bytes.len() as u64==size && size<=max_output };
+    anyhow::ensure!(size == selected.size && valid, "ALZ 文件预览大小不一致，请刷新后重试");
     anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Acquire), "ALZ 文件预览已取消");
     Ok((bytes, size))
 }

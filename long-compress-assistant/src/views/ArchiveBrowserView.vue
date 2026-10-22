@@ -376,7 +376,8 @@ const openPreview = async (entry: ArchiveEntryInfo) => {
   } catch (error) {
     if (sequence === previewSequence) {
       const raw = String(error).replace(/^Error:\s*/i, '').trim()
-      previewError.value = raw.includes('IMAGE_READER_CHANGED|')
+      previewError.value = raw.includes('ALZ 文本前缀读取超过 64 MiB')
+        ? '读取这段文本需要扫描超过 64 MiB，已停止预览。请先提取后打开。' : raw.includes('IMAGE_READER_CHANGED|')
         ? '来源已变化或无法确认，请关闭预览并刷新此栏后重试。' : /^provided password is incorrect$/i.test(raw)
         ? '密码不正确，请修改密码后重试。' : String(error)
     }
@@ -1026,7 +1027,7 @@ const extractSelected = async () => {
     <div v-if="previewEntry" class="preview-backdrop" data-testid="archive-entry-preview" @click.self="closePreview">
       <section class="preview-dialog" role="dialog" aria-modal="true" :aria-label="`预览 ${previewEntry.name}`">
         <header class="preview-header">
-          <div class="min-w-0 flex items-center gap-2"><h2 class="truncate text-lg font-black text-content">{{ previewEntry.name }}</h2><HelpHint label="预览说明"><template v-if="previewKind(previewEntry) === 'image'">只读查看，不修改原文件。支持 PNG、JPEG、GIF、WebP、BMP；图片不超过 8 MiB，单边不超过 8192、总像素不超过 1600 万。超出范围可先提取后查看。</template><template v-else>只读查看，不修改原文件。ALZ 支持 1 MiB 以内且通过完整校验的文本；其他已支持格式的大文本显示前 1 MiB。需要编辑时，可以提取后打开。</template></HelpHint></div>
+          <div class="min-w-0 flex items-center gap-2"><h2 class="truncate text-lg font-black text-content">{{ previewEntry.name }}</h2><HelpHint label="预览说明"><template v-if="previewKind(previewEntry) === 'image'">只读查看，不修改原文件。支持 PNG、JPEG、GIF、WebP、BMP；图片不超过 8 MiB，单边不超过 8192、总像素不超过 1600 万。超出范围可先提取后查看。</template><template v-else>只读查看，不修改原文件。ALZ 小文本完整校验后显示；大文本仅显示前 1 MiB，未校验整文件，不能代替完整性检查。其他已支持格式的大文本显示前 1 MiB。需要编辑时，可以提取后打开。</template></HelpHint></div>
           <button type="button" class="preview-close" aria-label="关闭预览" @click="closePreview"><i class="pi pi-times"></i></button>
         </header>
         <div class="preview-stage">
@@ -1039,7 +1040,7 @@ const extractSelected = async () => {
           <span>{{ imagePreview.width }} × {{ imagePreview.height }}</span><span>{{ formatBytes(imagePreview.byteSize) }}</span><span>{{ imagePreview.mimeType }}</span><span>只读</span><button class="text-primary font-bold" data-testid="archive-preview-read-images" @click="openImageReader(previewEntry)">连续阅读这组图片 <i class="pi pi-arrow-right"/></button>
         </footer>
         <footer v-else-if="textPreview" class="preview-meta">
-          <span>{{ textPreview.encoding }}</span><span>已读 {{ formatBytes(textPreview.byteSize) }} / {{ formatBytes(textPreview.totalSize) }}</span><span>{{ textPreview.lineCount }} 行</span><span>{{ textPreview.truncated ? '仅显示前 1 MiB' : '完整显示' }}</span><span>只读</span>
+          <span>{{ textPreview.encoding }}</span><span>已读 {{ formatBytes(textPreview.byteSize) }} / {{ formatBytes(textPreview.totalSize) }}</span><span>{{ textPreview.lineCount }} 行</span><span>{{ textPreview.truncated ? (result?.format === 'ALZ' ? '部分内容 · 未校验整文件' : '仅显示前 1 MiB') : '完整显示' }}</span><span>只读</span>
         </footer>
 
       </section>

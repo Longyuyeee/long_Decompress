@@ -100,6 +100,7 @@ import { runToolsCenter167Gate } from './tools-center-167-gate.mjs'
 import { runAlzBounded168Gate } from './alz-bounded-168-gate.mjs'
 import { runAlzText169Gate } from './alz-text-169-gate.mjs'
 import { runAlzImage1610Gate } from './alz-image-1610-gate.mjs'
+import { runAlzPrefix1611Gate } from './alz-prefix-1611-gate.mjs'
 import { runCompactModulesUiGate } from './compact-modules-ui-gate.mjs'
 import { runPageUiReview } from './page-ui-review-gate.mjs'
 import { runSettingsUpdateThemesGate } from './settings-update-themes-gate.mjs'
@@ -5023,6 +5024,9 @@ try {
     completedSuccessfully = true
   } else if ((process.argv.includes('--compact-modules-only') || process.argv.includes('--compact-modules-layout-only'))) {
     await runCompactModulesUiGate({driver,bridge:callDesktopBridge,application,root,dataDirectory:e2eDataDirectory})
+    completedSuccessfully = true
+  } else if (process.argv.includes('--alz-prefix-1611-only')) {
+    await runAlzPrefix1611Gate({driver,bridge:callDesktopBridge,root,application})
     completedSuccessfully = true
   } else if (process.argv.includes('--alz-image-1610-only')) {
     await runAlzImage1610Gate({driver,bridge:callDesktopBridge,root,application})

@@ -1,0 +1,8 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[alz-prefix-1611] large text uses the original preview and explicitly stays partial in wide and narrow windows
+[alz-prefix-1611] vault candidates and middle native volume read only a prefix
+[alz-prefix-1611] content preceding a bad whole-file CRC stays explicitly unverified
+[alz-prefix-1611] actual compressed inputs above 64 MiB either yield an early prefix or a clear scan-limit result
+[alz-prefix-1611] early cancel and replaced source never publish a prefix; a new request still works

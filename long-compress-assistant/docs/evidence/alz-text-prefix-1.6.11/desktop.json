@@ -1,0 +1,135 @@
+{
+  "version": "1.6.11",
+  "applicationSha256": "d5ed7c9681e068773f50de6624f2dc7c23e2b43283d0dc41c0209f7620e40b3e",
+  "helperSha256": "dcf5e376527db48c0faa42d55c227f07265e37f11c9e8af8b7a3aab98adbadd8",
+  "controlled": true,
+  "checks": [
+    {
+      "name": "large text uses the original preview and explicitly stays partial in wide and narrow windows",
+      "text": {
+        "length": 629146,
+        "scroll": true,
+        "start": "INFO 2026-10-23 02:00:00 服务已就绪，读取日志开头。\nINFO 2026-10-23 02:00:00 服务已就绪，读取日志开头。\nINFO 2026-10"
+      },
+      "meta": "UTF-8\n已读 1.00 MB / 2.48 MB\n16132 行\n部分内容 · 未校验整文件\n只读",
+      "applicationSha256": "fbb4651f0a00efa7650426a09c5a56be8e87a902a910d05fd9872ac34f22bd4c"
+    },
+    {
+      "name": "vault candidates and middle native volume read only a prefix",
+      "controlled": true,
+      "prefixBytes": 1048576,
+      "totalBytes": 2600000,
+      "wrongKey": "[alz-password] ALZ 密码短头不匹配，也可能加密头损坏；请核对密码和来源完整性",
+      "applicationSha256": "fbb4651f0a00efa7650426a09c5a56be8e87a902a910d05fd9872ac34f22bd4c"
+    },
+    {
+      "name": "content preceding a bad whole-file CRC stays explicitly unverified",
+      "partial": true,
+      "meta": "UTF-8\n已读 1.00 MB / 2.48 MB\n16132 行\n部分内容 · 未校验整文件\n只读",
+      "fullFailureCoveredByTargetedRust": true,
+      "applicationSha256": "fbb4651f0a00efa7650426a09c5a56be8e87a902a910d05fd9872ac34f22bd4c"
+    },
+    {
+      "name": "actual compressed inputs above 64 MiB either yield an early prefix or a clear scan-limit result",
+      "actualLargeSource": true,
+      "largePrefixBytes": 1048576,
+      "scanLimit": true,
+      "applicationSha256": "fbb4651f0a00efa7650426a09c5a56be8e87a902a910d05fd9872ac34f22bd4c"
+    },
+    {
+      "name": "early cancel and replaced source never publish a prefix; a new request still works",
+      "changed": "IMAGE_READER_CHANGED|来源无法确认，请返回刷新来源后重新阅读: [archive-inspection:damaged] ALZ 卷尾损坏或下载不完整：E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-prefix-1611\\b8c5df3d-3a08-465c-8b32-ad897260b4af\\changed.alz",
+      "cancelled": "文本预览已取消",
+      "newPrefixBytes": 1048575,
+      "applicationSha256": "fbb4651f0a00efa7650426a09c5a56be8e87a902a910d05fd9872ac34f22bd4c"
+    },
+    {
+      "name": "scan limit gives an extraction hint without internal I/O markers",
+      "applicationSha256": "d5ed7c9681e068773f50de6624f2dc7c23e2b43283d0dc41c0209f7620e40b3e",
+      "message": "无法预览\n读取这段文本需要扫描超过 64 MiB，已停止预览。请先提取后打开。",
+      "displayOnlyContinuation": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "prefix-wide",
+      "closeVisible": true,
+      "dialog": {
+        "height": 531.390625,
+        "width": 832,
+        "x": 134,
+        "y": 59.3046875
+      },
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100,
+      "applicationSha256": "fbb4651f0a00efa7650426a09c5a56be8e87a902a910d05fd9872ac34f22bd4c"
+    },
+    {
+      "name": "prefix-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 442.78125,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 38.609375
+      },
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760,
+      "applicationSha256": "fbb4651f0a00efa7650426a09c5a56be8e87a902a910d05fd9872ac34f22bd4c"
+    },
+    {
+      "name": "scan-limit-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 354.1953125,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 82.8984375
+      },
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760,
+      "applicationSha256": "fbb4651f0a00efa7650426a09c5a56be8e87a902a910d05fd9872ac34f22bd4c"
+    },
+    {
+      "name": "scan-limit-final-narrow",
+      "applicationSha256": "d5ed7c9681e068773f50de6624f2dc7c23e2b43283d0dc41c0209f7620e40b3e",
+      "closeVisible": true,
+      "dialog": {
+        "height": 354.1953125,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 82.8984375
+      },
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-prefix-1611\\b8c5df3d-3a08-465c-8b32-ad897260b4af",
+  "passed": true,
+  "previousCandidates": [
+    {
+      "applicationSha256": "fbb4651f0a00efa7650426a09c5a56be8e87a902a910d05fd9872ac34f22bd4c",
+      "scope": "Five passed groups retained; only the scan-limit UI error copy changed."
+    }
+  ]
+}

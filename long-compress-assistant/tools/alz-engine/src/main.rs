@@ -131,8 +131,8 @@ impl<W: Write> Write for CheckedWriter<W> {
     fn flush(&mut self) -> io::Result<()> { self.inner.flush() }
 }
 
-fn decode<W: Write>(archive: &mut AlzArchive, e: &AlzFileEntry, password: Option<&str>, codec: &'static encoding_rs::Encoding, writer: W) -> Result<()> {
-    let mut crypto = if e.is_encrypted() {
+fn entry_crypto(e: &AlzFileEntry, password: Option<&str>, codec: &'static encoding_rs::Encoding) -> Result<Option<ZipCrypto>> {
+    let crypto = if e.is_encrypted() {
         let password = password.context("[archive-inspection:password-required] ALZ 所选内容需要密码")?;
         let bytes = password_bytes(password, codec)?;
         let mut cipher = ZipCrypto::new(&bytes);
@@ -142,6 +142,12 @@ fn decode<W: Write>(archive: &mut AlzArchive, e: &AlzFileEntry, password: Option
         let mut cipher = ZipCrypto::new(&bytes);
         let mut check = header; cipher.decrypt(&mut check); Some(cipher)
     } else { None };
+    Ok(crypto)
+}
+
+
+fn decode<W: Write>(archive: &mut AlzArchive, e: &AlzFileEntry, password: Option<&str>, codec: &'static encoding_rs::Encoding, writer: W) -> Result<()> {
+    let mut crypto = entry_crypto(e, password, codec)?;
     archive.reader.seek(SeekFrom::Start(e.data_pos))?;
     let mut input = (&mut archive.reader).take(e.compressed_size);
     let mut out = CheckedWriter { inner: writer, bytes: 0, crc: crc32fast::Hasher::new() };
@@ -195,9 +201,58 @@ fn preview_entry(archive: &mut AlzArchive, entries: &[AlzFileEntry], password: O
     Ok(json!({"bytes":buffer.bytes,"totalSize":entry.uncompressed_size}))
 }
 
+// An intentional preview boundary is distinct from decoding/I/O failures.
+#[derive(Debug)]
+struct PrefixComplete;
+impl std::fmt::Display for PrefixComplete { fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result { f.write_str("ALZ preview prefix complete") } }
+impl std::error::Error for PrefixComplete {}
+struct PrefixWriter(Vec<u8>);
+impl Write for PrefixWriter {
+    fn write(&mut self, bytes:&[u8])->io::Result<usize>{
+        let count=bytes.len().min(MAX_TEXT_PREVIEW as usize-self.0.len());
+        self.0.extend_from_slice(&bytes[..count]);
+        if self.0.len()==MAX_TEXT_PREVIEW as usize {return Err(io::Error::other(PrefixComplete));}
+        Ok(count)
+    }
+    fn flush(&mut self)->io::Result<()>{Ok(())}
+}
+struct PrefixInput<R> { inner:R, remaining:u64, read:u64 }
+impl<R:Read> Read for PrefixInput<R> {
+    fn read(&mut self, buffer:&mut[u8])->io::Result<usize>{
+        if buffer.is_empty(){return Ok(0)}
+        if self.remaining==0{return Err(io::Error::other("ALZ 文本前缀读取超过 64 MiB 范围，请先提取后打开"))}
+        let count=buffer.len().min(self.remaining as usize);
+        let count=self.inner.read(&mut buffer[..count])?;self.remaining-=count as u64;self.read+=count as u64;Ok(count)
+    }
+}
+fn preview_text_prefix(archive:&mut AlzArchive,entries:&[AlzFileEntry],password:Option<&str>,codec:&'static encoding_rs::Encoding)->Result<Value>{
+    ensure!(entries.len()==1&&!entries[0].is_directory(),"请选择一份 ALZ 文本预览");
+    let entry=&entries[0];
+    ensure!(entry.uncompressed_size>MAX_TEXT_PREVIEW,"小文本应使用完整预览");
+    let mut crypto=entry_crypto(entry,password,codec)?;
+    archive.reader.seek(SeekFrom::Start(entry.data_pos))?;
+    let mut input=PrefixInput{inner:(&mut archive.reader).take(entry.compressed_size),remaining:MAX_TEXT_PREVIEW_INPUT,read:0};
+    let mut output=PrefixWriter(Vec::with_capacity(MAX_TEXT_PREVIEW as usize));
+    // Bzip2 emits one complete block at a time; bound its RLE-expanded block too.
+    let limit=entry.uncompressed_size.min(64*1024*1024);
+    let result=match entry.compression_method {
+        CompressionMethod::Store=>raw::extract_raw(&mut input,&mut output,entry.compressed_size,limit,crypto.as_mut()),
+        CompressionMethod::Deflate=>deflate::extract_deflate(&mut input,&mut output,entry.compressed_size,limit,crypto.as_mut()),
+        CompressionMethod::Bzip2=>bzip2::extract_bzip2(&mut input,&mut output,entry.compressed_size,limit,crypto.as_mut()),
+        CompressionMethod::Unknown(m)=>Err(AlzError::UnknownCompressionMethod(m)),
+    };
+    match result {
+        Err(AlzError::CantOpenDestFile(error)) if error.get_ref().is_some_and(|e|e.is::<PrefixComplete>())=>{},
+        Err(error)=>return Err(map_error(error,entry.is_encrypted())),
+        Ok(_)=>anyhow::bail!("ALZ 文本在预览范围前已结束且与声明大小不符，请先检查或重新获取来源"),
+    }
+    ensure!(output.0.len()==MAX_TEXT_PREVIEW as usize,"ALZ 文本前缀未完成");
+    Ok(json!({"bytes":output.0,"totalSize":entry.uncompressed_size,"partial":true,"inputBytes":input.read}))
+}
+
 fn run() -> Result<Value> {
     let args = std::env::args_os().skip(1).collect::<Vec<_>>();
-    ensure!(args.len() == 2, "Usage: long-alz list|plan|verify|extract|preview-text|preview-image archive (request on stdin)");
+    ensure!(args.len() == 2, "Usage: long-alz list|plan|verify|extract|preview-text|preview-image|preview-text-prefix archive (request on stdin)");
     let operation = args[0].to_str().context("Invalid operation")?;
     let mut data = Vec::new(); io::stdin().take(32 * 1024 * 1024 + 1).read_to_end(&mut data)?;
     ensure!(data.len() <= 32 * 1024 * 1024, "ALZ 请求过大");
@@ -214,6 +269,10 @@ fn run() -> Result<Value> {
         }
     }
     if operation == "plan" { return metadata(&entries); }
+    if operation == "preview-text-prefix" {
+        ensure!(request.selected.len()==1,"ALZ 前缀预览必须指定一个精确条目");
+        return preview_text_prefix(&mut archive,&entries,request.password.as_deref(),codec);
+    }
     if matches!(operation, "preview-text" | "preview-image") {
         ensure!(request.selected.len() == 1, "ALZ 预览必须指定一个精确条目");
         return preview_entry(&mut archive, &entries, request.password.as_deref(), codec, operation == "preview-image");
