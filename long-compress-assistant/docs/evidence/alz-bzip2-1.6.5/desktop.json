@@ -1,0 +1,313 @@
+{
+  "version": "1.6.5",
+  "binarySha256": "1ebcf6540b1f6c50d1adf685dc4adc0da7615bc9b41560c635fb879e2f20bc57",
+  "helperSha256": "f5e74b6420da0f46239c943700fbe53e39efde6b178592b96b56a4366a304cd7",
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bzip2-165\\0c5baa90-a15b-4f41-9188-09468f51c6c6",
+  "checks": [
+    {
+      "name": "original-content",
+      "hashes": true
+    },
+    {
+      "name": "plain-missing-end-single",
+      "diagnostic": {
+        "actualFormat": "ALZ",
+        "canRepair": false,
+        "encrypted": false,
+        "evidence": [
+          "Archive size: 268 bytes",
+          "Magic/extension format: ALZ",
+          "Entries: 2 files, 0 directories",
+          "Integrity failure class: damaged"
+        ],
+        "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\alz-bzip2-165\\plain-missing-end-single.alz",
+        "fileSize": 268,
+        "integrityTested": true,
+        "issues": [
+          {
+            "code": "damaged",
+            "detail": "归档结构已确认损坏或不完整；请重新获取完整文件，反复尝试密码不能修复损坏",
+            "severity": "error",
+            "title": "归档损坏"
+          }
+        ],
+        "missingVolumes": [],
+        "recoverability": "diagnostic_only",
+        "splitArchive": false,
+        "status": "damaged",
+        "totalDirectories": 0,
+        "totalFiles": 2,
+        "totalUncompressedSize": 4500,
+        "totalUncompressedSizeKnown": true,
+        "volumesFound": 1
+      },
+      "extraction": "[archive-inspection:damaged] ALZ 条目「a.txt」内容已通过大小和 CRC 校验，但Bzip2 压缩流缺少结束标记；归档不完整或已损坏，请重新获取完整原包，不必反复尝试密码",
+      "conversion": "转换读取原包失败：[archive-inspection:damaged] ALZ 条目「a.txt」内容已通过大小和 CRC 校验，但Bzip2 压缩流缺少结束标记；归档不完整或已损坏，请重新获取完整原包，不必反复尝试密码",
+      "noPartialResult": true,
+      "unrelatedSelectionHashes": true
+    },
+    {
+      "name": "key-trailing-volumes",
+      "diagnostic": {
+        "actualFormat": "ALZ",
+        "canRepair": false,
+        "encrypted": true,
+        "evidence": [
+          "Archive size: 337 bytes",
+          "Magic/extension format: ALZ",
+          "Entries: 2 files, 0 directories",
+          "Integrity failure class: damaged"
+        ],
+        "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\alz-bzip2-165\\key-trailing-volumes\\key-trailing-volumes.a00",
+        "fileSize": 337,
+        "integrityTested": true,
+        "issues": [
+          {
+            "code": "damaged",
+            "detail": "归档结构已确认损坏或不完整；请重新获取完整文件，反复尝试密码不能修复损坏",
+            "severity": "error",
+            "title": "归档损坏"
+          }
+        ],
+        "missingVolumes": [],
+        "recoverability": "diagnostic_only",
+        "splitArchive": true,
+        "status": "damaged",
+        "totalDirectories": 0,
+        "totalFiles": 2,
+        "totalUncompressedSize": 4500,
+        "totalUncompressedSizeKnown": true,
+        "volumesFound": 3
+      },
+      "extraction": "[archive-inspection:damaged] ALZ 条目「a.txt」内容已通过大小和 CRC 校验，但压缩流尾部仍有 5 字节异常数据；归档不完整或已损坏，请重新获取完整原包，不必反复尝试密码",
+      "conversion": "转换读取原包失败：[archive-inspection:damaged] ALZ 条目「a.txt」内容已通过大小和 CRC 校验，但压缩流尾部仍有 5 字节异常数据；归档不完整或已损坏，请重新获取完整原包，不必反复尝试密码",
+      "noPartialResult": true,
+      "unrelatedSelectionHashes": true
+    },
+    {
+      "name": "failure-and-retry",
+      "failed": {
+        "archiveOutput": null,
+        "completedAt": "2026-10-22T14:59:01.121Z",
+        "durationMs": 678,
+        "errorMessage": "[archive-inspection:damaged] ALZ 条目「a.txt」内容已通过大小和 CRC 校验，但Bzip2 压缩流缺少结束标记；归档不完整或已损坏，请重新获取完整原包，不必反复尝试密码",
+        "executionConfig": {
+          "extractToSubfolder": false,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bzip2-165\\0c5baa90-a15b-4f41-9188-09468f51c6c6\\旧失败结果",
+          "schemaVersion": 1
+        },
+        "failure": {
+          "category": "damaged",
+          "evidence": "recorded-marker",
+          "schemaVersion": 1,
+          "stage": "inspection"
+        },
+        "format": "alz",
+        "id": "w281ihk4nmvjo246y",
+        "logs": [
+          {
+            "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 132.7 GiB，预计输出 4.39 KiB）",
+            "severity": "info",
+            "timestamp": "2026-10-22T14:59:00.521Z"
+          },
+          {
+            "message": "确定解压格式: Alz (后缀: alz)",
+            "severity": "info",
+            "timestamp": "2026-10-22T14:59:00.529408500Z"
+          },
+          {
+            "message": "加密状态检测完成：本次解压内容无需密码，正在准备解压...",
+            "severity": "success",
+            "timestamp": "2026-10-22T14:59:00.669730700Z"
+          },
+          {
+            "message": "开始解压：未完整结束.alz",
+            "severity": "info",
+            "timestamp": "2026-10-22T14:59:00.848833400Z"
+          },
+          {
+            "message": "最终失败原因：[archive-inspection:damaged] ALZ 条目「a.txt」内容已通过大小和 CRC 校验，但Bzip2 压缩流缺少结束标记；归档不完整或已损坏，请重新获取完整原包，不必反复尝试密码",
+            "severity": "error",
+            "timestamp": "2026-10-22T14:59:01.121Z"
+          }
+        ],
+        "metrics": null,
+        "name": "未完整结束.alz",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bzip2-165\\0c5baa90-a15b-4f41-9188-09468f51c6c6\\旧失败结果",
+        "processedBytes": 0,
+        "retryOfTaskId": null,
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bzip2-165\\0c5baa90-a15b-4f41-9188-09468f51c6c6\\未完整结束.alz"
+        ],
+        "startedAt": "2026-10-22T14:59:00.443Z",
+        "status": "failed",
+        "taskType": "decompression",
+        "totalBytes": 4500,
+        "workloadKind": "archive"
+      },
+      "next": {
+        "archiveOutput": null,
+        "completedAt": "2026-10-22T14:59:06.618Z",
+        "durationMs": 515,
+        "errorMessage": null,
+        "executionConfig": {
+          "extractToSubfolder": false,
+          "kind": "archive-extraction",
+          "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bzip2-165\\0c5baa90-a15b-4f41-9188-09468f51c6c6\\新任务完整结果",
+          "schemaVersion": 1
+        },
+        "failure": null,
+        "format": "alz",
+        "id": "xojaf87srmvjo2gki",
+        "logs": [
+          {
+            "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 132.7 GiB，预计输出 4.39 KiB）",
+            "severity": "info",
+            "timestamp": "2026-10-22T14:59:06.161Z"
+          },
+          {
+            "message": "确定解压格式: Alz (后缀: alz)",
+            "severity": "info",
+            "timestamp": "2026-10-22T14:59:06.167532700Z"
+          },
+          {
+            "message": "加密状态检测完成：本次解压内容无需密码，正在准备解压...",
+            "severity": "success",
+            "timestamp": "2026-10-22T14:59:06.285046600Z"
+          },
+          {
+            "message": "开始解压：重新获取完整原包.alz",
+            "severity": "info",
+            "timestamp": "2026-10-22T14:59:06.402476500Z"
+          },
+          {
+            "message": "解压数据统计完成：实际产出 4500 字节",
+            "severity": "success",
+            "timestamp": "2026-10-22T14:59:06.607989500Z"
+          },
+          {
+            "message": "全部解压任务已完成",
+            "severity": "success",
+            "timestamp": "2026-10-22T14:59:06.608080700Z"
+          }
+        ],
+        "metrics": null,
+        "name": "重新获取完整原包.alz",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bzip2-165\\0c5baa90-a15b-4f41-9188-09468f51c6c6\\新任务完整结果",
+        "processedBytes": 4500,
+        "retryOfTaskId": "w281ihk4nmvjo246y",
+        "sourcePaths": [
+          "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bzip2-165\\0c5baa90-a15b-4f41-9188-09468f51c6c6\\重新获取完整原包.alz"
+        ],
+        "startedAt": "2026-10-22T14:59:06.103Z",
+        "status": "completed",
+        "taskType": "decompression",
+        "totalBytes": 4500,
+        "workloadKind": "archive"
+      },
+      "oldFailurePreserved": true,
+      "hashes": true
+    },
+    {
+      "name": "history-cause",
+      "actualDialog": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "alz-bzip2-failure",
+      "file": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bzip2-165\\alz-bzip2-failure-1100x700.png",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "alz-bzip2-failure",
+      "file": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bzip2-165\\alz-bzip2-failure-760x520.png",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    },
+    {
+      "name": "alz-bzip2-history",
+      "file": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bzip2-165\\alz-bzip2-history-1100x700.png",
+      "height": 700,
+      "overflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "alz-bzip2-history",
+      "file": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bzip2-165\\alz-bzip2-history-760x520.png",
+      "height": 520,
+      "overflow": 0,
+      "width": 760
+    }
+  ],
+  "ui": {
+    "taskId": "w281ihk4nmvjo246y",
+    "failed": {
+      "archiveOutput": null,
+      "completedAt": "2026-10-22T14:59:01.121Z",
+      "durationMs": 678,
+      "errorMessage": "[archive-inspection:damaged] ALZ 条目「a.txt」内容已通过大小和 CRC 校验，但Bzip2 压缩流缺少结束标记；归档不完整或已损坏，请重新获取完整原包，不必反复尝试密码",
+      "executionConfig": {
+        "extractToSubfolder": false,
+        "kind": "archive-extraction",
+        "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bzip2-165\\0c5baa90-a15b-4f41-9188-09468f51c6c6\\旧失败结果",
+        "schemaVersion": 1
+      },
+      "failure": {
+        "category": "damaged",
+        "evidence": "recorded-marker",
+        "schemaVersion": 1,
+        "stage": "inspection"
+      },
+      "format": "alz",
+      "id": "w281ihk4nmvjo246y",
+      "logs": [
+        {
+          "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 132.7 GiB，预计输出 4.39 KiB）",
+          "severity": "info",
+          "timestamp": "2026-10-22T14:59:00.521Z"
+        },
+        {
+          "message": "确定解压格式: Alz (后缀: alz)",
+          "severity": "info",
+          "timestamp": "2026-10-22T14:59:00.529408500Z"
+        },
+        {
+          "message": "加密状态检测完成：本次解压内容无需密码，正在准备解压...",
+          "severity": "success",
+          "timestamp": "2026-10-22T14:59:00.669730700Z"
+        },
+        {
+          "message": "开始解压：未完整结束.alz",
+          "severity": "info",
+          "timestamp": "2026-10-22T14:59:00.848833400Z"
+        },
+        {
+          "message": "最终失败原因：[archive-inspection:damaged] ALZ 条目「a.txt」内容已通过大小和 CRC 校验，但Bzip2 压缩流缺少结束标记；归档不完整或已损坏，请重新获取完整原包，不必反复尝试密码",
+          "severity": "error",
+          "timestamp": "2026-10-22T14:59:01.121Z"
+        }
+      ],
+      "metrics": null,
+      "name": "未完整结束.alz",
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bzip2-165\\0c5baa90-a15b-4f41-9188-09468f51c6c6\\旧失败结果",
+      "processedBytes": 0,
+      "retryOfTaskId": null,
+      "sourcePaths": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-bzip2-165\\0c5baa90-a15b-4f41-9188-09468f51c6c6\\未完整结束.alz"
+      ],
+      "startedAt": "2026-10-22T14:59:00.443Z",
+      "status": "failed",
+      "taskType": "decompression",
+      "totalBytes": 4500,
+      "workloadKind": "archive"
+    },
+    "nextId": "xojaf87srmvjo2gki"
+  },
+  "completedAt": "2026-10-22T14:59:11.025Z",
+  "originalAndDerivativesUnchanged": true
+}

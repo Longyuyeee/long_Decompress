@@ -1,0 +1,20 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.17s
+     Running unittests src\lib.rs (tools\alz-engine\target\debug\deps\unalz-9f013c54059b1683.exe)
+
+running 1 test
+
+thread 'decompress::bzip2::tests::bzip2_reads_only_declared_input_and_reports_real_short_reads' (84228) panicked at E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\vendor\unalz\src\decompress\bzip2.rs:396:9:
+assertion `left == right` failed
+  left: 160
+ right: 123
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test decompress::bzip2::tests::bzip2_reads_only_declared_input_and_reports_real_short_reads ... FAILED
+
+failures:
+
+failures:
+    decompress::bzip2::tests::bzip2_reads_only_declared_input_and_reports_real_short_reads
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 28 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p unalz --lib`

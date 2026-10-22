@@ -6,11 +6,18 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 
-const inspectOnly = process.argv.slice(2).includes('--inspect-only')
-assert.ok(process.argv.slice(2).every(a => a === '--inspect-only'), 'Only --inspect-only is supported')
+let inspectOnly = false, helperPath = 'src-tauri/resources/alz-engine/long-alz.exe'
+for (let i = 2; i < process.argv.length; i++) {
+  if (process.argv[i] === '--inspect-only') inspectOnly = true
+  else if (process.argv[i] === '--helper') {
+    const value = process.argv[++i]
+    assert.ok(value && !value.startsWith('--'), '--helper requires the recorded old helper path')
+    helperPath = value
+  } else assert.fail('Unknown option: ' + process.argv[i])
+}
 const base = path.resolve('test-results/alz-165/research')
 const manifest = JSON.parse(readFileSync('docs/evidence/alz-method3-source-1.6.5/producer-probe.json', 'utf8'))
-const helper = path.resolve('src-tauri/resources/alz-engine/long-alz.exe')
+const helper = path.resolve(helperPath)
 const sha = file => createHash('sha256').update(readFileSync(file)).digest('hex')
 assert.equal(sha(path.join('docs/evidence/alz-method3-source-1.6.5', manifest.archiveFixture)), manifest.attempts[0].archiveSha256)
 const source = path.join(base, 'size-source')

@@ -9,3 +9,10 @@ adapter can distinguish fully CRC-validated content from uncertain decryption.
 See `src-tauri/resources/alz-engine/SOURCE.md`
 and `alz-engine.lock.json` at the project root for the build and byte inventory.
 The upstream CLI is not shipped or invoked; credentials do not enter argv.
+
+v1.6.5 also requires the actual ALZ Bzip2 EOS marker and rejects whole trailing
+bytes inside its declared compressed range, permitting only sub-byte alignment.
+Bzip2 reads no further than the supplied entry length; short input and output
+I/O errors retain their original type. The adapter distinguishes an incomplete
+Bzip2 terminator after fully size/CRC-verified content from uncertain decryption.
+The existing 256 MiB compressed-input bound is unchanged. Method 3 is not added.

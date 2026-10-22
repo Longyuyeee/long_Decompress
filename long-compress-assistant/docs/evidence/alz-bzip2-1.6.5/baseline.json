@@ -1,0 +1,30 @@
+{
+  "original": "tests/fixtures/archives/alz-152/bzip2.alz",
+  "originalSha256": "3f9d77364199bf0fec4265af0c21d3080211d760967013ff1d2640511bbe1ea6",
+  "helperSha256": "62b086190ddd9fa9f2b02b4a3b3860078632261588025da37e76fa0c01563f12",
+  "faults": [
+    {
+      "name": "trailing",
+      "derived": true,
+      "archiveSha256": "0afae359635f7fe45b4ef2af7f2f0ee7bb9840602a42cfb4e82fad5b20277cee",
+      "exitCode": 0,
+      "response": {
+        "result": {
+          "verified": true
+        }
+      }
+    },
+    {
+      "name": "missing-end",
+      "derived": true,
+      "archiveSha256": "8c5909500c5377c1f5c0a56a70f85199314f4495344c473b82d2defd8d127854",
+      "exitCode": 0,
+      "response": {
+        "result": {
+          "verified": true
+        }
+      }
+    }
+  ],
+  "originalUnchanged": true
+}

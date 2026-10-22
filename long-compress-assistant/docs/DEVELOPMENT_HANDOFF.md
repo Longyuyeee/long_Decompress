@@ -1,5 +1,9 @@
 # 开发交接
 
+## 当前接续：v1.6.5 ALZ Bzip2 完整性修复（2026-10-22）
+
+按 [路线](ARCHIVE_ROADMAP_1.6.5.md) 将缺真实来源的方法 3 原候选单列保留，本版修复已复现的 Bzip2 缺结束/尾随数据仍报完整成功、直接调用读过声明边界的问题。四项解码器、一项应用服务回归通过；八种密码/原生卷故障为受控派生，不冒充新组合互通。helper 0.3.0，版本身份/类型/Vite/Shell 已通过，五项真实桌面记录和四张宽窄实看完成，已封板，接正常 PR/标签发布，见 [本版记录](ALZ_BZIP2_INTEGRITY_FREEZE_1.6.5.md)。下一阶段 [v1.6.6 大包有界读取](ARCHIVE_ROADMAP_1.6.6.md)仅规划。原交互及旧检查依据保持。下方为历史。
+
 ## 当前接续：v1.6.4 正式发布完成；v1.6.5 来源调查（2026-10-22）
 
 v1.6.4 已由 [PR #265](https://github.com/Longyuyeee/long_Decompress/pull/265) 合入，固定标签/主线 `9531957e244eded5734708e0e6b7151a29f11a33`；[正式运行 39792692412](https://github.com/Longyuyeee/long_Decompress/actions/runs/39792692412) 成功，安装包、更新包/签名及清单四项已生成，见 [发布页](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.4) 与 [回执](evidence/zpaq-retrieval-1.6.4/release.json)。沿用已过检查，不再打包复验。

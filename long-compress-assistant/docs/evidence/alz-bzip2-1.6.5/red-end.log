@@ -1,0 +1,55 @@
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded core_detect v1.0.0
+  Downloaded cfg-if v1.0.5
+  Downloaded multiversion_no_op v1.0.0
+  Downloaded rpassword v7.5.4
+  Downloaded rtoolbox v0.0.6
+  Downloaded unicode-ident v1.0.27
+  Downloaded crc32fast v1.5.2
+  Downloaded encoding_rs v0.8.42
+  Downloaded serde_json v1.0.154
+  Downloaded flate2 v1.1.10
+  Downloaded zlib-rs v0.6.8
+  Downloaded miniz_oxide v0.9.1
+  Downloaded syn v3.0.9
+   Compiling rustversion v1.0.23
+   Compiling autocfg v1.5.1
+   Compiling windows-link v0.2.1
+   Compiling cfg-if v1.0.5
+   Compiling crc32fast v1.5.2
+   Compiling simd-adler32 v0.3.10
+   Compiling adler2 v2.0.1
+   Compiling multiversion_no_op v1.0.0
+   Compiling core_detect v1.0.0
+   Compiling scopeguard v1.2.0
+   Compiling libbz2-rs-sys v0.2.5
+   Compiling simdutf8 v0.1.5
+   Compiling windows-sys v0.61.2
+   Compiling miniz_oxide v0.9.1
+   Compiling num-traits v0.2.19
+   Compiling flate2 v1.1.10
+   Compiling bzip2 v0.6.1
+   Compiling encoding_rs v0.8.42
+   Compiling rtoolbox v0.0.6
+   Compiling rpassword v7.5.4
+   Compiling chrono v0.4.45
+   Compiling unalz v0.2.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\vendor\unalz)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 14.77s
+     Running unittests src\lib.rs (tools\alz-engine\target\debug\deps\unalz-9f013c54059b1683.exe)
+
+running 1 test
+
+thread 'decompress::bzip2::tests::bzip2_rejects_missing_end_and_trailing_bytes_after_complete_content' (51000) panicked at E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\vendor\unalz\src\decompress\bzip2.rs:384:13:
+A missing end marker or trailing data must not verify successfully
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test decompress::bzip2::tests::bzip2_rejects_missing_end_and_trailing_bytes_after_complete_content ... FAILED
+
+failures:
+
+failures:
+    decompress::bzip2::tests::bzip2_rejects_missing_end_and_trailing_bytes_after_complete_content
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 28 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `-p unalz --lib`

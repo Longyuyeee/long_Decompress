@@ -8,12 +8,14 @@ the complete resolved dependency inventory is `dependencies.json`.
 
 Long adapter modifications to unalz are explicit `AlzArchive::from_reader`,
 `MultiVolumeReader::from_paths` constructors, original filename-byte retention,
-and rejecting unterminated Deflate or unconsumed declared compressed bytes.
-The 0.2.0 helper reports definitive trailing-data corruption only after the
+and rejecting unterminated Deflate/Bzip2 or unconsumed declared compressed bytes.
+The 0.3.0 helper reports definitive termination/trailing-data corruption only after the
 decoded content matches both its original length and CRC, including encrypted
 entries. Obfuscated Deflate (method 3) remains unsupported pending original
 producer evidence; no decoder from XADMaster or another project is incorporated.
-The existing crypto and modified Bzip2 algorithms are retained. This is an
+Bzip2 requires its DLZ end marker, permits only sub-byte alignment afterward,
+and reads within the declared input. Its 256 MiB input bound and the existing
+crypto/decoding algorithms are retained. This is an
 altered adapter, not an official ALZip or unalz release. Native volume framing
 is shared with the application's `alz_volumes.rs`; credentials use stdin JSON.
 

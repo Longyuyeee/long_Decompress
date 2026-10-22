@@ -100,6 +100,40 @@ mod tests {
     fn flag() -> Arc<AtomicBool> { Arc::new(AtomicBool::new(false)) }
     fn stream_root() -> PathBuf { root().parent().unwrap().join("alz-1512") }
     #[tokio::test]
+    async fn alz_bzip2_termination_causes_survive_password_and_selected_entry_routes() {
+        let fixtures = root().parent().unwrap().join("alz-bzip2-165");
+        let manifest: serde_json::Value = serde_json::from_slice(&std::fs::read(fixtures.join("manifest.json")).unwrap()).unwrap();
+        let options = DecompressOptions::default();
+        for case in manifest["cases"].as_array().unwrap() {
+            let entry = if case["controlledNativeFraming"] == true {
+                fixtures.join(case["members"][1]["name"].as_str().unwrap())
+            } else { fixtures.join(case["archive"].as_str().unwrap()) };
+            let password = case["password"].as_str();
+            assert_eq!(browse(&entry, flag()).await.unwrap().total_files, 2);
+            let error = verify(&entry, password, &options, flag()).await.unwrap_err().to_string();
+            assert!(error.contains("[archive-inspection:damaged]") && error.contains("不必反复尝试密码"), "{error}");
+            assert!(error.contains(if case["fault"] == "trailing" { "5 字节异常数据" } else { "缺少结束标记" }), "{error}");
+            if let Some(password) = password {
+                assert!(try_password(&entry, password, &options, flag()).await.unwrap_err().to_string().contains("[archive-inspection:damaged]"));
+                assert!(!try_password(&entry, "wrong password", &options, flag()).await.unwrap());
+            }
+            // The unrelated intact file remains available through existing exact
+            // selection. Do not introduce a new recovery mode or demand its key.
+            let selected = DecompressOptions { selected_entries: vec!["b.txt".into()], ..Default::default() };
+            assert!(!requires_password(&entry, &selected, flag()).await.unwrap());
+            verify(&entry, None, &selected, flag()).await.unwrap();
+            let out = tempfile::tempdir().unwrap();
+            extract(&entry, out.path(), None, &selected, flag()).await.unwrap();
+            assert_eq!(std::fs::read_dir(out.path()).unwrap().count(), 1);
+            assert_eq!(std::fs::read(out.path().join("b.txt")).unwrap(), b"lorem ipsum dolor sit amet ".repeat(80));
+        }
+        let uncertain = fixtures.join(manifest["uncertain"]["name"].as_str().unwrap());
+        let password = manifest["uncertain"]["password"].as_str().unwrap();
+        let error = verify(&uncertain, Some(password), &options, flag()).await.unwrap_err().to_string();
+        assert!(error.contains("[archive-inspection:ambiguous-data]") && !error.contains("[archive-inspection:damaged]"), "{error}");
+        assert!(!try_password(&uncertain, password, &options, flag()).await.unwrap());
+    }
+    #[tokio::test]
     async fn alz_original_deflate_stream_matrix_and_selected_payloads() {
         let m:serde_json::Value=serde_json::from_slice(&std::fs::read(stream_root().join("manifest.json")).unwrap()).unwrap();
         assert_eq!(m["cases"].as_array().unwrap().len(),8);

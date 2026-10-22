@@ -151,11 +151,15 @@ fn decode<W: Write>(archive: &mut AlzArchive, e: &AlzFileEntry, password: Option
         CompressionMethod::Bzip2 => bzip2::extract_bzip2(&mut input, &mut out, e.compressed_size, e.uncompressed_size, crypto.as_mut()),
         CompressionMethod::Unknown(m) => Err(AlzError::UnknownCompressionMethod(m)),
     };
-    if let Err(AlzError::TrailingCompressedData { remaining }) = &result {
+    if let Err(error @ (AlzError::TrailingCompressedData { .. } | AlzError::Bzip2MissingEnd)) = &result {
         // Only full decoded size AND CRC establish this is not another key
         // candidate. A matching short encryption header is not sufficient.
         if out.bytes == e.uncompressed_size && out.crc.clone().finalize() == e.file_crc {
-            anyhow::bail!("[archive-inspection:damaged] ALZ 条目「{}」内容已通过大小和 CRC 校验，但压缩流尾部仍有 {} 字节异常数据；归档已损坏，请重新获取完整原包，不必反复尝试密码", e.file_name, remaining);
+            let cause = match error {
+                AlzError::TrailingCompressedData { remaining } => format!("压缩流尾部仍有 {remaining} 字节异常数据"),
+                _ => "Bzip2 压缩流缺少结束标记".to_string(),
+            };
+            anyhow::bail!("[archive-inspection:damaged] ALZ 条目「{}」内容已通过大小和 CRC 校验，但{}；归档不完整或已损坏，请重新获取完整原包，不必反复尝试密码", e.file_name, cause);
         }
     }
     result.map_err(|err| map_error(err, e.is_encrypted()))?;

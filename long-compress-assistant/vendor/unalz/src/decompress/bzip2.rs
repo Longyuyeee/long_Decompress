@@ -128,7 +128,7 @@ pub fn extract_bzip2<R: Read, W: Write>(
 
     let mut alz_data = Vec::new();
     let read = reader
-        .take(MAX_BZ2_COMPRESSED + 1)
+        .take(compressed_size.min(MAX_BZ2_COMPRESSED + 1))
         .read_to_end(&mut alz_data)?;
     if read as u64 > MAX_BZ2_COMPRESSED {
         return Err(AlzError::Bzip2Failed(
@@ -155,12 +155,17 @@ pub fn extract_bzip2<R: Read, W: Write>(
     let mut produced_total: u64 = 0;
     let mut pos = 0usize; // bit position
 
-    // Read the 4-byte marker at the current bit position each iteration; a
-    // missing marker (fewer than 32 bits left) ends the stream.
-    while let Some(marker) = peek32(&alz_data, pos) {
+    // Complete output and its CRC do not prove the stream itself terminated.
+    // Only an actual EOS marker may end it; at most seven alignment bits follow.
+    loop {
+        let marker = peek32(&alz_data, pos).ok_or(AlzError::Bzip2MissingEnd)?;
         pos += 32;
         if marker == ALZ_EOS_MAGIC_U32 {
-            break;
+            let remaining = ((total_bits - pos) / 8) as u64;
+            if remaining != 0 {
+                return Err(AlzError::TrailingCompressedData { remaining });
+            }
+            return Ok(hasher.finalize());
         }
         if marker != ALZ_BLOCK_MAGIC_U32 {
             return Err(AlzError::Bzip2Failed(format!(
@@ -213,7 +218,6 @@ pub fn extract_bzip2<R: Read, W: Write>(
         pos = block_end;
     }
 
-    Ok(hasher.finalize())
 }
 
 /// Read the 32 bits starting at `bit` as a big-endian u32, or None if fewer
@@ -340,5 +344,110 @@ impl BitWriter {
 
     fn into_bytes(self) -> Vec<u8> {
         self.data
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+
+    // Byte-preserved upstream CC0 ALZip original, already tracked by v1.5.2.
+    fn original() -> Vec<u8> {
+        include_bytes!("../../../../tests/fixtures/archives/alz-152/bzip2.alz")[36..159].to_vec()
+    }
+    fn expected() -> Vec<u8> { b"ABCDEFG the quick brown fox 0123456789\n".repeat(60) }
+    fn append_bits(writer: &mut BitWriter, data: &[u8], count: usize) {
+        let mut reader = BitReader::at(data, 0);
+        let mut left = count;
+        while left > 0 {
+            let n = left.min(24);
+            writer.write_bits(reader.read_bits(n).unwrap(), n);
+            left -= n;
+        }
+    }
+
+    #[test]
+    fn bzip2_rejects_missing_end_and_trailing_bytes_after_complete_content() {
+        let bytes = original();
+        let end = next_marker(&bytes, 32).unwrap();
+        assert_eq!(peek32(&bytes, end), Some(ALZ_EOS_MAGIC_U32));
+        let mut missing = BitWriter::new();
+        append_bits(&mut missing, &bytes, end);
+        missing.flush();
+        let mut faults = vec![missing.into_bytes()];
+        for tail in [1, 5, 65536] {
+            let mut trailing = bytes.clone();
+            trailing.resize(trailing.len() + tail, 0xa5);
+            faults.push(trailing);
+        }
+        for fault in faults {
+            let mut out = Vec::new();
+            let result = extract_bzip2(&mut Cursor::new(&fault), &mut out, fault.len() as u64, expected().len() as u64, None);
+            assert_eq!(out, expected(), "The defect is after complete content, not a bad CRC");
+            assert!(result.is_err(), "A missing end marker or trailing data must not verify successfully");
+        }
+    }
+
+    #[test]
+    fn bzip2_reads_only_declared_input_and_reports_real_short_reads() {
+        let bytes = original();
+        let mut with_next_entry = bytes.clone();
+        with_next_entry.extend_from_slice(b"next archive entry must remain unread");
+        let mut input = Cursor::new(with_next_entry);
+        let mut out = Vec::new();
+        extract_bzip2(&mut input, &mut out, bytes.len() as u64, expected().len() as u64, None).unwrap();
+        assert_eq!(input.position(), bytes.len() as u64);
+        assert_eq!(out, expected());
+        let error = extract_bzip2(&mut Cursor::new(&bytes[..bytes.len()-1]), &mut Vec::new(), bytes.len() as u64, 2340, None).unwrap_err();
+        assert!(matches!(error, AlzError::Io(e) if e.kind() == io::ErrorKind::UnexpectedEof));
+    }
+
+    #[test]
+    fn bzip2_original_multiblock_empty_and_alignment_remain_readable() {
+        let bytes = original();
+        let end = next_marker(&bytes, 32).unwrap();
+        let mut joined = BitWriter::new();
+        append_bits(&mut joined, &bytes, end);
+        append_bits(&mut joined, &bytes, end);
+        joined.write_bits(ALZ_EOS_MAGIC_U32, 32);
+        joined.flush();
+        for (compressed, plain) in [
+            (bytes, expected()),
+            (joined.into_bytes(), expected().repeat(2)),
+            (ALZ_EOS_MAGIC_U32.to_be_bytes().to_vec(), Vec::new()),
+        ] {
+            let mut out = Vec::new();
+            let crc = extract_bzip2(&mut Cursor::new(&compressed), &mut out, compressed.len() as u64, plain.len() as u64, None).unwrap();
+            assert_eq!(out, plain);
+            assert_eq!(crc, crc32fast::hash(&plain));
+        }
+    }
+
+    #[test]
+    fn bzip2_short_chunks_and_io_errors_preserve_the_original_cause() {
+        struct Short(Cursor<Vec<u8>>);
+        impl Read for Short {
+            fn read(&mut self, bytes: &mut [u8]) -> io::Result<usize> {
+                let size = bytes.len().min(2);
+                self.0.read(&mut bytes[..size])
+            }
+        }
+        struct InputFailure;
+        impl Read for InputFailure {
+            fn read(&mut self, _: &mut [u8]) -> io::Result<usize> { Err(io::ErrorKind::PermissionDenied.into()) }
+        }
+        struct OutputFailure;
+        impl Write for OutputFailure {
+            fn write(&mut self, _: &[u8]) -> io::Result<usize> { Err(io::ErrorKind::BrokenPipe.into()) }
+            fn flush(&mut self) -> io::Result<()> { Ok(()) }
+        }
+        let bytes = original();
+        let mut out = Vec::new();
+        extract_bzip2(&mut Short(Cursor::new(bytes.clone())), &mut out, bytes.len() as u64, 2340, None).unwrap();
+        assert_eq!(out, expected());
+        assert!(matches!(extract_bzip2(&mut InputFailure, &mut Vec::new(), 123, 2340, None), Err(AlzError::Io(e)) if e.kind() == io::ErrorKind::PermissionDenied));
+        assert!(matches!(extract_bzip2(&mut Cursor::new(&bytes), &mut OutputFailure, 123, 2340, None), Err(AlzError::CantOpenDestFile(e)) if e.kind() == io::ErrorKind::BrokenPipe));
+        assert!(matches!(extract_bzip2(&mut Cursor::new(&bytes), &mut Vec::new(), 123, 2339, None), Err(AlzError::UncompressedSizeExceeded{limit:2339})));
     }
 }
