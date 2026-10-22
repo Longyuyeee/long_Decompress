@@ -42,7 +42,7 @@ vi.mock('@/composables/useArchiveEngine', () => ({
       formats: [],
       browseExtensions: ['zip', '7z', 'rar', 'tar', 'zst'],
       nestedExtensions: ['zip', '7z', 'rar', 'tar', 'zst'],
-      boundedPreviewFormats: ['ZIP', 'TAR', 'ZPAQ', 'ALZ'],
+      boundedPreviewFormats: ['ZIP', 'TAR', 'ZPAQ', 'ALZ', 'EGG'],
       boundedTextPreviewFormats: ['ZIP', 'TAR', 'ZPAQ', 'ALZ', 'EGG'],
       imagePreviewExtensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'],
       textPreviewExtensions: ['txt', 'md', 'log'],
@@ -232,13 +232,13 @@ describe('ArchiveBrowserView', () => {
     })
   })
 
-  it('EGG text uses the existing modal and source context while images stay disabled',async()=>{
+  it('EGG text and images use the existing modal with their own source context',async()=>{
     mocks.browseArchive.mockResolvedValueOnce({format:'EGG',revision:'c'.repeat(64),totalFiles:2,totalDirectories:0,totalUncompressedSize:30,totalCompressedSize:20,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:10,isDir:false},{path:'cover.png',name:'cover.png',size:20,isDir:false}]})
     mocks.previewArchiveText.mockResolvedValueOnce({entryPath:'readme.txt',content:'EGG 包内说明',encoding:'UTF-8',byteSize:10,totalSize:10,truncated:false,lineCount:1})
     const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1612,path:'C:/read.egg'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
-    expect(w.get('[data-entry-path="cover.png"] .preview-trigger').attributes('disabled')).toBeDefined()
+    expect(w.get('[data-entry-path="cover.png"] .preview-trigger').attributes('disabled')).toBeUndefined()
     await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises();expect(w.get('[data-testid="archive-text-preview"]').text()).toContain('EGG 包内说明');expect(w.get('.preview-meta').text()).toContain('完整显示')
-    expect(mocks.previewArchiveText).toHaveBeenCalledWith('C:/read.egg','readme.txt','',undefined,undefined,expect.objectContaining({sourceRevision:'c'.repeat(64),previewId:expect.stringMatching(/^egg-text-/)}));w.unmount()
+    expect(mocks.previewArchiveText).toHaveBeenCalledWith('C:/read.egg','readme.txt','',undefined,undefined,expect.objectContaining({sourceRevision:'c'.repeat(64),previewId:expect.stringMatching(/^egg-text-/)}));await w.get('.preview-close').trigger('click');await w.get('[data-entry-path="cover.png"]').trigger('dblclick');await flushPromises();expect(mocks.previewArchiveImage).toHaveBeenCalledWith('C:/read.egg','cover.png','',undefined,undefined,expect.objectContaining({sourceRevision:'c'.repeat(64),previewId:expect.stringMatching(/^egg-image-/)}));w.unmount()
   })
 
   it('EGG closing a pending preview cancels it and ignores late content',async()=>{
@@ -318,6 +318,18 @@ describe('ArchiveBrowserView', () => {
 
   it('ALZ image close cancels its own request and never shows a late image', async()=>{
     mocks.browseArchive.mockResolvedValueOnce({format:'ALZ',revision:'a'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:20,totalCompressedSize:8,encrypted:false,entries:[{path:'cover.png',name:'cover.png',size:20,isDir:false}]})
+    let finish!:(value:any)=>void
+    mocks.previewArchiveImage.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve}))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1610,path:'C:/pictures.alz'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
+    await w.get('[data-entry-path="cover.png"]').trigger('dblclick');await flushPromises()
+    const id=mocks.previewArchiveImage.mock.calls.at(-1)![5].previewId
+    await w.get('.preview-close').trigger('click');await flushPromises();expect(mocks.cancelArchiveBrowse).toHaveBeenCalledWith(id)
+    finish({entryPath:'cover.png',dataUrl:'data:image/png;base64,AA==',mimeType:'image/png',byteSize:20,width:1,height:1});await flushPromises()
+    expect(w.find('[data-testid="archive-entry-preview"]').exists()).toBe(false);w.unmount()
+  })
+
+  it('EGG image close cancels its own request and never shows a late image', async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'EGG',revision:'a'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:20,totalCompressedSize:8,encrypted:false,entries:[{path:'cover.png',name:'cover.png',size:20,isDir:false}]})
     let finish!:(value:any)=>void
     mocks.previewArchiveImage.mockImplementationOnce(()=>new Promise(resolve=>{finish=resolve}))
     const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1610,path:'C:/pictures.alz'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
@@ -776,6 +788,14 @@ describe('ArchiveBrowserView', () => {
   it('reader1557 actual reader mounts from the browser and closed readers do not steal password focus',async()=>{
     vi.stubGlobal('URL',{createObjectURL:vi.fn(()=> 'blob:actual-reader'),revokeObjectURL:vi.fn()})
     mocks.browseArchive.mockResolvedValueOnce({revision:'reader-source-version',format:'ZIP',totalFiles:1,totalDirectories:0,totalUncompressedSize:10,totalCompressedSize:8,encrypted:false,entries:[{path:'1.png',name:'1.png',isDir:false,size:10,compressedSize:8,modified:null,crc:null,encrypted:false}]})
+    mocks.invoke.mockImplementation(async(command,args)=>command==='read_archive_image'?{entryPath:args.entryPath,dataUrl:'data:image/png;base64,AA==',mimeType:'image/png',byteSize:1,width:1,height:1}:undefined)
+    const wrapper=mount(ArchiveBrowserView,{attachTo:document.body,global:{stubs:{Teleport:true}}})
+    try{await wrapper.get('header .browser-primary').trigger('click');await flushPromises();(wrapper.get('[data-testid="archive-reader-open"]').element as HTMLButtonElement).focus();await wrapper.get('[data-testid="archive-reader-open"]').trigger('click');await flushPromises();expect(wrapper.get('[data-testid="reader-current-path"]').text()).toBe('1.png');expect(wrapper.get('[data-testid="reader-image"]').attributes('src')).toBe('blob:actual-reader');await wrapper.get('[data-testid="reader-close"]').trigger('click');await flushPromises();const input=wrapper.get('.browser-toolbar input[type="password"]');(input.element as HTMLInputElement).focus();await input.setValue('new-source-password');await flushPromises();expect(document.activeElement).toBe(input.element);expect(wrapper.find('[data-testid="archive-image-reader"]').exists()).toBe(false)}finally{wrapper.unmount();vi.unstubAllGlobals()}
+  })
+
+  it('egg1613 actual reader mounts with the EGG source and keeps the original close behavior',async()=>{
+    vi.stubGlobal('URL',{createObjectURL:vi.fn(()=> 'blob:actual-reader'),revokeObjectURL:vi.fn()})
+    mocks.browseArchive.mockResolvedValueOnce({revision:'reader-source-version',format:'EGG',totalFiles:1,totalDirectories:0,totalUncompressedSize:10,totalCompressedSize:8,encrypted:false,entries:[{path:'1.png',name:'1.png',isDir:false,size:10,compressedSize:8,modified:null,crc:null,encrypted:false}]})
     mocks.invoke.mockImplementation(async(command,args)=>command==='read_archive_image'?{entryPath:args.entryPath,dataUrl:'data:image/png;base64,AA==',mimeType:'image/png',byteSize:1,width:1,height:1}:undefined)
     const wrapper=mount(ArchiveBrowserView,{attachTo:document.body,global:{stubs:{Teleport:true}}})
     try{await wrapper.get('header .browser-primary').trigger('click');await flushPromises();(wrapper.get('[data-testid="archive-reader-open"]').element as HTMLButtonElement).focus();await wrapper.get('[data-testid="archive-reader-open"]').trigger('click');await flushPromises();expect(wrapper.get('[data-testid="reader-current-path"]').text()).toBe('1.png');expect(wrapper.get('[data-testid="reader-image"]').attributes('src')).toBe('blob:actual-reader');await wrapper.get('[data-testid="reader-close"]').trigger('click');await flushPromises();const input=wrapper.get('.browser-toolbar input[type="password"]');(input.element as HTMLInputElement).focus();await input.setValue('new-source-password');await flushPromises();expect(document.activeElement).toBe(input.element);expect(wrapper.find('[data-testid="archive-image-reader"]').exists()).toBe(false)}finally{wrapper.unmount();vi.unstubAllGlobals()}

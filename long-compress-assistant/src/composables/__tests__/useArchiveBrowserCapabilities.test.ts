@@ -5,7 +5,7 @@ const state = vi.hoisted(() => ({
     value: {
       browseExtensions: ['zip', '7z', 'zst', 'qcow2', 'alz'],
       nestedExtensions: ['zip', '7z', 'zst'],
-      boundedPreviewFormats: ['ZIP', 'TAR', 'ALZ'],
+      boundedPreviewFormats: ['ZIP', 'TAR', 'ALZ', 'EGG'],
       boundedTextPreviewFormats: ['ZIP', 'TAR', 'ALZ', 'EGG'],
       imagePreviewExtensions: ['png', 'jpg'],
       textPreviewExtensions: ['txt', 'md'],
@@ -44,6 +44,6 @@ describe('useArchiveBrowserCapabilities', () => {
     expect(capabilities.supportsBoundedPreview('ALZ')).toBe(true)
     expect(capabilities.supportsTextPreview('7Z')).toBe(false)
     expect(capabilities.supportsTextPreview('EGG')).toBe(true)
-    expect(capabilities.supportsBoundedPreview('EGG')).toBe(false)
+    expect(capabilities.supportsBoundedPreview('EGG')).toBe(true)
   })
 })

@@ -1,0 +1,111 @@
+{
+  "version": "1.6.13",
+  "controlled": true,
+  "historicalProducer": false,
+  "password": "图片密码1613!",
+  "passwordEncoding": "cp936",
+  "images": [
+    {
+      "path": "gallery/01-cover.png",
+      "bytes": 51773,
+      "sha256": "4caaa6a30b6523e24d1f57ab3e4ae54ce0465885ed246da539cfc217740e57b7"
+    },
+    {
+      "path": "gallery/02-grid.bmp",
+      "bytes": 196662,
+      "sha256": "76a4ae37e7731dacde16f4cc5a63ef37f76342f7484a8eebcf84667a1ce0c832"
+    }
+  ],
+  "files": [
+    {
+      "name": "aes256.egg",
+      "bytes": 39346,
+      "sha256": "086561efaa104dafe2e928a2eb43937c54c5afa1b9ac00507731657dd6d80914"
+    },
+    {
+      "name": "at-limit.egg",
+      "bytes": 195194,
+      "sha256": "ad4a939e276687ee0ab2fe771b332aee2e932576596dd894595281afc31b5dfa"
+    },
+    {
+      "name": "bzip2.egg",
+      "bytes": 130471,
+      "sha256": "cc18a8791e38aef238e6036510d612bb39b20d3481ac1cd7cd16f444a40f0743"
+    },
+    {
+      "name": "crc.egg",
+      "bytes": 39239,
+      "sha256": "00fa35dbc08c4f1d12533f0f8d8bc2581bad4012110ca1e08689db208a1c3ff6"
+    },
+    {
+      "name": "deflate.egg",
+      "bytes": 225773,
+      "sha256": "461ae54a071caab73f2a43210fa1efdd105085a6de9135eafffe7c2f63f90c6f"
+    },
+    {
+      "name": "dimensions.egg",
+      "bytes": 39240,
+      "sha256": "796fc53a1cb8589e8ef5b0c3ff637123a58958253ee0adcd3ae800b453c40fee"
+    },
+    {
+      "name": "lzma.egg",
+      "bytes": 178261,
+      "sha256": "d650d69ab73db230a7097fa37d1914a71a54af74798bac7bede36a969aea4380"
+    },
+    {
+      "name": "not-image.egg",
+      "bytes": 97,
+      "sha256": "c074d768f1664b5fcb8bc4bc16b787eab9daf3f8cf79e8d7872a2145a966ce1b"
+    },
+    {
+      "name": "oversize.egg",
+      "bytes": 195196,
+      "sha256": "a951abbd3275a538d404844b17b516525bbd7b44d2358d504e88b79f3486a632"
+    },
+    {
+      "name": "password-volumes.vol1.egg",
+      "bytes": 13121,
+      "sha256": "878509796f5b7384a39d68d11e5a4d00afe3459027a390f80dd56552b6696998"
+    },
+    {
+      "name": "password-volumes.vol2.egg",
+      "bytes": 13122,
+      "sha256": "0bc5b8741d7cc811ba8980f0661fa38b990921801449a65f5adc64882c118fd7"
+    },
+    {
+      "name": "password-volumes.vol3.egg",
+      "bytes": 13122,
+      "sha256": "ce1c6731d49c2a174a9b64a0158d8d3f3b4a7f74c5c1a8b4c73f9153be0e8247"
+    },
+    {
+      "name": "solid.egg",
+      "bytes": 39246,
+      "sha256": "c7e6565cba1067abcb99922c008b0f073d0df6e79c6c2ee59542e61ff6118bb9"
+    },
+    {
+      "name": "store.egg",
+      "bytes": 248656,
+      "sha256": "fb1d137880bc336e489fc338488ae1494ffe778a47fe35378c73204139325f15"
+    },
+    {
+      "name": "trailing.egg",
+      "bytes": 39240,
+      "sha256": "0e9eae6e8a5480cf768e835aaf47c78bef46e3038e6c84eb49193891cdf43d0e"
+    },
+    {
+      "name": "truncated.egg",
+      "bytes": 39236,
+      "sha256": "b3d33ecae0ffca1e6863d445ce53db2b58d52eafe8faa10fce7bb333cbc16d56"
+    },
+    {
+      "name": "ui.egg",
+      "bytes": 225795,
+      "sha256": "2eceb0767bce3f95a1d00e848bca9301ddd445fa818573b169212769b91eb5c8"
+    },
+    {
+      "name": "zipcrypto.egg",
+      "bytes": 39334,
+      "sha256": "e16ab0b1ad6ecb6606dcddcb2dd4c9fa5adc69a5a37ab47892febe1c19431c9a"
+    }
+  ]
+}

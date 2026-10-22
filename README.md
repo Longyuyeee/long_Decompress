@@ -189,7 +189,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷、ZPAQ 原生密码数字切卷及原生多部分只读；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM / ESD / SWM、ZPAQ（含改密与数字分卷）；密码和分卷随目标格式提供 |
 | 清单校验 | SFV/MD5/SHA256 逐文件状态与原因、待补列表、按需复查；匹配表示与清单一致 |
-| 内部预览 | ZIP/TAR 系列及普通 GZIP/BZIP2/XZ/Zstandard 流、ZPAQ 日志式所选快照中的受支持图片与文本；ALZ Store/Deflate/Bzip2 支持完整小文本、大文本前 1 MiB（明确未校验整文件）、8 MiB 以内受支持图片及原连续阅读入口；密码和完整原生卷沿原入口使用；预览超出读取范围时可先提取后打开 |
+| 内部预览 | ZIP/TAR 系列及普通 GZIP/BZIP2/XZ/Zstandard 流、ZPAQ 日志式所选快照中的受支持图片与文本；ALZ Store/Deflate/Bzip2 支持完整小文本、大文本前 1 MiB（明确未校验整文件）、8 MiB 以内受支持图片及原连续阅读入口；EGG 非固实小文本和图片可直接预览并沿原入口连续阅读；密码和完整原生卷沿原入口使用，预览超出读取范围时可先提取后打开 |
 | 图片压缩 | JPEG、PNG、WebP；质量、尺寸与格式按对应编码能力调整 |
 | 视频压缩 | MP4、MOV、AVI、WMV、WebM、MKV、M4V 等受支持输入，输出 MP4 / H.264 |
 | PDF 优化 | 分析结构、优化体积；是否适合处理会在分析后显示 |
@@ -275,7 +275,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.6.12 · EGG 包内文本预览**。在原双栏直接查看非固实小文本，接通手动密码、保险箱、显式编码、完整原生卷、取消与来源刷新；完整校验所选内容，固实及超限给提取指引。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.12.md) · [范围与记录](long-compress-assistant/docs/EGG_TEXT_PREVIEW_FREEZE_1.6.12.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.12)。下一阶段 [EGG 图片](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.13.md)仅规划。
+**v1.6.13 · EGG 图片预览与连续阅读**。在原双栏直接查看受支持的非固实图片，沿原阅读器翻页、缩放、跳过坏图、定位和提取当前页；接通密码保险箱、显式代码页、完整原生卷、取消与来源刷新。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.13.md) · [范围与记录](long-compress-assistant/docs/EGG_IMAGE_PREVIEW_FREEZE_1.6.13.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.13)。下一阶段 [EGG 小型固实文本](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.14.md)仅规划。
+
+**v1.6.12 · EGG 包内文本预览**。在原双栏直接查看非固实小文本，接通手动密码、保险箱、显式编码、完整原生卷、取消与来源刷新；完整校验所选内容，固实及超限给提取指引。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.12.md) · [范围与记录](long-compress-assistant/docs/EGG_TEXT_PREVIEW_FREEZE_1.6.12.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.12)。EGG 图片已由上方 v1.6.13 接续。
 
 **v1.6.11 · ALZ 大文本前缀预览**。直接在原双栏查看较大日志、说明和配置的开头，最多显示前 1 MiB 并标明未校验整文件；接通密码保险箱、显式编码与完整原生卷，关闭取消、来源变化刷新，完整提取/检查/转换保持原校验条件。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.11.md) · [范围与记录](long-compress-assistant/docs/ALZ_TEXT_PREFIX_FREEZE_1.6.11.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.11)。EGG 小文本已由上方 v1.6.12 接续。
 
