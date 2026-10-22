@@ -167,6 +167,9 @@ const filteredEntries = computed(() => {
 const visibleFiles = computed(() => filteredEntries.value.filter(entry => !entry.isDir))
 const visibleSelected = computed(() => visibleFiles.value.length > 0 && visibleFiles.value.every(entry => selected.value.has(entry.path)))
 const previewRouteSupported = computed(() => archiveCapabilities.supportsBoundedPreview(result.value?.format))
+const entryPreviewSupported = (entry: ArchiveEntryInfo) => previewKind(entry) === 'text' ? archiveCapabilities.supportsTextPreview(result.value?.format) : previewRouteSupported.value
+let textPreviewRequestId: string | undefined
+const cancelTextPreview = () => { if (textPreviewRequestId) { void commands.cancelArchiveBrowse(textPreviewRequestId).catch(() => {}); textPreviewRequestId = undefined } }
 const detailFiles = computed(() => detailEntries.value.flatMap(entry => entry.isDir
   ? files.value.filter(file => file.path.replace(/\\/g, '/').startsWith(entry.path.replace(/\\/g, '/')))
   : [entry]))
@@ -254,7 +257,7 @@ const openArchivePath = async (path: string, options: ArchiveReadOptions = {}) =
         openImageReader(entry,saved)
       }else if (options.entryAction === 'preview' && entry) {
         await capabilitiesReady
-        if (canPreviewEntry(entry) && previewRouteSupported.value) await openPreview(entry)
+        if (canPreviewEntry(entry) && entryPreviewSupported(entry)) await openPreview(entry)
         else browseNotice.value = '已定位所选文件；此类型暂不提供内部预览，可提取后打开'
       } else if (options.entryAction === 'extract' && entry) {
         const destination = await requestOutputDirectory(outputPath.value)
@@ -334,6 +337,7 @@ const convertSnapshot = () => {
   if (selectedSnapshot.value && !inputBusy.value) conversion.openSnapshot(archivePath.value, selectedSnapshot.value, password.value)
 }
 const closePreview = () => {
+  cancelTextPreview()
   readerOpen.value=false
   previewSequence++
   imagePreview.value = null
@@ -344,8 +348,9 @@ const closePreview = () => {
 }
 
 const openPreview = async (entry: ArchiveEntryInfo) => {
-  if (!canPreviewEntry(entry) || !previewRouteSupported.value) return
+  if (!canPreviewEntry(entry) || !entryPreviewSupported(entry)) return
   if (props.embedded) paneToolsOpen.value = false
+  cancelTextPreview()
   const sequence = ++previewSequence
   previewEntry.value = entry
   imagePreview.value = null
@@ -358,17 +363,23 @@ const openPreview = async (entry: ArchiveEntryInfo) => {
       const value = await commands.previewArchiveImage(archivePath.value, entry.path, password.value, ...snapshotReadArguments.value)
       if (sequence === previewSequence) imagePreview.value = value
     } else {
-      const value = await commands.previewArchiveText(archivePath.value, entry.path, password.value, ...snapshotReadArguments.value)
+      const context = result.value?.format.toUpperCase() === 'ALZ'
+        ? { previewId: 'alz-text-'+crypto.randomUUID(), sourceRevision: result.value?.revision } : undefined
+      textPreviewRequestId = context?.previewId
+      const value = context
+        ? await commands.previewArchiveText(archivePath.value, entry.path, password.value, inputEncoding.value, selectedSnapshot.value, context)
+        : await commands.previewArchiveText(archivePath.value, entry.path, password.value, ...snapshotReadArguments.value)
       if (sequence === previewSequence) textPreview.value = value
     }
   } catch (error) {
     if (sequence === previewSequence) {
       const raw = String(error).replace(/^Error:\s*/i, '').trim()
-      previewError.value = /^provided password is incorrect$/i.test(raw)
+      previewError.value = raw.includes('IMAGE_READER_CHANGED|')
+        ? '来源已变化或无法确认，请关闭预览并刷新此栏后重试。' : /^provided password is incorrect$/i.test(raw)
         ? '密码不正确，请修改密码后重试。' : String(error)
     }
   } finally {
-    if (sequence === previewSequence) previewLoading.value = false
+    if (sequence === previewSequence) { previewLoading.value = false; textPreviewRequestId = undefined }
   }
 }
 
@@ -526,7 +537,7 @@ const activateEntry = (entry: ArchiveEntryInfo) => {
   focusedEntryPath.value = entry.path
   if (entry.isDir) navigateToDirectory(entry.path.replace(/\/+$/, ''))
   else if (isNestedArchiveEntry(entry)) void enterNestedArchive(entry)
-  else if (props.embedded && canPreviewEntry(entry) && previewRouteSupported.value) void openPreview(entry)
+  else if (props.embedded && canPreviewEntry(entry) && entryPreviewSupported(entry)) void openPreview(entry)
   else void openWithDefaultApplication(entry)
 }
 
@@ -699,7 +710,7 @@ const handleWorkspaceKeydown = (event: KeyboardEvent) => {
       clientX: rect ? rect.left + Math.min(rect.width / 2, 160) : window.innerWidth / 2,
       clientY: rect ? rect.top + Math.min(rect.height, 36) : window.innerHeight / 2,
     }))
-  } else if (event.ctrlKey && event.key === 'Enter' && focusedEntry && canPreviewEntry(focusedEntry) && previewRouteSupported.value) {
+  } else if (event.ctrlKey && event.key === 'Enter' && focusedEntry && canPreviewEntry(focusedEntry) && entryPreviewSupported(focusedEntry)) {
     event.preventDefault()
     void openPreview(focusedEntry)
   } else if (event.altKey && event.key === 'Enter' && keyboardDisplayEntries.length > 0) {
@@ -777,6 +788,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  cancelTextPreview()
   disposed = true; sourceSequence++; archiveLoadSequence++
   readerOpen.value=false
   previewSequence++
@@ -975,8 +987,8 @@ const extractSelected = async () => {
                   v-if="canPreviewEntry(entry)"
                   type="button"
                   class="preview-trigger"
-                  :disabled="!previewRouteSupported"
-                  :title="previewRouteSupported ? `预览 ${entry.name}` : '当前仅支持 ZIP 与 TAR 系列的有界预览'"
+                  :disabled="!entryPreviewSupported(entry)"
+                  :title="entryPreviewSupported(entry) ? `预览 ${entry.name}` : '此格式暂不支持此类预览，请先提取后打开'"
                   :aria-label="`预览 ${entry.name}`"
                   @click.stop="openPreview(entry)"
                 ><i class="pi pi-eye"></i></button>
@@ -1012,7 +1024,7 @@ const extractSelected = async () => {
     <div v-if="previewEntry" class="preview-backdrop" data-testid="archive-entry-preview" @click.self="closePreview">
       <section class="preview-dialog" role="dialog" aria-modal="true" :aria-label="`预览 ${previewEntry.name}`">
         <header class="preview-header">
-          <div class="min-w-0 flex items-center gap-2"><h2 class="truncate text-lg font-black text-content">{{ previewEntry.name }}</h2><HelpHint label="预览说明">只读查看，不修改原文件。大文本显示前 1 MB；需要编辑时，可以提取后用默认应用打开。</HelpHint></div>
+          <div class="min-w-0 flex items-center gap-2"><h2 class="truncate text-lg font-black text-content">{{ previewEntry.name }}</h2><HelpHint label="预览说明">只读查看，不修改原文件。ALZ 支持 1 MiB 以内且通过完整校验的文本；其他已支持格式的大文本显示前 1 MiB。需要编辑时，可以提取后打开。</HelpHint></div>
           <button type="button" class="preview-close" aria-label="关闭预览" @click="closePreview"><i class="pi pi-times"></i></button>
         </header>
         <div class="preview-stage">
@@ -1043,13 +1055,13 @@ const extractSelected = async () => {
         >
           <header class="archive-context-header">
             <i :class="contextMenu.entry?.isDir ? 'pi pi-folder' : contextDisplayEntries.length > 1 ? 'pi pi-clone' : 'pi pi-file'"></i>
-            <span class="min-w-0"><strong class="block truncate">{{ contextMenu.entry?.isDir ? contextMenu.entry.name : contextDisplayEntries.length > 1 ? `${contextDisplayEntries.length} 个已选文件` : contextMenu.entry?.name || '当前文件区' }}</strong><small>{{ contextMenu.entry?.isDir ? `${contextMenu.entries.length} 个文件` : contextDisplayEntries.length > 1 ? '批量操作' : contextMenu.entry && canPreviewEntry(contextMenu.entry) && previewRouteSupported ? '可内部只读预览，也可用默认应用打开' : '可安全提取后用默认应用打开' }}</small></span>
+            <span class="min-w-0"><strong class="block truncate">{{ contextMenu.entry?.isDir ? contextMenu.entry.name : contextDisplayEntries.length > 1 ? `${contextDisplayEntries.length} 个已选文件` : contextMenu.entry?.name || '当前文件区' }}</strong><small>{{ contextMenu.entry?.isDir ? `${contextMenu.entries.length} 个文件` : contextDisplayEntries.length > 1 ? '批量操作' : contextMenu.entry && canPreviewEntry(contextMenu.entry) && entryPreviewSupported(contextMenu.entry) ? '可内部只读预览，也可用默认应用打开' : '可安全提取后用默认应用打开' }}</small></span>
           </header>
 
           <button v-if="contextMenu.entry?.isDir" type="button" role="menuitem" data-testid="archive-context-open" @click="openContextEntry(contextMenu.entry)"><i class="pi pi-folder-open"></i><span>打开文件夹</span><kbd>Enter</kbd></button>
           <button v-if="contextMenu.entry && !contextMenu.entry.isDir" type="button" role="menuitem" data-testid="archive-context-default-open" :disabled="Boolean(openingEntryPath)" @click="defaultOpenContextEntry(contextMenu.entry)"><i :class="openingEntryPath === contextMenu.entry.path ? 'pi pi-spin pi-spinner' : 'pi pi-external-link'"></i><span>使用默认应用打开</span><kbd>Enter</kbd></button>
           <button v-if="contextMenu.entry && isNestedArchiveEntry(contextMenu.entry)" type="button" role="menuitem" data-testid="archive-context-enter-nested" :disabled="archiveDepth >= 3 || Boolean(openingEntryPath)" :title="archiveDepth >= 3 ? '已达到最多 3 层嵌套限制' : '在只读子工作区中打开'" @click="enterNestedArchive(contextMenu.entry)"><i class="pi pi-sitemap"></i><span>{{ archiveDepth >= 3 ? '已达到 3 层上限' : '进入压缩包' }}</span><kbd>Enter</kbd></button>
-          <button v-if="contextMenu.entry && !contextMenu.entry.isDir && canPreviewEntry(contextMenu.entry) && previewRouteSupported" type="button" role="menuitem" data-testid="archive-context-preview" @click="previewContextEntry(contextMenu.entry)"><i class="pi pi-eye"></i><span>内部查看器打开</span><kbd>Ctrl+Enter</kbd></button>
+          <button v-if="contextMenu.entry && !contextMenu.entry.isDir && canPreviewEntry(contextMenu.entry) && entryPreviewSupported(contextMenu.entry)" type="button" role="menuitem" data-testid="archive-context-preview" @click="previewContextEntry(contextMenu.entry)"><i class="pi pi-eye"></i><span>内部查看器打开</span><kbd>Ctrl+Enter</kbd></button>
 
           <button v-if="canEditZip && contextMenu.entry && !contextMenu.entry.isDir" type="button" role="menuitem" data-testid="archive-context-edit-replace" :disabled="inputBusy" @click="zipEditor?.replace(contextMenu.entry.path); closeContextMenu()"><i class="pi pi-file-edit"></i><span>替换此文件并另存…</span></button>
           <button v-if="canEditZip && contextMenu.entry" type="button" role="menuitem" data-testid="archive-context-edit-rename" :disabled="inputBusy" @click="zipEditor?.organize(contextDisplayEntries.map(entry=>entry.path),'rename'); closeContextMenu()"><i class="pi pi-pencil"></i><span>{{ contextDisplayEntries.length>1?'批量改名或移动…':'重命名或移动…' }}</span></button>

@@ -599,15 +599,20 @@ fn preview_archive_text_sync(
     password: Option<&str>,
     password_encoding: Option<ZipPasswordEncoding>,
     snapshot: Option<crate::models::compression::ZpaqSnapshot>,
+    cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
 ) -> Result<ArchiveTextPreview> {
     anyhow::ensure!(snapshot.is_none() || super::archive_browser::detect_format(archive_path)? == ArchiveFormat::Zpaq, "所选快照只适用于 ZPAQ 日志归档");
     if super::archive_browser::detect_format(archive_path)? == ArchiveFormat::AesEncrypted {
         let inner = super::aes_container::AuthenticatedInner::open(archive_path, password, || Ok(()))?;
-        return preview_archive_text_sync(&inner.path, entry_path, None, password_encoding, snapshot);
+        return preview_archive_text_sync(&inner.path, entry_path, None, password_encoding, snapshot, cancelled);
     }
     let entry_path = normalized_entry_path(entry_path)?;
-    let format = preview_format(archive_path)?;
+    let format = if super::archive_browser::detect_format(archive_path)? == ArchiveFormat::Alz { "ALZ" } else { preview_format(archive_path)? };
     let text_bytes = match format {
+        "ALZ" => {
+            let (bytes, total_size) = tauri::async_runtime::block_on(super::alz_engine::preview_text_entry(archive_path, &entry_path, password, password_encoding, cancelled))?;
+            TextBytes { bytes, total_size }
+        }
         "ZIP" => read_zip_text_entry(archive_path, &entry_path, password, password_encoding)?,
         "WIM" => {
             let (bytes, total_size) = tauri::async_runtime::block_on(super::wim_preview::preview_entry(archive_path, &entry_path, password, MAX_TAR_PREVIEW_SCAN_BYTES, MAX_TEXT_PREVIEW_BYTES, std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false))))?;
@@ -664,15 +669,32 @@ pub async fn preview_archive_text_at(
     archive_path: &Path, entry_path: &str, password: Option<&str>,
     encoding: Option<ZipPasswordEncoding>, snapshot: Option<crate::models::compression::ZpaqSnapshot>,
 ) -> Result<ArchiveTextPreview> {
+    preview_archive_text_controlled_at(archive_path, entry_path, password, encoding, snapshot,
+        std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)), None).await
+}
+
+pub async fn preview_archive_text_controlled_at(
+    archive_path: &Path, entry_path: &str, password: Option<&str>, encoding: Option<ZipPasswordEncoding>,
+    snapshot: Option<crate::models::compression::ZpaqSnapshot>, cancelled: std::sync::Arc<std::sync::atomic::AtomicBool>,
+    expected_revision: Option<String>,
+) -> Result<ArchiveTextPreview> {
     let archive_path = archive_path.to_path_buf();
     let entry_path = entry_path.to_string();
     let password = password.map(str::to_string);
     tauri::async_runtime::spawn_blocking(move || {
+        anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Acquire), "文本预览已取消");
+        if let Some(revision) = expected_revision.as_deref() { super::image_reader::check_source(&archive_path, revision)?; }
         let source = super::split_archive_detector::SplitArchiveDetector::complete_source(&archive_path)?;
-        preview_archive_text_sync(&source, &entry_path, password.as_deref(), encoding, snapshot)
-    })
-    .await
-    .context("Archive text preview worker failed")?
+        let revision = if super::archive_browser::detect_format(&source)? == ArchiveFormat::Alz {
+            let revision = match expected_revision { Some(value) => value, None => super::image_reader::revision(&source)? };
+            super::image_reader::check_source(&source, &revision)?;
+            Some(revision)
+        } else { None };
+        let result = preview_archive_text_sync(&source, &entry_path, password.as_deref(), encoding, snapshot, cancelled.clone())?;
+        anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Acquire), "文本预览已取消");
+        if let Some(revision) = revision { super::image_reader::check_source(&source, &revision)?; }
+        Ok(result)
+    }).await.context("Archive text preview worker failed")?
 }
 
 #[cfg(test)]
@@ -979,5 +1001,64 @@ mod local_file_preview_tests {
         let dir=tempfile::tempdir().unwrap();let path=dir.path().join("large.log");
         let mut bytes=vec![b'a';MAX_TEXT_PREVIEW_BYTES as usize-1];bytes.extend_from_slice("中文".as_bytes());std::fs::write(&path,&bytes).unwrap();
         let preview=preview_local_text(&path).unwrap();assert!(preview.truncated);assert_eq!(preview.encoding,"UTF-8");assert_eq!(preview.byte_size,MAX_TEXT_PREVIEW_BYTES-1);assert!(!preview.content.contains('�'));assert_eq!(preview.total_size,bytes.len() as u64);
+    }
+}
+
+#[cfg(test)]
+mod alz_text169_tests {
+    use super::*;
+    fn fixtures() -> std::path::PathBuf { Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives") }
+    #[tokio::test]
+    async fn alz_text169_complete_small_texts_and_exact_selection() {
+        let root = fixtures();
+        let manifest:serde_json::Value=serde_json::from_slice(&std::fs::read(root.join("alz-text-169/manifest.json")).unwrap()).unwrap();
+        for (name, content, encoding) in [
+            ("store",manifest["text"].as_str().unwrap().to_owned(),"UTF-8"),
+            ("deflate",manifest["text"].as_str().unwrap().repeat(120),"UTF-8"),
+            ("legacy","旧编码日志\n第二行".into(),"GBK"),
+            ("utf16","UTF16 配置\nvalue=中文".into(),"UTF-16 LE"),
+            ("empty",String::new(),"UTF-8"),
+            ("at-limit","x".repeat(1024*1024),"UTF-8"),
+        ] {
+            let path=root.join(format!("alz-text-169/{name}.alz"));
+            let result=preview_archive_text(&path,"docs/readme.txt",None).await.unwrap();
+            assert_eq!(result.content,content,"{name}");assert!(!result.truncated);
+            if name != "utf16" {assert_eq!(result.encoding,encoding);}
+        }
+        let original=preview_archive_text(&root.join("alz-152/bzip2.alz"),"a.txt",None).await.unwrap();
+        assert_eq!(original.content,"ABCDEFG the quick brown fox 0123456789\n".repeat(60));
+        // Actual original ALZip password/native Deflate groups retained by v1.5.12.
+        for group in ["m1-key-single","m2-key-volumes"] {
+            let extension=if group.ends_with("volumes"){ "a00" }else{ "alz" };
+            let path=root.join(format!("alz-1512/originals/{group}/{group}.{extension}"));
+            let result=preview_archive_text_with_encoding(&path,"文档/99说明.txt",Some("中文密码1512!"),Some(ZipPasswordEncoding::Cp936)).await.unwrap();
+            assert_eq!(result.content,"原厂 ALZ 普通压缩流；完整内容与结束位置都必须核对。\r\n".repeat(500));
+        }
+    }
+    #[tokio::test]
+    async fn alz_text169_limits_bad_content_and_original_errors_stay_distinct() {
+        let root=fixtures();
+        for (name,reason) in [("too-large","1 MiB"),("crc-damage","CRC"),("binary","binary")] {
+            let result=preview_archive_text(&root.join(format!("alz-text-169/{name}.alz")),"docs/readme.txt",None).await.unwrap_err();
+            assert!(format!("{result:#}").to_lowercase().contains(&reason.to_lowercase()),"{result:#}");
+        }
+        let error=preview_archive_text(&root.join("alz-bzip2-165/plain-missing-end-single.alz"),"a.txt",None).await.unwrap_err();
+        assert!(format!("{error:#}").contains("缺少结束标记"));
+        let path=root.join("alz-1512/originals/m1-key-single/m1-key-single.alz");
+        let error=preview_archive_text_with_encoding(&path,"文档/99说明.txt",Some("wrong"),Some(ZipPasswordEncoding::Cp936)).await.unwrap_err();
+        assert!(format!("{error:#}").contains("[alz-password]"));
+    }
+    #[tokio::test]
+    async fn alz_text169_cancel_and_stale_source_never_return_text() {
+        let root=fixtures();let dir=tempfile::tempdir().unwrap();let path=dir.path().join("source.alz");
+        std::fs::copy(root.join("alz-text-169/store.alz"),&path).unwrap();
+        let expected=super::super::image_reader::revision(&path).unwrap();
+        let cancelled=std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
+        let error=preview_archive_text_controlled_at(&path,"docs/readme.txt",None,None,None,cancelled,Some(expected.clone())).await.unwrap_err();
+        assert!(format!("{error:#}").contains("取消"));
+        use std::io::Write;
+        std::fs::OpenOptions::new().append(true).open(&path).unwrap().write_all(b"changed").unwrap();
+        let error=preview_archive_text_controlled_at(&path,"docs/readme.txt",None,None,None,std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),Some(expected)).await.unwrap_err();
+        assert!(format!("{error:#}").contains("IMAGE_READER_CHANGED"));
     }
 }

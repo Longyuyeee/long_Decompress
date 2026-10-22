@@ -9,7 +9,7 @@ the complete resolved dependency inventory is `dependencies.json`.
 Long adapter modifications to unalz are explicit `AlzArchive::from_reader`,
 `MultiVolumeReader::from_paths` constructors, original filename-byte retention,
 and rejecting unterminated Deflate/Bzip2 or unconsumed declared compressed bytes.
-The 0.4.0 helper reports definitive termination/trailing-data corruption only after the
+The 0.5.0 helper reports definitive termination/trailing-data corruption only after the
 decoded content matches both its original length and CRC, including encrypted
 entries. Obfuscated Deflate (method 3) remains unsupported pending original
 producer evidence; no decoder from XADMaster or another project is incorporated.
@@ -29,3 +29,10 @@ The build updates the generated source/binary/notice inventory
 bytes. The main application runs this helper through its cancellable, pausable
 archive child channel; input archives are not executed. No creation, EGG, ALZ
 repair, incremental backup or generic renamed slices are provided here.
+
+The preview-text operation reads exactly one selected regular entry into a
+bounded in-memory writer. It accepts at most 1 MiB declared/actual output and
+64 MiB compressed input, and returns bytes only after full decode, size, CRC
+and terminator validation. It does not create a temporary extraction file.
+Unrelated entries are not decoded. Large-prefix and image preview are not
+provided by this operation. Main-app source binding and cancellation apply.

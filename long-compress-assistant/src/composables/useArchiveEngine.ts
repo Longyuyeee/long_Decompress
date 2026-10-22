@@ -16,6 +16,7 @@ export interface ArchiveEngineCapabilities {
   browseExtensions: string[]
   nestedExtensions: string[]
   boundedPreviewFormats: string[]
+  boundedTextPreviewFormats?: string[]
   imagePreviewExtensions: string[]
   textPreviewExtensions: string[]
   message: string

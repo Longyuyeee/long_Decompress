@@ -1,0 +1,102 @@
+{
+  "controlled": true,
+  "historicalProducer": false,
+  "text": "ALZ 包内说明，无需先解压。\n第二行：配置与日志只读查看。\n",
+  "interpretation": "Self-authored controlled ALZ inputs for preview boundaries; not producer originals.",
+  "ui": {
+    "path": "ui.alz",
+    "sha256": "f19acdcf76e5d4455ac6155fe5b730233f8fa1ca9aed14dd38cc7874fe9112e0"
+  },
+  "cases": [
+    {
+      "name": "store",
+      "controlled": true,
+      "path": "store.alz",
+      "bytes": 211,
+      "sha256": "e2229b0dc179f34852157f292cde5e8f1e163bf0b3fa04aa71a37429da51614e",
+      "plainBytes": 81,
+      "plainSha256": "f3a481e6c2371225dad3e1326e1aefddbe2f74b1b6ca04766d013c8fe71bd475",
+      "method": 0
+    },
+    {
+      "name": "deflate",
+      "controlled": true,
+      "path": "deflate.alz",
+      "bytes": 274,
+      "sha256": "91b297f17d73787443559881ec4799912626017d63d19d594c74c65e4b7799d3",
+      "plainBytes": 9720,
+      "plainSha256": "802f9744fd8493b17065a465e91935c25fae68ddd3bea1dadfe2c08d271530b8",
+      "method": 2
+    },
+    {
+      "name": "legacy",
+      "controlled": true,
+      "path": "legacy.alz",
+      "bytes": 147,
+      "sha256": "04693d22887508dce22e8bb92fcbe1eea5ba3eaaa1133a543228ce2fb081da5f",
+      "plainBytes": 17,
+      "plainSha256": "fca2c9a548ea6707c408cc36d11d0b5e9dd85c21501067711e0c1d2ca5532be4",
+      "method": 0
+    },
+    {
+      "name": "utf16",
+      "controlled": true,
+      "path": "utf16.alz",
+      "bytes": 166,
+      "sha256": "bb5103f250f987561b0630ea6567f0ef73493a4903c981cdb245c5d10a273acb",
+      "plainBytes": 36,
+      "plainSha256": "d5f0ac994aac4d223adcef0a1acc07e8a201b8b7ad1835e96a1cb431cf613598",
+      "method": 0
+    },
+    {
+      "name": "empty",
+      "controlled": true,
+      "path": "empty.alz",
+      "bytes": 130,
+      "sha256": "b8c3e1b4994180c6a83e00f600506077fdd55c0df7b24753a4e744915319e5f5",
+      "plainBytes": 0,
+      "plainSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "method": 0
+    },
+    {
+      "name": "binary",
+      "controlled": true,
+      "path": "binary.alz",
+      "bytes": 140,
+      "sha256": "3eefce37a34f7da8a240e95ae043b2ba181478a70c419deec468bd43d505ad27",
+      "plainBytes": 10,
+      "plainSha256": "3d25bab678263fd93b0bf0e4d069bab59acd03ad44e0c77a0816566c324eb9e2",
+      "method": 0
+    },
+    {
+      "name": "crc-damage",
+      "controlled": true,
+      "path": "crc-damage.alz",
+      "bytes": 216,
+      "sha256": "a0cbb65fcdafe020997eb39ab035fafc5fec816901f30a7babd59e615a2dee76",
+      "plainBytes": 81,
+      "plainSha256": "f3a481e6c2371225dad3e1326e1aefddbe2f74b1b6ca04766d013c8fe71bd475",
+      "method": 2
+    },
+    {
+      "name": "at-limit",
+      "controlled": true,
+      "path": "at-limit.alz",
+      "bytes": 1163,
+      "sha256": "1508ac54638483a66a2dd502d49da5d651f7add58a19c81f0edfb026778c51fb",
+      "plainBytes": 1048576,
+      "plainSha256": "8f990ba0b577b51cf009ea049368c16bbda1b21e1b93be07a824758bb253c39b",
+      "method": 2
+    },
+    {
+      "name": "too-large",
+      "controlled": true,
+      "path": "too-large.alz",
+      "bytes": 1163,
+      "sha256": "c0b547b115cf446aaa5600c499d86adba4ee1fbe3d4598e90f4be2f8cd729c84",
+      "plainBytes": 1048577,
+      "plainSha256": "154b8ed3c2383ce429058768595935faf7851b5c38db2b1732594be1d88bc05a",
+      "method": 2
+    }
+  ]
+}

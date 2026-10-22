@@ -1601,11 +1601,39 @@ pub async fn preview_archive_text(
     password: Option<String>,
     zip_password_encoding: Option<ZipPasswordEncoding>,
     zpaq_snapshot: Option<crate::models::compression::ZpaqSnapshot>,
+    preview_id: Option<String>,
+    source_revision: Option<String>,
 ) -> Result<crate::services::archive_preview::ArchiveTextPreview, String> {
+    let browse_id = preview_id.unwrap_or_else(|| uuid::Uuid::new_v4().to_string());
+    if browse_id.is_empty() || browse_id.len() > 128 { return Err("预览请求无效".into()); }
+    let cancelled = Arc::new(AtomicBool::new(false));
+    match ARCHIVE_BROWSE_FLAGS.entry(browse_id.clone()) {
+        Entry::Vacant(entry) => { entry.insert(cancelled.clone()); }
+        Entry::Occupied(entry) => {
+            if entry.get().load(Ordering::Relaxed) { entry.remove(); return Err("文本预览已取消".into()); }
+            return Err("同一个预览请求已在执行".into());
+        }
+    }
+    let _guard = ArchiveBrowseGuard { browse_id };
+    // ALZ preview checks only its selected entry in the cancellable helper.
+    // A supplied password/vault candidate must not verify an unrelated large file.
+    // Check the browsed source before format detection can fail on its changed tail.
+    if let Some(revision) = source_revision.as_deref() { crate::services::image_reader::check_source(Path::new(&file_path), revision).map_err(|e|format!("{e:#}"))?; }
+    let is_alz = crate::services::archive_browser::detect_format(Path::new(&file_path))
+        .is_ok_and(|format| format == crate::services::archive_format::ArchiveFormat::Alz);
+    if is_alz {
+        let options = DecompressOptions { selected_entries: vec![entry_path.clone()], zip_password_encoding, ..Default::default() };
+        let metadata = crate::services::alz_engine::plan(Path::new(&file_path), &options, cancelled.clone()).await.map_err(|e| format!("{e:#}"))?;
+        if metadata.entries.len() != 1 || metadata.entries[0].is_dir { return Err("请选择一份 ALZ 文本预览".into()); }
+        let entry = &metadata.entries[0];
+        if entry.size > 1024*1024 { return Err("ALZ 文本预览支持 1 MiB 以内的完整文件；此文件较大，请先提取后打开".into()); }
+        if entry.compressed_size.unwrap_or(u64::MAX) > 64*1024*1024 { return Err("所选 ALZ 文本压缩数据超过 64 MiB 预览范围，请先提取后打开".into()); }
+    }
     let resolved_password = match password.filter(|value| !value.is_empty()) {
         Some(password) => Some(password),
         None => {
-            let service = CompressionService::new_with_defaults().await;
+            let mut service = CompressionService::new_with_defaults().await;
+            service.cancellation_flag = cancelled.clone();
             service
                 .resolve_archive_password_silent(&file_path, &DecompressOptions {
                     zip_password_encoding, selected_entries: vec![entry_path.clone()], ..Default::default()
@@ -1613,12 +1641,14 @@ pub async fn preview_archive_text(
                 .await.map_err(|error| error.to_string())?
         }
     };
-    crate::services::archive_preview::preview_archive_text_at(
+    crate::services::archive_preview::preview_archive_text_controlled_at(
         std::path::Path::new(&file_path),
         &entry_path,
         resolved_password.as_deref(),
         zip_password_encoding,
         zpaq_snapshot,
+        cancelled,
+        source_revision,
     )
     .await
     .map_err(|error| format!("{error:#}"))
@@ -2684,4 +2714,15 @@ mod cancellation_tests {
 #[command]
 pub async fn read_zpaq_retrieval_result(path:String,selection:crate::services::zpaq_engine::retrieval::Selection)->Result<crate::services::zpaq_engine::retrieval::Receipt,String>{
     crate::services::zpaq_engine::retrieval::read_receipt(Path::new(&path),&selection).map_err(|e|format!("取回说明无法读取，可能已移动或删除：{e:#}"))
+}
+
+#[cfg(test)]
+mod alz_text169_command_tests {
+    #[tokio::test]
+    async fn alz_text169_cancel_can_arrive_before_preview_registration() {
+        let id=format!("alz-text169-{}",uuid::Uuid::new_v4());
+        super::cancel_archive_browse(id.clone()).await.unwrap();
+        let error=super::preview_archive_text("not-opened.alz".into(),"readme.txt".into(),None,None,None,Some(id.clone()),None).await.unwrap_err();
+        assert!(error.contains("取消"));assert!(!super::ARCHIVE_BROWSE_FLAGS.contains_key(&id));
+    }
 }

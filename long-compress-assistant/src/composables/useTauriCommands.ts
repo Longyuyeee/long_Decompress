@@ -117,6 +117,7 @@ export interface ArchiveEngineCapabilities {
   browseExtensions: string[]
   nestedExtensions: string[]
   boundedPreviewFormats: string[]
+  boundedTextPreviewFormats?: string[]
   imagePreviewExtensions: string[]
   textPreviewExtensions: string[]
   message: string
@@ -899,9 +900,9 @@ export const useTauriCommands = () => {
     })
   }
 
-  const previewArchiveText = async (filePath: string, entryPath: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding, zpaqSnapshot?: ZpaqSnapshot) => {
+  const previewArchiveText = async (filePath: string, entryPath: string, password?: string, zipPasswordEncoding?: ZipPasswordEncoding, zpaqSnapshot?: ZpaqSnapshot, context?: { previewId: string; sourceRevision?: string }) => {
     return await invoke<ArchiveTextPreview>('preview_archive_text', {
-      filePath, entryPath, password: password || null, ...zipPasswordArguments(zipPasswordEncoding), ...snapshotArguments(zpaqSnapshot),
+      filePath, entryPath, password: password || null, ...zipPasswordArguments(zipPasswordEncoding), ...snapshotArguments(zpaqSnapshot), ...(context ?? {}),
     })
   }
 

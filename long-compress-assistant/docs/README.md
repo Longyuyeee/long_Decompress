@@ -1,8 +1,8 @@
 # 文档导航与维护规则
 
-- **当前版本 v1.6.8**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.8)、[中文说明](RELEASE_NOTES_1.6.8.md)和[有界读取记录](ALZ_BOUNDED_FREEZE_1.6.8.md)。正式附件按正常 PR/标签流水线生成。
-- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.8.md)；下一阶段 [v1.6.9 ALZ 包内预览](ARCHIVE_ROADMAP_1.6.9.md)仅规划，准确状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
-- **前版 v1.6.7**：[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.7)与[工具中心记录](TOOLS_CENTER_FREEZE_1.6.7.md)，正式构建及四附件已完成。
+- **当前版本 v1.6.9**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.9)、[中文说明](RELEASE_NOTES_1.6.9.md)和[小文本预览记录](ALZ_TEXT_PREVIEW_FREEZE_1.6.9.md)。正式附件按正常受保护 PR/标签流水线生成。
+- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.9.md)已完成；下一阶段 [v1.6.10 ALZ 图片预览](ARCHIVE_ROADMAP_1.6.10.md)仅规划，准确状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
+- **前版 v1.6.8**：[正式 Release](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.8)与[有界读取记录](ALZ_BOUNDED_FREEZE_1.6.8.md)，正式构建及四附件已完成。
 
 以下为历史阶段记录。
 

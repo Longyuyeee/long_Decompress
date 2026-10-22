@@ -1,0 +1,29 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[alz-text-169] small ALZ text opens internally with equal panes; image preview stays unavailable
+[alz-text-169] existing Bzip2 original previews only its chosen text
+[alz-text-169] actual original Chinese password and middle native volume work with the vault
+[alz-text-169] oversize text gives an extraction hint rather than a partial success
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: The input did not match the regular expression /IMAGE_READER_CHANGED/. Input:
+
+'[archive-inspection:damaged] ALZ 卷尾损坏或下载不完整：E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-text-169\\04158adb-10d3-4c75-98ee-d10298e19675\\changed.alz'
+
+    at file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/alz-text-169-gate.mjs:88:162
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async step (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/alz-text-169-gate.mjs:34:91)
+    at async runAlzText169Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/alz-text-169-gate.mjs:85:3)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:5027:5 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: '[archive-inspection:damaged] ALZ 卷尾损坏或下载不完整：E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-text-169\\04158adb-10d3-4c75-98ee-d10298e19675\\changed.alz',
+  expected: /IMAGE_READER_CHANGED/,
+  operator: 'match',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

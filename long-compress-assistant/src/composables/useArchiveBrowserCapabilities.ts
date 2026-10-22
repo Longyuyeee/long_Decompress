@@ -50,6 +50,7 @@ export const useArchiveBrowserCapabilities = () => {
     entryCategory,
     previewKind,
     supportsBoundedPreview,
+    supportsTextPreview: (format?: string | null) => !!format && (engine.capabilities.value?.boundedTextPreviewFormats ?? boundedPreviewFormats.value).some(candidate => format.toUpperCase() === candidate.toUpperCase() || format.toUpperCase().startsWith(candidate.toUpperCase()+'.')),
     isNestedArchiveName: (name: string) => nestedExtensions.value.has(normalizedExtension(name)),
   }
 }

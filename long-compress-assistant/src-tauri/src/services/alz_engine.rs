@@ -92,6 +92,34 @@ pub async fn extract(path: &Path, output: &Path, password: Option<&str>, options
     Ok(())
 }
 
+/// Read one complete small text in memory. No extraction directory is created,
+/// and unrelated entries are listed but never decoded or password-tested.
+pub async fn preview_text_entry(path: &Path, entry: &str, password: Option<&str>, encoding: Option<ZipPasswordEncoding>, cancelled: Arc<AtomicBool>) -> Result<(Vec<u8>, u64)> {
+    const MAX_OUTPUT: u64 = 1024 * 1024;
+    const MAX_INPUT: u64 = 64 * 1024 * 1024;
+    anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Acquire), "ALZ 文本预览已取消");
+    let entry = super::archive_entry_open::normalize_safe_entry_path(entry)?;
+    let listing = browse_with_encoding(path, encoding, cancelled.clone()).await?;
+    let selected = listing.entries.iter().find(|e| e.path == entry && !e.is_dir).context("所选 ALZ 文本已不存在，请刷新目录")?;
+    anyhow::ensure!(selected.size <= MAX_OUTPUT, "ALZ 文本预览支持 1 MiB 以内的完整文件；此文件较大，请先提取后打开");
+    anyhow::ensure!(selected.compressed_size.unwrap_or(MAX_INPUT+1) <= MAX_INPUT, "所选 ALZ 文本压缩数据超过 64 MiB 预览范围，请先提取后打开");
+    let group = super::alz_volumes::complete(path)?;
+    let tool = command_path().context("缺少随附 ALZ 读取引擎，请修复安装")?;
+    let mut command = crate::utils::process::async_command(tool);
+    command.arg("preview-text").arg(&group.first);
+    let input = serde_json::to_vec(&serde_json::json!({"password":password,"selected":[entry],"encoding":source_encoding(encoding)?}))?;
+    let result = crate::utils::process::cancellable_output_with_stdin(&mut command, &cancelled, Duration::from_secs(30), Some(input)).await.context("ALZ 文本预览已取消或读取未完成")?;
+    let response: serde_json::Value = serde_json::from_slice(&result.stdout).context("ALZ 文本预览没有返回有效结果")?;
+    if let Some(error) = response.get("error").and_then(|v| v.as_str()) { anyhow::bail!("{error}"); }
+    anyhow::ensure!(result.status.success(), "ALZ 文本预览未完成，请先提取后打开");
+    let value = response.get("result").context("ALZ 文本预览结果缺失")?;
+    let bytes: Vec<u8> = serde_json::from_value(value["bytes"].clone())?;
+    let size = value["totalSize"].as_u64().context("ALZ 文本大小缺失")?;
+    anyhow::ensure!(size == selected.size && bytes.len() as u64 == size && size <= MAX_OUTPUT, "ALZ 文本预览大小不一致，请刷新后重试");
+    anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Acquire), "ALZ 文本预览已取消");
+    Ok((bytes, size))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

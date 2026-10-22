@@ -1,0 +1,18 @@
+{
+  "helperSha256": "dcbe8ff673ff375ad5ea3eb129da4ce6e98515a418ccb6ba72272cf7ecb6c58a",
+  "controlled": true,
+  "checks": [
+    {
+      "name": "helper-direct-output-boundary",
+      "exitCode": 2,
+      "error": "ALZ 文本预览支持 1 MiB 以内的完整文件；此文件较大，请先提取后打开"
+    },
+    {
+      "name": "helper-direct-input-boundary",
+      "compressedSize": 67108865,
+      "exitCode": 2,
+      "error": "所选 ALZ 文本压缩数据超过 64 MiB 预览范围，请先提取后打开"
+    }
+  ],
+  "passed": true
+}

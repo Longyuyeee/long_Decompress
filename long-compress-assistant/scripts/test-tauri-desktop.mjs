@@ -98,6 +98,7 @@ import { runAlzBzip2165Gate } from './alz-bzip2-165-gate.mjs'
 import { runWindowMemory166Gate } from './window-memory-166-gate.mjs'
 import { runToolsCenter167Gate } from './tools-center-167-gate.mjs'
 import { runAlzBounded168Gate } from './alz-bounded-168-gate.mjs'
+import { runAlzText169Gate } from './alz-text-169-gate.mjs'
 import { runCompactModulesUiGate } from './compact-modules-ui-gate.mjs'
 import { runPageUiReview } from './page-ui-review-gate.mjs'
 import { runSettingsUpdateThemesGate } from './settings-update-themes-gate.mjs'
@@ -5021,6 +5022,9 @@ try {
     completedSuccessfully = true
   } else if ((process.argv.includes('--compact-modules-only') || process.argv.includes('--compact-modules-layout-only'))) {
     await runCompactModulesUiGate({driver,bridge:callDesktopBridge,application,root,dataDirectory:e2eDataDirectory})
+    completedSuccessfully = true
+  } else if (process.argv.includes('--alz-text-169-only')) {
+    await runAlzText169Gate({driver,bridge:callDesktopBridge,root,application})
     completedSuccessfully = true
   } else if (process.argv.includes('--alz-bounded-168-only')) {
     await runAlzBounded168Gate({driver,bridge:callDesktopBridge,application,root,bundledSevenZip})
