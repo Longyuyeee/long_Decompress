@@ -7,6 +7,7 @@ import { translations } from './i18n'
 
 import './assets/css/main.css'
 import './styles/design-tokens.css'
+import './styles/signature-themes.css'
 import './styles/accessibility.css'
 import './styles/responsive-utilities.css'
 import './styles/animation-utilities.css'

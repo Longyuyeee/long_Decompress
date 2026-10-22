@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   checkUpdate: vi.fn(),
   installUpdate: vi.fn(),
   onUpdaterEvent: vi.fn(),
+  listen: vi.fn(),
 }))
 
 vi.mock('@tauri-apps/api/updater', () => ({
@@ -13,6 +14,7 @@ vi.mock('@tauri-apps/api/updater', () => ({
   installUpdate: mocks.installUpdate,
   onUpdaterEvent: mocks.onUpdaterEvent,
 }))
+vi.mock('@tauri-apps/api/event', () => ({ listen: mocks.listen, TauriEvent: { DOWNLOAD_PROGRESS: 'tauri://update-download-progress' } }))
 
 const manifest = {
   version: '1.0.8',
@@ -30,6 +32,7 @@ describe('update store', () => {
       configurable: true,
     })
     mocks.onUpdaterEvent.mockResolvedValue(vi.fn())
+    mocks.listen.mockResolvedValue(vi.fn())
     mocks.installUpdate.mockResolvedValue(undefined)
   })
 
@@ -139,5 +142,61 @@ describe('update store', () => {
     await vi.advanceTimersByTimeAsync(3_000)
 
     expect(mocks.checkUpdate).not.toHaveBeenCalled()
+  })
+
+  it('registers progress before installation, accumulates chunks and uses the native downloaded phase', async () => {
+    const store = useUpdateStore()
+    store.manifest = manifest
+    mocks.installUpdate.mockImplementation(async () => {
+      const progress = mocks.listen.mock.calls[0][1]
+      progress({ payload: { chunkLength: 25, contentLength: 100 } })
+      progress({ payload: { chunkLength: 10, contentLength: 100 } })
+      expect(store.downloadedBytes).toBe(35)
+      expect(store.downloadPercent).toBe(35)
+      expect(store.installPhase).toBe('downloading')
+      mocks.onUpdaterEvent.mock.calls[0][0]({ status: 'DOWNLOADED' })
+      expect(store.installPhase).toBe('installing')
+      progress({ payload: { chunkLength: 99, contentLength: 100 } })
+      expect(store.downloadedBytes).toBe(35)
+    })
+    await store.install(0)
+    expect(store.installPhase).toBe('restarting')
+    expect(mocks.listen.mock.invocationCallOrder[0]).toBeLessThan(mocks.installUpdate.mock.invocationCallOrder[0])
+  })
+
+  it('shows indeterminate progress without a content length and resets after a failed attempt', async () => {
+    const store = useUpdateStore()
+    store.manifest = manifest
+    mocks.installUpdate.mockImplementationOnce(async () => {
+      mocks.listen.mock.calls[0][1]({ payload: { chunkLength: 50, contentLength: null } })
+      expect(store.downloadPercent).toBeNull()
+      expect(store.downloadedBytes).toBe(50)
+      store.remindLater()
+      expect(store.dialogVisible).toBe(true)
+      throw new Error('download interrupted')
+    })
+    await store.install(0)
+    expect(store.status).toBe('error')
+    mocks.installUpdate.mockImplementationOnce(async () => {
+      expect(store.downloadedBytes).toBe(0)
+      expect(store.totalBytes).toBeNull()
+      expect(store.installPhase).toBe('preparing')
+      mocks.listen.mock.calls[0][1]({ payload: { chunkLength: 120, contentLength: 100 } })
+      expect(store.downloadPercent).toBe(100)
+    })
+    await store.install(0)
+    expect(mocks.listen).toHaveBeenCalledOnce()
+  })
+
+  it('shares initialization and removes both listeners on cleanup', async () => {
+    const stopStatus = vi.fn(), stopProgress = vi.fn()
+    mocks.onUpdaterEvent.mockResolvedValue(stopStatus)
+    mocks.listen.mockResolvedValue(stopProgress)
+    const store = useUpdateStore()
+    await Promise.all([store.initialize(), store.initialize()])
+    expect(mocks.listen).toHaveBeenCalledOnce()
+    store.cleanup()
+    expect(stopStatus).toHaveBeenCalledOnce()
+    expect(stopProgress).toHaveBeenCalledOnce()
   })
 })

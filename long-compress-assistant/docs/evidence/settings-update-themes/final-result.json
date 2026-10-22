@@ -1,0 +1,51 @@
+{
+  "startedAt": "2026-10-22T03:58:53.291Z",
+  "binarySha256": "1ed24d752cb28501598a671f68aace5dba48b02541a9e6ed135614254c716f44",
+  "checks": [
+    "final-theme-icon-format-disclosures-and-legible-count-labels",
+    "tray-disabled-close-keeps-existing-active-task-confirmation"
+  ],
+  "layouts": [
+    {
+      "name": "final-theme-obsidian",
+      "height": 700,
+      "modal": null,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "final-themes-narrow",
+      "height": 520,
+      "modal": null,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    },
+    {
+      "name": "final-format-counts",
+      "height": 700,
+      "modal": null,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 1100
+    },
+    {
+      "name": "final-format-counts-narrow",
+      "height": 520,
+      "modal": null,
+      "overflow": 0,
+      "pageOverflow": 0,
+      "width": 760
+    }
+  ],
+  "screenshots": [
+    "final-theme-obsidian-1100x700.png",
+    "final-themes-narrow-760x520.png",
+    "final-format-counts-1100x700.png",
+    "final-format-counts-narrow-760x520.png"
+  ],
+  "updateTransport": "Synthetic chunks through real Tauri event channel; installer not launched",
+  "previousFunctionalEvidence": "result.json (earlier build; themes, download event transport, actual X hide/restore passed before the cancel selector timed out)",
+  "completedAt": "2026-10-22T03:58:58.542Z"
+}

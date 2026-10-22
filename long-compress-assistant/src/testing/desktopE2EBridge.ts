@@ -1,6 +1,6 @@
 import { appWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/tauri'
-import { listen } from '@tauri-apps/api/event'
+import { listen, emit, TauriEvent } from '@tauri-apps/api/event'
 import type { UpdateManifest } from '@tauri-apps/api/updater'
 import { useTaskStore, type TaskStatus, type TaskType } from '@/stores/task'
 import { useCompressionStore } from '@/stores/compression'
@@ -191,6 +191,8 @@ export interface DesktopE2EBridge {
     outputPaths: string[]
   }
   showAvailableUpdate: () => void
+  previewUpdateDownload: (chunkLength: number, contentLength: number | null, reset?: boolean) => Promise<void>
+  previewUpdateStatus: (status: 'DOWNLOADED' | 'DONE' | 'ERROR' | 'RESET') => Promise<void>
   seedResponsiveWorkspace: (type: 'compression' | 'decompression', state?: 'running' | 'completed', typical?: boolean) => string
   setCloseToTray: (enabled: boolean) => Promise<void>
   setAutoStart: (enabled: boolean) => Promise<boolean>
@@ -997,6 +999,17 @@ export const installDesktopE2EBridge = () => {
         errorMessage: '',
         dialogVisible: true,
       })
+    },
+
+    // UI fixtures use the real Tauri event transport without starting an installer.
+    async previewUpdateDownload(chunkLength, contentLength, reset = false) {
+      await updateStore.initialize()
+      if (reset) updateStore.$patch({ status: 'installing', manifest: { version: '99.0.0-e2e', date: '', body: '' }, dialogVisible: true, downloadedBytes: 0, totalBytes: null, installPhase: 'preparing', errorMessage: '' })
+      await emit(TauriEvent.DOWNLOAD_PROGRESS, { chunkLength, contentLength })
+    },
+    async previewUpdateStatus(status) {
+      if (status === 'RESET') { updateStore.$patch({ status: 'idle', manifest: null, dialogVisible: false }); return }
+      await emit(TauriEvent.STATUS_UPDATE, { status, error: status === 'ERROR' ? '下载中断，请重试' : undefined })
     },
 
     seedResponsiveWorkspace(type, state, typical = false) {

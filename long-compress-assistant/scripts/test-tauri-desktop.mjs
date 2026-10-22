@@ -92,6 +92,7 @@ import { runZipPpmd1562Gate } from './zip-ppmd-1562-gate.mjs'
 import { runZpaqNative1564Gate } from './zpaq-native-1564-gate.mjs'
 import { runCompactModulesUiGate } from './compact-modules-ui-gate.mjs'
 import { runPageUiReview } from './page-ui-review-gate.mjs'
+import { runSettingsUpdateThemesGate } from './settings-update-themes-gate.mjs'
 import { runDualPaneArchivesUiGate } from './dual-pane-archives-ui-gate.mjs'
 import { runZipXz1563Gate } from './zip-xz-1563-gate.mjs'
 import { runZipBzip1559Gate } from './zip-bzip2-1559-gate.mjs'
@@ -4996,6 +4997,9 @@ try {
     await runZipPpmd1535Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
   } else if (process.argv.includes('--zip-bzip2-1534-only')) {
     await runZipBzip1534Gate({ driver, bridge: callDesktopBridge, waitForElement, artifactDirectory, application, root, bundledSevenZip })
+  } else if (process.argv.includes('--settings-update-themes-only')) {
+    await runSettingsUpdateThemesGate({driver,bridge:callDesktopBridge,application,root,forwardContextAction})
+    completedSuccessfully = true
   } else if (process.argv.includes('--page-ui-review-only')) {
     await runPageUiReview({driver,bridge:callDesktopBridge,application,root})
     completedSuccessfully = true
