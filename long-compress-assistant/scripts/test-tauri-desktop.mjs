@@ -95,6 +95,7 @@ import { runZpaqTail162Gate } from './zpaq-tail-162-gate.mjs'
 import { runZpaqBlock163Gate } from './zpaq-block-163-gate.mjs'
 import { runZpaqRetrieval164Gate } from './zpaq-retrieval-164-gate.mjs'
 import { runAlzBzip2165Gate } from './alz-bzip2-165-gate.mjs'
+import { runWindowMemory166Gate } from './window-memory-166-gate.mjs'
 import { runCompactModulesUiGate } from './compact-modules-ui-gate.mjs'
 import { runPageUiReview } from './page-ui-review-gate.mjs'
 import { runSettingsUpdateThemesGate } from './settings-update-themes-gate.mjs'
@@ -2098,7 +2099,7 @@ async function waitForDesktopReady() {
   console.log('[desktop-e2e] desktop E2E bridge is ready')
 }
 
-async function restartDesktopSession({ preserveProfile = false, requestExit } = {}) {
+async function restartDesktopSession({ preserveProfile = false, requestExit, afterExit, applicationArgs = [] } = {}) {
   if (driver) {
     const previousDriver = driver
     const previousApplicationProcessIds = desktopApplicationProcessIds()
@@ -2133,6 +2134,7 @@ async function restartDesktopSession({ preserveProfile = false, requestExit } = 
   assert.equal(personalSettingsAfter, personalSettingsBefore, 'isolated desktop tests must not modify personal app settings')
   tauriDriverProcess = undefined
   console.log('[desktop-e2e] previous tauri-driver service stopped')
+  await afterExit?.()
   await new Promise((resolve) => setTimeout(resolve, 500))
   await startTauriDriver()
   console.log('[desktop-e2e] replacement tauri-driver service is ready')
@@ -2149,7 +2151,7 @@ async function restartDesktopSession({ preserveProfile = false, requestExit } = 
       'the focused auto-start gate refuses to overwrite an existing user startup choice',
     )
   }
-  driver = await createDesktopSession()
+  driver = await createDesktopSession(applicationArgs)
   console.log('[desktop-e2e] replacement desktop session created')
   await waitForDesktopReady()
 }
@@ -5017,6 +5019,9 @@ try {
     completedSuccessfully = true
   } else if ((process.argv.includes('--compact-modules-only') || process.argv.includes('--compact-modules-layout-only'))) {
     await runCompactModulesUiGate({driver,bridge:callDesktopBridge,application,root,dataDirectory:e2eDataDirectory})
+    completedSuccessfully = true
+  } else if (process.argv.includes('--window-memory-166-only') || process.argv.includes('--window-memory-166-resize-only')) {
+    await runWindowMemory166Gate({getDriver:()=>driver,restart:restartDesktopSession,bridge:callDesktopBridge,root,application,dataDirectory:e2eDataDirectory,readNativeRect:readNativeApplicationWindowRect,forwardContextAction})
     completedSuccessfully = true
   } else if (process.argv.includes('--alz-bzip2-165-only')) {
     await runAlzBzip2165Gate({driver,bridge:callDesktopBridge,waitForElement,application,root})

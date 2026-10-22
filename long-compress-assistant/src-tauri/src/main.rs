@@ -14,6 +14,7 @@ use interprocess::local_socket::{
 };
 use std::io::{BufRead, BufReader, Read, Write};
 use tauri::Manager;
+use long_compress_assistant::system_integration::window_memory::WindowMemory;
 use window_shadows::set_shadow;
 
 use long_compress_assistant::commands::system_integration::{ContextAction, DesktopBehaviorState};
@@ -302,16 +303,22 @@ fn main() {
                     };
                     let _ = std::fs::write(marker_path, visibility);
                 }
+            } else if window.label() == "main" {
+                let _ = window.show();
             }
         })
         .manage(EncryptedPasswordServiceState::new(data_dir.clone()))
         .manage(CompressionProfileServiceState::new())
         .manage(WatchFolderServiceState::new())
         .manage(DesktopBehaviorState::default())
+        .manage(WindowMemory::new(data_dir.clone()))
         .manage(long_compress_assistant::services::archive_entry_open::ArchiveEntryOpenCache::new(preview_cache_dir()))
         .system_tray(long_compress_assistant::system_integration::setup_tray())
         .on_system_tray_event(long_compress_assistant::system_integration::handle_tray_event)
         .on_window_event(|event| {
+            if let Some(memory) = event.window().try_state::<WindowMemory>() {
+                memory.on_event(event.window(), event.event());
+            }
             if let tauri::WindowEvent::CloseRequested { api, .. } = event.event() {
                 api.prevent_close();
                 let state = event.window().state::<DesktopBehaviorState>();
@@ -328,6 +335,7 @@ fn main() {
                     return Ok(());
                 }
             };
+            app.state::<WindowMemory>().restore(&window);
             if is_auto_start_activation(&args) {
                 let _ = window.hide();
             }

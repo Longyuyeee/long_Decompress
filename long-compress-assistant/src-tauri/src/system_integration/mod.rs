@@ -8,6 +8,7 @@ pub mod permission_manager;
 pub mod platform_compatibility;
 
 pub mod tray;
+pub mod window_memory;
 
 pub use notification::{NOTIFIER, NotificationRequest, NotificationConfig, NotificationHistory, NotificationType};
 pub use permission_manager::{PermissionManager, PermissionType, PermissionStatus};

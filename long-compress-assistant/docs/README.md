@@ -1,7 +1,7 @@
 # 文档导航与维护规则
 
-- **当前版本 v1.6.5**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.5)、[中文说明](RELEASE_NOTES_1.6.5.md)与[封板记录](ALZ_BZIP2_INTEGRITY_FREEZE_1.6.5.md)。正式附件按 PR/标签流水线生成，此前 v1.6.4 已发布且四附件齐全。
-- **当前接续 v1.6.5**：[ALZ Bzip2 完整性路线](ARCHIVE_ROADMAP_1.6.5.md)、[本版记录](ALZ_BZIP2_INTEGRITY_FREEZE_1.6.5.md)；原方法 3 候选仍缺真实来源，单独保留。[下一阶段 v1.6.6](ARCHIVE_ROADMAP_1.6.6.md)仅规划，准确封板/发布状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
+- **当前版本 v1.6.6**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.6)、[中文说明](RELEASE_NOTES_1.6.6.md)与[窗口记忆记录](WINDOW_MEMORY_FREEZE_1.6.6.md)。正式附件按正常 PR/标签流水线生成。
+- **当前接续**：[#248 窗口位置与大小](ARCHIVE_ROADMAP_1.6.6.md)；下一阶段 [v1.6.7 ALZ 大包候选](ARCHIVE_ROADMAP_1.6.7.md)仅规划，准确封板/发布状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
 
 以下为历史阶段记录。
 

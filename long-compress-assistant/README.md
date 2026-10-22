@@ -27,7 +27,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 工作流中心 | 保存手动顺序方案，按模板筛选、解压、压缩或转换；运行前集中选择来源与密码，实际产物接续、逐步进度/日志/结果、失败纠正、指定步骤重跑与跨次接续，核对实际内容后复用成功产物；明确启用目录规则，等待稳定/分卷到齐、按快照排队、暂停取消和跨次记录；单次/每天/每周定时、下一次时间、错过补跑/跳过与最近结果 |
 | 资料对比 | 文件夹与 Store/Deflate/Bzip2/LZMA/Zstandard/PPMd ZIP、ZIPX（XZ） 任意组合，按路径查看差异、实际读取内容核对，进度/停止与剩余接续；AES/ZipCrypto 密码、数字/标准卷，搜索筛选/跨页选择、弹窗取回与原草稿历史贯通；选择基础与补充，复核冲突/最终结构并另存新 ZIP，引用草稿恢复与失败继续 |
 | 文件完整性 | 从完成结果生成整组相对路径清单、CRC32/MD5/SHA256 校验、清单逐文件原因与待补列表/按需复查、真实进度/停止与继续、归档诊断、RAR4/RAR5 副本修复与恢复卷（需本机 Rar.exe），以及密码 ZIP 与目录可读的标准卷完整文件救援 |
-| 外观与设置 | 六类设置、动态格式统计、四种新增特色主题、强调色与缩放、辅助显示和关闭到托盘 |
+| 外观与设置 | 六类设置、动态格式统计、四种新增特色主题、强调色与缩放、辅助显示、关闭到托盘与窗口记忆 |
 | 历史与系统集成 | 搜索和再次执行、统一结果操作、托盘、资源管理器经典菜单（压缩/解压/校验清单）与带下载进度的应用内更新 |
 
 详细格式能力见 [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md)；RAR 创建依赖用户安装的 WinRAR，视频暂不保证支持 Windows N。功能介绍和快速上手见 [项目首页](../README.md)。
@@ -96,7 +96,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.6.5 · ALZ Bzip2 完整性修复**。缺少结束标记或声明压缩范围内夹入尾随数据时，不再把完整解出内容当作检查、解压或转换成功；大小和 CRC 均匹配后给出明确来源损坏原因，沿原失败新任务和历史继续处理。[中文说明](docs/RELEASE_NOTES_1.6.5.md) · [范围与记录](docs/ALZ_BZIP2_INTEGRITY_FREEZE_1.6.5.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.5)。方法 3 仍待真实原包；下一阶段 [ALZ Bzip2 大包读取](docs/ARCHIVE_ROADMAP_1.6.6.md)仅规划。
+**v1.6.6 · 窗口位置与大小记忆**。调整好的窗口在重启后自动恢复，最大化保留还原尺寸，最小化/托盘不覆盖正常位置；换屏或降低分辨率时调整到可见区域，无需额外设置。回应 [#248](https://github.com/Longyuyeee/long_Decompress/issues/248)。[中文说明](docs/RELEASE_NOTES_1.6.6.md) · [范围与记录](docs/WINDOW_MEMORY_FREEZE_1.6.6.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.6)。下一阶段 [ALZ 大包兼容](docs/ARCHIVE_ROADMAP_1.6.7.md)仅规划。
+
+**v1.6.5 · ALZ Bzip2 完整性修复**。缺少结束标记或声明压缩范围内夹入尾随数据时，不再把完整解出内容当作检查、解压或转换成功；大小和 CRC 均匹配后给出明确来源损坏原因，沿原失败新任务和历史继续处理。[中文说明](docs/RELEASE_NOTES_1.6.5.md) · [范围与记录](docs/ALZ_BZIP2_INTEGRITY_FREEZE_1.6.5.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.5)。方法 3 仍待真实原包；后续 [ALZ Bzip2 大包读取](docs/ALZ_BZIP2_BOUNDED_READ_PLAN.md)仅规划。
 
 **v1.6.4 · 从受损 ZPAQ 取回已校验文件**。在诊断详情勾选文件，二级弹窗确认后加入原队列；按所选范围验证密码，独立目录保留原路径，结果区分已取回与未取回原因。草稿、补密码、失败新任务及历史保留范围。[中文说明](docs/RELEASE_NOTES_1.6.4.md) · [范围与记录](docs/ZPAQ_RETRIEVAL_FREEZE_1.6.4.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.4)。正式安装与更新附件已生成。已由上方 v1.6.5 接续；方法 3 [来源调查](docs/ALZ_METHOD3_SOURCE_1.6.5.md)仍保留未完成。
 
