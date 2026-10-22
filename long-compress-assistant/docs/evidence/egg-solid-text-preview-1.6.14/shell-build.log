@@ -1,0 +1,7 @@
+
+> long-compress-assistant@1.6.14 build:shell-extension
+> powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build-shell-extension.ps1
+
+   Compiling long-compress-shell-extension v1.6.14 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\shell-extension)
+    Finished `release` profile [optimized] target(s) in 2.22s
+Shell extension staged at E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\resources\long_compress_shell_extension_1_6_14.dll

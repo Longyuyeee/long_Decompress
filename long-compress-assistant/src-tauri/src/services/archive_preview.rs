@@ -1220,7 +1220,7 @@ mod egg_text1612_tests{
         for (name,reason) in [("crc-damage","CRC"),("trailing-deflate","校验失败"),("short-deflate","校验失败"),("binary","binary"),("utf16-odd","编码末尾不完整"),("too-large","1 MiB")]{
             let error=preview_archive_text(&root().join(format!("egg-text-1612/{name}.egg")),"readme.txt",None).await.unwrap_err();assert!(format!("{error:#}").contains(reason),"{name}: {error:#}");
         }
-        let error=preview_archive_text(&root().join("egg-153/upstream/solid.egg"),"hello.txt",None).await.unwrap_err();assert!(format!("{error:#}").contains("固实"));
+        let value=preview_archive_text(&root().join("egg-153/upstream/solid.egg"),"hello.txt",None).await.unwrap();assert!(!value.truncated && value.total_size==45);
         let error=preview_archive_text(&root().join("../../../test-results/egg-text-1612/input-limit.egg"),"readme.txt",None).await.unwrap_err();assert!(format!("{error:#}").contains("64 MiB"),"{error:#}");
         let path=root().join("egg-153/upstream/enc_zip20_bzip2.egg");let error=preview_archive_text(&path,"text.txt",Some("wrong")).await.unwrap_err();assert!(format!("{error:#}").contains("[egg-password]"));
     }
@@ -1287,5 +1287,68 @@ mod egg_image1613_tests{
         let control=super::super::image_reader::Control::default();let mut service=CompressionService::new(CompressionServiceConfig::default(),Arc::new(IOBufferPool::default()),Arc::new(RarSupportService::new()),Arc::new(UniversalCliEngine::new()),Arc::new(vault));service.cancellation_flag=control.flag.clone();
         let path=root().join("password-volumes.vol2.egg");let value=service.preview_egg_image_with_vault(path.to_str().unwrap(),"相册/01-封面.png",None,Some(ZipPasswordEncoding::Cp936),None,control).await.unwrap();assert_eq!((value.width,value.height),(320,240));assert!(service.encrypted_password_service.list_passwords().await.unwrap().iter().all(|e|e.use_count==0));
         let path=root().join("solid.egg");let error=service.preview_egg_image_with_vault(path.to_str().unwrap(),"preview.png",None,None,None,Default::default()).await.unwrap_err();assert!(format!("{error:#}").contains("固实"));
+    }
+}
+
+
+#[cfg(test)]
+mod egg_solid_text1614_tests {
+    use super::*;
+    use std::sync::{Arc, atomic::AtomicBool};
+    use sha2::Digest;
+    fn fixtures()->std::path::PathBuf { Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives") }
+    fn controlled(name:&str)->std::path::PathBuf { fixtures().join(format!("egg-solid-text-1614/{name}.egg")) }
+    #[tokio::test]
+    async fn egg_solid_text1614_original_shared_deflate_lzma_and_empty_content() {
+        for (file,entry,expected) in [
+            ("egg-153/upstream/solid.egg","hello.txt","b47cc0f104b62d4c7c30bcd68fd8e67613e287dc4ad8c310ef10cbadea9c4380"),
+            ("egg-154/original-alzip/solid-deflate.egg","文档/说明 文件.txt","fa0a640e110667fc47056120b2dd20a7faa377f49afb19af557ad1463f912021"),
+            ("egg-154/original-alzip/solid-high.egg","文档/说明 文件.txt","fa0a640e110667fc47056120b2dd20a7faa377f49afb19af557ad1463f912021")
+        ] {
+            let value=preview_archive_text(&fixtures().join(file),entry,None).await.unwrap();
+            assert!(!value.truncated && value.byte_size==value.total_size);
+            assert_eq!(format!("{:x}",sha2::Sha256::digest(value.content.as_bytes())),expected);
+        }
+        let empty=preview_archive_text(&fixtures().join("egg-153/upstream/solid.egg"),"empty.txt",None).await.unwrap();
+        assert!(empty.content.is_empty() && !empty.truncated && empty.total_size==0);
+        let exact=preview_archive_text(&controlled("exact-limit"),"readme.txt",None).await.unwrap();
+        assert!(!exact.truncated && exact.total_size==1024*1024);
+    }
+    #[tokio::test]
+    async fn egg_solid_text1614_later_dependencies_and_limits_block_early_text() {
+        for (name,reason) in [("shared-crc","CRC"),("shared-output-limit","64 MiB"),("selected-limit","1 MiB"),("unknown-dependency","Deflate / LZMA"),("encrypted-dependency","加密固实"),("truncated","校验失败"),("trailing","校验失败")] {
+            let error=preview_archive_text(&controlled(name),"readme.txt",Some("irrelevant manual key")).await.unwrap_err();
+            assert!(format!("{error:#}").contains(reason),"{name}: {error:#}");
+        }
+    }
+    #[tokio::test]
+    async fn egg_solid_text1614_controlled_native_group_cancel_change_and_missing_dependency() {
+        let dir=tempfile::tempdir().unwrap();
+        for n in 1..=3 { let name=format!("controlled-native.vol{n}");std::fs::copy(controlled(&name),dir.path().join(format!("{name}.egg"))).unwrap(); }
+        let source=dir.path().join("controlled-native.vol2.egg");
+        let version=super::super::image_reader::revision(&source).unwrap();
+        let value=preview_archive_text_controlled_at(&source,"hello.txt",None,None,None,Arc::new(AtomicBool::new(false)),Some(version.clone())).await.unwrap();
+        assert!(!value.truncated && value.total_size==45);
+        let error=preview_archive_text_controlled_at(&source,"hello.txt",None,None,None,Arc::new(AtomicBool::new(true)),Some(version.clone())).await.unwrap_err();
+        assert!(format!("{error:#}").contains("取消"));
+        let absent=dir.path().join("controlled-native.vol3.egg");std::fs::remove_file(absent).unwrap();
+        let error=preview_archive_text_controlled_at(&source,"hello.txt",None,None,None,Arc::new(AtomicBool::new(false)),Some(version)).await.unwrap_err();
+        assert!(format!("{error:#}").contains("IMAGE_READER_CHANGED"));
+        let error=preview_archive_text(&source,"hello.txt",None).await.unwrap_err();
+        assert!(format!("{error:#}").contains("incomplete"));
+    }
+    #[tokio::test]
+    async fn egg_solid_text1614_plain_and_encrypted_shared_paths_never_need_a_vault() {
+        use crate::services::{compression_service::{CompressionService,CompressionServiceConfig},encrypted_password_service::EncryptedPasswordService,io_buffer_pool::IOBufferPool,rar_support::RarSupportService,universal_engine::UniversalCliEngine};
+        let dir=tempfile::tempdir().unwrap();
+        // Deliberately locked / uninitialized: plain solid preview must not require it.
+        let vault=EncryptedPasswordService::new(dir.path());
+        let service=CompressionService::new(CompressionServiceConfig::default(),Arc::new(IOBufferPool::default()),Arc::new(RarSupportService::new()),Arc::new(UniversalCliEngine::new()),Arc::new(vault));
+        let value=service.preview_egg_text_with_vault(controlled("ui").to_str().unwrap(),"readme.txt",None,None,None).await.unwrap();
+        assert!(!value.truncated && value.content.starts_with("固实包内说明"));
+        let error=service.preview_egg_text_with_vault(controlled("encrypted-dependency").to_str().unwrap(),"readme.txt",None,None,None).await.unwrap_err();
+        assert!(format!("{error:#}").contains("加密固实"));
+        let error=service.preview_egg_text_with_vault(controlled("shared-output-limit").to_str().unwrap(),"readme.txt",None,None,None).await.unwrap_err();
+        assert!(format!("{error:#}").contains("64 MiB"));
     }
 }

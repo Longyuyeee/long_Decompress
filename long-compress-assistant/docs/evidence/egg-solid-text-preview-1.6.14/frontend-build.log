@@ -1,0 +1,77 @@
+
+> long-compress-assistant@1.6.14 build
+> vue-tsc && vite build
+
+vite v8.2.1 building client environment for production...
+[2K
+transforming...✓ 447 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                          1.02 kB │ gzip:   0.45 kB
+dist/assets/long-jieya-icon-BL7vCFYd.png                14.45 kB
+dist/assets/primeicons-C6QP2o4f.woff2                   35.14 kB
+dist/assets/primeicons-MpK4pl85.ttf                     84.98 kB
+dist/assets/primeicons-WjwUDZjB.woff                    85.05 kB
+dist/assets/primeicons-DMOk5skT.eot                     85.15 kB
+dist/assets/primeicons-Dr5RGzOO.svg                    342.52 kB │ gzip: 108.35 kB
+dist/assets/ComparisonPasswordField-YY-NqlIG.css         0.31 kB │ gzip:   0.21 kB
+dist/assets/HelpHint-BOUTH_tX.css                        0.76 kB │ gzip:   0.39 kB
+dist/assets/Modal-BWpzrzlU.css                           0.93 kB │ gzip:   0.37 kB
+dist/assets/WorkspaceHeader-B9PAL-WN.css                 1.11 kB │ gzip:   0.43 kB
+dist/assets/EnhancedFileDropzone-BZuhFozL.css            1.25 kB │ gzip:   0.53 kB
+dist/assets/BatchConfigBar-Zo42Me3U.css                  1.86 kB │ gzip:   0.66 kB
+dist/assets/ToolsCenterView-xQLgiRpV.css                 2.32 kB │ gzip:   0.79 kB
+dist/assets/ZipEditBar-DwYwQLvR.css                      2.51 kB │ gzip:   0.58 kB
+dist/assets/TaskExecutionOverview-DKmwUy-m.css           2.97 kB │ gzip:   0.82 kB
+dist/assets/HistoryView-CFvGuBR_.css                     7.45 kB │ gzip:   1.70 kB
+dist/assets/SettingsView-Dd-NmjIW.css                   11.37 kB │ gzip:   2.29 kB
+dist/assets/ArchiveLibraryView-ChbWQjlz.css             13.09 kB │ gzip:   2.41 kB
+dist/assets/DecompressView-C5pW8H6l.css                 13.25 kB │ gzip:   3.07 kB
+dist/assets/SourceComparisonView-CNkSwYXT.css           13.66 kB │ gzip:   2.42 kB
+dist/assets/CompressionSettingsPanel-w5aO2pXS.css       13.77 kB │ gzip:   2.76 kB
+dist/assets/CompressionView-DDwoCtoz.css                14.27 kB │ gzip:   2.91 kB
+dist/assets/PasswordVaultView-CnZS5jpR.css              17.70 kB │ gzip:   3.57 kB
+dist/assets/WorkflowView-CAs8I916.css                   23.81 kB │ gzip:   3.75 kB
+dist/assets/FileIntegrityView-Dwtv1cbc.css              30.47 kB │ gzip:   4.92 kB
+dist/assets/SpecialCompressionView-FgrvabwZ.css         38.50 kB │ gzip:   5.87 kB
+dist/assets/FileBrowserView-64q_I6zN.css                60.90 kB │ gzip:   9.43 kB
+dist/assets/index-p8Jislk_.css                         125.06 kB │ gzip:  23.70 kB
+dist/assets/archiveLibrary-DmESjHDH.js                   0.60 kB │ gzip:   0.46 kB
+dist/assets/useArchiveEngine-Ka0NKJ4D.js                 0.92 kB │ gzip:   0.50 kB
+dist/assets/WorkspaceHeader-C84Irm1H.js                  1.07 kB │ gzip:   0.59 kB
+dist/assets/utils-q4OOveYu.js                            1.10 kB │ gzip:   0.67 kB
+dist/assets/pdfOptimizationWorkspace-CJoaJc3o.js         1.28 kB │ gzip:   0.88 kB
+dist/assets/useArchiveBrowserCapabilities-Coe6Gwhf.js    1.38 kB │ gzip:   0.64 kB
+dist/assets/ToolsCenterView-C8l6pb0q.js                  1.47 kB │ gzip:   0.80 kB
+dist/assets/TaskExecutionOverview-JiC8XsJN.js            1.55 kB │ gzip:   0.75 kB
+dist/assets/ComparisonPasswordField-ByrRLihH.js          3.21 kB │ gzip:   1.75 kB
+dist/assets/password-CbnnfU-e.js                         5.14 kB │ gzip:   2.08 kB
+dist/assets/Modal-Dq5KPQQK.js                            5.37 kB │ gzip:   2.35 kB
+dist/assets/EnhancedFileDropzone-Dlerp9aF.js             5.58 kB │ gzip:   2.43 kB
+dist/assets/zpaqRetrieval-B5Rf_GE9.js                    6.01 kB │ gzip:   3.07 kB
+dist/assets/BatchConfigBar-m8UWdoWg.js                  21.18 kB │ gzip:   7.55 kB
+dist/assets/vue-router-AJrn-jQ0.js                      24.87 kB │ gzip:   9.60 kB
+dist/assets/SourceComparisonView-KJQ9ZD2r.js            31.31 kB │ gzip:  10.63 kB
+dist/assets/SettingsView-DxoGxDPZ.js                    40.11 kB │ gzip:   9.79 kB
+dist/assets/ArchiveLibraryView-CZG8dTT7.js              42.91 kB │ gzip:  13.88 kB
+dist/assets/ZipEditBar-D9ZdE95w.js                      44.87 kB │ gzip:  13.60 kB
+dist/assets/PasswordVaultView-CkLn8lCG.js               47.09 kB │ gzip:  12.18 kB
+dist/assets/HistoryView-DU-ydanl.js                     51.22 kB │ gzip:  16.50 kB
+dist/assets/CompressionView-zNIVkZd0.js                 57.32 kB │ gzip:  16.57 kB
+dist/assets/SpecialCompressionView-DuNqKkzq.js          57.84 kB │ gzip:  17.29 kB
+dist/assets/HelpHint-CHWCO9Me.js                        62.11 kB │ gzip:  18.81 kB
+dist/assets/WorkflowView-DYz82V7c.js                    64.18 kB │ gzip:  19.48 kB
+dist/assets/DecompressView-BleZyezQ.js                  89.09 kB │ gzip:  26.55 kB
+dist/assets/FileIntegrityView-CwG2RwgA.js               92.11 kB │ gzip:  28.79 kB
+dist/assets/CompressionSettingsPanel-BsjNake2.js        93.29 kB │ gzip:  25.34 kB
+dist/assets/FileBrowserView-Bj1vl6pi.js                135.34 kB │ gzip:  43.06 kB
+dist/assets/_plugin-vue_export-helper-Y4NwoTN6.js      157.73 kB │ gzip:  56.21 kB
+dist/assets/index-CHDeuHIT.js                          329.86 kB │ gzip: 101.87 kB
+
+✓ built in 12.92s
+[PLUGIN_TIMINGS] Your build spent 96% of 12.9s inside plugin hooks (12.4s).
+Not measurable — 2 hooks whose calls overlap, so elapsed time covers work other calls were doing. Profile with `node --cpu-prof`:
+  - vite:css transform (99 calls)
+  - vite:vue transform (310 calls)
+See https://rolldown.rs/reference/InputOptions.checks#plugintimings for more details.
+

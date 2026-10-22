@@ -98,9 +98,12 @@ impl<R:Read>Read for PreviewInput<R>{
 impl<R:Seek>Seek for PreviewInput<R>{fn seek(&mut self,pos:SeekFrom)->io::Result<u64>{self.inner.seek(pos)}}
 fn preview_entry(a:&mut EggArchive<egg_volumes::Reader>,chosen:&[EggFileEntry],req:&Request,image:bool)->Result<Value>{
     let (kind,limit)=if image{("图片",MAX_IMAGE)}else{("文本",MAX_TEXT)};
-    ensure!(!a.is_solid,"EGG 固实条目暂不支持{kind}预览，请先提取后打开");
     ensure!(req.selected.len()==1&&chosen.len()==1&&!chosen[0].is_directory(),"请选择一份 EGG {kind}预览");
     let e=&chosen[0];ensure!(e.uncompressed_size<=limit,"EGG {kind}预览支持 {} MiB 以内的完整文件，请先提取后打开",limit/(1024*1024));
+    if a.is_solid {
+        ensure!(!image,"EGG 固实条目暂不支持图片预览，请先提取后打开");
+        return complex::preview_solid_text(a,chosen,req);
+    }
     let packed=e.blocks.iter().map(|b|b.compressed_size as u64).sum::<u64>();
     ensure!(packed<=MAX_TEXT_INPUT,"EGG 所选{kind}压缩数据超过 64 MiB，请先提取后打开");
     plan(a,chosen)?;

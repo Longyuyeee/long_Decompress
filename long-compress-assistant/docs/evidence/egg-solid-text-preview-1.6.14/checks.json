@@ -1,0 +1,30 @@
+{
+  "version": "1.6.14",
+  "applicationSha256": "1f2cf8f380e824461209a828071deb8320b7a67f7cca73292448a4617658a703",
+  "helperSha256": "3a0310cb1d1507c3c427f8daba4f4e08b7b5072760f539bbed1ac58d919fd467",
+  "helperVersion": "0.6.0",
+  "builds": {
+    "helper": true,
+    "vueTypesAndVite": true,
+    "shellExtension": true,
+    "nativeDesktopCandidate": true,
+    "eightVersionIdentitiesAndEngineInventory": true
+  },
+  "localCandidate": {
+    "features": [
+      "custom-protocol",
+      "desktop-e2e"
+    ],
+    "optLevel": 1,
+    "lto": false,
+    "formalReleaseConfigUnchanged": true
+  },
+  "checks": {
+    "rust": 4,
+    "frontendDifferentPassed": 2,
+    "helperNewOperation": 13,
+    "actualDesktopGroups": 4,
+    "viewedScreenshots": 3
+  },
+  "reuse": "Existing nonsolid previews, full codec/password/volume matrices, installation and real disk-full evidence were not repeated."
+}

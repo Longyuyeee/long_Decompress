@@ -1,0 +1,71 @@
+{
+  "version": "1.6.14",
+  "controlled": true,
+  "historicalProducer": false,
+  "textBytes": 73200,
+  "textSha256": "cd02abb97aa02560ef6194922bce6ac3e868f8925991381e577ba33241fd07b8",
+  "nativeVolumeEvidence": "controlled native headers around the unchanged genuine Deflate payload; not original producer volumes",
+  "nativePayloadOriginalSha256": "c6aaaa529a4adaea66d8b6f97529e95f1938d56f39b9e1c5fb04c3a22b0be053",
+  "files": [
+    {
+      "name": "controlled-native.vol1.egg",
+      "bytes": 1554,
+      "sha256": "f459d672c734ba2395367186b0c2d9c97b39477d5a33c599988e215c7f9cb288"
+    },
+    {
+      "name": "controlled-native.vol2.egg",
+      "bytes": 1555,
+      "sha256": "b115a270571dc29ccdbc17095b7c2be2a9a703b2bba88967583d9184c8ac9e43"
+    },
+    {
+      "name": "controlled-native.vol3.egg",
+      "bytes": 1555,
+      "sha256": "bb1becf297adcc6cd0fc09718364a78aabe34c77f33b450b66a77437272c4374"
+    },
+    {
+      "name": "encrypted-dependency.egg",
+      "bytes": 807,
+      "sha256": "8c988e31e417d062e61734bf5369180763f7aea540c1be10ae87d903238b05e7"
+    },
+    {
+      "name": "exact-limit.egg",
+      "bytes": 1492,
+      "sha256": "de6f603558cb5a4c2bb729c3bf28ba2f291dc9d7e0413dd2460b4ed1dd150e93"
+    },
+    {
+      "name": "selected-limit.egg",
+      "bytes": 1492,
+      "sha256": "0c12b19101c3fa2c346365b690f3ed703ec39f2d12be241062c58e0cae0958ae"
+    },
+    {
+      "name": "shared-crc.egg",
+      "bytes": 783,
+      "sha256": "85b720618528eb43a5dcdda8bf601270e429e4d675e307d424a016ce4a89a152"
+    },
+    {
+      "name": "shared-output-limit.egg",
+      "bytes": 783,
+      "sha256": "6ac29af7c5be60ec2a9e7a05603988eaa27bc526a747cb52ce84dd284327cb2f"
+    },
+    {
+      "name": "trailing.egg",
+      "bytes": 784,
+      "sha256": "ae8fac40326255d248d7da61ebcbdc02dad47995eea5d122cd336c02927b28a0"
+    },
+    {
+      "name": "truncated.egg",
+      "bytes": 780,
+      "sha256": "7322ab3526c6d7e47dfbbbac05c7b7019cdbd365b2eb63fca481f5847931ea02"
+    },
+    {
+      "name": "ui.egg",
+      "bytes": 783,
+      "sha256": "ab79bfbaec7a9c89f65a1a78f1cbddfd3981b44a9d86beea8041a9079e661d29"
+    },
+    {
+      "name": "unknown-dependency.egg",
+      "bytes": 783,
+      "sha256": "e3566ecf5d789993591f0b02e1778f5c75f538331f77c539bc5d469c3b3c39c7"
+    }
+  ]
+}
