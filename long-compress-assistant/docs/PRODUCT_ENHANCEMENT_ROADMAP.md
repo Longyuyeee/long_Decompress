@@ -1,5 +1,9 @@
 # Long解压产品增强路线
 
+## 当前排期：v1.6.7 工具中心与后续 ALZ 大包（2026-10-23）
+
+按用户要求优先将四类辅助功能收纳为 [工具中心](ARCHIVE_ROADMAP_1.6.7.md)，保留各工具功能、原交互与快捷直达；减少重复标题、保持深浅主题和宽窄布局，实际进度见 [本版记录](TOOLS_CENTER_FREEZE_1.6.7.md)。下一阶段 [v1.6.8 候选](ARCHIVE_ROADMAP_1.6.8.md) 回归 ALZ Bzip2 真实大包来源与有界读取；尚未取得大包和完成实现，ALZ 方法 3 / EGG 加密固实限制保持。下方为历史。
+
 ## 当前排期：v1.6.6 窗口记忆与后续 ALZ 大包（2026-10-22）
 
 优先回应 [#248](https://github.com/Longyuyeee/long_Decompress/issues/248)，按 [v1.6.6 路线](ARCHIVE_ROADMAP_1.6.6.md) 自动恢复位置、正常尺寸和最大化，兼容最小化/托盘及显示器变化，保留当前工作区交互。实现和封板状态见 [本版记录](WINDOW_MEMORY_FREEZE_1.6.6.md)。之后 [v1.6.7 候选](ARCHIVE_ROADMAP_1.6.7.md) 回归 ALZ Bzip2 真实大包来源、有界读取和现有流程，尚未实现。方法 3、EGG 加密固实限制不变。下方为历史。

@@ -1,7 +1,7 @@
 # 文档导航与维护规则
 
-- **当前版本 v1.6.6**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.6)、[中文说明](RELEASE_NOTES_1.6.6.md)与[窗口记忆记录](WINDOW_MEMORY_FREEZE_1.6.6.md)。正式附件按正常 PR/标签流水线生成。
-- **当前接续**：[#248 窗口位置与大小](ARCHIVE_ROADMAP_1.6.6.md)；下一阶段 [v1.6.7 ALZ 大包候选](ARCHIVE_ROADMAP_1.6.7.md)仅规划，准确封板/发布状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
+- **当前版本 v1.6.7**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.7)、[中文说明](RELEASE_NOTES_1.6.7.md)与[工具中心记录](TOOLS_CENTER_FREEZE_1.6.7.md)。正式附件按正常 PR/标签流水线生成。
+- **当前接续**：[工具中心路线](ARCHIVE_ROADMAP_1.6.7.md)；后续 [v1.6.8 ALZ 大包候选](ARCHIVE_ROADMAP_1.6.8.md)仅规划，准确状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
 
 以下为历史阶段记录。
 

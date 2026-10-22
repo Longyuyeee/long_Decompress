@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import HelpHint from './HelpHint.vue'
+import { inject } from 'vue'
+import { TOOLS_CENTER_EMBEDDED } from '@/utils/navigation'
 defineProps<{ title: string; description?: string; icon: string }>()
+const embedded = inject(TOOLS_CENTER_EMBEDDED, false)
 </script>
 
 <template>
   <header class="workspace-heading">
     <div class="workspace-heading-copy">
-      <span class="workspace-heading-icon" aria-hidden="true"><i :class="icon" /></span>
-      <h1>{{ title }}</h1><HelpHint v-if="description" :label="title+'使用说明'">{{ description }}</HelpHint>
+      <span v-if="!embedded" class="workspace-heading-icon" aria-hidden="true"><i :class="icon" /></span>
+      <h1 v-if="!embedded">{{ title }}</h1><HelpHint v-if="description" :label="title+'使用说明'">{{ description }}</HelpHint>
     </div>
     <div v-if="$slots.navigation" class="workspace-heading-navigation"><slot name="navigation" /></div>
     <div v-if="$slots.default" class="workspace-heading-actions"><slot /></div>

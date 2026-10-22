@@ -53,8 +53,10 @@ const startResize = (edge: ResizeEdge, event: PointerEvent) => {
 }
 
 const navItems = APP_NAVIGATION
+const isActive = (name: string) => route.matched.some(record => record.name === name)
 
 const navigateTo = (name: string) => {
+  if (name === 'ToolsCenter' && isActive(name)) return
   router.push({ name })
 }
 </script>
@@ -89,16 +91,16 @@ const navigateTo = (name: string) => {
                   :data-testid="`nav-${item.name}`"
                   :aria-label="item.shortcut ? `${appStore.t(item.label)} (${item.shortcut})` : appStore.t(item.label)"
                  :title="`${appStore.t(item.label)} (${item.shortcut})`"
-                 :aria-current="route.name === item.name ? 'page' : undefined"
+                 :aria-current="isActive(item.name) ? 'page' : undefined"
                  class="nav-entry group relative w-full h-12 flex items-center gap-3 px-3 rounded-xl cursor-pointer transition-all duration-200 text-left"
-                 :class="route.name === item.name ? 'bg-primary/20 shadow-sm text-primary' : 'text-muted hover:bg-primary/8 hover:text-content'">
+                 :class="isActive(item.name) ? 'bg-primary/20 shadow-sm text-primary' : 'text-muted hover:bg-primary/8 hover:text-content'">
 
               <div class="absolute left-0 w-1 h-7 rounded-full bg-gradient-to-b from-primary to-primary/50 transition-all duration-300 shadow-[0_0_8px_var(--dynamic-accent)]"
-                   :class="route.name === item.name ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'"></div>
+                   :class="isActive(item.name) ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0'"></div>
 
               <div class="sidebar-nav-icon w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
-                   :class="route.name === item.name ? 'bg-primary/15' : 'bg-input/70 group-hover:bg-primary/10'">
-                <i :class="[item.icon, 'text-base transition-all duration-200', route.name === item.name ? 'text-primary' : 'text-muted group-hover:text-content']"></i>
+                   :class="isActive(item.name) ? 'bg-primary/15' : 'bg-input/70 group-hover:bg-primary/10'">
+                <i :class="[item.icon, 'text-base transition-all duration-200', isActive(item.name) ? 'text-primary' : 'text-muted group-hover:text-content']"></i>
               </div>
               <div class="sidebar-copy flex-1 min-w-0">
                 <div class="sidebar-nav-label text-xs font-extrabold truncate">{{ appStore.t(item.label) }}</div>
@@ -125,7 +127,7 @@ const navigateTo = (name: string) => {
           <ZipEditRecoveryNotice />
           <router-view v-slot="{ Component }">
             <transition name="aero-page" mode="out-in">
-              <div :key="route.path" class="min-h-0 flex-1 w-full overflow-hidden">
+              <div :key="route.matched[0]?.path || route.path" class="min-h-0 flex-1 w-full overflow-hidden">
                 <component :is="Component" />
               </div>
             </transition>
@@ -248,6 +250,11 @@ html, body, #app {
   .sidebar-version-badge { padding-inline: 0.35rem; font-size: 0.55rem; letter-spacing: -0.02em; }
 }
 
+@media (min-width: 841px) and (min-height: 641px) and (max-height: 720px) {
+  .app-sidebar > nav { gap: .25rem; }
+  .app-sidebar .nav-entry { height: 2.75rem; }
+}
+
 @media (max-height: 640px) {
   .app-sidebar .sidebar-brand { height: 3.5rem; }
   .app-sidebar .sidebar-brand img,
@@ -262,8 +269,8 @@ html, body, #app {
 }
 
 @media (max-width: 840px) and (max-height: 640px) {
-  .app-sidebar > nav { padding-inline: .375rem; }
-  .app-sidebar .nav-entry { height: 3.25rem; min-height: 3.25rem; padding: .25rem .125rem; }
-  .app-sidebar .sidebar-nav-icon { width: 1.5rem; height: 1.5rem; }
+  .app-sidebar > nav { padding-inline: .375rem; gap: 0; }
+  .app-sidebar .nav-entry { height: 2.5rem; min-height: 2.5rem; padding: .125rem; gap: 2px; }
+  .app-sidebar .sidebar-nav-icon { width: 1.125rem; height: 1.125rem; }
 }
 </style>

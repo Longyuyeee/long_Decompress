@@ -9,7 +9,8 @@ import ChecksumProgressCard from '@/components/integrity/ChecksumProgressCard.vu
 import type { ChecksumCalculationEntry } from '@/types/checksum'
 import ChecksumVerificationPanel from '@/components/integrity/ChecksumVerificationPanel.vue'
 import ArchiveRecoveryDetails from '@/components/compression/ArchiveRecoveryDetails.vue'
-import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
+import { computed, inject, nextTick, onUnmounted, ref, watch } from 'vue'
+import { TOOLS_CENTER_EMBEDDED } from '@/utils/navigation'
 import { useRouter } from 'vue-router'
 import { useArchiveRecoveryStore } from '@/composables/useArchiveRecoveryBatch'
 import ArchiveRecoveryBatch from '@/components/compression/ArchiveRecoveryBatch.vue'
@@ -30,6 +31,7 @@ import { zipPasswordEncodingArguments, zipPasswordEncodingLabel, type ZipPasswor
 import { supportsZipPasswordEncoding, zipPasswordEncodingForSource } from '@/utils/zipPasswordSource'
 
 const appStore = useAppStore()
+const embedded = inject(TOOLS_CENTER_EMBEDDED, false)
 const router = useRouter()
 const uiStore = useUIStore()
 const tauriCommands = useTauriCommands()
@@ -520,7 +522,7 @@ onUnmounted(() => {
     <!-- 顶部标题栏 -->
     <header class="integrity-header shrink-0">
       <div>
-        <div class="flex items-center gap-2"><h1>{{ appStore.t('integrity.title') }}</h1><HelpHint label="完整性工具说明">计算文件摘要、核对校验清单，或检查与修复压缩包。</HelpHint></div>
+        <div class="flex items-center gap-2"><h1 v-if="!embedded">{{ appStore.t('integrity.title') }}</h1><HelpHint label="完整性工具说明">计算文件摘要、核对校验清单，或检查与修复压缩包。</HelpHint></div>
       </div>
             <nav class="integrity-mode-switch" aria-label="文件完整性工具">
           <button

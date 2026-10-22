@@ -1,0 +1,10 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[tools-center-167] eight sidebar entries and tool-center shortcut, with all four original shortcuts retained
+[tools-center-167] comparison native reads, selection and inline expansion survive category switching
+[tools-center-167] workflow draft and expanded step retained; modal review blocks navigation shortcuts
+[tools-center-167] library adds and indexes a real archive, with search retained across tool categories
+[tools-center-167] checksum native result and expanded details retained while changing tool category
+[tools-center-167] Explorer checksum handoff opens the correct tool inside the center
+{"checks":6,"layouts":8,"candidate":"c5494492911de90b86abba018c0dba4b806646538cf3674e60f2ab15cf145c26"}
