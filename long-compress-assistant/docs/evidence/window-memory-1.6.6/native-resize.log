@@ -1,0 +1,23 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[desktop-e2e] requesting native application exit
+[desktop-e2e] previous WebDriver session released
+[desktop-e2e] previous tauri-driver service stopped
+[desktop-e2e] replacement tauri-driver service is ready
+[desktop-e2e] creating replacement desktop session
+[desktop-e2e] replacement desktop session created
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[window-memory-166] measured native resize and move survive real process restart
+[desktop-e2e] requesting native application exit
+[desktop-e2e] previous WebDriver session released
+[desktop-e2e] previous tauri-driver service stopped
+[desktop-e2e] replacement tauri-driver service is ready
+[desktop-e2e] creating replacement desktop session
+[desktop-e2e] replacement desktop session created
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[window-memory-166] maximum survives restart and restore button retains original normal bounds

@@ -71,7 +71,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
   </td></tr>
 </table>
 
-**还有这些贴近日常的小细节：** 常用目录与书签、资源管理器右键、托盘后台任务、历史搜索与再次执行、冰川/雨林/星云/曜石鎏金特色主题与强调色、界面缩放和减少动效、带下载进度的更新，以及按设置关闭到托盘。
+**还有这些贴近日常的小细节：** 常用目录与书签、资源管理器右键、托盘后台任务、历史搜索与再次执行、冰川/雨林/星云/曜石鎏金特色主题与强调色、界面缩放和减少动效、带下载进度的更新，以及按设置关闭到托盘、重启恢复窗口位置与大小。
 
 <a id="screenshots"></a>
 
@@ -279,7 +279,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.6.5 · ALZ Bzip2 完整性修复**。缺少结束标记或声明压缩范围内夹入尾随数据时，不再把完整解出内容当作检查、解压或转换成功；大小和 CRC 均匹配后给出明确来源损坏原因，沿原失败新任务和历史继续处理。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.5.md) · [范围与记录](long-compress-assistant/docs/ALZ_BZIP2_INTEGRITY_FREEZE_1.6.5.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.5)。方法 3 仍待真实原包；下一阶段 [ALZ Bzip2 大包读取](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.6.md)仅规划。
+**v1.6.6 · 窗口位置与大小记忆**。调整好的窗口在重启后自动恢复，最大化保留还原尺寸，最小化/托盘不覆盖正常位置；换屏或降低分辨率时调整到可见区域，无需额外设置。回应 [#248](https://github.com/Longyuyeee/long_Decompress/issues/248)。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.6.md) · [范围与记录](long-compress-assistant/docs/WINDOW_MEMORY_FREEZE_1.6.6.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.6)。下一阶段 [ALZ 大包兼容](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.7.md)仅规划。
+
+**v1.6.5 · ALZ Bzip2 完整性修复**。缺少结束标记或声明压缩范围内夹入尾随数据时，不再把完整解出内容当作检查、解压或转换成功；大小和 CRC 均匹配后给出明确来源损坏原因，沿原失败新任务和历史继续处理。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.5.md) · [范围与记录](long-compress-assistant/docs/ALZ_BZIP2_INTEGRITY_FREEZE_1.6.5.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.5)。方法 3 仍待真实原包；后续 [ALZ Bzip2 大包读取](long-compress-assistant/docs/ALZ_BZIP2_BOUNDED_READ_PLAN.md)仅规划。
 
 **v1.6.4 · 从受损 ZPAQ 取回已校验文件**。在诊断详情勾选文件，二级弹窗确认后加入原队列；按所选范围验证密码，独立目录保留原路径，结果区分已取回与未取回原因。草稿、补密码、失败新任务及历史保留范围。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.4.md) · [范围与记录](long-compress-assistant/docs/ZPAQ_RETRIEVAL_FREEZE_1.6.4.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.4)。正式安装与更新附件已生成。已由上方 v1.6.5 接续；方法 3 [来源调查](long-compress-assistant/docs/ALZ_METHOD3_SOURCE_1.6.5.md)仍保留未完成。
 

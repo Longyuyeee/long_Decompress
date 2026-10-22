@@ -1,0 +1,241 @@
+{
+  "version": "1.6.6",
+  "issue": 248,
+  "applicationSha256": "f7c1fe3734d7bf4abf0d5395b5eae041a25188fc21bac279da107fd9b8a8eee6",
+  "checks": [
+    "maximum survives restart and restore button retains original normal bounds",
+    "minimizing before exit preserves maximum and normal bounds, next ordinary launch visible",
+    "actual X still hides to tray and second instance wakes same window at same bounds",
+    "maximized logon activation remains hidden; wake and restore retain both bounds",
+    "disconnected monitor, offscreen position and oversized bounds fall back visibly",
+    "corrupted state falls back to usable default window",
+    "measured native resize and move survive real process restart"
+  ],
+  "layouts": [
+    {
+      "name": "disconnected-screen-fallback",
+      "bodyWidth": 1280,
+      "height": 672,
+      "nav": [
+        {
+          "scroll": 191,
+          "text": "解压中心Ctrl+O",
+          "width": 191
+        },
+        {
+          "scroll": 191,
+          "text": "压缩中心Ctrl+N",
+          "width": 191
+        },
+        {
+          "scroll": 191,
+          "text": "特殊压缩Ctrl+Shift+S",
+          "width": 191
+        },
+        {
+          "scroll": 191,
+          "text": "文件浏览器Ctrl+B",
+          "width": 191
+        },
+        {
+          "scroll": 191,
+          "text": "资料对比Ctrl+Shift+D",
+          "width": 191
+        },
+        {
+          "scroll": 191,
+          "text": "工作流中心Ctrl+Shift+W",
+          "width": 191
+        },
+        {
+          "scroll": 191,
+          "text": "归档资源库Ctrl+Shift+L",
+          "width": 191
+        },
+        {
+          "scroll": 191,
+          "text": "密码保险箱Ctrl+Shift+V",
+          "width": 191
+        },
+        {
+          "scroll": 191,
+          "text": "文件完整性Ctrl+I",
+          "width": 191
+        },
+        {
+          "scroll": 191,
+          "text": "历史任务Ctrl+H",
+          "width": 191
+        },
+        {
+          "scroll": 191,
+          "text": "设置中心Ctrl+,",
+          "width": 191
+        }
+      ],
+      "scrollWidth": 1280,
+      "titlebar": true,
+      "width": 1280
+    },
+    {
+      "name": "restored-normal",
+      "bodyWidth": 1100,
+      "height": 600,
+      "nav": [
+        {
+          "scroll": 195,
+          "text": "解压中心Ctrl+O",
+          "width": 195
+        },
+        {
+          "scroll": 195,
+          "text": "压缩中心Ctrl+N",
+          "width": 195
+        },
+        {
+          "scroll": 195,
+          "text": "特殊压缩Ctrl+Shift+S",
+          "width": 195
+        },
+        {
+          "scroll": 195,
+          "text": "文件浏览器Ctrl+B",
+          "width": 195
+        },
+        {
+          "scroll": 195,
+          "text": "资料对比Ctrl+Shift+D",
+          "width": 195
+        },
+        {
+          "scroll": 195,
+          "text": "工作流中心Ctrl+Shift+W",
+          "width": 195
+        },
+        {
+          "scroll": 195,
+          "text": "归档资源库Ctrl+Shift+L",
+          "width": 195
+        },
+        {
+          "scroll": 195,
+          "text": "密码保险箱Ctrl+Shift+V",
+          "width": 195
+        },
+        {
+          "scroll": 195,
+          "text": "文件完整性Ctrl+I",
+          "width": 195
+        },
+        {
+          "scroll": 195,
+          "text": "历史任务Ctrl+H",
+          "width": 195
+        },
+        {
+          "scroll": 195,
+          "text": "设置中心Ctrl+,",
+          "width": 195
+        }
+      ],
+      "scrollWidth": 1100,
+      "titlebar": true,
+      "width": 1100
+    },
+    {
+      "name": "small-window",
+      "bodyWidth": 760,
+      "height": 520,
+      "nav": [
+        {
+          "scroll": 75,
+          "text": "解压中心Ctrl+O",
+          "width": 75
+        },
+        {
+          "scroll": 75,
+          "text": "压缩中心Ctrl+N",
+          "width": 75
+        },
+        {
+          "scroll": 75,
+          "text": "特殊压缩Ctrl+Shift+S",
+          "width": 75
+        },
+        {
+          "scroll": 75,
+          "text": "文件浏览器Ctrl+B",
+          "width": 75
+        },
+        {
+          "scroll": 75,
+          "text": "资料对比Ctrl+Shift+D",
+          "width": 75
+        },
+        {
+          "scroll": 75,
+          "text": "工作流中心Ctrl+Shift+W",
+          "width": 75
+        },
+        {
+          "scroll": 75,
+          "text": "归档资源库Ctrl+Shift+L",
+          "width": 75
+        },
+        {
+          "scroll": 75,
+          "text": "密码保险箱Ctrl+Shift+V",
+          "width": 75
+        },
+        {
+          "scroll": 75,
+          "text": "文件完整性Ctrl+I",
+          "width": 75
+        },
+        {
+          "scroll": 75,
+          "text": "历史任务Ctrl+H",
+          "width": 75
+        },
+        {
+          "scroll": 75,
+          "text": "设置中心Ctrl+,",
+          "width": 75
+        }
+      ],
+      "scrollWidth": 760,
+      "titlebar": true,
+      "width": 760
+    }
+  ],
+  "limitations": [
+    "Physical desktop has its current monitor configuration; 5K, negative monitor coordinates and DPI/work-area changes additionally covered by pure bounds tests."
+  ],
+  "passed": true,
+  "normalBounds": {
+    "left": 120,
+    "top": 80,
+    "width": 2200,
+    "height": 1200
+  },
+  "nativeMeasurement": {
+    "dpiAware": true,
+    "scaleFactor": 2,
+    "requestedLogical": {
+      "x": 60,
+      "y": 40,
+      "width": 1100,
+      "height": 600
+    },
+    "confirmedPhysical": {
+      "left": 120,
+      "top": 80,
+      "width": 2200,
+      "height": 1200
+    },
+    "smallLogical": {
+      "width": 760,
+      "height": 520
+    }
+  }
+}

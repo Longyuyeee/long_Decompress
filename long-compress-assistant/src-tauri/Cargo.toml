@@ -1,6 +1,6 @@
 [package]
 name = "long-compress-assistant"
-version = "1.6.5"
+version = "1.6.6"
 description = "智能压缩解压助手"
 authors = ["Longyuyeee"]
 license = "MIT"
@@ -98,6 +98,7 @@ lzma-rust2 = { version = "=0.22.0", default-features = false, features = ["std",
 windows-sys = { version = "0.59", features = [
     "Win32_Foundation",
     "Win32_Globalization",
+    "Win32_Graphics_Gdi",
     "Win32_Security_Cryptography",
     "Win32_Storage_FileSystem",
     "Win32_System_JobObjects",

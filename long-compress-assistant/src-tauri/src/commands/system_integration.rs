@@ -10,7 +10,6 @@ use std::sync::{
     Mutex,
 };
 use tauri::{command, AppHandle, State, Window};
-#[cfg(feature = "desktop-e2e")]
 use tauri::Manager;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -43,6 +42,7 @@ pub fn set_close_to_tray(state: State<'_, DesktopBehaviorState>, enabled: bool) 
 // Tauri v1 Window::close destroys the window without CloseRequested. Both the
 // custom title bar and OS close requests must pass through this same policy.
 pub fn handle_window_close(window: &Window, state: &DesktopBehaviorState) -> Result<(), String> {
+    crate::system_integration::window_memory::save_main(&window.app_handle());
     if state.close_to_tray.load(Ordering::SeqCst) {
         window.hide().map_err(|error| error.to_string())
     } else if should_confirm_exit(state) {
@@ -142,6 +142,7 @@ pub fn desktop_e2e_hide_window(
 
 #[command]
 pub fn exit_app(app: AppHandle) {
+    crate::system_integration::window_memory::save_main(&app);
     app.exit(0);
 }
 

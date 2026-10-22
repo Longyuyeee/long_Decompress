@@ -1,0 +1,64 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[desktop-e2e] requesting native application exit
+[desktop-e2e] previous WebDriver session released
+[desktop-e2e] previous tauri-driver service stopped
+[desktop-e2e] replacement tauri-driver service is ready
+[desktop-e2e] creating replacement desktop session
+[desktop-e2e] replacement desktop session created
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[window-memory-166] normal size and position survive real process restart
+[desktop-e2e] requesting native application exit
+[desktop-e2e] previous WebDriver session released
+[desktop-e2e] previous tauri-driver service stopped
+[desktop-e2e] replacement tauri-driver service is ready
+[desktop-e2e] creating replacement desktop session
+[desktop-e2e] replacement desktop session created
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[window-memory-166] maximum survives restart and restore button retains original normal bounds
+[desktop-e2e] requesting native application exit
+[desktop-e2e] previous WebDriver session released
+[desktop-e2e] previous tauri-driver service stopped
+[desktop-e2e] replacement tauri-driver service is ready
+[desktop-e2e] creating replacement desktop session
+[desktop-e2e] replacement desktop session created
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[window-memory-166] minimizing before exit preserves maximum and normal bounds, next ordinary launch visible
+[window-memory-166] actual X still hides to tray and second instance wakes same window at same bounds
+[desktop-e2e] requesting native application exit
+[desktop-e2e] previous WebDriver session released
+[desktop-e2e] previous tauri-driver service stopped
+[desktop-e2e] replacement tauri-driver service is ready
+[desktop-e2e] creating replacement desktop session
+[desktop-e2e] replacement desktop session created
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[window-memory-166] maximized logon activation remains hidden; wake and restore retain both bounds
+[desktop-e2e] requesting native application exit
+[desktop-e2e] previous WebDriver session released
+[desktop-e2e] previous tauri-driver service stopped
+[desktop-e2e] replacement tauri-driver service is ready
+[desktop-e2e] creating replacement desktop session
+[desktop-e2e] replacement desktop session created
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[window-memory-166] disconnected monitor, offscreen position and oversized bounds fall back visibly
+[desktop-e2e] requesting native application exit
+[desktop-e2e] previous WebDriver session released
+[desktop-e2e] previous tauri-driver service stopped
+[desktop-e2e] replacement tauri-driver service is ready
+[desktop-e2e] creating replacement desktop session
+[desktop-e2e] replacement desktop session created
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[window-memory-166] corrupted state falls back to usable default window
