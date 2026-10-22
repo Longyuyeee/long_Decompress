@@ -1,0 +1,28 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[egg-text-1612] selected text opens in the original equal panes with scrolling and precise capabilities
+[egg-text-1612] original LEA password and middle native volume work with the vault and exact encoding
+[egg-text-1612] solid text has a clear extraction hint in a small window
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+true !== false
+
+    at file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/egg-text-1612-gate.mjs:69:130
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async step (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/egg-text-1612-gate.mjs:32:105)
+    at async runEggText1612Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/egg-text-1612-gate.mjs:64:2)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:5030:5 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: true,
+  expected: false,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

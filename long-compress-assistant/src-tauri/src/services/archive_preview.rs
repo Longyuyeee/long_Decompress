@@ -485,7 +485,7 @@ pub async fn preview_archive_image_bound_at(archive_path:&Path,entry_path:&str,p
         control.check()?;
         if let Some(revision) = expected_revision.as_deref() { super::image_reader::check_source(&archive_path, revision)?; }
         let source = super::split_archive_detector::SplitArchiveDetector::complete_source(&archive_path)?;
-        let revision = if super::archive_browser::detect_format(&source)? == ArchiveFormat::Alz {
+        let revision = if matches!(super::archive_browser::detect_format(&source)?,ArchiveFormat::Alz|ArchiveFormat::Egg) {
             Some(match expected_revision { Some(value) => value, None => super::image_reader::revision(&source)? })
         } else { None };
         control.update("opening",0,0);control.check()?;
@@ -620,8 +620,14 @@ fn preview_archive_text_sync(
         return preview_archive_text_sync(&inner.path, entry_path, None, password_encoding, snapshot, cancelled);
     }
     let entry_path = normalized_entry_path(entry_path)?;
-    let format = if super::archive_browser::detect_format(archive_path)? == ArchiveFormat::Alz { "ALZ" } else { preview_format(archive_path)? };
+    let format = match super::archive_browser::detect_format(archive_path)? {
+        ArchiveFormat::Alz=>"ALZ",ArchiveFormat::Egg=>"EGG",_=>preview_format(archive_path)?
+    };
     let mut text_bytes = match format {
+        "EGG"=>{
+            let (bytes,total_size)=tauri::async_runtime::block_on(super::egg_engine::preview_text_entry(archive_path,&entry_path,password,password_encoding,cancelled))?;
+            TextBytes{bytes,total_size}
+        }
         "ALZ" => {
             let (bytes, total_size) = tauri::async_runtime::block_on(super::alz_engine::preview_text_entry(archive_path, &entry_path, password, password_encoding, cancelled))?;
             TextBytes { bytes, total_size }
@@ -653,6 +659,7 @@ fn preview_archive_text_sync(
         }
     }
     let (content, encoding, consumed) = decode_text_prefix(&text_bytes.bytes)?;
+    anyhow::ensure!(format!="EGG"||consumed==text_bytes.bytes.len(),"EGG 文本编码末尾不完整，请先提取后打开");
     let truncated = text_bytes.total_size > consumed as u64;
     let line_count = if content.is_empty() {
         0
@@ -1185,5 +1192,54 @@ mod alz_prefix1611_tests {
         let path=fixtures().join("alz-prefix-1611/password-volumes.a00");
         let value=service.preview_alz_text_prefix_with_vault(path.to_str().unwrap(),"logs/session.txt",None,Some(ZipPasswordEncoding::Utf8),true,None).await.unwrap();assert!(value.truncated && value.content.starts_with("INFO"));
         assert!(service.encrypted_password_service.list_passwords().await.unwrap().iter().all(|e|e.use_count==0));
+    }
+}
+
+#[cfg(test)]
+mod egg_text1612_tests{
+    use super::*;
+    use std::sync::{Arc,atomic::AtomicBool};
+    fn root()->std::path::PathBuf{Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives")}
+    #[tokio::test]
+    async fn egg_text1612_original_methods_keys_and_native_volumes_match_frozen_payloads(){
+        let sources=[("egg-153/upstream/store.egg","hello.txt",None,None),("egg-153/upstream/deflate5.egg","text.txt",None,None),("egg-153/upstream/lzma5.egg","text.txt",None,None),("egg-153/upstream/enc_zip20_bzip2.egg","text.txt",Some("test1234"),None)];
+        for (file,entry,key,encoding) in sources{
+            let preview=preview_archive_text_with_encoding(&root().join(file),entry,key,encoding).await.unwrap();assert!(!preview.truncated&&preview.byte_size==preview.total_size&&!preview.content.is_empty());
+        }
+        for cipher in ["zipcrypto","aes256","lea256"]{
+            let name=format!("ordinary-{cipher}-m3-volumes");let path=root().join(format!("egg-1511/originals/{name}/{name}.vol3.egg"));
+            let value=preview_archive_text_with_encoding(&path,"文档/99最后.txt",Some("中文密码1511!"),Some(ZipPasswordEncoding::Cp936)).await.unwrap();
+            use sha2::Digest;assert_eq!(format!("{:x}",sha2::Sha256::digest(value.content.as_bytes())),"c729bf41ca7329485476070dc259d161e10863fa0beeed825f725375b7a2bbe3");assert!(!value.truncated);
+        }
+        for name in ["empty","exact-limit","plain"]{let value=preview_archive_text(&root().join(format!("egg-text-1612/{name}.egg")),"readme.txt",None).await.unwrap();assert!(!value.truncated);if name=="exact-limit"{assert_eq!(value.byte_size,1048576);}}
+    }
+    #[tokio::test]
+    async fn egg_text1612_bad_content_solid_limits_and_wrong_keys_never_display_as_complete(){
+        for (name,reason) in [("crc-damage","CRC"),("trailing-deflate","校验失败"),("short-deflate","校验失败"),("binary","binary"),("utf16-odd","编码末尾不完整"),("too-large","1 MiB")]{
+            let error=preview_archive_text(&root().join(format!("egg-text-1612/{name}.egg")),"readme.txt",None).await.unwrap_err();assert!(format!("{error:#}").contains(reason),"{name}: {error:#}");
+        }
+        let error=preview_archive_text(&root().join("egg-153/upstream/solid.egg"),"hello.txt",None).await.unwrap_err();assert!(format!("{error:#}").contains("固实"));
+        let error=preview_archive_text(&root().join("../../../test-results/egg-text-1612/input-limit.egg"),"readme.txt",None).await.unwrap_err();assert!(format!("{error:#}").contains("64 MiB"),"{error:#}");
+        let path=root().join("egg-153/upstream/enc_zip20_bzip2.egg");let error=preview_archive_text(&path,"text.txt",Some("wrong")).await.unwrap_err();assert!(format!("{error:#}").contains("[egg-password]"));
+    }
+    #[tokio::test]
+    async fn egg_text1612_cancel_replacement_and_missing_member_preserve_the_original_scope(){
+        let dir=tempfile::tempdir().unwrap();let path=dir.path().join("text.egg");std::fs::copy(root().join("egg-text-1612/plain.egg"),&path).unwrap();let version=super::super::image_reader::revision(&path).unwrap();
+        let error=preview_archive_text_controlled_at(&path,"readme.txt",None,None,None,Arc::new(AtomicBool::new(true)),Some(version.clone())).await.unwrap_err();assert!(format!("{error:#}").contains("取消"));
+        std::fs::write(&path,b"changed source").unwrap();let error=preview_archive_text_controlled_at(&path,"readme.txt",None,None,None,Arc::new(AtomicBool::new(false)),Some(version)).await.unwrap_err();assert!(format!("{error:#}").contains("IMAGE_READER_CHANGED"));
+        for n in 1..=3{let name=format!("split_store.vol{n}.egg");std::fs::copy(root().join("egg-153/upstream").join(&name),dir.path().join(&name)).unwrap();}
+        let member=dir.path().join("split_store.vol3.egg");let version=super::super::image_reader::revision(&member).unwrap();std::fs::remove_file(dir.path().join("split_store.vol2.egg")).unwrap();
+        let error=preview_archive_text_controlled_at(&member,"hello.txt",None,None,None,Arc::new(AtomicBool::new(false)),Some(version)).await.unwrap_err();assert!(format!("{error:#}").contains("IMAGE_READER_CHANGED"));
+    }
+    #[tokio::test]
+    async fn egg_text1612_vault_checks_selected_text_without_validating_unrelated_data(){
+        use crate::services::{compression_service::{CompressionService,CompressionServiceConfig},encrypted_password_service::EncryptedPasswordService,io_buffer_pool::IOBufferPool,rar_support::RarSupportService,universal_engine::UniversalCliEngine};
+        use crate::models::password::{PasswordEntry,PasswordCategory};
+        let dir=tempfile::tempdir().unwrap();let mut vault=EncryptedPasswordService::new(dir.path());vault.initialize("public-owned-test-key").await.unwrap();
+        for (name,key) in [("a wrong","wrong"),("b original","中文密码1511!")]{vault.add_password(PasswordEntry::new(name.into(),key.into(),PasswordCategory::Other)).await.unwrap();}
+        let service=CompressionService::new(CompressionServiceConfig::default(),Arc::new(IOBufferPool::default()),Arc::new(RarSupportService::new()),Arc::new(UniversalCliEngine::new()),Arc::new(vault));
+        let path=root().join("egg-1511/originals/ordinary-lea256-m3-volumes/ordinary-lea256-m3-volumes.vol3.egg");
+        let value=service.preview_egg_text_with_vault(path.to_str().unwrap(),"文档/99最后.txt",None,Some(ZipPasswordEncoding::Cp936),None).await.unwrap();assert_eq!(value.byte_size,22500);assert!(!value.truncated);
+        let path=root().join("egg-text-1612/plain.egg");let value=service.preview_egg_text_with_vault(path.to_str().unwrap(),"readme.txt",None,None,None).await.unwrap();assert!(value.content.contains("保持双栏"));
     }
 }

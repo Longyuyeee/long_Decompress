@@ -1,0 +1,98 @@
+{
+  "version": "1.6.12",
+  "applicationSha256": "9dbfd2479718f18bf8c13edda74613a4374016f40bbdc8748483bfdf596b56cf",
+  "helperSha256": "6c0c1c26b0d4eda62a421a1f844675e3a45166013d0a0cf9def09e8c7b2720b3",
+  "checks": [
+    {
+      "name": "selected text opens in the original equal panes with scrolling and precise capabilities",
+      "meta": "UTF-8\n已读 90.8 KB / 90.8 KB\n1500 行\n完整显示\n只读",
+      "content": {
+        "scroll": true,
+        "start": "EGG 文本预览：保持双栏，直接查看所选说明。\nEGG 文本预览：保持双栏，直接查看所选说明。\nEGG 文本预览：保持双栏，直接查看所选说明。\nEGG 文本预览"
+      },
+      "unrelatedUnknownMethodNotDecoded": true
+    },
+    {
+      "name": "original LEA password and middle native volume work with the vault and exact encoding",
+      "original": true,
+      "bytes": 22500,
+      "wrongKey": "[egg-password] EGG 密码短头不匹配，也可能是加密头损坏；请核对密码和原文件完整性"
+    },
+    {
+      "name": "solid text has a clear extraction hint in a small window",
+      "message": "无法预览\nEGG 固实条目暂不支持文本预览，请先提取后打开"
+    },
+    {
+      "name": "CRC errors, actual input bounds, changed sources and early cancellation stay distinct",
+      "retainedCompletedAssertionsBeforeHarnessFailure": true,
+      "crcDisplay": true,
+      "outputLimit": true,
+      "actual64MiBInputLimit": true,
+      "sourceVersionChanged": true,
+      "earlyCancellation": true
+    },
+    {
+      "name": "AZO sample content is identified by bytes and real binary content is rejected; new previews still work",
+      "azoSampleBytes": 1602,
+      "printableTestPayload": true,
+      "actualBinaryRejected": true,
+      "newPreviewBytes": 93000
+    }
+  ],
+  "layouts": [
+    {
+      "name": "text-wide",
+      "closeVisible": true,
+      "dialog": {
+        "height": 531.390625,
+        "width": 832,
+        "x": 134,
+        "y": 59.3046875
+      },
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "text-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 442.78125,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 38.609375
+      },
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    },
+    {
+      "name": "solid-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 354.1953125,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 82.8984375
+      },
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\egg-text-1612\\f0b3dbb7-89e6-49ed-93f6-070a9ed97ffb",
+  "continuation": "Retained the three completed groups and the last group assertions before its harness-only AZO assumption failed. The .sys fixture contains printable MZAZO sample text, not binary control bytes. Product candidate unchanged.",
+  "passed": true
+}

@@ -1642,6 +1642,10 @@ pub async fn preview_archive_text(
     // A supplied password/vault candidate must not verify an unrelated large file.
     // Check the browsed source before format detection can fail on its changed tail.
     if let Some(revision) = source_revision.as_deref() { crate::services::image_reader::check_source(Path::new(&file_path), revision).map_err(|e|format!("{e:#}"))?; }
+    if crate::services::archive_browser::detect_format(Path::new(&file_path)).is_ok_and(|format|format==crate::services::archive_format::ArchiveFormat::Egg){
+        let mut service=CompressionService::new_with_defaults().await;service.cancellation_flag=cancelled;
+        return service.preview_egg_text_with_vault(&file_path,&entry_path,password.as_deref(),zip_password_encoding,source_revision).await.map_err(|e|format!("{e:#}"));
+    }
     let is_alz = crate::services::archive_browser::detect_format(Path::new(&file_path))
         .is_ok_and(|format| format == crate::services::archive_format::ArchiveFormat::Alz);
     if is_alz {

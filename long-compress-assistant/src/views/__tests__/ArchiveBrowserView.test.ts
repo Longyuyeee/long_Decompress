@@ -43,7 +43,7 @@ vi.mock('@/composables/useArchiveEngine', () => ({
       browseExtensions: ['zip', '7z', 'rar', 'tar', 'zst'],
       nestedExtensions: ['zip', '7z', 'rar', 'tar', 'zst'],
       boundedPreviewFormats: ['ZIP', 'TAR', 'ZPAQ', 'ALZ'],
-      boundedTextPreviewFormats: ['ZIP', 'TAR', 'ZPAQ', 'ALZ'],
+      boundedTextPreviewFormats: ['ZIP', 'TAR', 'ZPAQ', 'ALZ', 'EGG'],
       imagePreviewExtensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'],
       textPreviewExtensions: ['txt', 'md', 'log'],
       message: 'ready',
@@ -230,6 +230,30 @@ describe('ArchiveBrowserView', () => {
       entryPath: 'nested.7z', cachePath: 'C:/cache/nested.7z',
       parentSha256: 'parent-hash', contentSha256: 'child-hash', depth: 2,
     })
+  })
+
+  it('EGG text uses the existing modal and source context while images stay disabled',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'EGG',revision:'c'.repeat(64),totalFiles:2,totalDirectories:0,totalUncompressedSize:30,totalCompressedSize:20,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:10,isDir:false},{path:'cover.png',name:'cover.png',size:20,isDir:false}]})
+    mocks.previewArchiveText.mockResolvedValueOnce({entryPath:'readme.txt',content:'EGG 包内说明',encoding:'UTF-8',byteSize:10,totalSize:10,truncated:false,lineCount:1})
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1612,path:'C:/read.egg'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
+    expect(w.get('[data-entry-path="cover.png"] .preview-trigger').attributes('disabled')).toBeDefined()
+    await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises();expect(w.get('[data-testid="archive-text-preview"]').text()).toContain('EGG 包内说明');expect(w.get('.preview-meta').text()).toContain('完整显示')
+    expect(mocks.previewArchiveText).toHaveBeenCalledWith('C:/read.egg','readme.txt','',undefined,undefined,expect.objectContaining({sourceRevision:'c'.repeat(64),previewId:expect.stringMatching(/^egg-text-/)}));w.unmount()
+  })
+
+  it('EGG closing a pending preview cancels it and ignores late content',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'EGG',revision:'c'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:10,totalCompressedSize:8,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:10,isDir:false}]})
+    let finish!:(v:unknown)=>void;mocks.previewArchiveText.mockReturnValueOnce(new Promise(resolve=>finish=resolve))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1612,path:'C:/read.egg'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises();await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises()
+    const context=mocks.previewArchiveText.mock.calls.at(-1)![5];await w.get('.preview-close').trigger('click');expect(mocks.cancelArchiveBrowse).toHaveBeenCalledWith(context.previewId)
+    finish({entryPath:'readme.txt',content:'late EGG result',encoding:'UTF-8',byteSize:1,totalSize:1,truncated:false,lineCount:1});await flushPromises();expect(w.find('[data-testid="archive-entry-preview"]').exists()).toBe(false);w.unmount()
+  })
+
+  it('EGG preview errors give the cause without internal classification tags',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'EGG',revision:'c'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:10,totalCompressedSize:8,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:10,isDir:false}]})
+    mocks.previewArchiveText.mockRejectedValueOnce(new Error('[archive-inspection:damaged] EGG 内容、大小或 CRC 校验失败'))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1612,path:'C:/read.egg'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises();await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises()
+    expect(w.get('.preview-stage').text()).toContain('EGG 内容、大小或 CRC 校验失败');expect(w.get('.preview-stage').text()).not.toContain('archive-inspection');w.unmount()
   })
 
   it('ALZ large text explicitly shows partial content without whole-file verification',async()=>{

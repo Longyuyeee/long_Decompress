@@ -1,0 +1,54 @@
+{
+  "version": "1.6.12",
+  "controlled": true,
+  "historicalProducer": false,
+  "payloadSha256": "cc1c9822ce52b1376ff14efda268a5b3d79d753bf44106126a6f253c888d6986",
+  "payloadBytes": 93000,
+  "cases": [
+    {
+      "name": "plain",
+      "bytes": 93143,
+      "sha256": "b1e56c8891606a1ba08a1497d42ac9b2a7e5e5ccf1a86d9c5701ecf8512a7abe"
+    },
+    {
+      "name": "crc-damage",
+      "bytes": 93081,
+      "sha256": "4db972d86d4c6c3dc05f5590b88efb803edd276e852127a3c0c7267bac62efc9"
+    },
+    {
+      "name": "trailing-deflate",
+      "bytes": 443,
+      "sha256": "8190008fa332784154ec90c9734bbf52dc5b597bb4f8a0a382c84c59a59cab4a"
+    },
+    {
+      "name": "short-deflate",
+      "bytes": 440,
+      "sha256": "d140fb164df8794d4ce7b39fba0facc8a04e8a403ac959a2e4a6088d0f374df2"
+    },
+    {
+      "name": "exact-limit",
+      "bytes": 1048657,
+      "sha256": "e274a70c22f3c6e7088854b0a577786f71b2a2d8629bdf329093d449aaeb2026"
+    },
+    {
+      "name": "too-large",
+      "bytes": 1048658,
+      "sha256": "d6e49cc7130ae0beae301be5bb17340b5fbff2173e81ad1380739ff2ccd0ef46"
+    },
+    {
+      "name": "binary",
+      "bytes": 281,
+      "sha256": "7039b5c745ba95d6e7dd6bd2701c2ed8f5586aa8c9914b52865cb30a053908a0"
+    },
+    {
+      "name": "empty",
+      "bytes": 81,
+      "sha256": "aed45dbf004d3b199fd191e5c6c930f26af6b2903adf2511b0ff91c95d1bc721"
+    },
+    {
+      "name": "utf16-odd",
+      "bytes": 86,
+      "sha256": "0e652c763482c6092ec2e1bc355b5d4d784666846a8346f967af48fa3e1c1c48"
+    }
+  ]
+}

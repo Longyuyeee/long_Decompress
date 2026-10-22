@@ -1,0 +1,74 @@
+    Updating crates.io index
+ Downloading crates ...
+  Downloaded cpufeatures v0.3.1
+  Downloaded crc-catalog v2.5.0
+  Downloaded hybrid-array v0.4.15
+  Downloaded inout v0.2.4
+  Downloaded lzma-rs v0.3.0
+  Downloaded ctutils v0.4.3
+  Downloaded aes v0.9.3
+   Compiling typenum v1.20.1
+   Compiling proc-macro2 v1.0.107
+   Compiling cmov v0.5.4
+   Compiling rustversion v1.0.23
+   Compiling const-oid v0.10.2
+   Compiling unicode-ident v1.0.27
+   Compiling cfg-if v1.0.5
+   Compiling quote v1.0.47
+   Compiling serde_core v1.0.229
+   Compiling crc32fast v1.5.2
+   Compiling simd-adler32 v0.3.10
+   Compiling adler2 v2.0.1
+   Compiling zmij v1.0.23
+   Compiling crc-catalog v2.5.0
+   Compiling cpufeatures v0.3.1
+   Compiling byteorder v1.5.0
+   Compiling serde v1.0.229
+   Compiling simdutf8 v0.1.5
+   Compiling crc v3.4.0
+   Compiling serde_json v1.0.154
+   Compiling ctutils v0.4.3
+   Compiling miniz_oxide v0.9.1
+   Compiling scopeguard v1.2.0
+   Compiling multiversion_no_op v1.0.0
+   Compiling cpubits v0.1.1
+   Compiling libbz2-rs-sys v0.2.5
+   Compiling anyhow v1.0.104
+   Compiling core_detect v1.0.0
+   Compiling lzma-rs v0.3.0
+   Compiling memchr v2.8.3
+   Compiling libazo v0.1.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\vendor\libazo)
+   Compiling itoa v1.0.18
+   Compiling hybrid-array v0.4.15
+   Compiling bzip2 v0.6.1
+   Compiling flate2 v1.1.10
+   Compiling crypto-common v0.2.2
+   Compiling block-buffer v0.12.1
+   Compiling inout v0.2.4
+   Compiling encoding_rs v0.8.42
+   Compiling syn v3.0.9
+   Compiling digest v0.11.3
+   Compiling cipher v0.5.2
+   Compiling hmac v0.13.0
+   Compiling sha1 v0.11.0
+   Compiling aes v0.9.3
+   Compiling pbkdf2 v0.13.0
+   Compiling unegg v0.2.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\vendor\unegg)
+   Compiling serde_derive v1.0.229
+   Compiling long-egg v0.4.0 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\tools\egg-engine)
+warning: fields `first`, `total`, `bytes`, and `stem` are never read
+ --> src\..\..\..\src-tauri\src\services\egg_volumes.rs:7:9
+  |
+6 | pub struct Group {
+  |            ----- fields in this struct
+7 |     pub first: PathBuf, pub parts: Vec<PathBuf>, pub missing: Vec<PathBuf>,
+  |         ^^^^^
+8 |     pub total: usize, pub bytes: u64, pub stem: String,
+  |         ^^^^^             ^^^^^           ^^^^
+  |
+  = note: `Group` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `long-egg` (bin "long-egg") generated 1 warning
+    Finished `release` profile [optimized] target(s) in 50.65s
+Locked EGG helper and 51 dependency notices

@@ -359,8 +359,8 @@ const openPreview = async (entry: ArchiveEntryInfo) => {
   previewLoading.value = true
   try {
     if (librarySourceId.value) await invoke('library_check', { sourceId: librarySourceId.value, entryPath: entry.path })
-    const context = result.value?.format.toUpperCase() === 'ALZ'
-      ? { previewId: 'alz-'+previewKind(entry)+'-'+crypto.randomUUID(), sourceRevision: result.value?.revision } : undefined
+    const context = ['ALZ','EGG'].includes(result.value?.format.toUpperCase() || '')
+      ? { previewId: result.value?.format.toLowerCase()+'-'+previewKind(entry)+'-'+crypto.randomUUID(), sourceRevision: result.value?.revision } : undefined
     entryPreviewRequestId = context?.previewId
     if (previewKind(entry) === 'image') {
       const value = context
@@ -379,7 +379,8 @@ const openPreview = async (entry: ArchiveEntryInfo) => {
       previewError.value = raw.includes('ALZ 文本前缀读取超过 64 MiB')
         ? '读取这段文本需要扫描超过 64 MiB，已停止预览。请先提取后打开。' : raw.includes('IMAGE_READER_CHANGED|')
         ? '来源已变化或无法确认，请关闭预览并刷新此栏后重试。' : /^provided password is incorrect$/i.test(raw)
-        ? '密码不正确，请修改密码后重试。' : String(error)
+        ? '密码不正确，请修改密码后重试。' : result.value?.format === 'EGG'
+        ? (/appears to be binary|supported text encoding/.test(raw) ? '这份文件不是可识别的文本，请先提取后打开。' : raw.replace(/\[(?:archive-inspection:[^\]]+|egg-[^\]]+)\]\s*/g, '')) : String(error)
     }
   } finally {
     if (sequence === previewSequence) { previewLoading.value = false; entryPreviewRequestId = undefined }
@@ -1027,7 +1028,7 @@ const extractSelected = async () => {
     <div v-if="previewEntry" class="preview-backdrop" data-testid="archive-entry-preview" @click.self="closePreview">
       <section class="preview-dialog" role="dialog" aria-modal="true" :aria-label="`预览 ${previewEntry.name}`">
         <header class="preview-header">
-          <div class="min-w-0 flex items-center gap-2"><h2 class="truncate text-lg font-black text-content">{{ previewEntry.name }}</h2><HelpHint label="预览说明"><template v-if="previewKind(previewEntry) === 'image'">只读查看，不修改原文件。支持 PNG、JPEG、GIF、WebP、BMP；图片不超过 8 MiB，单边不超过 8192、总像素不超过 1600 万。超出范围可先提取后查看。</template><template v-else>只读查看，不修改原文件。ALZ 小文本完整校验后显示；大文本仅显示前 1 MiB，未校验整文件，不能代替完整性检查。其他已支持格式的大文本显示前 1 MiB。需要编辑时，可以提取后打开。</template></HelpHint></div>
+          <div class="min-w-0 flex items-center gap-2"><h2 class="truncate text-lg font-black text-content">{{ previewEntry.name }}</h2><HelpHint label="预览说明"><template v-if="previewKind(previewEntry) === 'image'">只读查看，不修改原文件。支持 PNG、JPEG、GIF、WebP、BMP；图片不超过 8 MiB，单边不超过 8192、总像素不超过 1600 万。超出范围可先提取后查看。</template><template v-else>只读查看，不修改原文件。EGG 非固实文本不超过 1 MiB，完整校验后显示；固实条目可先提取。ALZ 小文本完整校验后显示；大文本仅显示前 1 MiB，未校验整文件，不能代替完整性检查。其他已支持格式的大文本显示前 1 MiB。需要编辑时，可以提取后打开。</template></HelpHint></div>
           <button type="button" class="preview-close" aria-label="关闭预览" @click="closePreview"><i class="pi pi-times"></i></button>
         </header>
         <div class="preview-stage">
