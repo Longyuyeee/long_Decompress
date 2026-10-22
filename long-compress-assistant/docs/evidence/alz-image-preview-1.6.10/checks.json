@@ -1,0 +1,23 @@
+{
+  "version": "1.6.10",
+  "rustUniquePassed": 3,
+  "frontendUniquePassed": 50,
+  "desktopChecks": 5,
+  "screenshotsViewed": 3,
+  "ordinaryBuild": "type/Vite passed",
+  "finalE2eBuild": "type/Vite and native passed; custom-protocol,desktop-e2e opt-level=1 LTO=false; formal config unchanged",
+  "shellAndVersion": "1.6.10, eight sources and versioned DLL passed",
+  "helperVersion": "0.6.0",
+  "helperSha256": "558393d2e45d7fc6f8e966934115de438c20e57f851440fc9b41d8f49e57db7b",
+  "applicationSha256": "1303f4c7ae827e7a31d943a24aab38e3e66d51e973292442a92a72668d04ad9d",
+  "newProducerImageOriginal": false,
+  "controlled": "All new image/password/native fixtures explicitly controlled; existing original decoder evidence reused, not relabeled as new image interoperability.",
+  "continuation": "Initial run passed preview/layout/navigation/zoom/skip; only current-page extraction did not execute because the test queued a list instead of a directory string. Corrected test input; product candidate and previous checks unchanged.",
+  "reused": "old algorithms, full large controlled independent decode, installation, real low-disk checks; not rerun",
+  "previousRelease": {
+    "version": "1.6.9",
+    "run": 39829431411,
+    "conclusion": "success",
+    "assets": 4
+  }
+}

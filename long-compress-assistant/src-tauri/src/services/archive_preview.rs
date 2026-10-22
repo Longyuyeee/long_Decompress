@@ -209,6 +209,7 @@ fn preview_format(path: &Path) -> Result<&'static str> {
     if format == ArchiveFormat::Zip { return Ok("ZIP"); }
     if format == ArchiveFormat::Zpaq { return Ok("ZPAQ"); }
     if format == ArchiveFormat::Wim { return Ok("WIM"); }
+    if format == ArchiveFormat::Alz { return Ok("ALZ"); }
     match super::tar_compatibility::integrity_route(path, &format) {
         Some(Route::Tar) => Ok("TAR"),
         Some(Route::TarGzip) => Ok("TAR.GZ"),
@@ -426,6 +427,7 @@ fn preview_archive_image_sync(
     let format = preview_format(archive_path)?;
     let bytes = match format {
         "ZIP" => read_zip_entry(archive_path, &entry_path, password, encoding,control)?,
+        "ALZ" => tauri::async_runtime::block_on(super::alz_engine::preview_image_entry(archive_path, &entry_path, password, encoding, control.flag.clone()))?,
         "WIM" => tauri::async_runtime::block_on(super::wim_preview::preview_entry(archive_path, &entry_path, password, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES, control.flag.clone()))?.0,
         "ZPAQ" => tauri::async_runtime::block_on(super::zpaq_engine::preview_entry_controlled_at(archive_path, &entry_path, password, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES, snapshot.as_ref(),control.flag.clone()))?.0,
         format if format.starts_with("TAR") => read_tar_family(archive_path, format, &entry_path,control)?,
@@ -473,13 +475,24 @@ pub async fn preview_archive_image_at(
     preview_archive_image_controlled_at(archive_path,entry_path,password,encoding,snapshot,ImageControl::default()).await
 }
 pub async fn preview_archive_image_controlled_at(archive_path:&Path,entry_path:&str,password:Option<&str>,encoding:Option<ZipPasswordEncoding>,snapshot:Option<crate::models::compression::ZpaqSnapshot>,control:ImageControl)->Result<ArchiveImagePreview>{
+    preview_archive_image_bound_at(archive_path, entry_path, password, encoding, snapshot, control, None).await
+}
+pub async fn preview_archive_image_bound_at(archive_path:&Path,entry_path:&str,password:Option<&str>,encoding:Option<ZipPasswordEncoding>,snapshot:Option<crate::models::compression::ZpaqSnapshot>,control:ImageControl,expected_revision:Option<String>)->Result<ArchiveImagePreview>{
     let archive_path = archive_path.to_path_buf();
     let entry_path = entry_path.to_string();
     let password = password.map(str::to_string);
     tauri::async_runtime::spawn_blocking(move || {
+        control.check()?;
+        if let Some(revision) = expected_revision.as_deref() { super::image_reader::check_source(&archive_path, revision)?; }
         let source = super::split_archive_detector::SplitArchiveDetector::complete_source(&archive_path)?;
-        control.check()?;control.update("opening",0,0);
-        preview_archive_image_sync(&source, &entry_path, password.as_deref(), encoding, snapshot,&control)
+        let revision = if super::archive_browser::detect_format(&source)? == ArchiveFormat::Alz {
+            Some(match expected_revision { Some(value) => value, None => super::image_reader::revision(&source)? })
+        } else { None };
+        control.update("opening",0,0);control.check()?;
+        let result = preview_archive_image_sync(&source, &entry_path, password.as_deref(), encoding, snapshot,&control)?;
+        control.check()?;
+        if let Some(revision) = revision { super::image_reader::check_source(&source, &revision)?; }
+        Ok(result)
     })
     .await
     .context("Archive image preview worker failed")?
@@ -1059,6 +1072,56 @@ mod alz_text169_tests {
         use std::io::Write;
         std::fs::OpenOptions::new().append(true).open(&path).unwrap().write_all(b"changed").unwrap();
         let error=preview_archive_text_controlled_at(&path,"docs/readme.txt",None,None,None,std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false)),Some(expected)).await.unwrap_err();
+        assert!(format!("{error:#}").contains("IMAGE_READER_CHANGED"));
+    }
+}
+
+#[cfg(test)]
+mod alz_image1610_tests {
+    use super::*;
+    use std::sync::{Arc, atomic::{AtomicBool, Ordering}};
+    fn root() -> std::path::PathBuf { Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/alz-image-1610") }
+    #[tokio::test]
+    async fn alz_image1610_complete_images_only_read_the_selected_entry() {
+        use sha2::{Digest,Sha256};
+        let root=root();
+        let manifest:serde_json::Value=serde_json::from_slice(&std::fs::read(root.join("manifest.json")).unwrap()).unwrap();
+        for (file,password) in [("store.alz",None),("deflate.alz",None),("bzip2.alz",None),("password.alz",Some("图片密码1610!")),("password-volumes.a00",Some("图片密码1610!"))] {
+            for (entry,width,height) in [("相册/01-封面.png",320,240),("相册/02-网格.bmp",256,256)] {
+                let preview=preview_archive_image_with_encoding(&root.join(file),entry,password,Some(ZipPasswordEncoding::Utf8)).await.unwrap();
+                assert_eq!((preview.width,preview.height),(width,height),"{file}");
+                let bytes=general_purpose::STANDARD.decode(preview.data_url.split_once(',').unwrap().1).unwrap();
+                let expected=manifest["images"].as_array().unwrap().iter().find(|item|item["path"]==entry).unwrap();
+                assert_eq!(bytes.len() as u64,expected["bytes"].as_u64().unwrap());
+                assert_eq!(format!("{:x}",Sha256::digest(&bytes)),expected["sha256"].as_str().unwrap());
+            }
+        }
+        let exact=preview_archive_image(&root.join("at-limit.alz"),"preview.bmp",None).await.unwrap();
+        assert_eq!(exact.byte_size,8*1024*1024);
+    }
+    #[tokio::test]
+    async fn alz_image1610_bad_entries_never_become_finished_images() {
+        for (file,reason) in [("crc","CRC"),("missing-end","结束"),("not-image","not a supported raster"),("oversize","8 MiB"),("dimensions","dimensions exceed")] {
+            let error=preview_archive_image(&root().join(format!("{file}.alz")),"preview.png",None).await.unwrap_err();
+            assert!(format!("{error:#}").contains(reason),"{file}: {error:#}");
+        }
+        let error=preview_archive_image_with_encoding(&root().join("password-volumes.a00"),"相册/01-封面.png",Some("wrong"),Some(ZipPasswordEncoding::Utf8)).await.unwrap_err();
+        assert!(format!("{error:#}").contains("[alz-password]"));
+    }
+    #[tokio::test]
+    async fn alz_image1610_reader_cancellation_and_source_change_stop_delivery() {
+        let dir=tempfile::tempdir().unwrap();let path=dir.path().join("source.alz");
+        std::fs::copy(root().join("ui.alz"),&path).unwrap();
+        let revision=super::super::image_reader::revision(&path).unwrap();
+        let flag=Arc::new(AtomicBool::new(false));let signal=flag.clone();
+        let control=ImageControl{flag,observer:Arc::new(move|event|if event.phase=="opening"{signal.store(true,Ordering::Release)})};
+        let error=super::super::image_reader::read(&path,"gallery/01-cover.png",None,None,None,&revision,control).await.unwrap_err();
+        assert!(format!("{error:#}").contains("IMAGE_READER_CANCELLED"));
+        let changed=path.clone();
+        let control=ImageControl{observer:Arc::new(move|event|if event.phase=="decoding"{std::fs::write(&changed,b"changed source").unwrap()}),..Default::default()};
+        let error=super::super::image_reader::read(&path,"gallery/01-cover.png",None,None,None,&revision,control).await.unwrap_err();
+        assert!(format!("{error:#}").contains("IMAGE_READER_CHANGED"));
+        let error=preview_archive_image_bound_at(&path,"gallery/01-cover.png",None,None,None,Default::default(),Some(revision)).await.unwrap_err();
         assert!(format!("{error:#}").contains("IMAGE_READER_CHANGED"));
     }
 }

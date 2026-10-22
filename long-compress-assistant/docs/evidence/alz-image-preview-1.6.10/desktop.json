@@ -1,0 +1,117 @@
+{
+  "version": "1.6.10",
+  "applicationSha256": "1303f4c7ae827e7a31d943a24aab38e3e66d51e973292442a92a72668d04ad9d",
+  "helperSha256": "558393d2e45d7fc6f8e966934115de438c20e57f851440fc9b41d8f49e57db7b",
+  "controlled": true,
+  "newProducerOriginal": false,
+  "checks": [
+    {
+      "name": "single image opens in the original equal-pane preview",
+      "png": [
+        320,
+        240
+      ],
+      "sameDualPane": true
+    },
+    {
+      "name": "existing reader turns pages and skips bad content",
+      "reader": true,
+      "skip": true,
+      "zoom": true,
+      "retainedBeforeTestDialogFix": true
+    },
+    {
+      "name": "current page extraction retains the exact selected ALZ path",
+      "currentPageOnly": true,
+      "sha256": "76a4ae37e7731dacde16f4cc5a63ef37f76342f7484a8eebcf84667a1ce0c832"
+    },
+    {
+      "name": "password vault and middle native member preview the exact complete image",
+      "controlled": true,
+      "original": false,
+      "middleMember": true,
+      "vault": true,
+      "bytes": 51773,
+      "wrongKey": "[alz-password] ALZ 密码短头不匹配，也可能加密头损坏；请核对密码和来源完整性"
+    },
+    {
+      "name": "limits, stale source and early cancellation stay distinct; text budget is unchanged",
+      "errors": {
+        "oversize": "ALZ 图片超过 8 MiB 预览范围，请先提取后打开",
+        "dimensions": "Image dimensions exceed the preview safety limit (8192 × 8192 pixels, 16 megapixels)",
+        "crc": "[archive-inspection:damaged] ALZ 条目「preview.png」大小或 CRC 校验失败，未将结果记为成功"
+      },
+      "changed": "IMAGE_READER_CHANGED|来源无法确认，请返回刷新来源后重新阅读: [archive-inspection:damaged] ALZ 卷尾损坏或下载不完整：E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-image-1610\\bccaa3b3-a772-4893-917b-e8bcfb8d1111\\changed.alz",
+      "cancelled": "IMAGE_READER_CANCELLED|已停止读取图片",
+      "textStillBounded": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "image-wide",
+      "closeVisible": true,
+      "dialog": {
+        "height": 467.390625,
+        "width": 832,
+        "x": 134,
+        "y": 91.3046875
+      },
+      "height": 650,
+      "image": {
+        "height": 240,
+        "width": 320
+      },
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "image-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 401.984375,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 59.0078125
+      },
+      "height": 520,
+      "image": {
+        "height": 240,
+        "width": 320
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    },
+    {
+      "name": "reader-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 504,
+        "width": 744,
+        "x": 8,
+        "y": 8
+      },
+      "height": 520,
+      "image": {
+        "height": 256,
+        "width": 256
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\alz-image-1610\\bccaa3b3-a772-4893-917b-e8bcfb8d1111",
+  "continuation": "Initial run passed preview/layout/navigation/zoom/skip; only current-page extraction did not execute because the test queued a list instead of a directory string. Corrected test input; product candidate and previous checks unchanged.",
+  "passed": true
+}

@@ -1,0 +1,11 @@
+{
+  "officialPage": "https://altools.co.kr/product/ALZIP",
+  "officialDownload": "https://advert.estsoft.com/?event=200803276378987",
+  "resolved": "https://aldn.altools.co.kr/setup/ALZip1237.exe",
+  "installerSha256": "7b7b0dbebc380a5ee65cd52528faa8a234130599a3888a64577815392fff0b70",
+  "downloaded": true,
+  "installerExecuted": false,
+  "producerExecuted": false,
+  "originalImageObtained": false,
+  "result": "Old redirect TLS failed; direct official download obtained. Existing innoextract 1.9 could not parse Inno 6.4.2. No installation or repeated producer/source investigation. Image/password/native tests use controlled framing, not new original-producer evidence."
+}

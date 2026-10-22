@@ -1,0 +1,21 @@
+{
+  "helperSha256": "558393d2e45d7fc6f8e966934115de438c20e57f851440fc9b41d8f49e57db7b",
+  "checks": [
+    {
+      "name": "direct-output-boundary",
+      "exitCode": 2,
+      "reason": "8 MiB",
+      "controlled": true,
+      "passed": true,
+      "receipt": "Completed before the subsequent compressed-budget selection failed; retained without rerun."
+    },
+    {
+      "name": "direct-input-boundary",
+      "exitCode": 2,
+      "error": "所选 ALZ 内容压缩数据超过 64 MiB 预览范围，请先提取后打开",
+      "fileBytes": 67108926,
+      "controlled": true
+    }
+  ],
+  "passed": true
+}
