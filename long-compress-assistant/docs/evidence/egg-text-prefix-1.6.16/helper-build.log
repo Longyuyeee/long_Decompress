@@ -1,0 +1,17 @@
+   Compiling long-egg v0.8.0 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\tools\egg-engine)
+warning: fields `first`, `total`, `bytes`, and `stem` are never read
+ --> src\..\..\..\src-tauri\src\services\egg_volumes.rs:7:9
+  |
+6 | pub struct Group {
+  |            ----- fields in this struct
+7 |     pub first: PathBuf, pub parts: Vec<PathBuf>, pub missing: Vec<PathBuf>,
+  |         ^^^^^
+8 |     pub total: usize, pub bytes: u64, pub stem: String,
+  |         ^^^^^             ^^^^^           ^^^^
+  |
+  = note: `Group` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+  = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `long-egg` (bin "long-egg") generated 1 warning
+    Finished `release` profile [optimized] target(s) in 24.20s
+Locked EGG helper and 51 dependency notices

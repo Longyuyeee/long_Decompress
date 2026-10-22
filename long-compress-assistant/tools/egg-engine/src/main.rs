@@ -6,6 +6,7 @@ use std::{collections::HashSet, fs::{self,File}, io::{self,Read,Seek,SeekFrom,Wr
 use unegg::{archive::{EggArchive,EggFileEntry,CompressionMethod,EncryptionMethod},crypto::{ZipCrypto,Decryptor},decompress,error::EggError};
 #[path = "../../../src-tauri/src/services/egg_volumes.rs"] mod egg_volumes;
 mod complex;
+mod prefix;
 #[derive(Default,Deserialize)]
 struct Request { password:Option<String>,encoding:Option<String>,output:Option<PathBuf>,#[serde(default)]selected:Vec<String>,#[serde(default)]preserve_timestamps:bool }
 fn password_bytes(password:&str,encoding:Option<&str>)->Result<Vec<u8>> {
@@ -87,11 +88,11 @@ fn decode_reader<R:Read+Seek,W:Write>(reader:&mut R,e:&EggFileEntry,pwd:Option<&
 const MAX_TEXT:u64=1024*1024;
 const MAX_IMAGE:u64=8*1024*1024;
 const MAX_TEXT_INPUT:u64=64*1024*1024;
-struct PreviewInput<R>{inner:R,left:u64}
+struct PreviewInput<R>{inner:R,left:u64,limited:bool}
 impl<R:Read>Read for PreviewInput<R>{
     fn read(&mut self,buffer:&mut[u8])->io::Result<usize>{
         if buffer.is_empty(){return Ok(0)}
-        if self.left==0{return Err(io::Error::other("EGG 预览读取超过 64 MiB，请先提取后打开"))}
+        if self.left==0{self.limited=true;return Err(io::Error::other("EGG 预览读取超过 64 MiB，请先提取后打开"))}
         let n=buffer.len().min(self.left as usize);let n=self.inner.read(&mut buffer[..n])?;self.left-=n as u64;Ok(n)
     }
 }
@@ -99,14 +100,16 @@ impl<R:Seek>Seek for PreviewInput<R>{fn seek(&mut self,pos:SeekFrom)->io::Result
 fn preview_entry(a:&mut EggArchive<egg_volumes::Reader>,chosen:&[EggFileEntry],req:&Request,image:bool)->Result<Value>{
     let (kind,limit)=if image{("图片",MAX_IMAGE)}else{("文本",MAX_TEXT)};
     ensure!(req.selected.len()==1&&chosen.len()==1&&!chosen[0].is_directory(),"请选择一份 EGG {kind}预览");
-    let e=&chosen[0];ensure!(e.uncompressed_size<=limit,"EGG {kind}预览支持 {} MiB 以内的完整文件，请先提取后打开",limit/(1024*1024));
+    let e=&chosen[0];
+    if !image && !a.is_solid && e.uncompressed_size>MAX_TEXT {return prefix::preview(a,chosen,req)}
+    ensure!(e.uncompressed_size<=limit,"EGG {kind}预览支持 {} MiB 以内的完整文件，请先提取后打开",limit/(1024*1024));
     if a.is_solid {
         return complex::preview_solid(a,chosen,req,kind,limit);
     }
     let packed=e.blocks.iter().map(|b|b.compressed_size as u64).sum::<u64>();
     ensure!(packed<=MAX_TEXT_INPUT,"EGG 所选{kind}压缩数据超过 64 MiB，请先提取后打开");
     plan(a,chosen)?;
-    let mut input=PreviewInput{inner:&mut a.reader,left:MAX_TEXT_INPUT};
+    let mut input=PreviewInput{inner:&mut a.reader,left:MAX_TEXT_INPUT,limited:false};
     let mut output=CheckedWriter{inner:Vec::with_capacity(e.uncompressed_size as usize),bytes:0,limit};
     decode_reader(&mut input,e,req.password.as_deref(),req.encoding.as_deref(),&mut output)?;
     ensure!(output.bytes==e.uncompressed_size,"EGG {kind}大小不符，未显示内容");

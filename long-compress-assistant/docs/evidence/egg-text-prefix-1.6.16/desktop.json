@@ -1,0 +1,75 @@
+{
+  "version": "1.6.16",
+  "applicationSha256": "26d8359878771055b827a36a7d39084d6ec4a767b0f94afd32756cca3f35f361",
+  "helperSha256": "5bb50ac3170f64631237fd1198f0a038d480f27c1875b7a660d9d05723777904",
+  "checks": [
+    {
+      "name": "large text opens as explicitly unverified partial content in the original wide and narrow panes",
+      "meta": "UTF-8\n已读 1024 KB / 2.52 MB\n15888 行\n部分内容 · 未校验整文件\n只读",
+      "content": {
+        "scroll": true,
+        "start": "INFO 2026-10-23 EGG 包内日志；只看开头，保持双栏。\nINFO 2026-10-23 EGG 包内日志；只看开头，保持双栏。\nINFO 2026-10-23 EG"
+      }
+    },
+    {
+      "name": "vault and controlled middle native member preserve the selected prefix and encoding",
+      "controlledNative": true,
+      "vault": true,
+      "partial": true,
+      "bytes": 1048574,
+      "sha256": "c81cfcab3dd2c39074156db362f75e76d0fe9f460adcf00dba9bc8e51794ef59",
+      "wrongManual": "[egg-password] EGG 密码短头不匹配，也可能是加密头损坏；请核对密码和原文件完整性"
+    },
+    {
+      "name": "actual input limits differ from large stored prefixes and prior-block corruption",
+      "storedTotalBytes": 67108865,
+      "storedPrefixBytes": 1048576,
+      "limit": "无法预览\n读取这段文本需要扫描超过 64 MiB，已停止预览。请先提取后打开。",
+      "damaged": "无法预览\nEGG 文本前缀之前的数据块大小或 CRC 校验失败"
+    },
+    {
+      "name": "stale and cancelled prefix requests cannot replace a new preview",
+      "stale": "IMAGE_READER_CHANGED|来源无法确认，请返回刷新来源后重新阅读: [archive-inspection:damaged] EGG 末卷缺少结束标记，文件可能下载不完整",
+      "cancelled": "文本预览已取消",
+      "freshBytes": 1048574
+    }
+  ],
+  "layouts": [
+    {
+      "name": "prefix-wide",
+      "closeVisible": true,
+      "dialog": {
+        "height": 531.390625,
+        "width": 832,
+        "x": 134,
+        "y": 59.3046875
+      },
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "prefix-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 442.78125,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 38.609375
+      },
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\egg-prefix-1616\\35521f56-fc09-42ea-a253-49ee75af74e5",
+  "passed": true
+}

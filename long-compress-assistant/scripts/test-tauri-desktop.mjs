@@ -105,6 +105,7 @@ import { runEggText1612Gate } from './egg-text-1612-gate.mjs'
 import { runEggImage1613Gate } from './egg-image-1613-gate.mjs'
 import { runEggSolidText1614Gate } from './egg-solid-text-1614-gate.mjs'
 import { runEggSolidImage1615Gate } from './egg-solid-image-1615-gate.mjs'
+import { runEggPrefix1616Gate } from './egg-prefix-1616-gate.mjs'
 import { runCompactModulesUiGate } from './compact-modules-ui-gate.mjs'
 import { runPageUiReview } from './page-ui-review-gate.mjs'
 import { runSettingsUpdateThemesGate } from './settings-update-themes-gate.mjs'
@@ -5028,6 +5029,9 @@ try {
     completedSuccessfully = true
   } else if ((process.argv.includes('--compact-modules-only') || process.argv.includes('--compact-modules-layout-only'))) {
     await runCompactModulesUiGate({driver,bridge:callDesktopBridge,application,root,dataDirectory:e2eDataDirectory})
+    completedSuccessfully = true
+  } else if (process.argv.includes('--egg-prefix-1616-only')) {
+    await runEggPrefix1616Gate({driver,bridge:callDesktopBridge,root,application})
     completedSuccessfully = true
   } else if (process.argv.includes('--egg-solid-image-1615-only')) {
     await runEggSolidImage1615Gate({driver,bridge:callDesktopBridge,root,application})

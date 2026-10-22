@@ -1,0 +1,7 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[egg-prefix-1616] large text opens as explicitly unverified partial content in the original wide and narrow panes
+[egg-prefix-1616] vault and controlled middle native member preserve the selected prefix and encoding
+[egg-prefix-1616] actual input limits differ from large stored prefixes and prior-block corruption
+[egg-prefix-1616] stale and cancelled prefix requests cannot replace a new preview

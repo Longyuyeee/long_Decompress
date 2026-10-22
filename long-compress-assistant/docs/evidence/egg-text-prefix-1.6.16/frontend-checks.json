@@ -1,0 +1,19 @@
+{
+  "version": "1.6.16",
+  "differentPassedChecks": 3,
+  "checks": [
+    {
+      "name": "ArchiveBrowserView egg1616 large text labels partial content and explains unverified file integrity in the original modal",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView egg1616 a closed prefix request cannot display a late result",
+      "status": "passed"
+    },
+    {
+      "name": "ArchiveBrowserView egg1616 input budget errors offer extraction without internal tags",
+      "status": "passed"
+    }
+  ],
+  "filteredCasesNotCounted": true
+}

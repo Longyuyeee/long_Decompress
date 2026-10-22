@@ -1,0 +1,30 @@
+{
+  "version": "1.6.16",
+  "applicationSha256": "26d8359878771055b827a36a7d39084d6ec4a767b0f94afd32756cca3f35f361",
+  "helperSha256": "5bb50ac3170f64631237fd1198f0a038d480f27c1875b7a660d9d05723777904",
+  "helperVersion": "0.8.0",
+  "builds": {
+    "helper": true,
+    "vueTypesAndVite": true,
+    "shellExtension": true,
+    "nativeDesktopCandidate": true,
+    "eightVersionIdentitiesAndEngineInventory": true
+  },
+  "localCandidate": {
+    "features": [
+      "custom-protocol",
+      "desktop-e2e"
+    ],
+    "optLevel": 1,
+    "lto": false,
+    "formalReleaseConfigUnchanged": true
+  },
+  "checks": {
+    "rustNew": 4,
+    "frontendDifferentPassed": 3,
+    "helperPrefixPath": 16,
+    "actualDesktopGroups": 4,
+    "viewedScreenshots": 2
+  },
+  "reuse": "No old algorithm/password/volume matrix, installation or real disk-full repetition. Initial eight helper prefix results retained; audit script continued the remaining cases."
+}

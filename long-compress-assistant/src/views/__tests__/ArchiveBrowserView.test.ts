@@ -232,6 +232,27 @@ describe('ArchiveBrowserView', () => {
     })
   })
 
+  it('egg1616 large text labels partial content and explains unverified file integrity in the original modal',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'EGG',revision:'f'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:3000000,totalCompressedSize:8000,encrypted:false,entries:[{path:'session.txt',name:'session.txt',size:3000000,isDir:false,compressedSize:8000}]})
+    mocks.previewArchiveText.mockResolvedValueOnce({entryPath:'session.txt',content:'INFO 包内日志开头',encoding:'UTF-8',byteSize:1048575,totalSize:3000000,truncated:true,lineCount:1})
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1616,path:'C:/log.egg'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises();await w.get('[data-entry-path="session.txt"]').trigger('dblclick');await flushPromises()
+    expect(w.get('.preview-meta').text()).toContain('部分内容 · 未校验整文件');expect(w.get('.preview-meta').text()).not.toContain('完整显示')
+    await w.findAll('button').find(b=>b.attributes('aria-label')==='预览说明')!.trigger('mouseenter');await flushPromises();expect(w.text()).toContain('非固实大文本仅显示前 1 MiB');w.unmount()
+  })
+  it('egg1616 a closed prefix request cannot display a late result',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'EGG',revision:'f'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:3000000,totalCompressedSize:8000,encrypted:false,entries:[{path:'session.txt',name:'session.txt',size:3000000,isDir:false,compressedSize:8000}]})
+    let finish!:(value:unknown)=>void;mocks.previewArchiveText.mockReturnValueOnce(new Promise(resolve=>finish=resolve))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1616,path:'C:/log.egg'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises();await w.get('[data-entry-path="session.txt"]').trigger('dblclick');await flushPromises()
+    const request=mocks.previewArchiveText.mock.calls.at(-1)![5];await w.get('.preview-close').trigger('click');expect(mocks.cancelArchiveBrowse).toHaveBeenCalledWith(request.previewId)
+    finish({entryPath:'session.txt',content:'late prefix',encoding:'UTF-8',byteSize:1048576,totalSize:3000000,truncated:true,lineCount:1});await flushPromises();expect(w.find('[data-testid="archive-entry-preview"]').exists()).toBe(false);w.unmount()
+  })
+  it('egg1616 input budget errors offer extraction without internal tags',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'EGG',revision:'f'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:3000000,totalCompressedSize:70000000,encrypted:false,entries:[{path:'session.txt',name:'session.txt',size:3000000,isDir:false,compressedSize:70000000}]})
+    mocks.previewArchiveText.mockRejectedValueOnce(new Error('[archive-inspection:io] EGG 文本前缀读取超过 64 MiB 范围，请先提取后打开'))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1616,path:'C:/log.egg'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises();await w.get('[data-entry-path="session.txt"]').trigger('dblclick');await flushPromises()
+    expect(w.get('.preview-stage').text()).toContain('需要扫描超过 64 MiB');expect(w.get('.preview-stage').text()).not.toContain('archive-inspection');w.unmount()
+  })
+
   it('egg1615 solid image keeps the original modal, shared wait text and contextual limits',async()=>{
     mocks.browseArchive.mockResolvedValueOnce({format:'EGG',revision:'e'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:20,totalCompressedSize:8,encrypted:false,entries:[{path:'cover.png',name:'cover.png',size:20,isDir:false,compressedSize:null}]})
     let finish!:(v:unknown)=>void;mocks.previewArchiveImage.mockReturnValueOnce(new Promise(resolve=>finish=resolve))
