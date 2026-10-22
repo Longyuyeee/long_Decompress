@@ -1,5 +1,5 @@
 import {beforeEach,expect,it,vi} from 'vitest'
-import {readerImages,useArchiveImageReader} from '../useArchiveImageReader'
+import {readerError,readerImages,useArchiveImageReader} from '../useArchiveImageReader'
 import type {ArchiveImagePreview,ArchiveEntryInfo} from '../useTauriCommands'
 const preview=(path:string,bytes=10,pixels=100):ArchiveImagePreview=>({entryPath:path,dataUrl:'data:image/png;base64,AA==',mimeType:'image/png',byteSize:bytes,width:pixels,height:1})
 let client:any
@@ -38,3 +38,5 @@ it('reader1557 unsupported and browser decode failures remain actionable without
 it('reader1557 accepts progress only for the visible active request and rejects obsolete events',async()=>{
  let complete!:(p:ArchiveImagePreview)=>void;client.read.mockImplementation(()=>new Promise(resolve=>complete=resolve));const r=useArchiveImageReader(client),p=r.show('a'),id=client.read.mock.calls[0][1];r.update('old',{phase:'reading',processedBytes:100,totalBytes:100});expect(r.progress.value.processedBytes).toBe(0);r.update(id,{phase:'reading',processedBytes:3,totalBytes:10});expect(r.progress.value.processedBytes).toBe(3);complete(preview('a'));await p;r.dispose()
 })
+
+it('egg1613 reader failures hide internal tags while preserving the cause and extraction hint',()=>{expect(readerError('[archive-inspection:damaged] [egg-io] EGG 图片校验失败')).toBe('EGG 图片校验失败');expect(readerError('EGG 固实条目暂不支持图片预览，请先提取后打开')).toContain('提取');expect(readerError('Image dimensions exceed the preview limit')).toContain('尺寸超过')})

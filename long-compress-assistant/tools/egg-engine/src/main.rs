@@ -85,36 +85,38 @@ fn decode_reader<R:Read+Seek,W:Write>(reader:&mut R,e:&EggFileEntry,pwd:Option<&
     out.flush().context("[archive-inspection:io] [egg-io] EGG 输出刷盘失败")?;Ok(())
 }
 const MAX_TEXT:u64=1024*1024;
+const MAX_IMAGE:u64=8*1024*1024;
 const MAX_TEXT_INPUT:u64=64*1024*1024;
 struct PreviewInput<R>{inner:R,left:u64}
 impl<R:Read>Read for PreviewInput<R>{
     fn read(&mut self,buffer:&mut[u8])->io::Result<usize>{
         if buffer.is_empty(){return Ok(0)}
-        if self.left==0{return Err(io::Error::other("EGG 文本预览读取超过 64 MiB，请先提取后打开"))}
+        if self.left==0{return Err(io::Error::other("EGG 预览读取超过 64 MiB，请先提取后打开"))}
         let n=buffer.len().min(self.left as usize);let n=self.inner.read(&mut buffer[..n])?;self.left-=n as u64;Ok(n)
     }
 }
 impl<R:Seek>Seek for PreviewInput<R>{fn seek(&mut self,pos:SeekFrom)->io::Result<u64>{self.inner.seek(pos)}}
-fn preview_text(a:&mut EggArchive<egg_volumes::Reader>,chosen:&[EggFileEntry],req:&Request)->Result<Value>{
-    ensure!(!a.is_solid,"EGG 固实条目暂不支持文本预览，请先提取后打开");
-    ensure!(req.selected.len()==1&&chosen.len()==1&&!chosen[0].is_directory(),"请选择一份 EGG 文本预览");
-    let e=&chosen[0];ensure!(e.uncompressed_size<=MAX_TEXT,"EGG 文本预览支持 1 MiB 以内的完整文件，请先提取后打开");
+fn preview_entry(a:&mut EggArchive<egg_volumes::Reader>,chosen:&[EggFileEntry],req:&Request,image:bool)->Result<Value>{
+    let (kind,limit)=if image{("图片",MAX_IMAGE)}else{("文本",MAX_TEXT)};
+    ensure!(!a.is_solid,"EGG 固实条目暂不支持{kind}预览，请先提取后打开");
+    ensure!(req.selected.len()==1&&chosen.len()==1&&!chosen[0].is_directory(),"请选择一份 EGG {kind}预览");
+    let e=&chosen[0];ensure!(e.uncompressed_size<=limit,"EGG {kind}预览支持 {} MiB 以内的完整文件，请先提取后打开",limit/(1024*1024));
     let packed=e.blocks.iter().map(|b|b.compressed_size as u64).sum::<u64>();
-    ensure!(packed<=MAX_TEXT_INPUT,"EGG 所选文本压缩数据超过 64 MiB，请先提取后打开");
+    ensure!(packed<=MAX_TEXT_INPUT,"EGG 所选{kind}压缩数据超过 64 MiB，请先提取后打开");
     plan(a,chosen)?;
     let mut input=PreviewInput{inner:&mut a.reader,left:MAX_TEXT_INPUT};
-    let mut output=CheckedWriter{inner:Vec::with_capacity(e.uncompressed_size as usize),bytes:0,limit:MAX_TEXT};
+    let mut output=CheckedWriter{inner:Vec::with_capacity(e.uncompressed_size as usize),bytes:0,limit};
     decode_reader(&mut input,e,req.password.as_deref(),req.encoding.as_deref(),&mut output)?;
-    ensure!(output.bytes==e.uncompressed_size,"EGG 文本大小不符，未显示内容");
+    ensure!(output.bytes==e.uncompressed_size,"EGG {kind}大小不符，未显示内容");
     Ok(json!({"bytes":output.inner,"totalSize":e.uncompressed_size,"inputBytes":MAX_TEXT_INPUT-input.left}))
 }
 fn run()->Result<Value>{
-    let args=std::env::args_os().skip(1).collect::<Vec<_>>();ensure!(args.len()==2,"Usage: long-egg list|plan|verify|extract|preview-text archive (JSON stdin)");
+    let args=std::env::args_os().skip(1).collect::<Vec<_>>();ensure!(args.len()==2,"Usage: long-egg list|plan|verify|extract|preview-text|preview-image archive (JSON stdin)");
     let op=args[0].to_str().context("Invalid operation")?;let mut data=Vec::new();io::stdin().take(32*1024*1024+1).read_to_end(&mut data)?;
     ensure!(data.len()<=32*1024*1024,"EGG 请求过大");let req:Request=serde_json::from_slice(&data)?;data.fill(0);ensure!(req.selected.len()<=100000,"EGG 所选条目过多");
     let mut a=open(Path::new(&args[1]))?;let mut chosen=entries(&a,&req.selected)?;
     if op=="list" {return metadata(&a,&chosen)}
-    if op=="preview-text" {return preview_text(&mut a,&chosen,&req)}
+    if matches!(op,"preview-text"|"preview-image") {return preview_entry(&mut a,&chosen,&req,op=="preview-image")}
     plan(&a,&chosen)?;
     if op=="plan" {return metadata(&a,&chosen)}ensure!(matches!(op,"verify"|"extract"),"Unsupported operation");
     if a.is_solid {complex::solid(&mut a,&chosen,&req,op=="extract")?;return Ok(json!({"verified":true}));}

@@ -1,0 +1,35 @@
+   Compiling long-compress-assistant v1.6.13 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 56s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-f2bc30d1ba7afdf5.exe)
+
+running 4 tests
+test services::archive_preview::egg_image1613_tests::egg_image1613_cancel_and_source_change_after_decode_never_publish_an_image ... ok
+test services::archive_preview::egg_image1613_tests::egg_image1613_incomplete_damaged_solid_and_limits_remain_actionable ... ok
+test services::archive_preview::egg_image1613_tests::egg_image1613_vault_confirms_only_selected_bounded_image ... ok
+test services::archive_preview::egg_image1613_tests::egg_image1613_methods_keys_and_native_members_match_exact_owned_pixels ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 1093 filtered out; finished in 5.65s

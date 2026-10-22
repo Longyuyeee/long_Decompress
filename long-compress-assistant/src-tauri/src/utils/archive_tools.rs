@@ -34,7 +34,7 @@ const NESTED_ARCHIVE_EXTENSIONS: &[&str] = &[
     "zip", "zipx", "7z", "rar", "r00", "tar", "tgz", "tpz", "gz", "tbz", "tbz2",
     "bz2", "txz", "xz", "lzma", "tzst", "zst", "lz4", "br", "lz", "tlz", "cab", "iso", "jar", "epub", "apk", "appx", "arj", "z", "udf", "alz", "egg",
 ];
-const BOUNDED_PREVIEW_FORMATS: &[&str] = &["ZIP", "TAR", "GZIP", "BZIP2", "XZ", "ZSTD", "LZMA", "LZIP", "LZ4", "BR", "LONG AES", "ZPAQ", "WIM", "ALZ"];
+const BOUNDED_PREVIEW_FORMATS: &[&str] = &["ZIP", "TAR", "GZIP", "BZIP2", "XZ", "ZSTD", "LZMA", "LZIP", "LZ4", "BR", "LONG AES", "ZPAQ", "WIM", "ALZ", "EGG"];
 const IMAGE_PREVIEW_EXTENSIONS: &[&str] = &["png", "jpg", "jpeg", "gif", "webp", "bmp"];
 const TEXT_PREVIEW_EXTENSIONS: &[&str] = &[
     "txt", "md", "csv", "json", "xml", "yaml", "yml", "toml", "ini", "log", "conf",
@@ -277,7 +277,7 @@ pub fn detect_archive_engine_capabilities() -> ArchiveEngineCapabilities {
             formats: Vec::new(),
             browse_extensions: workspace.browse_extensions,
             nested_extensions: workspace.nested_extensions,
-            bounded_text_preview_formats: BOUNDED_PREVIEW_FORMATS.iter().copied().chain(["EGG"]).map(str::to_string).collect(),
+            bounded_text_preview_formats: BOUNDED_PREVIEW_FORMATS.iter().copied().map(str::to_string).collect(),
             bounded_preview_formats: workspace.bounded_preview_formats,
             image_preview_extensions: workspace.image_preview_extensions,
             text_preview_extensions: workspace.text_preview_extensions,
@@ -294,7 +294,7 @@ pub fn detect_archive_engine_capabilities() -> ArchiveEngineCapabilities {
             formats: Vec::new(),
             browse_extensions: workspace.browse_extensions,
             nested_extensions: workspace.nested_extensions,
-            bounded_text_preview_formats: BOUNDED_PREVIEW_FORMATS.iter().copied().chain(["EGG"]).map(str::to_string).collect(),
+            bounded_text_preview_formats: BOUNDED_PREVIEW_FORMATS.iter().copied().map(str::to_string).collect(),
             bounded_preview_formats: workspace.bounded_preview_formats,
             image_preview_extensions: workspace.image_preview_extensions,
             text_preview_extensions: workspace.text_preview_extensions,
@@ -330,7 +330,7 @@ pub fn detect_archive_engine_capabilities() -> ArchiveEngineCapabilities {
         formats,
         browse_extensions: workspace.browse_extensions,
         nested_extensions: workspace.nested_extensions,
-        bounded_text_preview_formats: BOUNDED_PREVIEW_FORMATS.iter().copied().chain(["EGG"]).map(str::to_string).collect(),
+        bounded_text_preview_formats: BOUNDED_PREVIEW_FORMATS.iter().copied().map(str::to_string).collect(),
         bounded_preview_formats: workspace.bounded_preview_formats,
         image_preview_extensions: workspace.image_preview_extensions,
         text_preview_extensions: workspace.text_preview_extensions,

@@ -102,6 +102,7 @@ import { runAlzText169Gate } from './alz-text-169-gate.mjs'
 import { runAlzImage1610Gate } from './alz-image-1610-gate.mjs'
 import { runAlzPrefix1611Gate } from './alz-prefix-1611-gate.mjs'
 import { runEggText1612Gate } from './egg-text-1612-gate.mjs'
+import { runEggImage1613Gate } from './egg-image-1613-gate.mjs'
 import { runCompactModulesUiGate } from './compact-modules-ui-gate.mjs'
 import { runPageUiReview } from './page-ui-review-gate.mjs'
 import { runSettingsUpdateThemesGate } from './settings-update-themes-gate.mjs'
@@ -5025,6 +5026,9 @@ try {
     completedSuccessfully = true
   } else if ((process.argv.includes('--compact-modules-only') || process.argv.includes('--compact-modules-layout-only'))) {
     await runCompactModulesUiGate({driver,bridge:callDesktopBridge,application,root,dataDirectory:e2eDataDirectory})
+    completedSuccessfully = true
+  } else if (process.argv.includes('--egg-image-1613-only')) {
+    await runEggImage1613Gate({driver,bridge:callDesktopBridge,root,application})
     completedSuccessfully = true
   } else if (process.argv.includes('--egg-text-1612-only')) {
     await runEggText1612Gate({driver,bridge:callDesktopBridge,root,application})

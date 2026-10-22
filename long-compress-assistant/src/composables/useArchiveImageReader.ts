@@ -16,7 +16,7 @@ export function readerError(cause:unknown){
  if(/Image dimensions exceed/.test(raw))return '此图片尺寸超过内置阅读范围（单边 8192、1600 万像素），请提取后查看。'
  if(/bounded scan budget/.test(raw))return '定位此图片需扫描超过 64 MiB，请提取后查看。'
  if(/not a supported raster image/.test(raw))return '内容不是支持的 PNG、JPEG、GIF、WebP 或 BMP 图片，可跳过或提取后查看。'
- return raw
+ return raw.includes('EGG') ? raw.replace(/\[(?:archive-inspection:[^\]]+|egg-[^\]]+)\]\s*/g,'') : raw
 }
 export interface ReaderAsset {path:string;url:string;width:number;height:number;byteSize:number;mimeType:string}
 export interface ReaderProgress {phase:string;processedBytes:number;totalBytes:number}

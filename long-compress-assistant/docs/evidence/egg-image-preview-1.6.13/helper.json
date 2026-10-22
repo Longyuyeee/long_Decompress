@@ -1,0 +1,85 @@
+{
+  "version": "1.6.13",
+  "helperSha256": "4a1b7740bc66863856891ad3bb4e7ecbaa1a3ded6d085e9177f88c612410ba5e",
+  "controlled": true,
+  "historicalProducer": false,
+  "checks": [
+    {
+      "name": "store.egg:gallery/01-cover.png",
+      "bytes": 51773,
+      "sha256": "4caaa6a30b6523e24d1f57ab3e4ae54ce0465885ed246da539cfc217740e57b7",
+      "inputBytes": 51773,
+      "matchesOwnedPixels": true
+    },
+    {
+      "name": "store.egg:gallery/02-grid.bmp",
+      "bytes": 196662,
+      "sha256": "76a4ae37e7731dacde16f4cc5a63ef37f76342f7484a8eebcf84667a1ce0c832",
+      "inputBytes": 196662,
+      "matchesOwnedPixels": true
+    },
+    {
+      "name": "deflate.egg:gallery/01-cover.png",
+      "bytes": 51773,
+      "sha256": "4caaa6a30b6523e24d1f57ab3e4ae54ce0465885ed246da539cfc217740e57b7",
+      "inputBytes": 39157,
+      "matchesOwnedPixels": true
+    },
+    {
+      "name": "deflate.egg:gallery/02-grid.bmp",
+      "bytes": 196662,
+      "sha256": "76a4ae37e7731dacde16f4cc5a63ef37f76342f7484a8eebcf84667a1ce0c832",
+      "inputBytes": 186395,
+      "matchesOwnedPixels": true
+    },
+    {
+      "name": "bzip2.egg:gallery/01-cover.png",
+      "bytes": 51773,
+      "sha256": "4caaa6a30b6523e24d1f57ab3e4ae54ce0465885ed246da539cfc217740e57b7",
+      "inputBytes": 41187,
+      "matchesOwnedPixels": true
+    },
+    {
+      "name": "bzip2.egg:gallery/02-grid.bmp",
+      "bytes": 196662,
+      "sha256": "76a4ae37e7731dacde16f4cc5a63ef37f76342f7484a8eebcf84667a1ce0c832",
+      "inputBytes": 89063,
+      "matchesOwnedPixels": true
+    },
+    {
+      "name": "lzma.egg:gallery/01-cover.png",
+      "bytes": 51773,
+      "sha256": "4caaa6a30b6523e24d1f57ab3e4ae54ce0465885ed246da539cfc217740e57b7",
+      "inputBytes": 35001,
+      "matchesOwnedPixels": true
+    },
+    {
+      "name": "lzma.egg:gallery/02-grid.bmp",
+      "bytes": 196662,
+      "sha256": "76a4ae37e7731dacde16f4cc5a63ef37f76342f7484a8eebcf84667a1ce0c832",
+      "inputBytes": 143039,
+      "matchesOwnedPixels": true
+    },
+    {
+      "name": "zipcrypto.egg:相册/01-封面.png",
+      "bytes": 51773,
+      "sha256": "4caaa6a30b6523e24d1f57ab3e4ae54ce0465885ed246da539cfc217740e57b7",
+      "inputBytes": 39157,
+      "matchesOwnedPixels": true
+    },
+    {
+      "name": "aes256.egg:相册/01-封面.png",
+      "bytes": 51773,
+      "sha256": "4caaa6a30b6523e24d1f57ab3e4ae54ce0465885ed246da539cfc217740e57b7",
+      "inputBytes": 78314,
+      "matchesOwnedPixels": true
+    },
+    {
+      "name": "password-volumes.vol2.egg:相册/01-封面.png",
+      "bytes": 51773,
+      "sha256": "4caaa6a30b6523e24d1f57ab3e4ae54ce0465885ed246da539cfc217740e57b7",
+      "inputBytes": 78314,
+      "matchesOwnedPixels": true
+    }
+  ]
+}

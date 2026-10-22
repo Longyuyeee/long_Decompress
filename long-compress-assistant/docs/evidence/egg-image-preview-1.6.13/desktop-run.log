@@ -1,0 +1,50 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[egg-image-1613] single image opens in the original equal-pane preview
+[egg-image-1613] existing reader turns pages and skips bad content
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+ElementClickInterceptedError: element click intercepted: Element <button data-v-a235cf00="" type="button" data-testid="nav-ArchiveBrowser" aria-label="文件浏览器 (Ctrl+B)" title="文件浏览器 (Ctrl+B)" class="nav-entry group relative w-full h-12 flex items-center gap-3 px-3 rounded-xl cursor-pointer transition-all duration-200 text-left bg-primary/20 shadow-sm text-primary" aria-current="page">...</button> is not clickable at point (107, 240). Other element would receive the click: <div data-v-32afe2f7="" class="reader-canvas">...</div>
+  (Session info: MicrosoftEdge=155.0.4283.62)
+    at Object.throwDecodedError (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\error.js:523:15)
+    at parseHttpResponse (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\http.js:527:13)
+    at Executor.execute (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\http.js:459:28)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async WebDriver.execute (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:745:17)
+    at async click (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/egg-image-1613-gate.mjs:36:145)
+    at async open (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/egg-image-1613-gate.mjs:49:23)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/egg-image-1613-gate.mjs:66:3
+    at async step (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/egg-image-1613-gate.mjs:33:105)
+    at async runEggImage1613Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/egg-image-1613-gate.mjs:65:2) {
+  remoteStacktrace: '\tmsedgedriver!GetHandleVerifier [0x7ff7fd6a82b5+4f25]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd5f7e74]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff7fda36e0f+393a7f]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd3d5b42]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd3d426f]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd3d2355]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd3d1937]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd3c694f]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd3f0c5a]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd3c60cd]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd3c5fca]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd3c60cd]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd40def8]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd3c590c]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd3c4b8d]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd3c5733]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd503121]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd513108]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff7fd750f0a+adb7a]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff7fd757571+b41e1]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd60361c]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd5fe134]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd5fe25a]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7fd5efbe8]\n' +
+    '\tKERNEL32!BaseThreadInitThunk [0x7ffbb71fdda7+17]\n' +
+    '\tntdll!RtlUserThreadStart [0x7ffbb78dee4c+2c]\n'
+}
+
+Node.js v24.14.0

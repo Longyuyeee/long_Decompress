@@ -1,0 +1,61 @@
+{
+  "version": "1.6.13",
+  "helperVersion": "0.5.0",
+  "applicationSha256": "172be1ee62e81b3e4585d5717c00decbb444a898f2f6586c6b47e3d5b8857d81",
+  "helperSha256": "4a1b7740bc66863856891ad3bb4e7ecbaa1a3ded6d085e9177f88c612410ba5e",
+  "rust": {
+    "passed": 4,
+    "filtered": 1093
+  },
+  "frontend": {
+    "uniquePassed": 55,
+    "viewAndCapabilities": 54,
+    "newReaderErrorOnly": 1
+  },
+  "helper": {
+    "controlledCompleteImageByteChecks": 11,
+    "historicalProducer": false
+  },
+  "desktop": {
+    "groups": 5,
+    "screenshotsInspected": 3,
+    "sameCandidateAcrossHarnessFix": true,
+    "continuation": "Initial single-image and reader groups retained. Harness now closes reader/preview before navigating to the next scenario; only remaining groups resumed.",
+    "currentPageExtractedHash": "76a4ae37e7731dacde16f4cc5a63ef37f76342f7484a8eebcf84667a1ce0c832",
+    "threeEntryPointSnapshotMisuseChecks": true
+  },
+  "builds": {
+    "helper": "passed",
+    "shell": "passed",
+    "typeCheckVite": "passed",
+    "native": "passed",
+    "features": "custom-protocol,desktop-e2e",
+    "optLevel": 1,
+    "lto": false,
+    "releaseProfileUnchanged": true,
+    "eightVersionIdentitiesAndEngineInventories": "passed"
+  },
+  "previousRelease": {
+    "version": "1.6.12",
+    "runId": 39844889171,
+    "status": "completed",
+    "conclusion": "success",
+    "duplicateMasterCI": {
+      "id": 39844831684,
+      "conclusion": "cancelled"
+    },
+    "assets": [
+      "latest.json",
+      "Long-Decompress_1.6.12_x64-setup.exe",
+      "Long-Decompress_1.6.12_x64-setup.nsis.zip",
+      "Long-Decompress_1.6.12_x64-setup.nsis.zip.sig"
+    ]
+  },
+  "notRepeated": [
+    "old codec/format matrix",
+    "original whole-archive extraction matrix",
+    "installation",
+    "actual disk-full",
+    "completed desktop groups after harness-only fix"
+  ]
+}
