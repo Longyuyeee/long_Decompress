@@ -1,8 +1,8 @@
 # 文档导航与维护规则
 
-- **当前版本 v1.6.40**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.40)、[中文说明](RELEASE_NOTES_1.6.40.md)和[普通固实 Deflate64 图文记录](SEVENZ_SOLID_DEFLATE64_PREVIEW_FREEZE_1.6.40.md)。已完成功能封板，正常受保护 PR/注解标签发布，最终身份/附件状态在本版 PR 接续。
-- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.40.md)已完成；[v1.6.41 密码固实 Deflate64 图文](ARCHIVE_ROADMAP_1.6.41.md)仅规划、尚未开发，见[交接](DEVELOPMENT_HANDOFF.md)。
-- **前版 v1.6.39**：[密码非固实 Deflate64 图文记录](SEVENZ_PASSWORD_DEFLATE64_PREVIEW_FREEZE_1.6.39.md)，PR #300 已合并并推送注解标签，正式附件状态在该 PR 接续。
+- **当前版本 v1.6.41**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.41)、[中文说明](RELEASE_NOTES_1.6.41.md)和[密码固实 Deflate64 图文记录](SEVENZ_PASSWORD_SOLID_DEFLATE64_PREVIEW_FREEZE_1.6.41.md)。已完成功能封板，正常受保护 PR/注解标签发布，最终身份/附件状态在本版 PR 接续。
+- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.41.md)已完成；[v1.6.42 非固实 Deflate64 大文本开头](ARCHIVE_ROADMAP_1.6.42.md)仅规划、尚未开发，见[交接](DEVELOPMENT_HANDOFF.md)。
+- **前版 v1.6.40**：[普通固实 Deflate64 图文记录](SEVENZ_SOLID_DEFLATE64_PREVIEW_FREEZE_1.6.40.md)，PR #301 已合并并推送注解标签，正式附件状态在该 PR 接续。
 
 以下为历史阶段记录。
 

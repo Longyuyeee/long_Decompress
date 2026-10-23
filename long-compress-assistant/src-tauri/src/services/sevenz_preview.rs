@@ -72,9 +72,9 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     use sevenz_rust::SevenZMethod as M;
     let codec = |id:&[u8]| id==M::ID_LZMA || id==M::ID_LZMA2;
     let ppmd=methods.as_slice()==[M::ID_PPMD] || methods.as_slice()==[M::ID_AES256SHA256,M::ID_PPMD];
-    let deflate64=(methods.as_slice()==[M::ID_DEFLATE64] || !shared && methods.as_slice()==[M::ID_AES256SHA256,M::ID_DEFLATE64]) && !prefix;
+    let deflate64=(methods.as_slice()==[M::ID_DEFLATE64] || methods.as_slice()==[M::ID_AES256SHA256,M::ID_DEFLATE64]) && !prefix;
     if methods.contains(&M::ID_DEFLATE64) {
-        ensure!(deflate64,"7Z Deflate64 当前支持普通/密码非固实及普通固实完整小图文（文本 ≤1 MiB、图片 ≤8 MiB）；密码固实或大文件请先提取后打开");
+        ensure!(deflate64,"7Z Deflate64 当前支持普通/密码非固实及固实完整小图文（文本 ≤1 MiB、图片 ≤8 MiB）；大文件请先提取后打开");
     }
     let deflate=methods.as_slice()==[M::ID_DEFLATE] || methods.as_slice()==[M::ID_AES256SHA256,M::ID_DEFLATE];
     if methods.contains(&M::ID_DEFLATE) {
