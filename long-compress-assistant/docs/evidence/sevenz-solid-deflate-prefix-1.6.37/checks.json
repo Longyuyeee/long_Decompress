@@ -1,0 +1,66 @@
+{
+  "version": "1.6.37",
+  "applicationSha256": "4c31a1e57c260ed76abeb378653a54c4f08d3e608c7000f8622a9753efa3786a",
+  "shellSha256": "173fdc21917fbc65ae18a945727682ea38812b72d66857e486c13d9539a7add1",
+  "backend": {
+    "passed": 6,
+    "failed": 0
+  },
+  "adapter": {
+    "passed": 3,
+    "failed": 0
+  },
+  "desktopGroups": 4,
+  "layouts": [
+    {
+      "name": "prefix-wide",
+      "action": {
+        "height": 28.59375,
+        "width": 93.421875,
+        "x": 641.0625,
+        "y": 561.1015625
+      },
+      "dialog": {
+        "height": 531.390625,
+        "width": 832,
+        "x": 134,
+        "y": 59.3046875
+      },
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "prefix-narrow",
+      "action": {
+        "height": 28.59375,
+        "width": 93.421875,
+        "x": 529.859375,
+        "y": 451.796875
+      },
+      "dialog": {
+        "height": 442.78125,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 38.609375
+      },
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "build": {
+    "frontend": "vue-tsc + VITE_DESKTOP_E2E=1 Vite",
+    "native": "custom-protocol,desktop-e2e; opt-level=1; LTO=false",
+    "productionConfigChanged": false
+  },
+  "fixturesManifestSha256": "d97d304c170780cf9d1feeba3491634b0da1cb69566bb0b23414225932ac11d5"
+}

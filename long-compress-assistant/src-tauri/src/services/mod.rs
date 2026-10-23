@@ -225,3 +225,5 @@ mod sevenz_ppmd_text_prefix_1631_tests;
 #[cfg(test)] mod sevenz_solid_deflate_preview_1635_tests;
 
 #[cfg(test)] mod sevenz_deflate_text_prefix_1636_tests;
+
+#[cfg(test)] mod sevenz_solid_deflate_prefix_1637_tests;

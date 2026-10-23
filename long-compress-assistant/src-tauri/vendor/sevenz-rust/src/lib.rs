@@ -60,3 +60,4 @@ pub use reader::SevenZReader;
 pub use writer::*;
 #[cfg(all(test,feature="aes256",feature="additional-codecs"))] mod deflate_solid_preview_1635_tests;
 #[cfg(all(test,feature="aes256",feature="additional-codecs"))] mod deflate_prefix_1636_tests;
+#[cfg(all(test,feature="aes256",feature="additional-codecs"))] mod deflate_solid_prefix_1637_tests;
