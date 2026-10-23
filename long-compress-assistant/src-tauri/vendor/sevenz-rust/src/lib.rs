@@ -13,6 +13,8 @@ mod ppmd_preview_1628_tests;
 mod ppmd_solid_preview_1630_tests;
 #[cfg(all(test,feature="aes256",feature="additional-codecs"))]
 mod ppmd_prefix_1631_tests;
+#[cfg(all(test,feature="aes256",feature="additional-codecs"))]
+mod ppmd_solid_prefix_1632_tests;
 mod bcj2;
 #[cfg(feature = "aes256")]
 pub use aes256sha256::*;
