@@ -1468,6 +1468,45 @@ pub struct BlockDecoder<'a, R: Read + Seek> {
 }
 
 impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
+    /// Complete one plain non-solid PPMd7 stream. 7z uses a declared output
+    /// size without an EOS symbol: verify its range-code finish and exact
+    /// compressed coverage instead of reading a spurious additional symbol.
+    #[cfg(feature="additional-codecs")]
+    pub fn read_ppmd_entry(self, selected:usize, max_bytes:usize, mut check:impl FnMut()->Result<(),Error>) -> Result<Vec<u8>,Error> {
+        let a=self.archive;let f=a.folders.get(self.folder_index).ok_or_else(||Error::other("Missing PPMd block"))?;
+        let e=a.files.get(selected).ok_or_else(||Error::other("Missing PPMd entry"))?;
+        if max_bytes==0 || max_bytes>8*1024*1024 || e.size>max_bytes as u64 || !e.has_stream || e.is_directory || e.is_anti_item
+            || a.stream_map.file_folder_index.get(selected)!=Some(&Some(self.folder_index))
+            || a.files.iter().enumerate().filter(|(i,e)|e.has_stream && a.stream_map.file_folder_index.get(*i)==Some(&Some(self.folder_index))).count()!=1
+            || f.num_unpack_sub_streams!=1 || f.get_unpack_size()!=e.size || f.coders.len()!=1 || f.packed_streams.len()!=1
+            || (!e.has_crc && !f.has_crc)
+        {return Err(Error::unsupported("7Z PPMd 预览仅支持有完整 CRC 的非固实小文本或图片，请先提取后打开"));}
+        let c=&f.coders[0];let p=&c.properties;
+        if c.decompression_method_id()!=SevenZMethod::ID_PPMD || c.num_in_streams!=1 || c.num_out_streams!=1 || p.len()!=5 {
+            return Err(Error::unsupported("7Z PPMd 预览方法或参数无法确认，请先提取后打开"));
+        }
+        let order=p[0] as u32;let memory=u32::from_le_bytes(p[1..5].try_into().unwrap());
+        if !(2..=64).contains(&order) || !(2048..=64*1024*1024).contains(&memory) {return Err(Error::unsupported("7Z PPMd 预览阶数或字典超出范围，请先提取后打开"));}
+        crate::preview::coder(c,e.size as usize)?;check()?;
+        let index=*a.stream_map.folder_first_pack_stream_index.get(self.folder_index).ok_or_else(||Error::other("Missing PPMd pack mapping"))?;
+        let size=*a.pack_sizes.get(index).ok_or_else(||Error::other("Missing PPMd pack size"))?;
+        if size>64*1024*1024 {return Err(Error::unsupported("7Z PPMd 预览压缩数据超过 64 MiB，请先提取后打开"));}
+        let start=32u64.checked_add(a.pack_pos).and_then(|n|a.stream_map.pack_stream_offsets.get(index).and_then(|o|n.checked_add(*o))).ok_or_else(||Error::other("PPMd pack offset overflow"))?;
+        self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
+        let mut packed=PreviewPack{source:self.source,start,size,read:0,crc:CRC32.digest()};
+        let mut decoder=ppmd_rust::Ppmd7Decoder::new(&mut packed,order,memory).map_err(|e|Error::other(format!("PPMd decoder: {e}")))?;
+        let mut bytes=Vec::with_capacity(e.size as usize);let mut buffer=[0;32*1024];
+        while bytes.len()<e.size as usize {
+            check()?;let capacity=buffer.len().min(e.size as usize-bytes.len());let n=decoder.read(&mut buffer[..capacity]).map_err(Error::io)?;
+            if n==0 {return Err(Error::other("PPMd output ended before declared size"));}bytes.extend_from_slice(&buffer[..n]);
+        }
+        decoder.finish_7z().map_err(Error::io)?;
+        if packed.read!=size {return Err(Error::other("PPMd compressed stream was not completely consumed"));}
+        let crc=CRC32.checksum(&bytes) as u64;
+        if e.has_crc && e.crc!=crc || f.has_crc && f.crc!=crc || a.pack_crcs_defined.contains(index) && a.pack_crcs.get(index).copied()!=Some(packed.crc.finalize() as u64) {return Err(Error::ChecksumVerificationFailed);}
+        check()?;Ok(bytes)
+    }
+
     /// Explicit partial shared-block read, optionally preceded by AES.
     /// Decode/discard only the
     /// bounded dependencies before this exact entry, then retain its prefix.

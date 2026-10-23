@@ -1,0 +1,90 @@
+{
+  "crate": "ppmd-rust 1.4.0",
+  "source": "crates.io locked registry copy",
+  "files": [
+    {
+      "path": "src/decoder_7.rs",
+      "sha256": "8fe2b43d3aaf9f0c9efe2b4974d4861427f1563983bb13a6cd0cdf3b79edd83b"
+    },
+    {
+      "path": "src/decoder_8.rs",
+      "sha256": "0991302447ec1b28a5ab2d78f14ca50277c03031d12610a9f5a8a6bea47a63d9"
+    },
+    {
+      "path": "src/encoder_7.rs",
+      "sha256": "99cabc01781571cf7435b8b41b0a481bf98fe0c35727eac3b7eb7d6e3f3c92fb"
+    },
+    {
+      "path": "src/encoder_8.rs",
+      "sha256": "31368664d8f7c8208fa4ba2c3f4a21ffd6509390abf06a89744f7f16da17e4a4"
+    },
+    {
+      "path": "src/internal.rs",
+      "sha256": "29af6c6129ef0bbf76d1350a65e8e0ee3f5b58ed60c6be5d616a407c62811631"
+    },
+    {
+      "path": "src/lib.rs",
+      "sha256": "7bbe02c44f8812ae1db971e58264c9c4b4e782e631d9aed9b8d857b035eeb34c"
+    },
+    {
+      "path": "src/internal/ppmd7.rs",
+      "sha256": "4bc5d3a61890f62ffb6aa69bf93cac7adca61c8c79dc850cd90f6047a416dbe6"
+    },
+    {
+      "path": "src/internal/ppmd8.rs",
+      "sha256": "2b808c7a9de1943d4f464d67edf8ca10350556f3e67301229c97734762b5fb8d"
+    },
+    {
+      "path": "src/internal/tagged_offset.rs",
+      "sha256": "baf1efabc7880092301b7ddad4bf949af123218ee26638b4e54241454d3d2366"
+    },
+    {
+      "path": "src/internal/ppmd7/decoder.rs",
+      "sha256": "c04a1a5d198d79ade0fd26df811d01d00ad0aef6f5e0f37a49ce0fc784fee5f6"
+    },
+    {
+      "path": "src/internal/ppmd7/encoder.rs",
+      "sha256": "a6b7f0b3c1e2a0174419a8e95909913625172ffe705a1fcab5ddbe0f4f060bb9"
+    },
+    {
+      "path": "src/internal/ppmd7/range_coding.rs",
+      "sha256": "cdc3239be1187db2559738b1af0916b14f0f83c8bd53935730891fc010d7739b"
+    },
+    {
+      "path": "src/internal/ppmd8/decoder.rs",
+      "sha256": "c29fe58c4a9c448f508345f1d887f56839a392886bc874e9e4eabaa6ef7ea08d"
+    },
+    {
+      "path": "src/internal/ppmd8/encoder.rs",
+      "sha256": "1fa9b88a39b2c4f8401f89b3dc3940f3e17117ec559c621c82659f2d0fc044ea"
+    },
+    {
+      "path": "src/internal/ppmd8/range_coding.rs",
+      "sha256": "9ac461e42da593f75cfd8d1982a91ffefd93df0dce666de739edf0679b0cde67"
+    },
+    {
+      "path": "Cargo.toml",
+      "sha256": "cfd8854ca4749fb98996bdc5b80430259cb56a17bd88dcfa09cc0349799b482b"
+    },
+    {
+      "path": "Cargo.toml.orig",
+      "sha256": "406f6ddb42aeb032101ccdeb28185f8bf7b7f2266e8156f58897b5ef8f168019"
+    },
+    {
+      "path": "README.md",
+      "sha256": "57d8f3b515d62de6258327dac0a26783cf2f38d5427e760baf3bb91e63d86a39"
+    },
+    {
+      "path": "LICENSE-CC0.md",
+      "sha256": "c2c14e64a5798ecd6e5332ed6139d950522352fb82ddfd1d620524db890712ec"
+    },
+    {
+      "path": "LICENSE-MIT-0.md",
+      "sha256": "5574529c6fc6bb5f1dba17056a3ae5fb5cac51bc50ae4d7cd146e13b708fe0ff"
+    },
+    {
+      "path": "CHANGELOG.md",
+      "sha256": "63d25976fa7169a829b74c13950498621f1145ca0c489448317821ae55797b7b"
+    }
+  ]
+}

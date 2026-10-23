@@ -3323,7 +3323,7 @@ checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
 
 [[package]]
 name = "long-compress-assistant"
-version = "1.6.26"
+version = "1.6.27"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -4510,6 +4510,10 @@ checksum = "439ee305def115ba05938db6eb1644ff94165c5ab5e9420d1c1bcedbba909391"
 [[package]]
 name = "ppmd-rust"
 version = "1.4.0"
+
+[[package]]
+name = "ppmd-rust"
+version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "efca4c95a19a79d1c98f791f10aebd5c1363b473244630bb7dbde1dc98455a24"
 
@@ -5427,7 +5431,7 @@ dependencies = [
  "js-sys",
  "lzma-rust",
  "nt-time",
- "ppmd-rust",
+ "ppmd-rust 1.4.0",
  "rand 0.8.5",
  "sha2",
  "wasm-bindgen",
@@ -8169,7 +8173,7 @@ dependencies = [
  "lzma-rust2 0.16.2",
  "memchr",
  "pbkdf2 0.13.0",
- "ppmd-rust",
+ "ppmd-rust 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "sha1 0.11.0",
  "typed-path",
  "zeroize",
