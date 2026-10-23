@@ -1,0 +1,116 @@
+{
+  "version": "1.6.29",
+  "applicationSha256": "0d3ebef861a69c2709b5b2c5d05692cb4380ddbd2112b6af146c7b0838e3d712",
+  "checks": [
+    {
+      "name": "shared selected PPMd text is exact complete scrollable and stays in equal wide panes",
+      "meta": "UTF-8\n已读 223 KB / 223 KB\n3000 行\n完整显示\n只读",
+      "sha256": "d9983887da846400b3325dd736d8d5ec12b93456127e4243b4c934897039744e",
+      "scroll": true
+    },
+    {
+      "name": "shared PPMd image pixels render in the original narrow modal",
+      "pixel": [
+        140,
+        20,
+        60,
+        255
+      ],
+      "png": [
+        320,
+        240
+      ]
+    },
+    {
+      "name": "original reader turns zooms skips broken raster locates and extracts only current page",
+      "zoom": true,
+      "skip": true,
+      "locate": true,
+      "currentPageSha256": "6d133ad7dc08719597d3b2b7c528a743c426686268835dd6d035a50e8cef8beb"
+    },
+    {
+      "name": "original shared order12 and non-first volume feed complete text and both image commands while invalid endings have next steps",
+      "plainShared": true,
+      "order12": true,
+      "nonFirstMember": true,
+      "readerCommand": true,
+      "errors": {
+        "bad-flush": "7Z 所选内容未通过完整读取或 CRC 校验，请重新下载或先提取检查：Io(Custom { kind: InvalidData, error: \"PPMd 7z range coder did not finish\" }, \"\")",
+        "encrypted": "7Z PPMd 预览支持非固实普通/密码及未加密小型固实的完整图文；密码固实或大文本请先提取后打开"
+      },
+      "large": "7Z PPMd 预览支持非固实普通/密码及未加密小型固实的完整图文；密码固实或大文本请先提取后打开"
+    },
+    {
+      "name": "cancelled changed and missing-volume requests cannot replace fresh shared PPMd content and unrelated large data is skipped",
+      "stale": "IMAGE_READER_CHANGED|来源已变化，请返回刷新来源后重新阅读",
+      "cancelled": "文本预览已取消",
+      "missingTail": "IMAGE_READER_CHANGED|来源已变化，请返回刷新来源后重新阅读",
+      "unrelatedLargeSkipped": true,
+      "fresh": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "text-wide",
+      "closeVisible": true,
+      "dialog": {
+        "height": 531.390625,
+        "width": 832,
+        "x": 134,
+        "y": 59.3046875
+      },
+      "height": 650,
+      "image": null,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "image-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 401.984375,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 59.0078125
+      },
+      "height": 520,
+      "image": {
+        "height": 240,
+        "width": 320
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    },
+    {
+      "name": "reader-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 504,
+        "width": 744,
+        "x": 8,
+        "y": 8
+      },
+      "height": 520,
+      "image": {
+        "height": 64,
+        "width": 96
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-solid-ppmd-preview-1629\\061f442c-737b-4649-bfe7-2a9550a8a4f8",
+  "passed": true
+}

@@ -14,6 +14,8 @@
 
 ## 原生 7Z 补充方法
 
+v1.6.29 新增独立的未加密固实 PPMd 完整预览入口，按共享流映射与声明总量分段检查前后内容，只保留所选文件，确认逐项/块/打包流 CRC、压缩完整覆盖与 PPMd 结束。复用 v1.6.27 的 finish_7z 加法 API，未改 PPMd/AES 算法、默认解码或 ZIP 依赖，也未新增外部引擎；详细修改见 sevenz-rust/LONG_PATCHES.md。
+
 v1.6.28 在同一完整 PPMd 入口接入 AES → PPMd，复用既有完整 PreviewAes（含消费回执、零填充、密文结束和 KDF 范围），逐级核对声明长度、实际消费与 PPMd 结束/CRC。未改 AES 算法或默认解码、未用部分读取绕过完整条件，也未新增依赖或外部引擎；补丁与必要原件见 sevenz-rust 的说明和应用测试。
 
 v1.6.27 的未加密非固实 PPMd 图文预览，在 `vendor/ppmd-rust 1.4.0`（MIT-0/CC0）增加独立的 7z 声明大小结束检查入口，按所选文件大小读取后核对 range coder、压缩覆盖和 CRC。仅本地 sevenz-rust 使用此副本，ZIP 仍引用原 registry 版本；默认 Read、模型和编码器不改。原始文件 SHA-256、补丁说明和许可见该目录；既有随包 `licenses/ppmd-rust-MIT-0.md` 保持。没有新增外部运行引擎。
