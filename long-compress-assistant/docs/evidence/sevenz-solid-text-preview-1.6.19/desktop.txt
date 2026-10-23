@@ -1,0 +1,7 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[sevenz-solid-text-1619] original solid selected text is complete and scrolls inside equal wide and narrow panes
+[sevenz-solid-text-1619] LZMA shared text and non-first numeric member work without reading unrelated large blocks
+[sevenz-solid-text-1619] damaged shared ending is not displayed and limits or encryption give extraction next steps
+[sevenz-solid-text-1619] changed shared sources and cancelled reads are discarded before fresh complete text

@@ -42,3 +42,12 @@ text for v1.6.17. It uses the existing decoder stack without an outer size/CRC
 wrapper masking the terminal read, then checks exact size and both entry/folder
 CRCs. No codec, writer, default, or general extraction behavior is changed.
 The application limits methods, dictionaries, input reads, time and source scope.
+
+2026-10-23: BlockDecoder::read_solid_entry streams the whole selected shared
+block for v1.6.19 text. It uses file_folder_index plus has_stream rather than
+a contiguous file slice (empty files/directories are not substreams), checks
+stream count/summed sizes, each file CRC, folder CRC and optional packed CRC,
+compressed coverage and codec end. Only selected output is retained; a caller
+callback checks cancellation/deadline on every output chunk and before success.
+The application allows only unencrypted LZMA/LZMA2 shared text <=1 MiB within
+64 MiB compressed/unpacked shared blocks. General extraction is unchanged.

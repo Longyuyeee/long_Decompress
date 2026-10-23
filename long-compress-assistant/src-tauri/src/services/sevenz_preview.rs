@@ -1,4 +1,4 @@
-//! Selected non-solid text and images; metadata and payload share an observable input budget.
+//! Selected text and non-solid images; metadata and payload share an input budget.
 use anyhow::{ensure, Context, Result};
 use std::{io::{self, Read, Seek, SeekFrom}, path::Path, sync::{Arc, atomic::{AtomicBool, Ordering}}, time::{Duration, Instant}};
 use super::numeric_volume_reader::ZipInputReader;
@@ -43,14 +43,14 @@ fn engine_error(error: sevenz_rust::Error, encrypted: bool) -> anyhow::Error {
 }
 
 pub(crate) fn read(path: &Path, selected: &str, password: Option<&str>, cancelled: Arc<AtomicBool>) -> Result<(Vec<u8>, u64)> {
-    read_selected(path,selected,password,cancelled,MAX_TEXT,None)
+    read_selected(path,selected,password,cancelled,MAX_TEXT,None,true)
 }
 
 pub(crate) fn read_image(path:&Path, selected:&str, password:Option<&str>, control:&super::image_reader::Control) -> Result<Vec<u8>> {
-    Ok(read_selected(path,selected,password,control.flag.clone(),super::archive_preview::MAX_PREVIEW_BYTES,Some(control.clone()))?.0)
+    Ok(read_selected(path,selected,password,control.flag.clone(),super::archive_preview::MAX_PREVIEW_BYTES,Some(control.clone()),false)?.0)
 }
 
-fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc<AtomicBool>, max_output:u64, control:Option<super::image_reader::Control>) -> Result<(Vec<u8>,u64)> {
+fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc<AtomicBool>, max_output:u64, control:Option<super::image_reader::Control>, allow_solid:bool) -> Result<(Vec<u8>,u64)> {
     let mut input = Input { inner: ZipInputReader::open_seven_zip(path)?, read:0, cancelled, until:Instant::now()+Duration::from_secs(30), control };
     input.check()?;
     let length = input.seek(SeekFrom::End(0))?;
@@ -69,9 +69,10 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
         return Ok((vec![],0));
     }
     let folder_index = archive.stream_map.file_folder_index.get(index).copied().flatten().context("7Z 所选内容缺少数据流，请先提取检查")?;
-    let folder = &archive.folders[folder_index];
-    ensure!(folder.num_unpack_sub_streams==1 && folder.get_unpack_size()==entry.size,"7Z 固实共享内容暂不支持预览，请先提取后打开");
-    ensure!(entry.has_crc || folder.has_crc,"7Z 所选内容缺少完整 CRC，暂不提供预览，请先提取检查");
+    let folder = archive.folders.get(folder_index).context("7Z 所选内容的数据块无法确认，请先提取检查")?;
+    let shared = folder.num_unpack_sub_streams != 1 || folder.get_unpack_size()!=entry.size;
+    ensure!(!shared || allow_solid,"7Z 固实共享图片暂不支持预览，请先提取后打开");
+    if !shared {ensure!(entry.has_crc || folder.has_crc,"7Z 所选内容缺少完整 CRC，暂不提供预览，请先提取检查");}
     // Only LZMA/LZMA2, optionally preceded by AES. No filters or unrelated blocks.
     let methods: Vec<_> = folder.ordered_coder_iter().map(|(_,c)|c.decompression_method_id()).collect();
     use sevenz_rust::SevenZMethod as M;
@@ -83,9 +84,25 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
         if c.decompression_method_id()==M::ID_LZMA2 { ensure!(c.properties.len()==1 && c.properties[0]<=28,"7Z 预览字典超过预览范围，请先提取后打开"); }
     }
     let encrypted = methods.contains(&M::ID_AES256SHA256);
+    if shared {
+        ensure!(!encrypted,"7Z 加密固实文本暂不支持预览，请先提取后打开");
+        ensure!(folder.packed_streams.len()==1,"7Z 固实共享范围无法确认，请先提取后打开");
+        let pack_index=archive.stream_map.folder_first_pack_stream_index.get(folder_index).context("7Z 固实共享范围无法确认，请先提取后打开")?;
+        let packed=archive.pack_sizes.get(*pack_index).context("7Z 固实共享大小无法确认，请先提取后打开")?;
+        ensure!(*packed<=MAX_INPUT && folder.get_unpack_size()<=MAX_INPUT,"7Z 固实共享内容超过 64 MiB 预览范围，请先提取后打开");
+    }
+    let flag=input.cancelled.clone();let until=input.until;
     let decoder = sevenz_rust::BlockDecoder::new(folder_index,&archive,key.as_slice(),&mut input);
-    ensure!(decoder.entries().len()==1 && decoder.entries()[0].name==entry.name,"7Z 所选内容的数据映射无法确认，请先提取后打开");
-    let bytes = decoder.read_single_entry(max_output as usize).map_err(|e|engine_error(e,encrypted))?;
+    let bytes = if shared {
+        decoder.read_solid_entry(index,max_output as usize,MAX_INPUT,||{
+            if flag.load(Ordering::Acquire) {return Err(sevenz_rust::Error::io(io::Error::other("7Z 预览已取消")));}
+            if Instant::now()>=until {return Err(sevenz_rust::Error::io(io::Error::new(io::ErrorKind::TimedOut,"7Z 预览超过 30 秒，请先提取后打开")));}
+            Ok(())
+        })
+    } else {
+        ensure!(decoder.entries().len()==1 && decoder.entries()[0].name==entry.name,"7Z 所选内容的数据映射无法确认，请先提取后打开");
+        decoder.read_single_entry(max_output as usize)
+    }.map_err(|e|engine_error(e,encrypted))?;
     input.check()?;
     Ok((bytes,entry.size))
 }
@@ -117,8 +134,8 @@ mod tests {
         }
     }
     #[tokio::test]
-    async fn sevenz1617_rejects_shared_streams_bad_end_binary_oversize_and_duplicate_paths() {
-        for (source,entry,reason) in [(case("solid"),SELECTED,"固实"),(case("lzma2"),"binary.txt","binary"),(fixtures().join("bad-end.7z"),"readme.txt","CRC"),(case("lzma2"),"missing.txt","不存在")] {
+    async fn sevenz1617_rejects_bad_end_binary_oversize_and_duplicate_paths() {
+        for (source,entry,reason) in [(case("lzma2"),"binary.txt","binary"),(fixtures().join("bad-end.7z"),"readme.txt","CRC"),(case("lzma2"),"missing.txt","不存在")] {
             let error=preview::preview_archive_text(&source,entry,None).await.unwrap_err();assert!(format!("{error:#}").contains(reason),"{error:#}");
         }
         let temp=tempfile::tempdir().unwrap();

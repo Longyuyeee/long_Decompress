@@ -275,7 +275,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.6.18 · 7Z 图片预览与连续阅读**。原双栏直接查看非固实 LZMA/LZMA2 图片，接通密码、文件名加密数字卷与原阅读器；按需翻页、缩放、跳过、定位和准确提取当前页，保持取消/来源核对与左右等宽。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.18.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_IMAGE_PREVIEW_FREEZE_1.6.18.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.18)。下一阶段 [7Z 小型固实文本](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.19.md)仅规划。
+**v1.6.19 · 7Z 固实小文本直接阅读**。在原双栏直接打开未加密 LZMA/LZMA2 固实包内的说明、日志与配置，完整数字分卷沿原入口；检查整个共享块后显示，保留滚动、关闭取消和来源核对。只保留选中文本，超限或加密固实仍可先提取。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.19.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_SOLID_TEXT_PREVIEW_FREEZE_1.6.19.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.19)。下一阶段 [7Z 小型固实图片](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.20.md)仅规划。
+
+**v1.6.18 · 7Z 图片预览与连续阅读**。原双栏直接查看非固实 LZMA/LZMA2 图片，接通密码、文件名加密数字卷与原阅读器；按需翻页、缩放、跳过、定位和准确提取当前页，保持取消/来源核对与左右等宽。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.18.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_IMAGE_PREVIEW_FREEZE_1.6.18.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.18)。7Z 小型固实文本已由上方 v1.6.19 接续。
 
 **v1.6.17 · 7Z 小文本原位预览**。在原双栏直接阅读 LZMA/LZMA2 非固实完整小文本，接通密码、保险箱与文件名加密数字卷，完整大小/CRC/解码结束后显示；保留取消、来源刷新与明确提取指引。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.17.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_TEXT_PREVIEW_FREEZE_1.6.17.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.17)。7Z 非固实图片已由上方 v1.6.18 接续。
 
