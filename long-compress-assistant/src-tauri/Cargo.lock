@@ -1413,6 +1413,10 @@ dependencies = [
 [[package]]
 name = "deflate64"
 version = "0.1.12"
+
+[[package]]
+name = "deflate64"
+version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ac6b926516df9c60bfa16e107b21086399f8285a44ca9711344b9e553c5146e2"
 
@@ -3323,7 +3327,7 @@ checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
 
 [[package]]
 name = "long-compress-assistant"
-version = "1.6.37"
+version = "1.6.38"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -5425,7 +5429,7 @@ dependencies = [
  "bzip2 0.4.4",
  "cbc",
  "crc",
- "deflate64",
+ "deflate64 0.1.12",
  "filetime_creation",
  "flate2",
  "js-sys",
@@ -8165,7 +8169,7 @@ dependencies = [
  "bzip2 0.6.1",
  "constant_time_eq 0.4.2",
  "crc32fast",
- "deflate64",
+ "deflate64 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "flate2",
  "getrandom 0.4.2",
  "hmac 0.13.0",

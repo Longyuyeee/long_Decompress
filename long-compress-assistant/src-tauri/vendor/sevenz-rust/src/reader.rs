@@ -1832,6 +1832,56 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         check()?;Ok(bytes)
     }
 
+    /// Complete ordinary non-solid Deflate64 preview. Never use the declared
+    /// output size as the inflater's finish condition; observe BFINAL/EOB and
+    /// exclude Huffman-prefetched whole bytes when checking packed coverage.
+    #[cfg(feature="additional-codecs")]
+    pub fn read_deflate64_entry(self, selected: usize, max_bytes: usize, mut check: impl FnMut() -> Result<(), Error>) -> Result<Vec<u8>, Error> {
+        let a=self.archive;
+        let f=a.folders.get(self.folder_index).ok_or_else(||Error::other("Missing Deflate64 block"))?;
+        let e=a.files.get(selected).ok_or_else(||Error::other("Missing Deflate64 file"))?;
+        let mapped=a.files.iter().enumerate().filter(|(i,e)|e.has_stream && a.stream_map.file_folder_index.get(*i)==Some(&Some(self.folder_index))).count();
+        if max_bytes>8*1024*1024 || e.size>max_bytes as u64 || !e.has_stream || e.is_directory || e.is_anti_item
+            || a.stream_map.file_folder_index.get(selected)!=Some(&Some(self.folder_index)) || mapped!=1
+            || f.coders.len()!=1 || f.unpack_sizes.len()!=1 || f.total_input_streams!=1 || f.total_output_streams!=1
+            || !f.bind_pairs.is_empty() || f.packed_streams.as_slice()!=[0]
+            || f.coders[0].num_in_streams!=1 || f.coders[0].num_out_streams!=1
+            || f.coders[0].decompression_method_id()!=SevenZMethod::ID_DEFLATE64 || !f.coders[0].properties.is_empty()
+            || f.num_unpack_sub_streams!=1 || f.get_unpack_size()!=e.size || !(e.has_crc || f.has_crc)
+        {return Err(Error::unsupported("7Z Deflate64 当前仅支持普通非固实完整小图文，请先提取后打开"));}
+        let pack=*a.stream_map.folder_first_pack_stream_index.get(self.folder_index).ok_or_else(||Error::other("Missing Deflate64 pack mapping"))?;
+        let size=*a.pack_sizes.get(pack).ok_or_else(||Error::other("Missing Deflate64 pack size"))?;
+        if size==0 || size>64*1024*1024 {return Err(Error::unsupported("7Z Deflate64 压缩内容须 ≤64 MiB，请先提取后打开"));}
+        let start=32u64.checked_add(a.pack_pos).and_then(|n|a.stream_map.pack_stream_offsets.get(pack).and_then(|o|n.checked_add(*o))).ok_or_else(||Error::other("Deflate64 pack offset overflow"))?;
+        check()?;self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
+        let mut packed=PreviewPack{source:self.source,start,size,read:0,crc:CRC32.digest()};
+        let mut codec=Box::new(deflate64::InflaterManaged::new());
+        let mut input=[0u8;32*1024];let mut output=[0u8;32*1024];let(mut offset,mut end)=(0,0);
+        let mut consumed=0u64;let mut bytes=Vec::with_capacity(e.size as usize);
+        loop {
+            check()?;
+            if offset==end {
+                offset=0;end=0;
+                while end<input.len() && packed.read<size {
+                    check()?;let n=packed.read(&mut input[end..]).map_err(Error::io)?;
+                    if n==0 {return Err(Error::other("Deflate64 packed stream ended early"));}end+=n;
+                }
+            }
+            let result=codec.inflate(&input[offset..end],&mut output);
+            if result.data_error || codec.errored() {return Err(Error::other("Deflate64 invalid stream"));}
+            offset+=result.bytes_consumed;consumed+=result.bytes_consumed as u64;
+            if bytes.len()+result.bytes_written>e.size as usize {return Err(Error::other("Deflate64 output exceeds declared size"));}
+            bytes.extend_from_slice(&output[..result.bytes_written]);
+            if codec.finished() {
+                if codec.finished_input_bytes()!=Some(size) || consumed!=size || packed.read!=size || bytes.len() as u64!=e.size {return Err(Error::other("Deflate64 end or compressed coverage mismatch"));}break;
+            }
+            if result.bytes_consumed==0 && result.bytes_written==0 {return Err(Error::other("Deflate64 stream did not finish"));}
+        }
+        let crc=CRC32.checksum(&bytes) as u64;
+        if e.has_crc && e.crc!=crc || f.has_crc && f.crc!=crc || a.pack_crcs_defined.contains(pack) && a.pack_crcs.get(pack).copied()!=Some(packed.crc.finalize() as u64) {return Err(Error::ChecksumVerificationFailed);}
+        check()?;Ok(bytes)
+    }
+
     /// Complete non-solid Deflate preview, optionally preceded by full AES.
     /// Observe raw StreamEnd and exact
     /// compressed consumption rather than treating a Read EOF as stream finish.

@@ -72,6 +72,10 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     use sevenz_rust::SevenZMethod as M;
     let codec = |id:&[u8]| id==M::ID_LZMA || id==M::ID_LZMA2;
     let ppmd=methods.as_slice()==[M::ID_PPMD] || methods.as_slice()==[M::ID_AES256SHA256,M::ID_PPMD];
+    let deflate64=methods.as_slice()==[M::ID_DEFLATE64] && !shared && !prefix;
+    if methods.contains(&M::ID_DEFLATE64) {
+        ensure!(deflate64,"7Z Deflate64 当前仅支持普通非固实完整小图文（文本 ≤1 MiB、图片 ≤8 MiB）；密码、固实或大文件请先提取后打开");
+    }
     let deflate=methods.as_slice()==[M::ID_DEFLATE] || methods.as_slice()==[M::ID_AES256SHA256,M::ID_DEFLATE];
     if methods.contains(&M::ID_DEFLATE) {
         ensure!(deflate,"7Z Deflate 预览当前支持普通/密码完整小文本和图片；大文本仅显示开头，未校验整文件");
@@ -79,7 +83,7 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     if methods.contains(&M::ID_PPMD) {
         ensure!(ppmd,"7Z 此 PPMd 方法组合暂不支持内部预览，请先提取后打开");
     }
-    ensure!(methods.len()==folder.coders.len() && (deflate || ppmd || methods.len()==1 && codec(methods[0]) || methods.len()==2 && methods[0]==M::ID_AES256SHA256 && codec(methods[1])),"7Z 此压缩方法组合暂不支持内部预览，请先提取后打开");
+    ensure!(methods.len()==folder.coders.len() && (deflate64 || deflate || ppmd || methods.len()==1 && codec(methods[0]) || methods.len()==2 && methods[0]==M::ID_AES256SHA256 && codec(methods[1])),"7Z 此压缩方法组合暂不支持内部预览，请先提取后打开");
     for c in &folder.coders {
         // Bound dictionaries before constructing the existing decoder.
         if c.decompression_method_id()==M::ID_LZMA { ensure!(c.properties.len()==5 && u32::from_le_bytes(c.properties[1..5].try_into().unwrap())<=64*1024*1024,"7Z 预览字典超过预览范围，请先提取后打开"); }
@@ -98,7 +102,9 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
         if flag.load(Ordering::Acquire) {return Err(sevenz_rust::Error::io(io::Error::other("7Z 预览已取消")));}
         if Instant::now()>=until {return Err(sevenz_rust::Error::io(io::Error::new(io::ErrorKind::TimedOut,"7Z 预览超过 30 秒，请先提取后打开")));}Ok(())
     };
-    let bytes = if deflate {
+    let bytes = if deflate64 {
+        decoder.read_deflate64_entry(index,max_output as usize,check)
+    } else if deflate {
         if prefix && shared { decoder.read_solid_deflate_entry_prefix(index,MAX_TEXT as usize,MAX_INPUT,check) } else if prefix { decoder.read_deflate_entry_prefix(index,MAX_TEXT as usize,check) } else if shared { decoder.read_solid_deflate_entry(index,max_output as usize,MAX_INPUT,check) } else { decoder.read_deflate_entry(index,max_output as usize,check) }
     } else if prefix && shared {
         decoder.read_solid_entry_prefix(index,MAX_TEXT as usize,MAX_INPUT,check)

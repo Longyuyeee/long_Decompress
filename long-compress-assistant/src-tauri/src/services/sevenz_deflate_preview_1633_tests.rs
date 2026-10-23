@@ -44,7 +44,7 @@ async fn sevenz1633_damaged_deflate_never_displays_complete_body_and_original_is
 #[tokio::test]
 async fn sevenz1633_output_image_limits_binary_and_unsupported_scopes_keep_next_steps(){
  assert!(text_error(&case("deflate"),"notes/binary.txt",None).await.contains("binary"));
- for (name,key,reason) in [("deflate64",None,"方法组合")] {assert!(text_error(&root().join(format!("{name}.7z")),TEXT,key).await.contains(reason),"{name}");}
+
 
 
  let v=preview::preview_archive_image(&root().join("at-limit.7z"),"at-limit.bmp",None).await.unwrap();assert_eq!(image_bytes(&v).len(),8*1024*1024);
