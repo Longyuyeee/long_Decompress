@@ -5,7 +5,7 @@ use sha2::{Digest,Sha256};
 use std::io::{Cursor,Read,Seek,SeekFrom,Write};
 const KEY:&[u8]=&[b'k',0];
 fn coder(id:&[u8],properties:Vec<u8>)->Coder{let mut c=Coder::default();c.id_size=id.len();c.decompression_method_id_mut().copy_from_slice(id);c.num_in_streams=1;c.num_out_streams=1;c.properties=properties;c}
-fn sample(bad_padding:bool,bad_flush:bool,extra_plain:bool)->(Archive,Cursor<Vec<u8>>,Vec<u8>){
+pub(super) fn sample(bad_padding:bool,bad_flush:bool,extra_plain:bool)->(Archive,Cursor<Vec<u8>>,Vec<u8>){
  let mut n=1;
  let (body,mut plain)=loop{let body=format!("AES PPMd complete stream {n}\n").repeat(2000).into_bytes();let mut e=ppmd_rust::Ppmd7Encoder::new(vec![],6,1024*1024).unwrap();e.write_all(&body).unwrap();let p=e.finish(false).unwrap();if p.len()%16!=0{break(body,p);}n+=1;};
  if bad_flush{*plain.last_mut().unwrap()^=1;}if extra_plain{plain.push(0);}

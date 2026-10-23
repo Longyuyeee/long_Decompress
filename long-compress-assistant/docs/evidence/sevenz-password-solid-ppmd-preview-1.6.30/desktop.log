@@ -1,0 +1,8 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[sevenz-password-ppmd-1630] vault encrypted selected PPMd text is exact complete scrollable and stays in equal wide panes
+[sevenz-password-ppmd-1630] vault encrypted PPMd image pixels render in the original narrow modal
+[sevenz-password-ppmd-1630] original reader turns zooms skips broken raster locates and extracts only current page
+[sevenz-password-ppmd-1630] original shared first content and non-first encrypted volume feed text and images with manual and vault passwords
+[sevenz-password-ppmd-1630] cancelled changed and missing-volume requests cannot replace fresh encrypted PPMd content and unrelated large data is skipped

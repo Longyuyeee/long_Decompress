@@ -209,3 +209,6 @@ mod sevenz_password_ppmd_preview_1628_tests;
 
 #[cfg(test)]
 mod sevenz_solid_ppmd_preview_1629_tests;
+
+#[cfg(test)]
+mod sevenz_password_solid_ppmd_preview_1630_tests;

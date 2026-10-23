@@ -1,0 +1,50 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling long-compress-assistant v1.6.30 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4m 41s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-d032501ad3ad9c84.exe)
+
+running 7 tests
+test services::sevenz_password_solid_ppmd_preview_1630_tests::sevenz1630_cancel_source_revision_missing_shared_tail_and_fresh_request ... ok
+test services::sevenz_password_solid_ppmd_preview_1630_tests::sevenz1630_damaged_shared_cipher_never_displays_text_or_pixels_and_unrelated_block_is_skipped ... ok
+
+thread 'services::sevenz_password_solid_ppmd_preview_1630_tests::sevenz1630_shared_before_after_block_pack_crc_mapping_parameters_and_cancel_are_required' (40344) panicked at src\services\sevenz_password_solid_ppmd_preview_1630_tests.rs:33:3:
+packed-map
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::sevenz_password_solid_ppmd_preview_1630_tests::sevenz1630_shared_before_after_block_pack_crc_mapping_parameters_and_cancel_are_required ... FAILED
+test services::sevenz_password_solid_ppmd_preview_1630_tests::sevenz1630_shared_and_image_boundaries_binary_large_and_password_scopes_keep_next_steps ... ok
+test services::sevenz_password_solid_ppmd_preview_1630_tests::sevenz1630_vault_selected_only_text_images_and_manual_wrong_never_record_archive_success ... ok
+test services::sevenz_password_solid_ppmd_preview_1630_tests::sevenz1630_original_solid_orders_every_numeric_member_and_complete_text_encodings ... ok
+test services::sevenz_password_solid_ppmd_preview_1630_tests::sevenz1630_original_shared_rasters_and_non_first_volume_keep_exact_bytes has been running for over 60 seconds
+test services::sevenz_password_solid_ppmd_preview_1630_tests::sevenz1630_original_shared_rasters_and_non_first_volume_keep_exact_bytes ... ok
+
+failures:
+
+failures:
+    services::sevenz_password_solid_ppmd_preview_1630_tests::sevenz1630_shared_before_after_block_pack_crc_mapping_parameters_and_cancel_are_required
+
+test result: FAILED. 6 passed; 1 failed; 0 ignored; 0 measured; 1175 filtered out; finished in 60.53s
+
+error: test failed, to rerun pass `--lib`
