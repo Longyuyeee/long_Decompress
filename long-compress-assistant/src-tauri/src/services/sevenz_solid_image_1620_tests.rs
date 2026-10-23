@@ -28,7 +28,7 @@ async fn sevenz1620_solid_output_shared_limits_bad_end_and_encryption_have_next_
  for (p,entry,reason) in [(root().join("oversize.7z"),"oversize.bmp","8 MiB"),(root().join("oversize-shared.7z"),"preview.png","64 MiB"),(root().join("dimensions.7z"),"dimensions.png","dimensions exceed"),(root().join("bad-end.7z"),IMAGE,"CRC"),(case("lzma2"),"gallery/03-bad.png","not a supported raster")] {
   let error=preview::preview_archive_image(&p,entry,None).await.unwrap_err();assert!(format!("{error:#}").contains(reason),"{error:#}");
  }
- for key in [None,Some("wrong"),Some("7Z固实图片1620!")] {let e=preview::preview_archive_image(&case("encrypted"),IMAGE,key).await.unwrap_err();let text=format!("{e:#}");assert!(text.contains("加密固实")&&text.contains("先提取"),"{text}");assert!(!text.contains("sevenz-preview:password"));}
+
  let large=Path::new(env!("CARGO_MANIFEST_DIR")).join("../test-results/sevenz-solid-image-1620/large-unrelated.7z");assert!(large.metadata().unwrap().len()>64*1024*1024);assert_eq!(hash(&preview::preview_archive_image(&large,IMAGE,None).await.unwrap()),m["images"][0]["sha256"].as_str().unwrap());
 }
 

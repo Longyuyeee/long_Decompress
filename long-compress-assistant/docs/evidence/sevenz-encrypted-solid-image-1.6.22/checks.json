@@ -1,0 +1,32 @@
+{
+  "version": "1.6.22",
+  "applicationSha256": "f87ffd633bddc08b788c87db734892c64b2bc382debd1ab83f8c54d1bd28d999",
+  "shellSha256": "35129089a9a7aaaffed3885bc849ca088c3be8a697e97d33207ba9d4871278ee",
+  "builds": {
+    "vueTypesAndVite": true,
+    "shellExtension": true,
+    "nativeDesktopCandidate": true,
+    "eightVersionIdentitiesAndEngineInventory": true
+  },
+  "localCandidate": {
+    "features": [
+      "custom-protocol",
+      "desktop-e2e"
+    ],
+    "VITE_DESKTOP_E2E": "1",
+    "optLevel": 1,
+    "lto": false,
+    "formalReleaseConfigUnchanged": true
+  },
+  "checks": {
+    "rustRelated": 5,
+    "frontendView": 4,
+    "originalGroups": 4,
+    "originalMembers": 11,
+    "rasterTypes": 5,
+    "independentOfficialReadback": true,
+    "actualDesktopGroups": 5,
+    "viewedScreenshots": 3
+  },
+  "continuity": "The new Rust test driver first corrected its reference to a metadata model without a revision field, before any tests ran. All five actual application tests and four frontend checks passed. The initial outer Windows PowerShell invocation rejected the build script; normal invocation in the current PowerShell built the Shell component and passed identity, without changing system policy. Desktop uses the final native candidate; passed groups are kept on resume. No vendor or general extraction changes; no repeat of passed old codec/password/volume matrices, installation or real disk-full checks."
+}

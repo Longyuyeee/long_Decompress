@@ -39,7 +39,7 @@ async fn sevenz1621_corrupt_unrelated_large_block_is_skipped_by_metadata_and_tex
 async fn sevenz1621_wrong_password_damage_limits_and_encrypted_images_keep_distinct_next_steps(){
  for key in [None,Some("wrong"),Some(KEY)]{let e=preview::preview_archive_text(&root().join("damaged-data.7z"),TEXT,key).await.unwrap_err();assert!(format!("{e:#}").contains("sevenz-preview:password"),"{e:#}");}
  let e=preview::preview_archive_text(&root().join("oversize-shared.7z"),"readme.txt",Some(KEY)).await.unwrap_err();assert!(format!("{e:#}").contains("64 MiB"),"{e:#}");assert!(!format!("{e:#}").contains("sevenz-preview:password"));
- let image=Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/sevenz-solid-image-1620/encrypted/相册.7z");assert!(preview::preview_archive_image(&image,"gallery/01-cover.png",Some("7Z固实图片1620!")).await.unwrap_err().to_string().contains("加密固实图片"));
+ let image=Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/sevenz-solid-image-1620/encrypted/相册.7z");assert_eq!(preview::preview_archive_image(&image,"gallery/01-cover.png",Some("7Z固实图片1620!")).await.unwrap().width,320);
  // Existing non-solid encrypted data now uses the same opt-in AES completion path.
  let previous=Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/sevenz-text-1617/contents/资料.7z");assert!(!preview::preview_archive_text(&previous,"notes/说明 [1].txt",Some("7Z预览密码1617!")).await.unwrap().truncated);
 }

@@ -96,7 +96,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.6.21 · 带密码的 7Z 固实说明直接阅读**。在原双栏阅读 AES + LZMA/LZMA2 固实说明与日志，接通原密码/保险箱、文件名加密和完整数字卷。目录只读取文件名信息，选中内容完整检查后显示，保留取消和来源核对。[中文说明](docs/RELEASE_NOTES_1.6.21.md) · [范围与记录](docs/SEVENZ_ENCRYPTED_SOLID_TEXT_FREEZE_1.6.21.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.21)。下一阶段 [7Z 加密固实图片](docs/ARCHIVE_ROADMAP_1.6.22.md)仅规划。
+**v1.6.22 · 带密码的 7Z 固实相册直接看图**。AES + LZMA/LZMA2 固实图片接入原双栏和阅读器，内容/文件名加密、原密码/保险箱与完整数字分卷贯通。按需翻页、缩放、跳过坏图、定位与准确提取当前页，另一栏位置保持。[中文说明](docs/RELEASE_NOTES_1.6.22.md) · [范围与记录](docs/SEVENZ_ENCRYPTED_SOLID_IMAGE_FREEZE_1.6.22.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.22)。下一阶段 [7Z 非固实大文本开头](docs/ARCHIVE_ROADMAP_1.6.23.md)仅规划。
+
+**v1.6.21 · 带密码的 7Z 固实说明直接阅读**。在原双栏阅读 AES + LZMA/LZMA2 固实说明与日志，接通原密码/保险箱、文件名加密和完整数字卷。目录只读取文件名信息，选中内容完整检查后显示，保留取消和来源核对。[中文说明](docs/RELEASE_NOTES_1.6.21.md) · [范围与记录](docs/SEVENZ_ENCRYPTED_SOLID_TEXT_FREEZE_1.6.21.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.21)。7Z 加密固实图片已由上方 v1.6.22 接续。
 
 **v1.6.20 · 7Z 固实相册直接看图**。未加密 LZMA/LZMA2 固实图片接入原双栏弹层和阅读器，完整数字分卷沿原入口；按需翻页、缩放、跳过坏图、定位和准确提取当前页，检查整个共享块后显示，保留取消与来源核对。[中文说明](docs/RELEASE_NOTES_1.6.20.md) · [范围与记录](docs/SEVENZ_SOLID_IMAGE_PREVIEW_FREEZE_1.6.20.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.20)。7Z 加密固实小文本已由上方 v1.6.21 接续。
 
