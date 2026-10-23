@@ -45,7 +45,7 @@ async fn sevenz1638_damaged_deflate_never_displays_complete_body_and_original_is
 #[tokio::test]
 async fn sevenz1638_output_image_limits_binary_and_unsupported_scopes_keep_next_steps(){
  assert!(text_error(&case("deflate64"),"notes/binary.txt",None).await.contains("binary"));
- for(p,e,key)in[(root().join("solid.7z"),TEXT,None),(case("deflate64"),"notes/large.txt",None)]{let error=text_error(&p,e,key).await;assert!(error.contains("Deflate64") && error.contains("提取"),"{error}");}
+ for(p,e,key)in[(case("deflate64"),"notes/large.txt",None)]{let error=text_error(&p,e,key).await;assert!(error.contains("Deflate64") && error.contains("提取"),"{error}");}
 
 
 

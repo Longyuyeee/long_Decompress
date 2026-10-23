@@ -1832,6 +1832,71 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         check()?;Ok(bytes)
     }
 
+    /// Complete ordinary shared Deflate64: stream all mapped dependencies,
+    /// retain only the selected file, and verify every available CRC plus the
+    /// real terminal extent, excluding whole Huffman-prefetched bytes.
+    #[cfg(feature="additional-codecs")]
+    pub fn read_solid_deflate64_entry(self, selected: usize, max_bytes: usize, max_shared: u64, mut check: impl FnMut() -> Result<(), Error>) -> Result<Vec<u8>, Error> {
+        let a=self.archive;
+        let f=a.folders.get(self.folder_index).ok_or_else(||Error::other("Missing Deflate64 block"))?;
+        let files:Vec<_>=a.files.iter().enumerate().filter(|(i,e)|e.has_stream && a.stream_map.file_folder_index.get(*i)==Some(&Some(self.folder_index))).collect();
+        let e=files.iter().find(|(i,_)|*i==selected).ok_or_else(||Error::other("Selected file is outside shared Deflate64 block"))?.1;
+        let total=files.iter().try_fold(0u64,|n,(_,e)|n.checked_add(e.size)).ok_or_else(||Error::other("Shared Deflate64 size overflow"))?;
+        if max_bytes==0 || max_bytes>8*1024*1024 || e.size>max_bytes as u64 || max_shared==0 || max_shared>64*1024*1024 || total>max_shared
+            || f.coders.len()!=1 || f.unpack_sizes.len()!=1 || f.total_input_streams!=1 || f.total_output_streams!=1
+            || !f.bind_pairs.is_empty() || f.packed_streams.as_slice()!=[0]
+            || f.coders[0].num_in_streams!=1 || f.coders[0].num_out_streams!=1
+            || f.coders[0].decompression_method_id()!=SevenZMethod::ID_DEFLATE64 || !f.coders[0].properties.is_empty()
+            || files.len()!=f.num_unpack_sub_streams || f.get_unpack_size()!=total
+            || files.iter().any(|(_,e)|e.is_directory || e.is_anti_item || (!e.has_crc && !f.has_crc))
+        {return Err(Error::unsupported("7Z Deflate64 普通固实共享映射或大小无法确认（共享内容须 ≤64 MiB），请先提取后打开"));}
+        let pack=*a.stream_map.folder_first_pack_stream_index.get(self.folder_index).ok_or_else(||Error::other("Missing Deflate64 pack mapping"))?;
+        let size=*a.pack_sizes.get(pack).ok_or_else(||Error::other("Missing Deflate64 pack size"))?;
+        if size==0 || size>max_shared {return Err(Error::unsupported("7Z Deflate64 压缩内容须 ≤64 MiB，请先提取后打开"));}
+        let start=32u64.checked_add(a.pack_pos).and_then(|n|a.stream_map.pack_stream_offsets.get(pack).and_then(|o|n.checked_add(*o))).ok_or_else(||Error::other("Deflate64 pack offset overflow"))?;
+        check()?;self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
+        let mut packed=PreviewPack{source:self.source,start,size,read:0,crc:CRC32.digest()};
+        let mut codec=Box::new(deflate64::InflaterManaged::new());
+        let mut input=[0u8;32*1024];let mut output=[0u8;32*1024];let(mut offset,mut end)=(0,0);
+        let(mut consumed,mut decoded)=(0u64,0u64);let mut bytes=Vec::with_capacity(e.size as usize);
+        let mut block_crc=CRC32.digest();let mut file_crcs:Vec<_>=files.iter().map(|_|CRC32.digest()).collect();
+        let(mut file_pos,mut in_file)=(0,0u64);
+        loop {
+            check()?;
+            if offset==end {
+                offset=0;end=0;
+                while end<input.len() && packed.read<size {
+                    check()?;let n=packed.read(&mut input[end..]).map_err(Error::io)?;
+                    if n==0 {return Err(Error::other("Deflate64 packed stream ended early"));}end+=n;
+                }
+            }
+            let result=codec.inflate(&input[offset..end],&mut output);
+            if result.data_error || codec.errored() {return Err(Error::other("Deflate64 invalid stream"));}
+            offset+=result.bytes_consumed;consumed+=result.bytes_consumed as u64;decoded+=result.bytes_written as u64;
+            if decoded>total {return Err(Error::other("Deflate64 output exceeds declared shared size"));}
+            let produced=result.bytes_written;block_crc.update(&output[..produced]);let mut position=0;
+            while position<produced {
+                check()?;
+                while file_pos<files.len() && in_file==files[file_pos].1.size {file_pos+=1;in_file=0;}
+                if file_pos==files.len() {return Err(Error::other("Shared Deflate64 output exceeds mapped files"));}
+                let n=(files[file_pos].1.size-in_file).min((produced-position) as u64) as usize;
+                let chunk=&output[position..position+n];file_crcs[file_pos].update(chunk);
+                if files[file_pos].0==selected {bytes.extend_from_slice(chunk);}
+                in_file+=n as u64;position+=n;
+            }
+            if codec.finished() {
+                if codec.finished_input_bytes()!=Some(size) || consumed!=size || packed.read!=size || decoded!=total {return Err(Error::other("Deflate64 end or compressed coverage mismatch"));}break;
+            }
+            if result.bytes_consumed==0 && produced==0 {return Err(Error::other("Deflate64 stream did not finish"));}
+        }
+        for ((_,file),crc) in files.iter().zip(file_crcs) {
+            if file.has_crc && file.crc!=crc.finalize() as u64 {return Err(Error::ChecksumVerificationFailed);}
+        }
+        if bytes.len() as u64!=e.size {return Err(Error::other("Shared Deflate64 selected output size mismatch"));}
+        if f.has_crc && f.crc!=block_crc.finalize() as u64 || a.pack_crcs_defined.contains(pack) && a.pack_crcs.get(pack).copied()!=Some(packed.crc.finalize() as u64) {return Err(Error::ChecksumVerificationFailed);}
+        check()?;Ok(bytes)
+    }
+
     /// Complete non-solid Deflate64, optionally preceded by full AES. Observe
     /// BFINAL/EOB, drain output, exclude Huffman-prefetched whole bytes and
     /// complete AES EOF/padding; declared output must never stand in for finish.
