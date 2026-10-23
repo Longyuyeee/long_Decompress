@@ -1704,6 +1704,73 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         Ok(bytes)
     }
 
+    /// Explicit non-solid Deflate64 prefix, optionally preceded by partial AES.
+    /// Stop at the requested output cap. Unread tail, CRCs, codec completion
+    /// and payload AES completion are deliberately not claimed as verified.
+    #[cfg(feature="additional-codecs")]
+    pub fn read_deflate64_entry_prefix(self, selected:usize, max_bytes:usize, mut check:impl FnMut()->Result<(),Error>)->Result<Vec<u8>,Error>{
+        let a=self.archive;
+        let f=a.folders.get(self.folder_index).ok_or_else(||Error::other("Missing Deflate64 prefix block"))?;
+        let e=a.files.get(selected).ok_or_else(||Error::other("Missing Deflate64 prefix file"))?;
+        if max_bytes==0 || max_bytes>1024*1024 || e.size<=max_bytes as u64 || !e.has_stream || e.is_directory || e.is_anti_item
+            || a.stream_map.file_folder_index.get(selected)!=Some(&Some(self.folder_index))
+            || a.files.iter().enumerate().filter(|(i,e)|e.has_stream && a.stream_map.file_folder_index.get(*i)==Some(&Some(self.folder_index))).count()!=1
+            || !(1..=2).contains(&f.coders.len()) || f.unpack_sizes.len()!=f.coders.len()
+            || f.total_input_streams!=f.coders.len() || f.total_output_streams!=f.coders.len()
+            || f.bind_pairs.len()!=f.coders.len()-1 || f.packed_streams.len()!=1
+            || f.coders.iter().any(|c|c.num_in_streams!=1 || c.num_out_streams!=1)
+            || f.num_unpack_sub_streams!=1 || f.get_unpack_size()!=e.size
+        {return Err(Error::unsupported("7Z Deflate64 大文本预览需要唯一非固实条目和明确映射，请先提取后打开"));}
+        let coders:Vec<_>=f.ordered_coder_iter().take(f.coders.len()+1).collect();
+        if coders.len()!=f.coders.len() || !(coders.len()==1 && coders[0].1.decompression_method_id()==SevenZMethod::ID_DEFLATE64
+            || coders.len()==2 && coders[0].1.decompression_method_id()==SevenZMethod::ID_AES256SHA256 && coders[1].1.decompression_method_id()==SevenZMethod::ID_DEFLATE64)
+            || !coders.last().unwrap().1.properties.is_empty()
+        {return Err(Error::unsupported("7Z Deflate64 大文本预览方法或顺序无法确认，请先提取后打开"));}
+        let pack=*a.stream_map.folder_first_pack_stream_index.get(self.folder_index).ok_or_else(||Error::other("Missing Deflate64 prefix pack mapping"))?;
+        let size=*a.pack_sizes.get(pack).ok_or_else(||Error::other("Missing Deflate64 prefix pack size"))?;
+        let encrypted=coders.len()==2;
+        let plain=if encrypted{f.get_unpack_size_at_index(coders[0].0)}else{size};
+        if plain==0{return Err(Error::other("Deflate64 prefix has no compressed plaintext"));}
+        if encrypted && plain.checked_add(15).map(|n|n/16*16)!=Some(size){return Err(Error::other("Deflate64 prefix AES packed size mismatch"));}
+        let start=32u64.checked_add(a.pack_pos).and_then(|n|a.stream_map.pack_stream_offsets.get(pack).and_then(|o|n.checked_add(*o))).ok_or_else(||Error::other("Deflate64 prefix offset overflow"))?;
+        check()?;self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
+        let packed=self.source.take(size);
+        let mut stream:Box<dyn Read+'_>=if encrypted{
+            #[cfg(feature="aes256")]
+            {crate::preview::coder(coders[0].1,0)?;let n=usize::try_from(plain).map_err(|_|Error::unsupported("Deflate64 prefix size exceeds platform range"))?;Box::new(crate::aes256sha256::PreviewAes::new_prefix(packed,&coders[0].1.properties,self.password,n)?)}
+            #[cfg(not(feature="aes256"))]
+            {return Err(Error::unsupported("AES is unavailable"));}
+        }else{Box::new(packed)};
+        let mut codec=Box::new(deflate64::InflaterManaged::new());let mut bytes=Vec::with_capacity(max_bytes);
+        let mut input=[0;32*1024];let mut output=[0;32*1024];let(mut offset,mut end,mut read_plain)=(0,0,0u64);
+        while bytes.len()<max_bytes{
+            check()?;
+            // Drain already decoded output before requesting another chunk;
+            // short raw/AES reads must not pull in an unrequested tail.
+            if offset==end && codec.available_output()==0{
+                offset=0;end=0;
+                while end<input.len() && read_plain<plain{
+                    check()?;let capacity=((input.len()-end) as u64).min(plain-read_plain) as usize;
+                    let n=stream.read(&mut input[end..end+capacity]).map_err(Error::io)?;
+                    if n==0{return Err(Error::other("7Z Deflate64 文本开头前数据结束，大小与声明不符，请重新下载或先提取检查"));}
+                    end+=n;read_plain+=n as u64;
+                }
+            }
+            let capacity=output.len().min(max_bytes-bytes.len());
+            let result=codec.inflate(&input[offset..end],&mut output[..capacity]);
+            if result.data_error || codec.errored(){return Err(Error::other("Deflate64 prefix invalid stream"));}
+            offset+=result.bytes_consumed;
+            // A real terminal may already be known while the fixed window
+            // still holds output. Reject known size conflicts without draining
+            // or certifying the unrequested tail.
+            let observed=bytes.len() as u64+result.bytes_written as u64+codec.available_output() as u64;
+            if codec.input_finished() && observed!=e.size{return Err(Error::other("7Z Deflate64 文本已提前结束，大小与声明不符，请先提取检查"));}
+            if result.bytes_consumed==0 && result.bytes_written==0{return Err(Error::other("7Z Deflate64 文本开头前数据不足，请先提取检查"));}
+            bytes.extend_from_slice(&output[..result.bytes_written]);
+        }
+        check()?;Ok(bytes)
+    }
+
     /// Explicit non-solid Deflate prefix, optionally preceded by partial AES.
     /// Stop at the requested output cap. Unread tail, CRCs, codec completion
     /// and payload AES completion are deliberately not claimed as verified.

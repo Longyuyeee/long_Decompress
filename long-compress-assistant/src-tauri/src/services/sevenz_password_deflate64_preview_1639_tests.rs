@@ -45,7 +45,6 @@ fn sevenz1639_complete_crc_mapping_aes_lengths_parameters_and_mid_read_cancel_ar
 }
 #[tokio::test]
 async fn sevenz1639_encrypted_limits_binary_solid_large_and_damage_keep_next_steps(){
- for(p,e)in[(case("contents"),"notes/large.txt")]{let error=text_error(&p,e,Some(KEY)).await;assert!(error.contains("Deflate64")&&error.contains("提取"),"{error}");}
  assert!(text_error(&case("contents"),"notes/binary.txt",Some(KEY)).await.contains("binary"));let e=text_error(&root().join("damaged-data.7z"),TEXT,Some(KEY)).await;assert!(e.contains("密码")&&e.contains("未通过读取或校验"),"{e}");
 
 
