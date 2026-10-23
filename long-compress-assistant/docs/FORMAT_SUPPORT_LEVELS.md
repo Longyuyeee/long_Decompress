@@ -1,5 +1,7 @@
 # 归档格式支持等级（当前权威口径）
 
+**v1.6.30 密码固实 PPMd 图文**：AES → PPMd7/PPMdH 小型固实完整文本 ≤1 MiB、图片 ≤8 MiB，内容/文件名加密、原手动密码/保险箱和完整数字卷贯通。完整检查 AES 长度/填充/消费回执与共享 PPMd 映射、可用 CRC、压缩覆盖/range coder 结束，只保留所选文件；共享压缩/解码各 ≤64 MiB，不扫描无关大块。PPMd 大文本仍给提取下一步，原普通固实/非固实及 LZMA/LZMA2 保持，无新增依赖或格式计数变化，见[记录](SEVENZ_PASSWORD_SOLID_PPMD_PREVIEW_FREEZE_1.6.30.md)。下方为历史。
+
 **v1.6.29 PPMd 小型固实图文**：未加密 PPMd7/PPMdH 固实完整文本 ≤1 MiB、图片 ≤8 MiB。共享压缩/解码各 ≤64 MiB，完整确认共享映射/顺序/大小、前后文件/块/打包流可用 CRC、压缩覆盖及 range coder 结束，只保留所选文件；原弹层/阅读器、完整数字卷、取消/来源接通。密码固实或大文本 PPMd 仍给提取下一步，原非固实普通/密码 PPMd 与 LZMA/LZMA2 路径保持，无新依赖或格式计数变化，见[记录](SEVENZ_SOLID_PPMD_PREVIEW_FREEZE_1.6.29.md)。下方为历史。
 
 **v1.6.28 密码 PPMd 非固实图文**：AES → PPMd7/PPMdH 普通文件完整文本 ≤1 MiB、图片 ≤8 MiB。内容/文件名加密、手动密码/保险箱、完整数字卷与原阅读器贯通，完整 AES 回执/零填充/长度与 PPMd 大小/压缩覆盖/range coder 结束/可用 CRC 均需通过。不记整包密码成功，实际输入/内存/时间/取消/来源范围保持。固实/大文本 PPMd 仍给提取下一步，格式数不变，见[记录](SEVENZ_PASSWORD_PPMD_PREVIEW_FREEZE_1.6.28.md)。下方为历史。
