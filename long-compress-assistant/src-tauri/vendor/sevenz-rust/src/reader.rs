@@ -1468,6 +1468,45 @@ pub struct BlockDecoder<'a, R: Read + Seek> {
 }
 
 impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
+    /// Explicit partial plaintext shared-block read. Decode/discard only the
+    /// bounded dependencies before this exact entry, then retain its prefix.
+    /// This never verifies preceding CRCs, unread tail or complete codec end.
+    /// The complete shared reader below remains a separate verification path.
+    pub fn read_solid_entry_prefix(self, selected: usize, max_bytes: usize, max_decoded: u64, mut check: impl FnMut() -> Result<(), Error>) -> Result<Vec<u8>, Error> {
+        let archive=self.archive;
+        let folder=archive.folders.get(self.folder_index).ok_or_else(||Error::other("Missing shared prefix block"))?;
+        let files:Vec<_>=archive.files.iter().enumerate().filter(|(i,e)|e.has_stream && archive.stream_map.file_folder_index.get(*i)==Some(&Some(self.folder_index))).collect();
+        let position=files.iter().position(|(i,_)|*i==selected).ok_or_else(||Error::other("Selected prefix is outside shared block"))?;
+        let total=files.iter().try_fold(0u64,|n,(_,e)|n.checked_add(e.size)).ok_or_else(||Error::other("Shared prefix size overflow"))?;
+        let offset=files[..position].iter().try_fold(0u64,|n,(_,e)|n.checked_add(e.size)).ok_or_else(||Error::other("Shared prefix offset overflow"))?;
+        if max_bytes==0 || max_bytes>1024*1024 || max_decoded>64*1024*1024 || files[position].1.size<=max_bytes as u64
+            || files.len()!=folder.num_unpack_sub_streams || total!=folder.get_unpack_size()
+            || files.iter().any(|(_,e)|e.is_directory || e.is_anti_item)
+            || folder.coders.len()!=1 || folder.packed_streams.len()!=1
+            || folder.coders[0].num_in_streams!=1 || folder.coders[0].num_out_streams!=1
+        {return Err(Error::unsupported("7Z 固实预览映射或方法无法确认，请先提取后打开"));}
+        if offset.checked_add(max_bytes as u64).is_none_or(|n|n>max_decoded) {
+            return Err(Error::unsupported("7Z 固实预览前置内容与开头合计超过 64 MiB，请先提取后打开"));
+        }
+        check()?;
+        let pack_index=*archive.stream_map.folder_first_pack_stream_index.get(self.folder_index).ok_or_else(||Error::other("Missing shared prefix pack mapping"))?;
+        let packed=*archive.pack_sizes.get(pack_index).ok_or_else(||Error::other("Missing shared prefix pack size"))?;
+        let start=32u64.checked_add(archive.pack_pos).and_then(|n|archive.stream_map.pack_stream_offsets.get(pack_index).and_then(|offset|n.checked_add(*offset))).ok_or_else(||Error::other("Shared prefix pack offset overflow"))?;
+        let unpacked=usize::try_from(total).map_err(|_|Error::unsupported("Shared prefix declared size exceeds platform range"))?;
+        self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
+        let mut decoder=crate::decoders::add_prefix_decoder(self.source.take(packed),unpacked,&folder.coders[0],MAX_MEM_LIMIT_KB)?;
+        let mut bytes=Vec::with_capacity(max_bytes);let mut buffer=[0;32*1024];
+        for (keep,mut remaining) in [(false,offset),(true,max_bytes as u64)] {
+            while remaining>0 {
+                check()?;let capacity=remaining.min(buffer.len() as u64) as usize;
+                let n=decoder.read(&mut buffer[..capacity]).map_err(Error::io)?;
+                if n==0 {return Err(Error::other("7Z 固实预览在所选开头前结束，数据与声明大小不符，请重新下载或先提取检查"));}
+                if keep {bytes.extend_from_slice(&buffer[..n]);}remaining-=n as u64;
+            }
+        }
+        check()?;Ok(bytes)
+    }
+
     /// Read a selected non-solid LZMA/LZMA2 prefix, optionally preceded by AES.
     /// The encrypted payload uses a distinct partial constructor; metadata and
     /// complete readers retain their full AES consumption receipts.

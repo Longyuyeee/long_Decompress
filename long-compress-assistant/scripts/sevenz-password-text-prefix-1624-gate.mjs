@@ -29,7 +29,7 @@ if (-not [SevenzImageWindow]::SetWindowPos((Get-Process -Id $taskApp.ProcessId).
 export async function runSevenzTextPrefix1624Gate({driver,bridge,root,application}) {
  const base=path.join(root,'test-results/sevenz-password-text-prefix-1624'),file=path.join(base,'desktop.json'),sample=path.join(root,'tests/fixtures/archives/sevenz-password-text-prefix-1624'),m=JSON.parse(readFileSync(path.join(sample,'manifest.json'),'utf8')),selected=m.selected,key=m.password
  mkdirSync(base,{recursive:true});const sha=p=>createHash('sha256').update(readFileSync(p)).digest('hex'),source=name=>{const c=m.cases.find(c=>c.name===name);return path.join(sample,name,c.members[0].name)}
- const report=existsSync(file)?JSON.parse(readFileSync(file,'utf8')):{version:'1.6.23',applicationSha256:sha(application),checks:[],layouts:[],work:path.join(base,randomUUID())}
+ const report=existsSync(file)?JSON.parse(readFileSync(file,'utf8')):{version:'1.6.24',applicationSha256:sha(application),checks:[],layouts:[],work:path.join(base,randomUUID())}
  assert.equal(report.applicationSha256,sha(application));mkdirSync(report.work,{recursive:true})
  const save=()=>writeFileSync(file,JSON.stringify(report,null,2)+'\n')
  const step=async(name,fn)=>{if(report.checks.some(c=>c.name===name))return;report.checks.push({name,applicationSha256:sha(application),...await fn()});save();console.log('[sevenz-password-text-prefix-1624]',name)}

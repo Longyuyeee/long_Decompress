@@ -85,3 +85,5 @@ regression covers the actual integrity route, bad terminal and valid encrypted
 solid integrity/image continuity; other codec/default choices are unchanged.
 
 2026-10-23: v1.6.24 permits the explicit non-solid selected prefix to chain AES then LZMA/LZMA2. PreviewAes::new_prefix uses a private unregistered completion receipt; it never disables header/full-entry receipts. CBC exact short reads, KDF/cancel/limits and end checks when reached remain shared. The caller confirms AES aligned packed length; all complete readers retain full consumption/CRC/end checks. Added partial-vs-full receipt and short-read/cancellation unit coverage.
+
+2026-10-23: v1.6.25 adds read_solid_entry_prefix for plaintext LZMA/LZMA2 shared blocks. It checks selected stream mapping/order/sizes, bounds skipped output plus prefix to 64 MiB, discards dependencies in cancellable chunks and retains only 1 MiB. It intentionally does not verify preceding CRCs or unread tail/codec end; the complete shared reader and AES receipt guards are unchanged. Covered by original two-tool readback and selected-range/mapping/cancel/short-output/full-vs-partial regressions in the application.

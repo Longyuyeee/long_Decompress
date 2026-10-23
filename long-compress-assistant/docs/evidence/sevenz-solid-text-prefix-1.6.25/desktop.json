@@ -1,0 +1,88 @@
+{
+  "version": "1.6.25",
+  "applicationSha256": "cfcfe1aa0bccbbf9d5236e8f2c929e221a633e05a738d35a8a6aad428bc28802",
+  "checks": [
+    {
+      "name": "large selected text is explicitly partial and scrollable in equal wide and narrow panes with original full-open action",
+      "applicationSha256": "cfcfe1aa0bccbbf9d5236e8f2c929e221a633e05a738d35a8a6aad428bc28802",
+      "meta": "UTF-8\n已读 1.00 MB / 2.52 MB\n11916 行\n部分内容 · 未校验整文件\n只读\n提取后打开",
+      "sha256": "b268f5521a157764ad0e2101095b7f59616f9380b4b9bc0d25318ab522891e2d",
+      "scroll": true,
+      "fullActionVisible": true
+    },
+    {
+      "name": "original LZMA non-first numeric member and five encoding boundaries keep exact selected prefix bytes",
+      "applicationSha256": "cfcfe1aa0bccbbf9d5236e8f2c929e221a633e05a738d35a8a6aad428bc28802",
+      "lzma": true,
+      "nonFirstMember": true,
+      "encodingBoundaries": 5,
+      "largeTotal": 68157440
+    },
+    {
+      "name": "unread damaged tail remains explicitly partial while complete integrity errors and unsupported text keep extraction hints",
+      "applicationSha256": "cfcfe1aa0bccbbf9d5236e8f2c929e221a633e05a738d35a8a6aad428bc28802",
+      "unreadTailUnverified": true,
+      "completeIntegrity": "压缩失败: Newly created 7Z archive failed verification: Io(Custom { kind: InvalidInput, error: \"Corrupted input data (LZMA2:2)\" }, \"\")",
+      "errors": {
+        "bad-start": "7Z 所选内容未通过完整读取或 CRC 校验，请重新下载或先提取检查：Io(Custom { kind: InvalidInput, error: \"Corrupted input data (LZMA2:0)\" }, \"\")"
+      },
+      "smallComplete": true
+    },
+    {
+      "name": "cancelled stale and missing-volume requests cannot replace a fresh shared prefix",
+      "applicationSha256": "cfcfe1aa0bccbbf9d5236e8f2c929e221a633e05a738d35a8a6aad428bc28802",
+      "stale": "IMAGE_READER_CHANGED|来源已变化，请返回刷新来源后重新阅读",
+      "cancelled": "文本预览已取消",
+      "freshBytes": 1048576,
+      "missingTail": "IMAGE_READER_CHANGED|来源已变化，请返回刷新来源后重新阅读"
+    }
+  ],
+  "layouts": [
+    {
+      "name": "prefix-wide",
+      "action": {
+        "height": 28.59375,
+        "width": 93.421875,
+        "x": 641.0625,
+        "y": 561.1015625
+      },
+      "dialog": {
+        "height": 531.390625,
+        "width": 832,
+        "x": 134,
+        "y": 59.3046875
+      },
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "prefix-narrow",
+      "action": {
+        "height": 28.59375,
+        "width": 93.421875,
+        "x": 529.859375,
+        "y": 451.796875
+      },
+      "dialog": {
+        "height": 442.78125,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 38.609375
+      },
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-solid-text-prefix-1625\\5164b4d8-935e-47fd-b4f2-16396fa46b56",
+  "passed": true
+}
