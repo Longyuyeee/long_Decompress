@@ -1,0 +1,49 @@
+   Compiling long-compress-assistant v1.6.28 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+   Compiling sevenz-rust v0.6.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\sevenz-rust)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3m 15s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-aab75501bb7f4002.exe)
+
+running 6 tests
+test services::sevenz_password_ppmd_preview_1628_tests::sevenz1628_cancel_source_revision_missing_encrypted_tail_and_fresh_request ... ok
+
+thread 'services::sevenz_password_ppmd_preview_1628_tests::sevenz1628_encrypted_limits_binary_solid_large_and_damage_keep_next_steps' (96828) panicked at src\services\sevenz_password_ppmd_preview_1628_tests.rs:48:376:
+[sevenz-preview:password] 7Z 加密内容未通过读取或校验，请核对密码与分卷来源；必要时重新下载
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::sevenz_password_ppmd_preview_1628_tests::sevenz1628_encrypted_limits_binary_solid_large_and_damage_keep_next_steps ... FAILED
+test services::sevenz_password_ppmd_preview_1628_tests::sevenz1628_complete_crc_mapping_aes_lengths_parameters_and_mid_read_cancel_are_required ... ok
+test services::sevenz_password_ppmd_preview_1628_tests::sevenz1628_vault_selected_only_text_images_and_manual_wrong_never_record_archive_success ... ok
+test services::sevenz_password_ppmd_preview_1628_tests::sevenz1628_original_content_header_orders_every_numeric_member_and_text_encodings ... ok
+test services::sevenz_password_ppmd_preview_1628_tests::sevenz1628_five_original_rasters_and_non_first_encrypted_volume_keep_exact_bytes ... ok
+
+failures:
+
+failures:
+    services::sevenz_password_ppmd_preview_1628_tests::sevenz1628_encrypted_limits_binary_solid_large_and_damage_keep_next_steps
+
+test result: FAILED. 5 passed; 1 failed; 0 ignored; 0 measured; 1163 filtered out; finished in 51.29s
+
+error: test failed, to rerun pass `--lib`

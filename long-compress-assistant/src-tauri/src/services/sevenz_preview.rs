@@ -66,13 +66,13 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     let folder = archive.folders.get(folder_index).context("7Z 所选内容的数据块无法确认，请先提取检查")?;
     let shared = folder.num_unpack_sub_streams != 1 || folder.get_unpack_size()!=entry.size;
     if !shared && !prefix {ensure!(entry.has_crc || folder.has_crc,"7Z 所选内容缺少完整 CRC，暂不提供预览，请先提取检查");}
-    // LZMA/LZMA2 optionally preceded by AES, or bounded plain PPMd.
+    // LZMA/LZMA2 or bounded non-solid PPMd, optionally preceded by AES.
     let methods: Vec<_> = folder.ordered_coder_iter().map(|(_,c)|c.decompression_method_id()).collect();
     use sevenz_rust::SevenZMethod as M;
     let codec = |id:&[u8]| id==M::ID_LZMA || id==M::ID_LZMA2;
-    let ppmd=methods.as_slice()==[M::ID_PPMD];
+    let ppmd=methods.as_slice()==[M::ID_PPMD] || methods.as_slice()==[M::ID_AES256SHA256,M::ID_PPMD];
     if methods.contains(&M::ID_PPMD) {
-        ensure!(ppmd && !shared && !prefix,"7Z PPMd 预览支持未加密非固实的完整小文本和图片；密码、固实或大文本请先提取后打开");
+        ensure!(ppmd && !shared && !prefix,"7Z PPMd 预览支持普通或 AES 密码非固实的完整小文本和图片；固实或大文本请先提取后打开");
     }
     ensure!(methods.len()==folder.coders.len() && (ppmd || methods.len()==1 && codec(methods[0]) || methods.len()==2 && methods[0]==M::ID_AES256SHA256 && codec(methods[1])),"7Z 此压缩方法组合暂不支持内部预览，请先提取后打开");
     for c in &folder.coders {

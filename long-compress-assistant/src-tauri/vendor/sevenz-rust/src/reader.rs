@@ -1468,9 +1468,9 @@ pub struct BlockDecoder<'a, R: Read + Seek> {
 }
 
 impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
-    /// Complete one plain non-solid PPMd7 stream. 7z uses a declared output
-    /// size without an EOS symbol: verify its range-code finish and exact
-    /// compressed coverage instead of reading a spurious additional symbol.
+    /// Complete one non-solid PPMd7 stream, optionally preceded by AES.
+    /// Size-delimited PPMd verifies range finish without an extra symbol;
+    /// AES still requires complete plaintext/ciphertext and valid padding.
     #[cfg(feature="additional-codecs")]
     pub fn read_ppmd_entry(self, selected:usize, max_bytes:usize, mut check:impl FnMut()->Result<(),Error>) -> Result<Vec<u8>,Error> {
         let a=self.archive;let f=a.folders.get(self.folder_index).ok_or_else(||Error::other("Missing PPMd block"))?;
@@ -1478,29 +1478,48 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         if max_bytes==0 || max_bytes>8*1024*1024 || e.size>max_bytes as u64 || !e.has_stream || e.is_directory || e.is_anti_item
             || a.stream_map.file_folder_index.get(selected)!=Some(&Some(self.folder_index))
             || a.files.iter().enumerate().filter(|(i,e)|e.has_stream && a.stream_map.file_folder_index.get(*i)==Some(&Some(self.folder_index))).count()!=1
-            || f.num_unpack_sub_streams!=1 || f.get_unpack_size()!=e.size || f.coders.len()!=1 || f.packed_streams.len()!=1
+            || f.num_unpack_sub_streams!=1 || f.get_unpack_size()!=e.size || !(1..=2).contains(&f.coders.len()) || f.packed_streams.len()!=1
             || (!e.has_crc && !f.has_crc)
         {return Err(Error::unsupported("7Z PPMd 预览仅支持有完整 CRC 的非固实小文本或图片，请先提取后打开"));}
-        let c=&f.coders[0];let p=&c.properties;
-        if c.decompression_method_id()!=SevenZMethod::ID_PPMD || c.num_in_streams!=1 || c.num_out_streams!=1 || p.len()!=5 {
-            return Err(Error::unsupported("7Z PPMd 预览方法或参数无法确认，请先提取后打开"));
-        }
+        let coders:Vec<_>=f.ordered_coder_iter().collect();
+        if coders.len()!=f.coders.len() || f.coders.iter().any(|c|c.num_in_streams!=1 || c.num_out_streams!=1)
+            || !(coders.len()==1 && coders[0].1.decompression_method_id()==SevenZMethod::ID_PPMD
+                || coders.len()==2 && coders[0].1.decompression_method_id()==SevenZMethod::ID_AES256SHA256 && coders[1].1.decompression_method_id()==SevenZMethod::ID_PPMD)
+        {return Err(Error::unsupported("7Z PPMd 预览方法或顺序无法确认，请先提取后打开"));}
+        let encrypted=coders.len()==2;
+        let c=coders.last().unwrap().1;let p=&c.properties;
+        if p.len()!=5 {return Err(Error::unsupported("7Z PPMd 预览参数无法确认，请先提取后打开"));}
         let order=p[0] as u32;let memory=u32::from_le_bytes(p[1..5].try_into().unwrap());
         if !(2..=64).contains(&order) || !(2048..=64*1024*1024).contains(&memory) {return Err(Error::unsupported("7Z PPMd 预览阶数或字典超出范围，请先提取后打开"));}
         crate::preview::coder(c,e.size as usize)?;check()?;
         let index=*a.stream_map.folder_first_pack_stream_index.get(self.folder_index).ok_or_else(||Error::other("Missing PPMd pack mapping"))?;
         let size=*a.pack_sizes.get(index).ok_or_else(||Error::other("Missing PPMd pack size"))?;
         if size>64*1024*1024 {return Err(Error::unsupported("7Z PPMd 预览压缩数据超过 64 MiB，请先提取后打开"));}
+        let plain=if encrypted {f.get_unpack_size_at_index(coders[0].0)} else {size};
+        if plain==0 || plain>64*1024*1024 {return Err(Error::unsupported("7Z PPMd 预览输入长度超出范围，请先提取后打开"));}
+        if encrypted && plain.checked_add(15).map(|n|n/16*16)!=Some(size) {return Err(Error::other("PPMd AES packed size mismatch"));}
         let start=32u64.checked_add(a.pack_pos).and_then(|n|a.stream_map.pack_stream_offsets.get(index).and_then(|o|n.checked_add(*o))).ok_or_else(||Error::other("PPMd pack offset overflow"))?;
         self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
         let mut packed=PreviewPack{source:self.source,start,size,read:0,crc:CRC32.digest()};
-        let mut decoder=ppmd_rust::Ppmd7Decoder::new(&mut packed,order,memory).map_err(|e|Error::other(format!("PPMd decoder: {e}")))?;
+        let mut stream:Box<dyn Read+'_>=if encrypted {
+            #[cfg(feature="aes256")]
+            {crate::preview::coder(coders[0].1,plain as usize)?;Box::new(crate::aes256sha256::PreviewAes::new(&mut packed,&coders[0].1.properties,self.password,plain as usize)?)}
+            #[cfg(not(feature="aes256"))]
+            {return Err(Error::unsupported("AES is unavailable"));}
+        } else {Box::new(&mut packed)};
+        let mut limited=(&mut stream).take(plain);
+        let mut decoder=ppmd_rust::Ppmd7Decoder::new(&mut limited,order,memory).map_err(|e|Error::other(format!("PPMd decoder: {e}")))?;
         let mut bytes=Vec::with_capacity(e.size as usize);let mut buffer=[0;32*1024];
         while bytes.len()<e.size as usize {
             check()?;let capacity=buffer.len().min(e.size as usize-bytes.len());let n=decoder.read(&mut buffer[..capacity]).map_err(Error::io)?;
             if n==0 {return Err(Error::other("PPMd output ended before declared size"));}bytes.extend_from_slice(&buffer[..n]);
         }
         decoder.finish_7z().map_err(Error::io)?;
+        if limited.limit()!=0 {return Err(Error::other("PPMd compressed plaintext was not completely consumed"));}
+        drop(limited);
+        // Check the raw/decrypted EOF, never decode an additional PPMd symbol.
+        let mut extra=[0];if stream.read(&mut extra).map_err(Error::io)?!=0 {return Err(Error::other("PPMd extra plaintext"));}
+        drop(stream);
         if packed.read!=size {return Err(Error::other("PPMd compressed stream was not completely consumed"));}
         let crc=CRC32.checksum(&bytes) as u64;
         if e.has_crc && e.crc!=crc || f.has_crc && f.crc!=crc || a.pack_crcs_defined.contains(index) && a.pack_crcs.get(index).copied()!=Some(packed.crc.finalize() as u64) {return Err(Error::ChecksumVerificationFailed);}
