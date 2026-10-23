@@ -1,0 +1,10 @@
+   Compiling ppmd-rust v1.4.0 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\ppmd-rust)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4.34s
+     Running unittests src\lib.rs (src-tauri\vendor\ppmd-rust\target\debug\deps\ppmd_rust-f73f0cb208cc9a5d.exe)
+
+running 2 tests
+test decoder_7::sevenz1627_tests::sevenz1627_size_delimited_stream_needs_range_finish_not_an_extra_symbol ... ok
+test decoder_7::sevenz1627_tests::sevenz1627_truncated_or_changed_flush_cannot_finish_as_complete ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.01s
+

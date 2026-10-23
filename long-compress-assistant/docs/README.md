@@ -1,8 +1,8 @@
 # 文档导航与维护规则
 
-- **当前版本 v1.6.26**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.26)、[中文说明](RELEASE_NOTES_1.6.26.md)和[密码固实 7Z 大文本记录](SEVENZ_ENCRYPTED_SOLID_TEXT_PREFIX_FREEZE_1.6.26.md)。已完成功能封板，正常受保护 PR/注解标签发布，最终身份与附件状态在本版 PR 接续。
-- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.26.md)已完成；[v1.6.27 PPMd 非固实完整图文预览](ARCHIVE_ROADMAP_1.6.27.md)仅规划、尚未开发，见[开发交接](DEVELOPMENT_HANDOFF.md)。
-- **前版 v1.6.25**：[固实大文本记录](SEVENZ_SOLID_TEXT_PREFIX_FREEZE_1.6.25.md)，PR #286 已合并并推送注解标签，正式附件状态在该 PR 接续。
+- **当前版本 v1.6.27**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.27)、[中文说明](RELEASE_NOTES_1.6.27.md)和[PPMd 图文记录](SEVENZ_PPMD_PREVIEW_FREEZE_1.6.27.md)。已完成功能封板，按正常受保护 PR/注解标签发布，最终身份与附件状态在本版 PR 接续。
+- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.27.md)已完成；[v1.6.28 密码 PPMd 非固实图文预览](ARCHIVE_ROADMAP_1.6.28.md)仅规划、尚未开发，见[开发交接](DEVELOPMENT_HANDOFF.md)。
+- **前版 v1.6.26**：[密码固实大文本记录](SEVENZ_ENCRYPTED_SOLID_TEXT_PREFIX_FREEZE_1.6.26.md)，PR #287 已合并并推送注解标签，正式附件状态在该 PR 接续。
 
 以下为历史阶段记录。
 
