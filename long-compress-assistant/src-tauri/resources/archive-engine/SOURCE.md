@@ -37,3 +37,5 @@ v1.4.12 开发接入 [lzma-rust2 0.22.0](https://github.com/hasenbanck/lzma-rust
 v1.5.38 为现有本地 zip 8.6.0 增加方法14写入，复用其已锁定且启用编码的 lzma-rust2 0.16.2（Apache-2.0），不新增外部引擎或依赖。写入 ZIP 专用属性头、原始 LZMA1 与 EOS，并保留普通、AES、ZipCrypto 和分卷流程。修改文件与原始来源见 `vendor/zip/LONG_COMPATIBILITY_PATCH.md`；既有 lzma-rust2 许可随包保留。独立 Python/liblzma 与 7-Zip 仅用于回解检查。
 
 v1.6.30：本地 sevenz-rust 的完整共享 PPMd 预览接通 AES → PPMd，复用既有完整 PreviewAes、消费回执和大小定义的 finish_7z；同时确认加密长度/填充、共享 CRC/映射和完整结束，只保留所选文件。普通固实/非固实、LZMA/LZMA2、通用解压及默认 codec 保持；PPMd 大文本不提前声明支持。原版 26.02 加密固实样本由包内官方 26.04 独立回解，新增接通检查与实际界面记录见 v1.6.30 封板文档。未增加依赖或第三方许可。
+
+v1.6.31：本地 sevenz-rust 的显式非固实文本前缀路径接通 PPMd7，提前限制阶数/字典，沿既有部分 AES 读取，仅返回所选开头，不把未读尾部、CRC 或 PPMd 结束记为成功。完整目录头的 AES 消费条件、完整小图文、固实前缀方法范围和默认 codec 保持；无新增依赖或许可。原版 26.02 与包内官方 26.04 独立回解、两项接通及后端/实际窗口记录见 v1.6.31 封板文档。
