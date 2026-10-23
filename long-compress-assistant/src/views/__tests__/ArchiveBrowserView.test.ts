@@ -261,9 +261,30 @@ describe('ArchiveBrowserView', () => {
     const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1617,path:'C:/资料.7z'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
     await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises();expect(w.get('.preview-meta').text()).toContain('完整显示')
     expect(mocks.previewArchiveText.mock.calls.at(-1)![5]).toEqual({previewId:expect.stringMatching(/^7z-text-/),sourceRevision:'7'.repeat(64)})
-    await w.findAll('button').find(b=>b.attributes('aria-label')==='预览说明')!.trigger('mouseenter');await flushPromises();expect(w.text()).toContain('7Z 支持 LZMA / LZMA2 非固实')
+    await w.findAll('button').find(b=>b.attributes('aria-label')==='预览说明')!.trigger('mouseenter');await flushPromises();expect(w.text()).toContain('7Z 支持 LZMA / LZMA2、1 MiB')
     await w.get('.preview-close').trigger('click');await w.get('[data-entry-path="cover.png"]').trigger('dblclick');await flushPromises();expect(mocks.previewArchiveImage).toHaveBeenCalledWith('C:/资料.7z','cover.png','',undefined,undefined,expect.objectContaining({previewId:expect.stringMatching(/^7z-image-/),sourceRevision:'7'.repeat(64)}));w.unmount()
   })
+
+  it('sevenz1619 shared wait becomes complete text in the same pane with contextual help',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'9'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:28,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:28,isDir:false,compressedSize:null}]})
+    let finish!:(v:unknown)=>void;mocks.previewArchiveText.mockReturnValueOnce(new Promise(resolve=>finish=resolve))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1619,path:'C:/solid.7z'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises();await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises()
+    expect(w.get('.preview-stage').text()).toContain('正在读取固实包共享内容');expect(w.text()).not.toContain('压缩包浏览中心')
+    finish({entryPath:'readme.txt',content:'共享块内说明',encoding:'UTF-8',byteSize:28,totalSize:28,truncated:false,lineCount:1});await flushPromises();expect(w.get('.preview-meta').text()).toContain('完整显示')
+    await w.findAll('button').find(b=>b.attributes('aria-label')==='预览说明')!.trigger('mouseenter');await flushPromises();expect(w.text()).toContain('检查整个共享块后显示');expect(w.text()).toContain('加密固实或超限请先提取');w.unmount()
+  })
+  it('sevenz1619 closing a shared read cancels the exact request and discards late success',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'9'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:28,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:28,isDir:false,compressedSize:null}]})
+    let finish!:(v:unknown)=>void;mocks.previewArchiveText.mockReturnValueOnce(new Promise(resolve=>finish=resolve))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1619,path:'C:/solid.7z'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises();await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises();const r=mocks.previewArchiveText.mock.calls.at(-1)![5]
+    await w.get('.preview-close').trigger('click');expect(mocks.cancelArchiveBrowse).toHaveBeenCalledWith(r.previewId);finish({entryPath:'readme.txt',content:'late',encoding:'UTF-8',byteSize:4,totalSize:4,truncated:false,lineCount:1});await flushPromises();expect(w.find('[data-testid="archive-entry-preview"]').exists()).toBe(false);w.unmount()
+  })
+  it('sevenz1619 encrypted solid errors keep extraction available without displaying partial content',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'9'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:28,encrypted:true,entries:[{path:'readme.txt',name:'readme.txt',size:28,isDir:false,compressedSize:null,encrypted:true}]})
+    mocks.previewArchiveText.mockRejectedValueOnce(new Error('7Z 加密固实文本暂不支持预览，请先提取后打开'))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1619,path:'C:/solid.7z'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises();await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises();expect(w.get('.preview-stage').text()).toContain('先提取后打开');expect(w.find('[data-testid="archive-text-preview"]').exists()).toBe(false);w.unmount()
+  })
+
   it('sevenz1617 close cancels the exact request and ignores late text',async()=>{
     mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'7'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:28,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:28,isDir:false,compressedSize:20}]})
     let finish!:(value:unknown)=>void;mocks.previewArchiveText.mockReturnValueOnce(new Promise(resolve=>finish=resolve))

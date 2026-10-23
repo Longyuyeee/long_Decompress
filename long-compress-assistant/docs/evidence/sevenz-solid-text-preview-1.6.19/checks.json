@@ -1,0 +1,31 @@
+{
+  "version": "1.6.19",
+  "applicationSha256": "48ca74d629a14192a26d207dd23725493e7cc1ddaf2391b1756d2e0fe92a5afb",
+  "shellSha256": "dd6ac08f172abfbcf7735bc678b097f260f5e0138f60f6b6fe609bd8db3c5d1b",
+  "builds": {
+    "vueTypesAndVite": true,
+    "shellExtension": true,
+    "nativeDesktopCandidate": true,
+    "eightVersionIdentitiesAndEngineInventory": true
+  },
+  "localCandidate": {
+    "features": [
+      "custom-protocol",
+      "desktop-e2e"
+    ],
+    "VITE_DESKTOP_E2E": "1",
+    "optLevel": 1,
+    "lto": false,
+    "formalReleaseConfigUnchanged": true
+  },
+  "checks": {
+    "rustRelated": 5,
+    "frontendView": 3,
+    "originalGroups": 4,
+    "originalMembers": 8,
+    "independentOfficialReadback": true,
+    "actualDesktopGroups": 4,
+    "viewedScreenshots": 2
+  },
+  "continuity": "All new targeted checks first passed. No old format matrices, installation or real disk-full repetition. Previous v1.6.18 formal Release 39895153265 succeeded with all four assets confirmed."
+}

@@ -176,3 +176,6 @@ mod zip_ppmd_compatibility_tests;
 mod zip_xz_compatibility_tests;
 
 #[cfg(test)] mod zpaq_1564_tests;
+
+#[cfg(test)]
+mod sevenz_solid_text_1619_tests;

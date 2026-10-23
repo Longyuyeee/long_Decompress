@@ -1428,6 +1428,72 @@ pub struct BlockDecoder<'a, R: Read + Seek> {
 }
 
 impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
+    /// Read one file from a complete bounded shared block. Stream and verify
+    /// every dependency, retain only the requested file, and read the codec end.
+    pub fn read_solid_entry(
+        self, selected: usize, max_selected: usize, max_shared: u64,
+        mut check: impl FnMut() -> Result<(), Error>,
+    ) -> Result<Vec<u8>, Error> {
+        let archive = self.archive;
+        let folder = archive.folders.get(self.folder_index)
+            .ok_or_else(|| Error::other("Missing shared block"))?;
+        let files: Vec<_> = archive.files.iter().enumerate().filter(|(i, e)|
+            e.has_stream && archive.stream_map.file_folder_index.get(*i) == Some(&Some(self.folder_index))
+        ).collect();
+        let total = files.iter().try_fold(0u64, |sum, (_, e)| sum.checked_add(e.size))
+            .ok_or_else(|| Error::other("Shared block size overflow"))?;
+        let entry = files.iter().find(|(i, _)| *i == selected)
+            .ok_or_else(|| Error::other("Selected file is outside shared block"))?.1;
+        if files.len() != folder.num_unpack_sub_streams || total != folder.get_unpack_size()
+            || total > max_shared || entry.size > max_selected as u64
+            || files.iter().any(|(_, e)| e.is_directory || e.is_anti_item || (!e.has_crc && !folder.has_crc))
+            || folder.packed_streams.len() != 1
+        { return Err(Error::unsupported("Unconfirmed or oversized shared block")); }
+        let pack_index = *archive.stream_map.folder_first_pack_stream_index.get(self.folder_index)
+            .ok_or_else(|| Error::other("Missing packed stream mapping"))?;
+        let pack_size = *archive.pack_sizes.get(pack_index).ok_or_else(|| Error::other("Missing packed size"))?;
+        if pack_size > max_shared { return Err(Error::unsupported("Packed shared block exceeds limit")); }
+        let start = 32u64.checked_add(archive.pack_pos)
+            .and_then(|v| archive.stream_map.pack_stream_offsets.get(pack_index).and_then(|n| v.checked_add(*n)))
+            .ok_or_else(|| Error::other("Packed stream offset overflow"))?;
+        let mut packed = PreviewPack { source: self.source, start, size: pack_size, read: 0, crc: CRC32.digest() };
+        let mut metadata = archive.clone();
+        metadata.folders[self.folder_index].has_crc = false;
+        let (mut decoder, _) = SevenZReader::build_decode_stack(&mut packed, &metadata, self.folder_index, self.password)?;
+        let mut output = Vec::with_capacity(entry.size as usize);
+        let mut buffer = [0u8; 32 * 1024];
+        let mut block_crc = CRC32.digest();
+        for (i, file) in files {
+            let mut remaining = file.size;
+            let mut file_crc = CRC32.digest();
+            while remaining > 0 {
+                check()?;
+                let capacity = remaining.min(buffer.len() as u64) as usize;
+                let count = decoder.read(&mut buffer[..capacity]).map_err(Error::io)?;
+                if count == 0 { return Err(Error::other("Shared block ended before declared file size")); }
+                let chunk = &buffer[..count];
+                file_crc.update(chunk); block_crc.update(chunk);
+                if i == selected { output.extend_from_slice(chunk); }
+                remaining -= count as u64;
+            }
+            if file.has_crc && file_crc.finalize() as u64 != file.crc {
+                return Err(Error::ChecksumVerificationFailed);
+            }
+        }
+        check()?;
+        if decoder.read(&mut buffer[..1]).map_err(Error::io)? != 0 {
+            return Err(Error::other("Shared block exceeds declared unpacked size"));
+        }
+        drop(decoder);
+        if packed.read != pack_size { return Err(Error::other("Shared packed stream was not completely consumed")); }
+        if (folder.has_crc && block_crc.finalize() as u64 != folder.crc)
+            || (archive.pack_crcs_defined.contains(pack_index) &&
+                archive.pack_crcs.get(pack_index).copied() != Some(packed.crc.finalize() as u64))
+        { return Err(Error::ChecksumVerificationFailed); }
+        check()?;
+        Ok(output)
+    }
+
     /// Complete one non-solid entry without a file-size wrapper masking the
     /// decoder's terminal read. The caller retains only its bounded output.
     pub fn read_single_entry(self, max_bytes: usize) -> Result<Vec<u8>, Error> {
@@ -1526,6 +1592,28 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
             }
         }
         Ok(true)
+    }
+}
+
+// The shared preview stack seeks to its packed stream once, then reads it
+// sequentially. Track compressed coverage and CRC without retaining the block.
+struct PreviewPack<'a, R> {
+    source: &'a mut R, start: u64, size: u64, read: u64,
+    crc: crc::Digest<'static, u32>,
+}
+impl<R: Read> Read for PreviewPack<'_, R> {
+    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+        let capacity = buffer.len().min(self.size.saturating_sub(self.read) as usize);
+        let n = self.source.read(&mut buffer[..capacity])?;
+        self.read += n as u64; self.crc.update(&buffer[..n]); Ok(n)
+    }
+}
+impl<R: Seek> Seek for PreviewPack<'_, R> {
+    fn seek(&mut self, position: SeekFrom) -> std::io::Result<u64> {
+        if self.read != 0 || !matches!(position, SeekFrom::Start(n) if n == self.start) {
+            return Err(std::io::Error::other("Unexpected shared preview seek"));
+        }
+        self.source.seek(position)
     }
 }
 

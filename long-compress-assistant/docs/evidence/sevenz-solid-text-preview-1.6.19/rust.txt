@@ -1,0 +1,38 @@
+   Compiling sevenz-rust v0.6.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\sevenz-rust)
+   Compiling long-compress-assistant v1.6.18 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5m 54s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-1325e61644e762b8.exe)
+
+running 5 tests
+test services::sevenz_solid_text_1619_tests::sevenz1619_cancel_during_buffered_output_stops_without_retaining_other_files ... ok
+test services::sevenz_solid_text_1619_tests::sevenz1619_checks_earlier_later_and_folder_crcs_and_complete_decoder_end ... ok
+test services::sevenz_solid_text_1619_tests::sevenz1619_source_revision_cancellation_and_missing_shared_volume_are_distinct ... ok
+test services::sevenz_solid_text_1619_tests::sevenz1619_shared_limits_encryption_and_images_keep_clear_extraction_next_steps ... ok
+test services::sevenz_solid_text_1619_tests::sevenz1619_original_shared_methods_and_every_numeric_member_show_complete_selected_text ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1117 filtered out; finished in 17.41s
+

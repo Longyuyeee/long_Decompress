@@ -1,0 +1,66 @@
+{
+  "version": "1.6.19",
+  "applicationSha256": "48ca74d629a14192a26d207dd23725493e7cc1ddaf2391b1756d2e0fe92a5afb",
+  "checks": [
+    {
+      "name": "original solid selected text is complete and scrolls inside equal wide and narrow panes",
+      "meta": "UTF-8\n已读 10.9 KB / 10.9 KB\n180 行\n完整显示\n只读",
+      "scroll": true,
+      "sha256": "e89335274be7818c7277b7c6ebe1c00c48f1faf0da61707487a8841f8f978830"
+    },
+    {
+      "name": "LZMA shared text and non-first numeric member work without reading unrelated large blocks",
+      "lzma": true,
+      "nonFirstMember": true,
+      "largeUnrelatedSkipped": true
+    },
+    {
+      "name": "damaged shared ending is not displayed and limits or encryption give extraction next steps",
+      "damaged": "无法预览\n7Z 所选内容未通过完整读取或 CRC 校验，请重新下载或先提取检查：Io(Custom { kind: UnexpectedEof, error: \"failed to fill whole buffer\" }, \"\")",
+      "oversize": "7Z 固实共享内容超过 64 MiB 预览范围，请先提取后打开",
+      "encrypted": "7Z 加密固实文本暂不支持预览，请先提取后打开"
+    },
+    {
+      "name": "changed shared sources and cancelled reads are discarded before fresh complete text",
+      "stale": "IMAGE_READER_CHANGED|来源已变化，请返回刷新来源后重新阅读",
+      "cancelled": "文本预览已取消",
+      "freshBytes": 11160
+    }
+  ],
+  "layouts": [
+    {
+      "name": "solid-text-wide",
+      "dialog": {
+        "height": 531.390625,
+        "width": 832,
+        "x": 134,
+        "y": 59.3046875
+      },
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "solid-text-narrow",
+      "dialog": {
+        "height": 442.78125,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 38.609375
+      },
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-solid-text-1619\\fecf0588-baf8-4491-8dc4-5e515de4d664",
+  "passed": true
+}
