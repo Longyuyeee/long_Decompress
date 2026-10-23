@@ -1,0 +1,39 @@
+   Compiling long-compress-assistant v1.6.34 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+   Compiling sevenz-rust v0.6.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\sevenz-rust)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 40s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-ac37e1609504866a.exe)
+
+running 6 tests
+test services::sevenz_password_deflate_preview_1634_tests::sevenz1634_cancel_source_revision_missing_encrypted_tail_and_fresh_request ... ok
+test services::sevenz_password_deflate_preview_1634_tests::sevenz1634_complete_crc_mapping_aes_lengths_parameters_and_mid_read_cancel_are_required ... ok
+test services::sevenz_password_deflate_preview_1634_tests::sevenz1634_encrypted_limits_binary_solid_large_and_damage_keep_next_steps ... ok
+test services::sevenz_password_deflate_preview_1634_tests::sevenz1634_vault_selected_only_text_images_and_manual_wrong_never_record_archive_success ... ok
+test services::sevenz_password_deflate_preview_1634_tests::sevenz1634_original_content_header_orders_every_numeric_member_and_text_encodings ... ok
+test services::sevenz_password_deflate_preview_1634_tests::sevenz1634_five_original_rasters_and_non_first_encrypted_volume_keep_exact_bytes ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 1199 filtered out; finished in 45.17s
+
