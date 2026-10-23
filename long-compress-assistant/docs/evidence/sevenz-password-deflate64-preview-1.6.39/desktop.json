@@ -1,0 +1,116 @@
+{
+  "version": "1.6.39",
+  "applicationSha256": "ad6d847639de65709728c696b3e3880e7b5fdb8f291d055d3bc3663e07f44e30",
+  "checks": [
+    {
+      "name": "vault encrypted selected Deflate64 text is exact complete scrollable and stays in equal wide panes",
+      "meta": "UTF-8\n已读 220 KB / 220 KB\n3000 行\n完整显示\n只读",
+      "sha256": "df4fb2d2d3a278d68096b625428d035ce0427a76e729304bfbb828105533d614",
+      "scroll": true
+    },
+    {
+      "name": "vault encrypted Deflate64 image pixels render in the original narrow modal",
+      "pixel": [
+        140,
+        20,
+        60,
+        255
+      ],
+      "png": [
+        320,
+        240
+      ]
+    },
+    {
+      "name": "original reader turns zooms skips broken raster locates and extracts only current page",
+      "zoom": true,
+      "skip": true,
+      "locate": true,
+      "currentPageSha256": "6d133ad7dc08719597d3b2b7c528a743c426686268835dd6d035a50e8cef8beb"
+    },
+    {
+      "name": "original content and non-first encrypted volume feed complete text and both image commands while invalid endings have next steps",
+      "contentAndHeaderEncryption": true,
+      "maximum": true,
+      "nonFirstMember": true,
+      "readerCommand": true,
+      "manualNeverFallsBack": true,
+      "errors": {
+        "damaged-data": "[sevenz-preview:password] 7Z 加密内容未通过读取或校验，请核对密码与分卷来源；必要时重新下载",
+        "solid": "7Z Deflate64 当前支持普通/密码非固实完整小图文（文本 ≤1 MiB、图片 ≤8 MiB）；固实或大文件请先提取后打开"
+      }
+    },
+    {
+      "name": "cancelled changed and missing-volume requests cannot replace fresh encrypted Deflate64 content and unrelated large data is skipped",
+      "stale": "IMAGE_READER_CHANGED|来源已变化，请返回刷新来源后重新阅读",
+      "cancelled": "文本预览已取消",
+      "missingTail": "IMAGE_READER_CHANGED|来源已变化，请返回刷新来源后重新阅读",
+      "unrelatedLargeSkipped": true,
+      "fresh": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "text-wide",
+      "closeVisible": true,
+      "dialog": {
+        "height": 531.390625,
+        "width": 832,
+        "x": 134,
+        "y": 59.3046875
+      },
+      "height": 650,
+      "image": null,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "image-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 401.984375,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 59.0078125
+      },
+      "height": 520,
+      "image": {
+        "height": 240,
+        "width": 320
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    },
+    {
+      "name": "reader-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 504,
+        "width": 744,
+        "x": 8,
+        "y": 8
+      },
+      "height": 520,
+      "image": {
+        "height": 64,
+        "width": 96
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-password-deflate64-preview-1639\\03f0aa08-095b-4583-88e9-cc07c0074432",
+  "passed": true
+}

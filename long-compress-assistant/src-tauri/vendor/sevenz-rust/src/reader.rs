@@ -1832,9 +1832,9 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         check()?;Ok(bytes)
     }
 
-    /// Complete ordinary non-solid Deflate64 preview. Never use the declared
-    /// output size as the inflater's finish condition; observe BFINAL/EOB and
-    /// exclude Huffman-prefetched whole bytes when checking packed coverage.
+    /// Complete non-solid Deflate64, optionally preceded by full AES. Observe
+    /// BFINAL/EOB, drain output, exclude Huffman-prefetched whole bytes and
+    /// complete AES EOF/padding; declared output must never stand in for finish.
     #[cfg(feature="additional-codecs")]
     pub fn read_deflate64_entry(self, selected: usize, max_bytes: usize, mut check: impl FnMut() -> Result<(), Error>) -> Result<Vec<u8>, Error> {
         let a=self.archive;
@@ -1843,28 +1843,43 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         let mapped=a.files.iter().enumerate().filter(|(i,e)|e.has_stream && a.stream_map.file_folder_index.get(*i)==Some(&Some(self.folder_index))).count();
         if max_bytes>8*1024*1024 || e.size>max_bytes as u64 || !e.has_stream || e.is_directory || e.is_anti_item
             || a.stream_map.file_folder_index.get(selected)!=Some(&Some(self.folder_index)) || mapped!=1
-            || f.coders.len()!=1 || f.unpack_sizes.len()!=1 || f.total_input_streams!=1 || f.total_output_streams!=1
-            || !f.bind_pairs.is_empty() || f.packed_streams.as_slice()!=[0]
-            || f.coders[0].num_in_streams!=1 || f.coders[0].num_out_streams!=1
-            || f.coders[0].decompression_method_id()!=SevenZMethod::ID_DEFLATE64 || !f.coders[0].properties.is_empty()
+            || !(1..=2).contains(&f.coders.len()) || f.unpack_sizes.len()!=f.coders.len()
+            || f.total_input_streams!=f.coders.len() || f.total_output_streams!=f.coders.len()
+            || f.bind_pairs.len()!=f.coders.len()-1 || f.packed_streams.len()!=1
+            || f.coders.iter().any(|c|c.num_in_streams!=1 || c.num_out_streams!=1)
             || f.num_unpack_sub_streams!=1 || f.get_unpack_size()!=e.size || !(e.has_crc || f.has_crc)
-        {return Err(Error::unsupported("7Z Deflate64 当前仅支持普通非固实完整小图文，请先提取后打开"));}
+        {return Err(Error::unsupported("7Z Deflate64 预览映射或方法无法确认，请先提取后打开"));}
+        let coders:Vec<_>=f.ordered_coder_iter().take(f.coders.len()+1).collect();
+        if coders.len()!=f.coders.len() || !(coders.len()==1 && coders[0].1.decompression_method_id()==SevenZMethod::ID_DEFLATE64
+            || coders.len()==2 && coders[0].1.decompression_method_id()==SevenZMethod::ID_AES256SHA256 && coders[1].1.decompression_method_id()==SevenZMethod::ID_DEFLATE64)
+            || !coders.last().unwrap().1.properties.is_empty()
+        {return Err(Error::unsupported("7Z Deflate64 预览方法或顺序无法确认，请先提取后打开"));}
         let pack=*a.stream_map.folder_first_pack_stream_index.get(self.folder_index).ok_or_else(||Error::other("Missing Deflate64 pack mapping"))?;
         let size=*a.pack_sizes.get(pack).ok_or_else(||Error::other("Missing Deflate64 pack size"))?;
-        if size==0 || size>64*1024*1024 {return Err(Error::unsupported("7Z Deflate64 压缩内容须 ≤64 MiB，请先提取后打开"));}
+        if size>64*1024*1024 {return Err(Error::unsupported("7Z Deflate64 压缩内容超过 64 MiB，请先提取后打开"));}
+        let encrypted=coders.len()==2;
+        let plain=if encrypted {f.get_unpack_size_at_index(coders[0].0)} else {size};
+        if plain==0 || plain>64*1024*1024 {return Err(Error::unsupported("7Z Deflate64 预览输入长度超出范围，请先提取后打开"));}
+        if encrypted && plain.checked_add(15).map(|n|n/16*16)!=Some(size) {return Err(Error::other("Deflate64 AES packed size mismatch"));}
         let start=32u64.checked_add(a.pack_pos).and_then(|n|a.stream_map.pack_stream_offsets.get(pack).and_then(|o|n.checked_add(*o))).ok_or_else(||Error::other("Deflate64 pack offset overflow"))?;
         check()?;self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
         let mut packed=PreviewPack{source:self.source,start,size,read:0,crc:CRC32.digest()};
+        let mut stream:Box<dyn Read+'_>=if encrypted {
+            #[cfg(feature="aes256")]
+            {crate::preview::coder(coders[0].1,plain as usize)?;Box::new(crate::aes256sha256::PreviewAes::new(&mut packed,&coders[0].1.properties,self.password,plain as usize)?)}
+            #[cfg(not(feature="aes256"))]
+            {return Err(Error::unsupported("AES is unavailable"));}
+        } else {Box::new(&mut packed)};
         let mut codec=Box::new(deflate64::InflaterManaged::new());
         let mut input=[0u8;32*1024];let mut output=[0u8;32*1024];let(mut offset,mut end)=(0,0);
-        let mut consumed=0u64;let mut bytes=Vec::with_capacity(e.size as usize);
+        let mut read_plain=0u64;let mut consumed=0u64;let mut bytes=Vec::with_capacity(e.size as usize);
         loop {
             check()?;
             if offset==end {
                 offset=0;end=0;
-                while end<input.len() && packed.read<size {
-                    check()?;let n=packed.read(&mut input[end..]).map_err(Error::io)?;
-                    if n==0 {return Err(Error::other("Deflate64 packed stream ended early"));}end+=n;
+                while end<input.len() && read_plain<plain {
+                    check()?;let capacity=(input.len()-end).min((plain-read_plain) as usize);let n=stream.read(&mut input[end..end+capacity]).map_err(Error::io)?;
+                    if n==0 {return Err(Error::other("Deflate64 packed stream ended early"));}end+=n;read_plain+=n as u64;
                 }
             }
             let result=codec.inflate(&input[offset..end],&mut output);
@@ -1873,10 +1888,14 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
             if bytes.len()+result.bytes_written>e.size as usize {return Err(Error::other("Deflate64 output exceeds declared size"));}
             bytes.extend_from_slice(&output[..result.bytes_written]);
             if codec.finished() {
-                if codec.finished_input_bytes()!=Some(size) || consumed!=size || packed.read!=size || bytes.len() as u64!=e.size {return Err(Error::other("Deflate64 end or compressed coverage mismatch"));}break;
+                if codec.finished_input_bytes()!=Some(plain) || consumed!=plain || read_plain!=plain || bytes.len() as u64!=e.size {return Err(Error::other("Deflate64 end or compressed coverage mismatch"));}break;
             }
             if result.bytes_consumed==0 && result.bytes_written==0 {return Err(Error::other("Deflate64 stream did not finish"));}
         }
+        // A valid raw terminal cannot waive the complete AES EOF/padding receipt.
+        let mut extra=[0];if stream.read(&mut extra).map_err(Error::io)?!=0 {return Err(Error::other("Deflate64 extra plaintext"));}
+        drop(stream);
+        if packed.read!=size {return Err(Error::other("Deflate64 packed stream was not completely consumed"));}
         let crc=CRC32.checksum(&bytes) as u64;
         if e.has_crc && e.crc!=crc || f.has_crc && f.crc!=crc || a.pack_crcs_defined.contains(pack) && a.pack_crcs.get(pack).copied()!=Some(packed.crc.finalize() as u64) {return Err(Error::ChecksumVerificationFailed);}
         check()?;Ok(bytes)

@@ -1,0 +1,82 @@
+{
+  "version": "1.6.39",
+  "applicationSha256": "ad6d847639de65709728c696b3e3880e7b5fdb8f291d055d3bc3663e07f44e30",
+  "shellSha256": "d027102a8462703e4d15e08621b399f9dc5fab44ea3ccc5d8619746df3451277",
+  "backend": {
+    "passed": 6,
+    "failed": 0
+  },
+  "adapter": {
+    "passed": 3,
+    "failed": 0
+  },
+  "desktopGroups": 5,
+  "layouts": [
+    {
+      "name": "text-wide",
+      "closeVisible": true,
+      "dialog": {
+        "height": 531.390625,
+        "width": 832,
+        "x": 134,
+        "y": 59.3046875
+      },
+      "height": 650,
+      "image": null,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "image-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 401.984375,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 59.0078125
+      },
+      "height": 520,
+      "image": {
+        "height": 240,
+        "width": 320
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    },
+    {
+      "name": "reader-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 504,
+        "width": 744,
+        "x": 8,
+        "y": 8
+      },
+      "height": 520,
+      "image": {
+        "height": 64,
+        "width": 96
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "build": {
+    "frontend": "vue-tsc + VITE_DESKTOP_E2E=1 Vite",
+    "native": "custom-protocol,desktop-e2e; opt-level=1; LTO=false",
+    "productionConfigChanged": false
+  },
+  "fixturesManifestSha256": "3f62de34ab3a948833a817ddd69983514dfd8b1966bafbb07a189e376ed2a4a1"
+}
