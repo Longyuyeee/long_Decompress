@@ -1490,6 +1490,11 @@ pub async fn preview_archive_image(
     let _guard = ArchiveBrowseGuard { browse_id };
     if let Some(revision) = source_revision.as_deref() { crate::services::image_reader::check_source(Path::new(&file_path), revision).map_err(|e|format!("{e:#}"))?; }
 
+    if crate::services::archive_browser::detect_format(Path::new(&file_path)).is_ok_and(|f|f==crate::services::archive_format::ArchiveFormat::SevenZip){
+        if zpaq_snapshot.is_some(){return Err("所选快照只适用于 ZPAQ 日志归档".into());}
+        let mut service=CompressionService::new_with_defaults().await;service.cancellation_flag=flag.clone();
+        return service.preview_sevenz_image_with_vault(&file_path,&entry_path,password.as_deref(),source_revision,crate::services::image_reader::Control{flag,..Default::default()}).await.map_err(|e|format!("{e:#}"));
+    }
     if crate::services::archive_browser::detect_format(Path::new(&file_path)).is_ok_and(|f|f==crate::services::archive_format::ArchiveFormat::Egg){
         if zpaq_snapshot.is_some(){return Err("所选快照只适用于 ZPAQ 日志归档".into());}
         let mut service=CompressionService::new_with_defaults().await;service.cancellation_flag=flag.clone();
@@ -1542,6 +1547,11 @@ pub async fn read_archive_image(window:Window,file_path:String,entry_path:String
  let last=std::sync::Mutex::new(("",crate::services::progress_gate::ProgressGate::new()));
  let observer=Arc::new(move|event:crate::services::image_reader::Progress|{let mut last=last.lock().unwrap_or_else(|e|e.into_inner());if last.0!=event.phase||last.1.allow(event.phase=="decoding"){last.0=event.phase;let _=window.emit("image-reader-progress",serde_json::json!({"requestId":request_id,"progress":event}));}});
  let control=crate::services::image_reader::Control{flag:flag.clone(),observer};
+ if crate::services::archive_browser::detect_format(Path::new(&file_path)).is_ok_and(|f|f==crate::services::archive_format::ArchiveFormat::SevenZip){
+  if zpaq_snapshot.is_some(){return Err("所选快照只适用于 ZPAQ 日志归档".into());}
+  let mut service=CompressionService::new_with_defaults().await;service.cancellation_flag=flag;
+  return service.preview_sevenz_image_with_vault(&file_path,&entry_path,password.as_deref(),Some(revision),control).await.map_err(|e|format!("{e:#}"));
+ }
  if crate::services::archive_browser::detect_format(Path::new(&file_path)).is_ok_and(|f|f==crate::services::archive_format::ArchiveFormat::Egg){
         if zpaq_snapshot.is_some(){return Err("所选快照只适用于 ZPAQ 日志归档".into());}
   let mut service=CompressionService::new_with_defaults().await;service.cancellation_flag=flag;

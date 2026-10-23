@@ -1,4 +1,4 @@
-//! Selected non-solid text; metadata and payload share an observable input budget.
+//! Selected non-solid text and images; metadata and payload share an observable input budget.
 use anyhow::{ensure, Context, Result};
 use std::{io::{self, Read, Seek, SeekFrom}, path::Path, sync::{Arc, atomic::{AtomicBool, Ordering}}, time::{Duration, Instant}};
 use super::numeric_volume_reader::ZipInputReader;
@@ -6,11 +6,11 @@ use super::numeric_volume_reader::ZipInputReader;
 const MAX_INPUT: u64 = 64 * 1024 * 1024;
 const MAX_TEXT: u64 = 1024 * 1024;
 
-struct Input<R> { inner: R, read: u64, cancelled: Arc<AtomicBool>, until: Instant }
+struct Input<R> { inner: R, read: u64, cancelled: Arc<AtomicBool>, until: Instant, control: Option<super::image_reader::Control> }
 impl<R> Input<R> {
     fn check(&self) -> io::Result<()> {
-        if self.cancelled.load(Ordering::Acquire) { return Err(io::Error::other("7Z 文本预览已取消")); }
-        if Instant::now() >= self.until { return Err(io::Error::new(io::ErrorKind::TimedOut,"7Z 文本预览超过 30 秒，请先提取后打开")); }
+        if self.cancelled.load(Ordering::Acquire) { return Err(io::Error::other("7Z 预览已取消")); }
+        if Instant::now() >= self.until { return Err(io::Error::new(io::ErrorKind::TimedOut,"7Z 预览超过 30 秒，请先提取后打开")); }
         Ok(())
     }
 }
@@ -19,9 +19,10 @@ impl<R: Read> Read for Input<R> {
         self.check()?;
         if buffer.is_empty() { return Ok(0); }
         let capacity = buffer.len().min(MAX_INPUT.saturating_sub(self.read) as usize);
-        if capacity == 0 { return Err(io::Error::other("7Z 文本预览读取超过 64 MiB，请先提取后打开")); }
+        if capacity == 0 { return Err(io::Error::other("7Z 预览读取超过 64 MiB，请先提取后打开")); }
         let n = self.inner.read(&mut buffer[..capacity])?;
         self.read += n as u64;
+        if let Some(control)=&self.control {control.update("reading",self.read,0);}
         Ok(n)
     }
 }
@@ -32,17 +33,25 @@ impl<R: Seek> Seek for Input<R> {
 fn engine_error(error: sevenz_rust::Error, encrypted: bool) -> anyhow::Error {
     use sevenz_rust::Error as E;
     match error {
-        E::MaybeBadPassword(ref e) if e.raw_os_error().is_some() || e.kind()==io::ErrorKind::TimedOut || e.to_string().contains("预览") => anyhow::anyhow!(error),
+        E::MaybeBadPassword(e) if e.raw_os_error().is_some() || e.kind()==io::ErrorKind::TimedOut || e.to_string().contains("预览") => anyhow::anyhow!(e),
         E::PasswordRequired | E::MaybeBadPassword(_) => anyhow::anyhow!("[sevenz-preview:password] 7Z 所选内容需要正确密码，也可能是加密数据损坏，请核对密码与分卷来源"),
-        E::Io(ref e, _) if e.raw_os_error().is_some() || e.kind()==io::ErrorKind::TimedOut || e.to_string().contains("预览") => anyhow::anyhow!(error),
-        E::UnsupportedCompressionMethod(_) | E::MaxMemLimited { .. } | E::Unsupported(_) => anyhow::anyhow!("7Z 所选文本的方法暂不支持预览，请先提取后打开：{error}"),
-        _ if encrypted => anyhow::anyhow!("[sevenz-preview:password] 7Z 加密文本未通过读取或校验，请核对密码与分卷来源；必要时重新下载"),
-        _ => anyhow::anyhow!("7Z 所选文本未通过完整读取或 CRC 校验，请重新下载或先提取检查：{error}"),
+        E::Io(e, _) if e.raw_os_error().is_some() || e.kind()==io::ErrorKind::TimedOut || e.to_string().contains("预览") => anyhow::anyhow!(e),
+        E::UnsupportedCompressionMethod(_) | E::MaxMemLimited { .. } | E::Unsupported(_) => anyhow::anyhow!("7Z 所选内容的方法暂不支持预览，请先提取后打开：{error}"),
+        _ if encrypted => anyhow::anyhow!("[sevenz-preview:password] 7Z 加密内容未通过读取或校验，请核对密码与分卷来源；必要时重新下载"),
+        _ => anyhow::anyhow!("7Z 所选内容未通过完整读取或 CRC 校验，请重新下载或先提取检查：{error}"),
     }
 }
 
 pub(crate) fn read(path: &Path, selected: &str, password: Option<&str>, cancelled: Arc<AtomicBool>) -> Result<(Vec<u8>, u64)> {
-    let mut input = Input { inner: ZipInputReader::open_seven_zip(path)?, read:0, cancelled, until:Instant::now()+Duration::from_secs(30) };
+    read_selected(path,selected,password,cancelled,MAX_TEXT,None)
+}
+
+pub(crate) fn read_image(path:&Path, selected:&str, password:Option<&str>, control:&super::image_reader::Control) -> Result<Vec<u8>> {
+    Ok(read_selected(path,selected,password,control.flag.clone(),super::archive_preview::MAX_PREVIEW_BYTES,Some(control.clone()))?.0)
+}
+
+fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc<AtomicBool>, max_output:u64, control:Option<super::image_reader::Control>) -> Result<(Vec<u8>,u64)> {
+    let mut input = Input { inner: ZipInputReader::open_seven_zip(path)?, read:0, cancelled, until:Instant::now()+Duration::from_secs(30), control };
     input.check()?;
     let length = input.seek(SeekFrom::End(0))?;
     super::native_extraction::seven_zip::validate_archive_extent(&mut input,length)?;
@@ -51,32 +60,32 @@ pub(crate) fn read(path: &Path, selected: &str, password: Option<&str>, cancelle
     let archive = sevenz_rust::Archive::read(&mut input,length,key.as_slice()).map_err(|e|engine_error(e,!key.is_empty()))?;
     input.check()?;
     let mut matches = archive.files.iter().enumerate().filter(|(_,e)| e.name.replace('\\',"/")==selected);
-    let (index,entry) = matches.next().context("所选 7Z 文本已不存在，请刷新目录")?;
+    let (index,entry) = matches.next().context("所选 7Z 内容已不存在，请刷新目录")?;
     ensure!(matches.next().is_none(),"7Z 中存在同路径条目，不能确定所选文本，请先提取并确认内容");
-    ensure!(!entry.is_directory && !entry.is_anti_item,"请选择普通文本文件");
-    ensure!(entry.size<=MAX_TEXT,"7Z 文本预览支持 1 MiB 以内的完整文件，请先提取后打开");
+    ensure!(!entry.is_directory && !entry.is_anti_item,"请选择普通文件");
+    ensure!(entry.size<=max_output,"7Z 所选文件超过 {} MiB 预览范围，请先提取后打开",max_output/1024/1024);
     if !entry.has_stream {
-        ensure!(entry.size==0,"7Z 文本大小与数据流不一致，请先提取检查");
+        ensure!(entry.size==0,"7Z 所选内容大小与数据流不一致，请先提取检查");
         return Ok((vec![],0));
     }
-    let folder_index = archive.stream_map.file_folder_index.get(index).copied().flatten().context("7Z 所选文本缺少数据流，请先提取检查")?;
+    let folder_index = archive.stream_map.file_folder_index.get(index).copied().flatten().context("7Z 所选内容缺少数据流，请先提取检查")?;
     let folder = &archive.folders[folder_index];
-    ensure!(folder.num_unpack_sub_streams==1 && folder.get_unpack_size()==entry.size,"7Z 固实共享文本暂不支持预览，请先提取后打开");
-    ensure!(entry.has_crc || folder.has_crc,"7Z 所选文本缺少完整 CRC，暂不提供预览，请先提取检查");
+    ensure!(folder.num_unpack_sub_streams==1 && folder.get_unpack_size()==entry.size,"7Z 固实共享内容暂不支持预览，请先提取后打开");
+    ensure!(entry.has_crc || folder.has_crc,"7Z 所选内容缺少完整 CRC，暂不提供预览，请先提取检查");
     // Only LZMA/LZMA2, optionally preceded by AES. No filters or unrelated blocks.
     let methods: Vec<_> = folder.ordered_coder_iter().map(|(_,c)|c.decompression_method_id()).collect();
     use sevenz_rust::SevenZMethod as M;
     let codec = |id:&[u8]| id==M::ID_LZMA || id==M::ID_LZMA2;
-    ensure!(methods.len()==folder.coders.len() && (methods.len()==1 && codec(methods[0]) || methods.len()==2 && methods[0]==M::ID_AES256SHA256 && codec(methods[1])),"7Z 此压缩方法组合暂不支持文本预览，请先提取后打开");
+    ensure!(methods.len()==folder.coders.len() && (methods.len()==1 && codec(methods[0]) || methods.len()==2 && methods[0]==M::ID_AES256SHA256 && codec(methods[1])),"7Z 此压缩方法组合暂不支持内部预览，请先提取后打开");
     for c in &folder.coders {
         // Bound dictionaries before constructing the existing decoder.
-        if c.decompression_method_id()==M::ID_LZMA { ensure!(c.properties.len()==5 && u32::from_le_bytes(c.properties[1..5].try_into().unwrap())<=64*1024*1024,"7Z 文本字典超过预览范围，请先提取后打开"); }
-        if c.decompression_method_id()==M::ID_LZMA2 { ensure!(c.properties.len()==1 && c.properties[0]<=28,"7Z 文本字典超过预览范围，请先提取后打开"); }
+        if c.decompression_method_id()==M::ID_LZMA { ensure!(c.properties.len()==5 && u32::from_le_bytes(c.properties[1..5].try_into().unwrap())<=64*1024*1024,"7Z 预览字典超过预览范围，请先提取后打开"); }
+        if c.decompression_method_id()==M::ID_LZMA2 { ensure!(c.properties.len()==1 && c.properties[0]<=28,"7Z 预览字典超过预览范围，请先提取后打开"); }
     }
     let encrypted = methods.contains(&M::ID_AES256SHA256);
     let decoder = sevenz_rust::BlockDecoder::new(folder_index,&archive,key.as_slice(),&mut input);
-    ensure!(decoder.entries().len()==1 && decoder.entries()[0].name==entry.name,"7Z 所选文本的数据映射无法确认，请先提取后打开");
-    let bytes = decoder.read_single_entry(MAX_TEXT as usize).map_err(|e|engine_error(e,encrypted))?;
+    ensure!(decoder.entries().len()==1 && decoder.entries()[0].name==entry.name,"7Z 所选内容的数据映射无法确认，请先提取后打开");
+    let bytes = decoder.read_single_entry(max_output as usize).map_err(|e|engine_error(e,encrypted))?;
     input.check()?;
     Ok((bytes,entry.size))
 }
@@ -142,7 +151,7 @@ mod tests {
         std::fs::remove_file(members.last().unwrap()).unwrap();
         let error=preview::preview_archive_text_controlled_at(p,SELECTED,Some(KEY),None,None,Arc::new(AtomicBool::new(false)),Some(rev)).await.unwrap_err();assert!(format!("{error:#}").contains("IMAGE_READER_CHANGED"));
         assert!(preview::preview_archive_text(p,SELECTED,Some(KEY)).await.is_err());
-        let mut input=Input{inner:io::Cursor::new(vec![0;4]),read:MAX_INPUT-1,cancelled:Arc::new(AtomicBool::new(false)),until:Instant::now()+Duration::from_secs(30)};
+        let mut input=Input{inner:io::Cursor::new(vec![0;4]),read:MAX_INPUT-1,cancelled:Arc::new(AtomicBool::new(false)),until:Instant::now()+Duration::from_secs(30),control:None};
         let mut b=[0;2];assert_eq!(input.read(&mut b).unwrap(),1);input.seek(SeekFrom::Start(0)).unwrap();assert!(input.read(&mut b).unwrap_err().to_string().contains("64 MiB"));
         input.until=Instant::now()-Duration::from_secs(1);assert!(input.seek(SeekFrom::Start(0)).unwrap_err().to_string().contains("30 秒"));
     }

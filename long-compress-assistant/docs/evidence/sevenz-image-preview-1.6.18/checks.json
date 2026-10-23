@@ -1,0 +1,33 @@
+{
+  "version": "1.6.18",
+  "applicationSha256": "7203742445e4ae2fa98a911060f3da3c2bb9ad1f6fa098c6ae7d23622c6088b8",
+  "shellSha256": "273c4f15e105d22ce27c1c8339b1a7e0d8d990be73987c6cbc649c8c82e22b89",
+  "builds": {
+    "vueTypesAndVite": true,
+    "shellExtension": true,
+    "nativeDesktopCandidate": true,
+    "eightVersionIdentitiesAndEngineInventory": true
+  },
+  "localCandidate": {
+    "features": [
+      "custom-protocol",
+      "desktop-e2e"
+    ],
+    "VITE_DESKTOP_E2E": "1",
+    "optLevel": 1,
+    "lto": false,
+    "formalReleaseConfigUnchanged": true
+  },
+  "checks": {
+    "rustRelated": 5,
+    "frontendView": 4,
+    "capabilityPolicy": 1,
+    "originalGroups": 5,
+    "originalMembers": 10,
+    "rasterTypes": 5,
+    "independentOfficialReadback": true,
+    "actualDesktopGroups": 5,
+    "viewedScreenshots": 3
+  },
+  "continuity": "First two desktop groups retained. Window became minimized; driver restored the window and ran only the remaining three groups using the same candidate SHA. Functional checks first passed; no old matrices, installation or real disk-full repetition."
+}

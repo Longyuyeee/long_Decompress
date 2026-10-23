@@ -56,7 +56,7 @@ const reason=(entry?:ReaderImage)=>!props.revision?'来源清单需要刷新，�
 async function load(){
  if(!ready.value)return;pageInput.value=Math.max(1,index.value+1)
  const next=images.value[index.value+1]
- await reader.show(path.value,!sharedEgg.value&&next&&!reason(next)?next.path:undefined,reason(entry.value))
+ await reader.show(path.value,!sharedEgg.value&&props.format.toUpperCase()!=='7Z'&&next&&!reason(next)?next.path:undefined,reason(entry.value))
  await nextTick();if(stage.value){stage.value.scrollTop=0;stage.value.scrollLeft=0}
 }
 watch(path,()=>void load())

@@ -11,6 +11,7 @@ pub mod archive_diagnostics;
 pub mod rar_recovery;
 pub mod archive_preview;
 pub(crate) mod sevenz_preview;
+#[cfg(test)] mod sevenz_image_1618_tests;
 pub mod archive_entry_open;
 pub mod universal_engine;
 pub mod compression_service;
