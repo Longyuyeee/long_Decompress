@@ -1,0 +1,90 @@
+{
+  "version": "1.6.33",
+  "applicationSha256": "3027e2f5b55fe6fe126ff0aca747019faa6c680ba901fa26d28cdc9323341196",
+  "shellSha256": "58eaabaf2dda0efec889dfc6f7156ce67aa80cbbcecd063d8985671e4232d66e",
+  "backend": {
+    "passed": 6,
+    "failed": 0,
+    "receipt": {
+      "initialPassed": 5,
+      "initialFailed": 1,
+      "reason": "Fixture lookup retained old ppmd case name before image decoding",
+      "retryPassed": 1,
+      "retryFailed": 0,
+      "unaffectedPassedTestsRerun": false
+    }
+  },
+  "adapter": {
+    "passed": 2,
+    "failed": 0
+  },
+  "desktopGroups": 5,
+  "layouts": [
+    {
+      "name": "text-wide",
+      "closeVisible": true,
+      "dialog": {
+        "height": 531.390625,
+        "width": 832,
+        "x": 134,
+        "y": 59.3046875
+      },
+      "height": 650,
+      "image": null,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "image-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 401.984375,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 59.0078125
+      },
+      "height": 520,
+      "image": {
+        "height": 240,
+        "width": 320
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    },
+    {
+      "name": "reader-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 504,
+        "width": 744,
+        "x": 8,
+        "y": 8
+      },
+      "height": 520,
+      "image": {
+        "height": 64,
+        "width": 96
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "build": {
+    "frontend": "vue-tsc + VITE_DESKTOP_E2E=1 Vite",
+    "native": "custom-protocol,desktop-e2e; opt-level=1; LTO=false",
+    "productionConfigChanged": false
+  },
+  "fixturesManifestSha256": "1dd069ab8a4453f814a5967367bb3f7cb2ef40b7f22b14d362cc252007b089ad"
+}

@@ -217,3 +217,5 @@ mod sevenz_password_solid_ppmd_preview_1630_tests;
 mod sevenz_ppmd_text_prefix_1631_tests;
 
 #[cfg(test)] mod sevenz_solid_ppmd_text_prefix_1632_tests;
+
+#[cfg(test)] mod sevenz_deflate_preview_1633_tests;
