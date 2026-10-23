@@ -36,3 +36,9 @@ Empty caller buffers still return zero without consuming data. Regression tests
 in reader::long_crc_tests fail before this fix and pass afterwards. Run with
 `cargo test --manifest-path src-tauri/vendor/sevenz-rust/Cargo.toml --lib long_crc_tests`.
 Keep the real desktop mixed-volume failure assertions unchanged.
+
+2026-10-23: BlockDecoder::read_single_entry provides bounded complete non-solid
+text for v1.6.17. It uses the existing decoder stack without an outer size/CRC
+wrapper masking the terminal read, then checks exact size and both entry/folder
+CRCs. No codec, writer, default, or general extraction behavior is changed.
+The application limits methods, dictionaries, input reads, time and source scope.

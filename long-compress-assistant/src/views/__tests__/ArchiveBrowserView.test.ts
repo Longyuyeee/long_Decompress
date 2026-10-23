@@ -43,7 +43,7 @@ vi.mock('@/composables/useArchiveEngine', () => ({
       browseExtensions: ['zip', '7z', 'rar', 'tar', 'zst'],
       nestedExtensions: ['zip', '7z', 'rar', 'tar', 'zst'],
       boundedPreviewFormats: ['ZIP', 'TAR', 'ZPAQ', 'ALZ', 'EGG'],
-      boundedTextPreviewFormats: ['ZIP', 'TAR', 'ZPAQ', 'ALZ', 'EGG'],
+      boundedTextPreviewFormats: ['ZIP', 'TAR', 'ZPAQ', 'ALZ', 'EGG', '7Z'],
       imagePreviewExtensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'],
       textPreviewExtensions: ['txt', 'md', 'log'],
       message: 'ready',
@@ -230,6 +230,28 @@ describe('ArchiveBrowserView', () => {
       entryPath: 'nested.7z', cachePath: 'C:/cache/nested.7z',
       parentSha256: 'parent-hash', contentSha256: 'child-hash', depth: 2,
     })
+  })
+
+  it('sevenz1617 text opens in the original modal with complete status while images remain extraction only',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'7'.repeat(64),totalFiles:2,totalDirectories:0,totalUncompressedSize:100,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:28,isDir:false,compressedSize:20},{path:'cover.png',name:'cover.png',size:72,isDir:false,compressedSize:50}]})
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1617,path:'C:/资料.7z'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
+    await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises();expect(w.get('.preview-meta').text()).toContain('完整显示')
+    expect(mocks.previewArchiveText.mock.calls.at(-1)![5]).toEqual({previewId:expect.stringMatching(/^7z-text-/),sourceRevision:'7'.repeat(64)})
+    await w.findAll('button').find(b=>b.attributes('aria-label')==='预览说明')!.trigger('mouseenter');await flushPromises();expect(w.text()).toContain('7Z 支持 LZMA / LZMA2 非固实')
+    await w.get('.preview-close').trigger('click');await w.get('[data-entry-path="cover.png"]').trigger('dblclick');await flushPromises();expect(mocks.previewArchiveImage).not.toHaveBeenCalled();w.unmount()
+  })
+  it('sevenz1617 close cancels the exact request and ignores late text',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'7'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:28,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:28,isDir:false,compressedSize:20}]})
+    let finish!:(value:unknown)=>void;mocks.previewArchiveText.mockReturnValueOnce(new Promise(resolve=>finish=resolve))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1617,path:'C:/资料.7z'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises();await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises()
+    const request=mocks.previewArchiveText.mock.calls.at(-1)![5];await w.get('.preview-close').trigger('click');expect(mocks.cancelArchiveBrowse).toHaveBeenCalledWith(request.previewId)
+    finish({entryPath:'readme.txt',content:'late',encoding:'UTF-8',byteSize:4,totalSize:4,truncated:false,lineCount:1});await flushPromises();expect(w.find('[data-testid="archive-entry-preview"]').exists()).toBe(false);w.unmount()
+  })
+  it('sevenz1617 encrypted failures explain the next action without internal tags',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'7'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:28,encrypted:true,entries:[{path:'readme.txt',name:'readme.txt',size:28,isDir:false,compressedSize:20,encrypted:true}]})
+    mocks.previewArchiveText.mockRejectedValueOnce('[sevenz-preview:password] 7Z 加密文本未通过读取或校验，请核对密码与分卷来源；必要时重新下载')
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1617,path:'C:/资料.7z'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises();await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises()
+    expect(w.get('.preview-stage').text()).toContain('核对密码与分卷来源');expect(w.get('.preview-stage').text()).not.toContain('sevenz-preview');w.unmount()
   })
 
   it('egg1616 large text labels partial content and explains unverified file integrity in the original modal',async()=>{

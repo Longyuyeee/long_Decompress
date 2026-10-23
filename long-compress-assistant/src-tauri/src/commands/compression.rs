@@ -1489,6 +1489,7 @@ pub async fn preview_archive_image(
     }
     let _guard = ArchiveBrowseGuard { browse_id };
     if let Some(revision) = source_revision.as_deref() { crate::services::image_reader::check_source(Path::new(&file_path), revision).map_err(|e|format!("{e:#}"))?; }
+
     if crate::services::archive_browser::detect_format(Path::new(&file_path)).is_ok_and(|f|f==crate::services::archive_format::ArchiveFormat::Egg){
         if zpaq_snapshot.is_some(){return Err("所选快照只适用于 ZPAQ 日志归档".into());}
         let mut service=CompressionService::new_with_defaults().await;service.cancellation_flag=flag.clone();
@@ -1653,6 +1654,11 @@ pub async fn preview_archive_text(
     // A supplied password/vault candidate must not verify an unrelated large file.
     // Check the browsed source before format detection can fail on its changed tail.
     if let Some(revision) = source_revision.as_deref() { crate::services::image_reader::check_source(Path::new(&file_path), revision).map_err(|e|format!("{e:#}"))?; }
+    if crate::services::archive_browser::detect_format(Path::new(&file_path)).is_ok_and(|f| f==crate::services::archive_format::ArchiveFormat::SevenZip) {
+        if zpaq_snapshot.is_some(){return Err("所选快照只适用于 ZPAQ 日志归档".into());}
+        let mut service=CompressionService::new_with_defaults().await;service.cancellation_flag=cancelled;
+        return service.preview_sevenz_text_with_vault(&file_path,&entry_path,password.as_deref(),source_revision).await.map_err(|e|format!("{e:#}"));
+    }
     if crate::services::archive_browser::detect_format(Path::new(&file_path)).is_ok_and(|format|format==crate::services::archive_format::ArchiveFormat::Egg){
         if zpaq_snapshot.is_some(){return Err("所选快照只适用于 ZPAQ 日志归档".into());}
         let mut service=CompressionService::new_with_defaults().await;service.cancellation_flag=cancelled;

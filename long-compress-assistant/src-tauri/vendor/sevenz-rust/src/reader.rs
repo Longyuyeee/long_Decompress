@@ -1428,6 +1428,30 @@ pub struct BlockDecoder<'a, R: Read + Seek> {
 }
 
 impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
+    /// Complete one non-solid entry without a file-size wrapper masking the
+    /// decoder's terminal read. The caller retains only its bounded output.
+    pub fn read_single_entry(self, max_bytes: usize) -> Result<Vec<u8>, Error> {
+        if self.entry_count() != 1 { return Err(Error::unsupported("Shared block requires extraction")); }
+        let entry = self.entries()[0].clone();
+        let folder = &self.archive.folders[self.folder_index];
+        if entry.size > max_bytes as u64 || folder.get_unpack_size() != entry.size {
+            return Err(Error::unsupported("Selected text exceeds output limit"));
+        }
+        // CRC wrappers stop at the declared size. Read the underlying codec to
+        // its own end, then verify both declared sizes and CRCs ourselves.
+        let mut metadata = self.archive.clone();
+        metadata.folders[self.folder_index].has_crc = false;
+        let (decoder, _) = SevenZReader::build_decode_stack(self.source, &metadata, self.folder_index, self.password)?;
+        let mut bytes = Vec::with_capacity(entry.size as usize);
+        decoder.take(max_bytes as u64 + 1).read_to_end(&mut bytes).map_err(Error::io)?;
+        if bytes.len() as u64 != entry.size { return Err(Error::other("Selected text size mismatch")); }
+        let crc = CRC32.checksum(&bytes) as u64;
+        if (entry.has_crc && crc != entry.crc) || (folder.has_crc && crc != folder.crc) {
+            return Err(Error::ChecksumVerificationFailed);
+        }
+        Ok(bytes)
+    }
+
     pub fn new(
         folder_index: usize,
         archive: &'a Archive,

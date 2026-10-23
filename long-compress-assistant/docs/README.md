@@ -1,7 +1,7 @@
 # 文档导航与维护规则
 
-- **当前版本 v1.6.16**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.16)、[中文说明](RELEASE_NOTES_1.6.16.md)和[大文本前缀记录](EGG_TEXT_PREFIX_FREEZE_1.6.16.md)。正式附件按正常受保护 PR/标签流水线生成，发布身份在本版 PR 接续。
-- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.16.md)已完成；下一阶段 [v1.6.17 7Z 非固实小文本](ARCHIVE_ROADMAP_1.6.17.md)仅规划、未开发，见[开发交接](DEVELOPMENT_HANDOFF.md)。
+- **当前版本 v1.6.17**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.17)、[中文说明](RELEASE_NOTES_1.6.17.md)和[7Z 小文本记录](SEVENZ_TEXT_PREVIEW_FREEZE_1.6.17.md)。正式附件按正常受保护 PR/标签流水线生成，发布身份在本版 PR 接续。
+- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.17.md)已完成封板；下一阶段 [v1.6.18 7Z 非固实图片](ARCHIVE_ROADMAP_1.6.18.md)仅规划、未开发，见[开发交接](DEVELOPMENT_HANDOFF.md)。
 - **前版 v1.6.15**：[固实图片记录](EGG_SOLID_IMAGE_PREVIEW_FREEZE_1.6.15.md)；封板时正式运行 39856465556 仍在打包，附件未确认，同树 master CI 已确认取消。最新状态在发布回执接续。
 
 以下为历史阶段记录。

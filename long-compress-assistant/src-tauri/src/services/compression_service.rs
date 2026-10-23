@@ -1529,6 +1529,33 @@ impl CompressionService {
         }
     }
 
+    /// Do not run whole-archive password verification for a selected 7Z text.
+    pub(crate) async fn preview_sevenz_text_with_vault(&self, file_path:&str, entry:&str, password:Option<&str>, revision:Option<String>) -> Result<crate::services::archive_preview::ArchiveTextPreview> {
+        let work=async {
+            let supplied=password.filter(|p|!p.is_empty());
+            let mut candidates=std::collections::VecDeque::from([supplied.map(str::to_string)]);
+            let mut vault_loaded=false;
+            while let Some(key)=candidates.pop_front() {
+                self.check_cancellation()?;
+                match crate::services::archive_preview::preview_archive_text_controlled_at(Path::new(file_path),entry,key.as_deref(),None,None,self.cancellation_flag.clone(),revision.clone()).await {
+                    Ok(value)=>return Ok(value),
+                    Err(error) if supplied.is_none() && format!("{error:#}").contains("[sevenz-preview:password]") => {
+                        if !vault_loaded {
+                            candidates.extend(self.password_book_candidates().await.unwrap_or_default().into_iter().map(|(_,_,key)|Some(key)));
+                            vault_loaded=true;
+                        }
+                    }
+                    Err(error)=>return Err(error),
+                }
+            }
+            anyhow::bail!("7Z 密码保险箱未能读取所选文本，请填写密码并核对完整分卷来源，或先提取后打开")
+        };
+        match tokio::time::timeout(std::time::Duration::from_secs(30),work).await {
+            Ok(value)=>value,
+            Err(_)=>{self.cancellation_flag.store(true,Ordering::Release);anyhow::bail!("7Z 文本预览超过 30 秒，已停止，请先提取后打开")}
+        }
+    }
+
     /// A password candidate is checked only against the bounded selected text.
     pub(crate) async fn preview_egg_text_with_vault(&self,file_path:&str,entry:&str,password:Option<&str>,encoding:Option<ZipPasswordEncoding>,revision:Option<String>)->Result<crate::services::archive_preview::ArchiveTextPreview>{
         let work=async{

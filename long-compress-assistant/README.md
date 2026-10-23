@@ -96,7 +96,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.6.16 · EGG 大文本前缀预览**。原双栏可直接阅读非固实大日志开头，最多前 1 MiB，明确“部分内容 · 未校验整文件”，保留字符边界；密码/原生卷、取消和来源刷新沿旧入口使用，完整操作保持原校验条件。[中文说明](docs/RELEASE_NOTES_1.6.16.md) · [范围与记录](docs/EGG_TEXT_PREFIX_FREEZE_1.6.16.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.16)。下一阶段 [7Z 非固实小文本](docs/ARCHIVE_ROADMAP_1.6.17.md)仅规划。
+**v1.6.17 · 7Z 小文本原位预览**。在原双栏直接阅读 LZMA/LZMA2 非固实完整小文本，接通密码、保险箱与文件名加密数字卷，完整大小/CRC/解码结束后显示；保留取消、来源刷新与明确提取指引。[中文说明](docs/RELEASE_NOTES_1.6.17.md) · [范围与记录](docs/SEVENZ_TEXT_PREVIEW_FREEZE_1.6.17.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.17)。下一阶段 [7Z 图片与原阅读器](docs/ARCHIVE_ROADMAP_1.6.18.md)仅规划。
+
+**v1.6.16 · EGG 大文本前缀预览**。原双栏可直接阅读非固实大日志开头，最多前 1 MiB，明确“部分内容 · 未校验整文件”，保留字符边界；密码/原生卷、取消和来源刷新沿旧入口使用，完整操作保持原校验条件。[中文说明](docs/RELEASE_NOTES_1.6.16.md) · [范围与记录](docs/EGG_TEXT_PREFIX_FREEZE_1.6.16.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.16)。7Z 非固实小文本已由上方 v1.6.17 接续。
 
 **v1.6.15 · EGG 固实图片与连续阅读**。在原双栏查看小型未加密 Deflate / LZMA 固实图片，沿原阅读器翻页、缩放、跳过和准确提取当前页；完整共享依赖检查后显示，按需读取、明确等待，保留有限缓存与取消/来源刷新。[中文说明](docs/RELEASE_NOTES_1.6.15.md) · [范围与记录](docs/EGG_SOLID_IMAGE_PREVIEW_FREEZE_1.6.15.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.15)。EGG 非固实大文本前缀已由上方 v1.6.16 接续。
 

@@ -623,9 +623,10 @@ fn preview_archive_text_sync(
     }
     let entry_path = normalized_entry_path(entry_path)?;
     let format = match super::archive_browser::detect_format(archive_path)? {
-        ArchiveFormat::Alz=>"ALZ",ArchiveFormat::Egg=>"EGG",_=>preview_format(archive_path)?
+        ArchiveFormat::Alz=>"ALZ",ArchiveFormat::Egg=>"EGG",ArchiveFormat::SevenZip=>"7Z",_=>preview_format(archive_path)?
     };
     let mut text_bytes = match format {
+        "7Z" => { let (bytes,total_size)=super::sevenz_preview::read(archive_path,&entry_path,password,cancelled)?; TextBytes{bytes,total_size} },
         "EGG"=>{
             let (bytes,total_size)=tauri::async_runtime::block_on(super::egg_engine::preview_text_entry(archive_path,&entry_path,password,password_encoding,cancelled))?;
             TextBytes{bytes,total_size}
@@ -662,6 +663,7 @@ fn preview_archive_text_sync(
     }
     let (content, encoding, consumed) = decode_text_prefix(&text_bytes.bytes)?;
     anyhow::ensure!(format!="EGG"||text_bytes.total_size>text_bytes.bytes.len() as u64||consumed==text_bytes.bytes.len(),"EGG 文本编码末尾不完整，请先提取后打开");
+    anyhow::ensure!(format!="7Z" || consumed==text_bytes.bytes.len(),"7Z 文本编码末尾不完整，请先提取后打开");
     let truncated = text_bytes.total_size > consumed as u64;
     let line_count = if content.is_empty() {
         0
@@ -716,7 +718,7 @@ pub async fn preview_archive_text_controlled_at(
         anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Acquire), "文本预览已取消");
         if let Some(revision) = expected_revision.as_deref() { super::image_reader::check_source(&archive_path, revision)?; }
         let source = super::split_archive_detector::SplitArchiveDetector::complete_source(&archive_path)?;
-        let revision = if matches!(super::archive_browser::detect_format(&source)?,ArchiveFormat::Alz|ArchiveFormat::Egg) {
+        let revision = if matches!(super::archive_browser::detect_format(&source)?,ArchiveFormat::Alz|ArchiveFormat::Egg|ArchiveFormat::SevenZip) {
             let revision = match expected_revision { Some(value) => value, None => super::image_reader::revision(&source)? };
             super::image_reader::check_source(&source, &revision)?;
             Some(revision)
@@ -997,17 +999,16 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn refuses_text_routes_without_a_provable_bounded_reader() {
+    async fn sevenz1617_accepts_the_now_bounded_native_text_route() {
         let temp = tempfile::tempdir().unwrap();
         let archive = temp.path().join("text.7z");
         let source = temp.path().join("readme.txt");
         std::fs::write(&source, b"bounded route required").unwrap();
         sevenz_rust::compress_to_path(&source, &archive).unwrap();
 
-        let error = preview_archive_text(&archive, "readme.txt", None)
-            .await
-            .unwrap_err();
-        assert!(error.to_string().contains("ZIP and TAR-family"));
+        let value = preview_archive_text(&archive, "readme.txt", None).await.unwrap();
+        assert_eq!(value.content,"bounded route required");
+        assert!(!value.truncated);
     }
 }
 
