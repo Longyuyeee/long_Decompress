@@ -1,0 +1,38 @@
+   Compiling long-compress-assistant v1.6.18 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3m 26s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-1325e61644e762b8.exe)
+
+running 5 tests
+test services::archive_preview::tests::sevenz1618_accepts_the_now_bounded_native_image_route ... ok
+test services::sevenz_image_1618_tests::sevenz1618_cancel_source_mutation_and_missing_member_cannot_publish_an_image ... ok
+test services::sevenz_image_1618_tests::sevenz1618_limits_end_marker_and_shared_streams_do_not_change_text_limits ... ok
+test services::sevenz_image_1618_tests::sevenz1618_original_lzma_lzma2_images_have_exact_complete_bytes ... ok
+test services::sevenz_image_1618_tests::sevenz1618_selected_vault_header_volumes_and_progress_are_connected has been running for over 60 seconds
+test services::sevenz_image_1618_tests::sevenz1618_selected_vault_header_volumes_and_progress_are_connected ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1112 filtered out; finished in 61.45s
+

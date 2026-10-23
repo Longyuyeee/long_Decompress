@@ -1,3 +1,4 @@
+import { runSevenzImage1618Gate } from './sevenz-image-1618-gate.mjs'
 import { runSevenzText1617Gate } from './sevenz-text-1617-gate.mjs'
 import assert from 'node:assert/strict'
 import { spawn, spawnSync } from 'node:child_process'
@@ -5030,6 +5031,9 @@ try {
     completedSuccessfully = true
   } else if ((process.argv.includes('--compact-modules-only') || process.argv.includes('--compact-modules-layout-only'))) {
     await runCompactModulesUiGate({driver,bridge:callDesktopBridge,application,root,dataDirectory:e2eDataDirectory})
+    completedSuccessfully = true
+  } else if (process.argv.includes('--sevenz-image-1618-only')) {
+    await runSevenzImage1618Gate({driver,bridge:callDesktopBridge,root,application})
     completedSuccessfully = true
   } else if (process.argv.includes('--sevenz-text-1617-only')) {
     await runSevenzText1617Gate({driver,bridge:callDesktopBridge,root,application})

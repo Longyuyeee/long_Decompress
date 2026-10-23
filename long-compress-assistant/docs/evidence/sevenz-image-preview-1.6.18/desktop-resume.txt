@@ -1,0 +1,6 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[sevenz-image-1618] current page extraction keeps the exact selected 7Z path and content
+[sevenz-image-1618] vault contents and non-first header-encrypted volume feed both preview and reader commands
+[sevenz-image-1618] limits solid sharing cancellation and source changes have distinct next steps

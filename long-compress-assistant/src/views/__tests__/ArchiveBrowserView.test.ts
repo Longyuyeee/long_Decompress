@@ -42,7 +42,7 @@ vi.mock('@/composables/useArchiveEngine', () => ({
       formats: [],
       browseExtensions: ['zip', '7z', 'rar', 'tar', 'zst'],
       nestedExtensions: ['zip', '7z', 'rar', 'tar', 'zst'],
-      boundedPreviewFormats: ['ZIP', 'TAR', 'ZPAQ', 'ALZ', 'EGG'],
+      boundedPreviewFormats: ['ZIP', 'TAR', 'ZPAQ', 'ALZ', 'EGG', '7Z'],
       boundedTextPreviewFormats: ['ZIP', 'TAR', 'ZPAQ', 'ALZ', 'EGG', '7Z'],
       imagePreviewExtensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp'],
       textPreviewExtensions: ['txt', 'md', 'log'],
@@ -232,13 +232,37 @@ describe('ArchiveBrowserView', () => {
     })
   })
 
-  it('sevenz1617 text opens in the original modal with complete status while images remain extraction only',async()=>{
+  it('sevenz1618 closing an image cancels its exact request and discards late bytes',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'8'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:72,encrypted:false,entries:[{path:'cover.png',name:'cover.png',size:72,isDir:false,compressedSize:50}]})
+    let finish!:(value:unknown)=>void;mocks.previewArchiveImage.mockReturnValueOnce(new Promise(resolve=>finish=resolve))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1618,path:'C:/相册.7z'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises();await w.get('[data-entry-path="cover.png"]').trigger('dblclick');await flushPromises()
+    const request=mocks.previewArchiveImage.mock.calls.at(-1)![5];await w.get('.preview-close').trigger('click');expect(mocks.cancelArchiveBrowse).toHaveBeenCalledWith(request.previewId)
+    finish({entryPath:'cover.png',mimeType:'image/png',dataUrl:'data:image/png;base64,AA==',byteSize:1,width:1,height:1});await flushPromises();expect(w.find('[data-testid="archive-entry-preview"]').exists()).toBe(false);w.unmount()
+  })
+  it('sevenz1618 actual reader loads only the current page and keeps the original close behavior',async()=>{
+    vi.stubGlobal('URL',{createObjectURL:vi.fn(()=> 'blob:sevenz-reader'),revokeObjectURL:vi.fn()})
+    mocks.browseArchive.mockResolvedValueOnce({revision:'8'.repeat(64),format:'7Z',totalFiles:2,totalDirectories:0,totalUncompressedSize:20,encrypted:false,entries:['1.png','2.png'].map(path=>({path,name:path,isDir:false,size:10,compressedSize:8}))})
+    mocks.invoke.mockImplementation(async(command,args)=>command==='read_archive_image'?{entryPath:args.entryPath,dataUrl:'data:image/png;base64,AA==',mimeType:'image/png',byteSize:1,width:1,height:1}:undefined)
+    const w=mount(ArchiveBrowserView,{attachTo:document.body,global:{stubs:{Teleport:true}}})
+    try{
+      await w.get('header .browser-primary').trigger('click');await flushPromises();await w.get('[data-testid="archive-reader-open"]').trigger('click');await flushPromises()
+      expect(w.get('[data-testid="reader-current-path"]').text()).toBe('1.png');expect(mocks.invoke.mock.calls.filter(c=>c[0]==='read_archive_image')).toHaveLength(1)
+      await w.get('[data-testid="reader-next"]').trigger('click');await flushPromises();expect(w.get('[data-testid="reader-current-path"]').text()).toBe('2.png');expect(mocks.invoke.mock.calls.filter(c=>c[0]==='read_archive_image')).toHaveLength(2)
+      await w.get('[data-testid="reader-close"]').trigger('click');expect(w.find('[data-testid="archive-image-reader"]').exists()).toBe(false)
+    }finally{w.unmount();vi.unstubAllGlobals()}
+  })
+  it('sevenz1618 image reader failures keep useful next actions without adapter tags',async()=>{
+    const {readerError}=await import('@/composables/useArchiveImageReader')
+    expect(readerError('[sevenz-preview:password] 7Z 加密内容未通过读取或校验，请核对密码与分卷来源')).toBe('7Z 加密内容未通过读取或校验，请核对密码与分卷来源')
+    expect(readerError('[archive-inspection:incomplete] 7Z 文件或卷组不完整，请补齐分卷')).toBe('7Z 文件或卷组不完整，请补齐分卷')
+  })
+  it('sevenz1618 complete text remains available and images now open in the original modal',async()=>{
     mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'7'.repeat(64),totalFiles:2,totalDirectories:0,totalUncompressedSize:100,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:28,isDir:false,compressedSize:20},{path:'cover.png',name:'cover.png',size:72,isDir:false,compressedSize:50}]})
     const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1617,path:'C:/资料.7z'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
     await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises();expect(w.get('.preview-meta').text()).toContain('完整显示')
     expect(mocks.previewArchiveText.mock.calls.at(-1)![5]).toEqual({previewId:expect.stringMatching(/^7z-text-/),sourceRevision:'7'.repeat(64)})
     await w.findAll('button').find(b=>b.attributes('aria-label')==='预览说明')!.trigger('mouseenter');await flushPromises();expect(w.text()).toContain('7Z 支持 LZMA / LZMA2 非固实')
-    await w.get('.preview-close').trigger('click');await w.get('[data-entry-path="cover.png"]').trigger('dblclick');await flushPromises();expect(mocks.previewArchiveImage).not.toHaveBeenCalled();w.unmount()
+    await w.get('.preview-close').trigger('click');await w.get('[data-entry-path="cover.png"]').trigger('dblclick');await flushPromises();expect(mocks.previewArchiveImage).toHaveBeenCalledWith('C:/资料.7z','cover.png','',undefined,undefined,expect.objectContaining({previewId:expect.stringMatching(/^7z-image-/),sourceRevision:'7'.repeat(64)}));w.unmount()
   })
   it('sevenz1617 close cancels the exact request and ignores late text',async()=>{
     mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'7'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:28,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:28,isDir:false,compressedSize:20}]})

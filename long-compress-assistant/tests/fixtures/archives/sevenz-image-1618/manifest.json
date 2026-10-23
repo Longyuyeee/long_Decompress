@@ -1,0 +1,444 @@
+{
+  "producer": "E:\\7-Zip\\7z.exe",
+  "producerSha256": "83967f1b02b43c4efeda302795722c809e0e81b8307de73558d10484d5676a7d",
+  "independent": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\resources\\archive-engine\\7z.exe",
+  "independentSha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53",
+  "images": [
+    {
+      "path": "gallery/01-cover.png",
+      "width": 320,
+      "height": 240,
+      "bytes": 2729,
+      "sha256": "9b2c072f170548132a8a29fbb5875e6f9673351a036c8ed603377ededec13a3b"
+    },
+    {
+      "path": "gallery/02-grid.bmp",
+      "width": 96,
+      "height": 64,
+      "bytes": 18486,
+      "sha256": "6d133ad7dc08719597d3b2b7c528a743c426686268835dd6d035a50e8cef8beb"
+    },
+    {
+      "path": "gallery/04-cover.jpg",
+      "width": 320,
+      "height": 240,
+      "bytes": 19432,
+      "sha256": "4fc408d91aee4e4037f06dc6392a35109a5fd26d4aa7c790ff0902a2e3181dc9"
+    },
+    {
+      "path": "gallery/05-cover.gif",
+      "width": 160,
+      "height": 120,
+      "bytes": 9922,
+      "sha256": "893ff673b0baa151e8dbacb82e2ffb3b0579441d46ff6bfaf09f4f393b99444a"
+    },
+    {
+      "path": "gallery/06-cover.webp",
+      "width": 160,
+      "height": 120,
+      "bytes": 5328,
+      "sha256": "e7aed6ff5eabe4891cdb40c07ee6d4cf6d076cd71f77c92561726ee70f1d3630"
+    }
+  ],
+  "cases": [
+    {
+      "name": "lzma",
+      "method": "LZMA",
+      "password": null,
+      "solid": false,
+      "members": [
+        {
+          "name": "相册.7z",
+          "bytes": 72233,
+          "sha256": "9d11167d41ae60e95e683bdb0a7bb85f10c43bd87ae680075b89652492574b5d"
+        }
+      ],
+      "expected": [
+        {
+          "path": "gallery/01-cover.png",
+          "bytes": 2729,
+          "sha256": "9b2c072f170548132a8a29fbb5875e6f9673351a036c8ed603377ededec13a3b"
+        },
+        {
+          "path": "gallery/02-grid.bmp",
+          "bytes": 18486,
+          "sha256": "6d133ad7dc08719597d3b2b7c528a743c426686268835dd6d035a50e8cef8beb"
+        },
+        {
+          "path": "gallery/04-cover.jpg",
+          "bytes": 19432,
+          "sha256": "4fc408d91aee4e4037f06dc6392a35109a5fd26d4aa7c790ff0902a2e3181dc9"
+        },
+        {
+          "path": "gallery/05-cover.gif",
+          "bytes": 9922,
+          "sha256": "893ff673b0baa151e8dbacb82e2ffb3b0579441d46ff6bfaf09f4f393b99444a"
+        },
+        {
+          "path": "gallery/06-cover.webp",
+          "bytes": 5328,
+          "sha256": "e7aed6ff5eabe4891cdb40c07ee6d4cf6d076cd71f77c92561726ee70f1d3630"
+        },
+        {
+          "path": "gallery/03-bad.png",
+          "bytes": 52,
+          "sha256": "51dbb86ccee5afc91d8a89d239491a61b2928e48f3038c77af5e63a9c6a05c47"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 55,
+          "sha256": "36f1ff966b4a697bfdef6f1c4a6078501e5ce7cf244d651ddb54002d5abacb01"
+        },
+        {
+          "path": "unrelated.bin",
+          "bytes": 24000,
+          "sha256": "dac8daf1f5cbd7dea59cdd49896e1056cbb441172f3caa877131f46dd9099054"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mx=1",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-m0=LZMA",
+        "-ms=off",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-image-1618\\lzma\\相册.7z",
+        "."
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "lzma2",
+      "method": "LZMA2",
+      "password": null,
+      "solid": false,
+      "members": [
+        {
+          "name": "相册.7z",
+          "bytes": 71778,
+          "sha256": "683375f2dfe4c4df8795d2180754e79a54f0165ad7f0d5a88a80a3ba56027a92"
+        }
+      ],
+      "expected": [
+        {
+          "path": "gallery/01-cover.png",
+          "bytes": 2729,
+          "sha256": "9b2c072f170548132a8a29fbb5875e6f9673351a036c8ed603377ededec13a3b"
+        },
+        {
+          "path": "gallery/02-grid.bmp",
+          "bytes": 18486,
+          "sha256": "6d133ad7dc08719597d3b2b7c528a743c426686268835dd6d035a50e8cef8beb"
+        },
+        {
+          "path": "gallery/04-cover.jpg",
+          "bytes": 19432,
+          "sha256": "4fc408d91aee4e4037f06dc6392a35109a5fd26d4aa7c790ff0902a2e3181dc9"
+        },
+        {
+          "path": "gallery/05-cover.gif",
+          "bytes": 9922,
+          "sha256": "893ff673b0baa151e8dbacb82e2ffb3b0579441d46ff6bfaf09f4f393b99444a"
+        },
+        {
+          "path": "gallery/06-cover.webp",
+          "bytes": 5328,
+          "sha256": "e7aed6ff5eabe4891cdb40c07ee6d4cf6d076cd71f77c92561726ee70f1d3630"
+        },
+        {
+          "path": "gallery/03-bad.png",
+          "bytes": 52,
+          "sha256": "51dbb86ccee5afc91d8a89d239491a61b2928e48f3038c77af5e63a9c6a05c47"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 55,
+          "sha256": "36f1ff966b4a697bfdef6f1c4a6078501e5ce7cf244d651ddb54002d5abacb01"
+        },
+        {
+          "path": "unrelated.bin",
+          "bytes": 24000,
+          "sha256": "dac8daf1f5cbd7dea59cdd49896e1056cbb441172f3caa877131f46dd9099054"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mx=1",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-m0=LZMA2",
+        "-ms=off",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-image-1618\\lzma2\\相册.7z",
+        "."
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "contents",
+      "method": "LZMA2",
+      "password": "7Z图片密码1618!",
+      "solid": false,
+      "members": [
+        {
+          "name": "相册.7z",
+          "bytes": 72023,
+          "sha256": "62c233f5e444637aea0631844aae146003b97a47fb92bb20329fececa42bc9d7"
+        }
+      ],
+      "expected": [
+        {
+          "path": "gallery/01-cover.png",
+          "bytes": 2729,
+          "sha256": "9b2c072f170548132a8a29fbb5875e6f9673351a036c8ed603377ededec13a3b"
+        },
+        {
+          "path": "gallery/02-grid.bmp",
+          "bytes": 18486,
+          "sha256": "6d133ad7dc08719597d3b2b7c528a743c426686268835dd6d035a50e8cef8beb"
+        },
+        {
+          "path": "gallery/04-cover.jpg",
+          "bytes": 19432,
+          "sha256": "4fc408d91aee4e4037f06dc6392a35109a5fd26d4aa7c790ff0902a2e3181dc9"
+        },
+        {
+          "path": "gallery/05-cover.gif",
+          "bytes": 9922,
+          "sha256": "893ff673b0baa151e8dbacb82e2ffb3b0579441d46ff6bfaf09f4f393b99444a"
+        },
+        {
+          "path": "gallery/06-cover.webp",
+          "bytes": 5328,
+          "sha256": "e7aed6ff5eabe4891cdb40c07ee6d4cf6d076cd71f77c92561726ee70f1d3630"
+        },
+        {
+          "path": "gallery/03-bad.png",
+          "bytes": 52,
+          "sha256": "51dbb86ccee5afc91d8a89d239491a61b2928e48f3038c77af5e63a9c6a05c47"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 55,
+          "sha256": "36f1ff966b4a697bfdef6f1c4a6078501e5ce7cf244d651ddb54002d5abacb01"
+        },
+        {
+          "path": "unrelated.bin",
+          "bytes": 24000,
+          "sha256": "dac8daf1f5cbd7dea59cdd49896e1056cbb441172f3caa877131f46dd9099054"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mx=1",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-m0=LZMA2",
+        "-ms=off",
+        "-p7Z图片密码1618!",
+        "-mhe=off",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-image-1618\\contents\\相册.7z",
+        "."
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "headers-volumes",
+      "method": "LZMA2",
+      "password": "7Z图片密码1618!",
+      "solid": false,
+      "members": [
+        {
+          "name": "相册.7z.001",
+          "bytes": 12288,
+          "sha256": "17c890ca523bdbe21357818b2a33b22467fe26f28da02791c07cbf8bc2b86b98"
+        },
+        {
+          "name": "相册.7z.002",
+          "bytes": 12288,
+          "sha256": "16008b64b46ecb32dd78b1924f74b3f2cde75eb64fe72c4231bfcc6b7f6ed2d8"
+        },
+        {
+          "name": "相册.7z.003",
+          "bytes": 12288,
+          "sha256": "e52ee90dc1aef5e8a0b837f6e3b55726ee2a14047d1daed9fb9691bc04f9afd2"
+        },
+        {
+          "name": "相册.7z.004",
+          "bytes": 12288,
+          "sha256": "73ae28182db9bf2ec81ffe0df93e0e98b1b20ab0a1fea059eaa606de38bed369"
+        },
+        {
+          "name": "相册.7z.005",
+          "bytes": 12288,
+          "sha256": "0b2ee9cbe37d3b078738a7f8c5a14cbe383800c7029e884583e0278eaab14a14"
+        },
+        {
+          "name": "相册.7z.006",
+          "bytes": 10624,
+          "sha256": "ac3cb4661bdad618224a17c803e02c4b321fc06a65b02fe7c1fce260537feb69"
+        }
+      ],
+      "expected": [
+        {
+          "path": "gallery/01-cover.png",
+          "bytes": 2729,
+          "sha256": "9b2c072f170548132a8a29fbb5875e6f9673351a036c8ed603377ededec13a3b"
+        },
+        {
+          "path": "gallery/02-grid.bmp",
+          "bytes": 18486,
+          "sha256": "6d133ad7dc08719597d3b2b7c528a743c426686268835dd6d035a50e8cef8beb"
+        },
+        {
+          "path": "gallery/04-cover.jpg",
+          "bytes": 19432,
+          "sha256": "4fc408d91aee4e4037f06dc6392a35109a5fd26d4aa7c790ff0902a2e3181dc9"
+        },
+        {
+          "path": "gallery/05-cover.gif",
+          "bytes": 9922,
+          "sha256": "893ff673b0baa151e8dbacb82e2ffb3b0579441d46ff6bfaf09f4f393b99444a"
+        },
+        {
+          "path": "gallery/06-cover.webp",
+          "bytes": 5328,
+          "sha256": "e7aed6ff5eabe4891cdb40c07ee6d4cf6d076cd71f77c92561726ee70f1d3630"
+        },
+        {
+          "path": "gallery/03-bad.png",
+          "bytes": 52,
+          "sha256": "51dbb86ccee5afc91d8a89d239491a61b2928e48f3038c77af5e63a9c6a05c47"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 55,
+          "sha256": "36f1ff966b4a697bfdef6f1c4a6078501e5ce7cf244d651ddb54002d5abacb01"
+        },
+        {
+          "path": "unrelated.bin",
+          "bytes": 24000,
+          "sha256": "dac8daf1f5cbd7dea59cdd49896e1056cbb441172f3caa877131f46dd9099054"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mx=1",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-m0=LZMA2",
+        "-ms=off",
+        "-p7Z图片密码1618!",
+        "-mhe=on",
+        "-v12k",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-image-1618\\headers-volumes\\相册.7z",
+        "."
+      ],
+      "independentReadback": true
+    },
+    {
+      "name": "solid",
+      "method": "LZMA2",
+      "password": null,
+      "solid": true,
+      "members": [
+        {
+          "name": "相册.7z",
+          "bytes": 71856,
+          "sha256": "594d7875823e3ba7022acdba2deb36cb2e02f685aec665e640a28dad10b10b9e"
+        }
+      ],
+      "expected": [
+        {
+          "path": "gallery/01-cover.png",
+          "bytes": 2729,
+          "sha256": "9b2c072f170548132a8a29fbb5875e6f9673351a036c8ed603377ededec13a3b"
+        },
+        {
+          "path": "gallery/02-grid.bmp",
+          "bytes": 18486,
+          "sha256": "6d133ad7dc08719597d3b2b7c528a743c426686268835dd6d035a50e8cef8beb"
+        },
+        {
+          "path": "gallery/04-cover.jpg",
+          "bytes": 19432,
+          "sha256": "4fc408d91aee4e4037f06dc6392a35109a5fd26d4aa7c790ff0902a2e3181dc9"
+        },
+        {
+          "path": "gallery/05-cover.gif",
+          "bytes": 9922,
+          "sha256": "893ff673b0baa151e8dbacb82e2ffb3b0579441d46ff6bfaf09f4f393b99444a"
+        },
+        {
+          "path": "gallery/06-cover.webp",
+          "bytes": 5328,
+          "sha256": "e7aed6ff5eabe4891cdb40c07ee6d4cf6d076cd71f77c92561726ee70f1d3630"
+        },
+        {
+          "path": "gallery/03-bad.png",
+          "bytes": 52,
+          "sha256": "51dbb86ccee5afc91d8a89d239491a61b2928e48f3038c77af5e63a9c6a05c47"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 55,
+          "sha256": "36f1ff966b4a697bfdef6f1c4a6078501e5ce7cf244d651ddb54002d5abacb01"
+        },
+        {
+          "path": "unrelated.bin",
+          "bytes": 24000,
+          "sha256": "dac8daf1f5cbd7dea59cdd49896e1056cbb441172f3caa877131f46dd9099054"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mx=1",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-m0=LZMA2",
+        "-ms=on",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-image-1618\\solid\\相册.7z",
+        "."
+      ],
+      "independentReadback": true
+    }
+  ],
+  "limits": {
+    "at-limit.bmp": {
+      "bytes": 8388608,
+      "sha256": "c98b15b3566599dda77a679f6b05bdc4c40bee1f78713a2772b16f8b12d95928"
+    },
+    "oversize.bmp": {
+      "bytes": 8388609,
+      "sha256": "12a445da8c26fa5e09e4531799580fef2d4b383022cf5c0e4316b0230027632d"
+    },
+    "dimensions.png": {
+      "bytes": 106,
+      "sha256": "a5373b1db9463b2f9eb0d0129d22fc98148f0c9442f2e230307686422cd46502"
+    }
+  },
+  "mutations": {
+    "terminal.7z": "200784cf756a33548d1617c3ea3d6e47f28572bbd3a3f378c20a0a791b001288",
+    "bad-end.7z": "f34db962d7650fd0b0e684c6fb5746e8b587e5c5497afcd48a15aeec248dd9d4"
+  },
+  "largeUnrelatedIgnored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-image-1618\\large-unrelated.7z"
+}

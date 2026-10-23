@@ -425,8 +425,9 @@ fn preview_archive_image_sync(
         return preview_archive_image_sync(&inner.path, entry_path, None, encoding, snapshot,control);
     }
     let entry_path = normalized_entry_path(entry_path)?;
-    let format = preview_format(archive_path)?;
+    let format = if super::archive_browser::detect_format(archive_path)?==ArchiveFormat::SevenZip {"7Z"} else {preview_format(archive_path)?};
     let bytes = match format {
+        "7Z" => super::sevenz_preview::read_image(archive_path,&entry_path,password,control)?,
         "ZIP" => read_zip_entry(archive_path, &entry_path, password, encoding,control)?,
         "EGG" => tauri::async_runtime::block_on(super::egg_engine::preview_image_entry(archive_path, &entry_path, password, encoding, control.flag.clone()))?,
         "ALZ" => tauri::async_runtime::block_on(super::alz_engine::preview_image_entry(archive_path, &entry_path, password, encoding, control.flag.clone()))?,
@@ -487,7 +488,7 @@ pub async fn preview_archive_image_bound_at(archive_path:&Path,entry_path:&str,p
         control.check()?;
         if let Some(revision) = expected_revision.as_deref() { super::image_reader::check_source(&archive_path, revision)?; }
         let source = super::split_archive_detector::SplitArchiveDetector::complete_source(&archive_path)?;
-        let revision = if matches!(super::archive_browser::detect_format(&source)?,ArchiveFormat::Alz|ArchiveFormat::Egg) {
+        let revision = if matches!(super::archive_browser::detect_format(&source)?,ArchiveFormat::Alz|ArchiveFormat::Egg|ArchiveFormat::SevenZip) {
             Some(match expected_revision { Some(value) => value, None => super::image_reader::revision(&source)? })
         } else { None };
         control.update("opening",0,0);control.check()?;
@@ -899,7 +900,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn refuses_routes_without_a_provable_bounded_reader() {
+    async fn sevenz1618_accepts_the_now_bounded_native_image_route() {
         let temp = tempfile::tempdir().unwrap();
         let archive = temp.path().join("images.7z");
         let source = temp.path().join("preview.png");
@@ -907,10 +908,8 @@ mod tests {
         sevenz_rust::compress_to_path(&source, &archive).unwrap();
 
         let entry_name = source.file_name().unwrap().to_string_lossy();
-        let error = preview_archive_image(&archive, &entry_name, None)
-            .await
-            .unwrap_err();
-        assert!(error.to_string().contains("ZIP and TAR-family"));
+        let value = preview_archive_image(&archive,&entry_name,None).await.unwrap();
+        assert_eq!((value.width,value.height),(1,1));
     }
 
     #[tokio::test]

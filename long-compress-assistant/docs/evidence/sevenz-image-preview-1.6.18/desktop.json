@@ -1,0 +1,126 @@
+{
+  "version": "1.6.18",
+  "applicationSha256": "7203742445e4ae2fa98a911060f3da3c2bb9ad1f6fa098c6ae7d23622c6088b8",
+  "checks": [
+    {
+      "name": "selected original PNG renders exact pixels in the original wide and narrow panes",
+      "pixel": [
+        140,
+        20,
+        60,
+        255
+      ],
+      "png": [
+        320,
+        240
+      ],
+      "equalPanes": true
+    },
+    {
+      "name": "original reader turns pages zooms skips bad content and locates JPEG without preloading",
+      "bmp": [
+        96,
+        64
+      ],
+      "jpeg": [
+        320,
+        240
+      ],
+      "zoom": true,
+      "skip": true,
+      "locate": true
+    },
+    {
+      "name": "current page extraction keeps the exact selected 7Z path and content",
+      "currentPageOnly": true,
+      "sha256": "6d133ad7dc08719597d3b2b7c528a743c426686268835dd6d035a50e8cef8beb"
+    },
+    {
+      "name": "vault contents and non-first header-encrypted volume feed both preview and reader commands",
+      "vault": true,
+      "contentPassword": true,
+      "headerPassword": true,
+      "nonFirstVolume": true,
+      "readerCommand": true
+    },
+    {
+      "name": "limits solid sharing cancellation and source changes have distinct next steps",
+      "errors": {
+        "oversize": "7Z 所选文件超过 8 MiB 预览范围，请先提取后打开",
+        "dimensions": "Image dimensions exceed the preview safety limit (8192 × 8192 pixels, 16 megapixels)",
+        "bad-end": "7Z 所选内容未通过完整读取或 CRC 校验，请重新下载或先提取检查：Io(Custom { kind: UnexpectedEof, error: \"failed to fill whole buffer\" }, \"\")"
+      },
+      "shared": "无法预览\n7Z 固实共享内容暂不支持预览，请先提取后打开",
+      "changed": "IMAGE_READER_CHANGED|来源已变化，请返回刷新来源后重新阅读",
+      "cancelled": "IMAGE_READER_CANCELLED|已停止读取图片",
+      "unrelatedLargeSkipped": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "image-wide",
+      "closeVisible": true,
+      "dialog": {
+        "height": 451.1875,
+        "width": 832,
+        "x": 44,
+        "y": 84.40625
+      },
+      "height": 620,
+      "image": {
+        "height": 240,
+        "width": 320
+      },
+      "overflow": 0,
+      "panes": [
+        332.796875,
+        332.8046875
+      ],
+      "width": 920
+    },
+    {
+      "name": "image-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 401.984375,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 59.0078125
+      },
+      "height": 520,
+      "image": {
+        "height": 240,
+        "width": 320
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    },
+    {
+      "name": "reader-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 504,
+        "width": 744,
+        "x": 8,
+        "y": 8
+      },
+      "height": 520,
+      "image": {
+        "height": 64,
+        "width": 96
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-image-1618\\b922cceb-1872-48d3-bf77-4b81b5486300",
+  "passed": true
+}
