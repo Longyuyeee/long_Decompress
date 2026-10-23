@@ -1,0 +1,32 @@
+{
+  "version": "1.6.20",
+  "applicationSha256": "d5c0d6789f058d54ef3e169fa56cb4ec1d540a8c5c79afd51a3cd66fa3e095d5",
+  "shellSha256": "aecb0a83946a09a9d417dfd5f6a77d7c4695b8ea6452e6c575d50810b4d98492",
+  "builds": {
+    "vueTypesAndVite": true,
+    "shellExtension": true,
+    "nativeDesktopCandidate": true,
+    "eightVersionIdentitiesAndEngineInventory": true
+  },
+  "localCandidate": {
+    "features": [
+      "custom-protocol",
+      "desktop-e2e"
+    ],
+    "VITE_DESKTOP_E2E": "1",
+    "optLevel": 1,
+    "lto": false,
+    "formalReleaseConfigUnchanged": true
+  },
+  "checks": {
+    "rustRelated": 4,
+    "frontendView": 4,
+    "originalGroups": 4,
+    "originalMembers": 9,
+    "rasterTypes": 5,
+    "independentOfficialReadback": true,
+    "actualDesktopGroups": 5,
+    "viewedScreenshots": 3
+  },
+  "continuity": "Initial Rust run: three passed, one negative fixture incorrectly had separate blocks due to 7-Zip mx=1 default. Fixed only fixture with ms=128m, confirmed one block, independently tested it, resumed only that one test successfully. Four frontend checks passed; preserved original EGG shared predicate before regenerating final assets/candidate. Five desktop groups first passed. No old matrix, installation or real disk-full repeat."
+}

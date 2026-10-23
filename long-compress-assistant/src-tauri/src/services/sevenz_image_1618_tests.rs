@@ -26,7 +26,7 @@ async fn sevenz1618_original_lzma_lzma2_images_have_exact_complete_bytes() {
 async fn sevenz1618_limits_end_marker_and_shared_streams_do_not_change_text_limits() {
  let at=preview::preview_archive_image(&fixtures().join("at-limit.7z"),"at-limit.bmp",None).await.unwrap();assert_eq!(at.byte_size,8*1024*1024);
  let m=manifest();assert_eq!(hex::encode(sha2::Sha256::digest(bytes(&at))),m["limits"]["at-limit.bmp"]["sha256"].as_str().unwrap());
- for (p,entry,reason) in [(fixtures().join("oversize.7z"),"oversize.bmp","8 MiB"),(fixtures().join("dimensions.7z"),"dimensions.png","dimensions exceed"),(case("lzma2"),"gallery/03-bad.png","not a supported raster"),(case("solid"),IMAGE,"固实"),(fixtures().join("bad-end.7z"),"preview.png","CRC")] {
+ for (p,entry,reason) in [(fixtures().join("oversize.7z"),"oversize.bmp","8 MiB"),(fixtures().join("dimensions.7z"),"dimensions.png","dimensions exceed"),(case("lzma2"),"gallery/03-bad.png","not a supported raster"),(fixtures().join("bad-end.7z"),"preview.png","CRC")] {
   let error=preview::preview_archive_image(&p,entry,None).await.unwrap_err();assert!(format!("{error:#}").contains(reason),"{error:#}");
  }
  let error=preview::preview_archive_text(&fixtures().join("at-limit.7z"),"at-limit.bmp",None).await.unwrap_err();assert!(error.to_string().contains("1 MiB"));
