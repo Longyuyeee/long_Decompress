@@ -77,7 +77,6 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     }
     let encrypted = methods.contains(&M::ID_AES256SHA256);
     if shared {
-        ensure!(!encrypted || max_output==MAX_TEXT,"7Z 加密固实图片暂不支持预览，请先提取后打开");
         ensure!(folder.packed_streams.len()==1,"7Z 固实共享范围无法确认，请先提取后打开");
         let pack_index=archive.stream_map.folder_first_pack_stream_index.get(folder_index).context("7Z 固实共享范围无法确认，请先提取后打开")?;
         let packed=archive.pack_sizes.get(*pack_index).context("7Z 固实共享大小无法确认，请先提取后打开")?;

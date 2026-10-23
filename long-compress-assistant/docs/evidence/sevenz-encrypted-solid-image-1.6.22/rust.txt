@@ -1,0 +1,37 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling long-compress-assistant v1.6.22 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 01s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-59d8ddea4e78071c.exe)
+
+running 5 tests
+test services::sevenz_encrypted_solid_image_1622_tests::sevenz1622_encrypted_selected_image_skips_corrupt_unrelated_65m_block ... ok
+test services::sevenz_encrypted_solid_image_1622_tests::sevenz1622_encrypted_image_mid_read_cancel_changed_source_and_missing_volume_are_discarded ... ok
+test services::sevenz_encrypted_solid_image_1622_tests::sevenz1622_encrypted_complete_image_limits_and_damage_never_publish_partial_pixels ... ok
+test services::sevenz_encrypted_solid_image_1622_tests::sevenz1622_selected_vault_image_and_metadata_never_validate_unrelated_data_or_record_success ... ok
+test services::sevenz_encrypted_solid_image_1622_tests::sevenz1622_original_encrypted_methods_rasters_headers_and_every_numeric_member_are_exact ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1131 filtered out; finished in 31.45s
+
