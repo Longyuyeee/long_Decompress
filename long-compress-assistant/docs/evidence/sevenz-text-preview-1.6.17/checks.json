@@ -1,0 +1,32 @@
+{
+  "version": "1.6.17",
+  "applicationSha256": "77a4c7567bf0aa5ad97b52edc4b31f208a22498e74c625e613d0a61810375d32",
+  "shellSha256": "ecc3b7e20dfdcb124faa4e01d401f7c6bbc9ac842720a224b4436c8609d4ee31",
+  "builds": {
+    "vueTypesAndVite": true,
+    "shellExtension": true,
+    "nativeDesktopCandidate": true,
+    "eightVersionIdentitiesAndEngineInventory": true
+  },
+  "localCandidate": {
+    "features": [
+      "custom-protocol",
+      "desktop-e2e"
+    ],
+    "VITE_DESKTOP_E2E": "1",
+    "optLevel": 1,
+    "lto": false,
+    "formalReleaseConfigUnchanged": true
+  },
+  "checks": {
+    "rustRelated": 5,
+    "frontendNew": 3,
+    "capabilityPolicy": 1,
+    "originalFixtureGroups": 5,
+    "originalMembers": 6,
+    "independentOfficialReadback": true,
+    "actualDesktopGroups": 4,
+    "viewedScreenshots": 2
+  },
+  "continuity": "Initial vendor borrow compile issue fixed before test execution. First desktop startup lacked test bridge and ran no scenarios; enabled only local test frontend flag and continued. All passed functional checks retained; no old matrices, installation or real disk-full repetition."
+}

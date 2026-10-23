@@ -277,7 +277,7 @@ pub fn detect_archive_engine_capabilities() -> ArchiveEngineCapabilities {
             formats: Vec::new(),
             browse_extensions: workspace.browse_extensions,
             nested_extensions: workspace.nested_extensions,
-            bounded_text_preview_formats: BOUNDED_PREVIEW_FORMATS.iter().copied().map(str::to_string).collect(),
+            bounded_text_preview_formats: BOUNDED_PREVIEW_FORMATS.iter().copied().chain(["7Z"]).map(str::to_string).collect(),
             bounded_preview_formats: workspace.bounded_preview_formats,
             image_preview_extensions: workspace.image_preview_extensions,
             text_preview_extensions: workspace.text_preview_extensions,
@@ -294,7 +294,7 @@ pub fn detect_archive_engine_capabilities() -> ArchiveEngineCapabilities {
             formats: Vec::new(),
             browse_extensions: workspace.browse_extensions,
             nested_extensions: workspace.nested_extensions,
-            bounded_text_preview_formats: BOUNDED_PREVIEW_FORMATS.iter().copied().map(str::to_string).collect(),
+            bounded_text_preview_formats: BOUNDED_PREVIEW_FORMATS.iter().copied().chain(["7Z"]).map(str::to_string).collect(),
             bounded_preview_formats: workspace.bounded_preview_formats,
             image_preview_extensions: workspace.image_preview_extensions,
             text_preview_extensions: workspace.text_preview_extensions,
@@ -330,7 +330,7 @@ pub fn detect_archive_engine_capabilities() -> ArchiveEngineCapabilities {
         formats,
         browse_extensions: workspace.browse_extensions,
         nested_extensions: workspace.nested_extensions,
-        bounded_text_preview_formats: BOUNDED_PREVIEW_FORMATS.iter().copied().map(str::to_string).collect(),
+        bounded_text_preview_formats: BOUNDED_PREVIEW_FORMATS.iter().copied().chain(["7Z"]).map(str::to_string).collect(),
         bounded_preview_formats: workspace.bounded_preview_formats,
         image_preview_extensions: workspace.image_preview_extensions,
         text_preview_extensions: workspace.text_preview_extensions,
@@ -394,7 +394,7 @@ Codecs:"#;
         assert!(workspace.nested_extensions.contains(&"zst".to_string()));
         assert!(workspace.nested_extensions.contains(&"zip".to_string()));
         assert!(!workspace.nested_extensions.contains(&"doc".to_string()));
-        assert_eq!(workspace.bounded_preview_formats, vec!["ZIP", "TAR", "GZIP", "BZIP2", "XZ", "ZSTD", "LZMA", "LZIP", "LZ4", "BR", "LONG AES", "ZPAQ", "WIM"]);
+        assert_eq!(workspace.bounded_preview_formats, vec!["ZIP", "TAR", "GZIP", "BZIP2", "XZ", "ZSTD", "LZMA", "LZIP", "LZ4", "BR", "LONG AES", "ZPAQ", "WIM", "ALZ", "EGG"]);
         assert!(workspace.image_preview_extensions.contains(&"png".to_string()));
         assert!(workspace.text_preview_extensions.contains(&"txt".to_string()));
     }

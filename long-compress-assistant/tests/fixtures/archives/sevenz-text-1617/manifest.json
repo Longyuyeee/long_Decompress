@@ -1,0 +1,402 @@
+{
+  "producer": "E:\\7-Zip\\7z.exe",
+  "producerSha256": "83967f1b02b43c4efeda302795722c809e0e81b8307de73558d10484d5676a7d",
+  "independent": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\resources\\archive-engine\\7z.exe",
+  "independentSha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53",
+  "cases": [
+    {
+      "name": "lzma",
+      "method": "LZMA",
+      "password": null,
+      "solid": false,
+      "members": [
+        {
+          "name": "资料.7z",
+          "bytes": 49106,
+          "sha256": "8e6a548f5e28b8ee4be789cda2b6e7fa5831405dc7351d9a31a19ab8059bf8a7"
+        }
+      ],
+      "expected": [
+        {
+          "path": "notes/说明 [1].txt",
+          "bytes": 4000,
+          "sha256": "60da181b087f089f85fd51784e64d7b7b00dcef2a3f7f6cf3069be8140681a00"
+        },
+        {
+          "path": "notes/说明 1.txt",
+          "bytes": 29,
+          "sha256": "cd76b5591b9d270d5c9066e8ad2030410cbf58b09243d745d8341c295d6ab009"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "utf16.txt",
+          "bytes": 24,
+          "sha256": "04beeefbfa341e360c26579b387766926b450100ede25839326a746414a6bc42"
+        },
+        {
+          "path": "gbk.txt",
+          "bytes": 12,
+          "sha256": "b9c3c07e5240f33737ab43e94ef9c4b0b49625f56e94484e00663201665255a0"
+        },
+        {
+          "path": "binary.txt",
+          "bytes": 80,
+          "sha256": "b6fc972133b70644101f33fdcef6cfce8e2d5fd80ef79d8310fabff7a86880f9"
+        },
+        {
+          "path": "other.bin",
+          "bytes": 48000,
+          "sha256": "e672fd1e9231f9ca44944a6b62c08006c33f5b44517001159aebe7c13acb4a0b"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=LZMA",
+        "-ms=off",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-text-1617\\lzma\\资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methods": [
+        "Method = LZMA:48k",
+        "Solid = -",
+        "Blocks = 6",
+        "Method = ",
+        "Method = ",
+        "Method = LZMA:48k",
+        "Method = LZMA:48k",
+        "Method = LZMA:48k",
+        "Method = LZMA:48k",
+        "Method = LZMA:48k",
+        "Method = LZMA:48k"
+      ]
+    },
+    {
+      "name": "lzma2",
+      "method": "LZMA2",
+      "password": null,
+      "solid": false,
+      "members": [
+        {
+          "name": "资料.7z",
+          "bytes": 48467,
+          "sha256": "8d745a7bd23e06f0f823b584620edd55f6bedb3e2ac8ae83a6d3fdff6f66ef0a"
+        }
+      ],
+      "expected": [
+        {
+          "path": "notes/说明 [1].txt",
+          "bytes": 4000,
+          "sha256": "60da181b087f089f85fd51784e64d7b7b00dcef2a3f7f6cf3069be8140681a00"
+        },
+        {
+          "path": "notes/说明 1.txt",
+          "bytes": 29,
+          "sha256": "cd76b5591b9d270d5c9066e8ad2030410cbf58b09243d745d8341c295d6ab009"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "utf16.txt",
+          "bytes": 24,
+          "sha256": "04beeefbfa341e360c26579b387766926b450100ede25839326a746414a6bc42"
+        },
+        {
+          "path": "gbk.txt",
+          "bytes": 12,
+          "sha256": "b9c3c07e5240f33737ab43e94ef9c4b0b49625f56e94484e00663201665255a0"
+        },
+        {
+          "path": "binary.txt",
+          "bytes": 80,
+          "sha256": "b6fc972133b70644101f33fdcef6cfce8e2d5fd80ef79d8310fabff7a86880f9"
+        },
+        {
+          "path": "other.bin",
+          "bytes": 48000,
+          "sha256": "e672fd1e9231f9ca44944a6b62c08006c33f5b44517001159aebe7c13acb4a0b"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=LZMA2",
+        "-ms=off",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-text-1617\\lzma2\\资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methods": [
+        "Method = LZMA2:48k",
+        "Solid = -",
+        "Blocks = 6",
+        "Method = ",
+        "Method = ",
+        "Method = LZMA2:48k",
+        "Method = LZMA2:48k",
+        "Method = LZMA2:48k",
+        "Method = LZMA2:48k",
+        "Method = LZMA2:48k",
+        "Method = LZMA2:48k"
+      ]
+    },
+    {
+      "name": "contents",
+      "method": "LZMA2",
+      "password": "7Z预览密码1617!",
+      "solid": false,
+      "members": [
+        {
+          "name": "资料.7z",
+          "bytes": 48645,
+          "sha256": "9ddc118c61b2cf94d62f9fffe9d68cdbc9e6910e447cef3c54730921359b647e"
+        }
+      ],
+      "expected": [
+        {
+          "path": "notes/说明 [1].txt",
+          "bytes": 4000,
+          "sha256": "60da181b087f089f85fd51784e64d7b7b00dcef2a3f7f6cf3069be8140681a00"
+        },
+        {
+          "path": "notes/说明 1.txt",
+          "bytes": 29,
+          "sha256": "cd76b5591b9d270d5c9066e8ad2030410cbf58b09243d745d8341c295d6ab009"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "utf16.txt",
+          "bytes": 24,
+          "sha256": "04beeefbfa341e360c26579b387766926b450100ede25839326a746414a6bc42"
+        },
+        {
+          "path": "gbk.txt",
+          "bytes": 12,
+          "sha256": "b9c3c07e5240f33737ab43e94ef9c4b0b49625f56e94484e00663201665255a0"
+        },
+        {
+          "path": "binary.txt",
+          "bytes": 80,
+          "sha256": "b6fc972133b70644101f33fdcef6cfce8e2d5fd80ef79d8310fabff7a86880f9"
+        },
+        {
+          "path": "other.bin",
+          "bytes": 48000,
+          "sha256": "e672fd1e9231f9ca44944a6b62c08006c33f5b44517001159aebe7c13acb4a0b"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=LZMA2",
+        "-ms=off",
+        "-p7Z预览密码1617!",
+        "-mhe=off",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-text-1617\\contents\\资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methods": [
+        "Method = LZMA2:48k 7zAES",
+        "Solid = -",
+        "Blocks = 6",
+        "Method = ",
+        "Method = ",
+        "Method = LZMA2:48k 7zAES:19",
+        "Method = LZMA2:48k 7zAES:19",
+        "Method = LZMA2:48k 7zAES:19",
+        "Method = LZMA2:48k 7zAES:19",
+        "Method = LZMA2:48k 7zAES:19",
+        "Method = LZMA2:48k 7zAES:19"
+      ]
+    },
+    {
+      "name": "headers-volumes",
+      "method": "LZMA2",
+      "password": "7Z预览密码1617!",
+      "solid": false,
+      "members": [
+        {
+          "name": "资料.7z.001",
+          "bytes": 24576,
+          "sha256": "764267bf4de567366936a391ee52104f7bafaf504de27f4684b68a0cd7021f55"
+        },
+        {
+          "name": "资料.7z.002",
+          "bytes": 24112,
+          "sha256": "f5222a2c2e0f24fd50c6a21f88b2449547c7d3508d821e8a161e5985ed7d9f47"
+        }
+      ],
+      "expected": [
+        {
+          "path": "notes/说明 [1].txt",
+          "bytes": 4000,
+          "sha256": "60da181b087f089f85fd51784e64d7b7b00dcef2a3f7f6cf3069be8140681a00"
+        },
+        {
+          "path": "notes/说明 1.txt",
+          "bytes": 29,
+          "sha256": "cd76b5591b9d270d5c9066e8ad2030410cbf58b09243d745d8341c295d6ab009"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "utf16.txt",
+          "bytes": 24,
+          "sha256": "04beeefbfa341e360c26579b387766926b450100ede25839326a746414a6bc42"
+        },
+        {
+          "path": "gbk.txt",
+          "bytes": 12,
+          "sha256": "b9c3c07e5240f33737ab43e94ef9c4b0b49625f56e94484e00663201665255a0"
+        },
+        {
+          "path": "binary.txt",
+          "bytes": 80,
+          "sha256": "b6fc972133b70644101f33fdcef6cfce8e2d5fd80ef79d8310fabff7a86880f9"
+        },
+        {
+          "path": "other.bin",
+          "bytes": 48000,
+          "sha256": "e672fd1e9231f9ca44944a6b62c08006c33f5b44517001159aebe7c13acb4a0b"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=LZMA2",
+        "-ms=off",
+        "-p7Z预览密码1617!",
+        "-mhe=on",
+        "-v24k",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-text-1617\\headers-volumes\\资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methods": [
+        "Method = LZMA2:48k 7zAES",
+        "Solid = -",
+        "Blocks = 6",
+        "Method = ",
+        "Method = ",
+        "Method = LZMA2:48k 7zAES:19",
+        "Method = LZMA2:48k 7zAES:19",
+        "Method = LZMA2:48k 7zAES:19",
+        "Method = LZMA2:48k 7zAES:19",
+        "Method = LZMA2:48k 7zAES:19",
+        "Method = LZMA2:48k 7zAES:19"
+      ]
+    },
+    {
+      "name": "solid",
+      "method": "LZMA2",
+      "password": null,
+      "solid": true,
+      "members": [
+        {
+          "name": "资料.7z",
+          "bytes": 49076,
+          "sha256": "ab36f77e99640eaa596265b83c3832c9845a1cba70fa6da8928a4d1e8cd51100"
+        }
+      ],
+      "expected": [
+        {
+          "path": "notes/说明 [1].txt",
+          "bytes": 4000,
+          "sha256": "60da181b087f089f85fd51784e64d7b7b00dcef2a3f7f6cf3069be8140681a00"
+        },
+        {
+          "path": "notes/说明 1.txt",
+          "bytes": 29,
+          "sha256": "cd76b5591b9d270d5c9066e8ad2030410cbf58b09243d745d8341c295d6ab009"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "utf16.txt",
+          "bytes": 24,
+          "sha256": "04beeefbfa341e360c26579b387766926b450100ede25839326a746414a6bc42"
+        },
+        {
+          "path": "gbk.txt",
+          "bytes": 12,
+          "sha256": "b9c3c07e5240f33737ab43e94ef9c4b0b49625f56e94484e00663201665255a0"
+        },
+        {
+          "path": "binary.txt",
+          "bytes": 80,
+          "sha256": "b6fc972133b70644101f33fdcef6cfce8e2d5fd80ef79d8310fabff7a86880f9"
+        },
+        {
+          "path": "other.bin",
+          "bytes": 48000,
+          "sha256": "e672fd1e9231f9ca44944a6b62c08006c33f5b44517001159aebe7c13acb4a0b"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-m0=LZMA2",
+        "-ms=on",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-text-1617\\solid\\资料.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "methods": [
+        "Method = LZMA2:16",
+        "Solid = +",
+        "Blocks = 1",
+        "Method = ",
+        "Method = ",
+        "Method = LZMA2:16",
+        "Method = LZMA2:16",
+        "Method = LZMA2:16",
+        "Method = LZMA2:16",
+        "Method = LZMA2:16",
+        "Method = LZMA2:16"
+      ]
+    }
+  ],
+  "terminalOriginalSha256": "32bb8bb88817fdde4b79ca0b09d3981ba1bb5c946cdc62bac520a5cb9bbf8373",
+  "badEndSha256": "08f26c4a30666a9361c61147e6b082dea5472569bba341f9a60baf5cf6983fbd",
+  "largeUnrelatedIgnored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-text-1617\\large-unrelated.7z",
+  "textSha256": "60da181b087f089f85fd51784e64d7b7b00dcef2a3f7f6cf3069be8140681a00"
+}
