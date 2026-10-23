@@ -65,3 +65,5 @@ pub use writer::*;
 #[cfg(all(test,feature="additional-codecs"))] mod deflate64_preview_1638_tests;
 
 #[cfg(all(test,feature="aes256",feature="additional-codecs"))] mod deflate64_aes_preview_1639_tests;
+
+#[cfg(all(test,feature="additional-codecs"))] mod deflate64_solid_preview_1640_tests;

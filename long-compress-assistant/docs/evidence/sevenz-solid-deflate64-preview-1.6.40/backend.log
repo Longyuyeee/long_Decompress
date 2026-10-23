@@ -1,0 +1,38 @@
+   Compiling long-compress-assistant v1.6.40 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+   Compiling sevenz-rust v0.6.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\sevenz-rust)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3m 10s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-cd0754442cf171df.exe)
+
+running 6 tests
+test services::sevenz_solid_deflate64_preview_1640_tests::sevenz1640_shared_before_after_block_pack_crc_mapping_parameters_and_cancel_are_required ... ok
+test services::sevenz_solid_deflate64_preview_1640_tests::sevenz1640_cancel_source_revision_missing_shared_tail_and_fresh_request ... ok
+test services::sevenz_solid_deflate64_preview_1640_tests::sevenz1640_damaged_shared_stream_never_displays_text_or_pixels_and_unrelated_block_is_skipped ... ok
+test services::sevenz_solid_deflate64_preview_1640_tests::sevenz1640_shared_and_image_boundaries_binary_large_and_password_scopes_keep_next_steps ... ok
+test services::sevenz_solid_deflate64_preview_1640_tests::sevenz1640_original_shared_rasters_and_non_first_volume_keep_exact_bytes ... ok
+test services::sevenz_solid_deflate64_preview_1640_tests::sevenz1640_original_solid_orders_every_numeric_member_and_complete_text_encodings ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 1234 filtered out; finished in 9.54s

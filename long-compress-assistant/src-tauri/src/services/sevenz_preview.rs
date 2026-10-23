@@ -72,9 +72,9 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     use sevenz_rust::SevenZMethod as M;
     let codec = |id:&[u8]| id==M::ID_LZMA || id==M::ID_LZMA2;
     let ppmd=methods.as_slice()==[M::ID_PPMD] || methods.as_slice()==[M::ID_AES256SHA256,M::ID_PPMD];
-    let deflate64=(methods.as_slice()==[M::ID_DEFLATE64] || methods.as_slice()==[M::ID_AES256SHA256,M::ID_DEFLATE64]) && !shared && !prefix;
+    let deflate64=(methods.as_slice()==[M::ID_DEFLATE64] || !shared && methods.as_slice()==[M::ID_AES256SHA256,M::ID_DEFLATE64]) && !prefix;
     if methods.contains(&M::ID_DEFLATE64) {
-        ensure!(deflate64,"7Z Deflate64 当前支持普通/密码非固实完整小图文（文本 ≤1 MiB、图片 ≤8 MiB）；固实或大文件请先提取后打开");
+        ensure!(deflate64,"7Z Deflate64 当前支持普通/密码非固实及普通固实完整小图文（文本 ≤1 MiB、图片 ≤8 MiB）；密码固实或大文件请先提取后打开");
     }
     let deflate=methods.as_slice()==[M::ID_DEFLATE] || methods.as_slice()==[M::ID_AES256SHA256,M::ID_DEFLATE];
     if methods.contains(&M::ID_DEFLATE) {
@@ -103,7 +103,7 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
         if Instant::now()>=until {return Err(sevenz_rust::Error::io(io::Error::new(io::ErrorKind::TimedOut,"7Z 预览超过 30 秒，请先提取后打开")));}Ok(())
     };
     let bytes = if deflate64 {
-        decoder.read_deflate64_entry(index,max_output as usize,check)
+        if shared { decoder.read_solid_deflate64_entry(index,max_output as usize,MAX_INPUT,check) } else { decoder.read_deflate64_entry(index,max_output as usize,check) }
     } else if deflate {
         if prefix && shared { decoder.read_solid_deflate_entry_prefix(index,MAX_TEXT as usize,MAX_INPUT,check) } else if prefix { decoder.read_deflate_entry_prefix(index,MAX_TEXT as usize,check) } else if shared { decoder.read_solid_deflate_entry(index,max_output as usize,MAX_INPUT,check) } else { decoder.read_deflate_entry(index,max_output as usize,check) }
     } else if prefix && shared {
