@@ -115,6 +115,7 @@ impl<R: Read + Seek> Seek for Aes256Sha256Decoder<R> {
 }
 
 fn get_aes_key(properties: &[u8], password: &[u8]) -> Result<([u8; 32], [u8; 16]), crate::Error> {
+    crate::preview::aes(properties,password)?;
     if properties.len() < 2 {
         return Err(crate::Error::other("AES256 properties too shart"));
     }
@@ -142,7 +143,8 @@ fn get_aes_key(properties: &[u8], password: &[u8]) -> Result<([u8; 32], [u8; 16]
     } else {
         let mut sha = sha2::Sha256::default();
         let mut extra = [0u8; 8];
-        for _ in 0..(1u32 << num_cycles_power) {
+        for round in 0..(1u32 << num_cycles_power) {
+            if round & 4095 == 0 {crate::preview::check()?;}
             sha.update(&salt);
             sha.update(password);
             sha.update(extra);
@@ -156,6 +158,40 @@ fn get_aes_key(properties: &[u8], password: &[u8]) -> Result<([u8; 32], [u8; 16]
         sha.finalize().into()
     };
     Ok((aes_key, iv))
+}
+
+/// Exact preview-only AES-CBC stream: aligned reads tolerate short volume reads,
+/// validate the declared plaintext length, zero padding and bounded cipher EOF.
+pub struct PreviewAes<R> {
+    input:R,cipher:Aes256CbcDec,remaining:usize,cipher_remaining:usize,
+    buffer:Vec<u8>,position:usize,complete:std::sync::Arc<std::sync::atomic::AtomicBool>,
+}
+impl<R:Read> PreviewAes<R> {
+    pub(crate) fn new(input:R,properties:&[u8],password:&[u8],size:usize)->Result<Self,crate::Error>{
+        let (key,iv)=get_aes_key(properties,password)?;
+        Ok(Self{input,cipher:Aes256CbcDec::new(&key.into(),&iv.into()),remaining:size,cipher_remaining:size.div_ceil(16)*16,buffer:vec![],position:0,complete:crate::preview::track_aes()})
+    }
+    fn fill(&mut self)->std::io::Result<()>{
+        crate::preview::check().map_err(|e|match e {crate::Error::Io(e,_)|crate::Error::MaybeBadPassword(e)=>e,other=>std::io::Error::other(other)})?;
+        let n=self.cipher_remaining.min(4096);self.buffer.resize(n,0);self.position=0;
+        self.input.read_exact(&mut self.buffer)?;self.cipher_remaining-=n;
+        for block in self.buffer.chunks_exact_mut(16){self.cipher.decrypt_block_mut(GenericArray::from_mut_slice(block));}
+        if self.cipher_remaining==0 {
+            if self.remaining>n || self.buffer[self.remaining..].iter().any(|b|*b!=0){return Err(std::io::Error::new(std::io::ErrorKind::InvalidData,"7Z AES padding/size mismatch"));}
+            let mut extra=[0];if self.input.read(&mut extra)?!=0{return Err(std::io::Error::new(std::io::ErrorKind::InvalidData,"7Z AES extra ciphertext"));}
+            self.buffer.truncate(self.remaining);
+        }
+        Ok(())
+    }
+}
+impl<R:Read> Read for PreviewAes<R>{
+    fn read(&mut self,out:&mut [u8])->std::io::Result<usize>{
+        if out.is_empty(){return Ok(0);}
+        if self.position==self.buffer.len() && !self.complete.load(std::sync::atomic::Ordering::Acquire){self.fill()?;}
+        let n=out.len().min(self.buffer.len()-self.position);out[..n].copy_from_slice(&self.buffer[self.position..self.position+n]);self.position+=n;self.remaining-=n;
+        if self.remaining==0 && self.cipher_remaining==0 {self.complete.store(true,std::sync::atomic::Ordering::Release);}
+        Ok(n)
+    }
 }
 
 struct Cipher {
@@ -384,4 +420,43 @@ mod tests {
         std::io::copy(&mut dec, &mut decoded);
         assert_eq!(&decoded[..original.len()], &original[..]);
     }
+}
+
+#[cfg(test)]
+mod preview_1621_tests {
+ use super::*;
+ use crate::{with_preview_limits,Error};
+ fn encrypted(plain:&[u8],bad_padding:bool)->Vec<u8>{
+  let(key,iv)=get_aes_key(&[8,0],b"test utf16 bytes").unwrap();let mut cipher=cbc::Encryptor::<aes::Aes256>::new(&key.into(),&iv.into());
+  let mut bytes=vec![0;plain.len().div_ceil(16)*16];bytes[..plain.len()].copy_from_slice(plain);if bad_padding{*bytes.last_mut().unwrap()=1;}
+  for block in bytes.chunks_exact_mut(16){cipher.encrypt_block_mut(GenericArray::from_mut_slice(block));}bytes
+ }
+ struct Short(std::io::Cursor<Vec<u8>>);
+ impl Read for Short{fn read(&mut self,b:&mut[u8])->std::io::Result<usize>{let n=b.len().min(1);self.0.read(&mut b[..n])}}
+ #[test]fn preview1621_aes_exact_plaintext_padding_and_short_volume_reads(){
+  let plain=b"owned preview";let cipher=encrypted(plain,false);
+  let bytes:Vec<u8>=with_preview_limits::<_,Error>(64*1024*1024,20,||Ok(()),||{let mut r=PreviewAes::new(Short(std::io::Cursor::new(cipher)),&[8,0],b"test utf16 bytes",plain.len())?;let mut b=vec![];r.read_to_end(&mut b)?;Ok(b)}).unwrap();assert_eq!(bytes,plain);assert!(!crate::preview::active());
+ }
+ #[test]fn preview1621_aes_bad_padding_truncated_and_extra_ciphertext_fail(){
+  let plain=b"owned preview";
+  for bytes in [encrypted(plain,true),{let mut b=encrypted(plain,false);b.pop();b},{let mut b=encrypted(plain,false);b.extend_from_slice(&[0;16]);b}]{
+   assert!(with_preview_limits::<_,Error>(64*1024*1024,20,||Ok(()),||{let mut r=PreviewAes::new(bytes.as_slice(),&[8,0],b"test utf16 bytes",plain.len())?;let mut b=vec![];r.read_to_end(&mut b)?;Ok(())}).is_err());
+  }
+ }
+ #[test]fn preview1621_incomplete_aes_and_nested_scopes_restore_context(){
+  let cipher=encrypted(b"owned preview",false);
+  with_preview_limits::<_,Error>(64*1024*1024,20,||Ok(()),||{
+   assert!(with_preview_limits::<_,Error>(64*1024*1024,20,||Ok(()),||{let mut r=PreviewAes::new(cipher.as_slice(),&[8,0],b"test utf16 bytes",13)?;r.read_exact(&mut[0])?;Ok(())}).is_err());assert!(crate::preview::active());Ok(())
+  }).unwrap();assert!(!crate::preview::active());
+ }
+ #[test]fn preview1621_kdf_bounds_and_cpu_check_can_cancel_or_timeout(){
+  for power in [21,31,63]{assert!(with_preview_limits::<_,Error>(64*1024*1024,20,||Ok(()),||get_aes_key(&[power,0],b"key")).is_err());}
+  for kind in [std::io::ErrorKind::Interrupted,std::io::ErrorKind::TimedOut]{
+   let count=std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));let seen=count.clone();
+   let e=with_preview_limits::<_,Error>(64*1024*1024,20,move||{if seen.fetch_add(1,std::sync::atomic::Ordering::SeqCst)>=3{Err(Error::io(std::io::Error::new(kind,"7Z 预览取消或超时")))}else{Ok(())}},||get_aes_key(&[19,0],b"key")).unwrap_err();assert!(e.to_string().contains("预览取消或超时"));assert!(!crate::preview::active());
+  }
+ }
+ #[test]fn preview1621_header_allocation_bound_is_opt_in(){
+  assert!(crate::preview::size(65*1024*1024).is_ok());assert!(with_preview_limits::<_,Error>(64*1024*1024,20,||Ok(()),||crate::preview::size(65*1024*1024)).is_err());assert!(!crate::preview::active());
+ }
 }

@@ -51,3 +51,17 @@ compressed coverage and codec end. Only selected output is retained; a caller
 callback checks cancellation/deadline on every output chunk and before success.
 The application allows only unencrypted LZMA/LZMA2 shared text <=1 MiB within
 64 MiB compressed/unpacked shared blocks. General extraction is unchanged.
+
+2026-10-23: v1.6.21 adds with_preview_limits, a synchronous thread-local RAII
+scope used only by the application's 7Z metadata and preview reads. It bounds
+header allocations/dictionaries and AES work (cycles power <=20, UTF16 bytes
+<=4096), checks cancellation/deadline every 4096 KDF rounds, and restores the
+previous scope on error/panic. Scoped AES-CBC uses exact aligned short-read-safe
+input, declared plaintext length, zero padding and ciphertext EOF; every scoped
+AES stream must be fully consumed before a successful return. Encoded headers
+in scope read the actual codec end and verify folder CRC after exact output.
+General unscoped extraction/creation defaults are preserved. Original producer
+cases and five scoped vendor tests cover this path. The zero-padding/declared
+size model follows the official source:
+https://github.com/ip7z/7zip/blob/main/CPP/7zip/Common/FilterCoder.cpp
+https://github.com/ip7z/7zip/blob/main/CPP/7zip/Crypto/7zAes.cpp

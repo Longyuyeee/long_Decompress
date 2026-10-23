@@ -3,7 +3,7 @@ use crate::services::archive_format::ArchiveFormat;
 use crate::services::universal_engine::UniversalCliEngine;
 use anyhow::{Context, Result};
 
-use std::io::{Read, Seek, SeekFrom};
+use std::io::Read;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -110,25 +110,10 @@ fn browse_zip(path: &Path, cancelled: &AtomicBool) -> Result<ArchiveBrowseResult
 fn browse_7z(
     path: &Path,
     password: Option<&str>,
-    cancelled: &AtomicBool,
+    cancelled: &Arc<AtomicBool>,
 ) -> Result<ArchiveBrowseResult> {
     ensure_not_cancelled(cancelled)?;
-    let mut file = super::numeric_volume_reader::ZipInputReader::open_seven_zip(path)?;
-    let length = file.seek(SeekFrom::End(0))?;
-    // Explicitly supplied passwords bypass password resolution. Apply the same
-    // CRC/extent preflight here so truncated volumes cannot become password errors.
-    super::native_extraction::seven_zip::validate_archive_extent(&mut file, length)?;
-    file.seek(SeekFrom::Start(0))?;
-    let password = password.map(sevenz_rust::Password::from);
-    let archive = sevenz_rust::Archive::read(
-        &mut file,
-        length,
-        password
-            .as_ref()
-            .map(|value| value.as_slice())
-            .unwrap_or(&[]),
-    )
-    .map_err(|error| anyhow::anyhow!("Unable to read 7Z metadata: {error}"))?;
+    let archive=super::sevenz_preview::metadata(path,password,cancelled.clone())?;
     let encrypted = archive.folders.iter().any(|folder| {
         folder.coders.iter().any(|coder| {
             coder.decompression_method_id() == sevenz_rust::SevenZMethod::ID_AES256SHA256
@@ -137,8 +122,8 @@ fn browse_7z(
     ensure_not_cancelled(cancelled)?;
     let entries = archive
         .files
-        .into_iter()
-        .map(|entry| {
+        .into_iter().enumerate()
+        .map(|(index,entry)| {
             ensure_not_cancelled(cancelled)?;
             let path = entry.name.replace('\\', "/");
             let modified = entry.has_last_modified_date.then(|| {
@@ -149,7 +134,7 @@ fn browse_7z(
                 name: entry_name(&path),
                 path,
                 size: entry.size,
-                compressed_size: Some(entry.compressed_size),
+                compressed_size: archive.stream_map.file_folder_index.get(index).copied().flatten().filter(|i|archive.folders[*i].num_unpack_sub_streams>1).map_or(Some(entry.compressed_size),|_|None),
                 modified,
                 crc: entry.has_crc.then(|| format!("{:08X}", entry.crc)),
                 encrypted,

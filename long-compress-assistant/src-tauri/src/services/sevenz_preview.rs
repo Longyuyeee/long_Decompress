@@ -51,14 +51,7 @@ pub(crate) fn read_image(path:&Path, selected:&str, password:Option<&str>, contr
 }
 
 fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc<AtomicBool>, max_output:u64, control:Option<super::image_reader::Control>) -> Result<(Vec<u8>,u64)> {
-    let mut input = Input { inner: ZipInputReader::open_seven_zip(path)?, read:0, cancelled, until:Instant::now()+Duration::from_secs(30), control };
-    input.check()?;
-    let length = input.seek(SeekFrom::End(0))?;
-    super::native_extraction::seven_zip::validate_archive_extent(&mut input,length)?;
-    input.seek(SeekFrom::Start(0))?;
-    let key = password.filter(|s|!s.is_empty()).map(sevenz_rust::Password::from).unwrap_or_default();
-    let archive = sevenz_rust::Archive::read(&mut input,length,key.as_slice()).map_err(|e|engine_error(e,!key.is_empty()))?;
-    input.check()?;
+    with_archive(path,password,cancelled,control,|archive,input,key|{
     let mut matches = archive.files.iter().enumerate().filter(|(_,e)| e.name.replace('\\',"/")==selected);
     let (index,entry) = matches.next().context("所选 7Z 内容已不存在，请刷新目录")?;
     ensure!(matches.next().is_none(),"7Z 中存在同路径条目，不能确定所选内容，请先提取并确认内容");
@@ -84,14 +77,14 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     }
     let encrypted = methods.contains(&M::ID_AES256SHA256);
     if shared {
-        ensure!(!encrypted,"7Z 加密固实内容暂不支持预览，请先提取后打开");
+        ensure!(!encrypted || max_output==MAX_TEXT,"7Z 加密固实图片暂不支持预览，请先提取后打开");
         ensure!(folder.packed_streams.len()==1,"7Z 固实共享范围无法确认，请先提取后打开");
         let pack_index=archive.stream_map.folder_first_pack_stream_index.get(folder_index).context("7Z 固实共享范围无法确认，请先提取后打开")?;
         let packed=archive.pack_sizes.get(*pack_index).context("7Z 固实共享大小无法确认，请先提取后打开")?;
         ensure!(*packed<=MAX_INPUT && folder.get_unpack_size()<=MAX_INPUT,"7Z 固实共享内容超过 64 MiB 预览范围，请先提取后打开");
     }
     let flag=input.cancelled.clone();let until=input.until;
-    let decoder = sevenz_rust::BlockDecoder::new(folder_index,&archive,key.as_slice(),&mut input);
+    let decoder = sevenz_rust::BlockDecoder::new(folder_index,&archive,key.as_slice(),input);
     let bytes = if shared {
         decoder.read_solid_entry(index,max_output as usize,MAX_INPUT,||{
             if flag.load(Ordering::Acquire) {return Err(sevenz_rust::Error::io(io::Error::other("7Z 预览已取消")));}
@@ -104,6 +97,26 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     }.map_err(|e|engine_error(e,encrypted))?;
     input.check()?;
     Ok((bytes,entry.size))
+    })
+}
+
+pub(crate) fn metadata(path:&Path,password:Option<&str>,cancelled:Arc<AtomicBool>)->Result<sevenz_rust::Archive>{
+    with_archive(path,password,cancelled,None,|archive,_,_|Ok(archive))
+}
+
+fn with_archive<T>(path:&Path,password:Option<&str>,cancelled:Arc<AtomicBool>,control:Option<super::image_reader::Control>,work:impl FnOnce(sevenz_rust::Archive,&mut Input<ZipInputReader>,sevenz_rust::Password)->Result<T>)->Result<T>{
+    let mut input=Input{inner:ZipInputReader::open_seven_zip(path)?,read:0,cancelled,until:Instant::now()+Duration::from_secs(30),control};
+    let flag=input.cancelled.clone();let until=input.until;
+    sevenz_rust::with_preview_limits(MAX_INPUT,20,move||{
+        if flag.load(Ordering::Acquire){return Err(sevenz_rust::Error::io(io::Error::other("7Z 预览已取消")));}
+        if Instant::now()>=until{return Err(sevenz_rust::Error::io(io::Error::new(io::ErrorKind::TimedOut,"7Z 预览超过 30 秒，请先提取后打开")));}Ok(())
+    },||{
+        input.check()?;let length=input.seek(SeekFrom::End(0))?;
+        super::native_extraction::seven_zip::validate_archive_extent(&mut input,length)?;input.seek(SeekFrom::Start(0))?;
+        let key=password.filter(|s|!s.is_empty()).map(sevenz_rust::Password::from).unwrap_or_default();
+        let archive=sevenz_rust::Archive::read(&mut input,length,key.as_slice()).map_err(|e|engine_error(e,!key.is_empty()))?;
+        input.check()?;work(archive,&mut input,key)
+    }).map_err(|error:anyhow::Error|match error.downcast::<sevenz_rust::Error>(){Ok(e)=>engine_error(e,false),Err(e)=>e})
 }
 
 #[cfg(test)]

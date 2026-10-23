@@ -33,6 +33,8 @@ pub enum Decoder<R: Read> {
     BZip2(BzDecoder<R>),
     #[cfg(feature = "aes256")]
     AES256SHA256(Aes256Sha256Decoder<R>),
+    #[cfg(feature = "aes256")]
+    PreviewAES(crate::aes256sha256::PreviewAes<R>),
 }
 
 // impl<R: Read> Decoder<R> {
@@ -64,6 +66,8 @@ impl<R: Read> Read for Decoder<R> {
             Decoder::BZip2(r) => r.read(buf),
             #[cfg(feature = "aes256")]
             Decoder::AES256SHA256(r) => r.read(buf),
+            #[cfg(feature = "aes256")]
+            Decoder::PreviewAES(r) => r.read(buf),
         }
     }
 }
@@ -75,6 +79,7 @@ pub fn add_decoder<I: Read>(
     #[allow(unused)] password: &[u8],
     max_mem_limit_kb: usize,
 ) -> Result<Decoder<I>, Error> {
+    crate::preview::coder(coder, uncompressed_len)?;
     let method = SevenZMethod::by_id(coder.decompression_method_id());
     let method = if let Some(m) = method {
         m
@@ -171,8 +176,12 @@ pub fn add_decoder<I: Read>(
         }
         #[cfg(feature = "aes256")]
         SevenZMethod::ID_AES256SHA256 => {
+            crate::preview::aes(&coder.properties,password)?;
             if password.is_empty() {
                 return Err(Error::PasswordRequired);
+            }
+            if crate::preview::active() {
+                return Ok(Decoder::PreviewAES(crate::aes256sha256::PreviewAes::new(input,&coder.properties,password,uncompressed_len)?));
             }
             let de = Aes256Sha256Decoder::new(input, &coder.properties, password)?;
             Ok(Decoder::AES256SHA256(de))

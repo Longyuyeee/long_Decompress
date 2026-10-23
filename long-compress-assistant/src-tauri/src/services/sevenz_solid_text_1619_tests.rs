@@ -53,7 +53,7 @@ fn sevenz1619_checks_earlier_later_and_folder_crcs_and_complete_decoder_end() {
 
 #[tokio::test]
 async fn sevenz1619_shared_limits_and_encryption_keep_clear_extraction_next_steps() {
- for (p,entry,key,reason) in [(root().join("oversize-shared.7z"),"readme.txt",None,"64 MiB"),(case("encrypted"),SELECTED,Some("7Z固实公开测试1619!"),"加密固实")] {
+ for (p,entry,key,reason) in [(root().join("oversize-shared.7z"),"readme.txt",None,"64 MiB")] {
   let e=preview::preview_archive_text(&p,entry,key).await.unwrap_err();let text=format!("{e:#}");assert!(text.contains(reason)&&text.contains("先提取"),"{text}");assert!(!text.contains("[sevenz-preview:password]"));
  }
  let(mut f,mut a,i,b)=archive();let n=a.stream_map.folder_first_pack_stream_index[b];a.pack_sizes[n]=LIMIT+1;
