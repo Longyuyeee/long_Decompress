@@ -1,0 +1,569 @@
+{
+  "producer": "E:\\7-Zip\\7z.exe",
+  "producerSha256": "83967f1b02b43c4efeda302795722c809e0e81b8307de73558d10484d5676a7d",
+  "independent": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\resources\\archive-engine\\7z.exe",
+  "independentSha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53",
+  "selected": "notes/说明 [1].txt",
+  "textBytes": 219000,
+  "textSha256": "19a7db6f92a4d0374f3aef1862a1f57add3f782dcea396c2e9b29902e9e0d922",
+  "images": [
+    {
+      "path": "gallery/01-cover.png",
+      "width": 320,
+      "height": 240,
+      "bytes": 2729,
+      "sha256": "9b2c072f170548132a8a29fbb5875e6f9673351a036c8ed603377ededec13a3b"
+    },
+    {
+      "path": "gallery/02-grid.bmp",
+      "width": 96,
+      "height": 64,
+      "bytes": 18486,
+      "sha256": "6d133ad7dc08719597d3b2b7c528a743c426686268835dd6d035a50e8cef8beb"
+    },
+    {
+      "path": "gallery/04-cover.jpg",
+      "width": 320,
+      "height": 240,
+      "bytes": 19432,
+      "sha256": "4fc408d91aee4e4037f06dc6392a35109a5fd26d4aa7c790ff0902a2e3181dc9"
+    },
+    {
+      "path": "gallery/05-cover.gif",
+      "width": 160,
+      "height": 120,
+      "bytes": 9922,
+      "sha256": "893ff673b0baa151e8dbacb82e2ffb3b0579441d46ff6bfaf09f4f393b99444a"
+    },
+    {
+      "path": "gallery/06-cover.webp",
+      "width": 160,
+      "height": 120,
+      "bytes": 5328,
+      "sha256": "e7aed6ff5eabe4891cdb40c07ee6d4cf6d076cd71f77c92561726ee70f1d3630"
+    }
+  ],
+  "cases": [
+    {
+      "name": "deflate",
+      "level": 5,
+      "members": [
+        {
+          "name": "Deflate资料.7z",
+          "bytes": 111195,
+          "sha256": "78ad0b92a64e5af1a5bdc81f7258d23f21c5732b1a74eae5f5920e5850c30c3a"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mhc=off",
+        "-ms=off",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-m0=Deflate",
+        "-mx=5",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-preview-1633\\deflate\\Deflate资料.7z",
+        "."
+      ],
+      "expected": [
+        {
+          "path": "notes/说明 [1].txt",
+          "bytes": 219000,
+          "sha256": "19a7db6f92a4d0374f3aef1862a1f57add3f782dcea396c2e9b29902e9e0d922"
+        },
+        {
+          "path": "notes/说明 1.txt",
+          "bytes": 29,
+          "sha256": "c40d449564c21dae0b52c2b76c71dba49cd4cbd246721d228b9c278e07486ca3"
+        },
+        {
+          "path": "notes/empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "notes/utf16.txt",
+          "bytes": 24,
+          "sha256": "04beeefbfa341e360c26579b387766926b450100ede25839326a746414a6bc42"
+        },
+        {
+          "path": "notes/gbk.txt",
+          "bytes": 12,
+          "sha256": "b9c3c07e5240f33737ab43e94ef9c4b0b49625f56e94484e00663201665255a0"
+        },
+        {
+          "path": "notes/binary.txt",
+          "bytes": 500,
+          "sha256": "e6304a473c65ecd0ccffbd2f5925a8f51c44b11f59b66cfcc055e4bb911b8fa0"
+        },
+        {
+          "path": "notes/exact.txt",
+          "bytes": 1048576,
+          "sha256": "ce2442b8b1c15414ca16f054e5331fc8019d24fd50813f43cc9881f7f19d765c"
+        },
+        {
+          "path": "notes/large.txt",
+          "bytes": 1048577,
+          "sha256": "c67906e91b2ceb65fade1f2b958f4ac765b959f3fe79578b207db2874e242e8d"
+        },
+        {
+          "path": "gallery/01-cover.png",
+          "bytes": 2729,
+          "sha256": "9b2c072f170548132a8a29fbb5875e6f9673351a036c8ed603377ededec13a3b"
+        },
+        {
+          "path": "gallery/02-grid.bmp",
+          "bytes": 18486,
+          "sha256": "6d133ad7dc08719597d3b2b7c528a743c426686268835dd6d035a50e8cef8beb"
+        },
+        {
+          "path": "gallery/04-cover.jpg",
+          "bytes": 19432,
+          "sha256": "4fc408d91aee4e4037f06dc6392a35109a5fd26d4aa7c790ff0902a2e3181dc9"
+        },
+        {
+          "path": "gallery/05-cover.gif",
+          "bytes": 9922,
+          "sha256": "893ff673b0baa151e8dbacb82e2ffb3b0579441d46ff6bfaf09f4f393b99444a"
+        },
+        {
+          "path": "gallery/06-cover.webp",
+          "bytes": 5328,
+          "sha256": "e7aed6ff5eabe4891cdb40c07ee6d4cf6d076cd71f77c92561726ee70f1d3630"
+        },
+        {
+          "path": "gallery/03-bad.png",
+          "bytes": 41,
+          "sha256": "45fd6fcb95d858726770810b5b486311c2aa784f49aa8f2c6dbe03b11f7dac92"
+        }
+      ],
+      "independentReadback": true,
+      "listing": [
+        "Method = Deflate",
+        "Solid = -",
+        "Blocks = 13",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate"
+      ]
+    },
+    {
+      "name": "maximum",
+      "level": 9,
+      "members": [
+        {
+          "name": "Deflate资料.7z",
+          "bytes": 105699,
+          "sha256": "37ff064187e008cdc4edc756d866f1f1f633a8a400944666430a4a312df37410"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mhc=off",
+        "-ms=off",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-m0=Deflate",
+        "-mx=9",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-preview-1633\\maximum\\Deflate资料.7z",
+        "."
+      ],
+      "expected": [
+        {
+          "path": "notes/说明 [1].txt",
+          "bytes": 219000,
+          "sha256": "19a7db6f92a4d0374f3aef1862a1f57add3f782dcea396c2e9b29902e9e0d922"
+        },
+        {
+          "path": "notes/说明 1.txt",
+          "bytes": 29,
+          "sha256": "c40d449564c21dae0b52c2b76c71dba49cd4cbd246721d228b9c278e07486ca3"
+        },
+        {
+          "path": "notes/empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "notes/utf16.txt",
+          "bytes": 24,
+          "sha256": "04beeefbfa341e360c26579b387766926b450100ede25839326a746414a6bc42"
+        },
+        {
+          "path": "notes/gbk.txt",
+          "bytes": 12,
+          "sha256": "b9c3c07e5240f33737ab43e94ef9c4b0b49625f56e94484e00663201665255a0"
+        },
+        {
+          "path": "notes/binary.txt",
+          "bytes": 500,
+          "sha256": "e6304a473c65ecd0ccffbd2f5925a8f51c44b11f59b66cfcc055e4bb911b8fa0"
+        },
+        {
+          "path": "notes/exact.txt",
+          "bytes": 1048576,
+          "sha256": "ce2442b8b1c15414ca16f054e5331fc8019d24fd50813f43cc9881f7f19d765c"
+        },
+        {
+          "path": "notes/large.txt",
+          "bytes": 1048577,
+          "sha256": "c67906e91b2ceb65fade1f2b958f4ac765b959f3fe79578b207db2874e242e8d"
+        },
+        {
+          "path": "gallery/01-cover.png",
+          "bytes": 2729,
+          "sha256": "9b2c072f170548132a8a29fbb5875e6f9673351a036c8ed603377ededec13a3b"
+        },
+        {
+          "path": "gallery/02-grid.bmp",
+          "bytes": 18486,
+          "sha256": "6d133ad7dc08719597d3b2b7c528a743c426686268835dd6d035a50e8cef8beb"
+        },
+        {
+          "path": "gallery/04-cover.jpg",
+          "bytes": 19432,
+          "sha256": "4fc408d91aee4e4037f06dc6392a35109a5fd26d4aa7c790ff0902a2e3181dc9"
+        },
+        {
+          "path": "gallery/05-cover.gif",
+          "bytes": 9922,
+          "sha256": "893ff673b0baa151e8dbacb82e2ffb3b0579441d46ff6bfaf09f4f393b99444a"
+        },
+        {
+          "path": "gallery/06-cover.webp",
+          "bytes": 5328,
+          "sha256": "e7aed6ff5eabe4891cdb40c07ee6d4cf6d076cd71f77c92561726ee70f1d3630"
+        },
+        {
+          "path": "gallery/03-bad.png",
+          "bytes": 41,
+          "sha256": "45fd6fcb95d858726770810b5b486311c2aa784f49aa8f2c6dbe03b11f7dac92"
+        }
+      ],
+      "independentReadback": true,
+      "listing": [
+        "Method = Deflate",
+        "Solid = -",
+        "Blocks = 13",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate"
+      ]
+    },
+    {
+      "name": "volumes",
+      "level": 5,
+      "members": [
+        {
+          "name": "Deflate资料.7z.001",
+          "bytes": 24576,
+          "sha256": "7805f311539dbc76dc75f317fec4db627c8f170625ec93edac50380f26f6ccca"
+        },
+        {
+          "name": "Deflate资料.7z.002",
+          "bytes": 24576,
+          "sha256": "08c4c1029a0993b9dbedf07081250a64a247edc9b26aa968667ed15ac7733b23"
+        },
+        {
+          "name": "Deflate资料.7z.003",
+          "bytes": 24576,
+          "sha256": "3b37ba375548e6331fae28e360124d22e33c6ee59583d11253fba0c083eaeacc"
+        },
+        {
+          "name": "Deflate资料.7z.004",
+          "bytes": 24576,
+          "sha256": "05fdb1c459bf36350904c7753aa4d9d9de6ed92e96b89fea4d9d31d12ed09098"
+        },
+        {
+          "name": "Deflate资料.7z.005",
+          "bytes": 12891,
+          "sha256": "f5610e4bfb7d2299c77fcf48e3992ad81ecc5f2fec7817e6497fc57ac0de5123"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mhc=off",
+        "-ms=off",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-m0=Deflate",
+        "-mx=5",
+        "-v24k",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-preview-1633\\volumes\\Deflate资料.7z",
+        "."
+      ],
+      "expected": [
+        {
+          "path": "notes/说明 [1].txt",
+          "bytes": 219000,
+          "sha256": "19a7db6f92a4d0374f3aef1862a1f57add3f782dcea396c2e9b29902e9e0d922"
+        },
+        {
+          "path": "notes/说明 1.txt",
+          "bytes": 29,
+          "sha256": "c40d449564c21dae0b52c2b76c71dba49cd4cbd246721d228b9c278e07486ca3"
+        },
+        {
+          "path": "notes/empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "notes/utf16.txt",
+          "bytes": 24,
+          "sha256": "04beeefbfa341e360c26579b387766926b450100ede25839326a746414a6bc42"
+        },
+        {
+          "path": "notes/gbk.txt",
+          "bytes": 12,
+          "sha256": "b9c3c07e5240f33737ab43e94ef9c4b0b49625f56e94484e00663201665255a0"
+        },
+        {
+          "path": "notes/binary.txt",
+          "bytes": 500,
+          "sha256": "e6304a473c65ecd0ccffbd2f5925a8f51c44b11f59b66cfcc055e4bb911b8fa0"
+        },
+        {
+          "path": "notes/exact.txt",
+          "bytes": 1048576,
+          "sha256": "ce2442b8b1c15414ca16f054e5331fc8019d24fd50813f43cc9881f7f19d765c"
+        },
+        {
+          "path": "notes/large.txt",
+          "bytes": 1048577,
+          "sha256": "c67906e91b2ceb65fade1f2b958f4ac765b959f3fe79578b207db2874e242e8d"
+        },
+        {
+          "path": "gallery/01-cover.png",
+          "bytes": 2729,
+          "sha256": "9b2c072f170548132a8a29fbb5875e6f9673351a036c8ed603377ededec13a3b"
+        },
+        {
+          "path": "gallery/02-grid.bmp",
+          "bytes": 18486,
+          "sha256": "6d133ad7dc08719597d3b2b7c528a743c426686268835dd6d035a50e8cef8beb"
+        },
+        {
+          "path": "gallery/04-cover.jpg",
+          "bytes": 19432,
+          "sha256": "4fc408d91aee4e4037f06dc6392a35109a5fd26d4aa7c790ff0902a2e3181dc9"
+        },
+        {
+          "path": "gallery/05-cover.gif",
+          "bytes": 9922,
+          "sha256": "893ff673b0baa151e8dbacb82e2ffb3b0579441d46ff6bfaf09f4f393b99444a"
+        },
+        {
+          "path": "gallery/06-cover.webp",
+          "bytes": 5328,
+          "sha256": "e7aed6ff5eabe4891cdb40c07ee6d4cf6d076cd71f77c92561726ee70f1d3630"
+        },
+        {
+          "path": "gallery/03-bad.png",
+          "bytes": 41,
+          "sha256": "45fd6fcb95d858726770810b5b486311c2aa784f49aa8f2c6dbe03b11f7dac92"
+        }
+      ],
+      "independentReadback": true,
+      "listing": [
+        "Method = Deflate",
+        "Solid = -",
+        "Blocks = 13",
+        "Method = ",
+        "Method = ",
+        "Method = ",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate"
+      ]
+    }
+  ],
+  "sideOriginals": {
+    "solid": {
+      "sha256": "ab0bbbb173fae983940f61e823bd5c490b71355ca1c71afed3bd1f7644e722b1",
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mhc=off",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-m0=Deflate",
+        "-ms=on",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-preview-1633\\solid.7z",
+        "."
+      ],
+      "independentReadback": true
+    },
+    "encrypted": {
+      "sha256": "280c54e9e0b06dd7dc88adf3cb8a8e1e6dccad2a4e37153f6032b0479cef58b8",
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mhc=off",
+        "-ms=off",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-m0=Deflate",
+        "-pDeflate公开测试密码1633!",
+        "-mhe=on",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-preview-1633\\encrypted.7z",
+        "notes/说明 [1].txt"
+      ],
+      "independentReadback": true
+    },
+    "deflate64": {
+      "sha256": "f309edc65a2262997524f7c31cee12fd01ea7e61eebf9b6fcca7a79868f225fc",
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mhc=off",
+        "-ms=off",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-m0=Deflate",
+        "-m0=Deflate64",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-preview-1633\\deflate64.7z",
+        "notes/说明 [1].txt"
+      ],
+      "independentReadback": true
+    },
+    "original": {
+      "sha256": "8349cb3139b1b6741041c8fcc636825d787c0dd8fbe1ba3d9294f09626267417",
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mhc=off",
+        "-ms=off",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-m0=Deflate",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-preview-1633\\original.7z",
+        "notes/说明 [1].txt"
+      ],
+      "independentReadback": true
+    },
+    "at-limit.bmp": {
+      "sha256": "77aed3a03bcbe0fd847ba3c0db09c9356c251fee0bb923e44a442871d712574c",
+      "bytes": 8388608,
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mhc=off",
+        "-ms=off",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-m0=Deflate",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-preview-1633\\at-limit.7z",
+        "at-limit.bmp"
+      ],
+      "independentReadback": true
+    },
+    "oversize.bmp": {
+      "sha256": "8ffdd63e58e44db1a5e67793d02e3d673366de410b455f1407949c47b1b61504",
+      "bytes": 8388609,
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mhc=off",
+        "-ms=off",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-m0=Deflate",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-preview-1633\\oversize.7z",
+        "oversize.bmp"
+      ],
+      "independentReadback": true
+    },
+    "dimensions.png": {
+      "sha256": "f4baf34f9ded71c7ddf2fb69f8ac6bfd7b81bafe0a51d43820a6bd2e624acac1",
+      "bytes": 106,
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mhc=off",
+        "-ms=off",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-m0=Deflate",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-preview-1633\\dimensions.7z",
+        "dimensions.png"
+      ],
+      "independentReadback": true
+    }
+  },
+  "password": "Deflate公开测试密码1633!",
+  "badData": {
+    "sha256": "d5e7812265cd1b8435485e3186a8e5d6a579253bd9a7888a1330abf244e46357",
+    "independentIntegrityFailed": true
+  },
+  "largeUnrelatedIgnored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-deflate-preview-1633\\large-unrelated.7z"
+}
