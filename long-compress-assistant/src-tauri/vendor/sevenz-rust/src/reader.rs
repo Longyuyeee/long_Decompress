@@ -1468,6 +1468,50 @@ pub struct BlockDecoder<'a, R: Read + Seek> {
 }
 
 impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
+    /// Complete a plain bounded PPMd7 shared block, retaining only one entry.
+    /// Check each mapped stream, block/pack CRCs and the size-defined finish.
+    #[cfg(feature="additional-codecs")]
+    pub fn read_solid_ppmd_entry(self, selected:usize, max_selected:usize, max_shared:u64, mut check:impl FnMut()->Result<(),Error>) -> Result<Vec<u8>,Error> {
+        let a=self.archive;let f=a.folders.get(self.folder_index).ok_or_else(||Error::other("Missing shared PPMd block"))?;
+        let files:Vec<_>=a.files.iter().enumerate().filter(|(i,e)|e.has_stream && a.stream_map.file_folder_index.get(*i)==Some(&Some(self.folder_index))).collect();
+        let e=files.iter().find(|(i,_)|*i==selected).ok_or_else(||Error::other("Selected file is outside shared PPMd block"))?.1;
+        let total=files.iter().try_fold(0u64,|n,(_,e)|n.checked_add(e.size)).ok_or_else(||Error::other("Shared PPMd size overflow"))?;
+        if max_selected==0 || max_selected>8*1024*1024 || max_shared==0 || max_shared>64*1024*1024
+            || e.size>max_selected as u64 || total>max_shared || total!=f.get_unpack_size() || files.len()!=f.num_unpack_sub_streams
+            || files.iter().any(|(_,e)|e.is_directory || e.is_anti_item || (!e.has_crc && !f.has_crc))
+            || f.coders.len()!=1 || f.packed_streams.as_slice()!=[0]
+        {return Err(Error::unsupported("7Z PPMd 固实共享映射或大小无法确认，请先提取后打开"));}
+        let c=&f.coders[0];let p=&c.properties;
+        if c.decompression_method_id()!=SevenZMethod::ID_PPMD || c.num_in_streams!=1 || c.num_out_streams!=1 || p.len()!=5 {
+            return Err(Error::unsupported("7Z PPMd 固实预览方法或参数无法确认，请先提取后打开"));
+        }
+        let order=p[0] as u32;let memory=u32::from_le_bytes(p[1..5].try_into().unwrap());
+        if !(2..=64).contains(&order) || !(2048..=64*1024*1024).contains(&memory) {return Err(Error::unsupported("7Z PPMd 固实预览阶数或字典超出范围，请先提取后打开"));}
+        crate::preview::coder(c,total as usize)?;check()?;
+        let index=*a.stream_map.folder_first_pack_stream_index.get(self.folder_index).ok_or_else(||Error::other("Missing shared PPMd pack mapping"))?;
+        let size=*a.pack_sizes.get(index).ok_or_else(||Error::other("Missing shared PPMd packed size"))?;
+        if size>max_shared {return Err(Error::unsupported("7Z PPMd 固实压缩数据超过 64 MiB，请先提取后打开"));}
+        let start=32u64.checked_add(a.pack_pos).and_then(|n|a.stream_map.pack_stream_offsets.get(index).and_then(|o|n.checked_add(*o))).ok_or_else(||Error::other("Shared PPMd pack offset overflow"))?;
+        self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
+        let mut packed=PreviewPack{source:self.source,start,size,read:0,crc:CRC32.digest()};
+        let mut decoder=ppmd_rust::Ppmd7Decoder::new(&mut packed,order,memory).map_err(|e|Error::other(format!("Shared PPMd decoder: {e}")))?;
+        let mut output=Vec::with_capacity(e.size as usize);let mut buffer=[0;32*1024];let mut block_crc=CRC32.digest();
+        for(i,file)in files {
+            let mut remaining=file.size;let mut file_crc=CRC32.digest();
+            while remaining>0 {
+                check()?;let capacity=remaining.min(buffer.len() as u64) as usize;let n=decoder.read(&mut buffer[..capacity]).map_err(Error::io)?;
+                if n==0 {return Err(Error::other("Shared PPMd ended before declared file size"));}
+                let chunk=&buffer[..n];file_crc.update(chunk);block_crc.update(chunk);if i==selected {output.extend_from_slice(chunk);}remaining-=n as u64;
+            }
+            if file.has_crc && file_crc.finalize() as u64!=file.crc {return Err(Error::ChecksumVerificationFailed);}
+        }
+        // Standard 7z PPMd has no EOS: finish the declared total, not another symbol.
+        decoder.finish_7z().map_err(Error::io)?;
+        if packed.read!=size {return Err(Error::other("Shared PPMd packed stream was not completely consumed"));}
+        if f.has_crc && block_crc.finalize() as u64!=f.crc || a.pack_crcs_defined.contains(index) && a.pack_crcs.get(index).copied()!=Some(packed.crc.finalize() as u64) {return Err(Error::ChecksumVerificationFailed);}
+        check()?;Ok(output)
+    }
+
     /// Complete one non-solid PPMd7 stream, optionally preceded by AES.
     /// Size-delimited PPMd verifies range finish without an extra symbol;
     /// AES still requires complete plaintext/ciphertext and valid padding.

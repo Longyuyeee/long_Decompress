@@ -44,7 +44,6 @@ async fn sevenz1627_range_flush_failure_never_displays_complete_body(){
 #[tokio::test]
 async fn sevenz1627_output_image_limits_binary_and_unsupported_scopes_keep_next_steps(){
  assert!(text_error(&case("ppmd"),"notes/large.txt",None).await.contains("PPMd"));assert!(text_error(&case("ppmd"),"notes/binary.txt",None).await.contains("binary"));
- for(p,e,key)in[(root().join("solid.7z"),TEXT,None)]{let e=text_error(&p,e,key).await;assert!(e.contains("PPMd")&&e.contains("先提取"),"{e}");}
  let v=preview::preview_archive_image(&root().join("at-limit.7z"),"at-limit.bmp",None).await.unwrap();assert_eq!(image_bytes(&v).len(),8*1024*1024);
  for(p,e,reason)in[(root().join("oversize.7z"),"oversize.bmp","8 MiB"),(root().join("dimensions.7z"),"dimensions.png","dimensions exceed"),(case("ppmd"),"gallery/03-bad.png","not a supported raster")]{let error=preview::preview_archive_image(&p,e,None).await.err().unwrap();assert!(format!("{error:#}").contains(reason),"{error:#}");}
 }
