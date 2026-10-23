@@ -1,0 +1,87 @@
+{
+  "version": "1.6.28",
+  "applicationSha256": "2388a515de2a640b0a3a3f7289ec232e79403d9c3b2314c484cb7842634f8e34",
+  "shellSha256": "a8b4d51952975b16fe3c0fc6d44abc1f7e8e959d4767f5d4cae6388ce942c221",
+  "backend": {
+    "successfulDistinctCases": 6,
+    "initialPassed": 5,
+    "initialFailed": 1,
+    "followupPassed": 1,
+    "followupFailed": 0,
+    "repeatedPassedCases": 0,
+    "correction": "Test assertion aligned to existing password/integrity hint; application behavior unchanged"
+  },
+  "aesPpmdUnits": {
+    "passed": 2,
+    "failed": 0
+  },
+  "desktopGroups": 5,
+  "layouts": [
+    {
+      "name": "text-wide",
+      "closeVisible": true,
+      "dialog": {
+        "height": 531.390625,
+        "width": 832,
+        "x": 134,
+        "y": 59.3046875
+      },
+      "height": 650,
+      "image": null,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "image-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 401.984375,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 59.0078125
+      },
+      "height": 520,
+      "image": {
+        "height": 240,
+        "width": 320
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    },
+    {
+      "name": "reader-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 504,
+        "width": 744,
+        "x": 8,
+        "y": 8
+      },
+      "height": 520,
+      "image": {
+        "height": 64,
+        "width": 96
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "build": {
+    "frontend": "vue-tsc + VITE_DESKTOP_E2E=1 Vite",
+    "native": "custom-protocol,desktop-e2e; opt-level=1; LTO=false",
+    "productionConfigChanged": false
+  },
+  "fixturesManifestSha256": "083fb8ba4d6d331c496fa9bf413a93e8900a246ec25ecf17f3b07f8b42ce4124"
+}

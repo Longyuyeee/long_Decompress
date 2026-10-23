@@ -6,6 +6,9 @@
 extern crate wasm_bindgen;
 #[cfg(feature = "aes256")]
 mod aes256sha256;
+
+#[cfg(all(test,feature="aes256",feature="additional-codecs"))]
+mod ppmd_preview_1628_tests;
 mod bcj2;
 #[cfg(feature = "aes256")]
 pub use aes256sha256::*;

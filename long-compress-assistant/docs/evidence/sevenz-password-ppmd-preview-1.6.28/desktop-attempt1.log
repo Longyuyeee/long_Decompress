@@ -1,0 +1,17 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[sevenz-password-ppmd-1628] vault encrypted selected PPMd text is exact complete scrollable and stays in equal wide panes
+[sevenz-password-ppmd-1628] vault encrypted PPMd image pixels render in the original narrow modal
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+TimeoutError: .preview-image
+Wait timed out after 16093ms
+    at E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:929:22
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  remoteStacktrace: ''
+}
+
+Node.js v24.14.0

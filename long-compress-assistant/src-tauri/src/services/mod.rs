@@ -203,3 +203,6 @@ mod sevenz_encrypted_solid_text_prefix_1626_tests;
 
 #[cfg(test)]
 mod sevenz_ppmd_preview_1627_tests;
+
+#[cfg(test)]
+mod sevenz_password_ppmd_preview_1628_tests;
