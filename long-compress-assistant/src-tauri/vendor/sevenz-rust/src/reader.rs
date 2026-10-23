@@ -1704,6 +1704,67 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         Ok(bytes)
     }
 
+    /// Explicit non-solid Deflate prefix, optionally preceded by partial AES.
+    /// Stop at the requested output cap. Unread tail, CRCs, codec completion
+    /// and payload AES completion are deliberately not claimed as verified.
+    #[cfg(feature="additional-codecs")]
+    pub fn read_deflate_entry_prefix(self, selected:usize, max_bytes:usize, mut check:impl FnMut()->Result<(),Error>)->Result<Vec<u8>,Error>{
+        let a=self.archive;
+        let f=a.folders.get(self.folder_index).ok_or_else(||Error::other("Missing Deflate prefix block"))?;
+        let e=a.files.get(selected).ok_or_else(||Error::other("Missing Deflate prefix file"))?;
+        if max_bytes==0 || max_bytes>1024*1024 || e.size<=max_bytes as u64 || !e.has_stream || e.is_directory || e.is_anti_item
+            || a.stream_map.file_folder_index.get(selected)!=Some(&Some(self.folder_index))
+            || a.files.iter().enumerate().filter(|(i,e)|e.has_stream && a.stream_map.file_folder_index.get(*i)==Some(&Some(self.folder_index))).count()!=1
+            || !(1..=2).contains(&f.coders.len()) || f.unpack_sizes.len()!=f.coders.len()
+            || f.total_input_streams!=f.coders.len() || f.total_output_streams!=f.coders.len()
+            || f.bind_pairs.len()!=f.coders.len()-1 || f.packed_streams.len()!=1
+            || f.coders.iter().any(|c|c.num_in_streams!=1 || c.num_out_streams!=1)
+            || f.num_unpack_sub_streams!=1 || f.get_unpack_size()!=e.size
+        {return Err(Error::unsupported("7Z Deflate 大文本预览需要唯一非固实条目和明确映射，请先提取后打开"));}
+        let coders:Vec<_>=f.ordered_coder_iter().take(f.coders.len()+1).collect();
+        if coders.len()!=f.coders.len() || !(coders.len()==1 && coders[0].1.decompression_method_id()==SevenZMethod::ID_DEFLATE
+            || coders.len()==2 && coders[0].1.decompression_method_id()==SevenZMethod::ID_AES256SHA256 && coders[1].1.decompression_method_id()==SevenZMethod::ID_DEFLATE)
+            || !coders.last().unwrap().1.properties.is_empty()
+        {return Err(Error::unsupported("7Z Deflate 大文本预览方法或顺序无法确认，请先提取后打开"));}
+        let pack=*a.stream_map.folder_first_pack_stream_index.get(self.folder_index).ok_or_else(||Error::other("Missing Deflate prefix pack mapping"))?;
+        let size=*a.pack_sizes.get(pack).ok_or_else(||Error::other("Missing Deflate prefix pack size"))?;
+        let encrypted=coders.len()==2;
+        let plain=if encrypted{f.get_unpack_size_at_index(coders[0].0)}else{size};
+        if plain==0{return Err(Error::other("Deflate prefix has no compressed plaintext"));}
+        if encrypted && plain.checked_add(15).map(|n|n/16*16)!=Some(size){return Err(Error::other("Deflate prefix AES packed size mismatch"));}
+        let start=32u64.checked_add(a.pack_pos).and_then(|n|a.stream_map.pack_stream_offsets.get(pack).and_then(|o|n.checked_add(*o))).ok_or_else(||Error::other("Deflate prefix offset overflow"))?;
+        check()?;self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
+        let packed=self.source.take(size);
+        let mut stream:Box<dyn Read+'_>=if encrypted{
+            #[cfg(feature="aes256")]
+            {crate::preview::coder(coders[0].1,0)?;let n=usize::try_from(plain).map_err(|_|Error::unsupported("Deflate prefix size exceeds platform range"))?;Box::new(crate::aes256sha256::PreviewAes::new_prefix(packed,&coders[0].1.properties,self.password,n)?)}
+            #[cfg(not(feature="aes256"))]
+            {return Err(Error::unsupported("AES is unavailable"));}
+        }else{Box::new(packed)};
+        let mut codec=flate2::Decompress::new(false);let mut bytes=Vec::with_capacity(max_bytes);
+        let mut input=[0;32*1024];let mut output=[0;32*1024];let(mut offset,mut end,mut read_plain)=(0,0,0u64);
+        while bytes.len()<max_bytes{
+            check()?;
+            if offset==end{
+                offset=0;end=0;
+                while end<input.len() && read_plain<plain{
+                    check()?;let capacity=((input.len()-end) as u64).min(plain-read_plain) as usize;
+                    let n=stream.read(&mut input[end..end+capacity]).map_err(Error::io)?;
+                    if n==0{return Err(Error::other("7Z Deflate 文本开头前数据结束，大小与声明不符，请重新下载或先提取检查"));}
+                    end+=n;read_plain+=n as u64;
+                }
+            }
+            let before_in=codec.total_in();let before_out=codec.total_out();let capacity=output.len().min(max_bytes-bytes.len());
+            let status=codec.decompress(&input[offset..end],&mut output[..capacity],flate2::FlushDecompress::None).map_err(|e|Error::other(format!("Deflate prefix: {e}")))?;
+            let consumed=(codec.total_in()-before_in) as usize;let produced=(codec.total_out()-before_out) as usize;offset+=consumed;
+            // An observed early end is a known short file, not an unread tail.
+            if status==flate2::Status::StreamEnd{return Err(Error::other("7Z Deflate 文本在所选开头结束，大小与声明不符，请先提取检查"));}
+            if consumed==0 && produced==0{return Err(Error::other("7Z Deflate 文本开头前数据不足，请先提取检查"));}
+            bytes.extend_from_slice(&output[..produced]);
+        }
+        check()?;Ok(bytes)
+    }
+
     /// Complete non-solid Deflate preview, optionally preceded by full AES.
     /// Observe raw StreamEnd and exact
     /// compressed consumption rather than treating a Read EOF as stream finish.
