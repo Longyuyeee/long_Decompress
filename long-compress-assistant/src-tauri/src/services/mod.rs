@@ -188,3 +188,6 @@ mod sevenz_encrypted_solid_text_1621_tests;
 
 #[cfg(test)]
 mod sevenz_encrypted_solid_image_1622_tests;
+
+#[cfg(test)]
+mod sevenz_text_prefix_1623_tests;

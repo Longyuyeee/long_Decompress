@@ -1,0 +1,41 @@
+{
+  "version": "1.6.23",
+  "applicationSha256": "563a6e9a2772e06b47048f22914e4476b0758f5b50e19b2591aa0edd773d3b3f",
+  "priorPrefixCandidateSha256": "532cccf8dad63bc33ed6d24e4c7f2c67282194ebe93b801db724980c5d77b27e",
+  "shellSha256": "f8692c994290c41e2201463f05f39bf6bc3ef3899c0805856ba2ccc0e2336244",
+  "builds": {
+    "vueTypesAndVite": true,
+    "shellExtension": true,
+    "nativeDesktopCandidate": true,
+    "eightVersionIdentitiesAndEngineInventory": true
+  },
+  "localCandidate": {
+    "features": [
+      "custom-protocol",
+      "desktop-e2e"
+    ],
+    "VITE_DESKTOP_E2E": "1",
+    "optLevel": 1,
+    "lto": false,
+    "formalReleaseConfigUnchanged": true
+  },
+  "checks": {
+    "rustRelated": 6,
+    "newCompleteIntegrityRegression": 1,
+    "rustInitialPassed": 4,
+    "rustResumedOnlyFailed": 1,
+    "frontendView": 5,
+    "frontendInitial": 4,
+    "frontendFullOpenAdded": 1,
+    "originalGroups": 3,
+    "originalMembers": 6,
+    "sideOriginals": 5,
+    "encodingBoundaries": 5,
+    "independentOfficialReadback": true,
+    "actualDesktopGroups": 4,
+    "retainedPrefixDesktopGroups": 2,
+    "finalCandidateDesktopGroups": 2,
+    "viewedScreenshots": 2
+  },
+  "continuity": "Initial Rust run: four passed, one negative input was non-solid because -ms=off remained alongside the solid byte-size option. Only that owned fixture was recreated without -ms=off, independently checked Solid +/Blocks 1, and only the failed test resumed successfully. Four frontend checks passed, then a new full-open button check passed separately; final frontend was rebuilt for the added action. The initial panic printed a full 1 MiB value, abbreviated explicitly in the evidence log. Two initial desktop prefix/UI/encoding groups and screenshots are retained with their original candidate hash. The actual complete-integrity command exposed a pre-existing LZMA2 terminal bug; a new regression and valid encrypted full-read continuity passed, then only the two remaining desktop groups resumed on the completion-fixed candidate. Prefix decoder and frontend branches were unchanged by this completion-only fix. No repeat of passed old codec/password/volume matrices, installation or real disk-full checks."
+}

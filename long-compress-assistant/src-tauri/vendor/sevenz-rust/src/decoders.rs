@@ -80,6 +80,22 @@ pub fn add_decoder<I: Read>(
     max_mem_limit_kb: usize,
 ) -> Result<Decoder<I>, Error> {
     crate::preview::coder(coder, uncompressed_len)?;
+    add_decoder_inner(input, uncompressed_len, coder, password, max_mem_limit_kb)
+}
+
+// Prefix output is capped by the caller, so declared total size is not an
+// allocation. Keep the scoped dictionary/shape checks, and allow only a bare
+// unencrypted LZMA/LZMA2 stream. Complete decoder defaults remain unchanged.
+pub(crate) fn add_prefix_decoder<I: Read>(input: I, uncompressed_len: usize, coder: &Coder, max_mem_limit_kb: usize) -> Result<Decoder<I>, Error> {
+    let id = coder.decompression_method_id();
+    if id != SevenZMethod::ID_LZMA && id != SevenZMethod::ID_LZMA2 {
+        return Err(Error::unsupported("Prefix requires unencrypted LZMA/LZMA2"));
+    }
+    crate::preview::coder(coder, 0)?;
+    add_decoder_inner(input, uncompressed_len, coder, &[], max_mem_limit_kb)
+}
+
+fn add_decoder_inner<I: Read>(input: I, uncompressed_len: usize, coder: &Coder, #[allow(unused)] password: &[u8], max_mem_limit_kb: usize) -> Result<Decoder<I>, Error> {
     let method = SevenZMethod::by_id(coder.decompression_method_id());
     let method = if let Some(m) = method {
         m

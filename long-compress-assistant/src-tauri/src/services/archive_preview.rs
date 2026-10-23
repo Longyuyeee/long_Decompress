@@ -653,7 +653,7 @@ fn preview_archive_text_sync(
             "Safe bounded text preview is currently available for ZIP and TAR-family archives only"
         ),
     };
-    if matches!(format,"ALZ"|"EGG") && text_bytes.total_size>text_bytes.bytes.len() as u64 {
+    if matches!(format,"ALZ"|"EGG"|"7Z") && text_bytes.total_size>text_bytes.bytes.len() as u64 {
         let bytes=&mut text_bytes.bytes;
         let bom=usize::from(bytes.starts_with(&[0xef,0xbb,0xbf]))*3;
         if let Err(error)=std::str::from_utf8(&bytes[bom..]) { if error.error_len().is_none(){bytes.truncate(bom+error.valid_up_to());} }
@@ -664,7 +664,7 @@ fn preview_archive_text_sync(
     }
     let (content, encoding, consumed) = decode_text_prefix(&text_bytes.bytes)?;
     anyhow::ensure!(format!="EGG"||text_bytes.total_size>text_bytes.bytes.len() as u64||consumed==text_bytes.bytes.len(),"EGG 文本编码末尾不完整，请先提取后打开");
-    anyhow::ensure!(format!="7Z" || consumed==text_bytes.bytes.len(),"7Z 文本编码末尾不完整，请先提取后打开");
+    anyhow::ensure!(format!="7Z" || text_bytes.total_size>text_bytes.bytes.len() as u64 || consumed==text_bytes.bytes.len(),"7Z 文本编码末尾不完整，请先提取后打开");
     let truncated = text_bytes.total_size > consumed as u64;
     let line_count = if content.is_empty() {
         0

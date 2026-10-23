@@ -1,0 +1,458 @@
+{
+  "producer": "E:\\7-Zip\\7z.exe",
+  "producerSha256": "83967f1b02b43c4efeda302795722c809e0e81b8307de73558d10484d5676a7d",
+  "independent": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\resources\\archive-engine\\7z.exe",
+  "independentSha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53",
+  "selected": "logs/session [1].txt",
+  "cases": [
+    {
+      "name": "lzma",
+      "method": "LZMA",
+      "members": [
+        {
+          "name": "日志.7z",
+          "bytes": 816703,
+          "sha256": "de524ecacb255ec29227861ca82ddc55a3ed3d3c7271fc5249d5ec13ee4e111d"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=LZMA",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-text-prefix-1623\\lzma\\日志.7z",
+        "."
+      ],
+      "expected": [
+        {
+          "path": "logs/session [1].txt",
+          "bytes": 2550000,
+          "sha256": "2b36beeaeaec8aec6d9160faee8c81c7f6f57aff70864bbf0c27d03184027e59"
+        },
+        {
+          "path": "logs/session 1.txt",
+          "bytes": 29,
+          "sha256": "c40d449564c21dae0b52c2b76c71dba49cd4cbd246721d228b9c278e07486ca3"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 36,
+          "sha256": "a7e73bba4740d49bc7de5f13ab0a76a59e3a1b209501f087e6a50c97e99996dd"
+        },
+        {
+          "path": "exact.txt",
+          "bytes": 1048576,
+          "sha256": "39b7909f0f28b1b169e9206e1472d327c68c9cb56108931b21aeea6c87cfee7c"
+        },
+        {
+          "path": "logs/utf8.txt",
+          "bytes": 1048617,
+          "sha256": "ba997a8d89af66748bdc47892e9a00e457932faa8dcb0fbef3fd444dbac183a3"
+        },
+        {
+          "path": "logs/utf8-bom.txt",
+          "bytes": 1048617,
+          "sha256": "72edbb8e02c3c01c305ff47e33ae2411d4f249bc1665866adc202ef1a2a7ddbb"
+        },
+        {
+          "path": "logs/utf16le.txt",
+          "bytes": 1048642,
+          "sha256": "590199244c5af35f46987e4bbf0d2c0df2c5f40a0ef22d47f89358edd8369fc6"
+        },
+        {
+          "path": "logs/utf16be.txt",
+          "bytes": 1048642,
+          "sha256": "54443a511d6383463018fba90f86c527371c0d6606aafbefa67f3a0d06897019"
+        },
+        {
+          "path": "logs/gbk.txt",
+          "bytes": 1048613,
+          "sha256": "32d86f67464f103b18e12cf059ec13216577c966cac364a6c333b85b9de004f7"
+        },
+        {
+          "path": "logs/binary.txt",
+          "bytes": 1048580,
+          "sha256": "16a9aaa1488865e165d3b66bfaa6943a5987a36023a4a0d67b6fc99a4c6063cf"
+        }
+      ],
+      "independentReadback": true,
+      "listing": [
+        "Method = LZMA:3m",
+        "Solid = -",
+        "Blocks = 10",
+        "Method = ",
+        "Method = LZMA:3m",
+        "Method = LZMA:3m",
+        "Method = LZMA:3m",
+        "Method = LZMA:3m",
+        "Method = LZMA:3m",
+        "Method = LZMA:3m",
+        "Method = LZMA:3m",
+        "Method = LZMA:3m",
+        "Method = LZMA:3m",
+        "Method = LZMA:3m"
+      ]
+    },
+    {
+      "name": "lzma2",
+      "method": "LZMA2",
+      "members": [
+        {
+          "name": "日志.7z",
+          "bytes": 816909,
+          "sha256": "58ee26b70c404905bd7bc7506e30aec88589ba04769c9cd55d6e7733e7e324a0"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=LZMA2",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-text-prefix-1623\\lzma2\\日志.7z",
+        "."
+      ],
+      "expected": [
+        {
+          "path": "logs/session [1].txt",
+          "bytes": 2550000,
+          "sha256": "2b36beeaeaec8aec6d9160faee8c81c7f6f57aff70864bbf0c27d03184027e59"
+        },
+        {
+          "path": "logs/session 1.txt",
+          "bytes": 29,
+          "sha256": "c40d449564c21dae0b52c2b76c71dba49cd4cbd246721d228b9c278e07486ca3"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 36,
+          "sha256": "a7e73bba4740d49bc7de5f13ab0a76a59e3a1b209501f087e6a50c97e99996dd"
+        },
+        {
+          "path": "exact.txt",
+          "bytes": 1048576,
+          "sha256": "39b7909f0f28b1b169e9206e1472d327c68c9cb56108931b21aeea6c87cfee7c"
+        },
+        {
+          "path": "logs/utf8.txt",
+          "bytes": 1048617,
+          "sha256": "ba997a8d89af66748bdc47892e9a00e457932faa8dcb0fbef3fd444dbac183a3"
+        },
+        {
+          "path": "logs/utf8-bom.txt",
+          "bytes": 1048617,
+          "sha256": "72edbb8e02c3c01c305ff47e33ae2411d4f249bc1665866adc202ef1a2a7ddbb"
+        },
+        {
+          "path": "logs/utf16le.txt",
+          "bytes": 1048642,
+          "sha256": "590199244c5af35f46987e4bbf0d2c0df2c5f40a0ef22d47f89358edd8369fc6"
+        },
+        {
+          "path": "logs/utf16be.txt",
+          "bytes": 1048642,
+          "sha256": "54443a511d6383463018fba90f86c527371c0d6606aafbefa67f3a0d06897019"
+        },
+        {
+          "path": "logs/gbk.txt",
+          "bytes": 1048613,
+          "sha256": "32d86f67464f103b18e12cf059ec13216577c966cac364a6c333b85b9de004f7"
+        },
+        {
+          "path": "logs/binary.txt",
+          "bytes": 1048580,
+          "sha256": "16a9aaa1488865e165d3b66bfaa6943a5987a36023a4a0d67b6fc99a4c6063cf"
+        }
+      ],
+      "independentReadback": true,
+      "listing": [
+        "Method = LZMA2:3m",
+        "Solid = -",
+        "Blocks = 10",
+        "Method = ",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m"
+      ]
+    },
+    {
+      "name": "volumes",
+      "method": "LZMA2",
+      "members": [
+        {
+          "name": "日志.7z.001",
+          "bytes": 262144,
+          "sha256": "971d3ab5df01817c0c5b57ab8e4a81f8a0bc4572d755acf312a99f7a55af51ec"
+        },
+        {
+          "name": "日志.7z.002",
+          "bytes": 262144,
+          "sha256": "342e98fd19003c5ce57eee5b60f1c8bee57a032621ec6e7b267f798a850976cc"
+        },
+        {
+          "name": "日志.7z.003",
+          "bytes": 262144,
+          "sha256": "4e781ec9244f5a02a8fef7bdd9ac07e600b4cf9764e27d858e16ea2677023b3f"
+        },
+        {
+          "name": "日志.7z.004",
+          "bytes": 30477,
+          "sha256": "0ada601a4d93fc3d23944b26fcf98e931b5ea3a6a38d896445749cfaf1c824ea"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=LZMA2",
+        "-v256k",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-text-prefix-1623\\volumes\\日志.7z",
+        "."
+      ],
+      "expected": [
+        {
+          "path": "logs/session [1].txt",
+          "bytes": 2550000,
+          "sha256": "2b36beeaeaec8aec6d9160faee8c81c7f6f57aff70864bbf0c27d03184027e59"
+        },
+        {
+          "path": "logs/session 1.txt",
+          "bytes": 29,
+          "sha256": "c40d449564c21dae0b52c2b76c71dba49cd4cbd246721d228b9c278e07486ca3"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 36,
+          "sha256": "a7e73bba4740d49bc7de5f13ab0a76a59e3a1b209501f087e6a50c97e99996dd"
+        },
+        {
+          "path": "exact.txt",
+          "bytes": 1048576,
+          "sha256": "39b7909f0f28b1b169e9206e1472d327c68c9cb56108931b21aeea6c87cfee7c"
+        },
+        {
+          "path": "logs/utf8.txt",
+          "bytes": 1048617,
+          "sha256": "ba997a8d89af66748bdc47892e9a00e457932faa8dcb0fbef3fd444dbac183a3"
+        },
+        {
+          "path": "logs/utf8-bom.txt",
+          "bytes": 1048617,
+          "sha256": "72edbb8e02c3c01c305ff47e33ae2411d4f249bc1665866adc202ef1a2a7ddbb"
+        },
+        {
+          "path": "logs/utf16le.txt",
+          "bytes": 1048642,
+          "sha256": "590199244c5af35f46987e4bbf0d2c0df2c5f40a0ef22d47f89358edd8369fc6"
+        },
+        {
+          "path": "logs/utf16be.txt",
+          "bytes": 1048642,
+          "sha256": "54443a511d6383463018fba90f86c527371c0d6606aafbefa67f3a0d06897019"
+        },
+        {
+          "path": "logs/gbk.txt",
+          "bytes": 1048613,
+          "sha256": "32d86f67464f103b18e12cf059ec13216577c966cac364a6c333b85b9de004f7"
+        },
+        {
+          "path": "logs/binary.txt",
+          "bytes": 1048580,
+          "sha256": "16a9aaa1488865e165d3b66bfaa6943a5987a36023a4a0d67b6fc99a4c6063cf"
+        }
+      ],
+      "independentReadback": true,
+      "listing": [
+        "Method = LZMA2:3m",
+        "Solid = -",
+        "Blocks = 10",
+        "Method = ",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m",
+        "Method = LZMA2:3m"
+      ]
+    }
+  ],
+  "sideOriginals": {
+    "solid": {
+      "sha256": "80f346fbdd3554f09b19980f81b4c4b997ad2f15b0c9279655d68a0c2e5d326c",
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-m0=LZMA2",
+        "-ms=128m",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-text-prefix-1623\\solid.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "listing": [
+        "Method = LZMA2:12m",
+        "Solid = +",
+        "Blocks = 1",
+        "Method = ",
+        "Method = LZMA2:12m",
+        "Method = LZMA2:12m",
+        "Method = LZMA2:12m",
+        "Method = LZMA2:12m",
+        "Method = LZMA2:12m",
+        "Method = LZMA2:12m",
+        "Method = LZMA2:12m",
+        "Method = LZMA2:12m",
+        "Method = LZMA2:12m",
+        "Method = LZMA2:12m"
+      ]
+    },
+    "encrypted": {
+      "sha256": "0dc3f5113855fe0ed6dabb2286a5608ced8b5eaaa9f162555bc76b57d5eb7e10",
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=LZMA2",
+        "-p日志密码1623!",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-text-prefix-1623\\encrypted.7z",
+        "logs/session [1].txt"
+      ],
+      "independentReadback": true
+    },
+    "store": {
+      "sha256": "c8bce1b9a24059e16ee93707156ce56948fab3316d7ca9980c8701646ab29345",
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=LZMA2",
+        "-m0=Copy",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-text-prefix-1623\\store.7z",
+        "logs/session [1].txt"
+      ],
+      "independentReadback": true
+    },
+    "late-original": {
+      "sha256": "f5d8702d6616c35ffa7c16cbe1f93c572db7f0a0e34f422869c0e789cb28bbca",
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=LZMA2",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-text-prefix-1623\\late-original.7z",
+        "logs/session [1].txt"
+      ],
+      "independentReadback": true
+    },
+    "large-total": {
+      "sha256": "cf0d288985492d47ee5c13cbf18c9f367fff95873e03b7a213fb7e6efcb74052",
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=LZMA2",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-text-prefix-1623\\large-total.7z",
+        "huge.txt"
+      ],
+      "independentReadback": true,
+      "bytes": 68157440
+    }
+  },
+  "mutations": {
+    "tail-damaged.7z": "76adf64dcc32fb9a814fe6b4a144a8395b4eff7146a50838c3aba3daa580c278",
+    "bad-start.7z": "1e774a616be1bfc33b7bf800bac19092ad789e00216e79d97c404728b2ae7b35"
+  },
+  "renderedPrefixBytes": 1048576,
+  "renderedPrefixSha256": "a5f3359feb70aa1dbecad22ccf5c124dc6b507bdbdd2b36d2cdf38e1da7d659c",
+  "totalSize": 2550000,
+  "boundaries": [
+    {
+      "path": "logs/utf8.txt",
+      "encoding": "UTF-8",
+      "bytes": 1048575,
+      "sha256": "04713def0c5de392161b4cfc0ecd49623237c6438bc898d15bb6c55b345b7ccf"
+    },
+    {
+      "path": "logs/utf8-bom.txt",
+      "encoding": "UTF-8 BOM",
+      "bytes": 1048575,
+      "sha256": "ee2bd97236c05bef3a2a30ba00bffd4fdaf02baeea73edecafc4e8d379f046e1"
+    },
+    {
+      "path": "logs/utf16le.txt",
+      "encoding": "UTF-16LE",
+      "bytes": 1048574,
+      "sha256": "f7ff3e45bfba0af50caded3cea46eb0ba0cb60076fd89795babfaff7444160ed"
+    },
+    {
+      "path": "logs/utf16be.txt",
+      "encoding": "UTF-16BE",
+      "bytes": 1048574,
+      "sha256": "f7ff3e45bfba0af50caded3cea46eb0ba0cb60076fd89795babfaff7444160ed"
+    },
+    {
+      "path": "logs/gbk.txt",
+      "encoding": "GBK",
+      "bytes": 1048575,
+      "sha256": "b05aef04c243d96ab2f339e216754575e66bd2b48a322c0cc48b5c24968a2079"
+    }
+  ],
+  "largeUnrelatedIgnored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-text-prefix-1623\\unrelated.7z"
+}

@@ -65,3 +65,21 @@ cases and five scoped vendor tests cover this path. The zero-padding/declared
 size model follows the official source:
 https://github.com/ip7z/7zip/blob/main/CPP/7zip/Common/FilterCoder.cpp
 https://github.com/ip7z/7zip/blob/main/CPP/7zip/Crypto/7zAes.cpp
+
+2026-10-23: v1.6.23 adds read_single_entry_prefix for a uniquely mapped,
+unencrypted, single-coder LZMA/LZMA2 non-solid stream larger than 1 MiB.
+It keeps only the requested <=1 MiB, checks cancellation per 32 KiB output,
+and fails if the decoder ends before the prefix. It deliberately does not
+read/verify the remaining tail, CRC or codec end. add_prefix_decoder keeps
+scoped dictionary/shape checks without treating declared total output as an
+allocation; complete add_decoder and entry readers preserve their prior checks.
+The application retains aggregate input, metadata, source and time bounds and
+explicitly labels partial text; AES/shared prefixes are not enabled here.
+
+The v1.6.23 actual integrity check also exposed a pre-existing terminal bug:
+file/folder size and CRC wrappers stopped before the final LZMA2 control byte.
+The complete stack now wraps bare LZMA2 and AES+LZMA2 in Lzma2EndReader before
+the folder CRC wrapper, checking the codec end before returning the last output
+chunk. Prefix reads intentionally bypass this complete stack. A new application
+regression covers the actual integrity route, bad terminal and valid encrypted
+solid integrity/image continuity; other codec/default choices are unchanged.

@@ -1,8 +1,8 @@
 # 文档导航与维护规则
 
-- **当前版本 v1.6.22**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.22)、[中文说明](RELEASE_NOTES_1.6.22.md)和[7Z 加密固实图片记录](SEVENZ_ENCRYPTED_SOLID_IMAGE_FREEZE_1.6.22.md)。已封板，正常受保护 PR/注解标签发布，最终身份与附件状态在本版 PR 接续。
-- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.22.md)已完成；下一阶段 [v1.6.23 非固实大文本开头](ARCHIVE_ROADMAP_1.6.23.md)仅规划、尚未开发，见[开发交接](DEVELOPMENT_HANDOFF.md)。
-- **前版 v1.6.21**：[加密固实小文本记录](SEVENZ_ENCRYPTED_SOLID_TEXT_FREEZE_1.6.21.md)；v1.6.21 正式运行 39904539851 已成功，非草稿四附件齐备，PR #282 发布回执补全。 同树 master CI 已确认取消。
+- **当前版本 v1.6.23**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.23)、[中文说明](RELEASE_NOTES_1.6.23.md)和[7Z 大文本开头记录](SEVENZ_TEXT_PREFIX_FREEZE_1.6.23.md)。已封板，正常受保护 PR/注解标签发布，最终身份与附件状态在本版 PR 接续。
+- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.23.md)已完成；下一阶段 [v1.6.24 非固实密码大文本开头](ARCHIVE_ROADMAP_1.6.24.md)仅规划、尚未开发，见[开发交接](DEVELOPMENT_HANDOFF.md)。
+- **前版 v1.6.22**：[加密固实图片记录](SEVENZ_ENCRYPTED_SOLID_IMAGE_FREEZE_1.6.22.md)；v1.6.22 正式运行 39907144319 已成功，非草稿四附件齐备，PR #283 发布回执补全。 同树 master CI 已确认取消。
 
 以下为历史阶段记录。
 
