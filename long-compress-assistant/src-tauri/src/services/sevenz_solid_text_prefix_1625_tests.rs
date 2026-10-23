@@ -56,7 +56,6 @@ async fn sevenz1625_partial_tail_never_weakens_complete_shared_checks(){
   assert!(sevenz_rust::BlockDecoder::new(b,&a,&[],&mut input).read_solid_entry(i,4*CAP,LIMIT,||Ok(())).is_err(),"{which}");
  }
  assert!(error(&case("lzma2"),"logs/30-binary.txt",None).await.contains("binary"));assert!(error(&root().join("bad-start.7z"),SELECTED,None).await.contains("CRC"));
- let old=Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/sevenz-password-text-prefix-1624/solid.7z");assert!(error(&old,"logs/session [1].txt",Some("日志密码1624!")).await.contains("加密固实大文本"));
 }
 #[tokio::test]
 async fn sevenz1625_cancel_changed_source_missing_volume_and_fresh_prefix_keep_original_contract(){

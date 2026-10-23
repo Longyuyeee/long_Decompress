@@ -69,6 +69,11 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('ArchiveBrowserView', () => {
+  it('sevenz1626 encrypted shared prefix keeps exact selection and existing full-open flow',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'6'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:2097152,encrypted:true,entries:[{path:'logs/readme.txt',name:'readme.txt',size:2097152,isDir:false,compressedSize:null,encrypted:true}]})
+    mocks.previewArchiveText.mockResolvedValueOnce({entryPath:'logs/readme.txt',content:'INFO 密码固实开头',encoding:'UTF-8',byteSize:1048576,totalSize:2097152,truncated:true,lineCount:1});mocks.openArchiveEntry.mockResolvedValueOnce({status:'opened',path:'D:/temp/readme.txt'})
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1626,path:'C:/encrypted-solid.7z'}},global:{stubs:{Teleport:true}}});await flushPromises();await w.get('[data-entry-path="logs/"]').trigger('dblclick');await w.get('[data-entry-path="logs/readme.txt"]').trigger('dblclick');await flushPromises();expect(w.get('.preview-meta').text()).toContain('部分内容 · 未校验整文件');expect(mocks.previewArchiveText.mock.calls.at(-1)![5]).toEqual({previewId:expect.stringMatching(/^7z-text-/),sourceRevision:'6'.repeat(64)});await w.get('[data-testid="archive-prefix-open-full"]').trigger('click');await flushPromises();expect(mocks.openArchiveEntry).toHaveBeenCalledWith('C:/encrypted-solid.7z','logs/readme.txt','',false);expect(w.find('[data-testid="archive-entry-preview"]').exists()).toBe(false);w.unmount()
+  })
   it('sevenz1625 shared prefix stays in its original pane with exact source and full-open action',async()=>{
     mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'5'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:2097152,encrypted:false,entries:[{path:'logs/readme.txt',name:'readme.txt',size:2097152,isDir:false,compressedSize:null}]})
     mocks.previewArchiveText.mockResolvedValueOnce({entryPath:'logs/readme.txt',content:'INFO 固实开头',encoding:'UTF-8',byteSize:1048576,totalSize:2097152,truncated:true,lineCount:1});mocks.openArchiveEntry.mockResolvedValueOnce({status:'opened',path:'D:/temp/readme.txt'})
@@ -87,7 +92,7 @@ describe('ArchiveBrowserView', () => {
     const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1623,path:'C:/logs.7z'}},global:{stubs:{Teleport:true}}});await flushPromises();await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises();await w.get('[data-testid="archive-prefix-open-full"]').trigger('click');await flushPromises()
     expect(mocks.openArchiveEntry).toHaveBeenCalledWith('C:/logs.7z','readme.txt','',false);expect(w.find('[data-testid="archive-entry-preview"]').exists()).toBe(false);w.unmount()
   })
-  it('sevenz1625 prefix stays in the original pane with explicit partial bytes and contextual scope',async()=>{
+  it('sevenz1626 prefix stays in the original pane with explicit partial bytes and contextual scope',async()=>{
     mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'3'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:2097152,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:2097152,isDir:false,compressedSize:1200000}]})
     mocks.previewArchiveText.mockResolvedValueOnce({entryPath:'readme.txt',content:'INFO 开头',encoding:'UTF-8',byteSize:1048575,totalSize:2097152,truncated:true,lineCount:1})
     const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1623,path:'C:/logs.7z'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises();await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises()
@@ -101,9 +106,9 @@ describe('ArchiveBrowserView', () => {
     const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1623,path:'C:/logs.7z'}},global:{stubs:{Teleport:true}}});await flushPromises();await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises();const request=mocks.previewArchiveText.mock.calls.at(-1)![5]
     await w.get('.preview-close').trigger('click');expect(mocks.cancelArchiveBrowse).toHaveBeenCalledWith(request.previewId);finish({entryPath:'readme.txt',content:'late prefix',encoding:'UTF-8',byteSize:11,totalSize:2097152,truncated:true,lineCount:1});await flushPromises();expect(w.find('[data-testid="archive-entry-preview"]').exists()).toBe(false);w.unmount()
   })
-  it.each(['加密固实大文本'])('sevenz1625 %s keeps extraction guidance without publishing content',async kind=>{
+  it.each(['固实前置范围超限'])('sevenz1626 %s keeps extraction guidance without publishing content',async kind=>{
     mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'3'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:2097152,encrypted:true,entries:[{path:'readme.txt',name:'readme.txt',size:2097152,isDir:false,compressedSize:null}]})
-    mocks.previewArchiveText.mockRejectedValueOnce(new Error(`7Z ${kind}暂不支持开头预览，请先提取后打开`))
+    mocks.previewArchiveText.mockRejectedValueOnce(new Error(`7Z ${kind}：前置内容与开头合计超过 64 MiB，请先提取后打开`))
     const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1623,path:'C:/logs.7z'}},global:{stubs:{Teleport:true}}});await flushPromises();await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises();expect(w.get('.preview-stage').text()).toContain('先提取后打开');expect(w.find('[data-testid="archive-text-preview"]').exists()).toBe(false);w.unmount()
   })
   it('library1547 waits for the initial engine capabilities before deciding preview support',async()=>{
