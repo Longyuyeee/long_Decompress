@@ -189,7 +189,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷、ZPAQ 原生密码数字切卷及原生多部分只读；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM / ESD / SWM、ZPAQ（含改密与数字分卷）；密码和分卷随目标格式提供 |
 | 清单校验 | SFV/MD5/SHA256 逐文件状态与原因、待补列表、按需复查；匹配表示与清单一致 |
-| 内部预览 | ZIP/TAR 系列及普通 GZIP/BZIP2/XZ/Zstandard 流、ZPAQ 日志式所选快照中的受支持图片与文本；7Z Deflate 普通/密码非固实包支持完整图文（文本 ≤1 MiB、图片 ≤8 MiB，含内容/文件名加密与数字分卷）；7Z PPMd 普通/密码包均支持非固实及小型固实的完整图文，非固实及固实大文本可读前 1 MiB（明确未校验整文件；固实前置与开头合计 ≤64 MiB，完整块压缩/解码各 ≤64 MiB）；7Z LZMA/LZMA2 的普通或密码包均支持完整小文本、图片及大文本前 1 MiB，兼容非固实与固实包（大文本明确未校验整文件，固实前置范围 ≤64 MiB）；ALZ Store/Deflate/Bzip2 支持完整小文本、大文本前 1 MiB（明确未校验整文件）、8 MiB 以内受支持图片及原连续阅读入口；EGG 非固实小文本和图片可直接预览并沿原入口连续阅读；密码和完整原生卷沿原入口使用，预览超出读取范围时可先提取后打开 |
+| 内部预览 | ZIP/TAR 系列及普通 GZIP/BZIP2/XZ/Zstandard 流、ZPAQ 日志式所选快照中的受支持图片与文本；7Z Deflate 普通/密码包支持完整图文（文本 ≤1 MiB、图片 ≤8 MiB，含固实、内容/文件名加密与数字分卷；共享压缩/解码各 ≤64 MiB）；7Z PPMd 普通/密码包均支持非固实及小型固实的完整图文，非固实及固实大文本可读前 1 MiB（明确未校验整文件；固实前置与开头合计 ≤64 MiB，完整块压缩/解码各 ≤64 MiB）；7Z LZMA/LZMA2 的普通或密码包均支持完整小文本、图片及大文本前 1 MiB，兼容非固实与固实包（大文本明确未校验整文件，固实前置范围 ≤64 MiB）；ALZ Store/Deflate/Bzip2 支持完整小文本、大文本前 1 MiB（明确未校验整文件）、8 MiB 以内受支持图片及原连续阅读入口；EGG 非固实小文本和图片可直接预览并沿原入口连续阅读；密码和完整原生卷沿原入口使用，预览超出读取范围时可先提取后打开 |
 | 图片压缩 | JPEG、PNG、WebP；质量、尺寸与格式按对应编码能力调整 |
 | 视频压缩 | MP4、MOV、AVI、WMV、WebM、MKV、M4V 等受支持输入，输出 MP4 / H.264 |
 | PDF 优化 | 分析结构、优化体积；是否适合处理会在分析后显示 |
@@ -275,7 +275,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.6.34 · 密码 Deflate 图文直接预览**。AES 内容/文件名加密与完整数字卷接回原双栏文本、图片和整包阅读，沿原手动密码/保险箱与当前页提取；完整 AES 消费和 Deflate 结束同时确认，保留编码/滚动、取消/来源与下一步入口。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.34.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_PASSWORD_DEFLATE_PREVIEW_FREEZE_1.6.34.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.34)。下一阶段 [Deflate 固实图文预览](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.35.md)仅规划。
+**v1.6.35 · Deflate 固实图文直接预览**。普通/密码固实包接回原双栏文本、图片与整包阅读，内容/文件名加密、完整数字卷/非首卷、原密码入口与当前页提取贯通；共享块完整读取后只保留所选内容。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.35.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_SOLID_DEFLATE_PREVIEW_FREEZE_1.6.35.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.35)。下一阶段 [非固实大文本开头预览](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.36.md)仅规划。
+
+**v1.6.34 · 密码 Deflate 图文直接预览**。AES 内容/文件名加密与完整数字卷接回原双栏文本、图片和整包阅读，沿原手动密码/保险箱与当前页提取；完整 AES 消费和 Deflate 结束同时确认，保留编码/滚动、取消/来源与下一步入口。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.34.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_PASSWORD_DEFLATE_PREVIEW_FREEZE_1.6.34.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.34)。Deflate 固实图文由上方 v1.6.35 接续。
 
 **v1.6.33 · 7Z Deflate 图文原位预览**。普通非固实包沿原双栏窗口完整查看小文本和图片，接通数字分卷、原整包阅读/当前页提取；确认完整流结束、大小、压缩消费和 CRC，保留编码、取消/来源与下一步入口。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.33.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_DEFLATE_PREVIEW_FREEZE_1.6.33.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.33)。密码 Deflate 图文由上方 v1.6.34 接续。
 

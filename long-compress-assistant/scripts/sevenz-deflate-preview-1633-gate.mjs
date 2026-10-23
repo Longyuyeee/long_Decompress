@@ -76,7 +76,7 @@ export async function runSevenzDeflate1633Gate({driver,bridge,root,application})
   for(const p of [source('maximum'),member]){const listing=await ipc('browse_archive',{filePath:p,browseId:randomUUID()});const v=await ipc('preview_archive_text',textRequest(p,m.selected,{sourceRevision:listing.revision}));assert.equal(v.truncated,false);assert.equal(createHash('sha256').update(v.content).digest('hex'),m.textSha256)
    for(const cmd of ['preview_archive_image','read_archive_image']){const im=await ipc(cmd,{...textRequest(p,'gallery/01-cover.png'),sourceRevision:listing.revision,requestId:randomUUID(),revision:listing.revision});assert.equal(createHash('sha256').update(Buffer.from(im.dataUrl.split(',')[1],'base64')).digest('hex'),m.images[0].sha256)}
   }
-  const errors={};for(const[name,entry,key,reason]of[['bad-data',m.selected,null,/Deflate/],['solid',m.selected,null,/Deflate/],['deflate64',m.selected,null,/方法组合/]]){const r=await invoke('preview_archive_text',textRequest(path.join(fixtures,name+'.7z'),entry,{password:key}));assert.equal(r.ok,false);assert.match(r.error,reason);errors[name]=r.error}
+  const errors={};for(const[name,entry,key,reason]of[['bad-data',m.selected,null,/Deflate/],['deflate64',m.selected,null,/方法组合/]]){const r=await invoke('preview_archive_text',textRequest(path.join(fixtures,name+'.7z'),entry,{password:key}));assert.equal(r.ok,false);assert.match(r.error,reason);errors[name]=r.error}
   const large=await invoke('preview_archive_text',textRequest(source('deflate'),'notes/large.txt'));assert.equal(large.ok,false);assert.match(large.error,/Deflate/);
 
   return{maximum:true,nonFirstMember:true,readerCommand:true,errors}

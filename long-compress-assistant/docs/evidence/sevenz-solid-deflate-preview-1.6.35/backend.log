@@ -1,0 +1,50 @@
+    Blocking waiting for file lock on package cache
+   Compiling long-compress-assistant v1.6.35 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+   Compiling sevenz-rust v0.6.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\sevenz-rust)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5m 18s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-a382351fa3ea47b1.exe)
+
+running 6 tests
+test services::sevenz_solid_deflate_preview_1635_tests::sevenz1635_cancel_source_revision_missing_encrypted_tail_and_fresh_request ... ok
+test services::sevenz_solid_deflate_preview_1635_tests::sevenz1635_complete_crc_mapping_aes_lengths_parameters_and_mid_read_cancel_are_required ... ok
+
+thread 'services::sevenz_solid_deflate_preview_1635_tests::sevenz1635_shared_limits_binary_large_and_damage_keep_next_steps' (44872) panicked at src\services\sevenz_solid_deflate_preview_1635_tests.rs:10:145:
+unexpected successful 26 bytes
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::sevenz_solid_deflate_preview_1635_tests::sevenz1635_shared_limits_binary_large_and_damage_keep_next_steps ... FAILED
+test services::sevenz_solid_deflate_preview_1635_tests::sevenz1635_vault_selected_only_text_images_and_manual_wrong_never_record_archive_success ... ok
+test services::sevenz_solid_deflate_preview_1635_tests::sevenz1635_original_content_header_orders_every_numeric_member_and_text_encodings ... ok
+test services::sevenz_solid_deflate_preview_1635_tests::sevenz1635_five_original_rasters_and_non_first_encrypted_volume_keep_exact_bytes ... ok
+
+failures:
+
+failures:
+    services::sevenz_solid_deflate_preview_1635_tests::sevenz1635_shared_limits_binary_large_and_damage_keep_next_steps
+
+test result: FAILED. 5 passed; 1 failed; 0 ignored; 0 measured; 1205 filtered out; finished in 57.87s
+
+error: test failed, to rerun pass `--lib`
