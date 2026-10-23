@@ -1,0 +1,72 @@
+   Compiling sevenz-rust v0.6.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\sevenz-rust)
+warning: variable does not need to be mutable
+   --> src\aes256sha256.rs:406:13
+    |
+406 |         let mut writer = CountingWriter::new(&mut encoded);
+    |             ----^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: trait `SeedRead` is never used
+  --> src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused `std::result::Result` that must be used
+   --> src\aes256sha256.rs:412:9
+    |
+412 |         enc.write(&[]);
+    |         ^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+    = note: `#[warn(unused_must_use)]` (part of `#[warn(unused)]`) on by default
+help: use `let _ = ...` to ignore the resulting value
+    |
+412 |         let _ = enc.write(&[]);
+    |         +++++++
+
+warning: unused `std::result::Result` that must be used
+   --> src\aes256sha256.rs:420:9
+    |
+420 |         std::io::copy(&mut dec, &mut decoded);
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: this `Result` may be an `Err` variant, which should be handled
+help: use `let _ = ...` to ignore the resulting value
+    |
+420 |         let _ = std::io::copy(&mut dec, &mut decoded);
+    |         +++++++
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib test) generated 5 warnings (run `cargo fix --lib -p sevenz-rust --tests` to apply 2 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5.57s
+     Running unittests src\lib.rs (src-tauri\vendor\sevenz-rust\target\debug\deps\sevenz_rust-b45672ffd64a39a9.exe)
+
+running 5 tests
+test aes256sha256::preview_1621_tests::preview1621_header_allocation_bound_is_opt_in ... ok
+test aes256sha256::preview_1621_tests::preview1621_aes_exact_plaintext_padding_and_short_volume_reads ... ok
+test aes256sha256::preview_1621_tests::preview1621_incomplete_aes_and_nested_scopes_restore_context ... ok
+test aes256sha256::preview_1621_tests::preview1621_aes_bad_padding_truncated_and_extra_ciphertext_fail ... ok
+test aes256sha256::preview_1621_tests::preview1621_kdf_bounds_and_cpu_check_can_cancel_or_timeout ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.01s
+

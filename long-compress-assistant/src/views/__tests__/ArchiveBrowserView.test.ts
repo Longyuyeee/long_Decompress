@@ -302,13 +302,37 @@ describe('ArchiveBrowserView', () => {
     await w.get('.preview-close').trigger('click');await w.get('[data-entry-path="cover.png"]').trigger('dblclick');await flushPromises();expect(mocks.previewArchiveImage).toHaveBeenCalledWith('C:/资料.7z','cover.png','',undefined,undefined,expect.objectContaining({previewId:expect.stringMatching(/^7z-image-/),sourceRevision:'7'.repeat(64)}));w.unmount()
   })
 
+  it('sevenz1621 shared wait becomes complete text in the same pane with contextual help',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'9'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:28,encrypted:true,entries:[{path:'readme.txt',name:'readme.txt',size:28,isDir:false,compressedSize:null}]})
+    let finish!:(v:unknown)=>void;mocks.previewArchiveText.mockReturnValueOnce(new Promise(resolve=>finish=resolve))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1621,path:'C:/solid.7z'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises();await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises()
+    expect(w.get('.preview-stage').text()).toContain('正在读取固实包共享内容');expect(w.text()).not.toContain('压缩包浏览中心')
+    finish({entryPath:'readme.txt',content:'共享块内说明',encoding:'UTF-8',byteSize:28,totalSize:28,truncated:false,lineCount:1});await flushPromises();expect(w.get('.preview-meta').text()).toContain('完整显示')
+    await w.findAll('button').find(b=>b.attributes('aria-label')==='预览说明')!.trigger('mouseenter');await flushPromises();expect(w.text()).toContain('检查整个共享块后显示');expect(w.text()).toContain('AES 内容加密、文件名加密');w.unmount()
+  })
+  it('sevenz1621 closing a shared read cancels the exact request and discards late success',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'9'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:28,encrypted:true,entries:[{path:'readme.txt',name:'readme.txt',size:28,isDir:false,compressedSize:null}]})
+    let finish!:(v:unknown)=>void;mocks.previewArchiveText.mockReturnValueOnce(new Promise(resolve=>finish=resolve))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1621,path:'C:/solid.7z'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises();await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises();const r=mocks.previewArchiveText.mock.calls.at(-1)![5]
+    await w.get('.preview-close').trigger('click');expect(mocks.cancelArchiveBrowse).toHaveBeenCalledWith(r.previewId);finish({entryPath:'readme.txt',content:'late',encoding:'UTF-8',byteSize:4,totalSize:4,truncated:false,lineCount:1});await flushPromises();expect(w.find('[data-testid="archive-entry-preview"]').exists()).toBe(false);w.unmount()
+  })
+  it('sevenz1621 password or damage keeps the useful source hint without internal markers',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'1'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:28,encrypted:true,entries:[{path:'readme.txt',name:'readme.txt',size:28,isDir:false,compressedSize:null,encrypted:true}]})
+    mocks.previewArchiveText.mockRejectedValueOnce('[sevenz-preview:password] 7Z 加密内容未通过读取或校验，请核对密码与分卷来源；必要时重新下载')
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1621,path:'C:/encrypted.7z'}},global:{stubs:{Teleport:true}}});await flushPromises();await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises();expect(w.get('.preview-stage').text()).toContain('核对密码与分卷来源');expect(w.get('.preview-stage').text()).not.toContain('sevenz-preview');expect(w.find('[data-testid="archive-text-preview"]').exists()).toBe(false);w.unmount()
+  })
+  it('sevenz1621 image help still gives extraction for encrypted solid pictures',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'1'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:72,encrypted:true,entries:[{path:'cover.png',name:'cover.png',size:72,isDir:false,compressedSize:null,encrypted:true}]})
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1621,path:'C:/encrypted.7z'}},global:{stubs:{Teleport:true}}});await flushPromises();await w.get('[data-entry-path="cover.png"]').trigger('dblclick');await flushPromises();await w.findAll('button').find(b=>b.attributes('aria-label')==='预览说明')!.trigger('mouseenter');await flushPromises();expect(w.text()).toContain('加密固实或超限请先提取');w.unmount()
+  })
+
   it('sevenz1619 shared wait becomes complete text in the same pane with contextual help',async()=>{
     mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'9'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:28,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:28,isDir:false,compressedSize:null}]})
     let finish!:(v:unknown)=>void;mocks.previewArchiveText.mockReturnValueOnce(new Promise(resolve=>finish=resolve))
     const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1619,path:'C:/solid.7z'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises();await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises()
     expect(w.get('.preview-stage').text()).toContain('正在读取固实包共享内容');expect(w.text()).not.toContain('压缩包浏览中心')
     finish({entryPath:'readme.txt',content:'共享块内说明',encoding:'UTF-8',byteSize:28,totalSize:28,truncated:false,lineCount:1});await flushPromises();expect(w.get('.preview-meta').text()).toContain('完整显示')
-    await w.findAll('button').find(b=>b.attributes('aria-label')==='预览说明')!.trigger('mouseenter');await flushPromises();expect(w.text()).toContain('检查整个共享块后显示');expect(w.text()).toContain('加密固实或超限请先提取');w.unmount()
+    await w.findAll('button').find(b=>b.attributes('aria-label')==='预览说明')!.trigger('mouseenter');await flushPromises();expect(w.text()).toContain('检查整个共享块后显示');expect(w.text()).toContain('超限请先提取');w.unmount()
   })
   it('sevenz1619 closing a shared read cancels the exact request and discards late success',async()=>{
     mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'9'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:28,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:28,isDir:false,compressedSize:null}]})

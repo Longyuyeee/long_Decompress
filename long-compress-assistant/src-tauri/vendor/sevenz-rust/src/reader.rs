@@ -360,6 +360,7 @@ impl Archive {
         password: &[u8],
         verify_crc: bool,
     ) -> Result<Self, Error> {
+        crate::preview::size(start_header.next_header_size)?;
         if start_header.next_header_size > usize::MAX as u64 {
             return Err(Error::other(format!(
                 "Cannot handle next_header_size {}",
@@ -392,6 +393,15 @@ impl Archive {
             out_reader
                 .read_exact(&mut buf)
                 .map_err(|e| Error::bad_password(e, !password.is_empty()))?;
+            if crate::preview::active() {
+                crate::preview::check()?;
+                let mut extra=[0];
+                if out_reader.read(&mut extra).map_err(|e|Error::bad_password(e,!password.is_empty()))?!=0 {
+                    return Err(Error::other("Encoded header exceeds declared size"));
+                }
+                let folder=&archive.folders[0];
+                if folder.has_crc && CRC32.checksum(&buf) as u64!=folder.crc {return Err(Error::ChecksumVerificationFailed);}
+            }
             archive = Archive::default();
             buf_reader = buf.as_slice();
             nid = read_u8(&mut buf_reader)?;
@@ -431,6 +441,10 @@ impl Archive {
         let coder_len = folder.coders.len();
         let unpack_size = folder.get_unpack_size() as usize;
         let pack_size = archive.pack_sizes[first_pack_stream_index] as usize;
+        if crate::preview::active() {
+            crate::preview::size(unpack_size as u64)?;crate::preview::size(pack_size as u64)?;
+            if archive.folders.len()!=1 || archive.pack_sizes.len()!=1 || folder.packed_streams.len()!=1 {return Err(Error::unsupported("7Z 预览文件头共享范围无法确认，请先提取检查"));}
+        }
         let input_reader =
             SeekableBoundedReader::new(reader, (folder_offset, folder_offset + pack_size as u64));
         let mut decoder: Box<dyn Read> = Box::new(input_reader);
@@ -454,7 +468,7 @@ impl Archive {
         } else {
             decoder
         };
-        if folder.has_crc {
+        if folder.has_crc && !crate::preview::active() {
             decoder = Box::new(Crc32VerifyingReader::new(decoder, unpack_size, folder.crc));
         }
 

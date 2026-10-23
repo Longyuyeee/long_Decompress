@@ -28,6 +28,8 @@ mod method_options;
 pub use method_options::*;
 mod password;
 mod reader;
+mod preview;
+pub use preview::with_preview_limits;
 #[cfg(feature = "compress")]
 mod writer;
 pub use archive::*;

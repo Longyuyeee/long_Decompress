@@ -1,0 +1,8 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[sevenz-encrypted-solid-text-1621] header password opens via the original vault and complete selected text fits equal wide and narrow panes
+[sevenz-encrypted-solid-text-1621] both methods and non-first filename-encrypted member use metadata-only then selected vault reads
+[sevenz-encrypted-solid-text-1621] wrong manual key damage and oversized dependency never publish partial text
+[sevenz-encrypted-solid-text-1621] unrelated corrupt 65 MiB data is not consulted when browsing and reading selected encrypted text
+[sevenz-encrypted-solid-text-1621] changed encrypted source and cancelled request are discarded before fresh full text

@@ -1,0 +1,47 @@
+   Compiling long-compress-assistant v1.6.21 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+   Compiling sevenz-rust v0.6.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\sevenz-rust)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+warning: unused imports: `SeekFrom` and `Seek`
+ --> src\services\archive_browser.rs:6:21
+  |
+6 | use std::io::{Read, Seek, SeekFrom};
+  |                     ^^^^  ^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `long-compress-assistant` (lib test) generated 1 warning (run `cargo fix --lib -p long-compress-assistant --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3m 34s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-cf7ccf3626203bc1.exe)
+
+running 5 tests
+test services::sevenz_encrypted_solid_text_1621_tests::sevenz1621_source_revision_cancel_and_missing_encrypted_volume_do_not_publish_text ... ok
+test services::sevenz_encrypted_solid_text_1621_tests::sevenz1621_corrupt_unrelated_large_block_is_skipped_by_metadata_and_text ... ok
+test services::sevenz_encrypted_solid_text_1621_tests::sevenz1621_wrong_password_damage_limits_and_encrypted_images_keep_distinct_next_steps ... ok
+test services::sevenz_encrypted_solid_text_1621_tests::sevenz1621_vault_metadata_and_selected_text_never_record_whole_archive_success ... ok
+test services::sevenz_encrypted_solid_text_1621_tests::sevenz1621_original_content_header_methods_and_numeric_members_show_complete_text ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1126 filtered out; finished in 17.91s
+

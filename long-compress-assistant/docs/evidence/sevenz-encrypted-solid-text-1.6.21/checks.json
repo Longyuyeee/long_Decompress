@@ -1,0 +1,33 @@
+{
+  "version": "1.6.21",
+  "applicationSha256": "21d270b395d24e9ccdbd4d129c28255f94bccdc70203060221e6d4b05c5c3bd7",
+  "shellSha256": "4516db7c040446ee89a12d190a7edcfc22efa58e023445a77b65eca155bc00f6",
+  "builds": {
+    "vueTypesAndVite": true,
+    "shellExtension": true,
+    "nativeDesktopCandidate": true,
+    "eightVersionIdentitiesAndEngineInventory": true
+  },
+  "localCandidate": {
+    "features": [
+      "custom-protocol",
+      "desktop-e2e"
+    ],
+    "VITE_DESKTOP_E2E": "1",
+    "optLevel": 1,
+    "lto": false,
+    "formalReleaseConfigUnchanged": true
+  },
+  "checks": {
+    "rustRelated": 5,
+    "vendorPreviewAes": 5,
+    "frontendView": 4,
+    "originalGroups": 4,
+    "originalMembers": 8,
+    "independentOfficialReadback": true,
+    "controlledBzip2Header": 1,
+    "actualDesktopGroups": 5,
+    "viewedScreenshots": 2
+  },
+  "continuity": "Five application tests and four frontend checks passed. Vendor test setup first enabled aes256 and fixed the test-only read slice type; all five scoped vendor checks then executed and passed. Preserved previously available bounded header codecs after review, regenerated the final candidate, and included a controlled Bzip2 header in actual desktop IPC alongside both original methods and non-first encrypted numeric member. All five final desktop groups first passed; wide and narrow screenshots viewed. No repeat of passed old codec/password/volume matrices, installation or real disk-full checks."
+}

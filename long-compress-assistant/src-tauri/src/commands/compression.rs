@@ -1377,7 +1377,7 @@ pub async fn browse_archive(
     let resolved_password = match password.filter(|value| !value.is_empty()) {
         Some(password) => Some(password),
         None if crate::services::archive_browser::detect_format(std::path::Path::new(&file_path))
-            .is_ok_and(|format| matches!(format, crate::services::archive_format::ArchiveFormat::Zip | crate::services::archive_format::ArchiveFormat::Alz | crate::services::archive_format::ArchiveFormat::Egg)) => None,
+            .is_ok_and(|format| matches!(format, crate::services::archive_format::ArchiveFormat::Zip | crate::services::archive_format::ArchiveFormat::Alz | crate::services::archive_format::ArchiveFormat::Egg | crate::services::archive_format::ArchiveFormat::SevenZip)) => None,
         None => {
             let service = CompressionService::new_with_defaults().await;
             service
@@ -1401,14 +1401,18 @@ pub async fn browse_archive(
     }
     let _guard = ArchiveBrowseGuard { browse_id };
     let revision=crate::services::image_reader::revision(Path::new(&file_path)).map_err(|e|classify_archive_browse_error(&format!("{e:#}")))?;
-    let listing=crate::services::archive_browser::browse_archive_cancellable_at(
+    let listing=if crate::services::archive_browser::detect_format(Path::new(&file_path)).is_ok_and(|f|f==crate::services::archive_format::ArchiveFormat::SevenZip){
+        if zpaq_snapshot.is_some(){return Err("所选快照只适用于 ZPAQ 日志归档".into());}
+        let mut service=CompressionService::new_with_defaults().await;service.cancellation_flag=cancelled;
+        service.browse_sevenz_with_vault(&file_path,resolved_password.as_deref()).await
+    }else{crate::services::archive_browser::browse_archive_cancellable_at(
         std::path::Path::new(&file_path),
         resolved_password.as_deref(),
         cancelled,
         zip_password_encoding,
         zpaq_snapshot,
     )
-    .await
+    .await}
     // anyhow's Display only contains the outer context. Keep the native cause
     // so a wrong RAR header password is not mislabeled as damaged metadata.
     .map_err(|error| classify_archive_browse_error(&format!("{error:#}")))?;

@@ -1,0 +1,73 @@
+{
+  "version": "1.6.21",
+  "applicationSha256": "21d270b395d24e9ccdbd4d129c28255f94bccdc70203060221e6d4b05c5c3bd7",
+  "checks": [
+    {
+      "name": "header password opens via the original vault and complete selected text fits equal wide and narrow panes",
+      "missing": "ARCHIVE_BROWSE_PASSWORD|密码不正确，或这一层归档需要单独的密码|[sevenz-preview:password] 7Z 文件名需要有效密码，或文件头已损坏；请填写密码并核对完整分卷来源",
+      "meta": "UTF-8\n已读 10.9 KB / 10.9 KB\n180 行\n完整显示\n只读",
+      "scroll": true,
+      "sha256": "e89335274be7818c7277b7c6ebe1c00c48f1faf0da61707487a8841f8f978830"
+    },
+    {
+      "name": "both methods and non-first filename-encrypted member use metadata-only then selected vault reads",
+      "lzma": true,
+      "lzma2": true,
+      "nonFirstHeaderMember": true,
+      "sharedSizeUnattributed": true
+    },
+    {
+      "name": "wrong manual key damage and oversized dependency never publish partial text",
+      "manual": "[sevenz-preview:password] 7Z 所选内容需要正确密码，也可能是加密数据损坏，请核对密码与分卷来源",
+      "damaged": "[sevenz-preview:password] 7Z 加密内容未通过读取或校验，请核对密码与分卷来源；必要时重新下载",
+      "oversize": "7Z 固实共享内容超过 64 MiB 预览范围，请先提取后打开"
+    },
+    {
+      "name": "unrelated corrupt 65 MiB data is not consulted when browsing and reading selected encrypted text",
+      "metadataOnly": true,
+      "selectedOnly": true
+    },
+    {
+      "name": "changed encrypted source and cancelled request are discarded before fresh full text",
+      "stale": "IMAGE_READER_CHANGED|来源已变化，请返回刷新来源后重新阅读",
+      "cancelled": "文本预览已取消",
+      "freshBytes": 11160
+    }
+  ],
+  "layouts": [
+    {
+      "name": "encrypted-text-wide",
+      "dialog": {
+        "height": 531.390625,
+        "width": 832,
+        "x": 134,
+        "y": 59.3046875
+      },
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "encrypted-text-narrow",
+      "dialog": {
+        "height": 442.78125,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 38.609375
+      },
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-encrypted-solid-text-1621\\29901bd6-9dd7-4929-83fd-92813ecdc077",
+  "passed": true
+}

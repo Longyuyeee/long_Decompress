@@ -1553,6 +1553,22 @@ impl CompressionService {
     }
 
     /// Do not run whole-archive password verification for a selected 7Z text.
+    pub(crate) async fn browse_sevenz_with_vault(&self,file_path:&str,password:Option<&str>)->Result<crate::models::compression::ArchiveBrowseResult>{
+        let work=async{
+            let supplied=password.filter(|p|!p.is_empty());let mut keys=std::collections::VecDeque::from([supplied.map(str::to_string)]);let mut loaded=false;
+            while let Some(key)=keys.pop_front(){
+                self.check_cancellation()?;
+                match crate::services::archive_browser::browse_archive_cancellable_at(Path::new(file_path),key.as_deref(),self.cancellation_flag.clone(),None,None).await{
+                    Ok(value)=>return Ok(value),
+                    Err(e) if supplied.is_none()&&format!("{e:#}").contains("[sevenz-preview:password]")=>{if !loaded{keys.extend(self.password_book_candidates().await.unwrap_or_default().into_iter().map(|(_,_,key)|Some(key)));loaded=true;}},
+                    Err(e)=>return Err(e),
+                }
+            }
+            anyhow::bail!("[sevenz-preview:password] 7Z 文件名需要有效密码，或文件头已损坏；请填写密码并核对完整分卷来源")
+        };
+        match tokio::time::timeout(std::time::Duration::from_secs(30),work).await{Ok(value)=>value,Err(_)=>{self.cancellation_flag.store(true,Ordering::Release);anyhow::bail!("7Z 目录读取超过 30 秒，已停止，请核对来源")}}
+    }
+
     pub(crate) async fn preview_sevenz_text_with_vault(&self, file_path:&str, entry:&str, password:Option<&str>, revision:Option<String>) -> Result<crate::services::archive_preview::ArchiveTextPreview> {
         let work=async {
             let supplied=password.filter(|p|!p.is_empty());
