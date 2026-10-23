@@ -1468,7 +1468,9 @@ pub struct BlockDecoder<'a, R: Read + Seek> {
 }
 
 impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
-    /// Read only the requested prefix of one unencrypted non-solid LZMA stream.
+    /// Read a selected non-solid LZMA/LZMA2 prefix, optionally preceded by AES.
+    /// The encrypted payload uses a distinct partial constructor; metadata and
+    /// complete readers retain their full AES consumption receipts.
     /// This deliberately does not verify the unread tail, CRCs or codec end.
     /// Complete entry readers retain their independent full verification path.
     pub fn read_single_entry_prefix(self, selected: usize, max_bytes: usize, mut check: impl FnMut() -> Result<(), Error>) -> Result<Vec<u8>, Error> {
@@ -1479,17 +1481,35 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
             || !entry.has_stream || entry.is_directory || entry.is_anti_item
             || archive.stream_map.file_folder_index.get(selected) != Some(&Some(self.folder_index))
             || folder.num_unpack_sub_streams != 1 || folder.get_unpack_size() != entry.size
-            || folder.coders.len() != 1 || folder.packed_streams.len() != 1
-            || folder.coders[0].num_in_streams != 1 || folder.coders[0].num_out_streams != 1
+            || !(1..=2).contains(&folder.coders.len()) || folder.packed_streams.len() != 1
+            || folder.coders.iter().any(|c|c.num_in_streams!=1 || c.num_out_streams!=1)
             || archive.files.iter().enumerate().filter(|(i,e)|e.has_stream && archive.stream_map.file_folder_index.get(*i)==Some(&Some(self.folder_index))).count() != 1
         { return Err(Error::unsupported("Prefix requires one complete mapped non-solid stream")); }
+        let coders:Vec<_>=folder.ordered_coder_iter().collect();
+        let codec=|id:&[u8]|id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2;
+        if coders.len()!=folder.coders.len() || !(coders.len()==1 && codec(coders[0].1.decompression_method_id()) || coders.len()==2 && coders[0].1.decompression_method_id()==SevenZMethod::ID_AES256SHA256 && codec(coders[1].1.decompression_method_id())) {
+            return Err(Error::unsupported("Prefix requires LZMA/LZMA2, optionally preceded by AES"));
+        }
         check()?;
         let pack_index = *archive.stream_map.folder_first_pack_stream_index.get(self.folder_index).ok_or_else(|| Error::other("Missing prefix pack mapping"))?;
         let size = *archive.pack_sizes.get(pack_index).ok_or_else(|| Error::other("Missing prefix pack size"))?;
         let start = 32u64.checked_add(archive.pack_pos).and_then(|n| archive.stream_map.pack_stream_offsets.get(pack_index).and_then(|offset|n.checked_add(*offset))).ok_or_else(|| Error::other("Prefix pack offset overflow"))?;
         let unpacked = usize::try_from(entry.size).map_err(|_|Error::unsupported("Prefix declared size exceeds platform range"))?;
         self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
-        let mut decoder = crate::decoders::add_prefix_decoder(self.source.take(size), unpacked, &folder.coders[0], MAX_MEM_LIMIT_KB)?;
+        let packed=self.source.take(size);
+        let stream:Box<dyn Read+'_>=if coders.len()==2 {
+            #[cfg(feature="aes256")]
+            {
+                let (index,coder)=coders[0];
+                crate::preview::coder(coder,0)?;
+                let plain=usize::try_from(folder.get_unpack_size_at_index(index)).map_err(|_|Error::unsupported("AES prefix size exceeds platform range"))?;
+                if plain.checked_add(15).map(|n|(n/16*16) as u64)!=Some(size){return Err(Error::other("AES prefix packed size mismatch"));}
+                Box::new(crate::aes256sha256::PreviewAes::new_prefix(packed,&coder.properties,self.password,plain)?)
+            }
+            #[cfg(not(feature="aes256"))]
+            {return Err(Error::unsupported("AES is unavailable"));}
+        } else {Box::new(packed)};
+        let mut decoder = crate::decoders::add_prefix_decoder(stream, unpacked, coders.last().unwrap().1, MAX_MEM_LIMIT_KB)?;
         let mut bytes = Vec::with_capacity(max_bytes);
         let mut buffer = [0u8;32*1024];
         while bytes.len() < max_bytes {

@@ -79,7 +79,6 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     let encrypted = methods.contains(&M::ID_AES256SHA256);
     if prefix {
         ensure!(!shared,"7Z 固实大文本暂不支持开头预览，请先提取后打开");
-        ensure!(!encrypted,"7Z 密码大文本暂不支持开头预览，请先提取后打开");
     }
     if shared {
         ensure!(folder.packed_streams.len()==1,"7Z 固实共享范围无法确认，请先提取后打开");
