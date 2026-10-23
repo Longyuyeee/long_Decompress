@@ -1,7 +1,7 @@
 //! Constructed terminal-stream cases supplement original-tool app fixtures.
 use crate::{archive::StreamMap,folder::{Coder,Folder},Archive,BlockDecoder,Error,SevenZArchiveEntry,SevenZMethod as M};
 use std::io::{Cursor,Read,Seek,SeekFrom};
-fn sample(final_block:bool,extra:bool)->(Archive,Cursor<Vec<u8>>,Vec<u8>){
+pub(super) fn sample(final_block:bool,extra:bool)->(Archive,Cursor<Vec<u8>>,Vec<u8>){
  let body:Vec<u8>=(0..60000).map(|n|(n*13%251) as u8).collect();let n=body.len() as u16;
  let mut packed=vec![u8::from(final_block)];packed.extend(n.to_le_bytes());packed.extend((!n).to_le_bytes());packed.extend(&body);if extra{packed.push(0);}
  let crc=crc::Crc::<u32>::new(&crc::CRC_32_ISO_HDLC);let value=crc.checksum(&body) as u64;
