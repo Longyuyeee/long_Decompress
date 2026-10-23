@@ -1,3 +1,4 @@
+import { runSevenzDeflatePrefix1636Gate } from './sevenz-deflate-text-prefix-1636-gate.mjs'
 import { runSevenzSolidDeflate1635Gate } from './sevenz-solid-deflate-preview-1635-gate.mjs'
 import { runSevenzPasswordDeflate1634Gate } from './sevenz-password-deflate-preview-1634-gate.mjs'
 import { runSevenzDeflate1633Gate } from './sevenz-deflate-preview-1633-gate.mjs'
@@ -5049,6 +5050,8 @@ try {
   } else if ((process.argv.includes('--compact-modules-only') || process.argv.includes('--compact-modules-layout-only'))) {
     await runCompactModulesUiGate({driver,bridge:callDesktopBridge,application,root,dataDirectory:e2eDataDirectory})
     completedSuccessfully = true
+  } else if (process.argv.includes('--sevenz-deflate-text-prefix-1636-only')) {
+    await runSevenzDeflatePrefix1636Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--sevenz-solid-deflate-preview-1635-only')) {
     await runSevenzSolidDeflate1635Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--sevenz-password-deflate-preview-1634-only')) {

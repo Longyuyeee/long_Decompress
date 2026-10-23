@@ -1,0 +1,587 @@
+{
+  "selected": "logs/session [1].txt",
+  "renderedPrefixBytes": 1048576,
+  "renderedPrefixSha256": "bc98972e29b3ce49a3cb85b9653aff5e91ed0a892a3d55f2a374b217535952f4",
+  "totalSize": 2550000,
+  "boundaries": [
+    {
+      "path": "logs/utf8.txt",
+      "encoding": "UTF-8",
+      "bytes": 1048575,
+      "sha256": "04713def0c5de392161b4cfc0ecd49623237c6438bc898d15bb6c55b345b7ccf"
+    },
+    {
+      "path": "logs/utf8-bom.txt",
+      "encoding": "UTF-8 BOM",
+      "bytes": 1048575,
+      "sha256": "ee2bd97236c05bef3a2a30ba00bffd4fdaf02baeea73edecafc4e8d379f046e1"
+    },
+    {
+      "path": "logs/utf16le.txt",
+      "encoding": "UTF-16LE",
+      "bytes": 1048574,
+      "sha256": "f7ff3e45bfba0af50caded3cea46eb0ba0cb60076fd89795babfaff7444160ed"
+    },
+    {
+      "path": "logs/utf16be.txt",
+      "encoding": "UTF-16BE",
+      "bytes": 1048574,
+      "sha256": "f7ff3e45bfba0af50caded3cea46eb0ba0cb60076fd89795babfaff7444160ed"
+    },
+    {
+      "path": "logs/gbk.txt",
+      "encoding": "GBK",
+      "bytes": 1048575,
+      "sha256": "b05aef04c243d96ab2f339e216754575e66bd2b48a322c0cc48b5c24968a2079"
+    }
+  ],
+  "password": "Deflate日志公开密码1636!",
+  "producer": "E:\\7-Zip\\7z.exe",
+  "producerSha256": "83967f1b02b43c4efeda302795722c809e0e81b8307de73558d10484d5676a7d",
+  "independent": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\resources\\archive-engine\\7z.exe",
+  "independentSha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53",
+  "cases": [
+    {
+      "name": "plain",
+      "method": "Deflate",
+      "encrypted": false,
+      "filenameEncrypted": false,
+      "members": [
+        {
+          "name": "Deflate日志.7z",
+          "bytes": 819400,
+          "sha256": "41ae6c13275e8a9971e7b51226ae7af067ef11a45ac8f7f3799300d83cbdd589"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=Deflate",
+        "-mx=5",
+        "-mhe=off",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-text-prefix-1636\\plain\\Deflate日志.7z",
+        "."
+      ],
+      "expected": [
+        {
+          "path": "logs/session [1].txt",
+          "bytes": 2550000,
+          "sha256": "c50355792a27575d11525b2292df2b0cab8cd5c53d621dbbadd32f858775abe0"
+        },
+        {
+          "path": "logs/session 1.txt",
+          "bytes": 29,
+          "sha256": "c40d449564c21dae0b52c2b76c71dba49cd4cbd246721d228b9c278e07486ca3"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 36,
+          "sha256": "a7e73bba4740d49bc7de5f13ab0a76a59e3a1b209501f087e6a50c97e99996dd"
+        },
+        {
+          "path": "exact.txt",
+          "bytes": 1048576,
+          "sha256": "39b7909f0f28b1b169e9206e1472d327c68c9cb56108931b21aeea6c87cfee7c"
+        },
+        {
+          "path": "just-over.txt",
+          "bytes": 1048577,
+          "sha256": "82218d65cbd1c2ed4842d6ead6a989108c86b63317a7d487ed08fbaa37a1f2a0"
+        },
+        {
+          "path": "logs/utf8.txt",
+          "bytes": 1048617,
+          "sha256": "ba997a8d89af66748bdc47892e9a00e457932faa8dcb0fbef3fd444dbac183a3"
+        },
+        {
+          "path": "logs/utf8-bom.txt",
+          "bytes": 1048617,
+          "sha256": "72edbb8e02c3c01c305ff47e33ae2411d4f249bc1665866adc202ef1a2a7ddbb"
+        },
+        {
+          "path": "logs/utf16le.txt",
+          "bytes": 1048642,
+          "sha256": "590199244c5af35f46987e4bbf0d2c0df2c5f40a0ef22d47f89358edd8369fc6"
+        },
+        {
+          "path": "logs/utf16be.txt",
+          "bytes": 1048642,
+          "sha256": "54443a511d6383463018fba90f86c527371c0d6606aafbefa67f3a0d06897019"
+        },
+        {
+          "path": "logs/gbk.txt",
+          "bytes": 1048613,
+          "sha256": "32d86f67464f103b18e12cf059ec13216577c966cac364a6c333b85b9de004f7"
+        },
+        {
+          "path": "logs/binary.txt",
+          "bytes": 1048580,
+          "sha256": "16a9aaa1488865e165d3b66bfaa6943a5987a36023a4a0d67b6fc99a4c6063cf"
+        }
+      ],
+      "independentReadback": true,
+      "listing": [
+        "Method = Deflate",
+        "Solid = -",
+        "Blocks = 11",
+        "Method = ",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate",
+        "Method = Deflate"
+      ]
+    },
+    {
+      "name": "contents",
+      "method": "Deflate",
+      "encrypted": true,
+      "filenameEncrypted": false,
+      "members": [
+        {
+          "name": "Deflate日志.7z",
+          "bytes": 819798,
+          "sha256": "e1e28acccabf25549392d603766384e3c4d4fc4fa7853c7c3d4c8aa9be8bb65b"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=Deflate",
+        "-pDeflate日志公开密码1636!",
+        "-mx=5",
+        "-mhe=off",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-text-prefix-1636\\contents\\Deflate日志.7z",
+        "."
+      ],
+      "expected": [
+        {
+          "path": "logs/session [1].txt",
+          "bytes": 2550000,
+          "sha256": "c50355792a27575d11525b2292df2b0cab8cd5c53d621dbbadd32f858775abe0"
+        },
+        {
+          "path": "logs/session 1.txt",
+          "bytes": 29,
+          "sha256": "c40d449564c21dae0b52c2b76c71dba49cd4cbd246721d228b9c278e07486ca3"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 36,
+          "sha256": "a7e73bba4740d49bc7de5f13ab0a76a59e3a1b209501f087e6a50c97e99996dd"
+        },
+        {
+          "path": "exact.txt",
+          "bytes": 1048576,
+          "sha256": "39b7909f0f28b1b169e9206e1472d327c68c9cb56108931b21aeea6c87cfee7c"
+        },
+        {
+          "path": "just-over.txt",
+          "bytes": 1048577,
+          "sha256": "82218d65cbd1c2ed4842d6ead6a989108c86b63317a7d487ed08fbaa37a1f2a0"
+        },
+        {
+          "path": "logs/utf8.txt",
+          "bytes": 1048617,
+          "sha256": "ba997a8d89af66748bdc47892e9a00e457932faa8dcb0fbef3fd444dbac183a3"
+        },
+        {
+          "path": "logs/utf8-bom.txt",
+          "bytes": 1048617,
+          "sha256": "72edbb8e02c3c01c305ff47e33ae2411d4f249bc1665866adc202ef1a2a7ddbb"
+        },
+        {
+          "path": "logs/utf16le.txt",
+          "bytes": 1048642,
+          "sha256": "590199244c5af35f46987e4bbf0d2c0df2c5f40a0ef22d47f89358edd8369fc6"
+        },
+        {
+          "path": "logs/utf16be.txt",
+          "bytes": 1048642,
+          "sha256": "54443a511d6383463018fba90f86c527371c0d6606aafbefa67f3a0d06897019"
+        },
+        {
+          "path": "logs/gbk.txt",
+          "bytes": 1048613,
+          "sha256": "32d86f67464f103b18e12cf059ec13216577c966cac364a6c333b85b9de004f7"
+        },
+        {
+          "path": "logs/binary.txt",
+          "bytes": 1048580,
+          "sha256": "16a9aaa1488865e165d3b66bfaa6943a5987a36023a4a0d67b6fc99a4c6063cf"
+        }
+      ],
+      "independentReadback": true,
+      "listing": [
+        "Method = Deflate 7zAES",
+        "Solid = -",
+        "Blocks = 11",
+        "Method = ",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19"
+      ]
+    },
+    {
+      "name": "headers",
+      "method": "Deflate",
+      "encrypted": true,
+      "filenameEncrypted": true,
+      "members": [
+        {
+          "name": "Deflate日志.7z",
+          "bytes": 802946,
+          "sha256": "d3a864518c50e58f9d6c3cbd28b8ff569bdd3cf913be4ac2adbe78a659445719"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=Deflate",
+        "-pDeflate日志公开密码1636!",
+        "-mx=9",
+        "-mhe=on",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-text-prefix-1636\\headers\\Deflate日志.7z",
+        "."
+      ],
+      "expected": [
+        {
+          "path": "logs/session [1].txt",
+          "bytes": 2550000,
+          "sha256": "c50355792a27575d11525b2292df2b0cab8cd5c53d621dbbadd32f858775abe0"
+        },
+        {
+          "path": "logs/session 1.txt",
+          "bytes": 29,
+          "sha256": "c40d449564c21dae0b52c2b76c71dba49cd4cbd246721d228b9c278e07486ca3"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 36,
+          "sha256": "a7e73bba4740d49bc7de5f13ab0a76a59e3a1b209501f087e6a50c97e99996dd"
+        },
+        {
+          "path": "exact.txt",
+          "bytes": 1048576,
+          "sha256": "39b7909f0f28b1b169e9206e1472d327c68c9cb56108931b21aeea6c87cfee7c"
+        },
+        {
+          "path": "just-over.txt",
+          "bytes": 1048577,
+          "sha256": "82218d65cbd1c2ed4842d6ead6a989108c86b63317a7d487ed08fbaa37a1f2a0"
+        },
+        {
+          "path": "logs/utf8.txt",
+          "bytes": 1048617,
+          "sha256": "ba997a8d89af66748bdc47892e9a00e457932faa8dcb0fbef3fd444dbac183a3"
+        },
+        {
+          "path": "logs/utf8-bom.txt",
+          "bytes": 1048617,
+          "sha256": "72edbb8e02c3c01c305ff47e33ae2411d4f249bc1665866adc202ef1a2a7ddbb"
+        },
+        {
+          "path": "logs/utf16le.txt",
+          "bytes": 1048642,
+          "sha256": "590199244c5af35f46987e4bbf0d2c0df2c5f40a0ef22d47f89358edd8369fc6"
+        },
+        {
+          "path": "logs/utf16be.txt",
+          "bytes": 1048642,
+          "sha256": "54443a511d6383463018fba90f86c527371c0d6606aafbefa67f3a0d06897019"
+        },
+        {
+          "path": "logs/gbk.txt",
+          "bytes": 1048613,
+          "sha256": "32d86f67464f103b18e12cf059ec13216577c966cac364a6c333b85b9de004f7"
+        },
+        {
+          "path": "logs/binary.txt",
+          "bytes": 1048580,
+          "sha256": "16a9aaa1488865e165d3b66bfaa6943a5987a36023a4a0d67b6fc99a4c6063cf"
+        }
+      ],
+      "independentReadback": true,
+      "listing": [
+        "Method = Deflate 7zAES",
+        "Solid = -",
+        "Blocks = 11",
+        "Method = ",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19"
+      ]
+    },
+    {
+      "name": "volumes",
+      "method": "Deflate",
+      "encrypted": true,
+      "filenameEncrypted": true,
+      "members": [
+        {
+          "name": "Deflate日志.7z.001",
+          "bytes": 262144,
+          "sha256": "858685d8a8841f1f181f8ddcb080640b645e6a310658c1ad3a4c3dec17999e08"
+        },
+        {
+          "name": "Deflate日志.7z.002",
+          "bytes": 262144,
+          "sha256": "03a617520a07db087d2ad2941d2051beb4d70c4f8744b5d940faa4c5d1c798a4"
+        },
+        {
+          "name": "Deflate日志.7z.003",
+          "bytes": 262144,
+          "sha256": "c66a27f1029a935401d585ad13146eec788d325ecd447b0ca4770e6a9251a7f0"
+        },
+        {
+          "name": "Deflate日志.7z.004",
+          "bytes": 33426,
+          "sha256": "a740fcdcc67a86ef673eae5afe6bd6a25307387afc95c7239b0e25e344fa1ea1"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=Deflate",
+        "-pDeflate日志公开密码1636!",
+        "-mx=5",
+        "-mhe=on",
+        "-v256k",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-text-prefix-1636\\volumes\\Deflate日志.7z",
+        "."
+      ],
+      "expected": [
+        {
+          "path": "logs/session [1].txt",
+          "bytes": 2550000,
+          "sha256": "c50355792a27575d11525b2292df2b0cab8cd5c53d621dbbadd32f858775abe0"
+        },
+        {
+          "path": "logs/session 1.txt",
+          "bytes": 29,
+          "sha256": "c40d449564c21dae0b52c2b76c71dba49cd4cbd246721d228b9c278e07486ca3"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 36,
+          "sha256": "a7e73bba4740d49bc7de5f13ab0a76a59e3a1b209501f087e6a50c97e99996dd"
+        },
+        {
+          "path": "exact.txt",
+          "bytes": 1048576,
+          "sha256": "39b7909f0f28b1b169e9206e1472d327c68c9cb56108931b21aeea6c87cfee7c"
+        },
+        {
+          "path": "just-over.txt",
+          "bytes": 1048577,
+          "sha256": "82218d65cbd1c2ed4842d6ead6a989108c86b63317a7d487ed08fbaa37a1f2a0"
+        },
+        {
+          "path": "logs/utf8.txt",
+          "bytes": 1048617,
+          "sha256": "ba997a8d89af66748bdc47892e9a00e457932faa8dcb0fbef3fd444dbac183a3"
+        },
+        {
+          "path": "logs/utf8-bom.txt",
+          "bytes": 1048617,
+          "sha256": "72edbb8e02c3c01c305ff47e33ae2411d4f249bc1665866adc202ef1a2a7ddbb"
+        },
+        {
+          "path": "logs/utf16le.txt",
+          "bytes": 1048642,
+          "sha256": "590199244c5af35f46987e4bbf0d2c0df2c5f40a0ef22d47f89358edd8369fc6"
+        },
+        {
+          "path": "logs/utf16be.txt",
+          "bytes": 1048642,
+          "sha256": "54443a511d6383463018fba90f86c527371c0d6606aafbefa67f3a0d06897019"
+        },
+        {
+          "path": "logs/gbk.txt",
+          "bytes": 1048613,
+          "sha256": "32d86f67464f103b18e12cf059ec13216577c966cac364a6c333b85b9de004f7"
+        },
+        {
+          "path": "logs/binary.txt",
+          "bytes": 1048580,
+          "sha256": "16a9aaa1488865e165d3b66bfaa6943a5987a36023a4a0d67b6fc99a4c6063cf"
+        }
+      ],
+      "independentReadback": true,
+      "listing": [
+        "Method = Deflate 7zAES",
+        "Solid = -",
+        "Blocks = 11",
+        "Method = ",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19",
+        "Method = Deflate 7zAES:19"
+      ]
+    }
+  ],
+  "sideOriginals": {
+    "solid": {
+      "sha256": "532d888f4d590fd1d50316ed3efd771cc54e7c4d84f2bfa0dfc89464e5ef8cbe",
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-m0=Deflate",
+        "-ms=128m",
+        "-pDeflate日志公开密码1636!",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-text-prefix-1636\\solid.7z",
+        "."
+      ],
+      "independentReadback": true,
+      "listing": [
+        "Solid = +",
+        "Blocks = 1"
+      ]
+    },
+    "store": {
+      "sha256": "bcae2fe72f29007f097f94398970c5452a281b1a716b9c29c943bd4c221cd64f",
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=Deflate",
+        "-m0=Copy",
+        "-pDeflate日志公开密码1636!",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-text-prefix-1636\\store.7z",
+        "logs/session [1].txt"
+      ],
+      "independentReadback": true
+    },
+    "late-original": {
+      "sha256": "9323a73ca31ae2f78777791f47bdeff229310a27e0a1073b7a343b9b4a3b989f",
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=Deflate",
+        "-pDeflate日志公开密码1636!",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-text-prefix-1636\\late-original.7z",
+        "logs/session [1].txt"
+      ],
+      "independentReadback": true
+    },
+    "late-plain": {
+      "sha256": "396ebe4b6c312a05b6b409fa7a0ef783a16076648376312109afa5bdff53e75d",
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=Deflate",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-text-prefix-1636\\late-plain.7z",
+        "logs/session [1].txt"
+      ],
+      "independentReadback": true
+    },
+    "large-total": {
+      "sha256": "ad7006b45cc0b053685b79bb08160ec7c55dbfbcc04c9a988d72bb31d768d497",
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=Deflate",
+        "-pDeflate日志公开密码1636!",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-deflate-text-prefix-1636\\large-total.7z",
+        "huge.txt"
+      ],
+      "independentReadback": true,
+      "bytes": 68157440
+    }
+  },
+  "mutations": {
+    "tail-damaged.7z": "b5ac91bc70650ec307d957f02b5f20bfbfd41ffc8374cee9e81093dd1fb4bdcf",
+    "plain-tail-damaged.7z": "54bb2e2f3f1fbf16dc1f882a85afbe9ca91c0042dfac1483814f3b64a38bdd19",
+    "bad-start.7z": "8f2c2bce978f8628f820243e2b9a4c9bc783571e47e3882097cc5fca81a867f3"
+  }
+}

@@ -1,8 +1,8 @@
 # 文档导航与维护规则
 
-- **当前版本 v1.6.35**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.35)、[中文说明](RELEASE_NOTES_1.6.35.md)与[固实 Deflate 图文记录](SEVENZ_SOLID_DEFLATE_PREVIEW_FREEZE_1.6.35.md)。已完成功能封板，正常受保护 PR/注解标签发布，最终身份与附件状态在本版 PR 接续。
-- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.35.md)已完成；[v1.6.36 非固实大文本开头预览](ARCHIVE_ROADMAP_1.6.36.md)仅规划、尚未开发，见[交接](DEVELOPMENT_HANDOFF.md)。
-- **前版 v1.6.34**：[密码非固实 Deflate 图文记录](SEVENZ_PASSWORD_DEFLATE_PREVIEW_FREEZE_1.6.34.md)，PR #295 已合并并推送注解标签，附件状态在该 PR 接续。
+- **当前版本 v1.6.36**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.36)、[中文说明](RELEASE_NOTES_1.6.36.md)与[Deflate 大文本记录](SEVENZ_DEFLATE_TEXT_PREFIX_FREEZE_1.6.36.md)。已完成功能封板，正常受保护 PR/注解标签发布，最终身份和附件状态在本版 PR 接续。
+- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.36.md)已完成；[v1.6.37 固实大文本开头预览](ARCHIVE_ROADMAP_1.6.37.md)仅规划、尚未开发，见[交接](DEVELOPMENT_HANDOFF.md)。
+- **前版 v1.6.35**：[固实 Deflate 图文记录](SEVENZ_SOLID_DEFLATE_PREVIEW_FREEZE_1.6.35.md)，PR #296 已合并并推送注解标签，正式附件状态在该 PR 接续。
 
 以下为历史阶段记录。
 

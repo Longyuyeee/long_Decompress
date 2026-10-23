@@ -1,0 +1,48 @@
+Traceback (most recent call last):
+  File "E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\scripts\prepare-sevenz-deflate-text-prefix-1636.py", line 34, in <module>
+    target=(base/(name+'.7z')).resolve();target.write_bytes(b);run(independent,['t','-p'+key,target],success=False)
+                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\scripts\prepare-sevenz-deflate-text-prefix-1636.py", line 7, in run
+    r=subprocess.run([str(exe),*map(str,args)],cwd=cwd,capture_output=True,timeout=180);assert (r.returncode==0)==success,r.stdout.decode('utf-8','replace')+r.stderr.decode('utf-8','replace');return r.stdout.decode('utf-8','replace')
+                                                                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 
+
+7-Zip 26.04 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-10-05
+
+
+
+Scanning the drive for archives:
+
+1 file, 808752 bytes (790 KiB)
+
+
+
+Testing archive: E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\tests\fixtures\archives\sevenz-deflate-text-prefix-1636\plain-tail-damaged.7z
+
+--
+
+Path = E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\tests\fixtures\archives\sevenz-deflate-text-prefix-1636\plain-tail-damaged.7z
+
+Type = 7z
+
+Physical Size = 808752
+
+Headers Size = 134
+
+Method = Deflate
+
+Solid = -
+
+Blocks = 1
+
+
+
+Everything is Ok
+
+
+
+Size:       2550000
+
+Compressed: 808752
+
+

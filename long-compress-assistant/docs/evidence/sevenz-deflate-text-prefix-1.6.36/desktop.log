@@ -1,0 +1,5 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[sevenz-deflate-text-prefix-1636] unread damaged tail remains explicitly partial while complete integrity errors and unsupported text keep extraction hints
+[sevenz-deflate-text-prefix-1636] cancelled and stale requests cannot replace a fresh prefix
