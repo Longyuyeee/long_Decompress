@@ -168,8 +168,19 @@ pub struct PreviewAes<R> {
 }
 impl<R:Read> PreviewAes<R> {
     pub(crate) fn new(input:R,properties:&[u8],password:&[u8],size:usize)->Result<Self,crate::Error>{
+        Self::construct(input,properties,password,size,true)
+    }
+    /// Explicit selected-prefix stream. Its private receipt never waives the
+    /// full-consumption receipts registered by headers and complete readers.
+    pub(crate) fn new_prefix(input:R,properties:&[u8],password:&[u8],size:usize)->Result<Self,crate::Error>{
+        Self::construct(input,properties,password,size,false)
+    }
+    fn construct(input:R,properties:&[u8],password:&[u8],size:usize,full:bool)->Result<Self,crate::Error>{
+        if password.is_empty(){return Err(crate::Error::PasswordRequired);}
+        let cipher_size=size.checked_add(15).map(|n|n/16*16).ok_or_else(||crate::Error::unsupported("AES size overflow"))?;
         let (key,iv)=get_aes_key(properties,password)?;
-        Ok(Self{input,cipher:Aes256CbcDec::new(&key.into(),&iv.into()),remaining:size,cipher_remaining:size.div_ceil(16)*16,buffer:vec![],position:0,complete:crate::preview::track_aes()})
+        let complete=if full {crate::preview::track_aes()} else {std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false))};
+        Ok(Self{input,cipher:Aes256CbcDec::new(&key.into(),&iv.into()),remaining:size,cipher_remaining:cipher_size,buffer:vec![],position:0,complete})
     }
     fn fill(&mut self)->std::io::Result<()>{
         crate::preview::check().map_err(|e|match e {crate::Error::Io(e,_)|crate::Error::MaybeBadPassword(e)=>e,other=>std::io::Error::other(other)})?;
@@ -197,6 +208,32 @@ impl<R:Read> Read for PreviewAes<R>{
 struct Cipher {
     dec: Aes256CbcDec,
     buf: Vec<u8>,
+}
+
+#[cfg(test)]
+mod prefix1624_tests {
+    use super::*;
+    use std::sync::{Arc,atomic::{AtomicUsize,Ordering}};
+    struct Short {data:std::io::Cursor<Vec<u8>>,read:Arc<AtomicUsize>}
+    impl Read for Short {fn read(&mut self,b:&mut [u8])->std::io::Result<usize>{let cap=b.len().min(3);let n=self.data.read(&mut b[..cap])?;self.read.fetch_add(n,Ordering::SeqCst);Ok(n)}}
+    fn encrypted()->Vec<u8>{let mut data=vec![b'A';8192];let mut hash=sha2::Sha256::new();hash.update([b'k',0]);hash.update([0;8]);let key:[u8;32]=hash.finalize().into();let mut cipher=cbc::Encryptor::<aes::Aes256>::new(&key.into(),&[0u8;16].into());for b in data.chunks_exact_mut(16){cipher.encrypt_block_mut(GenericArray::from_mut_slice(b));}data}
+    #[test]
+    fn sevenz1624_aes_partial_short_reads_do_not_waive_full_receipts(){
+        let count=Arc::new(AtomicUsize::new(0));
+        let value:Result<(),crate::Error>=crate::with_preview_limits(64*1024*1024,20,||Ok(()),||{
+            let input=Short{data:std::io::Cursor::new(encrypted()),read:count.clone()};let mut prefix=PreviewAes::new_prefix(input,&[0,0],&[b'k',0],8192)?;let mut b=[0;100];prefix.read_exact(&mut b).map_err(crate::Error::io)?;assert_eq!(b,[b'A';100]);Ok(())
+        });assert!(value.is_ok());assert_eq!(count.load(Ordering::SeqCst),4096);
+        let value:Result<(),crate::Error>=crate::with_preview_limits(64*1024*1024,20,||Ok(()),||{
+            let mut full=PreviewAes::new(std::io::Cursor::new(encrypted()),&[0,0],&[b'k',0],8192)?;let mut b=[0;100];full.read_exact(&mut b).map_err(crate::Error::io)?;
+            let mut prefix=PreviewAes::new_prefix(std::io::Cursor::new(encrypted()),&[0,0],&[b'k',0],8192)?;prefix.read_exact(&mut b).map_err(crate::Error::io)?;Ok(())
+        });assert!(value.unwrap_err().to_string().contains("未完整消费"));
+        let value:Result<(),crate::Error>=crate::with_preview_limits(64*1024*1024,20,||Ok(()),||{let mut full=PreviewAes::new(std::io::Cursor::new(encrypted()),&[0,0],&[b'k',0],8192)?;let mut b=vec![];full.read_to_end(&mut b).map_err(crate::Error::io)?;assert_eq!(b.len(),8192);Ok(())});assert!(value.is_ok());
+    }
+    #[test]
+    fn sevenz1624_partial_still_rejects_short_cipher_and_honours_cancellation(){
+        let value:Result<(),crate::Error>=crate::with_preview_limits(64*1024*1024,20,||Ok(()),||{let mut d=PreviewAes::new_prefix(std::io::Cursor::new(vec![0;15]),&[0,0],&[b'k',0],8192)?;assert!(d.read(&mut [0;1]).is_err());Ok(())});assert!(value.is_ok());
+        let calls=Arc::new(AtomicUsize::new(0));let c=calls.clone();let value:Result<(),crate::Error>=crate::with_preview_limits(64*1024*1024,20,move||{if c.fetch_add(1,Ordering::SeqCst)>1{Err(crate::Error::other("预览已取消"))}else{Ok(())}},||{let mut d=PreviewAes::new_prefix(std::io::Cursor::new(encrypted()),&[0,0],&[b'k',0],8192)?;d.read(&mut [0;1]).map_err(crate::Error::io)?;Ok(())});assert!(value.unwrap_err().to_string().contains("取消"));
+    }
 }
 
 impl Cipher {

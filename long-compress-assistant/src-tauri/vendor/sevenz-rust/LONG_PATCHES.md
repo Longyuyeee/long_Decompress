@@ -83,3 +83,5 @@ the folder CRC wrapper, checking the codec end before returning the last output
 chunk. Prefix reads intentionally bypass this complete stack. A new application
 regression covers the actual integrity route, bad terminal and valid encrypted
 solid integrity/image continuity; other codec/default choices are unchanged.
+
+2026-10-23: v1.6.24 permits the explicit non-solid selected prefix to chain AES then LZMA/LZMA2. PreviewAes::new_prefix uses a private unregistered completion receipt; it never disables header/full-entry receipts. CBC exact short reads, KDF/cancel/limits and end checks when reached remain shared. The caller confirms AES aligned packed length; all complete readers retain full consumption/CRC/end checks. Added partial-vs-full receipt and short-read/cancellation unit coverage.

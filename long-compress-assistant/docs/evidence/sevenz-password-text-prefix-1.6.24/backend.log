@@ -1,0 +1,37 @@
+   Compiling sevenz-rust v0.6.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\sevenz-rust)
+   Compiling long-compress-assistant v1.6.24 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 28s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-55dae3c8bc3ebaff.exe)
+
+running 4 tests
+test services::sevenz_password_text_prefix_1624_tests::sevenz1624_cancel_source_revision_missing_tail_and_large_unrelated_are_bounded ... ok
+test services::sevenz_password_text_prefix_1624_tests::sevenz1624_partial_tail_is_not_full_integrity_and_full_small_reads_stay_strict ... ok
+test services::sevenz_password_text_prefix_1624_tests::sevenz1624_vault_candidates_and_manual_wrong_key_keep_partial_out_of_success_stats ... ok
+test services::sevenz_password_text_prefix_1624_tests::sevenz1624_original_aes_methods_headers_and_every_numeric_member_read_exact_prefix ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 1142 filtered out; finished in 18.41s
+

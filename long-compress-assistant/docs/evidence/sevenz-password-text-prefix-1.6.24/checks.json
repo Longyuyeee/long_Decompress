@@ -1,0 +1,69 @@
+{
+  "version": "1.6.24",
+  "applicationSha256": "50710e3681c1558d0b50b103032add9c00b763dfb2335f91600d51fe5a000c40",
+  "shellSha256": "0ce590add682449d90955ccb085ced7657a9b90ed6ff07041e29695fd8e70816",
+  "backend": {
+    "passed": 4
+  },
+  "vendor": {
+    "passed": 2,
+    "initialFailure": "Unit fixture used AES cycles-power 63, outside the existing preview bound 20; corrected fixture to power 0. Production limit unchanged."
+  },
+  "frontend": {
+    "passed": 5
+  },
+  "desktopGroups": 4,
+  "layouts": [
+    {
+      "name": "prefix-wide",
+      "action": {
+        "height": 28.59375,
+        "width": 93.421875,
+        "x": 641.0625,
+        "y": 561.1015625
+      },
+      "dialog": {
+        "height": 531.390625,
+        "width": 832,
+        "x": 134,
+        "y": 59.3046875
+      },
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "prefix-narrow",
+      "action": {
+        "height": 28.59375,
+        "width": 93.421875,
+        "x": 529.859375,
+        "y": 451.796875
+      },
+      "dialog": {
+        "height": 442.78125,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 38.609375
+      },
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "build": {
+    "frontend": "VITE_DESKTOP_E2E=1",
+    "native": "custom-protocol,desktop-e2e; opt-level=1; LTO=false",
+    "productionConfigChanged": false
+  },
+  "fixturePreparation": "Initial duplicate -p side-case switch and rerun multivolume update corrected in producer; existing base originals retained and independently read back. Compile-only run selected zero tests before new test module registration, not counted as a pass.",
+  "fixturesManifestSha256": "a51f2c15518e1d7bf7a15658698f58c4ae8ee113c5f38eeb146c2adeb9307e94"
+}
