@@ -1,0 +1,46 @@
+   Compiling long-compress-assistant v1.6.20 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5m 26s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-0826fabd26578f39.exe)
+
+running 4 tests
+test services::sevenz_solid_image_1620_tests::sevenz1620_shared_image_progress_and_mid_read_cancellation_do_not_publish_bytes ... ok
+test services::sevenz_solid_image_1620_tests::sevenz1620_shared_source_changes_and_missing_volume_reject_stale_images ... ok
+
+thread 'services::sevenz_solid_image_1620_tests::sevenz1620_solid_output_shared_limits_bad_end_and_encryption_have_next_steps' (22292) panicked at src\services\sevenz_solid_image_1620_tests.rs:29:65:
+called `Result::unwrap_err()` on an `Ok` value: ArchiveImagePreview { entry_path: "preview.png", mime_type: "image/png", data_url: "data:image/png;base64,[fixture bytes omitted]", byte_size: 2729, width: 320, height: 240 }
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::sevenz_solid_image_1620_tests::sevenz1620_solid_output_shared_limits_bad_end_and_encryption_have_next_steps ... FAILED
+test services::sevenz_solid_image_1620_tests::sevenz1620_solid_original_rasters_methods_and_every_numeric_member_are_exact ... ok
+
+failures:
+
+failures:
+    services::sevenz_solid_image_1620_tests::sevenz1620_solid_output_shared_limits_bad_end_and_encryption_have_next_steps
+
+test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 1122 filtered out; finished in 11.22s
+
+error: test failed, to rerun pass `--lib`

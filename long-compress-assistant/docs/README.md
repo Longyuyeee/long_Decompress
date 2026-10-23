@@ -1,8 +1,8 @@
 # 文档导航与维护规则
 
-- **当前版本 v1.6.19**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.19)、[中文说明](RELEASE_NOTES_1.6.19.md)和[7Z 固实文本记录](SEVENZ_SOLID_TEXT_PREVIEW_FREEZE_1.6.19.md)。按正常受保护 PR/注解标签发布，最终身份和正式附件状态在本版 PR 接续。
-- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.19.md)已完成封板；下一阶段 [v1.6.20 小型固实图片与原阅读器](ARCHIVE_ROADMAP_1.6.20.md)仅规划、尚未开发，见[开发交接](DEVELOPMENT_HANDOFF.md)。
-- **前版 v1.6.18**：[图片记录](SEVENZ_IMAGE_PREVIEW_FREEZE_1.6.18.md)；正式运行 39895153265 已成功、四附件齐备，PR #279 发布回执补全，同树 master CI 已确认取消。
+- **当前版本 v1.6.20**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.20)、[中文说明](RELEASE_NOTES_1.6.20.md)和[7Z 固实图片记录](SEVENZ_SOLID_IMAGE_PREVIEW_FREEZE_1.6.20.md)。按正常受保护 PR/注解标签发布，最终身份与附件状态在本版 PR 接续。
+- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.20.md)已完成封板；下一阶段 [v1.6.21 加密固实小文本](ARCHIVE_ROADMAP_1.6.21.md)仅规划、尚未开发，见[开发交接](DEVELOPMENT_HANDOFF.md)。
+- **前版 v1.6.19**：[固实文本记录](SEVENZ_SOLID_TEXT_PREVIEW_FREEZE_1.6.19.md)；正式运行 39898361079 已成功，四附件齐备，PR #280 发布回执补全，同树 master CI 已确认取消。
 
 以下为历史阶段记录。
 

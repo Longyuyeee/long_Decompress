@@ -52,7 +52,7 @@ fn sevenz1619_checks_earlier_later_and_folder_crcs_and_complete_decoder_end() {
 }
 
 #[tokio::test]
-async fn sevenz1619_shared_limits_encryption_and_images_keep_clear_extraction_next_steps() {
+async fn sevenz1619_shared_limits_and_encryption_keep_clear_extraction_next_steps() {
  for (p,entry,key,reason) in [(root().join("oversize-shared.7z"),"readme.txt",None,"64 MiB"),(case("encrypted"),SELECTED,Some("7Z固实公开测试1619!"),"加密固实")] {
   let e=preview::preview_archive_text(&p,entry,key).await.unwrap_err();let text=format!("{e:#}");assert!(text.contains(reason)&&text.contains("先提取"),"{text}");assert!(!text.contains("[sevenz-preview:password]"));
  }
@@ -61,7 +61,7 @@ async fn sevenz1619_shared_limits_encryption_and_images_keep_clear_extraction_ne
  let big=Path::new(env!("CARGO_MANIFEST_DIR")).join("../test-results/sevenz-solid-text-1619/unrelated.7z");assert!(big.metadata().unwrap().len()>LIMIT);
  assert!(!preview::preview_archive_text(&big,SELECTED,None).await.unwrap().truncated);
  let image=Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/sevenz-image-1618/solid/相册.7z");
- assert!(preview::preview_archive_image(&image,"gallery/01-cover.png",None).await.unwrap_err().to_string().contains("固实"));
+ assert_eq!(preview::preview_archive_image(&image,"gallery/01-cover.png",None).await.unwrap().width,320);
 }
 
 #[test]

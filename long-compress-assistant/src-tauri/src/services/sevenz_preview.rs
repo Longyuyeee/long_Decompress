@@ -1,4 +1,4 @@
-//! Selected text and non-solid images; metadata and payload share an input budget.
+//! Selected text and images; metadata and payload share an input budget.
 use anyhow::{ensure, Context, Result};
 use std::{io::{self, Read, Seek, SeekFrom}, path::Path, sync::{Arc, atomic::{AtomicBool, Ordering}}, time::{Duration, Instant}};
 use super::numeric_volume_reader::ZipInputReader;
@@ -43,14 +43,14 @@ fn engine_error(error: sevenz_rust::Error, encrypted: bool) -> anyhow::Error {
 }
 
 pub(crate) fn read(path: &Path, selected: &str, password: Option<&str>, cancelled: Arc<AtomicBool>) -> Result<(Vec<u8>, u64)> {
-    read_selected(path,selected,password,cancelled,MAX_TEXT,None,true)
+    read_selected(path,selected,password,cancelled,MAX_TEXT,None)
 }
 
 pub(crate) fn read_image(path:&Path, selected:&str, password:Option<&str>, control:&super::image_reader::Control) -> Result<Vec<u8>> {
-    Ok(read_selected(path,selected,password,control.flag.clone(),super::archive_preview::MAX_PREVIEW_BYTES,Some(control.clone()),false)?.0)
+    Ok(read_selected(path,selected,password,control.flag.clone(),super::archive_preview::MAX_PREVIEW_BYTES,Some(control.clone()))?.0)
 }
 
-fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc<AtomicBool>, max_output:u64, control:Option<super::image_reader::Control>, allow_solid:bool) -> Result<(Vec<u8>,u64)> {
+fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc<AtomicBool>, max_output:u64, control:Option<super::image_reader::Control>) -> Result<(Vec<u8>,u64)> {
     let mut input = Input { inner: ZipInputReader::open_seven_zip(path)?, read:0, cancelled, until:Instant::now()+Duration::from_secs(30), control };
     input.check()?;
     let length = input.seek(SeekFrom::End(0))?;
@@ -61,7 +61,7 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     input.check()?;
     let mut matches = archive.files.iter().enumerate().filter(|(_,e)| e.name.replace('\\',"/")==selected);
     let (index,entry) = matches.next().context("所选 7Z 内容已不存在，请刷新目录")?;
-    ensure!(matches.next().is_none(),"7Z 中存在同路径条目，不能确定所选文本，请先提取并确认内容");
+    ensure!(matches.next().is_none(),"7Z 中存在同路径条目，不能确定所选内容，请先提取并确认内容");
     ensure!(!entry.is_directory && !entry.is_anti_item,"请选择普通文件");
     ensure!(entry.size<=max_output,"7Z 所选文件超过 {} MiB 预览范围，请先提取后打开",max_output/1024/1024);
     if !entry.has_stream {
@@ -71,7 +71,6 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     let folder_index = archive.stream_map.file_folder_index.get(index).copied().flatten().context("7Z 所选内容缺少数据流，请先提取检查")?;
     let folder = archive.folders.get(folder_index).context("7Z 所选内容的数据块无法确认，请先提取检查")?;
     let shared = folder.num_unpack_sub_streams != 1 || folder.get_unpack_size()!=entry.size;
-    ensure!(!shared || allow_solid,"7Z 固实共享图片暂不支持预览，请先提取后打开");
     if !shared {ensure!(entry.has_crc || folder.has_crc,"7Z 所选内容缺少完整 CRC，暂不提供预览，请先提取检查");}
     // Only LZMA/LZMA2, optionally preceded by AES. No filters or unrelated blocks.
     let methods: Vec<_> = folder.ordered_coder_iter().map(|(_,c)|c.decompression_method_id()).collect();
@@ -85,7 +84,7 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     }
     let encrypted = methods.contains(&M::ID_AES256SHA256);
     if shared {
-        ensure!(!encrypted,"7Z 加密固实文本暂不支持预览，请先提取后打开");
+        ensure!(!encrypted,"7Z 加密固实内容暂不支持预览，请先提取后打开");
         ensure!(folder.packed_streams.len()==1,"7Z 固实共享范围无法确认，请先提取后打开");
         let pack_index=archive.stream_map.folder_first_pack_stream_index.get(folder_index).context("7Z 固实共享范围无法确认，请先提取后打开")?;
         let packed=archive.pack_sizes.get(*pack_index).context("7Z 固实共享大小无法确认，请先提取后打开")?;

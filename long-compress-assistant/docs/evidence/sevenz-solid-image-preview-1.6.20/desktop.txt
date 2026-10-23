@@ -1,0 +1,8 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[sevenz-solid-image-1620] selected original PNG renders exact pixels in the original wide and narrow panes
+[sevenz-solid-image-1620] original reader turns pages zooms skips bad content and locates JPEG without preloading
+[sevenz-solid-image-1620] current page extraction keeps the exact selected 7Z path and content
+[sevenz-solid-image-1620] solid LZMA and non-first numeric volume feed preview and reader with exact selected bytes
+[sevenz-solid-image-1620] shared limits damaged ending encryption cancellation and changed sources keep clear next steps

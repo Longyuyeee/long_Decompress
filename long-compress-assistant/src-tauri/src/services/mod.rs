@@ -179,3 +179,6 @@ mod zip_xz_compatibility_tests;
 
 #[cfg(test)]
 mod sevenz_solid_text_1619_tests;
+
+#[cfg(test)]
+mod sevenz_solid_image_1620_tests;

@@ -21,9 +21,9 @@ const extensions=new Set(['png','jpg','jpeg','gif','webp','bmp','svg','ico','avi
 const extension=(name:string)=>name.split('.').pop()?.toLowerCase()||''
 const parent=(path:string)=>{const p=path.replace(/\\/g,'/');return p.slice(0,Math.max(0,p.lastIndexOf('/')))}
 const all=computed(()=>readerImages(props.entries,name=>extensions.has(extension(name))))
-const sharedEgg=computed(()=>props.format.toUpperCase()==='EGG'&&props.entries.some(entry=>!entry.isDir&&entry.compressedSize===null))
 const images=computed(()=>scope.value==='archive'?all.value:all.value.filter(entry=>parent(entry.path)===directory.value))
 const index=computed(()=>images.value.findIndex(entry=>entry.path===path.value)),entry=computed(()=>images.value[index.value])
+const sharedArchive=computed(()=>props.format.toUpperCase()==='EGG' ? props.entries.some(item=>!item.isDir&&item.compressedSize===null) : props.format.toUpperCase()==='7Z'&&entry.value?.compressedSize===null)
 const thumbnails=computed(()=>{const start=Math.max(0,Math.min(index.value-3,images.value.length-7));return images.value.slice(start,start+7).map((entry,offset)=>({entry,index:start+offset}))})
 const missingResume=computed(()=>!!resumed&&!all.value.some(entry=>entry.path===resumed.path))
 const finderResults=computed(()=>{const query=finderQuery.value.trim().toLocaleLowerCase();return images.value.map((entry,index)=>({entry,index})).filter(row=>!query||row.entry.path.toLocaleLowerCase().includes(query))})
@@ -56,7 +56,7 @@ const reason=(entry?:ReaderImage)=>!props.revision?'来源清单需要刷新，�
 async function load(){
  if(!ready.value)return;pageInput.value=Math.max(1,index.value+1)
  const next=images.value[index.value+1]
- await reader.show(path.value,!sharedEgg.value&&props.format.toUpperCase()!=='7Z'&&next&&!reason(next)?next.path:undefined,reason(entry.value))
+ await reader.show(path.value,!sharedArchive.value&&props.format.toUpperCase()!=='7Z'&&next&&!reason(next)?next.path:undefined,reason(entry.value))
  await nextTick();if(stage.value){stage.value.scrollTop=0;stage.value.scrollLeft=0}
 }
 watch(path,()=>void load())
@@ -65,7 +65,7 @@ watch(scope,()=>{if(!images.value.some(e=>e.path===path.value))path.value=images
 function go(index:number){const image=images.value[Math.max(0,Math.min(index,images.value.length-1))];if(image&&image.path!==path.value)path.value=image.path}
 function jump(){if(Number.isFinite(pageInput.value))go(Math.trunc(pageInput.value)-1);pageInput.value=index.value+1}
 function zoomBy(amount:number){fit.value=false;zoom.value=Math.max(.25,Math.min(4,Math.round((zoom.value+amount)*100)/100))}
-const progressText=computed(()=>{const p=reader.progress.value;if(sharedEgg.value&&p.phase!=='decoding')return '正在读取固实包共享内容，请稍候…';if(p.phase==='locating')return `正在定位图片 · 已扫描 ${bytes(p.processedBytes)}`;if(p.phase==='reading')return `正在读取 · ${bytes(p.processedBytes)}${p.totalBytes?' / '+bytes(p.totalBytes):''}`;return p.phase==='decoding'?'正在显示图片…':'正在读取图片，请稍候…'})
+const progressText=computed(()=>{const p=reader.progress.value;if(sharedArchive.value&&p.phase!=='decoding')return '正在读取固实包共享内容，请稍候…';if(p.phase==='locating')return `正在定位图片 · 已扫描 ${bytes(p.processedBytes)}`;if(p.phase==='reading')return `正在读取 · ${bytes(p.processedBytes)}${p.totalBytes?' / '+bytes(p.totalBytes):''}`;return p.phase==='decoding'?'正在显示图片…':'正在读取图片，请稍候…'})
 function bytes(value:number){return value>=1048576?(value/1048576).toFixed(1)+' MiB':value>=1024?(value/1024).toFixed(1)+' KiB':value+' B'}
 function keydown(event:KeyboardEvent){
  event.stopPropagation()

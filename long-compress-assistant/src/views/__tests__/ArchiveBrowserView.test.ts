@@ -232,6 +232,43 @@ describe('ArchiveBrowserView', () => {
     })
   })
 
+  it('sevenz1620 solid image keeps the original modal, shared wait text and contextual limits',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'e'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:20,totalCompressedSize:8,encrypted:false,entries:[{path:'cover.png',name:'cover.png',size:20,isDir:false,compressedSize:null}]})
+    let finish!:(v:unknown)=>void;mocks.previewArchiveImage.mockReturnValueOnce(new Promise(resolve=>finish=resolve))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1620,path:'C:/solid.7z'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
+    await w.get('[data-entry-path="cover.png"]').trigger('dblclick');await flushPromises();expect(w.get('.preview-stage').text()).toContain('正在读取固实包共享内容')
+    finish({entryPath:'cover.png',dataUrl:'data:image/png;base64,AA==',mimeType:'image/png',width:320,height:240,byteSize:20});await flushPromises()
+    expect(w.find('[data-testid="archive-image-preview"]').exists()).toBe(true)
+    await w.findAll('button').find(b=>b.attributes('aria-label')==='预览说明')!.trigger('mouseenter');await flushPromises();expect(w.text()).toContain('检查整个共享块后显示');expect(w.text()).toContain('64 MiB');w.unmount()
+  })
+
+  it('sevenz1620 closing an image cancels its exact request and discards late bytes',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'8'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:72,encrypted:false,entries:[{path:'cover.png',name:'cover.png',size:72,isDir:false,compressedSize:null}]})
+    let finish!:(value:unknown)=>void;mocks.previewArchiveImage.mockReturnValueOnce(new Promise(resolve=>finish=resolve))
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1620,path:'C:/相册.7z'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises();await w.get('[data-entry-path="cover.png"]').trigger('dblclick');await flushPromises()
+    const request=mocks.previewArchiveImage.mock.calls.at(-1)![5];await w.get('.preview-close').trigger('click');expect(mocks.cancelArchiveBrowse).toHaveBeenCalledWith(request.previewId)
+    finish({entryPath:'cover.png',mimeType:'image/png',dataUrl:'data:image/png;base64,AA==',byteSize:1,width:1,height:1});await flushPromises();expect(w.find('[data-testid="archive-entry-preview"]').exists()).toBe(false);w.unmount()
+  })
+  it('sevenz1620 actual reader loads only the current page and keeps the original close behavior',async()=>{
+    vi.stubGlobal('URL',{createObjectURL:vi.fn(()=> 'blob:sevenz-reader'),revokeObjectURL:vi.fn()})
+    mocks.browseArchive.mockResolvedValueOnce({revision:'8'.repeat(64),format:'7Z',totalFiles:2,totalDirectories:0,totalUncompressedSize:20,encrypted:false,entries:['1.png','2.png'].map(path=>({path,name:path,isDir:false,size:10,compressedSize:null}))})
+    mocks.invoke.mockImplementation(async(command,args)=>command==='read_archive_image'?{entryPath:args.entryPath,dataUrl:'data:image/png;base64,AA==',mimeType:'image/png',byteSize:1,width:1,height:1}:undefined)
+    const w=mount(ArchiveBrowserView,{attachTo:document.body,global:{stubs:{Teleport:true}}})
+    try{
+      await w.get('header .browser-primary').trigger('click');await flushPromises();await w.get('[data-testid="archive-reader-open"]').trigger('click');await flushPromises()
+      expect(w.get('[data-testid="reader-current-path"]').text()).toBe('1.png');expect(mocks.invoke.mock.calls.filter(c=>c[0]==='read_archive_image')).toHaveLength(1)
+      await w.get('[data-testid="reader-next"]').trigger('click');await flushPromises();expect(w.get('[data-testid="reader-current-path"]').text()).toBe('2.png');expect(mocks.invoke.mock.calls.filter(c=>c[0]==='read_archive_image')).toHaveLength(2)
+      await w.get('[data-testid="reader-close"]').trigger('click');expect(w.find('[data-testid="archive-image-reader"]').exists()).toBe(false)
+    }finally{w.unmount();vi.unstubAllGlobals()}
+  })
+  it('sevenz1620 solid reader explains shared work and stop discards the late page',async()=>{
+    let finish!:(v:unknown)=>void
+    mocks.browseArchive.mockResolvedValueOnce({revision:'0'.repeat(64),format:'7Z',totalFiles:1,totalDirectories:0,totalUncompressedSize:10,encrypted:false,entries:[{path:'1.png',name:'1.png',isDir:false,size:10,compressedSize:null}]})
+    mocks.invoke.mockImplementation((cmd)=>cmd==='read_archive_image'?new Promise(resolve=>finish=resolve):Promise.resolve())
+    const w=mount(ArchiveBrowserView,{attachTo:document.body,global:{stubs:{Teleport:true}}})
+    try{await w.get('header .browser-primary').trigger('click');await flushPromises();await w.get('[data-testid="archive-reader-open"]').trigger('click');await flushPromises();expect(w.get('[data-testid="reader-progress"]').text()).toContain('正在读取固实包共享内容');await w.get('[data-testid="reader-stop"]').trigger('click');await flushPromises();expect(mocks.invoke.mock.calls.some(c=>c[0]==='cancel_archive_browse')).toBe(true);finish({entryPath:'1.png',dataUrl:'data:image/png;base64,AA==',mimeType:'image/png',byteSize:1,width:1,height:1});await flushPromises();expect(w.find('[data-testid="reader-image"]').exists()).toBe(false)}finally{w.unmount()}
+  })
+
   it('sevenz1618 closing an image cancels its exact request and discards late bytes',async()=>{
     mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'8'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:72,encrypted:false,entries:[{path:'cover.png',name:'cover.png',size:72,isDir:false,compressedSize:50}]})
     let finish!:(value:unknown)=>void;mocks.previewArchiveImage.mockReturnValueOnce(new Promise(resolve=>finish=resolve))
