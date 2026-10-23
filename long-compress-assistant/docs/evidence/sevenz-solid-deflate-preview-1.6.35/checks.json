@@ -1,0 +1,93 @@
+{
+  "version": "1.6.35",
+  "applicationSha256": "d99f8cf7e05105bb723d64beb960de3b29cd70ac3083aba580bf0a086296f85a",
+  "shellSha256": "58d07c21ee7bc8ec5e3c7c162a5f90b75a8841297967ddfc6b508eaf6a1e61d5",
+  "backend": {
+    "passed": 6,
+    "failed": 0,
+    "initial": {
+      "passed": 5,
+      "failed": 1,
+      "cause": "Boundary fixture was automatically split into separate blocks by producer; corrected to explicit 128m solid block, independently read back and confirmed Solid + / Blocks 1"
+    },
+    "affectedRetry": {
+      "passed": 1,
+      "failed": 0,
+      "productionCodeChanged": false,
+      "previouslyPassedRepeated": false
+    }
+  },
+  "adapter": {
+    "passed": 2,
+    "failed": 0
+  },
+  "desktopGroups": 5,
+  "layouts": [
+    {
+      "name": "text-wide",
+      "closeVisible": true,
+      "dialog": {
+        "height": 531.390625,
+        "width": 832,
+        "x": 134,
+        "y": 59.3046875
+      },
+      "height": 650,
+      "image": null,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "image-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 401.984375,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 59.0078125
+      },
+      "height": 520,
+      "image": {
+        "height": 240,
+        "width": 320
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    },
+    {
+      "name": "reader-narrow",
+      "closeVisible": true,
+      "dialog": {
+        "height": 504,
+        "width": 744,
+        "x": 8,
+        "y": 8
+      },
+      "height": 520,
+      "image": {
+        "height": 64,
+        "width": 96
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "build": {
+    "frontend": "vue-tsc + VITE_DESKTOP_E2E=1 Vite",
+    "native": "custom-protocol,desktop-e2e; opt-level=1; LTO=false",
+    "productionConfigChanged": false
+  },
+  "fixturesManifestSha256": "4742a8dedb23a152cb787801ad02c1b81932b913337784bbdc78a86e243ed6bb"
+}

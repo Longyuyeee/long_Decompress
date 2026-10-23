@@ -58,3 +58,4 @@ pub use reader::BlockDecoder;
 pub use reader::SevenZReader;
 #[cfg(feature = "compress")]
 pub use writer::*;
+#[cfg(all(test,feature="aes256",feature="additional-codecs"))] mod deflate_solid_preview_1635_tests;

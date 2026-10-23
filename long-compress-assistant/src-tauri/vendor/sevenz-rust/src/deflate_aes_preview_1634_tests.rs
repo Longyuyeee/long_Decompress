@@ -3,7 +3,7 @@ use crate::{folder::{Coder,BindPair},Archive,BlockDecoder,Error,SevenZMethod as 
 use aes::cipher::{BlockEncryptMut,KeyIvInit,generic_array::GenericArray};
 use sha2::{Digest,Sha256};use std::io::{Cursor,Read,Seek,SeekFrom};
 const KEY:&[u8]=&[b'k',0];
-fn sample(final_block:bool,extra:bool,bad_padding:bool)->(Archive,Cursor<Vec<u8>>,Vec<u8>){
+pub(super) fn sample(final_block:bool,extra:bool,bad_padding:bool)->(Archive,Cursor<Vec<u8>>,Vec<u8>){
  let(mut a,data,body)=crate::deflate_preview_1633_tests::sample(final_block,extra);
  let plain=&data.get_ref()[32..];let mut cipher=plain.to_vec();cipher.resize(plain.len().div_ceil(16)*16,0);if bad_padding{*cipher.last_mut().unwrap()=1;}
  let mut seed=KEY.to_vec();seed.extend_from_slice(&[0;8]);let key:[u8;32]=Sha256::digest(seed).into();let mut aes=cbc::Encryptor::<aes::Aes256>::new(&key.into(),&[0u8;16].into());for b in cipher.chunks_exact_mut(16){aes.encrypt_block_mut(GenericArray::from_mut_slice(b));}

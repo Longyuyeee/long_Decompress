@@ -74,7 +74,7 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     let ppmd=methods.as_slice()==[M::ID_PPMD] || methods.as_slice()==[M::ID_AES256SHA256,M::ID_PPMD];
     let deflate=methods.as_slice()==[M::ID_DEFLATE] || methods.as_slice()==[M::ID_AES256SHA256,M::ID_DEFLATE];
     if methods.contains(&M::ID_DEFLATE) {
-        ensure!(deflate && !shared && !prefix,"7Z Deflate 预览当前支持普通/密码非固实完整小文本和图片；固实或大文本请先提取后打开");
+        ensure!(deflate && !prefix,"7Z Deflate 预览当前支持普通/密码完整小文本和图片；大文本请先提取后打开");
     }
     if methods.contains(&M::ID_PPMD) {
         ensure!(ppmd,"7Z 此 PPMd 方法组合暂不支持内部预览，请先提取后打开");
@@ -99,7 +99,7 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
         if Instant::now()>=until {return Err(sevenz_rust::Error::io(io::Error::new(io::ErrorKind::TimedOut,"7Z 预览超过 30 秒，请先提取后打开")));}Ok(())
     };
     let bytes = if deflate {
-        decoder.read_deflate_entry(index,max_output as usize,check)
+        if shared { decoder.read_solid_deflate_entry(index,max_output as usize,MAX_INPUT,check) } else { decoder.read_deflate_entry(index,max_output as usize,check) }
     } else if prefix && shared {
         decoder.read_solid_entry_prefix(index,MAX_TEXT as usize,MAX_INPUT,check)
     } else if prefix {
