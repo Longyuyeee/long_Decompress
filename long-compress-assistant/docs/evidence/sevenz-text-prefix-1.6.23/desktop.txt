@@ -1,0 +1,27 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[sevenz-text-prefix-1623] large selected text is explicitly partial and scrollable in equal wide and narrow panes with original full-open action
+[sevenz-text-prefix-1623] original LZMA non-first numeric member and five encoding boundaries keep exact selected prefix bytes
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+
+true !== false
+
+    at file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-text-prefix-1623-gate.mjs:65:121
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async step (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-text-prefix-1623-gate.mjs:35:105)
+    at async runSevenzTextPrefix1623Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-text-prefix-1623-gate.mjs:63:2)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:5041:5 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: true,
+  expected: false,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

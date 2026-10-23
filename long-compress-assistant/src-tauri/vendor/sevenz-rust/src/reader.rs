@@ -112,6 +112,26 @@ struct Crc32VerifyingReader<R> {
     remaining: i64,
 }
 
+// A file/CRC size wrapper would otherwise hide a malformed LZMA2 terminal
+// chunk after all declared bytes have been returned. Check it before handing
+// the last bytes to the complete-operation callback. Prefix readers do not
+// use this stack and deliberately leave their unread tail unverified.
+struct Lzma2EndReader<R> { inner: R, remaining: u64 }
+impl<R: Read> Read for Lzma2EndReader<R> {
+    fn read(&mut self, buffer: &mut [u8]) -> std::io::Result<usize> {
+        if buffer.is_empty() { return Ok(0); }
+        if self.remaining == 0 { return Ok(0); }
+        let capacity = self.remaining.min(buffer.len() as u64) as usize;
+        let n = self.inner.read(&mut buffer[..capacity])?;
+        if n == 0 { return Err(std::io::Error::new(ErrorKind::UnexpectedEof,"LZMA2 output ended before declared size")); }
+        self.remaining -= n as u64;
+        if self.remaining == 0 && self.inner.read(&mut [0u8;1])? != 0 {
+            return Err(std::io::Error::new(ErrorKind::InvalidData,"LZMA2 output exceeds declared size"));
+        }
+        Ok(n)
+    }
+}
+
 impl<R: Read> Crc32VerifyingReader<R> {
     fn new(inner: R, remaining: usize, expected_value: u64) -> Self {
         Self {
@@ -1230,6 +1250,12 @@ impl<R: Read + Seek> SevenZReader<R> {
             )?;
             decoder = Box::new(next);
         }
+        let methods: Vec<_> = folder.ordered_coder_iter().map(|(_,c)|c.decompression_method_id()).collect();
+        if methods.as_slice() == [SevenZMethod::ID_LZMA2]
+            || methods.as_slice() == [SevenZMethod::ID_AES256SHA256,SevenZMethod::ID_LZMA2]
+        {
+            decoder = Box::new(Lzma2EndReader { inner: decoder, remaining: folder.get_unpack_size() });
+        }
         if folder.has_crc {
             decoder = Box::new(Crc32VerifyingReader::new(
                 decoder,
@@ -1442,6 +1468,41 @@ pub struct BlockDecoder<'a, R: Read + Seek> {
 }
 
 impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
+    /// Read only the requested prefix of one unencrypted non-solid LZMA stream.
+    /// This deliberately does not verify the unread tail, CRCs or codec end.
+    /// Complete entry readers retain their independent full verification path.
+    pub fn read_single_entry_prefix(self, selected: usize, max_bytes: usize, mut check: impl FnMut() -> Result<(), Error>) -> Result<Vec<u8>, Error> {
+        let archive = self.archive;
+        let folder = archive.folders.get(self.folder_index).ok_or_else(|| Error::other("Missing prefix block"))?;
+        let entry = archive.files.get(selected).ok_or_else(|| Error::other("Missing prefix file"))?;
+        if max_bytes == 0 || max_bytes > 1024 * 1024 || entry.size <= max_bytes as u64
+            || !entry.has_stream || entry.is_directory || entry.is_anti_item
+            || archive.stream_map.file_folder_index.get(selected) != Some(&Some(self.folder_index))
+            || folder.num_unpack_sub_streams != 1 || folder.get_unpack_size() != entry.size
+            || folder.coders.len() != 1 || folder.packed_streams.len() != 1
+            || folder.coders[0].num_in_streams != 1 || folder.coders[0].num_out_streams != 1
+            || archive.files.iter().enumerate().filter(|(i,e)|e.has_stream && archive.stream_map.file_folder_index.get(*i)==Some(&Some(self.folder_index))).count() != 1
+        { return Err(Error::unsupported("Prefix requires one complete mapped non-solid stream")); }
+        check()?;
+        let pack_index = *archive.stream_map.folder_first_pack_stream_index.get(self.folder_index).ok_or_else(|| Error::other("Missing prefix pack mapping"))?;
+        let size = *archive.pack_sizes.get(pack_index).ok_or_else(|| Error::other("Missing prefix pack size"))?;
+        let start = 32u64.checked_add(archive.pack_pos).and_then(|n| archive.stream_map.pack_stream_offsets.get(pack_index).and_then(|offset|n.checked_add(*offset))).ok_or_else(|| Error::other("Prefix pack offset overflow"))?;
+        let unpacked = usize::try_from(entry.size).map_err(|_|Error::unsupported("Prefix declared size exceeds platform range"))?;
+        self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
+        let mut decoder = crate::decoders::add_prefix_decoder(self.source.take(size), unpacked, &folder.coders[0], MAX_MEM_LIMIT_KB)?;
+        let mut bytes = Vec::with_capacity(max_bytes);
+        let mut buffer = [0u8;32*1024];
+        while bytes.len() < max_bytes {
+            check()?;
+            let capacity = buffer.len().min(max_bytes-bytes.len());
+            let n = decoder.read(&mut buffer[..capacity]).map_err(Error::io)?;
+            if n == 0 { return Err(Error::other("7Z 文本开头在 1 MiB 前结束，数据与声明大小不符，请重新下载或先提取检查")); }
+            bytes.extend_from_slice(&buffer[..n]);
+        }
+        check()?;
+        Ok(bytes)
+    }
+
     /// Read one file from a complete bounded shared block. Stream and verify
     /// every dependency, retain only the requested file, and read the codec end.
     pub fn read_solid_entry(

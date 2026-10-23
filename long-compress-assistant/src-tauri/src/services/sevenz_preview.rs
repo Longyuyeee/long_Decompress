@@ -56,7 +56,8 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     let (index,entry) = matches.next().context("所选 7Z 内容已不存在，请刷新目录")?;
     ensure!(matches.next().is_none(),"7Z 中存在同路径条目，不能确定所选内容，请先提取并确认内容");
     ensure!(!entry.is_directory && !entry.is_anti_item,"请选择普通文件");
-    ensure!(entry.size<=max_output,"7Z 所选文件超过 {} MiB 预览范围，请先提取后打开",max_output/1024/1024);
+    let prefix = max_output==MAX_TEXT && entry.size>max_output;
+    ensure!(entry.size<=max_output || prefix,"7Z 所选文件超过 {} MiB 预览范围，请先提取后打开",max_output/1024/1024);
     if !entry.has_stream {
         ensure!(entry.size==0,"7Z 所选内容大小与数据流不一致，请先提取检查");
         return Ok((vec![],0));
@@ -64,7 +65,7 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     let folder_index = archive.stream_map.file_folder_index.get(index).copied().flatten().context("7Z 所选内容缺少数据流，请先提取检查")?;
     let folder = archive.folders.get(folder_index).context("7Z 所选内容的数据块无法确认，请先提取检查")?;
     let shared = folder.num_unpack_sub_streams != 1 || folder.get_unpack_size()!=entry.size;
-    if !shared {ensure!(entry.has_crc || folder.has_crc,"7Z 所选内容缺少完整 CRC，暂不提供预览，请先提取检查");}
+    if !shared && !prefix {ensure!(entry.has_crc || folder.has_crc,"7Z 所选内容缺少完整 CRC，暂不提供预览，请先提取检查");}
     // Only LZMA/LZMA2, optionally preceded by AES. No filters or unrelated blocks.
     let methods: Vec<_> = folder.ordered_coder_iter().map(|(_,c)|c.decompression_method_id()).collect();
     use sevenz_rust::SevenZMethod as M;
@@ -76,6 +77,10 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
         if c.decompression_method_id()==M::ID_LZMA2 { ensure!(c.properties.len()==1 && c.properties[0]<=28,"7Z 预览字典超过预览范围，请先提取后打开"); }
     }
     let encrypted = methods.contains(&M::ID_AES256SHA256);
+    if prefix {
+        ensure!(!shared,"7Z 固实大文本暂不支持开头预览，请先提取后打开");
+        ensure!(!encrypted,"7Z 密码大文本暂不支持开头预览，请先提取后打开");
+    }
     if shared {
         ensure!(folder.packed_streams.len()==1,"7Z 固实共享范围无法确认，请先提取后打开");
         let pack_index=archive.stream_map.folder_first_pack_stream_index.get(folder_index).context("7Z 固实共享范围无法确认，请先提取后打开")?;
@@ -84,7 +89,13 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     }
     let flag=input.cancelled.clone();let until=input.until;
     let decoder = sevenz_rust::BlockDecoder::new(folder_index,&archive,key.as_slice(),input);
-    let bytes = if shared {
+    let check = || {
+        if flag.load(Ordering::Acquire) {return Err(sevenz_rust::Error::io(io::Error::other("7Z 预览已取消")));}
+        if Instant::now()>=until {return Err(sevenz_rust::Error::io(io::Error::new(io::ErrorKind::TimedOut,"7Z 预览超过 30 秒，请先提取后打开")));}Ok(())
+    };
+    let bytes = if prefix {
+        decoder.read_single_entry_prefix(index,MAX_TEXT as usize,check)
+    } else if shared {
         decoder.read_solid_entry(index,max_output as usize,MAX_INPUT,||{
             if flag.load(Ordering::Acquire) {return Err(sevenz_rust::Error::io(io::Error::other("7Z 预览已取消")));}
             if Instant::now()>=until {return Err(sevenz_rust::Error::io(io::Error::new(io::ErrorKind::TimedOut,"7Z 预览超过 30 秒，请先提取后打开")));}
@@ -150,7 +161,7 @@ mod tests {
             let error=preview::preview_archive_text(&source,entry,None).await.unwrap_err();assert!(format!("{error:#}").contains(reason),"{error:#}");
         }
         let temp=tempfile::tempdir().unwrap();
-        for (name,entries,reason) in [("large",vec![("readme.txt",vec![b'x';1024*1024+1])],"1 MiB"),("duplicates",vec![("same.txt",b"first".to_vec()),("same.txt",b"second".to_vec())],"同路径")] {
+        for (name,entries,reason) in [("duplicates",vec![("same.txt",b"first".to_vec()),("same.txt",b"second".to_vec())],"同路径")] {
             let p=temp.path().join(format!("{name}.7z"));let mut writer=sevenz_rust::SevenZWriter::create(&p).unwrap();
             for (name,data) in &entries {let mut e=sevenz_rust::SevenZArchiveEntry::default();e.name=(*name).into();writer.push_archive_entry(e,Some(data.as_slice())).unwrap();}writer.finish().unwrap();
             let error=preview::preview_archive_text(&p,entries[0].0,None).await.unwrap_err();assert!(format!("{error:#}").contains(reason),"{error:#}");

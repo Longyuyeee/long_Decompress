@@ -1,0 +1,95 @@
+{
+  "version": "1.6.23",
+  "applicationSha256": "563a6e9a2772e06b47048f22914e4476b0758f5b50e19b2591aa0edd773d3b3f",
+  "checks": [
+    {
+      "name": "large selected text is explicitly partial and scrollable in equal wide and narrow panes with original full-open action",
+      "meta": "UTF-8\n已读 1.00 MB / 2.43 MB\n12337 行\n部分内容 · 未校验整文件\n只读\n提取后打开",
+      "sha256": "a5f3359feb70aa1dbecad22ccf5c124dc6b507bdbdd2b36d2cdf38e1da7d659c",
+      "scroll": true,
+      "fullActionVisible": true,
+      "applicationSha256": "532cccf8dad63bc33ed6d24e4c7f2c67282194ebe93b801db724980c5d77b27e"
+    },
+    {
+      "name": "original LZMA non-first numeric member and five encoding boundaries keep exact selected prefix bytes",
+      "lzma": true,
+      "nonFirstMember": true,
+      "encodingBoundaries": 5,
+      "largeTotal": 68157440,
+      "applicationSha256": "532cccf8dad63bc33ed6d24e4c7f2c67282194ebe93b801db724980c5d77b27e"
+    },
+    {
+      "name": "unread damaged tail remains explicitly partial while complete integrity errors and unsupported text keep extraction hints",
+      "applicationSha256": "563a6e9a2772e06b47048f22914e4476b0758f5b50e19b2591aa0edd773d3b3f",
+      "unreadTailUnverified": true,
+      "completeIntegrity": "压缩失败: Newly created 7Z archive failed verification: Io(Custom { kind: InvalidInput, error: \"Corrupted input data (LZMA2:2)\" }, \"\")",
+      "errors": {
+        "solid": "7Z 固实大文本暂不支持开头预览，请先提取后打开",
+        "encrypted": "7Z 密码大文本暂不支持开头预览，请先提取后打开",
+        "store": "7Z 此压缩方法组合暂不支持内部预览，请先提取后打开",
+        "bad-start": "7Z 所选内容未通过完整读取或 CRC 校验，请重新下载或先提取检查：Io(Custom { kind: InvalidInput, error: \"Corrupted input data (LZMA2:0)\" }, \"\")"
+      },
+      "smallComplete": true
+    },
+    {
+      "name": "cancelled and stale requests cannot replace a fresh prefix and unrelated corrupt 65 MiB stays unread",
+      "applicationSha256": "563a6e9a2772e06b47048f22914e4476b0758f5b50e19b2591aa0edd773d3b3f",
+      "stale": "IMAGE_READER_CHANGED|来源已变化，请返回刷新来源后重新阅读",
+      "cancelled": "文本预览已取消",
+      "freshBytes": 1048576,
+      "unrelatedCorrupt65mSkipped": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "prefix-wide",
+      "action": {
+        "height": 28.59375,
+        "width": 93.421875,
+        "x": 641.0625,
+        "y": 561.1015625
+      },
+      "dialog": {
+        "height": 531.390625,
+        "width": 832,
+        "x": 134,
+        "y": 59.3046875
+      },
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100,
+      "applicationSha256": "532cccf8dad63bc33ed6d24e4c7f2c67282194ebe93b801db724980c5d77b27e"
+    },
+    {
+      "name": "prefix-narrow",
+      "action": {
+        "height": 28.59375,
+        "width": 93.421875,
+        "x": 529.859375,
+        "y": 451.796875
+      },
+      "dialog": {
+        "height": 442.78125,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 38.609375
+      },
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760,
+      "applicationSha256": "532cccf8dad63bc33ed6d24e4c7f2c67282194ebe93b801db724980c5d77b27e"
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-text-prefix-1623\\71abbb40-77ae-4a52-a90a-8aa680459018",
+  "previousCandidateSha256": "532cccf8dad63bc33ed6d24e4c7f2c67282194ebe93b801db724980c5d77b27e",
+  "continuity": "The two passed prefix/UI/encoding groups and screenshots retain their original candidate hash. A new complete-stack LZMA2 end check fixed a pre-existing integrity-command false success. Prefix decoding uses its independent add_prefix_decoder and raw metadata originals; frontend and those branches did not change. Only the remaining complete-integrity/next-step and source/cancel groups resume on the final completion-fixed candidate; each new group records its own candidate hash.",
+  "passed": true
+}
