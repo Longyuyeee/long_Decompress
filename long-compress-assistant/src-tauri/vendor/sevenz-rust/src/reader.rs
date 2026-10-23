@@ -1649,7 +1649,7 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         check()?;Ok(bytes)
     }
 
-    /// Read a selected non-solid LZMA/LZMA2 prefix, optionally preceded by AES.
+    /// Read a selected non-solid LZMA/LZMA2/PPMd prefix, optionally preceded by AES.
     /// The encrypted payload uses a distinct partial constructor; metadata and
     /// complete readers retain their full AES consumption receipts.
     /// This deliberately does not verify the unread tail, CRCs or codec end.
@@ -1667,9 +1667,9 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
             || archive.files.iter().enumerate().filter(|(i,e)|e.has_stream && archive.stream_map.file_folder_index.get(*i)==Some(&Some(self.folder_index))).count() != 1
         { return Err(Error::unsupported("Prefix requires one complete mapped non-solid stream")); }
         let coders:Vec<_>=folder.ordered_coder_iter().collect();
-        let codec=|id:&[u8]|id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2;
+        let codec=|id:&[u8]|id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2 || id==SevenZMethod::ID_PPMD;
         if coders.len()!=folder.coders.len() || !(coders.len()==1 && codec(coders[0].1.decompression_method_id()) || coders.len()==2 && coders[0].1.decompression_method_id()==SevenZMethod::ID_AES256SHA256 && codec(coders[1].1.decompression_method_id())) {
-            return Err(Error::unsupported("Prefix requires LZMA/LZMA2, optionally preceded by AES"));
+            return Err(Error::unsupported("Prefix requires LZMA/LZMA2/PPMd, optionally preceded by AES"));
         }
         check()?;
         let pack_index = *archive.stream_map.folder_first_pack_stream_index.get(self.folder_index).ok_or_else(|| Error::other("Missing prefix pack mapping"))?;

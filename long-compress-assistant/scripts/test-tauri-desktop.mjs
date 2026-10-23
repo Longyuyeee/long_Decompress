@@ -1,3 +1,4 @@
+import { runSevenzPpmdPrefix1631Gate } from './sevenz-ppmd-text-prefix-1631-gate.mjs'
 import { runSevenzPasswordSolidPpmd1630Gate } from './sevenz-password-solid-ppmd-preview-1630-gate.mjs'
 import { runSevenzSolidPpmd1629Gate } from './sevenz-solid-ppmd-preview-1629-gate.mjs'
 import { runSevenzPasswordPpmd1628Gate } from './sevenz-password-ppmd-preview-1628-gate.mjs'
@@ -5043,6 +5044,9 @@ try {
     completedSuccessfully = true
   } else if ((process.argv.includes('--compact-modules-only') || process.argv.includes('--compact-modules-layout-only'))) {
     await runCompactModulesUiGate({driver,bridge:callDesktopBridge,application,root,dataDirectory:e2eDataDirectory})
+    completedSuccessfully = true
+  } else if (process.argv.includes('--sevenz-ppmd-text-prefix-1631-only')) {
+    await runSevenzPpmdPrefix1631Gate({driver,bridge:callDesktopBridge,root,application})
     completedSuccessfully = true
   } else if (process.argv.includes('--sevenz-password-solid-ppmd-preview-1630-only')) {
     await runSevenzPasswordSolidPpmd1630Gate({driver,bridge:callDesktopBridge,root,application})

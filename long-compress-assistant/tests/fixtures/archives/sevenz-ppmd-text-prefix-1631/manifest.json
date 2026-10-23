@@ -1,0 +1,592 @@
+{
+  "password": "PPMd日志公开密码1631!",
+  "producer": "E:\\7-Zip\\7z.exe",
+  "producerSha256": "83967f1b02b43c4efeda302795722c809e0e81b8307de73558d10484d5676a7d",
+  "independent": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\resources\\archive-engine\\7z.exe",
+  "independentSha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53",
+  "selected": "logs/session [1].txt",
+  "cases": [
+    {
+      "name": "plain",
+      "method": "PPMd",
+      "encrypted": false,
+      "filenameEncrypted": false,
+      "members": [
+        {
+          "name": "PPMd日志.7z",
+          "bytes": 784126,
+          "sha256": "bcb2bac315641f220f5e5c0926321cc7c67dc29ab00f2467b10ef972c9f6b355"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=PPMd",
+        "-mo=6",
+        "-mmem=8m",
+        "-mhe=off",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-ppmd-text-prefix-1631\\plain\\PPMd日志.7z",
+        "."
+      ],
+      "expected": [
+        {
+          "path": "logs/session [1].txt",
+          "bytes": 2550000,
+          "sha256": "c50355792a27575d11525b2292df2b0cab8cd5c53d621dbbadd32f858775abe0"
+        },
+        {
+          "path": "logs/session 1.txt",
+          "bytes": 29,
+          "sha256": "c40d449564c21dae0b52c2b76c71dba49cd4cbd246721d228b9c278e07486ca3"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 36,
+          "sha256": "a7e73bba4740d49bc7de5f13ab0a76a59e3a1b209501f087e6a50c97e99996dd"
+        },
+        {
+          "path": "exact.txt",
+          "bytes": 1048576,
+          "sha256": "39b7909f0f28b1b169e9206e1472d327c68c9cb56108931b21aeea6c87cfee7c"
+        },
+        {
+          "path": "just-over.txt",
+          "bytes": 1048577,
+          "sha256": "82218d65cbd1c2ed4842d6ead6a989108c86b63317a7d487ed08fbaa37a1f2a0"
+        },
+        {
+          "path": "logs/utf8.txt",
+          "bytes": 1048617,
+          "sha256": "ba997a8d89af66748bdc47892e9a00e457932faa8dcb0fbef3fd444dbac183a3"
+        },
+        {
+          "path": "logs/utf8-bom.txt",
+          "bytes": 1048617,
+          "sha256": "72edbb8e02c3c01c305ff47e33ae2411d4f249bc1665866adc202ef1a2a7ddbb"
+        },
+        {
+          "path": "logs/utf16le.txt",
+          "bytes": 1048642,
+          "sha256": "590199244c5af35f46987e4bbf0d2c0df2c5f40a0ef22d47f89358edd8369fc6"
+        },
+        {
+          "path": "logs/utf16be.txt",
+          "bytes": 1048642,
+          "sha256": "54443a511d6383463018fba90f86c527371c0d6606aafbefa67f3a0d06897019"
+        },
+        {
+          "path": "logs/gbk.txt",
+          "bytes": 1048613,
+          "sha256": "32d86f67464f103b18e12cf059ec13216577c966cac364a6c333b85b9de004f7"
+        },
+        {
+          "path": "logs/binary.txt",
+          "bytes": 1048580,
+          "sha256": "16a9aaa1488865e165d3b66bfaa6943a5987a36023a4a0d67b6fc99a4c6063cf"
+        }
+      ],
+      "independentReadback": true,
+      "listing": [
+        "Method = PPMD",
+        "Solid = -",
+        "Blocks = 11",
+        "Method = ",
+        "Method = PPMD:o6:mem23",
+        "Method = PPMD:o6:mem23",
+        "Method = PPMD:o6:mem23",
+        "Method = PPMD:o6:mem23",
+        "Method = PPMD:o6:mem23",
+        "Method = PPMD:o6:mem23",
+        "Method = PPMD:o6:mem23",
+        "Method = PPMD:o6:mem23",
+        "Method = PPMD:o6:mem23",
+        "Method = PPMD:o6:mem23",
+        "Method = PPMD:o6:mem23"
+      ]
+    },
+    {
+      "name": "contents",
+      "method": "PPMd",
+      "encrypted": true,
+      "filenameEncrypted": false,
+      "members": [
+        {
+          "name": "PPMd日志.7z",
+          "bytes": 784518,
+          "sha256": "6afaabf2aa866e3be448bda6f635e38fe56afec28e352a9c8a49e9ade0a5238c"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-pPPMd日志公开密码1631!",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=PPMd",
+        "-mo=6",
+        "-mmem=8m",
+        "-mhe=off",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-ppmd-text-prefix-1631\\contents\\PPMd日志.7z",
+        "."
+      ],
+      "expected": [
+        {
+          "path": "logs/session [1].txt",
+          "bytes": 2550000,
+          "sha256": "c50355792a27575d11525b2292df2b0cab8cd5c53d621dbbadd32f858775abe0"
+        },
+        {
+          "path": "logs/session 1.txt",
+          "bytes": 29,
+          "sha256": "c40d449564c21dae0b52c2b76c71dba49cd4cbd246721d228b9c278e07486ca3"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 36,
+          "sha256": "a7e73bba4740d49bc7de5f13ab0a76a59e3a1b209501f087e6a50c97e99996dd"
+        },
+        {
+          "path": "exact.txt",
+          "bytes": 1048576,
+          "sha256": "39b7909f0f28b1b169e9206e1472d327c68c9cb56108931b21aeea6c87cfee7c"
+        },
+        {
+          "path": "just-over.txt",
+          "bytes": 1048577,
+          "sha256": "82218d65cbd1c2ed4842d6ead6a989108c86b63317a7d487ed08fbaa37a1f2a0"
+        },
+        {
+          "path": "logs/utf8.txt",
+          "bytes": 1048617,
+          "sha256": "ba997a8d89af66748bdc47892e9a00e457932faa8dcb0fbef3fd444dbac183a3"
+        },
+        {
+          "path": "logs/utf8-bom.txt",
+          "bytes": 1048617,
+          "sha256": "72edbb8e02c3c01c305ff47e33ae2411d4f249bc1665866adc202ef1a2a7ddbb"
+        },
+        {
+          "path": "logs/utf16le.txt",
+          "bytes": 1048642,
+          "sha256": "590199244c5af35f46987e4bbf0d2c0df2c5f40a0ef22d47f89358edd8369fc6"
+        },
+        {
+          "path": "logs/utf16be.txt",
+          "bytes": 1048642,
+          "sha256": "54443a511d6383463018fba90f86c527371c0d6606aafbefa67f3a0d06897019"
+        },
+        {
+          "path": "logs/gbk.txt",
+          "bytes": 1048613,
+          "sha256": "32d86f67464f103b18e12cf059ec13216577c966cac364a6c333b85b9de004f7"
+        },
+        {
+          "path": "logs/binary.txt",
+          "bytes": 1048580,
+          "sha256": "16a9aaa1488865e165d3b66bfaa6943a5987a36023a4a0d67b6fc99a4c6063cf"
+        }
+      ],
+      "independentReadback": true,
+      "listing": [
+        "Method = PPMD 7zAES",
+        "Solid = -",
+        "Blocks = 11",
+        "Method = ",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19"
+      ]
+    },
+    {
+      "name": "headers",
+      "method": "PPMd",
+      "encrypted": true,
+      "filenameEncrypted": true,
+      "members": [
+        {
+          "name": "PPMd日志.7z",
+          "bytes": 782098,
+          "sha256": "ad2301cd83e265050d0d528f0e678b3064595cc0129c9a88fb7a9c004fac0553"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-pPPMd日志公开密码1631!",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=PPMd",
+        "-mo=6",
+        "-mmem=8m",
+        "-mo=12",
+        "-mmem=16m",
+        "-mhe=on",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-ppmd-text-prefix-1631\\headers\\PPMd日志.7z",
+        "."
+      ],
+      "expected": [
+        {
+          "path": "logs/session [1].txt",
+          "bytes": 2550000,
+          "sha256": "c50355792a27575d11525b2292df2b0cab8cd5c53d621dbbadd32f858775abe0"
+        },
+        {
+          "path": "logs/session 1.txt",
+          "bytes": 29,
+          "sha256": "c40d449564c21dae0b52c2b76c71dba49cd4cbd246721d228b9c278e07486ca3"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 36,
+          "sha256": "a7e73bba4740d49bc7de5f13ab0a76a59e3a1b209501f087e6a50c97e99996dd"
+        },
+        {
+          "path": "exact.txt",
+          "bytes": 1048576,
+          "sha256": "39b7909f0f28b1b169e9206e1472d327c68c9cb56108931b21aeea6c87cfee7c"
+        },
+        {
+          "path": "just-over.txt",
+          "bytes": 1048577,
+          "sha256": "82218d65cbd1c2ed4842d6ead6a989108c86b63317a7d487ed08fbaa37a1f2a0"
+        },
+        {
+          "path": "logs/utf8.txt",
+          "bytes": 1048617,
+          "sha256": "ba997a8d89af66748bdc47892e9a00e457932faa8dcb0fbef3fd444dbac183a3"
+        },
+        {
+          "path": "logs/utf8-bom.txt",
+          "bytes": 1048617,
+          "sha256": "72edbb8e02c3c01c305ff47e33ae2411d4f249bc1665866adc202ef1a2a7ddbb"
+        },
+        {
+          "path": "logs/utf16le.txt",
+          "bytes": 1048642,
+          "sha256": "590199244c5af35f46987e4bbf0d2c0df2c5f40a0ef22d47f89358edd8369fc6"
+        },
+        {
+          "path": "logs/utf16be.txt",
+          "bytes": 1048642,
+          "sha256": "54443a511d6383463018fba90f86c527371c0d6606aafbefa67f3a0d06897019"
+        },
+        {
+          "path": "logs/gbk.txt",
+          "bytes": 1048613,
+          "sha256": "32d86f67464f103b18e12cf059ec13216577c966cac364a6c333b85b9de004f7"
+        },
+        {
+          "path": "logs/binary.txt",
+          "bytes": 1048580,
+          "sha256": "16a9aaa1488865e165d3b66bfaa6943a5987a36023a4a0d67b6fc99a4c6063cf"
+        }
+      ],
+      "independentReadback": true,
+      "listing": [
+        "Method = PPMD 7zAES",
+        "Solid = -",
+        "Blocks = 11",
+        "Method = ",
+        "Method = PPMD:o12:mem24 7zAES:19",
+        "Method = PPMD:o12:mem24 7zAES:19",
+        "Method = PPMD:o12:mem24 7zAES:19",
+        "Method = PPMD:o12:mem24 7zAES:19",
+        "Method = PPMD:o12:mem24 7zAES:19",
+        "Method = PPMD:o12:mem24 7zAES:19",
+        "Method = PPMD:o12:mem24 7zAES:19",
+        "Method = PPMD:o12:mem24 7zAES:19",
+        "Method = PPMD:o12:mem24 7zAES:19",
+        "Method = PPMD:o12:mem24 7zAES:19",
+        "Method = PPMD:o12:mem24 7zAES:19"
+      ]
+    },
+    {
+      "name": "volumes",
+      "method": "PPMd",
+      "encrypted": true,
+      "filenameEncrypted": true,
+      "members": [
+        {
+          "name": "PPMd日志.7z.001",
+          "bytes": 262144,
+          "sha256": "602fe598ef9f44bbf434084cb097affe44445515b4bb545ee68cf829cb1aac73"
+        },
+        {
+          "name": "PPMd日志.7z.002",
+          "bytes": 262144,
+          "sha256": "e03ba15bfce920d0f47af746073a69e4a85d3e72cc5b161f2f91743cfc9c4f4c"
+        },
+        {
+          "name": "PPMd日志.7z.003",
+          "bytes": 260290,
+          "sha256": "ad6b84bf90734668dfda517a0a0f67d3f448ec3b0740b26b3af173571fdf15a1"
+        }
+      ],
+      "originalArgs": [
+        "a",
+        "-pPPMd日志公开密码1631!",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=PPMd",
+        "-mo=6",
+        "-mmem=8m",
+        "-mhe=on",
+        "-v256k",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-ppmd-text-prefix-1631\\volumes\\PPMd日志.7z",
+        "."
+      ],
+      "expected": [
+        {
+          "path": "logs/session [1].txt",
+          "bytes": 2550000,
+          "sha256": "c50355792a27575d11525b2292df2b0cab8cd5c53d621dbbadd32f858775abe0"
+        },
+        {
+          "path": "logs/session 1.txt",
+          "bytes": 29,
+          "sha256": "c40d449564c21dae0b52c2b76c71dba49cd4cbd246721d228b9c278e07486ca3"
+        },
+        {
+          "path": "readme.txt",
+          "bytes": 36,
+          "sha256": "a7e73bba4740d49bc7de5f13ab0a76a59e3a1b209501f087e6a50c97e99996dd"
+        },
+        {
+          "path": "exact.txt",
+          "bytes": 1048576,
+          "sha256": "39b7909f0f28b1b169e9206e1472d327c68c9cb56108931b21aeea6c87cfee7c"
+        },
+        {
+          "path": "just-over.txt",
+          "bytes": 1048577,
+          "sha256": "82218d65cbd1c2ed4842d6ead6a989108c86b63317a7d487ed08fbaa37a1f2a0"
+        },
+        {
+          "path": "logs/utf8.txt",
+          "bytes": 1048617,
+          "sha256": "ba997a8d89af66748bdc47892e9a00e457932faa8dcb0fbef3fd444dbac183a3"
+        },
+        {
+          "path": "logs/utf8-bom.txt",
+          "bytes": 1048617,
+          "sha256": "72edbb8e02c3c01c305ff47e33ae2411d4f249bc1665866adc202ef1a2a7ddbb"
+        },
+        {
+          "path": "logs/utf16le.txt",
+          "bytes": 1048642,
+          "sha256": "590199244c5af35f46987e4bbf0d2c0df2c5f40a0ef22d47f89358edd8369fc6"
+        },
+        {
+          "path": "logs/utf16be.txt",
+          "bytes": 1048642,
+          "sha256": "54443a511d6383463018fba90f86c527371c0d6606aafbefa67f3a0d06897019"
+        },
+        {
+          "path": "logs/gbk.txt",
+          "bytes": 1048613,
+          "sha256": "32d86f67464f103b18e12cf059ec13216577c966cac364a6c333b85b9de004f7"
+        },
+        {
+          "path": "logs/binary.txt",
+          "bytes": 1048580,
+          "sha256": "16a9aaa1488865e165d3b66bfaa6943a5987a36023a4a0d67b6fc99a4c6063cf"
+        }
+      ],
+      "independentReadback": true,
+      "listing": [
+        "Method = PPMD 7zAES",
+        "Solid = -",
+        "Blocks = 11",
+        "Method = ",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19",
+        "Method = PPMD:o6:mem23 7zAES:19"
+      ]
+    }
+  ],
+  "sideOriginals": {
+    "solid": {
+      "sha256": "83df0ef6185f9074d45b2c04f372bc13469759c9a2b49ae9f236dec98863be0d",
+      "originalArgs": [
+        "a",
+        "-pPPMd日志公开密码1631!",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-m0=PPMd",
+        "-mo=6",
+        "-mmem=8m",
+        "-ms=128m",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-ppmd-text-prefix-1631\\solid.7z",
+        "."
+      ],
+      "independentReadback": true
+    },
+    "store": {
+      "sha256": "b628f833183bc438157a662c7829c31c34fe5a784777bc8f13f4594f3d2ce04b",
+      "originalArgs": [
+        "a",
+        "-pPPMd日志公开密码1631!",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=Copy",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-ppmd-text-prefix-1631\\store.7z",
+        "logs/session [1].txt"
+      ],
+      "independentReadback": true
+    },
+    "late-original": {
+      "sha256": "c734029719b05a9a8e9ef09754c9bea9d5714d90f895a3d188272d10d2c48d15",
+      "originalArgs": [
+        "a",
+        "-pPPMd日志公开密码1631!",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=PPMd",
+        "-mo=6",
+        "-mmem=8m",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-ppmd-text-prefix-1631\\late-original.7z",
+        "logs/session [1].txt"
+      ],
+      "independentReadback": true
+    },
+    "late-plain": {
+      "sha256": "bccb15b98ce4dd73ed2195fd6800ee0bb0393ea384a16ce1ebcc67eab0a943d2",
+      "originalArgs": [
+        "a",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=PPMd",
+        "-mo=6",
+        "-mmem=8m",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-ppmd-text-prefix-1631\\late-plain.7z",
+        "logs/session [1].txt"
+      ],
+      "independentReadback": true
+    },
+    "large-total": {
+      "sha256": "4a292488f6af7ab67649727bf6ec966631e4a36fcf259842cd0d137b5df4471b",
+      "originalArgs": [
+        "a",
+        "-pPPMd日志公开密码1631!",
+        "-t7z",
+        "-y",
+        "-sccUTF-8",
+        "-mtc=off",
+        "-mta=off",
+        "-mtm=off",
+        "-mhc=off",
+        "-ms=off",
+        "-m0=PPMd",
+        "-mo=6",
+        "-mmem=8m",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\sevenz-ppmd-text-prefix-1631\\large-total.7z",
+        "huge.txt"
+      ],
+      "independentReadback": true,
+      "bytes": 68157440
+    }
+  },
+  "mutations": {
+    "tail-damaged.7z": "02fa31018fd42a4cda09fd06673c1d2071b0643f63043f99085ddf81c7a08612",
+    "plain-tail-damaged.7z": "307f39a6804a77ed77cb4f5698465400d3bbbca4ba6d6d1bfe8999b8e3e0582e",
+    "bad-start.7z": "78b3d4086ded3193c72b0fd866c8932ff73cc29960790a38f181e87602377b11"
+  },
+  "renderedPrefixBytes": 1048576,
+  "renderedPrefixSha256": "bc98972e29b3ce49a3cb85b9653aff5e91ed0a892a3d55f2a374b217535952f4",
+  "totalSize": 2550000,
+  "boundaries": [
+    {
+      "path": "logs/utf8.txt",
+      "encoding": "UTF-8",
+      "bytes": 1048575,
+      "sha256": "04713def0c5de392161b4cfc0ecd49623237c6438bc898d15bb6c55b345b7ccf"
+    },
+    {
+      "path": "logs/utf8-bom.txt",
+      "encoding": "UTF-8 BOM",
+      "bytes": 1048575,
+      "sha256": "ee2bd97236c05bef3a2a30ba00bffd4fdaf02baeea73edecafc4e8d379f046e1"
+    },
+    {
+      "path": "logs/utf16le.txt",
+      "encoding": "UTF-16LE",
+      "bytes": 1048574,
+      "sha256": "f7ff3e45bfba0af50caded3cea46eb0ba0cb60076fd89795babfaff7444160ed"
+    },
+    {
+      "path": "logs/utf16be.txt",
+      "encoding": "UTF-16BE",
+      "bytes": 1048574,
+      "sha256": "f7ff3e45bfba0af50caded3cea46eb0ba0cb60076fd89795babfaff7444160ed"
+    },
+    {
+      "path": "logs/gbk.txt",
+      "encoding": "GBK",
+      "bytes": 1048575,
+      "sha256": "b05aef04c243d96ab2f339e216754575e66bd2b48a322c0cc48b5c24968a2079"
+    }
+  ],
+  "largeUnrelatedIgnored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-ppmd-text-prefix-1631\\unrelated.7z"
+}

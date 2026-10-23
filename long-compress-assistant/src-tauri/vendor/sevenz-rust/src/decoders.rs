@@ -85,12 +85,18 @@ pub fn add_decoder<I: Read>(
 
 // Prefix output is capped by the caller, so declared total size is not an
 // allocation. Keep the scoped dictionary/shape checks, and allow only a bare
-// LZMA/LZMA2 codec after any explicit partial AES stage. Complete decoder
+// LZMA/LZMA2/PPMd codec after any explicit partial AES stage. Complete decoder
 // defaults remain unchanged.
 pub(crate) fn add_prefix_decoder<I: Read>(input: I, uncompressed_len: usize, coder: &Coder, max_mem_limit_kb: usize) -> Result<Decoder<I>, Error> {
     let id = coder.decompression_method_id();
-    if id != SevenZMethod::ID_LZMA && id != SevenZMethod::ID_LZMA2 {
-        return Err(Error::unsupported("Prefix requires unencrypted LZMA/LZMA2"));
+    if id != SevenZMethod::ID_LZMA && id != SevenZMethod::ID_LZMA2 && id != SevenZMethod::ID_PPMD {
+        return Err(Error::unsupported("Prefix requires LZMA/LZMA2/PPMd"));
+    }
+    if id==SevenZMethod::ID_PPMD {
+        let p=&coder.properties;
+        if p.len()!=5 || !(2..=64).contains(&p[0]) || !(2048..=64*1024*1024).contains(&u32::from_le_bytes(p[1..5].try_into().unwrap())) {
+            return Err(Error::unsupported("7Z PPMd 预览阶数或字典超出范围，请先提取后打开"));
+        }
     }
     crate::preview::coder(coder, 0)?;
     add_decoder_inner(input, uncompressed_len, coder, &[], max_mem_limit_kb)
