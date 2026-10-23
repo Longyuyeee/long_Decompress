@@ -1468,7 +1468,8 @@ pub struct BlockDecoder<'a, R: Read + Seek> {
 }
 
 impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
-    /// Explicit partial plaintext shared-block read. Decode/discard only the
+    /// Explicit partial shared-block read, optionally preceded by AES.
+    /// Decode/discard only the
     /// bounded dependencies before this exact entry, then retain its prefix.
     /// This never verifies preceding CRCs, unread tail or complete codec end.
     /// The complete shared reader below remains a separate verification path.
@@ -1482,9 +1483,14 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         if max_bytes==0 || max_bytes>1024*1024 || max_decoded>64*1024*1024 || files[position].1.size<=max_bytes as u64
             || files.len()!=folder.num_unpack_sub_streams || total!=folder.get_unpack_size()
             || files.iter().any(|(_,e)|e.is_directory || e.is_anti_item)
-            || folder.coders.len()!=1 || folder.packed_streams.len()!=1
-            || folder.coders[0].num_in_streams!=1 || folder.coders[0].num_out_streams!=1
+            || !(1..=2).contains(&folder.coders.len()) || folder.packed_streams.len()!=1
+            || folder.coders.iter().any(|c|c.num_in_streams!=1 || c.num_out_streams!=1)
         {return Err(Error::unsupported("7Z 固实预览映射或方法无法确认，请先提取后打开"));}
+        let coders:Vec<_>=folder.ordered_coder_iter().collect();
+        let codec=|id:&[u8]|id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2;
+        if coders.len()!=folder.coders.len() || !(coders.len()==1 && codec(coders[0].1.decompression_method_id()) || coders.len()==2 && coders[0].1.decompression_method_id()==SevenZMethod::ID_AES256SHA256 && codec(coders[1].1.decompression_method_id())) {
+            return Err(Error::unsupported("Shared prefix requires LZMA/LZMA2, optionally preceded by AES"));
+        }
         if offset.checked_add(max_bytes as u64).is_none_or(|n|n>max_decoded) {
             return Err(Error::unsupported("7Z 固实预览前置内容与开头合计超过 64 MiB，请先提取后打开"));
         }
@@ -1494,7 +1500,21 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         let start=32u64.checked_add(archive.pack_pos).and_then(|n|archive.stream_map.pack_stream_offsets.get(pack_index).and_then(|offset|n.checked_add(*offset))).ok_or_else(||Error::other("Shared prefix pack offset overflow"))?;
         let unpacked=usize::try_from(total).map_err(|_|Error::unsupported("Shared prefix declared size exceeds platform range"))?;
         self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
-        let mut decoder=crate::decoders::add_prefix_decoder(self.source.take(packed),unpacked,&folder.coders[0],MAX_MEM_LIMIT_KB)?;
+        let packed_input=self.source.take(packed);
+        let stream:Box<dyn Read+'_>=if coders.len()==2 {
+            #[cfg(feature="aes256")]
+            {
+                let (index,coder)=coders[0];crate::preview::coder(coder,0)?;
+                let plain=usize::try_from(folder.get_unpack_size_at_index(index)).map_err(|_|Error::unsupported("Shared AES prefix size exceeds platform range"))?;
+                if plain.checked_add(15).map(|n|(n/16*16) as u64)!=Some(packed){return Err(Error::other("Shared AES prefix packed size mismatch"));}
+                // Intentional partial payload only. Header/full-entry AES
+                // streams still register and require complete consumption.
+                Box::new(crate::aes256sha256::PreviewAes::new_prefix(packed_input,&coder.properties,self.password,plain)?)
+            }
+            #[cfg(not(feature="aes256"))]
+            {return Err(Error::unsupported("AES is unavailable"));}
+        } else {Box::new(packed_input)};
+        let mut decoder=crate::decoders::add_prefix_decoder(stream,unpacked,coders.last().unwrap().1,MAX_MEM_LIMIT_KB)?;
         let mut bytes=Vec::with_capacity(max_bytes);let mut buffer=[0;32*1024];
         for (keep,mut remaining) in [(false,offset),(true,max_bytes as u64)] {
             while remaining>0 {

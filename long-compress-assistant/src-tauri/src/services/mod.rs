@@ -197,3 +197,6 @@ mod sevenz_password_text_prefix_1624_tests;
 
 #[cfg(test)]
 mod sevenz_solid_text_prefix_1625_tests;
+
+#[cfg(test)]
+mod sevenz_encrypted_solid_text_prefix_1626_tests;

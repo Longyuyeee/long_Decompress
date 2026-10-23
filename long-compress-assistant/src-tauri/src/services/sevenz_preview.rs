@@ -77,9 +77,6 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
         if c.decompression_method_id()==M::ID_LZMA2 { ensure!(c.properties.len()==1 && c.properties[0]<=28,"7Z 预览字典超过预览范围，请先提取后打开"); }
     }
     let encrypted = methods.contains(&M::ID_AES256SHA256);
-    if prefix {
-        ensure!(!shared || !encrypted,"7Z 加密固实大文本暂不支持开头预览，请先提取后打开");
-    }
     if shared && !prefix {
         ensure!(folder.packed_streams.len()==1,"7Z 固实共享范围无法确认，请先提取后打开");
         let pack_index=archive.stream_map.folder_first_pack_stream_index.get(folder_index).context("7Z 固实共享范围无法确认，请先提取后打开")?;
