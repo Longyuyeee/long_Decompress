@@ -189,7 +189,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷、ZPAQ 原生密码数字切卷及原生多部分只读；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM / ESD / SWM、ZPAQ（含改密与数字分卷）；密码和分卷随目标格式提供 |
 | 清单校验 | SFV/MD5/SHA256 逐文件状态与原因、待补列表、按需复查；匹配表示与清单一致 |
-| 内部预览 | ZIP/TAR 系列及普通 GZIP/BZIP2/XZ/Zstandard 流、ZPAQ 日志式所选快照中的受支持图片与文本；7Z PPMd 普通/密码包均支持非固实及小型固实的完整图文，非固实大文本可读前 1 MiB（明确未校验整文件；固实完整块压缩/解码各 ≤64 MiB）；7Z LZMA/LZMA2 的普通或密码包均支持完整小文本、图片及大文本前 1 MiB，兼容非固实与固实包（大文本明确未校验整文件，固实前置范围 ≤64 MiB）；ALZ Store/Deflate/Bzip2 支持完整小文本、大文本前 1 MiB（明确未校验整文件）、8 MiB 以内受支持图片及原连续阅读入口；EGG 非固实小文本和图片可直接预览并沿原入口连续阅读；密码和完整原生卷沿原入口使用，预览超出读取范围时可先提取后打开 |
+| 内部预览 | ZIP/TAR 系列及普通 GZIP/BZIP2/XZ/Zstandard 流、ZPAQ 日志式所选快照中的受支持图片与文本；7Z PPMd 普通/密码包均支持非固实及小型固实的完整图文，非固实及固实大文本可读前 1 MiB（明确未校验整文件；固实前置与开头合计 ≤64 MiB，完整块压缩/解码各 ≤64 MiB）；7Z LZMA/LZMA2 的普通或密码包均支持完整小文本、图片及大文本前 1 MiB，兼容非固实与固实包（大文本明确未校验整文件，固实前置范围 ≤64 MiB）；ALZ Store/Deflate/Bzip2 支持完整小文本、大文本前 1 MiB（明确未校验整文件）、8 MiB 以内受支持图片及原连续阅读入口；EGG 非固实小文本和图片可直接预览并沿原入口连续阅读；密码和完整原生卷沿原入口使用，预览超出读取范围时可先提取后打开 |
 | 图片压缩 | JPEG、PNG、WebP；质量、尺寸与格式按对应编码能力调整 |
 | 视频压缩 | MP4、MOV、AVI、WMV、WebM、MKV、M4V 等受支持输入，输出 MP4 / H.264 |
 | PDF 优化 | 分析结构、优化体积；是否适合处理会在分析后显示 |
@@ -275,7 +275,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.6.31 · PPMd 非固实大日志直接读开头**。普通/密码包接入原文本窗口，显示前 1 MiB 并明确“部分内容 / 未校验整文件”；手动密码/保险箱、内容/文件名加密和完整数字卷贯通，保留编码、滚动、取消/来源与提取入口。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.31.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_PPMD_TEXT_PREFIX_FREEZE_1.6.31.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.31)。下一阶段 [PPMd 固实大日志预览](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.32.md)仅规划。
+**v1.6.32 · 固实 PPMd 大日志直接读开头**。普通/密码固实包沿原窗口显示所选前 1 MiB，接通内容/文件名加密、手动密码/保险箱和完整数字卷；保留编码、滚动及提取入口。只跳过必要前置内容，明确“部分内容 / 未校验整文件”，超出范围给出下一步。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.32.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_SOLID_PPMD_TEXT_PREFIX_FREEZE_1.6.32.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.32)。下一阶段 [7Z Deflate 图文原位预览](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.33.md)仅规划。
+
+**v1.6.31 · PPMd 非固实大日志直接读开头**。普通/密码包接入原文本窗口，显示前 1 MiB 并明确“部分内容 / 未校验整文件”；手动密码/保险箱、内容/文件名加密和完整数字卷贯通，保留编码、滚动、取消/来源与提取入口。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.31.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_PPMD_TEXT_PREFIX_FREEZE_1.6.31.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.31)。固实 PPMd 大日志由上方 v1.6.32 接续。
 
 **v1.6.30 · 密码固实 PPMd 7Z 直接查看图文**。AES 内容/文件名加密的小型固实包接入原双栏完整小文本、图片与连续阅读；手动密码/保险箱、完整数字卷、取消/来源和准确当前页提取贯通，完整检查 AES 与共享 PPMd 结束。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.30.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_PASSWORD_SOLID_PPMD_PREVIEW_FREEZE_1.6.30.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.30)。非固实 PPMd 大日志由上方 v1.6.31 接续。
 

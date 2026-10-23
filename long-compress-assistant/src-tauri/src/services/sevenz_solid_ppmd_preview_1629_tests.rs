@@ -44,7 +44,7 @@ async fn sevenz1629_readable_shared_bad_flush_never_displays_text_or_pixels_and_
 #[tokio::test]
 async fn sevenz1629_shared_and_image_boundaries_binary_large_and_password_scopes_keep_next_steps(){
  let v=preview::preview_archive_text(&root().join("at-shared-limit.7z"),"readme.txt",None).await.unwrap();assert_eq!(v.content,"Valid selected shared text");assert!(!v.truncated);let e=text_error(&root().join("oversize-shared.7z"),"readme.txt",None).await;assert!(e.contains("64 MiB")&&e.contains("先提取"),"{e}");
- assert!(text_error(&case("ppmd"),"notes/large.txt",None).await.contains("PPMd"));assert!(text_error(&case("ppmd"),"notes/binary.txt",None).await.contains("binary"));
+ assert!(text_error(&case("ppmd"),"notes/binary.txt",None).await.contains("binary"));
  let v=preview::preview_archive_image(&root().join("at-limit.7z"),"at-limit.bmp",None).await.unwrap();assert_eq!(v.byte_size,8*1024*1024);
  for(p,e,reason)in[(root().join("oversize.7z"),"oversize.bmp","8 MiB"),(root().join("dimensions.7z"),"dimensions.png","dimensions exceed"),(case("ppmd"),"gallery/03-bad.png","not a supported raster")]{let error=preview::preview_archive_image(&p,e,None).await.err().unwrap();assert!(format!("{error:#}").contains(reason),"{error:#}");}
  let(mut input,mut a,i,f)=archive();let pack=a.stream_map.folder_first_pack_stream_index[f];a.pack_sizes[pack]=LIMIT+1;assert!(sevenz_rust::BlockDecoder::new(f,&a,&[],&mut input).read_solid_ppmd_entry(i,1024*1024,LIMIT,||Ok(())).is_err());

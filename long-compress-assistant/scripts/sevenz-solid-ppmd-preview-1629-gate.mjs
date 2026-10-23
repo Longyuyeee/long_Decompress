@@ -78,7 +78,7 @@ export async function runSevenzSolidPpmd1629Gate({driver,bridge,root,application
    for(const cmd of ['preview_archive_image','read_archive_image']){const im=await ipc(cmd,{...textRequest(p,'gallery/01-cover.png'),sourceRevision:listing.revision,requestId:randomUUID(),revision:listing.revision});assert.equal(createHash('sha256').update(Buffer.from(im.dataUrl.split(',')[1],'base64')).digest('hex'),m.images[0].sha256)}
   }
   const errors={};for(const[name,entry,password,reason]of[['bad-flush',m.selected,null,/range coder did not finish/]]){const r=await invoke('preview_archive_text',textRequest(path.join(fixtures,name+'.7z'),entry,{password}));assert.equal(r.ok,false);assert.match(r.error,reason);errors[name]=r.error}
-  const large=await invoke('preview_archive_text',textRequest(source('ppmd'),'notes/large.txt'));assert.equal(large.ok,false);assert.match(large.error,/PPMd/);;return{plainShared:true,order12:true,nonFirstMember:true,readerCommand:true,errors,large:large.error}
+  ;return{plainShared:true,order12:true,nonFirstMember:true,readerCommand:true,errors}
  })
  await step('cancelled changed and missing-volume requests cannot replace fresh shared PPMd content and unrelated large data is skipped',async()=>{
   const p=path.join(report.work,'changed.7z');copyFileSync(source('ppmd'),p);const listing=await ipc('browse_archive',{filePath:p,browseId:randomUUID()});appendFileSync(p,Buffer.from([0]));const stale=await invoke('preview_archive_text',textRequest(p,m.selected,{sourceRevision:listing.revision}));assert.equal(stale.ok,false);assert.match(stale.error,/IMAGE_READER_CHANGED/)

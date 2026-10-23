@@ -66,13 +66,14 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     let folder = archive.folders.get(folder_index).context("7Z 所选内容的数据块无法确认，请先提取检查")?;
     let shared = folder.num_unpack_sub_streams != 1 || folder.get_unpack_size()!=entry.size;
     if !shared && !prefix {ensure!(entry.has_crc || folder.has_crc,"7Z 所选内容缺少完整 CRC，暂不提供预览，请先提取检查");}
-    // LZMA/LZMA2 or bounded PPMd; PPMd prefixes remain non-solid only.
+    // Explicit prefixes share bounded LZMA/LZMA2/PPMd decoding; complete
+    // PPMd reads retain their independent finish and CRC verification path.
     let methods: Vec<_> = folder.ordered_coder_iter().map(|(_,c)|c.decompression_method_id()).collect();
     use sevenz_rust::SevenZMethod as M;
     let codec = |id:&[u8]| id==M::ID_LZMA || id==M::ID_LZMA2;
     let ppmd=methods.as_slice()==[M::ID_PPMD] || methods.as_slice()==[M::ID_AES256SHA256,M::ID_PPMD];
     if methods.contains(&M::ID_PPMD) {
-        ensure!(ppmd && (!prefix || !shared),"7Z PPMd 支持普通/密码非固实大文本开头，以及小型固实完整图文；固实大文本请先提取后打开");
+        ensure!(ppmd,"7Z 此 PPMd 方法组合暂不支持内部预览，请先提取后打开");
     }
     ensure!(methods.len()==folder.coders.len() && (ppmd || methods.len()==1 && codec(methods[0]) || methods.len()==2 && methods[0]==M::ID_AES256SHA256 && codec(methods[1])),"7Z 此压缩方法组合暂不支持内部预览，请先提取后打开");
     for c in &folder.coders {
@@ -93,16 +94,14 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
         if flag.load(Ordering::Acquire) {return Err(sevenz_rust::Error::io(io::Error::other("7Z 预览已取消")));}
         if Instant::now()>=until {return Err(sevenz_rust::Error::io(io::Error::new(io::ErrorKind::TimedOut,"7Z 预览超过 30 秒，请先提取后打开")));}Ok(())
     };
-    let bytes = if ppmd && prefix {
+    let bytes = if prefix && shared {
+        decoder.read_solid_entry_prefix(index,MAX_TEXT as usize,MAX_INPUT,check)
+    } else if prefix {
         decoder.read_single_entry_prefix(index,MAX_TEXT as usize,check)
     } else if ppmd && shared {
         decoder.read_solid_ppmd_entry(index,max_output as usize,MAX_INPUT,check)
     } else if ppmd {
         decoder.read_ppmd_entry(index,max_output as usize,check)
-    } else if prefix && shared {
-        decoder.read_solid_entry_prefix(index,MAX_TEXT as usize,MAX_INPUT,check)
-    } else if prefix {
-        decoder.read_single_entry_prefix(index,MAX_TEXT as usize,check)
     } else if shared {
         decoder.read_solid_entry(index,max_output as usize,MAX_INPUT,||{
             if flag.load(Ordering::Acquire) {return Err(sevenz_rust::Error::io(io::Error::other("7Z 预览已取消")));}
