@@ -65,7 +65,7 @@ export async function runSevenzTextPrefix1623Gate({driver,bridge,root,applicatio
   const v=await ipc('preview_archive_text',request(path.join(sample,'tail-damaged.7z')));assert.equal(v.truncated,true);assert.equal(createHash('sha256').update(v.content).digest('hex'),m.renderedPrefixSha256)
   const full=await invoke('test_archive_integrity',{filePath:path.join(sample,'tail-damaged.7z'),password:null});assert.equal(full.ok,false)
   const errors={}
-  for(const[name,entry,reason]of[['solid',selected,/固实大文本/],['encrypted',selected,/密码大文本/],['store',selected,/方法组合/],['bad-start',selected,/CRC/]]){const r=await invoke('preview_archive_text',request(path.join(sample,name+'.7z'),entry));assert.equal(r.ok,false);assert.match(r.error,reason);errors[name]=r.error}
+  for(const[name,entry,reason]of[['store',selected,/方法组合/],['bad-start',selected,/CRC/]]){const r=await invoke('preview_archive_text',request(path.join(sample,name+'.7z'),entry));assert.equal(r.ok,false);assert.match(r.error,reason);errors[name]=r.error}
   await open(source('lzma2'),'logs/binary.txt');const stage=await find('.preview-stage');await driver.wait(async()=>/不是可识别的文本/.test(await stage.getText()),15000);assert.equal((await driver.findElements(By.css('[data-testid="archive-text-preview"]'))).length,0);await close()
   const small=await ipc('preview_archive_text',request(source('lzma2'),'readme.txt'));assert.equal(small.truncated,false);return{unreadTailUnverified:true,completeIntegrity:full.error,errors,smallComplete:true}
  })

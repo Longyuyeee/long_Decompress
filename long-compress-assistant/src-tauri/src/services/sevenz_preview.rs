@@ -78,9 +78,9 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     }
     let encrypted = methods.contains(&M::ID_AES256SHA256);
     if prefix {
-        ensure!(!shared,"7Z 固实大文本暂不支持开头预览，请先提取后打开");
+        ensure!(!shared || !encrypted,"7Z 加密固实大文本暂不支持开头预览，请先提取后打开");
     }
-    if shared {
+    if shared && !prefix {
         ensure!(folder.packed_streams.len()==1,"7Z 固实共享范围无法确认，请先提取后打开");
         let pack_index=archive.stream_map.folder_first_pack_stream_index.get(folder_index).context("7Z 固实共享范围无法确认，请先提取后打开")?;
         let packed=archive.pack_sizes.get(*pack_index).context("7Z 固实共享大小无法确认，请先提取后打开")?;
@@ -92,7 +92,9 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
         if flag.load(Ordering::Acquire) {return Err(sevenz_rust::Error::io(io::Error::other("7Z 预览已取消")));}
         if Instant::now()>=until {return Err(sevenz_rust::Error::io(io::Error::new(io::ErrorKind::TimedOut,"7Z 预览超过 30 秒，请先提取后打开")));}Ok(())
     };
-    let bytes = if prefix {
+    let bytes = if prefix && shared {
+        decoder.read_solid_entry_prefix(index,MAX_TEXT as usize,MAX_INPUT,check)
+    } else if prefix {
         decoder.read_single_entry_prefix(index,MAX_TEXT as usize,check)
     } else if shared {
         decoder.read_solid_entry(index,max_output as usize,MAX_INPUT,||{

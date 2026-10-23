@@ -96,7 +96,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.6.24 · 密码 7Z 大日志直接读开头**。AES + LZMA/LZMA2 非固实大文本接入原双栏，内容/文件名加密、原密码/保险箱和完整数字卷贯通；明确部分内容/未校验整文件，保留编码边界、取消与“提取后打开”。[中文说明](docs/RELEASE_NOTES_1.6.24.md) · [范围与记录](docs/SEVENZ_PASSWORD_TEXT_PREFIX_FREEZE_1.6.24.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.24)。下一阶段 [未加密固实大文本开头](docs/ARCHIVE_ROADMAP_1.6.25.md)仅规划。
+**v1.6.25 · 固实 7Z 大日志直接读开头**。未加密 LZMA/LZMA2 固实大文本接入原双栏，准确跳过有界前置内容，只保留所选前 1 MiB；明确部分内容/未校验整文件，保留数字卷、编码边界、取消与“提取后打开”。[中文说明](docs/RELEASE_NOTES_1.6.25.md) · [范围与记录](docs/SEVENZ_SOLID_TEXT_PREFIX_FREEZE_1.6.25.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.25)。下一阶段 [加密固实大文本开头](docs/ARCHIVE_ROADMAP_1.6.26.md)仅规划。
+
+**v1.6.24 · 密码 7Z 大日志直接读开头**。AES + LZMA/LZMA2 非固实大文本接入原双栏，内容/文件名加密、原密码/保险箱和完整数字卷贯通；明确部分内容/未校验整文件，保留编码边界、取消与“提取后打开”。[中文说明](docs/RELEASE_NOTES_1.6.24.md) · [范围与记录](docs/SEVENZ_PASSWORD_TEXT_PREFIX_FREEZE_1.6.24.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.24)。未加密固实大文本由上方 v1.6.25 接续。
 
 **v1.6.23 · 7Z 大日志直接读开头**。未加密 LZMA/LZMA2 非固实大文本在原双栏显示前 1 MiB，明确部分内容/未校验整文件，保留编码边界、完整数字卷与关闭取消；可沿“提取后打开”查看全文；修复 LZMA2 结束标记损坏时完整检查误报成功。[中文说明](docs/RELEASE_NOTES_1.6.23.md) · [范围与记录](docs/SEVENZ_TEXT_PREFIX_FREEZE_1.6.23.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.23)。密码大文本由上方 v1.6.24 接续。
 
