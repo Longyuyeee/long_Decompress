@@ -82,7 +82,8 @@ version = "1.0"
 optional = true
 
 [dependencies.deflate64]
-version = "0.1.12"
+path = "../deflate64"
+version = "=0.1.12"
 optional = true
 
 [dependencies.ppmd-rust]
