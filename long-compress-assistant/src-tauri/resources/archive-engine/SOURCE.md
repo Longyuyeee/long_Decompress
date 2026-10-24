@@ -1,5 +1,7 @@
 # 随包兼容引擎
 
+v1.6.52：外部引擎核对八类原生 x86 BCJ + LZMA2/LZMA 新输出并逐文件完整回解；另生成两类独立原件供原生图文/开头/提取读取。使用的 PE32 原件仅在本地测试，不随代码分发。引擎本体、版本与许可未改，不增加格式数。
+
 当前为上游 **7-Zip 26.04 / Windows x64**，于 2026-10-13 更新。
 
 来源：[7-Zip 官方下载页](https://www.7-zip.org/download.html)所链接的[官方安装包](https://github.com/ip7z/7zip/releases/download/26.04/7z2604-x64.exe)。仅解出控制台引擎、DLL、Readme 和许可证，未安装或修改本机 7-Zip。

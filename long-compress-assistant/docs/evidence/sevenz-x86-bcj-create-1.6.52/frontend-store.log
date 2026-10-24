@@ -1,0 +1,9 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  19:49:35
+   Duration  3.09s (transform 687ms, setup 255ms, import 1.32s, tests 76ms, environment 1.06s)
+

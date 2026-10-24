@@ -1,0 +1,11 @@
+{
+  "applicationSha256": "85925cf2b33406dfb4daf86533792cd0907db8095e79c8b5f56ae4c7b737363c",
+  "viewed": [
+    "collapsed-wide",
+    "inline-wide",
+    "inline-narrow",
+    "batch-narrow",
+    "conversion-narrow"
+  ],
+  "result": "Original style, inline expansion and multiselect modal retained; equal columns and no horizontal clipping observed; BCJ selector fills its row"
+}

@@ -176,7 +176,7 @@ fn clean_plan(mut plan: Plan) -> Result<Plan> {
         if let Some(method)=settings.get("sevenZipMethod") {
             ensure!(method.as_str().and_then(super::seven_zip_method::SevenZipMethod::from_setting).is_some(),"请选择支持的 7Z 压缩方法：LZMA2、LZMA、Bzip2、Deflate、PPMd 或仅归档（Copy）");
         }
-        if let Some(s)=settings.get("sevenZipFilter"){ensure!(s.as_str().and_then(super::seven_zip_method::SevenZipFilter::from_setting).is_some(),"7Z 预处理请选择无或 Delta");}
+        if let Some(s)=settings.get("sevenZipFilter"){ensure!(s.as_str().and_then(super::seven_zip_method::SevenZipFilter::from_setting).is_some(),"7Z 预处理请选择无、Delta 或 x86 BCJ");}
         if let Some(n)=settings.get("sevenZipDeltaDistance"){ensure!(n.as_u64().is_some_and(|n|(1..=256).contains(&n)),"Delta 距离请输入 1～256 的整数");}
         settings.insert("deleteAfter".into(), false.into());
         step.settings = serde_json::Value::Object(settings);

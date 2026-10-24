@@ -1,0 +1,144 @@
+[
+  {
+    "filter": "bcj_x86",
+    "distance": 1,
+    "nativeTextImagePrefix": true,
+    "method": "lzma2",
+    "kind": "plain",
+    "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-plain\\资料.7z",
+    "members": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-plain\\资料.7z"
+    ],
+    "files": 19,
+    "independentReadback": true,
+    "emptyDirectoryPreserved": true
+  },
+  {
+    "filter": "bcj_x86",
+    "distance": 256,
+    "nativeTextImagePrefix": true,
+    "method": "lzma2",
+    "kind": "contents",
+    "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-contents\\资料.7z",
+    "members": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-contents\\资料.7z"
+    ],
+    "files": 19,
+    "independentReadback": true,
+    "emptyDirectoryPreserved": true
+  },
+  {
+    "filter": "bcj_x86",
+    "distance": 4,
+    "nativeTextImagePrefix": true,
+    "method": "lzma2",
+    "kind": "headers",
+    "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-headers\\资料.7z",
+    "members": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-headers\\资料.7z"
+    ],
+    "files": 19,
+    "independentReadback": true,
+    "emptyDirectoryPreserved": true
+  },
+  {
+    "filter": "bcj_x86",
+    "distance": 1,
+    "nativeTextImagePrefix": true,
+    "method": "lzma2",
+    "kind": "volumes",
+    "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-volumes\\资料.7z.001",
+    "members": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-volumes\\资料.7z.001",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-volumes\\资料.7z.002",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-volumes\\资料.7z.003",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-volumes\\资料.7z.004",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-volumes\\资料.7z.005",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-volumes\\资料.7z.006",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-volumes\\资料.7z.007",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-volumes\\资料.7z.008",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-volumes\\资料.7z.009",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-volumes\\资料.7z.010",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-volumes\\资料.7z.011",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-volumes\\资料.7z.012",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-volumes\\资料.7z.013",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-volumes\\资料.7z.014",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-volumes\\资料.7z.015",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma2-volumes\\资料.7z.016"
+    ],
+    "files": 19,
+    "independentReadback": true,
+    "emptyDirectoryPreserved": true
+  },
+  {
+    "filter": "bcj_x86",
+    "distance": 1,
+    "nativeTextImagePrefix": true,
+    "method": "lzma",
+    "kind": "plain",
+    "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-plain\\资料.7z",
+    "members": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-plain\\资料.7z"
+    ],
+    "files": 19,
+    "independentReadback": true,
+    "emptyDirectoryPreserved": true
+  },
+  {
+    "filter": "bcj_x86",
+    "distance": 256,
+    "nativeTextImagePrefix": true,
+    "method": "lzma",
+    "kind": "contents",
+    "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-contents\\资料.7z",
+    "members": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-contents\\资料.7z"
+    ],
+    "files": 19,
+    "independentReadback": true,
+    "emptyDirectoryPreserved": true
+  },
+  {
+    "filter": "bcj_x86",
+    "distance": 4,
+    "nativeTextImagePrefix": true,
+    "method": "lzma",
+    "kind": "headers",
+    "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-headers\\资料.7z",
+    "members": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-headers\\资料.7z"
+    ],
+    "files": 19,
+    "independentReadback": true,
+    "emptyDirectoryPreserved": true
+  },
+  {
+    "filter": "bcj_x86",
+    "distance": 1,
+    "nativeTextImagePrefix": true,
+    "method": "lzma",
+    "kind": "volumes",
+    "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-volumes\\资料.7z.001",
+    "members": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-volumes\\资料.7z.001",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-volumes\\资料.7z.002",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-volumes\\资料.7z.003",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-volumes\\资料.7z.004",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-volumes\\资料.7z.005",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-volumes\\资料.7z.006",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-volumes\\资料.7z.007",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-volumes\\资料.7z.008",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-volumes\\资料.7z.009",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-volumes\\资料.7z.010",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-volumes\\资料.7z.011",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-volumes\\资料.7z.012",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-volumes\\资料.7z.013",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-volumes\\资料.7z.014",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-volumes\\资料.7z.015",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-x86-bcj-create-1652\\creation-efef2746-f421-4d93-9bac-4f468eb69c5d\\lzma-volumes\\资料.7z.016"
+    ],
+    "files": 19,
+    "independentReadback": true,
+    "emptyDirectoryPreserved": true
+  }
+]

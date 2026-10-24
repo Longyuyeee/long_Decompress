@@ -1,0 +1,370 @@
+{
+  "version": "1.6.52",
+  "applicationSha256": "85925cf2b33406dfb4daf86533792cd0907db8095e79c8b5f56ae4c7b737363c",
+  "checks": [
+    {
+      "name": "inline collapsed advanced settings retain method inheritance and batch modal in wide and small windows",
+      "applicationSha256": "85925cf2b33406dfb4daf86533792cd0907db8095e79c8b5f56ae4c7b737363c",
+      "inlinePreserved": true,
+      "batchModalPreserved": true,
+      "defaultNonePreserved": true,
+      "inactiveMethodRetainsDistance": true,
+      "analysisInvalidatedOnFilterChange": true
+    },
+    {
+      "name": "UI BCJ creation history previews extraction and target conversion preserve selected chain",
+      "applicationSha256": "85925cf2b33406dfb4daf86533792cd0907db8095e79c8b5f56ae4c7b737363c",
+      "creationFilter": "bcj_x86",
+      "dormantDeltaDistance": 256,
+      "historyPreserved": true,
+      "textAndImagePreview": true,
+      "extraction": true,
+      "zipToLzmaBcjPasswordSolidNumeric": true
+    },
+    {
+      "name": "conversion inline and multiselect keep chosen target BCJ and distance",
+      "applicationSha256": "85925cf2b33406dfb4daf86533792cd0907db8095e79c8b5f56ae4c7b737363c",
+      "singleSelectionRetained": true,
+      "batchSelectionRetained": true,
+      "actualConversionHistory": true,
+      "targetFilterPreserved": true
+    },
+    {
+      "name": "independent 7-Zip x86 originals reopen in the native text image prefix and extraction flow",
+      "applicationSha256": "85925cf2b33406dfb4daf86533792cd0907db8095e79c8b5f56ae4c7b737363c",
+      "externalOriginals": [
+        {
+          "name": "plain-lzma2",
+          "method": "LZMA2",
+          "password": null,
+          "solid": false,
+          "volumes": false,
+          "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\external-plain-lzma2.7z",
+          "nativeTextImagePrefix": true,
+          "originalX86Sha256": "d5e5a1fe43f8f17f6bea29106f56e2311448d6d71c86a529bf1efd2aa783e5af"
+        },
+        {
+          "name": "password-solid-lzma",
+          "method": "LZMA",
+          "password": "external1652",
+          "solid": true,
+          "volumes": true,
+          "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\external-password-solid-lzma.7z.001",
+          "nativeTextImagePrefix": true,
+          "originalX86Sha256": "d5e5a1fe43f8f17f6bea29106f56e2311448d6d71c86a529bf1efd2aa783e5af"
+        }
+      ]
+    }
+  ],
+  "layouts": [
+    {
+      "name": "collapsed-wide",
+      "applicationSha256": "85925cf2b33406dfb4daf86533792cd0907db8095e79c8b5f56ae4c7b737363c",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 275,
+          "y": 202.0703125
+        },
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 653,
+          "y": 202.0703125
+        }
+      ],
+      "width": 1100,
+      "preprocessing": []
+    },
+    {
+      "name": "inline-wide",
+      "applicationSha256": "85925cf2b33406dfb4daf86533792cd0907db8095e79c8b5f56ae4c7b737363c",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 562.5703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 202.5703125,
+          "width": 378,
+          "x": 275,
+          "y": 202.5703125
+        },
+        {
+          "bottom": 562.5703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 202.5703125,
+          "width": 378,
+          "x": 653,
+          "y": 202.5703125
+        }
+      ],
+      "width": 1100,
+      "preprocessing": []
+    },
+    {
+      "name": "inline-narrow",
+      "applicationSha256": "85925cf2b33406dfb4daf86533792cd0907db8095e79c8b5f56ae4c7b737363c",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 476.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 158.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 158.5703125
+        },
+        {
+          "bottom": 476.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 158.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 158.5703125
+        }
+      ],
+      "width": 760,
+      "preprocessing": []
+    },
+    {
+      "name": "batch-narrow",
+      "applicationSha256": "85925cf2b33406dfb4daf86533792cd0907db8095e79c8b5f56ae4c7b737363c",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 368.5703125
+        },
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 368.5703125
+        }
+      ],
+      "width": 760,
+      "preprocessing": []
+    },
+    {
+      "name": "conversion-narrow",
+      "applicationSha256": "85925cf2b33406dfb4daf86533792cd0907db8095e79c8b5f56ae4c7b737363c",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 680.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 362.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 362.5703125
+        },
+        {
+          "bottom": 680.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 362.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 362.5703125
+        }
+      ],
+      "width": 760,
+      "preprocessing": [
+        {
+          "clientWidth": 608,
+          "controls": [
+            {
+              "bottom": 225.921875,
+              "height": 16,
+              "left": 166.109375,
+              "right": 182.109375,
+              "top": 209.921875,
+              "width": 16,
+              "x": 166.109375,
+              "y": 209.921875
+            },
+            {
+              "bottom": 309.3203125,
+              "height": 42.3984375,
+              "left": 83,
+              "right": 667,
+              "top": 266.921875,
+              "width": 584,
+              "x": 83,
+              "y": 266.921875
+            }
+          ],
+          "rect": {
+            "bottom": 322.3203125,
+            "height": 121.3984375,
+            "left": 70,
+            "right": 680,
+            "top": 200.921875,
+            "width": 610,
+            "x": 70,
+            "y": 200.921875
+          },
+          "scrollWidth": 608,
+          "status": {
+            "bottom": 225.921875,
+            "height": 16,
+            "left": 608.1796875,
+            "right": 667,
+            "top": 209.921875,
+            "width": 58.8203125,
+            "x": 608.1796875,
+            "y": 209.921875
+          },
+          "summary": {
+            "bottom": 233.921875,
+            "height": 32,
+            "left": 71,
+            "right": 679,
+            "top": 201.921875,
+            "width": 608,
+            "x": 71,
+            "y": 201.921875
+          }
+        }
+      ]
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d",
+  "created": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\created\\source.7z",
+  "zip": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\intermediate.zip",
+  "converted": {
+    "files": [
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\converted.7z.001"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\converted.7z.002"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\converted.7z.003"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\converted.7z.004"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\converted.7z.005"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\converted.7z.006"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\converted.7z.007"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\converted.7z.008"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\converted.7z.009"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\converted.7z.010"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\converted.7z.011"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\converted.7z.012"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\converted.7z.013"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\converted.7z.014"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\converted.7z.015"
+      },
+      {
+        "bytes": 5053,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\converted.7z.016"
+      }
+    ],
+    "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-x86-bcj-create-1652\\968ab465-1ed4-4703-b347-e084bf5ce21d\\converted.7z.001",
+    "split": true,
+    "totalBytes": 127933
+  },
+  "passed": true
+}
