@@ -34,7 +34,7 @@ async fn sevenz1642_partial_tail_is_not_full_integrity_and_full_small_reads_stay
  let password=sevenz_rust::Password::from(key().as_str());
  let p=case("contents");let v=preview::preview_archive_text(&p,"readme.txt",Some(&key())).await.unwrap();assert!(!v.truncated);assert_eq!(v.content,"完整小文本仍需完整读取。");
  let mut input=std::fs::File::open(&p).unwrap();let len=input.metadata().unwrap().len();let mut a=sevenz_rust::Archive::read(&mut input,len,password.as_slice()).unwrap();let i=a.files.iter().position(|e|e.name=="readme.txt").unwrap();a.files[i].crc^=1;let f=a.stream_map.file_folder_index[i].unwrap();assert!(sevenz_rust::BlockDecoder::new(f,&a,password.as_slice(),&mut input).read_deflate64_entry(i,1024*1024,||Ok(())).is_err());
- for (name,entry,reason) in [("bad-start.7z",SELECTED,"password"),("store.7z",SELECTED,"方法组合"),("solid.7z",SELECTED,"固实大文本")]{assert!(error(&root().join(name),entry,Some(&key())).await.contains(reason),"{name}");}
+ for (name,entry,reason) in [("bad-start.7z",SELECTED,"password"),("store.7z",SELECTED,"方法组合")]{assert!(error(&root().join(name),entry,Some(&key())).await.contains(reason),"{name}");}
 
  assert!(error(&p,"logs/binary.txt",Some(&key())).await.contains("binary"));assert!(error(&p,SELECTED,Some("wrong")).await.contains("password"));
 }
