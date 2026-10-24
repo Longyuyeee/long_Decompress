@@ -111,7 +111,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
             if !matches!(percent.as_u64(), Some(0 | 3 | 5 | 10)) { return None; }
             output.insert("rarRecoveryPercent".into(), percent.clone());
         }
-        for (key, default, allowed) in [("zipMethod", "deflate", &["deflate", "zstd", "bzip2", "ppmd", "lzma"][..]), ("zipEncryption", "aes256", &["aes256", "zipcrypto"][..]),
+        for (key, default, allowed) in [("zipMethod", "deflate", &["deflate", "zstd", "bzip2", "ppmd", "lzma", "store"][..]), ("zipEncryption", "aes256", &["aes256", "zipcrypto"][..]),
             ("zipSplitMode", "numeric", &["numeric", "standard"][..])] {
             let selected = value.get(key).and_then(Value::as_str).unwrap_or(default);
             if !allowed.contains(&selected) { return None; }
@@ -154,7 +154,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
                 settings.insert("zipSplitMode".into(), mode.clone());
             }
             if let Some(method) = value.get("settings")?.get("zipMethod") {
-                if !matches!(method.as_str(), Some("deflate" | "zstd" | "bzip2" | "ppmd" | "lzma")) { return None; }
+                if !matches!(method.as_str(), Some("deflate" | "zstd" | "bzip2" | "ppmd" | "lzma" | "store")) { return None; }
                 settings.insert("zipMethod".into(), method.clone());
             }
             if let Some(encryption) = value.get("settings")?.get("zipEncryption") {
@@ -478,5 +478,14 @@ fn sevenz1649_history_creation_and_conversion_retain_method_reject_unknown(){
   let creation=serde_json::json!({"schemaVersion":1,"kind":"archive-compression","outputDirectory":"D:/out","passwordRequired":true,"settings":{"format":"7z","level":1,"filename":"","splitArchive":false,"splitSize":"1","keepStructure":true,"verifyAfter":true,"createSolidArchive":true,"sevenZipMethod":method}});
   let converted=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","outputPath":"D:/out.7z","format":"7z","level":1,"splitSize":0,"encryptFilenames":false,"passwordRequired":false,"sevenZipMethod":method});
   for (value,kind) in [(creation,"compression"),(converted,"conversion")]{let saved=sanitize(value.clone(),"compression","archive").unwrap();assert_eq!(if kind=="compression"{&saved["settings"]["sevenZipMethod"]}else{&saved["sevenZipMethod"]},method);let mut bad=value;if kind=="compression"{bad["settings"]["sevenZipMethod"]="bad".into()}else{bad["sevenZipMethod"]="bad".into()}assert!(sanitize(bad,"compression","archive").is_none());}
+ }
+}
+
+#[cfg(test)]#[test]
+fn zip1650_history_creation_and_conversion_retain_method_reject_unknown(){
+ for method in ["store"]{
+  let creation=serde_json::json!({"schemaVersion":1,"kind":"archive-compression","outputDirectory":"D:/out","passwordRequired":true,"settings":{"format":"zip","level":1,"filename":"","splitArchive":false,"splitSize":"1","keepStructure":true,"verifyAfter":true,"createSolidArchive":true,"zipMethod":method}});
+  let converted=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","outputPath":"D:/out.zip","format":"zip","level":1,"splitSize":0,"encryptFilenames":false,"passwordRequired":false,"zipMethod":method});
+  for (value,kind) in [(creation,"compression"),(converted,"conversion")]{let saved=sanitize(value.clone(),"compression","archive").unwrap();assert_eq!(if kind=="compression"{&saved["settings"]["zipMethod"]}else{&saved["zipMethod"]},method);let mut bad=value;if kind=="compression"{bad["settings"]["zipMethod"]="bad".into()}else{bad["zipMethod"]="bad".into()}assert!(sanitize(bad,"compression","archive").is_none());}
  }
 }

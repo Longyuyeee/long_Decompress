@@ -80,7 +80,7 @@ export interface CompressOptions {
   zip_password_encoding?: ZipPasswordEncoding
   wim_method?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
   seven_zip_method?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'
-  zip_method?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'
+  zip_method?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma' | 'store'
   zip_encryption?: 'aes256' | 'zipcrypto'
   zip_split_mode?: 'numeric' | 'standard'
   format?: string
@@ -137,6 +137,7 @@ export interface CompressionAnalysisResult {
   recommendedFormat: string
   recommendedLevel: number
   recommendedSevenZipMethod?: 'copy'
+  recommendedZipMethod?: 'store'
   recommendedSolid: boolean
   lowValueBytes: number
   lowValueFileCount: number

@@ -257,3 +257,6 @@ mod sevenz_ppmd_create_1648_tests;
 
 #[cfg(test)]
 mod sevenz_copy_create_1649_tests;
+
+#[cfg(test)]
+mod zip_store_create_1650_tests;

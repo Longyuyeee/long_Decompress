@@ -203,7 +203,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
 
     let zipx = output.to_ascii_lowercase().ends_with(".zipx");
     let method_name = if zipx { "XZ" } else if options.zip_method == crate::services::zip_method::ZipMethod::Lzma { "LZMA" } else if options.zip_method == crate::services::zip_method::ZipMethod::Ppmd { "PPMd" } else if options.zip_method == crate::services::zip_method::ZipMethod::Bzip2 { "BZip2" } else if options.zip_method == crate::services::zip_method::ZipMethod::Zstd { "Zstandard" }
-        else if options.level == 0 { "Store" } else { "Deflate" };
+        else if options.zip_method == crate::services::zip_method::ZipMethod::Store || options.level == 0 { "Store" } else { "Deflate" };
     if let Some(window) = window {
         runtime.emit_log(window, task_id, &format!("正在创建 {} · {}{}…",
             if zipx { "ZIPX" } else { "ZIP" }, method_name,

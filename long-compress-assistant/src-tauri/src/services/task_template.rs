@@ -240,7 +240,7 @@ pub fn template_from_profile(profile: &CompressionProfile) -> TaskTemplate {
             seven_zip_method: profile.config.extra_params.get("seven_zip_method").and_then(|value|super::seven_zip_method::SevenZipMethod::from_setting(value)),
             wim_method: profile.config.extra_params.get("wim_method").map(|method| match method.as_str() { "solid" => super::wim_writer::WimMethod::Solid, "lzms" => super::wim_writer::WimMethod::Lzms, "lzx" => super::wim_writer::WimMethod::Lzx, "xpress" => super::wim_writer::WimMethod::Xpress, _ => super::wim_writer::WimMethod::Store }),
             zip_method: profile.config.extra_params.get("zip_method").map(|value|
-                match value.as_str() { "lzma" => crate::services::zip_method::ZipMethod::Lzma, "ppmd" => crate::services::zip_method::ZipMethod::Ppmd, "bzip2" => crate::services::zip_method::ZipMethod::Bzip2, "zstd" => crate::services::zip_method::ZipMethod::Zstd, _ => crate::services::zip_method::ZipMethod::Deflate }),
+                match value.as_str() { "store" => crate::services::zip_method::ZipMethod::Store, "lzma" => crate::services::zip_method::ZipMethod::Lzma, "ppmd" => crate::services::zip_method::ZipMethod::Ppmd, "bzip2" => crate::services::zip_method::ZipMethod::Bzip2, "zstd" => crate::services::zip_method::ZipMethod::Zstd, _ => crate::services::zip_method::ZipMethod::Deflate }),
             zip_encryption: if matches!(profile.config.format.to_ascii_lowercase().as_str(), "zip" | "zipx") {
                 profile.config.extra_params.get("zip_encryption").map(|value|
                     if value == "zipcrypto" { crate::services::zip_password::ZipEncryption::Zipcrypto }
@@ -858,7 +858,7 @@ pub fn import_template_profile(path: &Path, expected_sha256: &str) -> Result<Com
               }
               if let Some(method)=template.compression.seven_zip_method {params.insert("seven_zip_method".into(),method.as_str().into());}
               if let Some(method) = template.compression.zip_method {
-                  params.insert("zip_method".into(), match method { crate::services::zip_method::ZipMethod::Lzma => "lzma", crate::services::zip_method::ZipMethod::Ppmd => "ppmd", crate::services::zip_method::ZipMethod::Bzip2 => "bzip2", crate::services::zip_method::ZipMethod::Zstd => "zstd", crate::services::zip_method::ZipMethod::Deflate => "deflate" }.into());
+                  params.insert("zip_method".into(), match method { crate::services::zip_method::ZipMethod::Store => "store", crate::services::zip_method::ZipMethod::Lzma => "lzma", crate::services::zip_method::ZipMethod::Ppmd => "ppmd", crate::services::zip_method::ZipMethod::Bzip2 => "bzip2", crate::services::zip_method::ZipMethod::Zstd => "zstd", crate::services::zip_method::ZipMethod::Deflate => "deflate" }.into());
               }
               if let Some(encryption) = template.compression.zip_encryption {
                   let value = match encryption {
@@ -1046,6 +1046,14 @@ mod tests {
         original.config.extra_params.insert("zip_method".into(),"lzma".into());
         export_profile_template(&original,&path).unwrap();let preview=preview_template_file(&path).unwrap();assert_eq!(preview.template.compression.zip_method,Some(super::super::zip_method::ZipMethod::Lzma));
         let imported=import_template_profile(&path,&preview.content_sha256).unwrap();assert_eq!(imported.config.extra_params["zip_method"],"lzma");
+    }
+    #[test]
+    fn zip1650_template_method_survives_export_import() {
+        let temp=tempfile::tempdir().unwrap();let path=temp.path().join("store.longtask.json");
+        let mut original=profile();original.config.format="zip".into();original.config.password=None;original.config.create_solid_archive=false;original.config.encrypt_filenames=false;
+        original.config.extra_params.insert("zip_method".into(),"store".into());
+        export_profile_template(&original,&path).unwrap();let preview=preview_template_file(&path).unwrap();assert_eq!(preview.template.compression.zip_method,Some(super::super::zip_method::ZipMethod::Store));
+        let imported=import_template_profile(&path,&preview.content_sha256).unwrap();assert_eq!(imported.config.extra_params["zip_method"],"store");
     }
 
 

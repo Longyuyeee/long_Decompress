@@ -4,7 +4,7 @@ export interface BatchConfigPatch {
   format?: 'zip' | 'zipx' | '7z' | 'rar' | 'swm' | 'wim' | 'esd' | 'zpaq' | 'tar.lz' | 'lzma' | 'tar.lzma' | 'lzma.aes' | 'tar.lzma.aes'
   wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
   sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'
-  zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'
+  zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma' | 'store'
   password?: string
   encryptFilenames?: boolean
   splitArchive?: boolean

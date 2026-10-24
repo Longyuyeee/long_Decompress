@@ -27,6 +27,8 @@ pub struct CompressionAnalysisResult {
     pub recommended_solid: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub recommended_seven_zip_method: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recommended_zip_method: Option<String>,
     pub low_value_bytes: u64,
     pub low_value_file_count: usize,
     pub reasons: Vec<String>,
@@ -191,11 +193,20 @@ fn compressed_sample_size_with_cancel(sample: &[u8], format: &str, level: u32, c
         let size=super::seven_zip_method::sample_size(sample,method,level,cancelled)?;
         check_cancelled(cancelled)?;return Ok(size);
     }
-    if format == "zip-ppmd" || format == "zip-lzma" {
+    if matches!(format, "zip" | "zip-store" | "zip-ppmd" | "zip-lzma" | "zip-zstd" | "zip-bzip2") {
         // Use the selected real ZIP writer, including method parameters and stream finalization.
         let mut archive = zip_aes::ZipWriter::new(std::io::Cursor::new(Vec::new()));
         check_cancelled(cancelled)?;
-        archive.start_file("sample", crate::services::zip_method::file_options(false, if format == "zip-lzma" { crate::services::zip_method::ZipMethod::Lzma } else { crate::services::zip_method::ZipMethod::Ppmd }, level))?;
+        use super::zip_method::ZipMethod;
+        let method = match format {
+            "zip-store" => ZipMethod::Store,
+            "zip-lzma" => ZipMethod::Lzma,
+            "zip-ppmd" => ZipMethod::Ppmd,
+            "zip-zstd" => ZipMethod::Zstd,
+            "zip-bzip2" => ZipMethod::Bzip2,
+            _ => ZipMethod::Deflate,
+        };
+        archive.start_file("sample", crate::services::zip_method::file_options(false, method, level))?;
         for chunk in sample.chunks(SAMPLE_CHUNK_BYTES) {
             check_cancelled(cancelled)?;
             archive.write_all(chunk)?;
@@ -259,13 +270,13 @@ fn duration_range(total_size: u64, format: &str, level: u32, file_count: usize) 
     let format = format.strip_suffix(".aes").unwrap_or(format);
     let base_mib_per_second = match format {
         "7z" | "7z-lzma" | "xz" | "tar.xz" | "lzma" | "tar.lzma" | "zip-lzma" | "lz" | "tar.lz" => 45.0,
-        "7z-bzip2" | "bz2" | "tar.bz2" => 35.0,
+        "7z-bzip2" | "bz2" | "tar.bz2" | "zip-bzip2" => 35.0,
         "7z-ppmd" | "zip-ppmd" => 12.0,
-        "zst" | "zstd" | "tar.zst" => 180.0,
-        "tar" | "7z-copy" => 350.0,
+        "zst" | "zstd" | "tar.zst" | "zip-zstd" => 180.0,
+        "tar" | "7z-copy" | "zip-store" => 350.0,
         _ => 110.0,
     };
-    let level_factor = if format == "7z-copy" { 1.0 } else { 1.0 + level.saturating_sub(1) as f64 * 0.16 };
+    let level_factor = if matches!(format, "7z-copy" | "zip-store") { 1.0 } else { 1.0 + level.saturating_sub(1) as f64 * 0.16 };
     let seconds = total_size as f64 / (1024.0 * 1024.0) / base_mib_per_second * level_factor
         + file_count as f64 * 0.0008;
     (
@@ -306,13 +317,15 @@ pub fn analyze_compression(
     } else {
         low_value_bytes as f64 / total_size as f64
     };
-    // Copy never shrinks the data. Extensions must not invent compression
-    // savings, nor alone trigger advice to change the user's 7Z method.
-    let adjusted_ratio = if format == "7z-copy" { sample_ratio.max(1.0) } else {
+    // Store/Copy never shrink data. Extensions alone must neither invent
+    // savings nor trigger advice to replace the selected compression method.
+    let adjusted_ratio = if matches!(format, "7z-copy" | "zip-store") || (format == "zip" && level == 0) { sample_ratio.max(1.0) } else {
         (sample_ratio * (1.0 - low_value_share) + 0.98 * low_value_share).clamp(0.02, 1.08)
     };
     let recommend_copy = matches!(format,"7z"|"7z-lzma"|"7z-bzip2"|"7z-deflate"|"7z-ppmd")
         && sample.len() >= 4096 && sample_ratio >= 0.98;
+    let recommend_store = matches!(format, "zip" | "zip-lzma" | "zip-ppmd" | "zip-zstd" | "zip-bzip2")
+        && !(format == "zip" && level == 0) && sample.len() >= 4096 && sample_ratio >= 0.98;
     let overhead = 1024u64.saturating_add(file_count as u64 * 96);
     let estimated_size = ((total_size as f64 * adjusted_ratio) as u64).saturating_add(overhead);
     let confidence = if sample.len() >= 1024 * 1024 && sampled_files >= 8 {
@@ -325,6 +338,8 @@ pub fn analyze_compression(
     let (recommended_format, recommended_level, recommended_solid, mut reasons) =
         if recommend_copy {
             ("7z", level.min(9), false, vec!["本次内容样本继续压缩的收益不足 2%，可仅打包以减少编码时间".to_string()])
+        } else if recommend_store {
+            ("zip", level.min(9), false, vec!["本次内容样本压缩收益不足 2%，可使用仅存储（Store）快速打包".to_string()])
         } else if adjusted_ratio >= 0.9 {
             (
                 "zip",
@@ -370,6 +385,7 @@ pub fn analyze_compression(
         recommended_level,
         recommended_solid,
         recommended_seven_zip_method: recommend_copy.then(|| "copy".to_owned()),
+        recommended_zip_method: recommend_store.then(|| "store".to_owned()),
         low_value_bytes,
         low_value_file_count,
         reasons,
@@ -506,4 +522,15 @@ mod ppmd_1535_tests {
         assert_eq!(compressed_sample_size(data.as_bytes(),"zip-lzma",0).unwrap(),expected.len());
         assert!(compressed_sample_size_with_cancel(data.as_bytes(),"zip-lzma",9,&AtomicBool::new(true)).is_err());
     }
+}
+
+#[cfg(test)]#[test]
+fn zip1650_store_analysis_matches_real_writer_and_retained_strength() {
+ let data=b"Already compressed or incompressible is still stored".repeat(1000);
+ let mut writer=zip_aes::ZipWriter::new(std::io::Cursor::new(Vec::new()));
+ writer.start_file("sample",crate::services::zip_method::file_options(false,crate::services::zip_method::ZipMethod::Store,9)).unwrap();
+ writer.write_all(&data).unwrap();let expected=writer.finish().unwrap().into_inner().len();
+ for level in [0,6,9]{assert_eq!(compressed_sample_size(&data,"zip-store",level).unwrap(),expected);}
+ assert_eq!(duration_range(4*1024*1024*1024,"zip-store",0,3),duration_range(4*1024*1024*1024,"zip-store",9,3));
+ assert!(compressed_sample_size_with_cancel(&data,"zip-store",9,&AtomicBool::new(true)).is_err());
 }

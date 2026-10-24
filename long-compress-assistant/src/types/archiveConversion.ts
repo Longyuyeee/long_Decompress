@@ -17,7 +17,7 @@ export interface ConversionSettings {
   rarRecoveryVolumes?: number
   wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
   sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'
-  zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'
+  zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma' | 'store'
   zipEncryption: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
   zipPasswordEncoding: ZipPasswordEncoding
