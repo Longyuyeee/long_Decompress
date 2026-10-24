@@ -1969,6 +1969,92 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         check()?;Ok(bytes)
     }
 
+    /// Complete Bzip2 (single or shared), optionally preceded by full AES.
+    /// Keep only the selected bytes; require the real single-stream terminal,
+    /// precise input/output coverage, all available CRCs and full AES receipts.
+    #[cfg(feature="bzip2")]
+    pub fn read_bzip2_entry(self, selected: usize, max_bytes: usize, max_shared: u64, mut check: impl FnMut() -> Result<(), Error>) -> Result<Vec<u8>, Error> {
+        let a=self.archive;
+        let f=a.folders.get(self.folder_index).ok_or_else(||Error::other("Missing Bzip2 block"))?;
+        let files:Vec<_>=a.files.iter().enumerate().filter(|(i,e)|e.has_stream && a.stream_map.file_folder_index.get(*i)==Some(&Some(self.folder_index))).collect();
+        let e=files.iter().find(|(i,_)|*i==selected).ok_or_else(||Error::other("Selected file is outside shared Bzip2 block"))?.1;
+        let total=files.iter().try_fold(0u64,|n,(_,e)|n.checked_add(e.size)).ok_or_else(||Error::other("Shared Bzip2 size overflow"))?;
+        if max_bytes==0 || max_bytes>8*1024*1024 || e.size>max_bytes as u64 || max_shared==0 || max_shared>64*1024*1024 || total>max_shared
+            || !(1..=2).contains(&f.coders.len()) || f.unpack_sizes.len()!=f.coders.len()
+            || f.total_input_streams!=f.coders.len() || f.total_output_streams!=f.coders.len()
+            || f.bind_pairs.len()!=f.coders.len()-1 || f.packed_streams.len()!=1
+            || f.coders.iter().any(|c|c.num_in_streams!=1 || c.num_out_streams!=1)
+            || files.len()!=f.num_unpack_sub_streams || f.get_unpack_size()!=total
+            || files.iter().any(|(_,e)|e.is_directory || e.is_anti_item || (!e.has_crc && !f.has_crc))
+        {return Err(Error::unsupported("7Z Bzip2 固实共享映射或大小无法确认（共享内容须 ≤64 MiB），请先提取后打开"));}
+        let coders:Vec<_>=f.ordered_coder_iter().take(f.coders.len()+1).collect();
+        if coders.len()!=f.coders.len() || !(coders.len()==1 && coders[0].1.decompression_method_id()==SevenZMethod::ID_BZIP2
+            || coders.len()==2 && coders[0].1.decompression_method_id()==SevenZMethod::ID_AES256SHA256 && coders[1].1.decompression_method_id()==SevenZMethod::ID_BZIP2)
+            || !coders.last().unwrap().1.properties.is_empty()
+        {return Err(Error::unsupported("7Z Bzip2 预览方法或顺序无法确认，请先提取后打开"));}
+        let pack=*a.stream_map.folder_first_pack_stream_index.get(self.folder_index).ok_or_else(||Error::other("Missing Bzip2 pack mapping"))?;
+        let size=*a.pack_sizes.get(pack).ok_or_else(||Error::other("Missing Bzip2 pack size"))?;
+        if size>max_shared {return Err(Error::unsupported("7Z Bzip2 压缩内容超过 64 MiB，请先提取后打开"));}
+        let encrypted=coders.len()==2;
+        let plain=if encrypted {f.get_unpack_size_at_index(coders[0].0)} else {size};
+        if plain==0 || plain>max_shared {return Err(Error::unsupported("7Z Bzip2 预览输入长度超出范围，请先提取后打开"));}
+        if encrypted && plain.checked_add(15).map(|n|n/16*16)!=Some(size) {return Err(Error::other("Bzip2 AES packed size mismatch"));}
+        let start=32u64.checked_add(a.pack_pos).and_then(|n|a.stream_map.pack_stream_offsets.get(pack).and_then(|o|n.checked_add(*o))).ok_or_else(||Error::other("Bzip2 pack offset overflow"))?;
+        check()?;self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
+        let mut packed=PreviewPack{source:self.source,start,size,read:0,crc:CRC32.digest()};
+        let mut stream:Box<dyn Read+'_>=if encrypted {
+            #[cfg(feature="aes256")]
+            {crate::preview::coder(coders[0].1,plain as usize)?;Box::new(crate::aes256sha256::PreviewAes::new(&mut packed,&coders[0].1.properties,self.password,plain as usize)?)}
+            #[cfg(not(feature="aes256"))]
+            {return Err(Error::unsupported("AES is unavailable"));}
+        } else {Box::new(&mut packed)};
+        let mut codec=bzip2::Decompress::new(false);
+        let mut input=[0u8;32*1024];let mut output=[0u8;32*1024];let(mut offset,mut end)=(0,0);
+        let(mut consumed,mut decoded,mut read_plain)=(0u64,0u64,0u64);let mut bytes=Vec::with_capacity(e.size as usize);
+        let mut block_crc=CRC32.digest();let mut file_crcs:Vec<_>=files.iter().map(|_|CRC32.digest()).collect();
+        let(mut file_pos,mut in_file)=(0,0u64);
+        loop {
+            check()?;
+            if offset==end {
+                offset=0;end=0;
+                while end<input.len() && read_plain<plain {
+                    check()?;let capacity=(input.len()-end).min((plain-read_plain) as usize);let n=stream.read(&mut input[end..end+capacity]).map_err(Error::io)?;
+                    if n==0 {return Err(Error::other("Bzip2 packed stream ended early"));}end+=n;read_plain+=n as u64;
+                }
+            }
+            let before_in=codec.total_in();let before_out=codec.total_out();
+            let status=codec.decompress(&input[offset..end],&mut output).map_err(|e|Error::other(format!("Bzip2 invalid stream: {e}")))?;
+            if status==bzip2::Status::MemNeeded {return Err(Error::other("Bzip2 decoder memory unavailable"));}
+            let used=(codec.total_in()-before_in) as usize;let produced=(codec.total_out()-before_out) as usize;
+            offset+=used;consumed+=used as u64;decoded+=produced as u64;
+            if decoded>total {return Err(Error::other("Bzip2 output exceeds declared shared size"));}
+            block_crc.update(&output[..produced]);let mut position=0;
+            while position<produced {
+                check()?;
+                while file_pos<files.len() && in_file==files[file_pos].1.size {file_pos+=1;in_file=0;}
+                if file_pos==files.len() {return Err(Error::other("Shared Bzip2 output exceeds mapped files"));}
+                let n=(files[file_pos].1.size-in_file).min((produced-position) as u64) as usize;
+                let chunk=&output[position..position+n];file_crcs[file_pos].update(chunk);
+                if files[file_pos].0==selected {bytes.extend_from_slice(chunk);}
+                in_file+=n as u64;position+=n;
+            }
+            if status==bzip2::Status::StreamEnd {
+                if codec.total_in()!=plain || consumed!=plain || read_plain!=plain || decoded!=total {return Err(Error::other("Bzip2 end or compressed coverage mismatch"));}break;
+            }
+            if used==0 && produced==0 {return Err(Error::other("Bzip2 stream did not finish"));}
+        }
+        // A complete raw terminal cannot waive full AES EOF/padding or receipts.
+        let mut extra=[0];if stream.read(&mut extra).map_err(Error::io)?!=0 {return Err(Error::other("Bzip2 extra plaintext"));}
+        drop(stream);
+        if packed.read!=size {return Err(Error::other("Bzip2 packed stream was not completely consumed"));}
+        for ((_,file),crc) in files.iter().zip(file_crcs) {
+            if file.has_crc && file.crc!=crc.finalize() as u64 {return Err(Error::ChecksumVerificationFailed);}
+        }
+        if bytes.len() as u64!=e.size {return Err(Error::other("Shared Bzip2 selected output size mismatch"));}
+        if f.has_crc && f.crc!=block_crc.finalize() as u64 || a.pack_crcs_defined.contains(pack) && a.pack_crcs.get(pack).copied()!=Some(packed.crc.finalize() as u64) {return Err(Error::ChecksumVerificationFailed);}
+        check()?;Ok(bytes)
+    }
+
     /// Complete shared Deflate64, optionally preceded by full AES: stream dependencies,
     /// retain only the selected file, and verify every available CRC plus the
     /// real terminal extent, excluding whole Huffman-prefetched bytes.
