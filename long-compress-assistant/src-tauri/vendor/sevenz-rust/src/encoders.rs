@@ -13,6 +13,8 @@ use crate::{
 pub enum Encoder<W: Write> {
     LZMA(LZMAWriter<W>),
     LZMA2(LZMA2Writer<W>),
+    #[cfg(feature = "bzip2")]
+    BZIP2(Bzip2Encoder<CountingWriter<W>>),
     #[cfg(feature = "aes256")]
     AES(Aes256Sha256Encoder<W>),
 }
@@ -22,6 +24,8 @@ impl<W: Write> Write for Encoder<W> {
         match self {
             Encoder::LZMA(w) => w.write(buf),
             Encoder::LZMA2(w) => w.write(buf),
+            #[cfg(feature = "bzip2")]
+            Encoder::BZIP2(w) => w.write(buf),
             #[cfg(feature = "aes256")]
             Encoder::AES(w) => w.write(buf),
         }
@@ -31,6 +35,8 @@ impl<W: Write> Write for Encoder<W> {
         match self {
             Encoder::LZMA(w) => w.flush(),
             Encoder::LZMA2(w) => w.flush(),
+            #[cfg(feature = "bzip2")]
+            Encoder::BZIP2(w) => w.flush(),
             #[cfg(feature = "aes256")]
             Encoder::AES(w) => w.flush(),
         }
@@ -44,6 +50,15 @@ pub fn add_encoder<W: Write>(
     let method = method_config.method;
 
     match method.id() {
+        #[cfg(feature = "bzip2")]
+        SevenZMethod::ID_BZIP2 => {
+            let level = match method_config.options.as_ref() {
+                Some(MethodOptions::Num(level)) => (*level).clamp(1, 9),
+                None => 6,
+                _ => return Err(Error::other("Invalid Bzip2 encoder options")),
+            };
+            Ok(Encoder::BZIP2(Bzip2Encoder { inner: bzip2::write::BzEncoder::new(input, bzip2::Compression::new(level)), done: false }))
+        }
         SevenZMethod::ID_LZMA => {
             let mut def_opts = LZMA2Options::default();
             let options = get_lzma2_options(method_config.options.as_ref(), &mut def_opts);
@@ -69,6 +84,31 @@ pub fn add_encoder<W: Write>(
         _ => Err(Error::UnsupportedCompressionMethod(
             method.name().to_string(),
         )),
+    }
+}
+
+/// SevenZWriter ends a coder with an empty write after flush. Explicitly
+/// finish Bzip2 first, then forward that signal through counting/AES writers;
+/// neither the Bzip2 trailer nor AES padding may depend on a fallible Drop.
+#[cfg(feature = "bzip2")]
+pub struct Bzip2Encoder<W: Write> { inner: bzip2::write::BzEncoder<W>, done: bool }
+#[cfg(feature = "bzip2")]
+impl<W: Write> Write for Bzip2Encoder<W> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        if buf.is_empty() {
+            if !self.done {
+                self.inner.try_finish()?;
+                self.inner.get_mut().write(&[])?;
+                self.inner.get_mut().flush()?;
+                self.done = true;
+            }
+            return Ok(0);
+        }
+        if self.done { return Err(std::io::Error::new(std::io::ErrorKind::BrokenPipe,"Bzip2 coder already finished")); }
+        self.inner.write(buf)
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        if self.done { self.inner.get_mut().flush() } else { self.inner.flush() }
     }
 }
 
@@ -126,4 +166,19 @@ pub(crate) fn get_lzma2_options<'a>(
         }
     };
     options
+}
+
+
+#[cfg(all(test,feature="bzip2"))]
+mod sevenz1646_tests {
+ use super::*;use std::{rc::Rc,cell::RefCell,io::{self,Read}};
+ #[derive(Default)]struct State{bytes:Vec<u8>,signal:usize,fail:u8}
+ #[derive(Clone)]struct Sink(Rc<RefCell<State>>);
+ impl Write for Sink{fn write(&mut self,b:&[u8])->io::Result<usize>{let mut s=self.0.borrow_mut();if s.fail==1||s.fail==2&&b.is_empty(){return Err(io::Error::other("injected terminal write"));}if b.is_empty(){s.signal+=1;}s.bytes.extend_from_slice(b);Ok(b.len())}fn flush(&mut self)->io::Result<()>{if self.0.borrow().fail==3{Err(io::Error::other("injected terminal flush"))}else{Ok(())}}}
+ #[test]fn sevenz1646_bzip2_explicit_eos_before_drop_and_idempotent(){
+  for input in [Vec::new(),b"abc terminal tail".repeat(1000)]{let state=Rc::new(RefCell::new(State::default()));let mut encoder=add_encoder(CountingWriter::new(Sink(state.clone())),&SevenZMethodConfiguration::new(SevenZMethod::BZIP2).with_options(MethodOptions::Num(9))).unwrap();encoder.write_all(&input).unwrap();encoder.flush().unwrap();encoder.write(&[]).unwrap();let bytes=state.borrow().bytes.clone();let mut decoded=Vec::new();bzip2::read::BzDecoder::new(bytes.as_slice()).read_to_end(&mut decoded).unwrap();assert_eq!(decoded,input);assert_eq!(state.borrow().signal,1);encoder.write(&[]).unwrap();assert_eq!(state.borrow().signal,1);assert!(encoder.write(b"after finish").is_err());}
+ }
+ #[test]fn sevenz1646_bzip2_terminal_errors_propagate(){
+  for fail in [1,2,3]{let state=Rc::new(RefCell::new(State::default()));let mut encoder=add_encoder(CountingWriter::new(Sink(state.clone())),&SevenZMethodConfiguration::new(SevenZMethod::BZIP2)).unwrap();encoder.write_all(b"data").unwrap();encoder.flush().unwrap();state.borrow_mut().fail=fail;assert!(encoder.write(&[]).is_err(),"failure {fail}");state.borrow_mut().fail=0;}
+ }
 }

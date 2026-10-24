@@ -94,6 +94,8 @@ pub struct TemplateCompression {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zip_method: Option<crate::services::zip_method::ZipMethod>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub seven_zip_method: Option<super::seven_zip_method::SevenZipMethod>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zip_encryption: Option<crate::services::zip_password::ZipEncryption>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zip_split_mode: Option<crate::services::standard_zip_writer::ZipSplitMode>,
@@ -235,6 +237,7 @@ pub fn template_from_profile(profile: &CompressionProfile) -> TaskTemplate {
             filename_template: profile.config.filename_template.clone(),
         },
         compression: TemplateCompression {
+            seven_zip_method: profile.config.extra_params.get("seven_zip_method").and_then(|value|super::seven_zip_method::SevenZipMethod::from_setting(value)),
             wim_method: profile.config.extra_params.get("wim_method").map(|method| match method.as_str() { "solid" => super::wim_writer::WimMethod::Solid, "lzms" => super::wim_writer::WimMethod::Lzms, "lzx" => super::wim_writer::WimMethod::Lzx, "xpress" => super::wim_writer::WimMethod::Xpress, _ => super::wim_writer::WimMethod::Store }),
             zip_method: profile.config.extra_params.get("zip_method").map(|value|
                 match value.as_str() { "lzma" => crate::services::zip_method::ZipMethod::Lzma, "ppmd" => crate::services::zip_method::ZipMethod::Ppmd, "bzip2" => crate::services::zip_method::ZipMethod::Bzip2, "zstd" => crate::services::zip_method::ZipMethod::Zstd, _ => crate::services::zip_method::ZipMethod::Deflate }),
@@ -432,6 +435,9 @@ fn parse_template(bytes: &[u8]) -> Result<TaskTemplate> {
 }
 
 pub fn export_profile_template(profile: &CompressionProfile, path: &Path) -> Result<TaskTemplate> {
+    if let Some(value)=profile.config.extra_params.get("seven_zip_method") {
+        anyhow::ensure!(super::seven_zip_method::SevenZipMethod::from_setting(value).is_some(),"请选择支持的 7Z 压缩方法：LZMA2、LZMA 或 Bzip2");
+    }
     let template = template_from_profile(profile);
     validate_template(&template)?;
     let json = serde_json::to_vec_pretty(&template)?;
@@ -850,6 +856,7 @@ pub fn import_template_profile(path: &Path, expected_sha256: &str) -> Result<Com
               if let Some(method) = template.compression.wim_method {
                   params.insert("wim_method".into(), match method { super::wim_writer::WimMethod::Solid => "solid", super::wim_writer::WimMethod::Lzms => "lzms", super::wim_writer::WimMethod::Lzx => "lzx", super::wim_writer::WimMethod::Xpress => "xpress", super::wim_writer::WimMethod::Store => "store" }.into());
               }
+              if let Some(method)=template.compression.seven_zip_method {params.insert("seven_zip_method".into(),method.as_str().into());}
               if let Some(method) = template.compression.zip_method {
                   params.insert("zip_method".into(), match method { crate::services::zip_method::ZipMethod::Lzma => "lzma", crate::services::zip_method::ZipMethod::Ppmd => "ppmd", crate::services::zip_method::ZipMethod::Bzip2 => "bzip2", crate::services::zip_method::ZipMethod::Zstd => "zstd", crate::services::zip_method::ZipMethod::Deflate => "deflate" }.into());
               }
@@ -1353,4 +1360,10 @@ mod tests {
         template.compression.split_size_mib = Some(10);
         assert!(validate_template(&template).is_err());
     }
+
+ #[test]fn sevenz1646_profile_template_roundtrip_and_invalid_explicit_method(){
+  let dir=tempfile::tempdir().unwrap();
+  for method in ["lzma2","lzma","bzip2"]{let mut p=profile();p.config.extra_params.insert("seven_zip_method".into(),method.into());let file=dir.path().join(format!("{method}.longtask.json"));export_profile_template(&p,&file).unwrap();let preview=preview_template_file(&file).unwrap();let imported=import_template_profile(&file,&preview.content_sha256).unwrap();assert_eq!(imported.config.extra_params["seven_zip_method"],method);}
+  let mut p=profile();p.config.extra_params.insert("seven_zip_method".into(),"unknown".into());let file=dir.path().join("invalid.longtask.json");assert!(export_profile_template(&p,&file).is_err());assert!(!file.exists());
+ }
 }

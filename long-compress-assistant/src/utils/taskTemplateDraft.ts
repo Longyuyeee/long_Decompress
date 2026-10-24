@@ -40,7 +40,7 @@ export const buildSafeTemplateDraftSettings = (
   rarRecoveryVolumes: profile.config.rarRecoveryVolumes ?? 0,
   ...(profile.config.zipPasswordEncoding ? { zipPasswordEncoding: profile.config.zipPasswordEncoding } : {}),
   ...(profile.config.wimMethod ? { wimMethod: profile.config.wimMethod } : {}),
-  ...(profile.config.zipMethod ? { zipMethod: profile.config.zipMethod } : {}),
+  ...(profile.config.sevenZipMethod ? { sevenZipMethod: profile.config.sevenZipMethod } : {}), ...(profile.config.zipMethod ? { zipMethod: profile.config.zipMethod } : {}),
   ...(profile.config.zipEncryption ? { zipEncryption: profile.config.zipEncryption } : {}),
   ...(profile.config.zipSplitMode ? { zipSplitMode: profile.config.zipSplitMode } : {}),
 })

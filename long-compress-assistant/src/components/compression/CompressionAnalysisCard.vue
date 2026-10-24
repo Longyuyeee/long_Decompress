@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { compressionAnalysisFormat } from '@/utils/sevenZipMethod'
 import HelpHint from '@/components/ui/HelpHint.vue'
 import { computed } from 'vue'
 import { useCompressionStore, type CompressionOptions } from '@/stores/compression'
@@ -19,6 +20,7 @@ const state = computed(() => store.compressionAnalysis[props.jobId])
 const result = computed(() => state.value?.result)
 const stale = computed(() => state.value?.status === 'completed' && (
   state.value.format !== props.modelValue.format || state.value.level !== props.modelValue.level ||
+  (props.modelValue.format === '7z' && (state.value.sevenZipMethod ?? 'lzma2') !== (props.modelValue.sevenZipMethod ?? 'lzma2')) ||
   (props.modelValue.format === 'zip' && (state.value.zipMethod ?? 'deflate') !== (props.modelValue.zipMethod ?? 'deflate'))
 ))
 
@@ -36,10 +38,10 @@ const confidenceLabel = (confidence?: string) => ({ low: '初步', medium: '中�
 const analyze = async () => {
   if (props.disabled || state.value?.status === 'running') return
   const settings = { ...props.modelValue }
-  const analysisFormat = settings.format === 'zipx' ? 'xz' : settings.format === 'zip' && settings.zipMethod === 'zstd' ? 'zst' : settings.format === 'zip' && settings.zipMethod === 'bzip2' ? 'bz2' : settings.format === 'zip' && settings.zipMethod === 'lzma' ? 'zip-lzma' : settings.zipMethod === 'ppmd' ? 'zip-ppmd' : settings.format
+  const analysisFormat = compressionAnalysisFormat(settings)
   const analysisId = `analysis-${Date.now()}-${Math.random().toString(36).slice(2)}`
   store.setAnalysisState(props.jobId, {
-    status: 'running', analysisId, format: settings.format, level: settings.level, zipMethod: settings.zipMethod,
+    status: 'running', analysisId, format: settings.format, level: settings.level, sevenZipMethod: settings.sevenZipMethod, zipMethod: settings.zipMethod,
   })
   try {
     const analysis = await commands.analyzeCompressionSources(
@@ -47,14 +49,14 @@ const analyze = async () => {
     )
     if (store.compressionAnalysis[props.jobId]?.analysisId !== analysisId) return
     store.setAnalysisState(props.jobId, {
-      status: 'completed', analysisId, format: settings.format, zipMethod: settings.zipMethod,
+      status: 'completed', analysisId, format: settings.format, sevenZipMethod: settings.sevenZipMethod, zipMethod: settings.zipMethod,
       level: settings.level, result: analysis,
     })
   } catch (error) {
     if (store.compressionAnalysis[props.jobId]?.analysisId !== analysisId) return
     if (store.compressionAnalysis[props.jobId]?.status === 'cancelled') return
     store.setAnalysisState(props.jobId, {
-      status: 'failed', analysisId, format: settings.format, zipMethod: settings.zipMethod,
+      status: 'failed', analysisId, format: settings.format, sevenZipMethod: settings.sevenZipMethod, zipMethod: settings.zipMethod,
       level: settings.level, error: extractErrorMessage(error),
     })
   }
@@ -62,7 +64,7 @@ const analyze = async () => {
 
 const cancel = async () => {
   const settings = { ...props.modelValue }
-  const analysisFormat = settings.format === 'zipx' ? 'xz' : settings.format === 'zip' && settings.zipMethod === 'zstd' ? 'zst' : settings.format === 'zip' && settings.zipMethod === 'bzip2' ? 'bz2' : settings.format === 'zip' && settings.zipMethod === 'lzma' ? 'zip-lzma' : settings.zipMethod === 'ppmd' ? 'zip-ppmd' : settings.format
+  const analysisFormat = compressionAnalysisFormat(settings)
   const analysisId = state.value?.analysisId
   if (!analysisId || state.value?.status !== 'running') return
   store.setAnalysisState(props.jobId, { ...state.value, status: 'cancelled' })
@@ -75,6 +77,7 @@ const applyRecommendation = () => {
     ...props.modelValue,
     format: result.value.recommendedFormat as CompressionOptions['format'],
     level: result.value.recommendedLevel,
+    ...(result.value.recommendedFormat === '7z' ? { sevenZipMethod: 'lzma2' as const } : {}),
     ...(result.value.recommendedFormat === 'zip' ? { zipMethod: 'deflate' as const } : {}),
     createSolidArchive: result.value.recommendedFormat === '7z' && result.value.recommendedSolid,
   })

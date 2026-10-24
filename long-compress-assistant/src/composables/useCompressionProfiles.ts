@@ -1,3 +1,4 @@
+import { normalizeSevenZipMethod } from '@/utils/sevenZipMethod'
 import { invoke } from '@tauri-apps/api/tauri'
 import { extractErrorMessage } from '@/utils'
 import { isZipPasswordEncoding } from '@/types/zipPassword'
@@ -69,6 +70,7 @@ const normalizeProfile = (raw: any): CompressionProfile => {
   description: raw.description,
   config: {
     format: raw.config.format,
+    sevenZipMethod: normalizeSevenZipMethod(raw.config.sevenZipMethod ?? raw.config.extra_params?.seven_zip_method ?? raw.config.extraParams?.seven_zip_method),
     level: raw.config.level,
     password: raw.config.password ?? null,
     splitArchive: raw.config.splitArchive ?? raw.config.split_archive ?? false,
@@ -125,7 +127,7 @@ const toBackendProfile = (profile: CompressionProfile) => ({
     create_solid_archive: profile.config.createSolidArchive,
     encrypt_filenames: profile.config.encryptFilenames ?? false,
     filename_template: profile.config.filenameTemplate,
-    extra_params: { ...profile.config.extraParams, wim_method: profile.config.wimMethod ?? 'store', zip_password_encoding: profile.config.zipPasswordEncoding ?? 'utf8', zip_method: profile.config.zipMethod ?? 'deflate', zip_encryption: profile.config.zipEncryption ?? 'aes256',
+    extra_params: { ...profile.config.extraParams, wim_method: profile.config.wimMethod ?? 'store', zip_password_encoding: profile.config.zipPasswordEncoding ?? 'utf8', seven_zip_method: profile.config.sevenZipMethod ?? 'lzma2', zip_method: profile.config.zipMethod ?? 'deflate', zip_encryption: profile.config.zipEncryption ?? 'aes256',
       ...(profile.config.zipSplitMode ? { zip_split_mode: profile.config.zipSplitMode } : {}),
       ...(profile.config.rarRecoveryPercent ? { rar_recovery_percent: String(profile.config.rarRecoveryPercent) } : {}),
       ...(profile.config.rarRecoveryVolumes ? { rar_recovery_volumes: String(profile.config.rarRecoveryVolumes) } : {}) },
@@ -197,7 +199,7 @@ export const useCompressionProfiles = () => {
       } : input
       return await invoke<string>('create_compression_profile', { profile: { ...profile,
         config: { ...input.config, extraParams: { ...input.config.extraParams,
-          wim_method: input.config.wimMethod ?? 'store', zip_password_encoding: input.config.zipPasswordEncoding ?? 'utf8', zip_method: input.config.zipMethod ?? 'deflate', zip_encryption: input.config.zipEncryption ?? 'aes256',
+          wim_method: input.config.wimMethod ?? 'store', zip_password_encoding: input.config.zipPasswordEncoding ?? 'utf8', seven_zip_method: input.config.sevenZipMethod ?? 'lzma2', zip_method: input.config.zipMethod ?? 'deflate', zip_encryption: input.config.zipEncryption ?? 'aes256',
           ...(input.config.zipSplitMode ? { zip_split_mode: input.config.zipSplitMode } : {}), ...(input.config.rarRecoveryPercent ? { rar_recovery_percent: String(input.config.rarRecoveryPercent) } : {}), ...(input.config.rarRecoveryVolumes ? { rar_recovery_volumes: String(input.config.rarRecoveryVolumes) } : {}) } } } })
     } catch (error) {
       console.error('[useCompressionProfiles] Failed to create profile:', error)

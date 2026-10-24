@@ -183,6 +183,12 @@ fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usi
 }
 
 fn compressed_sample_size_with_cancel(sample: &[u8], format: &str, level: u32, cancelled: &AtomicBool) -> Result<usize> {
+    if matches!(format,"7z"|"7z-lzma"|"7z-bzip2") {
+        check_cancelled(cancelled)?;
+        let method=match format {"7z-lzma"=>super::seven_zip_method::SevenZipMethod::Lzma,"7z-bzip2"=>super::seven_zip_method::SevenZipMethod::Bzip2,_=>Default::default()};
+        let size=super::seven_zip_method::sample_size(sample,method,level,cancelled)?;
+        check_cancelled(cancelled)?;return Ok(size);
+    }
     if format == "zip-ppmd" || format == "zip-lzma" {
         // Use the selected real ZIP writer, including method parameters and stream finalization.
         let mut archive = zip_aes::ZipWriter::new(std::io::Cursor::new(Vec::new()));
@@ -233,7 +239,7 @@ fn compressed_sample_size_with_cancel(sample: &[u8], format: &str, level: u32, c
         encoder.write_all(sample)?;
         return Ok(encoder.finish()?.len());
     }
-    if format.contains("xz") || format == "7z" {
+    if format.contains("xz") {
         let mut encoder = xz2::write::XzEncoder::new(Vec::new(), level);
         encoder.write_all(sample)?;
         return Ok(encoder.finish()?.len());
@@ -250,8 +256,8 @@ fn compressed_sample_size_with_cancel(sample: &[u8], format: &str, level: u32, c
 fn duration_range(total_size: u64, format: &str, level: u32, file_count: usize) -> (u64, u64) {
     let format = format.strip_suffix(".aes").unwrap_or(format);
     let base_mib_per_second = match format {
-        "7z" | "xz" | "tar.xz" | "lzma" | "tar.lzma" | "zip-lzma" | "lz" | "tar.lz" => 45.0,
-        "bz2" | "tar.bz2" => 35.0,
+        "7z" | "7z-lzma" | "xz" | "tar.xz" | "lzma" | "tar.lzma" | "zip-lzma" | "lz" | "tar.lz" => 45.0,
+        "7z-bzip2" | "bz2" | "tar.bz2" => 35.0,
         "zip-ppmd" => 12.0,
         "zst" | "zstd" | "tar.zst" => 180.0,
         "tar" => 350.0,

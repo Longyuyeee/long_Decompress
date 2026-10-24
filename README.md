@@ -184,7 +184,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 
 | 能力 | 主要格式与说明 |
 | --- | --- |
-| 创建归档 | ZIP（Deflate / Zstandard / BZip2 / PPMd / LZMA）、ZIPX（XZ）、7Z、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码、数字分卷与保留历史的增量更新）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM（存储/XPRESS/LZX/LZMS/固实）、ESD（LZMS 固实），两者支持数字分卷；SWM（仅存储/XPRESS/LZX 原生资源分包） |
+| 创建归档 | ZIP（Deflate / Zstandard / BZip2 / PPMd / LZMA）、ZIPX（XZ）、7Z（LZMA2 / LZMA / Bzip2）、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码、数字分卷与保留历史的增量更新）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM（存储/XPRESS/LZX/LZMS/固实）、ESD（LZMS 固实），两者支持数字分卷；SWM（仅存储/XPRESS/LZX 原生资源分包） |
 | 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式当前内容/日志式历史快照、原生多部分确认读取、版本对比与变化提取）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，原生 SWM（Copy/XPRESS/LZX 整组读取），以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
 | 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷、ZPAQ 原生密码数字切卷及原生多部分只读；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM / ESD / SWM、ZPAQ（含改密与数字分卷）；密码和分卷随目标格式提供 |
@@ -275,7 +275,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.6.45 · Bzip2 大日志先看开头**。普通/密码、非固实/固实同版先看所选前 1 MiB，接通内容/文件名加密及完整数字卷/非首卷，保留编码/滚动、部分范围和提取全文，达到目标后停止推进。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.45.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_BZIP2_TEXT_PREFIX_FREEZE_1.6.45.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.45)。下一阶段 [7Z 压缩方法可选](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.46.md)仅规划。
+**v1.6.46 · 7Z 压缩方法可选**。原配置中选择 LZMA2（默认）/LZMA/Bzip2，接通密码、隐藏文件名、固实、数字分卷和转换，配置与草稿保留选择，体积分析按实际方法抽样。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.46.md) · [记录](long-compress-assistant/docs/SEVENZ_COMPRESSION_METHODS_FREEZE_1.6.46.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.46)。下一阶段 [7Z Deflate 创建](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.47.md)仅规划。
+
+**v1.6.45 · Bzip2 大日志先看开头**。普通/密码、非固实/固实同版先看所选前 1 MiB，接通内容/文件名加密及完整数字卷/非首卷，保留编码/滚动、部分范围和提取全文，达到目标后停止推进。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.45.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_BZIP2_TEXT_PREFIX_FREEZE_1.6.45.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.45)。7Z 创建方法由上方 v1.6.46 接续。
 
 **v1.6.44 · 7Z Bzip2 图文直接看**。普通/密码、非固实/固实包同版接回原双栏完整文本与图片，含内容/文件名加密、完整数字卷/非首卷、连续阅读及仅提取当前页。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.44.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_BZIP2_PREVIEW_FREEZE_1.6.44.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.44)。Bzip2 大文本开头由上方 v1.6.45 接续。
 

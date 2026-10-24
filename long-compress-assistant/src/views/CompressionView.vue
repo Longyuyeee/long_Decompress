@@ -279,13 +279,14 @@ const getCompressionEstimate = (
   format: string,
   level: number,
   zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma',
+  sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2',
 ) => {
   const analysis = compressionStore.compressionAnalysis[jobId]
   if (
     analysis?.status === 'completed' &&
     analysis.result &&
     analysis.format === format &&
-    analysis.level === level && (format !== 'zip' || (analysis.zipMethod ?? 'deflate') === (zipMethod ?? 'deflate'))
+    analysis.level === level && (format !== 'zip' || (analysis.zipMethod ?? 'deflate') === (zipMethod ?? 'deflate')) && (format !== '7z' || (analysis.sevenZipMethod ?? 'lzma2') === (sevenZipMethod ?? 'lzma2'))
   ) {
     return { estimatedOutputBytes: analysis.result.estimatedSize, estimateReliable: false }
   }
@@ -299,14 +300,14 @@ const getCompressionEstimate = (
 
 const runCompressionResourcePreflight = async (
   taskId: string,
-  job: { id: string, files: FileObject[], outputPath: string, settings: { format: string, level: number, zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma', wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' } },
+  job: { id: string, files: FileObject[], outputPath: string, settings: { format: string, level: number, sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2', zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma', wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' } },
 ) => {
   const task = taskStore.tasks.find(item => item.id === taskId)
   if (!task) return false
 
   taskStore.updateTaskStatus(taskId, 'preparing')
   try {
-    const estimate = (job.settings.format === 'swm' || job.settings.format === 'esd' || (job.settings.format === 'wim' && ['xpress', 'lzx', 'lzms', 'solid'].includes(job.settings.wimMethod || ''))) ? undefined : getCompressionEstimate(job.id, job.files, job.settings.format, job.settings.level, job.settings.zipMethod)
+    const estimate = (job.settings.format === 'swm' || job.settings.format === 'esd' || (job.settings.format === 'wim' && ['xpress', 'lzx', 'lzms', 'solid'].includes(job.settings.wimMethod || ''))) ? undefined : getCompressionEstimate(job.id, job.files, job.settings.format, job.settings.level, job.settings.zipMethod, job.settings.sevenZipMethod)
     const report = await tauriCommands.preflightOperationResources({
       operation: 'compression',
       outputPath: job.outputPath,
@@ -488,7 +489,7 @@ const runCompression = async () => {
           rarRecoveryVolumes: job.settings.format === 'rar' ? (job.settings.rarRecoveryVolumes ?? 0) : 0,
           zipPasswordEncoding: ['zip', 'zipx'].includes(effectiveFormat) ? job.settings.zipPasswordEncoding ?? 'utf8' : 'utf8',
           ...(job.settings.wimMethod ? { wimMethod: job.settings.wimMethod } : {}),
-          zipMethod: job.settings.zipMethod ?? 'deflate',
+          sevenZipMethod: job.settings.sevenZipMethod ?? 'lzma2', zipMethod: job.settings.zipMethod ?? 'deflate',
           zipEncryption: job.settings.zipEncryption ?? 'aes256',
           zipSplitMode: job.settings.zipSplitMode ?? 'numeric',
           fastPack: false,
@@ -498,7 +499,7 @@ const runCompression = async () => {
         fast_pack: false,
         zip_password_encoding: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipPasswordEncoding ?? 'utf8') : 'utf8',
         ...(['wim','esd','swm'].includes(job.settings.format) ? { wim_method: job.settings.wimMethod ?? 'store' } : {}),
-        zip_method: job.settings.zipMethod ?? 'deflate',
+        seven_zip_method: job.settings.sevenZipMethod ?? 'lzma2', zip_method: job.settings.zipMethod ?? 'deflate',
         zip_encryption: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipEncryption ?? 'aes256') : 'aes256',
         zip_split_mode: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipSplitMode ?? 'numeric') : 'numeric',
         format: effectiveFormat,
@@ -547,7 +548,7 @@ const runCompression = async () => {
           fast_pack: false,
           zip_password_encoding: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipPasswordEncoding ?? 'utf8') : 'utf8',
           ...(['wim','esd','swm'].includes(job.settings.format) ? { wim_method: job.settings.wimMethod ?? 'store' } : {}),
-        zip_method: job.settings.zipMethod ?? 'deflate',
+        seven_zip_method: job.settings.sevenZipMethod ?? 'lzma2', zip_method: job.settings.zipMethod ?? 'deflate',
           zip_encryption: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipEncryption ?? 'aes256') : 'aes256',
           zip_split_mode: ['zip', 'zipx'].includes(effectiveFormat) ? (job.settings.zipSplitMode ?? 'numeric') : 'numeric',
           format: effectiveFormat,

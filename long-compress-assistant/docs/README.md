@@ -1,8 +1,7 @@
 # 文档导航与维护规则
 
-- **当前版本 v1.6.45**：[发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.45)、[中文说明](RELEASE_NOTES_1.6.45.md)和[Bzip2 大文本记录](SEVENZ_BZIP2_TEXT_PREFIX_FREEZE_1.6.45.md)。已完成功能封板，正常受保护 PR/注解标签发布，最终身份/附件状态在本版 PR 接续。
-- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.45.md)已完成；[v1.6.46 7Z 压缩方法可选](ARCHIVE_ROADMAP_1.6.46.md)仅规划，见[交接](DEVELOPMENT_HANDOFF.md)。
-- **前版 v1.6.44**：[Bzip2 图文记录](SEVENZ_BZIP2_PREVIEW_FREEZE_1.6.44.md)，PR #305 已合并并推送注解标签，正式四附件已确认，最终身份在该 PR 接续。
+- **当前版本 v1.6.46**：[发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.46)、[中文说明](RELEASE_NOTES_1.6.46.md)、[7Z 创建方法记录](SEVENZ_COMPRESSION_METHODS_FREEZE_1.6.46.md)。已完成功能封板，最终身份/附件在本版 PR 接续。
+- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.46.md)已完成；[v1.6.47 7Z Deflate 创建](ARCHIVE_ROADMAP_1.6.47.md)仅规划，见[交接](DEVELOPMENT_HANDOFF.md)。
 
 以下为历史阶段记录。
 

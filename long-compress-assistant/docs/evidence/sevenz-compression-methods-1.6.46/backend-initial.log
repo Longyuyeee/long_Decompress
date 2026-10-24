@@ -1,0 +1,54 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+   Compiling long-compress-assistant v1.6.46 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+   Compiling sevenz-rust v0.6.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\sevenz-rust)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5m 08s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-ca94aac7be5ff095.exe)
+
+running 5 tests
+
+thread 'commands::history_execution_config::sevenz1646_history_creation_and_conversion_retain_method_reject_unknown' (6252) panicked at src\commands\history_execution_config.rs:453:124:
+called `Option::unwrap()` on a `None` value
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test commands::history_execution_config::sevenz1646_history_creation_and_conversion_retain_method_reject_unknown ... FAILED
+test services::sevenz_compression_methods_1646_tests::sevenz1646_workflow_database_roundtrip ... ok
+test services::task_template::tests::sevenz1646_profile_template_roundtrip_and_invalid_explicit_method ... ok
+test services::sevenz_compression_methods_1646_tests::sevenz1646_default_analysis_and_cancel_collision ... ok
+
+thread 'services::sevenz_compression_methods_1646_tests::sevenz1646_create_three_methods_password_solid_numeric_and_independent_readback' (41448) panicked at src\services\sevenz_compression_methods_1646_tests.rs:16:156:
+called `Result::unwrap()` on an `Err` value: FromUtf8Error { bytes: [13, 10, 55, 45, 90, 105, 112, 32, 50, 54, 46, 48, 52, 32, 40, 120, 54, 52, 41, 32, 58, 32, 67, 111, 112, 121, 114, 105, 103, 104, 116, 32, 40, 99, 41, 32, 49, 57, 57, 57, 45, 50, 48, 50, 54, 32, 73, 103, 111, 114, 32, 80, 97, 118, 108, 111, 118, 32, 58, 32, 50, 48, 50, 54, 45, 49, 48, 45, 48, 53, 13, 10, 13, 10, 83, 99, 97, 110, 110, 105, 110, 103, 32, 116, 104, 101, 32, 100, 114, 105, 118, 101, 32, 102, 111, 114, 32, 97, 114, 99, 104, 105, 118, 101, 115, 58, 13, 10, 49, 32, 102, 105, 108, 101, 44, 32, 49, 49, 49, 54, 54, 54, 32, 98, 121, 116, 101, 115, 32, 40, 49, 49, 48, 32, 75, 105, 66, 41, 13, 10, 13, 10, 69, 120, 116, 114, 97, 99, 116, 105, 110, 103, 32, 97, 114, 99, 104, 105, 118, 101, 58, 32, 69, 58, 92, 80, 114, 111, 106, 101, 99, 116, 92, 65, 73, 80, 114, 111, 106, 101, 99, 116, 92, 71, 101, 109, 105, 110, 105, 80, 114, 111, 106, 101, 99, 116, 92, 108, 111, 110, 103, 95, 68, 101, 99, 111, 109, 112, 114, 101, 115, 115, 92, 108, 111, 110, 103, 45, 99, 111, 109, 112, 114, 101, 115, 115, 45, 97, 115, 115, 105, 115, 116, 97, 110, 116, 92, 116, 101, 115, 116, 45, 114, 101, 115, 117, 108, 116, 115, 92, 115, 101, 118, 101, 110, 122, 45, 99, 111, 109, 112, 114, 101, 115, 115, 105, 111, 110, 45, 109, 101, 116, 104, 111, 100, 115, 45, 49, 54, 52, 54, 92, 108, 122, 109, 97, 50, 45, 112, 108, 97, 105, 110, 92, 215, 202, 193, 207, 46, 55, 122, 13, 10, 45, 45, 13, 10, 80, 97, 116, 104, 32, 61, 32, 69, 58, 92, 80, 114, 111, 106, 101, 99, 116, 92, 65, 73, 80, 114, 111, 106, 101, 99, 116, 92, 71, 101, 109, 105, 110, 105, 80, 114, 111, 106, 101, 99, 116, 92, 108, 111, 110, 103, 95, 68, 101, 99, 111, 109, 112, 114, 101, 115, 115, 92, 108, 111, 110, 103, 45, 99, 111, 109, 112, 114, 101, 115, 115, 45, 97, 115, 115, 105, 115, 116, 97, 110, 116, 92, 116, 101, 115, 116, 45, 114, 101, 115, 117, 108, 116, 115, 92, 115, 101, 118, 101, 110, 122, 45, 99, 111, 109, 112, 114, 101, 115, 115, 105, 111, 110, 45, 109, 101, 116, 104, 111, 100, 115, 45, 49, 54, 52, 54, 92, 108, 122, 109, 97, 50, 45, 112, 108, 97, 105, 110, 92, 215, 202, 193, 207, 46, 55, 122, 13, 10, 84, 121, 112, 101, 32, 61, 32, 55, 122, 13, 10, 80, 104, 121, 115, 105, 99, 97, 108, 32, 83, 105, 122, 101, 32, 61, 32, 49, 49, 49, 54, 54, 54, 13, 10, 72, 101, 97, 100, 101, 114, 115, 32, 83, 105, 122, 101, 32, 61, 32, 55, 49, 49, 13, 10, 77, 101, 116, 104, 111, 100, 32, 61, 32, 76, 90, 77, 65, 50, 58, 50, 48, 13, 10, 83, 111, 108, 105, 100, 32, 61, 32, 45, 13, 10, 66, 108, 111, 99, 107, 115, 32, 61, 32, 49, 55, 13, 10, 13, 10, 69, 118, 101, 114, 121, 116, 104, 105, 110, 103, 32, 105, 115, 32, 79, 107, 13, 10, 13, 10, 70, 111, 108, 100, 101, 114, 115, 58, 32, 51, 13, 10, 70, 105, 108, 101, 115, 58, 32, 49, 55, 13, 10, 83, 105, 122, 101, 58, 32, 32, 32, 32, 32, 32, 32, 50, 52, 49, 56, 50, 53, 54, 13, 10, 67, 111, 109, 112, 114, 101, 115, 115, 101, 100, 58, 32, 49, 49, 49, 54, 54, 54, 13, 10], error: Utf8Error { valid_up_to: 294, error_len: Some(1) } }
+test services::sevenz_compression_methods_1646_tests::sevenz1646_create_three_methods_password_solid_numeric_and_independent_readback ... FAILED
+
+failures:
+
+failures:
+    commands::history_execution_config::sevenz1646_history_creation_and_conversion_retain_method_reject_unknown
+    services::sevenz_compression_methods_1646_tests::sevenz1646_create_three_methods_password_solid_numeric_and_independent_readback
+
+test result: FAILED. 3 passed; 2 failed; 0 ignored; 0 measured; 1270 filtered out; finished in 0.78s
+
+error: test failed, to rerun pass `--lib`
