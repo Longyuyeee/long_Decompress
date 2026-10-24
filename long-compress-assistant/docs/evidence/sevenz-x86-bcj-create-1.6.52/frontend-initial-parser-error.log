@@ -1,0 +1,35 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ ❯ src/stores/__tests__/sevenzBcj1652.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/stores/__tests__/sevenzBcj1652.test.ts [ src/stores/__tests__/sevenzBcj1652.test.ts ]
+Error: Transform failed with 1 error:
+
+[PARSE_ERROR] Expected `,` or `}` but found `Identifier`
+    ╭─[ src/stores/__tests__/sevenzBcj1652.test.ts:21:191 ]
+    │
+ 21 │  const global=JSON.stringify(s.globalSettings),other=JSON.stringify(s.selectedFiles[1]);expect(s.applyBatchConfiguration(s.selectedFiles.map(f=>f.path),{sevenZipFilter:'bcj_x86',sevenZipx86 BCJDistance:256})).toBe(1)
+    │                                                                                                                                                         ┬                                     ─────┬─────  
+    │                                                                                                                                                         ╰────────────────────────────────────────────────── Opened here
+    │                                                                                                                                                                                                    │       
+    │                                                                                                                                                                                                    ╰─────── `,` or `}` expected
+────╯
+
+  Plugin: vite:oxc
+  File: E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/src/stores/__tests__/sevenzBcj1652.test.ts
+ ❯ transformWithOxc node_modules/vite/dist/node/chunks/node.js:4097:19
+ ❯ TransformPluginContext.transform node_modules/vite/dist/node/chunks/node.js:4168:26
+ ❯ EnvironmentPluginContainer.transform node_modules/vite/dist/node/chunks/node.js:30851:51
+ ❯ loadAndTransform node_modules/vite/dist/node/chunks/node.js:20619:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  3 passed (3)
+   Start at  19:47:27
+   Duration  30.58s (transform 2.42s, setup 928ms, import 3.52s, tests 166ms, environment 49.64s)
+

@@ -2,6 +2,11 @@ mod arm;
 mod ppc;
 mod sparc;
 mod x86;
+#[cfg(all(test, feature = "compress"))]
+#[path = "../bcj_encoder_1652_tests.rs"]
+mod bcj_encoder_1652_tests;
+#[cfg(feature = "compress")]
+pub(crate) mod encoder;
 use std::io::Read;
 
 pub struct BCJFilter {
@@ -53,6 +58,10 @@ impl<R> SimpleReader<R> {
         Self::new(inner, BCJFilter::new_x86(0, false))
     }
 
+    pub(crate) fn new_x86_at(inner: R, start: usize) -> Self {
+        if start == 0 { Self::new_x86(inner) } else { Self::new(inner, BCJFilter::new_x86(start, false)) }
+    }
+
     #[inline]
     pub fn new_arm(inner: R) -> Self {
         Self::new(inner, BCJFilter::new_arm(0, false))
@@ -68,6 +77,13 @@ impl<R> SimpleReader<R> {
     #[inline]
     pub fn new_sparc(inner: R) -> Self {
         Self::new(inner, BCJFilter::new_sparc(0, false))
+    }
+}
+pub(crate) fn x86_start_position(properties: &[u8]) -> Result<usize, crate::Error> {
+    match properties {
+        [] => Ok(0),
+        [a, b, c, d] => Ok(u32::from_le_bytes([*a, *b, *c, *d]) as usize),
+        _ => Err(crate::Error::other("x86 BCJ properties must be empty or a 4-byte start position")),
     }
 }
 impl<R: Read> Read for SimpleReader<R> {

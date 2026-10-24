@@ -46,3 +46,6 @@ long-compress-assistant/src-tauri/resources/archive-engine/licenses/ppmd-rust-MI
 # Preserve exact upstream WIM encoder, source and license bytes.
 long-compress-assistant/src-tauri/resources/wim-engine/** -text
 long-compress-assistant/src-tauri/resources/wim-engine/*.txt -whitespace
+
+# Preserve this release's captured evidence and its byte hashes.
+long-compress-assistant/docs/evidence/sevenz-x86-bcj-create-1.6.52/** -text -whitespace

@@ -11,6 +11,7 @@ use crate::{
 };
 
 pub enum Encoder<W: Write> {
+    BcjX86(crate::bcj::encoder::X86Encoder<CountingWriter<W>>),
     DELTA(crate::delta_encoder::DeltaEncoder<CountingWriter<W>>),
     COPY(CopyEncoder<CountingWriter<W>>),
     LZMA(LZMAWriter<W>),
@@ -28,6 +29,7 @@ pub enum Encoder<W: Write> {
 impl<W: Write> Write for Encoder<W> {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         match self {
+            Encoder::BcjX86(w) => w.write(buf),
             Encoder::DELTA(w) => w.write(buf),
             Encoder::COPY(w) => w.write(buf),
             Encoder::LZMA(w) => w.write(buf),
@@ -45,6 +47,7 @@ impl<W: Write> Write for Encoder<W> {
 
     fn flush(&mut self) -> std::io::Result<()> {
         match self {
+            Encoder::BcjX86(w) => w.flush(),
             Encoder::DELTA(w) => w.flush(),
             Encoder::COPY(w) => w.flush(),
             Encoder::LZMA(w) => w.flush(),
@@ -68,6 +71,10 @@ pub fn add_encoder<W: Write>(
     let method = method_config.method;
 
     match method.id() {
+        SevenZMethod::ID_BCJ_X86 => {
+            if method_config.options.is_some() { return Err(Error::other("x86 BCJ does not accept output options")); }
+            Ok(Encoder::BcjX86(crate::bcj::encoder::X86Encoder::new(input)))
+        }
         SevenZMethod::ID_DELTA => {
             let distance = delta_distance(method_config.options.as_ref())?;
             Ok(Encoder::DELTA(crate::delta_encoder::DeltaEncoder::new(input, distance).map_err(Error::io)?))

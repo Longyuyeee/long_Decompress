@@ -31,13 +31,14 @@ pub(crate) fn sample_size(sample:&[u8],method:SevenZipMethod,level:u32,cancelled
 
 #[derive(Debug,Clone,Copy,Default,serde::Serialize,serde::Deserialize,PartialEq,Eq)]
 #[serde(rename_all="snake_case")]
-pub enum SevenZipFilter { #[default] None, Delta }
+pub enum SevenZipFilter { #[default] None, Delta, BcjX86 }
 pub(crate) fn default_delta_distance()->u32 {1}
 impl SevenZipFilter {
-    pub(crate) fn as_str(self)->&'static str {match self {Self::None=>"none",Self::Delta=>"delta"}}
-    pub(crate) fn from_setting(s:&str)->Option<Self>{match s {"none"=>Some(Self::None),"delta"=>Some(Self::Delta),_=>None}}
+    pub(crate) fn as_str(self)->&'static str {match self {Self::None=>"none",Self::Delta=>"delta",Self::BcjX86=>"bcj_x86"}}
+    pub(crate) fn from_setting(s:&str)->Option<Self>{match s {"none"=>Some(Self::None),"delta"=>Some(Self::Delta),"bcj_x86"=>Some(Self::BcjX86),_=>None}}
     pub(crate) fn configuration(self,method:SevenZipMethod,distance:u32)->anyhow::Result<Option<sevenz_rust::SevenZMethodConfiguration>> {
         if self==Self::None || !matches!(method,SevenZipMethod::Lzma2|SevenZipMethod::Lzma){return Ok(None)}
+        if self==Self::BcjX86 { return Ok(Some(sevenz_rust::SevenZMethodConfiguration::new(sevenz_rust::SevenZMethod::BCJ_X86_FILTER))); }
         anyhow::ensure!((1..=256).contains(&distance),"Delta 距离请输入 1～256 的整数");
         Ok(Some(sevenz_rust::SevenZMethodConfiguration::new(sevenz_rust::SevenZMethod::DELTA_FILTER).with_options(sevenz_rust::MethodOptions::Num(distance))))
     }

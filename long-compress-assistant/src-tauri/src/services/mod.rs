@@ -263,3 +263,6 @@ mod zip_store_create_1650_tests;
 
 #[cfg(test)]
 mod sevenz_delta_create_1651_tests;
+
+#[cfg(test)]
+mod sevenz_x86_bcj_create_1652_tests;

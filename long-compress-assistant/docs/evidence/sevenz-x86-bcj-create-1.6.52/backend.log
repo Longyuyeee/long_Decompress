@@ -1,0 +1,81 @@
+   Compiling long-compress-assistant v1.6.52 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+   Compiling sevenz-rust v0.6.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\sevenz-rust)
+warning: variant `BCJ_X86` should have an upper camel case name
+  --> vendor\sevenz-rust\src\encoders.rs:14:5
+   |
+14 |     BCJ_X86(crate::bcj::encoder::X86Encoder<CountingWriter<W>>),
+   |     ^^^^^^^ help: convert the identifier to upper camel case: `BcjX86`
+   |
+   = note: `#[warn(non_camel_case_types)]` (part of `#[warn(nonstandard_style)]`) on by default
+
+warning: associated function `new_x86` is never used
+  --> vendor\sevenz-rust\src\bcj\mod.rs:57:12
+   |
+44 | impl<R> SimpleReader<R> {
+   | ----------------------- associated function in this implementation
+...
+57 |     pub fn new_x86(inner: R) -> Self {
+   |            ^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 4 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+warning: unnecessary parentheses around `if` condition
+   --> src\services\compression_analysis.rs:286:21
+    |
+286 |     let format = if (format.starts_with("7z-lzma2-delta-") || format=="7z-lzma2-bcj-x86") {"7z"} else if (format.starts_with("7z-lzma-del...
+    |                     ^                                                                   ^
+    |
+    = note: `#[warn(unused_parens)]` (part of `#[warn(unused)]`) on by default
+help: remove these parentheses
+    |
+286 -     let format = if (format.starts_with("7z-lzma2-delta-") || format=="7z-lzma2-bcj-x86") {"7z"} else if (format.starts_with("7z-lzma-delta-") || format=="7z-lzma-bcj-x86") {"7z-lzma"} else {format};
+286 +     let format = if format.starts_with("7z-lzma2-delta-") || format=="7z-lzma2-bcj-x86"  {"7z"} else if (format.starts_with("7z-lzma-delta-") || format=="7z-lzma-bcj-x86") {"7z-lzma"} else {format};
+    |
+
+warning: unnecessary parentheses around `if` condition
+   --> src\services\compression_analysis.rs:286:106
+    |
+286 | ...z-lzma2-bcj-x86") {"7z"} else if (format.starts_with("7z-lzma-delta-") || format=="7z-lzma-bcj-x86") {"7z-lzma"} else {format};
+    |                                     ^                                                                 ^
+    |
+help: remove these parentheses
+    |
+286 -     let format = if (format.starts_with("7z-lzma2-delta-") || format=="7z-lzma2-bcj-x86") {"7z"} else if (format.starts_with("7z-lzma-delta-") || format=="7z-lzma-bcj-x86") {"7z-lzma"} else {format};
+286 +     let format = if (format.starts_with("7z-lzma2-delta-") || format=="7z-lzma2-bcj-x86") {"7z"} else if format.starts_with("7z-lzma-delta-") || format=="7z-lzma-bcj-x86"  {"7z-lzma"} else {format};
+    |
+
+warning: `long-compress-assistant` (lib test) generated 2 warnings (run `cargo fix --lib -p long-compress-assistant --tests` to apply 2 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4m 59s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-94c8b15891c96f3b.exe)
+
+running 5 tests
+test commands::history_execution_config::sevenz1652_history_creation_and_conversion_retain_method_reject_unknown ... ok
+test services::sevenz_x86_bcj_create_1652_tests::sevenz1652_create_bcj_password_solid_numeric_and_independent_readback ... ok
+test services::sevenz_x86_bcj_create_1652_tests::sevenz1652_defaults_inactive_filter_analysis_and_preflight_cancel_conflict ... ok
+test services::sevenz_x86_bcj_create_1652_tests::sevenz1652_workflow_database_roundtrip ... ok
+test services::task_template::tests::sevenz1652_template_method_survives_export_import ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1307 filtered out; finished in 25.13s
+
