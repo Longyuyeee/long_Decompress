@@ -248,3 +248,6 @@ pub mod seven_zip_method;
 
 #[cfg(test)]
 mod sevenz_compression_methods_1646_tests;
+
+#[cfg(test)]
+mod sevenz_deflate_create_1647_tests;

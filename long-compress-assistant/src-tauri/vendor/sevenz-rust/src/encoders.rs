@@ -15,6 +15,8 @@ pub enum Encoder<W: Write> {
     LZMA2(LZMA2Writer<W>),
     #[cfg(feature = "bzip2")]
     BZIP2(Bzip2Encoder<CountingWriter<W>>),
+    #[cfg(feature = "additional-codecs")]
+    DEFLATE(DeflateEncoder<CountingWriter<W>>),
     #[cfg(feature = "aes256")]
     AES(Aes256Sha256Encoder<W>),
 }
@@ -26,6 +28,8 @@ impl<W: Write> Write for Encoder<W> {
             Encoder::LZMA2(w) => w.write(buf),
             #[cfg(feature = "bzip2")]
             Encoder::BZIP2(w) => w.write(buf),
+            #[cfg(feature = "additional-codecs")]
+            Encoder::DEFLATE(w) => w.write(buf),
             #[cfg(feature = "aes256")]
             Encoder::AES(w) => w.write(buf),
         }
@@ -37,6 +41,8 @@ impl<W: Write> Write for Encoder<W> {
             Encoder::LZMA2(w) => w.flush(),
             #[cfg(feature = "bzip2")]
             Encoder::BZIP2(w) => w.flush(),
+            #[cfg(feature = "additional-codecs")]
+            Encoder::DEFLATE(w) => w.flush(),
             #[cfg(feature = "aes256")]
             Encoder::AES(w) => w.flush(),
         }
@@ -50,6 +56,18 @@ pub fn add_encoder<W: Write>(
     let method = method_config.method;
 
     match method.id() {
+        #[cfg(feature = "additional-codecs")]
+        SevenZMethod::ID_DEFLATE => {
+            let level = match method_config.options.as_ref() {
+                Some(MethodOptions::Num(level)) => (*level).clamp(1, 9),
+                None => 6,
+                _ => return Err(Error::other("Invalid Deflate encoder options")),
+            };
+            Ok(Encoder::DEFLATE(DeflateEncoder {
+                inner: flate2::write::DeflateEncoder::new(input, flate2::Compression::new(level)),
+                done: false,
+            }))
+        }
         #[cfg(feature = "bzip2")]
         SevenZMethod::ID_BZIP2 => {
             let level = match method_config.options.as_ref() {
@@ -107,6 +125,37 @@ impl<W: Write> Write for Bzip2Encoder<W> {
         if self.done { return Err(std::io::Error::new(std::io::ErrorKind::BrokenPipe,"Bzip2 coder already finished")); }
         self.inner.write(buf)
     }
+    fn flush(&mut self) -> std::io::Result<()> {
+        if self.done { self.inner.get_mut().flush() } else { self.inner.flush() }
+    }
+}
+
+/// A raw Deflate stream must reach BFINAL before ending the following AES
+/// coder. Return every terminal error to SevenZWriter, before Drop can run.
+#[cfg(feature = "additional-codecs")]
+pub struct DeflateEncoder<W: Write> {
+    inner: flate2::write::DeflateEncoder<W>,
+    done: bool,
+}
+
+#[cfg(feature = "additional-codecs")]
+impl<W: Write> Write for DeflateEncoder<W> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        if buf.is_empty() {
+            if !self.done {
+                self.inner.try_finish()?;
+                self.inner.get_mut().write(&[])?;
+                self.inner.get_mut().flush()?;
+                self.done = true;
+            }
+            return Ok(0);
+        }
+        if self.done {
+            return Err(std::io::Error::new(std::io::ErrorKind::BrokenPipe, "Deflate coder already finished"));
+        }
+        self.inner.write(buf)
+    }
+
     fn flush(&mut self) -> std::io::Result<()> {
         if self.done { self.inner.get_mut().flush() } else { self.inner.flush() }
     }
@@ -182,3 +231,7 @@ mod sevenz1646_tests {
   for fail in [1,2,3]{let state=Rc::new(RefCell::new(State::default()));let mut encoder=add_encoder(CountingWriter::new(Sink(state.clone())),&SevenZMethodConfiguration::new(SevenZMethod::BZIP2)).unwrap();encoder.write_all(b"data").unwrap();encoder.flush().unwrap();state.borrow_mut().fail=fail;assert!(encoder.write(&[]).is_err(),"failure {fail}");state.borrow_mut().fail=0;}
  }
 }
+
+#[cfg(all(test, feature = "additional-codecs"))]
+#[path = "deflate_encoder_1647_tests.rs"]
+mod deflate_encoder_1647_tests;

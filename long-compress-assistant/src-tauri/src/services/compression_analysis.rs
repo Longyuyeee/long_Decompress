@@ -183,9 +183,9 @@ fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usi
 }
 
 fn compressed_sample_size_with_cancel(sample: &[u8], format: &str, level: u32, cancelled: &AtomicBool) -> Result<usize> {
-    if matches!(format,"7z"|"7z-lzma"|"7z-bzip2") {
+    if matches!(format,"7z"|"7z-lzma"|"7z-bzip2"|"7z-deflate") {
         check_cancelled(cancelled)?;
-        let method=match format {"7z-lzma"=>super::seven_zip_method::SevenZipMethod::Lzma,"7z-bzip2"=>super::seven_zip_method::SevenZipMethod::Bzip2,_=>Default::default()};
+        let method=match format {"7z-lzma"=>super::seven_zip_method::SevenZipMethod::Lzma,"7z-bzip2"=>super::seven_zip_method::SevenZipMethod::Bzip2,"7z-deflate"=>super::seven_zip_method::SevenZipMethod::Deflate,_=>Default::default()};
         let size=super::seven_zip_method::sample_size(sample,method,level,cancelled)?;
         check_cancelled(cancelled)?;return Ok(size);
     }
