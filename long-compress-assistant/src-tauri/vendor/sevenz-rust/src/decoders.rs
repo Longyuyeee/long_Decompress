@@ -165,7 +165,7 @@ fn add_decoder_inner<I: Read>(input: I, uncompressed_len: usize, coder: &Coder, 
             Ok(Decoder::LZMA2(lz))
         }
         SevenZMethod::ID_BCJ_X86 => {
-            let de = SimpleReader::new_x86(input);
+            let de = SimpleReader::new_x86_at(input, crate::bcj::x86_start_position(&coder.properties)?);
             Ok(Decoder::BCJ(de))
         }
         SevenZMethod::ID_BCJ_ARM => {

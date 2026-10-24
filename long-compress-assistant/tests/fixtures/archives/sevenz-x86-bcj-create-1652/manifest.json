@@ -1,0 +1,11 @@
+{
+  "generator": "Python stdlib lzma/liblzma; BCJ + LZMA2 encoded then LZMA2 alone decoded",
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "seed": 1652,
+  "files": {
+    "filtered-0.bin": "03e5ee27bf89e8a65909812b5df4374cba4b71b7bcbc0bd6ad26724522a18e8f",
+    "filtered-2147483645.bin": "8dcd2956d38c22a353ab89e29342cb1c15d408d9119251276e35b2dec3c63e1f",
+    "filtered-4294967293.bin": "8dcd2956d38c22a353ab89e29342cb1c15d408d9119251276e35b2dec3c63e1f",
+    "input.bin": "221769a5d7646fbc92be1c161023bd38aefa9435fc0541dece4f738f6d85b46d"
+  }
+}

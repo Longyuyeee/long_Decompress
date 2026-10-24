@@ -4,7 +4,7 @@ impl BCJFilter {
     pub fn new_x86(start_pos: usize, encoder: bool) -> Self {
         Self {
             is_encoder: encoder,
-            pos: start_pos + 5,
+            pos: start_pos.wrapping_add(5),
             prev_mask: 0,
             filter: Self::x86_code,
         }
@@ -56,9 +56,9 @@ impl BCJFilter {
                 let mut dest: i32;
                 loop {
                     if self.is_encoder {
-                        dest = src + (self.pos + i) as i32;
+                        dest = src.wrapping_add(self.pos.wrapping_add(i) as i32);
                     } else {
-                        dest = src - (self.pos + i) as i32;
+                        dest = src.wrapping_sub(self.pos.wrapping_add(i) as i32);
                     }
 
                     if prev_mask == 0 {
@@ -92,7 +92,7 @@ impl BCJFilter {
         };
 
         self.prev_mask = prev_mask;
-        self.pos += i;
+        self.pos = self.pos.wrapping_add(i);
         i
     }
 }

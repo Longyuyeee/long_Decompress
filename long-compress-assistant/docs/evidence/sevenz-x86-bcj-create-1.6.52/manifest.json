@@ -1,0 +1,125 @@
+{
+  "applicationSha256": "85925cf2b33406dfb4daf86533792cd0907db8095e79c8b5f56ae4c7b737363c",
+  "files": {
+    "vendor.log": {
+      "size": 3557,
+      "sha256": "9b779838170a3efde0e4a41c79820670bf696763c445713c92b90f2207c41e2e"
+    },
+    "vendor-exit.json": {
+      "size": 75,
+      "sha256": "4a565941f9a34167e299f01cb051a80a2b9ab227e355a427ba25154333c9a3db"
+    },
+    "backend.log": {
+      "size": 4794,
+      "sha256": "1c43f77730c5949d28a53bc605442ceca5806699a4ac04ef50968a9b0e18dfac"
+    },
+    "backend-exit.json": {
+      "size": 75,
+      "sha256": "ce1cd2ca44129b8e1c299f11618ddc59e139566684e6f7a8e343b4773fdbe4f1"
+    },
+    "frontend-initial-parser-error.log": {
+      "size": 2516,
+      "sha256": "c578e198f08c8574b8558e07e24347fa8cfda258a647d742c22a37eedfb5b403"
+    },
+    "frontend-store.log": {
+      "size": 271,
+      "sha256": "2e247d02962a4f2f9526ab51eac69f7a4bfce9fc8cb15c51dabafb2f39d66b02"
+    },
+    "frontend-store-exit.json": {
+      "size": 75,
+      "sha256": "10d632f37d3958362673be440604870b76bcdfd9053ccd4bf6feb5bd8e3d8c84"
+    },
+    "frontend-build.log": {
+      "size": 6674,
+      "sha256": "ee53a1c02aeba11b35bf8d05e1a022f2f24cec49efa05c048145bca0503c907f"
+    },
+    "frontend-fullrow-build.log": {
+      "size": 6379,
+      "sha256": "5a733d8e15a4b0346247bf4f9c9410373925bb80087bff2727b67b60b83ef593"
+    },
+    "frontend-build-exit.json": {
+      "size": 119,
+      "sha256": "8085b2023564ca64b69bd471758796b9f7e060df8a22ab0f8c3e965007164c90"
+    },
+    "identity.log": {
+      "size": 564,
+      "sha256": "157567770a8a59e2840f2e6d5e20c9d58201fa7e2fe3515b79cceb26ba2877f6"
+    },
+    "shell.log": {
+      "size": 381,
+      "sha256": "b36b76b45d87799cae537637a41754fe5ec5ea3064f69fe4aae20888fc3f8ed1"
+    },
+    "native.log": {
+      "size": 2435,
+      "sha256": "923c962316ddebd49127e4f1b57945236250db260cf72124c5005932924bfe0b"
+    },
+    "native-exit.json": {
+      "size": 73,
+      "sha256": "d864e27954e21c694cb83c72c9c34b1752c13efec2ead09f3b0216e119c832aa"
+    },
+    "desktop.log": {
+      "size": 584,
+      "sha256": "e88ad7dafbbd1fed0a7a72f9d2d32d349807e93b8153f916c5a4942bf12b8d92"
+    },
+    "desktop-exit.json": {
+      "size": 73,
+      "sha256": "00ae08869121c61d578275f9aed18abbfa3cb76fda047d9579f42ff6fa30f47a"
+    },
+    "desktop.json": {
+      "size": 13174,
+      "sha256": "03b4e5001764ad86f986eeffb6092b0b8cb4964ec60f455ecc71b4ccf0ed8059"
+    },
+    "creation.json": {
+      "size": 11463,
+      "sha256": "a29533175a7b7aa20fcc144d43ff6b44b5fee3c1dc17bf932aa4e8426a0dc99b"
+    },
+    "source-original.json": {
+      "size": 201,
+      "sha256": "38336d16d89eb5b234df5a7bf8216ac72ed41306fefa4a26d451efc4acbc9933"
+    },
+    "screenshots-viewed.json": {
+      "size": 388,
+      "sha256": "e9232852a7a37e4ff4dd4055de4cb045f651bd98af6325efd1fbcb38efea689f"
+    },
+    "batch-narrow.png": {
+      "size": 211218,
+      "sha256": "e0b3d4b83c6f8c56c113c6385b71a73a9c587517da20476c57dcbb586af81099"
+    },
+    "collapsed-wide.png": {
+      "size": 382737,
+      "sha256": "34799325ad83d911fe04fd5c048efdcf9248c718bae563e7efde3e973a2a690e"
+    },
+    "conversion-narrow.png": {
+      "size": 128789,
+      "sha256": "6dc38b8d21ab1fa4859595792d984cf36994acf7328da6995da498c51905217e"
+    },
+    "inline-narrow.png": {
+      "size": 278785,
+      "sha256": "64274031309ab320175475ec76f2aa2291e0b7f95169cb0c4361d8c80a72d2bb"
+    },
+    "inline-wide.png": {
+      "size": 379086,
+      "sha256": "c5b804c7c2cac346f703768cb222aec98283e9b98d736c08db025de9d5e67221"
+    },
+    "frontend-e2e-build.log": {
+      "size": 5949,
+      "sha256": "5a8dccb2d69e36e447946e679cf1049b717a91d2251eb03280d8abcf3b41ac87"
+    },
+    "desktop.log.before-e2e-bundle": {
+      "size": 503,
+      "sha256": "a2aa1ffd0ccc07072731c575b8c5b05a316bfb3e9ca3d5d2e599dc228814e4ba"
+    },
+    "desktop-exit.json.before-e2e-bundle": {
+      "size": 73,
+      "sha256": "f39f6ab554a8b93c69e7d1d6a6c9d562e387a9be6b03f49e90a3361f4b890ea2"
+    },
+    "native.log.before-e2e-bundle": {
+      "size": 2521,
+      "sha256": "1741e895b8d128974abd073a20144566e536b16d30237126eef8d6d8f21c5083"
+    },
+    "native-exit.json.before-e2e-bundle": {
+      "size": 73,
+      "sha256": "eb097b23df5f4414e17d0407f5aab6b51f0fdc62744f18dca1bbca287d4b30d7"
+    }
+  }
+}

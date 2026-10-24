@@ -1,7 +1,7 @@
 # 文档导航与维护规则
 
-- **当前版本 v1.6.51**：[发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.51)、[中文说明](RELEASE_NOTES_1.6.51.md)、[7Z Delta 记录](SEVENZ_DELTA_CREATE_FREEZE_1.6.51.md)。已完成功能封板，身份/附件在本版 PR 接续。
-- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.51.md)已完成；[v1.6.52 7Z x86 BCJ 预处理](ARCHIVE_ROADMAP_1.6.52.md)仅规划，见[交接](DEVELOPMENT_HANDOFF.md)。
+- **当前版本 v1.6.52**：[发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.52)、[中文说明](RELEASE_NOTES_1.6.52.md)、[7Z x86 BCJ 记录](SEVENZ_X86_BCJ_CREATE_FREEZE_1.6.52.md)。已完成功能封板，身份/附件在本版 PR 接续。
+- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.52.md)已完成；[v1.6.53 ARM32 BCJ](ARCHIVE_ROADMAP_1.6.53.md)仅规划，见[交接](DEVELOPMENT_HANDOFF.md)。
 
 以下为历史阶段记录。
 
