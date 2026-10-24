@@ -1609,9 +1609,9 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
             || folder.coders.iter().any(|c|c.num_in_streams!=1 || c.num_out_streams!=1)
         {return Err(Error::unsupported("7Z 固实预览映射或方法无法确认，请先提取后打开"));}
         let coders:Vec<_>=folder.ordered_coder_iter().collect();
-        let codec=|id:&[u8]|id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2 || id==SevenZMethod::ID_PPMD;
+        let codec=|id:&[u8]|id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2 || id==SevenZMethod::ID_PPMD || id==SevenZMethod::ID_COPY;
         if coders.len()!=folder.coders.len() || !(coders.len()==1 && codec(coders[0].1.decompression_method_id()) || coders.len()==2 && coders[0].1.decompression_method_id()==SevenZMethod::ID_AES256SHA256 && codec(coders[1].1.decompression_method_id())) {
-            return Err(Error::unsupported("Shared prefix requires LZMA/LZMA2/PPMd, optionally preceded by AES"));
+            return Err(Error::unsupported("Shared prefix requires LZMA/LZMA2/PPMd/Copy, optionally preceded by AES"));
         }
         if offset.checked_add(max_bytes as u64).is_none_or(|n|n>max_decoded) {
             return Err(Error::unsupported("7Z 固实预览前置内容与开头合计超过 64 MiB，请先提取后打开"));
@@ -1620,6 +1620,10 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         let pack_index=*archive.stream_map.folder_first_pack_stream_index.get(self.folder_index).ok_or_else(||Error::other("Missing shared prefix pack mapping"))?;
         let packed=*archive.pack_sizes.get(pack_index).ok_or_else(||Error::other("Missing shared prefix pack size"))?;
         let start=32u64.checked_add(archive.pack_pos).and_then(|n|archive.stream_map.pack_stream_offsets.get(pack_index).and_then(|offset|n.checked_add(*offset))).ok_or_else(||Error::other("Shared prefix pack offset overflow"))?;
+        if coders.last().unwrap().1.decompression_method_id()==SevenZMethod::ID_COPY {
+            let expected=if coders.len()==2 {let plain=folder.get_unpack_size_at_index(coders[0].0);if plain!=total{return Err(Error::other("Copy prefix AES unpack size mismatch"));}plain.checked_add(15).map(|n|n/16*16)} else {Some(total)};
+            if expected!=Some(packed){return Err(Error::other("Copy prefix packed size mismatch"));}
+        }
         let unpacked=usize::try_from(total).map_err(|_|Error::unsupported("Shared prefix declared size exceeds platform range"))?;
         self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
         let packed_input=self.source.take(packed);
@@ -1667,14 +1671,18 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
             || archive.files.iter().enumerate().filter(|(i,e)|e.has_stream && archive.stream_map.file_folder_index.get(*i)==Some(&Some(self.folder_index))).count() != 1
         { return Err(Error::unsupported("Prefix requires one complete mapped non-solid stream")); }
         let coders:Vec<_>=folder.ordered_coder_iter().collect();
-        let codec=|id:&[u8]|id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2 || id==SevenZMethod::ID_PPMD;
+        let codec=|id:&[u8]|id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2 || id==SevenZMethod::ID_PPMD || id==SevenZMethod::ID_COPY;
         if coders.len()!=folder.coders.len() || !(coders.len()==1 && codec(coders[0].1.decompression_method_id()) || coders.len()==2 && coders[0].1.decompression_method_id()==SevenZMethod::ID_AES256SHA256 && codec(coders[1].1.decompression_method_id())) {
-            return Err(Error::unsupported("Prefix requires LZMA/LZMA2/PPMd, optionally preceded by AES"));
+            return Err(Error::unsupported("Prefix requires LZMA/LZMA2/PPMd/Copy, optionally preceded by AES"));
         }
         check()?;
         let pack_index = *archive.stream_map.folder_first_pack_stream_index.get(self.folder_index).ok_or_else(|| Error::other("Missing prefix pack mapping"))?;
         let size = *archive.pack_sizes.get(pack_index).ok_or_else(|| Error::other("Missing prefix pack size"))?;
         let start = 32u64.checked_add(archive.pack_pos).and_then(|n| archive.stream_map.pack_stream_offsets.get(pack_index).and_then(|offset|n.checked_add(*offset))).ok_or_else(|| Error::other("Prefix pack offset overflow"))?;
+        if coders.last().unwrap().1.decompression_method_id()==SevenZMethod::ID_COPY {
+            let expected=if coders.len()==2 {let plain=folder.get_unpack_size_at_index(coders[0].0);if plain!=entry.size{return Err(Error::other("Copy prefix AES unpack size mismatch"));}plain.checked_add(15).map(|n|n/16*16)} else {Some(entry.size)};
+            if expected!=Some(size){return Err(Error::other("Copy prefix packed size mismatch"));}
+        }
         let unpacked = usize::try_from(entry.size).map_err(|_|Error::unsupported("Prefix declared size exceeds platform range"))?;
         self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
         let packed=self.source.take(size);

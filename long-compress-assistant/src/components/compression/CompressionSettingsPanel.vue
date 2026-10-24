@@ -149,7 +149,7 @@ const effectiveOutputExtension = computed(() =>
 
 const presets = computed(() => appStore.compressionPresets)
 
-const applyPreset = (preset: { name: string; format: string; level: number; password?: string; sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd'; zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'; wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' }) => {
+const applyPreset = (preset: { name: string; format: string; level: number; password?: string; sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'; zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'; wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' }) => {
   compressionOptions.value.format = preset.format as any
   compressionOptions.value.level = preset.level
   compressionOptions.value.wimMethod = preset.wimMethod ?? 'store'
@@ -373,7 +373,7 @@ const closeVaultPasswordsAfterFocus = () => {
       </div>
 
       <!-- 压缩强度 (精致 Range) -->
-      <div class="flex flex-col gap-1.5 min-w-0">
+      <div v-if="!(compressionOptions.format === '7z' && compressionOptions.sevenZipMethod === 'copy')" data-testid="compression-level-control" class="flex flex-col gap-1.5 min-w-0">
         <div class="flex justify-between items-center px-1">
           <label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.level') }}</label>
           <span class="text-xs font-mono text-primary font-black">{{ ['wim','esd','swm'].includes(compressionOptions.format) ? (compressionOptions.format === 'esd' || compressionOptions.wimMethod === 'solid' ? 'LZMS · 固实归档' : compressionOptions.wimMethod === 'lzms' ? 'LZMS · 固定算法' : compressionOptions.wimMethod === 'lzx' ? 'LZX · 固定算法' : compressionOptions.wimMethod === 'xpress' ? 'XPRESS · 固定算法' : '仅存储 · 去重') : isLz4Format(compressionOptions.format) ? '快速模式' : `${(compressionOptions.format === '7z' || compressionOptions.format === 'zip' && ['bzip2', 'ppmd', 'lzma'].includes(compressionOptions.zipMethod || '')) ? Math.max(1, compressionOptions.level) : compressionOptions.level} / 9` }}</span>

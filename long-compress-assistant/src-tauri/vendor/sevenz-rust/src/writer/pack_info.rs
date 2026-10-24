@@ -35,6 +35,11 @@ impl PackInfo {
             let mut temp = Vec::with_capacity(self.len());
             write_bit_set(&mut temp, &crc_define_bits)?;
             header.write_all(&temp)?;
+            // The bitmap is followed by every digest marked as defined.
+            // Copy of an empty file can have CRC 0 alongside nonzero streams.
+            for crc in self.crcs.iter().copied().filter(|crc| *crc != 0) {
+                header.write_u32::<LittleEndian>(crc)?;
+            }
         }
 
         header.write_u8(K_END)?;

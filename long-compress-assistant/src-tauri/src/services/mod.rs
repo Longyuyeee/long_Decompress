@@ -254,3 +254,6 @@ mod sevenz_deflate_create_1647_tests;
 
 #[cfg(test)]
 mod sevenz_ppmd_create_1648_tests;
+
+#[cfg(test)]
+mod sevenz_copy_create_1649_tests;

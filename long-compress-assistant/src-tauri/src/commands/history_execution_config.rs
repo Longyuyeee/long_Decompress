@@ -471,3 +471,12 @@ fn sevenz1648_history_creation_and_conversion_retain_method_reject_unknown(){
   for (value,kind) in [(creation,"compression"),(converted,"conversion")]{let saved=sanitize(value.clone(),"compression","archive").unwrap();assert_eq!(if kind=="compression"{&saved["settings"]["sevenZipMethod"]}else{&saved["sevenZipMethod"]},method);let mut bad=value;if kind=="compression"{bad["settings"]["sevenZipMethod"]="bad".into()}else{bad["sevenZipMethod"]="bad".into()}assert!(sanitize(bad,"compression","archive").is_none());}
  }
 }
+
+#[cfg(test)]#[test]
+fn sevenz1649_history_creation_and_conversion_retain_method_reject_unknown(){
+ for method in ["copy"]{
+  let creation=serde_json::json!({"schemaVersion":1,"kind":"archive-compression","outputDirectory":"D:/out","passwordRequired":true,"settings":{"format":"7z","level":1,"filename":"","splitArchive":false,"splitSize":"1","keepStructure":true,"verifyAfter":true,"createSolidArchive":true,"sevenZipMethod":method}});
+  let converted=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","outputPath":"D:/out.7z","format":"7z","level":1,"splitSize":0,"encryptFilenames":false,"passwordRequired":false,"sevenZipMethod":method});
+  for (value,kind) in [(creation,"compression"),(converted,"conversion")]{let saved=sanitize(value.clone(),"compression","archive").unwrap();assert_eq!(if kind=="compression"{&saved["settings"]["sevenZipMethod"]}else{&saved["sevenZipMethod"]},method);let mut bad=value;if kind=="compression"{bad["settings"]["sevenZipMethod"]="bad".into()}else{bad["sevenZipMethod"]="bad".into()}assert!(sanitize(bad,"compression","archive").is_none());}
+ }
+}

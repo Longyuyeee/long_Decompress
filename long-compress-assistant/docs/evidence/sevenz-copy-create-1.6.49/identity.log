@@ -1,0 +1,6 @@
+Media dependency gate passed (6 locked dependencies; real=false).
+ZPAQ 7.15 adapter, sources, license and resource inclusion verified
+WIM wimlib 1.14.5 official Windows x64 (unmodified), corresponding source and license inclusion verified
+ALZ adapter, decoder, native framing and dependency notices verified
+EGG adapter, decoder, native framing and dependency notices verified
+Release identity verified: v1.6.49 (long_compress_shell_extension_1_6_49.dll)

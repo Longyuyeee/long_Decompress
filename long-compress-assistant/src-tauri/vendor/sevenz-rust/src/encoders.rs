@@ -11,6 +11,7 @@ use crate::{
 };
 
 pub enum Encoder<W: Write> {
+    COPY(CopyEncoder<CountingWriter<W>>),
     LZMA(LZMAWriter<W>),
     LZMA2(LZMA2Writer<W>),
     #[cfg(feature = "bzip2")]
@@ -26,6 +27,7 @@ pub enum Encoder<W: Write> {
 impl<W: Write> Write for Encoder<W> {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         match self {
+            Encoder::COPY(w) => w.write(buf),
             Encoder::LZMA(w) => w.write(buf),
             Encoder::LZMA2(w) => w.write(buf),
             #[cfg(feature = "bzip2")]
@@ -41,6 +43,7 @@ impl<W: Write> Write for Encoder<W> {
 
     fn flush(&mut self) -> std::io::Result<()> {
         match self {
+            Encoder::COPY(w) => w.flush(),
             Encoder::LZMA(w) => w.flush(),
             Encoder::LZMA2(w) => w.flush(),
             #[cfg(feature = "bzip2")]
@@ -62,6 +65,10 @@ pub fn add_encoder<W: Write>(
     let method = method_config.method;
 
     match method.id() {
+        SevenZMethod::ID_COPY => {
+            if method_config.options.is_some() { return Err(Error::other("Copy does not accept compression options")); }
+            Ok(Encoder::COPY(CopyEncoder { inner: input, state: CopyState::Active }))
+        }
         #[cfg(feature = "additional-codecs")]
         SevenZMethod::ID_PPMD => {
             let (order, memory) = ppmd_encoder_settings(method_config.options.as_ref())?;
@@ -115,6 +122,34 @@ pub fn add_encoder<W: Write>(
         _ => Err(Error::UnsupportedCompressionMethod(
             method.name().to_string(),
         )),
+    }
+}
+
+#[derive(PartialEq)]
+enum CopyState { Active, Finished, Failed }
+
+/// Copy still participates in coder termination: AES must pad only after
+/// all source bytes, and any downstream terminal failure remains a failure.
+pub struct CopyEncoder<W: Write> { inner: W, state: CopyState }
+impl<W: Write> Write for CopyEncoder<W> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        if self.state == CopyState::Failed || !buf.is_empty() && self.state == CopyState::Finished {
+            return Err(std::io::Error::new(std::io::ErrorKind::BrokenPipe, "Copy coder already finished or failed"));
+        }
+        if !buf.is_empty() { return self.inner.write(buf); }
+        if self.state == CopyState::Active {
+            self.state = CopyState::Failed;
+            self.inner.write(&[])?;
+            self.inner.flush()?;
+            self.state = CopyState::Finished;
+        }
+        Ok(0)
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        if self.state == CopyState::Failed {
+            return Err(std::io::Error::new(std::io::ErrorKind::BrokenPipe, "Copy coder failed to finish"));
+        }
+        self.inner.flush()
     }
 }
 
@@ -306,3 +341,7 @@ mod deflate_encoder_1647_tests;
 #[cfg(all(test, feature = "additional-codecs"))]
 #[path = "ppmd_encoder_1648_tests.rs"]
 mod ppmd_encoder_1648_tests;
+
+#[cfg(test)]
+#[path = "copy_encoder_1649_tests.rs"]
+mod copy_encoder_1649_tests;

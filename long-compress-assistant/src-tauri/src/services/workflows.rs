@@ -172,7 +172,7 @@ fn clean_plan(mut plan: Plan) -> Result<Plan> {
             }
         }
         if let Some(method)=settings.get("sevenZipMethod") {
-            ensure!(method.as_str().and_then(super::seven_zip_method::SevenZipMethod::from_setting).is_some(),"请选择支持的 7Z 压缩方法：LZMA2、LZMA、Bzip2、Deflate 或 PPMd");
+            ensure!(method.as_str().and_then(super::seven_zip_method::SevenZipMethod::from_setting).is_some(),"请选择支持的 7Z 压缩方法：LZMA2、LZMA、Bzip2、Deflate、PPMd 或仅归档（Copy）");
         }
         settings.insert("deleteAfter".into(), false.into());
         step.settings = serde_json::Value::Object(settings);

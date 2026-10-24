@@ -1,0 +1,24 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[sevenz-copy-1649] original inline edit automatic individual and batch modal in wide and small windows
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: 7Z 姝ゅ帇缂╂柟娉曠粍鍚堟殏涓嶆敮鎸佸唴閮ㄩ瑙堬紝璇峰厛鎻愬彇鍚庢墦寮€
+    at ipc (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-copy-create-1649-gate.mjs:18:435)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-copy-create-1649-gate.mjs:29:143
+    at async step (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-copy-create-1649-gate.mjs:12:105)
+    at async runSevenzCopy1649Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-copy-create-1649-gate.mjs:26:2)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:5075:5 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

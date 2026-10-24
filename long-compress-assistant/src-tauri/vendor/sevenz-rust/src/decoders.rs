@@ -89,9 +89,10 @@ pub fn add_decoder<I: Read>(
 // defaults remain unchanged.
 pub(crate) fn add_prefix_decoder<I: Read>(input: I, uncompressed_len: usize, coder: &Coder, max_mem_limit_kb: usize) -> Result<Decoder<I>, Error> {
     let id = coder.decompression_method_id();
-    if id != SevenZMethod::ID_LZMA && id != SevenZMethod::ID_LZMA2 && id != SevenZMethod::ID_PPMD {
-        return Err(Error::unsupported("Prefix requires LZMA/LZMA2/PPMd"));
+    if id != SevenZMethod::ID_LZMA && id != SevenZMethod::ID_LZMA2 && id != SevenZMethod::ID_PPMD && id != SevenZMethod::ID_COPY {
+        return Err(Error::unsupported("Prefix requires LZMA/LZMA2/PPMd/Copy"));
     }
+    if id==SevenZMethod::ID_COPY && !coder.properties.is_empty() {return Err(Error::unsupported("Copy prefix does not accept coder properties"));}
     if id==SevenZMethod::ID_PPMD {
         let p=&coder.properties;
         if p.len()!=5 || !(2..=64).contains(&p[0]) || !(2048..=64*1024*1024).contains(&u32::from_le_bytes(p[1..5].try_into().unwrap())) {

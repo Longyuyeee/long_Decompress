@@ -25,6 +25,8 @@ pub struct CompressionAnalysisResult {
     pub recommended_format: String,
     pub recommended_level: u32,
     pub recommended_solid: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub recommended_seven_zip_method: Option<String>,
     pub low_value_bytes: u64,
     pub low_value_file_count: usize,
     pub reasons: Vec<String>,
@@ -183,9 +185,9 @@ fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usi
 }
 
 fn compressed_sample_size_with_cancel(sample: &[u8], format: &str, level: u32, cancelled: &AtomicBool) -> Result<usize> {
-    if matches!(format,"7z"|"7z-lzma"|"7z-bzip2"|"7z-deflate"|"7z-ppmd") {
+    if matches!(format,"7z"|"7z-lzma"|"7z-bzip2"|"7z-deflate"|"7z-ppmd"|"7z-copy") {
         check_cancelled(cancelled)?;
-        let method=match format {"7z-lzma"=>super::seven_zip_method::SevenZipMethod::Lzma,"7z-bzip2"=>super::seven_zip_method::SevenZipMethod::Bzip2,"7z-deflate"=>super::seven_zip_method::SevenZipMethod::Deflate,"7z-ppmd"=>super::seven_zip_method::SevenZipMethod::Ppmd,_=>Default::default()};
+        let method=match format {"7z-lzma"=>super::seven_zip_method::SevenZipMethod::Lzma,"7z-bzip2"=>super::seven_zip_method::SevenZipMethod::Bzip2,"7z-deflate"=>super::seven_zip_method::SevenZipMethod::Deflate,"7z-ppmd"=>super::seven_zip_method::SevenZipMethod::Ppmd,"7z-copy"=>super::seven_zip_method::SevenZipMethod::Copy,_=>Default::default()};
         let size=super::seven_zip_method::sample_size(sample,method,level,cancelled)?;
         check_cancelled(cancelled)?;return Ok(size);
     }
@@ -260,10 +262,10 @@ fn duration_range(total_size: u64, format: &str, level: u32, file_count: usize) 
         "7z-bzip2" | "bz2" | "tar.bz2" => 35.0,
         "7z-ppmd" | "zip-ppmd" => 12.0,
         "zst" | "zstd" | "tar.zst" => 180.0,
-        "tar" => 350.0,
+        "tar" | "7z-copy" => 350.0,
         _ => 110.0,
     };
-    let level_factor = 1.0 + level.saturating_sub(1) as f64 * 0.16;
+    let level_factor = if format == "7z-copy" { 1.0 } else { 1.0 + level.saturating_sub(1) as f64 * 0.16 };
     let seconds = total_size as f64 / (1024.0 * 1024.0) / base_mib_per_second * level_factor
         + file_count as f64 * 0.0008;
     (
@@ -304,8 +306,13 @@ pub fn analyze_compression(
     } else {
         low_value_bytes as f64 / total_size as f64
     };
-    let adjusted_ratio =
-        (sample_ratio * (1.0 - low_value_share) + 0.98 * low_value_share).clamp(0.02, 1.08);
+    // Copy never shrinks the data. Extensions must not invent compression
+    // savings, nor alone trigger advice to change the user's 7Z method.
+    let adjusted_ratio = if format == "7z-copy" { sample_ratio.max(1.0) } else {
+        (sample_ratio * (1.0 - low_value_share) + 0.98 * low_value_share).clamp(0.02, 1.08)
+    };
+    let recommend_copy = matches!(format,"7z"|"7z-lzma"|"7z-bzip2"|"7z-deflate"|"7z-ppmd")
+        && sample.len() >= 4096 && sample_ratio >= 0.98;
     let overhead = 1024u64.saturating_add(file_count as u64 * 96);
     let estimated_size = ((total_size as f64 * adjusted_ratio) as u64).saturating_add(overhead);
     let confidence = if sample.len() >= 1024 * 1024 && sampled_files >= 8 {
@@ -316,7 +323,9 @@ pub fn analyze_compression(
         "low"
     };
     let (recommended_format, recommended_level, recommended_solid, mut reasons) =
-        if adjusted_ratio >= 0.9 {
+        if recommend_copy {
+            ("7z", level.min(9), false, vec!["本次内容样本继续压缩的收益不足 2%，可仅打包以减少编码时间".to_string()])
+        } else if adjusted_ratio >= 0.9 {
             (
                 "zip",
                 1,
@@ -360,6 +369,7 @@ pub fn analyze_compression(
         recommended_format: recommended_format.to_string(),
         recommended_level,
         recommended_solid,
+        recommended_seven_zip_method: recommend_copy.then(|| "copy".to_owned()),
         low_value_bytes,
         low_value_file_count,
         reasons,
@@ -370,6 +380,11 @@ pub fn analyze_compression(
 mod tests {
     use super::analyze_compression;
     use std::sync::atomic::AtomicBool;
+
+    #[test]
+    fn sevenz1649_copy_duration_ignores_retained_strength() {
+        assert_eq!(super::duration_range(4*1024*1024*1024,"7z-copy",0,3),super::duration_range(4*1024*1024*1024,"7z-copy",9,3));
+    }
 
     #[test]
     fn real_text_and_precompressed_samples_produce_explainable_different_advice() {

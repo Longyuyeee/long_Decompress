@@ -77,10 +77,10 @@ const stagedPatch = computed(() => {
   if (destination.value !== 'keep') patch.outputDirectory = destination.value === 'source' ? '' : outputDirectory.value.trim()
   if (props.mode === 'compression') {
     if (formats.some(option => option.value === format.value) && format.value !== 'keep') patch.format = format.value as BatchConfigPatch['format']
-    if ((format.value === 'keep' || format.value === '7z') && ['lzma2','lzma','bzip2','deflate','ppmd'].includes(sevenZipMethod.value)) patch.sevenZipMethod = sevenZipMethod.value as BatchConfigPatch['sevenZipMethod']
+    if ((format.value === 'keep' || format.value === '7z') && ['lzma2','lzma','bzip2','deflate','ppmd','copy'].includes(sevenZipMethod.value)) patch.sevenZipMethod = sevenZipMethod.value as BatchConfigPatch['sevenZipMethod']
     if ((format.value === 'keep' || format.value === 'zip') && ['lzma','ppmd','bzip2','zstd','deflate'].includes(zipMethod.value)) patch.zipMethod = zipMethod.value as BatchConfigPatch['zipMethod']
     if (wimMethod.value !== 'keep' && (format.value === 'keep' || ['wim','swm'].includes(format.value))) patch.wimMethod = wimMethod.value as 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
-    if (level.value !== 'keep' && !['wim','esd','swm'].includes(format.value)) patch.level = Number(level.value)
+    if (level.value !== 'keep' && !['wim','esd','swm'].includes(format.value) && !(format.value === '7z' && sevenZipMethod.value === 'copy')) patch.level = Number(level.value)
     if (recovery.value !== 'keep') patch.rarRecoveryPercent = Number(recovery.value)
     if (recoveryVolumes.value !== 'keep') patch.rarRecoveryVolumes = Number(recoveryVolumes.value)
     if (isZipPasswordEncoding(zipPasswordEncoding.value)) patch.zipPasswordEncoding = zipPasswordEncoding.value
@@ -129,7 +129,7 @@ function apply() {
         <label v-if="mode === 'compression'" class="min-w-0 space-y-1.5 text-xs text-muted">压缩格式 <HelpHint v-if="format === 'zipx'" label="ZIPX 分卷说明">ZIPX 使用 XZ，支持数字卷和 .zx01/…/.zipx 标准卷；卷型沿用各自设置。</HelpHint>
           <ThemedSelect v-model="format" :options="formats" aria-label="批量压缩格式" test-id="batch-format" floating />
         </label>
-        <label v-if="mode === 'compression'" class="min-w-0 space-y-1.5 text-xs text-muted">压缩等级
+        <label v-if="mode === 'compression' && !(format === '7z' && sevenZipMethod === 'copy')" class="min-w-0 space-y-1.5 text-xs text-muted">压缩等级
           <ThemedSelect v-model="level" :options="levels" aria-label="批量压缩等级" test-id="batch-level" :disabled="['wim','esd','swm'].includes(format)" floating />
         </label>
         <label v-else class="min-w-0 space-y-1.5 text-xs text-muted">文件放置方式
@@ -148,7 +148,7 @@ function apply() {
         <ThemedSelect v-model="wimMethod" :options="[keep,{value:'store',label:'仅存储 · 去重'},{value:'xpress',label:'XPRESS · 快速压缩'},{value:'lzx',label:'LZX · 体积优先'},{value:'lzms',label:'LZMS · 高压缩'},{value:'solid',label:'LZMS · 固实归档'}].filter(option => format !== 'swm' || ['keep','store','xpress','lzx'].includes(option.value))" test-id="batch-wim-method" floating />
         <span class="block leading-relaxed">仅修改适用的 WIM / SWM 任务，其余格式保持各自设置。</span>
       </label>
-      <label v-if="mode === 'compression' && (format === 'keep' || format === '7z')" class="block min-w-0 space-y-1.5 text-xs text-muted">7Z 压缩方法<HelpHint label="批量 7Z 方法说明">只修改所选 7Z 任务，其他格式保持各自设置。</HelpHint><ThemedSelect v-model="sevenZipMethod" :options="[keep,{value:'lzma2',label:'LZMA2 · 默认'},{value:'lzma',label:'LZMA'},{value:'bzip2',label:'Bzip2'},{value:'deflate',label:'Deflate'},{value:'ppmd',label:'PPMd'}]" test-id="batch-sevenz-method" floating /></label>
+      <label v-if="mode === 'compression' && (format === 'keep' || format === '7z')" class="block min-w-0 space-y-1.5 text-xs text-muted">7Z 压缩方法<HelpHint label="批量 7Z 方法说明">只修改所选 7Z 任务，其他格式保持各自设置。</HelpHint><ThemedSelect v-model="sevenZipMethod" :options="[keep,{value:'lzma2',label:'LZMA2 · 默认'},{value:'lzma',label:'LZMA'},{value:'bzip2',label:'Bzip2'},{value:'deflate',label:'Deflate'},{value:'ppmd',label:'PPMd'},{value:'copy',label:'仅归档（Copy）'}]" test-id="batch-sevenz-method" floating /></label>
       <label v-if="mode === 'compression' && (format === 'keep' || format === 'zip')" class="block min-w-0 space-y-1.5 text-xs text-muted">ZIP 压缩方法
         <ThemedSelect v-model="zipMethod" :options="[keep, { value: 'deflate', label: '兼容 ZIP · Deflate' }, { value: 'zstd', label: 'Zstandard' }, { value: 'bzip2', label: 'BZip2' }, { value: 'ppmd', label: 'PPMd · 文本归档' }, { value: 'lzma', label: 'LZMA' }]" test-id="batch-zip-method" floating />
         <span class="block leading-relaxed">只修改所选 ZIP 任务的方法；ZIPX 始终使用 XZ。</span>
