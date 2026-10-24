@@ -1605,12 +1605,15 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         if max_bytes==0 || max_bytes>1024*1024 || max_decoded>64*1024*1024 || files[position].1.size<=max_bytes as u64
             || files.len()!=folder.num_unpack_sub_streams || total!=folder.get_unpack_size()
             || files.iter().any(|(_,e)|e.is_directory || e.is_anti_item)
-            || !(1..=2).contains(&folder.coders.len()) || folder.packed_streams.len()!=1
+            || !(1..=3).contains(&folder.coders.len()) || folder.packed_streams.len()!=1
             || folder.coders.iter().any(|c|c.num_in_streams!=1 || c.num_out_streams!=1)
         {return Err(Error::unsupported("7Z 固实预览映射或方法无法确认，请先提取后打开"));}
         let coders:Vec<_>=folder.ordered_coder_iter().collect();
+        let encrypted=coders.first().is_some_and(|(_,c)|c.decompression_method_id()==SevenZMethod::ID_AES256SHA256);
+        let codec_position=usize::from(encrypted);
         let codec=|id:&[u8]|id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2 || id==SevenZMethod::ID_PPMD || id==SevenZMethod::ID_COPY;
-        if coders.len()!=folder.coders.len() || !(coders.len()==1 && codec(coders[0].1.decompression_method_id()) || coders.len()==2 && coders[0].1.decompression_method_id()==SevenZMethod::ID_AES256SHA256 && codec(coders[1].1.decompression_method_id())) {
+        let delta=coders.len()==codec_position+2 && matches!(coders[codec_position].1.decompression_method_id(),id if id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2) && coders.last().unwrap().1.decompression_method_id()==SevenZMethod::ID_DELTA && coders.last().unwrap().1.properties.len()==1;
+        if coders.len()!=folder.coders.len() || !(delta || coders.len()==codec_position+1 && codec(coders[codec_position].1.decompression_method_id())) {
             return Err(Error::unsupported("Shared prefix requires LZMA/LZMA2/PPMd/Copy, optionally preceded by AES"));
         }
         if offset.checked_add(max_bytes as u64).is_none_or(|n|n>max_decoded) {
@@ -1627,7 +1630,7 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         let unpacked=usize::try_from(total).map_err(|_|Error::unsupported("Shared prefix declared size exceeds platform range"))?;
         self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
         let packed_input=self.source.take(packed);
-        let stream:Box<dyn Read+'_>=if coders.len()==2 {
+        let stream:Box<dyn Read+'_>=if encrypted {
             #[cfg(feature="aes256")]
             {
                 let (index,coder)=coders[0];crate::preview::coder(coder,0)?;
@@ -1640,7 +1643,8 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
             #[cfg(not(feature="aes256"))]
             {return Err(Error::unsupported("AES is unavailable"));}
         } else {Box::new(packed_input)};
-        let mut decoder=crate::decoders::add_prefix_decoder(stream,unpacked,coders.last().unwrap().1,MAX_MEM_LIMIT_KB)?;
+        let decoder=crate::decoders::add_prefix_decoder(stream,unpacked,coders[codec_position].1,MAX_MEM_LIMIT_KB)?;
+        let mut decoder:Box<dyn Read+'_>=if delta {Box::new(crate::delta::DeltaReader::new(decoder,coders.last().unwrap().1.properties[0] as usize+1))}else{Box::new(decoder)};
         let mut bytes=Vec::with_capacity(max_bytes);let mut buffer=[0;32*1024];
         for (keep,mut remaining) in [(false,offset),(true,max_bytes as u64)] {
             while remaining>0 {
@@ -1666,13 +1670,16 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
             || !entry.has_stream || entry.is_directory || entry.is_anti_item
             || archive.stream_map.file_folder_index.get(selected) != Some(&Some(self.folder_index))
             || folder.num_unpack_sub_streams != 1 || folder.get_unpack_size() != entry.size
-            || !(1..=2).contains(&folder.coders.len()) || folder.packed_streams.len() != 1
+            || !(1..=3).contains(&folder.coders.len()) || folder.packed_streams.len() != 1
             || folder.coders.iter().any(|c|c.num_in_streams!=1 || c.num_out_streams!=1)
             || archive.files.iter().enumerate().filter(|(i,e)|e.has_stream && archive.stream_map.file_folder_index.get(*i)==Some(&Some(self.folder_index))).count() != 1
         { return Err(Error::unsupported("Prefix requires one complete mapped non-solid stream")); }
         let coders:Vec<_>=folder.ordered_coder_iter().collect();
+        let encrypted=coders.first().is_some_and(|(_,c)|c.decompression_method_id()==SevenZMethod::ID_AES256SHA256);
+        let codec_position=usize::from(encrypted);
         let codec=|id:&[u8]|id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2 || id==SevenZMethod::ID_PPMD || id==SevenZMethod::ID_COPY;
-        if coders.len()!=folder.coders.len() || !(coders.len()==1 && codec(coders[0].1.decompression_method_id()) || coders.len()==2 && coders[0].1.decompression_method_id()==SevenZMethod::ID_AES256SHA256 && codec(coders[1].1.decompression_method_id())) {
+        let delta=coders.len()==codec_position+2 && matches!(coders[codec_position].1.decompression_method_id(),id if id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2) && coders.last().unwrap().1.decompression_method_id()==SevenZMethod::ID_DELTA && coders.last().unwrap().1.properties.len()==1;
+        if coders.len()!=folder.coders.len() || !(delta || coders.len()==codec_position+1 && codec(coders[codec_position].1.decompression_method_id())) {
             return Err(Error::unsupported("Prefix requires LZMA/LZMA2/PPMd/Copy, optionally preceded by AES"));
         }
         check()?;
@@ -1686,7 +1693,7 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         let unpacked = usize::try_from(entry.size).map_err(|_|Error::unsupported("Prefix declared size exceeds platform range"))?;
         self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
         let packed=self.source.take(size);
-        let stream:Box<dyn Read+'_>=if coders.len()==2 {
+        let stream:Box<dyn Read+'_>=if encrypted {
             #[cfg(feature="aes256")]
             {
                 let (index,coder)=coders[0];
@@ -1698,7 +1705,8 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
             #[cfg(not(feature="aes256"))]
             {return Err(Error::unsupported("AES is unavailable"));}
         } else {Box::new(packed)};
-        let mut decoder = crate::decoders::add_prefix_decoder(stream, unpacked, coders.last().unwrap().1, MAX_MEM_LIMIT_KB)?;
+        let decoder = crate::decoders::add_prefix_decoder(stream, unpacked, coders[codec_position].1, MAX_MEM_LIMIT_KB)?;
+        let mut decoder:Box<dyn Read+'_>=if delta {Box::new(crate::delta::DeltaReader::new(decoder,coders.last().unwrap().1.properties[0] as usize+1))}else{Box::new(decoder)};
         let mut bytes = Vec::with_capacity(max_bytes);
         let mut buffer = [0u8;32*1024];
         while bytes.len() < max_bytes {

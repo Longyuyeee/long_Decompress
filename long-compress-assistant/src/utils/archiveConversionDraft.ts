@@ -5,7 +5,7 @@ import { supportsNativePassword, supportsArchiveSplit, supportsFilenameEncryptio
 
 export function defaultConversionSettings(): ConversionSettings {
   return { format: '7z', level: 6, outputDirectory: '', outputPath: '', sourcePassword: '', password: '',
-    splitMiB: 0, encryptFilenames: false, sevenZipMethod: 'lzma2', zipMethod: 'deflate', zipEncryption: 'aes256', zipPasswordEncoding: 'utf8', zipSplitMode: 'numeric' }
+    splitMiB: 0, encryptFilenames: false, sevenZipFilter: 'none', sevenZipDeltaDistance: 1, sevenZipMethod: 'lzma2', zipMethod: 'deflate', zipEncryption: 'aes256', zipPasswordEncoding: 'utf8', zipSplitMode: 'numeric' }
 }
 export function conversionOutputPath(source: string, settings: ConversionSettings, intent = 'convert'): string {
   if (settings.outputPath) return settings.outputPath
@@ -20,6 +20,7 @@ export function normalizeConversionSettings(settings: ConversionSettings, patch:
     if (patch.format === 'swm' && !next.splitMiB) next.splitMiB = 1024
   }
   if (next.format === 'esd') next.wimMethod = 'solid'
+  if (next.format !== '7z') { next.sevenZipFilter = settings.sevenZipFilter; next.sevenZipDeltaDistance = settings.sevenZipDeltaDistance }
   next.sevenZipMethod = next.format === '7z' ? next.sevenZipMethod ?? 'lzma2' : settings.sevenZipMethod ?? 'lzma2'
   next.zipMethod = next.format === 'zip' ? next.zipMethod ?? 'deflate' : settings.zipMethod ?? 'deflate'
   if (patch.format && next.outputPath.toLowerCase().endsWith(`.${settings.format}`)) {

@@ -95,6 +95,14 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
             let prefix=value.get("archivePrefix").and_then(Value::as_str).unwrap_or("");if prefix.len()>32768{return None}
             output.insert("operation".into(),operation.clone());output.insert("updateSources".into(),Value::Array(sources.clone()));output.insert("archivePrefix".into(),prefix.into());
         }
+        if let Some(filter)=value.get("sevenZipFilter") {
+            crate::services::seven_zip_method::SevenZipFilter::from_setting(filter.as_str()?)?;
+            output.insert("sevenZipFilter".into(),filter.clone());
+        }
+        if let Some(distance)=value.get("sevenZipDeltaDistance") {
+            if !(1..=256).contains(&distance.as_u64()?){return None}
+            output.insert("sevenZipDeltaDistance".into(),distance.clone());
+        }
         if let Some(method)=value.get("sevenZipMethod") {
             crate::services::seven_zip_method::SevenZipMethod::from_setting(method.as_str()?)?;
             output.insert("sevenZipMethod".into(),method.clone());
@@ -133,6 +141,14 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     if !settings_fields.is_empty() {
         let mut settings = project(value.get("settings")?, settings_fields)?;
         if kind == "archive-compression" {
+            if let Some(filter)=value.get("settings")?.get("sevenZipFilter") {
+                crate::services::seven_zip_method::SevenZipFilter::from_setting(filter.as_str()?)?;
+                settings.insert("sevenZipFilter".into(),filter.clone());
+            }
+            if let Some(distance)=value.get("settings")?.get("sevenZipDeltaDistance") {
+                if !(1..=256).contains(&distance.as_u64()?){return None}
+                settings.insert("sevenZipDeltaDistance".into(),distance.clone());
+            }
             if let Some(method)=value.get("settings")?.get("sevenZipMethod") {
                 crate::services::seven_zip_method::SevenZipMethod::from_setting(method.as_str()?)?;
                 settings.insert("sevenZipMethod".into(),method.clone());
@@ -487,5 +503,14 @@ fn zip1650_history_creation_and_conversion_retain_method_reject_unknown(){
   let creation=serde_json::json!({"schemaVersion":1,"kind":"archive-compression","outputDirectory":"D:/out","passwordRequired":true,"settings":{"format":"zip","level":1,"filename":"","splitArchive":false,"splitSize":"1","keepStructure":true,"verifyAfter":true,"createSolidArchive":true,"zipMethod":method}});
   let converted=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","outputPath":"D:/out.zip","format":"zip","level":1,"splitSize":0,"encryptFilenames":false,"passwordRequired":false,"zipMethod":method});
   for (value,kind) in [(creation,"compression"),(converted,"conversion")]{let saved=sanitize(value.clone(),"compression","archive").unwrap();assert_eq!(if kind=="compression"{&saved["settings"]["zipMethod"]}else{&saved["zipMethod"]},method);let mut bad=value;if kind=="compression"{bad["settings"]["zipMethod"]="bad".into()}else{bad["zipMethod"]="bad".into()}assert!(sanitize(bad,"compression","archive").is_none());}
+ }
+}
+
+#[cfg(test)]#[test]
+fn sevenz1651_history_creation_and_conversion_retain_method_reject_unknown(){
+ for method in ["lzma2"]{
+  let creation=serde_json::json!({"schemaVersion":1,"kind":"archive-compression","outputDirectory":"D:/out","passwordRequired":true,"settings":{"format":"7z","level":1,"filename":"","splitArchive":false,"splitSize":"1","keepStructure":true,"verifyAfter":true,"createSolidArchive":true,"sevenZipMethod":method,"sevenZipFilter":"delta","sevenZipDeltaDistance":256}});
+  let converted=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","outputPath":"D:/out.7z","format":"7z","level":1,"splitSize":0,"encryptFilenames":false,"passwordRequired":false,"sevenZipMethod":method,"sevenZipFilter":"delta","sevenZipDeltaDistance":256});
+  for (value,kind) in [(creation,"compression"),(converted,"conversion")]{let saved=sanitize(value.clone(),"compression","archive").unwrap();assert_eq!(if kind=="compression"{&saved["settings"]["sevenZipMethod"]}else{&saved["sevenZipMethod"]},method);assert_eq!(if kind=="compression"{&saved["settings"]["sevenZipFilter"]}else{&saved["sevenZipFilter"]},"delta");let mut bad=value;if kind=="compression"{bad["settings"]["sevenZipMethod"]="bad".into()}else{bad["sevenZipMethod"]="bad".into()}assert!(sanitize(bad,"compression","archive").is_none());}
  }
 }

@@ -2,6 +2,22 @@
 
 Source: crates.io sevenz-rust 0.6.1 (Apache-2.0; LICENSE preserved).
 
+## v1.6.51 optional Delta creation and preview
+
+Adds a streaming Delta encoder with distances 1..256, fixed 8 KiB scratch space,
+history across writes/solid entries, and explicit one-time downstream end signaling.
+Write/active-flush/termination failures remain failed; an ended LZMA/LZMA2 coder
+is not flushed again. Property byte is distance minus one. The existing Delta
+decoder now widens before adding one, so property 255 correctly means 256.
+
+Bounded LZMA/LZMA2 prefix readers additionally accept the strict linear optional
+AES -> codec -> Delta decode chain, with exactly one Delta property byte. Delta
+keeps history while dropping solid predecessors. Original decoded/input limits,
+dictionary caps, partial-AES distinction and full-entry CRC/AES checks remain.
+Other filters are not added to the selected-entry allowlist. Native creation
+and independent complete readback cover LZMA2/LZMA, distances 1/4/256, password,
+solid/non-solid, empty/CRC-zero entries and complete numeric volumes.
+
 ## v1.5.7 additional read codecs
 
 The opt-in `additional-codecs` feature registers 7z PPMdH and uses the existing

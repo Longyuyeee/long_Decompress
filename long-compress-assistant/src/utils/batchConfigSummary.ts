@@ -6,6 +6,8 @@ export function batchConfigSummary(patch: BatchConfigPatch | ConversionPatch): s
   const rows: string[] = []
   if (patch.format !== undefined) rows.push(`格式：${patch.format.toUpperCase()}`)
   if (patch.level !== undefined) rows.push(`压缩强度：${patch.level}`)
+  if(patch.sevenZipFilter !== undefined) rows.push(`7Z 预处理：${patch.sevenZipFilter === 'delta' ? 'Delta' : '关闭'}`)
+  if(patch.sevenZipDeltaDistance !== undefined) rows.push(`Delta 距离：${patch.sevenZipDeltaDistance}`)
   if (patch.sevenZipMethod !== undefined) rows.push(`7Z 方法：${patch.sevenZipMethod === 'bzip2' ? 'Bzip2' : patch.sevenZipMethod.toUpperCase()}`)
   if (patch.zipMethod !== undefined) rows.push(`ZIP 方法：${({store:'仅存储（Store）',deflate:'Deflate',zstd:'Zstandard',bzip2:'BZip2',ppmd:'PPMd',lzma:'LZMA'})[patch.zipMethod]}`)
   if (patch.wimMethod !== undefined) rows.push(`WIM/SWM 方法：${patch.wimMethod === 'store' ? '仅存储' : patch.wimMethod === 'solid' ? 'LZMS 固实' : patch.wimMethod.toUpperCase()}`)

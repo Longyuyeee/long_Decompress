@@ -1,0 +1,48 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+ElementClickInterceptedError: element click intercepted: Element <button data-v-85851b06="" aria-label="鍏抽棴鎴愬姛鎻愮ず" class="pointer-events-auto absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-content hover:bg-input transition-colors">...</button> is not clickable at point (707, 57). Other element would receive the click: <button data-v-9501aeb4="" aria-label="Close dialog" class="absolute right-6 top-6 z-10 rounded-full p-2 hover:bg-input transition-all">...</button>
+  (Session info: MicrosoftEdge=155.0.4283.62)
+    at Object.throwDecodedError (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\error.js:523:15)
+    at parseHttpResponse (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\http.js:527:13)
+    at Executor.execute (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\http.js:459:28)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async WebDriver.execute (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:745:17)
+    at async click (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-delta-create-1651-gate.mjs:15:135)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-delta-create-1651-gate.mjs:24:790
+    at async step (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-delta-create-1651-gate.mjs:12:140)
+    at async runSevenzDelta1651Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-delta-create-1651-gate.mjs:20:2)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:5077:5 {
+  remoteStacktrace: '\tmsedgedriver!GetHandleVerifier [0x7ff792b982b5+4f25]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff792ae7e74]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff792f26e0f+393a7f]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7928c5b42]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7928c426f]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7928c2355]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7928c1937]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7928b694f]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7928e0c5a]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7928b60cd]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7928b5fca]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7928b60cd]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7928fdef8]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7928b590c]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7928b4b8d]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7928b5733]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff7929f3121]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff792a03108]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff792c40f0a+adb7a]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff792c47571+b41e1]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff792af361c]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff792aee134]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff792aee25a]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff792adfbe8]\n' +
+    '\tKERNEL32!BaseThreadInitThunk [0x7ffc277ddda7+17]\n' +
+    '\tntdll!RtlUserThreadStart [0x7ffc289fee4c+2c]\n'
+}
+
+Node.js v24.14.0

@@ -1,0 +1,42 @@
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.65s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-c01a7c7694e4891b.exe)
+
+running 1 test
+
+thread 'services::sevenz_delta_create_1651_tests::sevenz1651_defaults_inactive_filter_analysis_and_preflight_cancel_conflict' (26760) panicked at src\services\sevenz_delta_create_1651_tests.rs:52:92:
+called `Result::unwrap()` on an `Err` value: Error("missing field `level`", line: 0, column: 0)
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::sevenz_delta_create_1651_tests::sevenz1651_defaults_inactive_filter_analysis_and_preflight_cancel_conflict ... FAILED
+
+failures:
+
+failures:
+    services::sevenz_delta_create_1651_tests::sevenz1651_defaults_inactive_filter_analysis_and_preflight_cancel_conflict
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 1306 filtered out; finished in 0.00s
+
+error: test failed, to rerun pass `--lib`

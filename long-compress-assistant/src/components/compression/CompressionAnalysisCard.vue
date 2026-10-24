@@ -25,7 +25,7 @@ const storeAdvice = computed(() => props.modelValue.format === 'zip' && !isStore
 const packingAdvice = computed(() => copyAdvice.value || storeAdvice.value)
 const stale = computed(() => state.value?.status === 'completed' && (
   state.value.format !== props.modelValue.format || state.value.level !== props.modelValue.level ||
-  (props.modelValue.format === '7z' && (state.value.sevenZipMethod ?? 'lzma2') !== (props.modelValue.sevenZipMethod ?? 'lzma2')) ||
+  (props.modelValue.format === '7z' && ((state.value.sevenZipMethod ?? 'lzma2') !== (props.modelValue.sevenZipMethod ?? 'lzma2') || (state.value.sevenZipFilter ?? 'none') !== (props.modelValue.sevenZipFilter ?? 'none') || (state.value.sevenZipDeltaDistance ?? 1) !== (props.modelValue.sevenZipDeltaDistance ?? 1))) ||
   (props.modelValue.format === 'zip' && (state.value.zipMethod ?? 'deflate') !== (props.modelValue.zipMethod ?? 'deflate'))
 ))
 
@@ -46,7 +46,7 @@ const analyze = async () => {
   const analysisFormat = compressionAnalysisFormat(settings)
   const analysisId = `analysis-${Date.now()}-${Math.random().toString(36).slice(2)}`
   store.setAnalysisState(props.jobId, {
-    status: 'running', analysisId, format: settings.format, level: settings.level, sevenZipMethod: settings.sevenZipMethod, zipMethod: settings.zipMethod,
+    status: 'running', analysisId, format: settings.format, level: settings.level, sevenZipFilter: settings.sevenZipFilter, sevenZipDeltaDistance: settings.sevenZipDeltaDistance, sevenZipMethod: settings.sevenZipMethod, zipMethod: settings.zipMethod,
   })
   try {
     const analysis = await commands.analyzeCompressionSources(
@@ -54,14 +54,14 @@ const analyze = async () => {
     )
     if (store.compressionAnalysis[props.jobId]?.analysisId !== analysisId) return
     store.setAnalysisState(props.jobId, {
-      status: 'completed', analysisId, format: settings.format, sevenZipMethod: settings.sevenZipMethod, zipMethod: settings.zipMethod,
+      status: 'completed', analysisId, format: settings.format, sevenZipFilter: settings.sevenZipFilter, sevenZipDeltaDistance: settings.sevenZipDeltaDistance, sevenZipMethod: settings.sevenZipMethod, zipMethod: settings.zipMethod,
       level: settings.level, result: analysis,
     })
   } catch (error) {
     if (store.compressionAnalysis[props.jobId]?.analysisId !== analysisId) return
     if (store.compressionAnalysis[props.jobId]?.status === 'cancelled') return
     store.setAnalysisState(props.jobId, {
-      status: 'failed', analysisId, format: settings.format, sevenZipMethod: settings.sevenZipMethod, zipMethod: settings.zipMethod,
+      status: 'failed', analysisId, format: settings.format, sevenZipFilter: settings.sevenZipFilter, sevenZipDeltaDistance: settings.sevenZipDeltaDistance, sevenZipMethod: settings.sevenZipMethod, zipMethod: settings.zipMethod,
       level: settings.level, error: extractErrorMessage(error),
     })
   }

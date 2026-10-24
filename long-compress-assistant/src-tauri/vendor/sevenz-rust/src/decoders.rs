@@ -188,7 +188,7 @@ fn add_decoder_inner<I: Read>(input: I, uncompressed_len: usize, coder: &Coder, 
             let d = if coder.properties.is_empty() {
                 1
             } else {
-                coder.properties[0].wrapping_add(1)
+                coder.properties[0] as usize + 1
             };
             let de = DeltaReader::new(input, d as usize);
             Ok(Decoder::Delta(de))

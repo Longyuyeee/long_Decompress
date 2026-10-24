@@ -1,0 +1,332 @@
+{
+  "version": "1.6.51",
+  "applicationSha256": "3fd2a17455083bcc0ca6972101e61ff5e11be74a82646b5ec12c01e4ed43db58",
+  "checks": [
+    {
+      "name": "inline collapsed advanced settings retain method inheritance and batch modal in wide and small windows",
+      "applicationSha256": "3fd2a17455083bcc0ca6972101e61ff5e11be74a82646b5ec12c01e4ed43db58",
+      "inlinePreserved": true,
+      "batchModalPreserved": true,
+      "defaultNonePreserved": true,
+      "inactiveMethodRetainsDistance": true,
+      "analysisInvalidatedOnDistanceChange": true,
+      "checkpoint": "All preceding assertions passed; helper intercepted closing background toast before clicking save on unchanged global settings",
+      "resumedAfterToastOcclusion": true
+    },
+    {
+      "name": "UI Delta creation history previews extraction and target conversion preserve selected chain",
+      "applicationSha256": "3fd2a17455083bcc0ca6972101e61ff5e11be74a82646b5ec12c01e4ed43db58",
+      "creationFilter": "delta",
+      "distance": 4,
+      "historyPreserved": true,
+      "textAndImagePreview": true,
+      "extraction": true,
+      "zipToLzmaDelta256PasswordSolidNumeric": true
+    },
+    {
+      "name": "conversion inline and multiselect keep chosen target Delta and distance",
+      "applicationSha256": "3fd2a17455083bcc0ca6972101e61ff5e11be74a82646b5ec12c01e4ed43db58",
+      "singleSelectionRetained": true,
+      "batchSelectionRetained": true,
+      "actualConversionHistory": true,
+      "targetDistance": 16
+    }
+  ],
+  "layouts": [
+    {
+      "name": "collapsed-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 275,
+          "y": 202.0703125
+        },
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 653,
+          "y": 202.0703125
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "inline-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 562.5703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 202.5703125,
+          "width": 378,
+          "x": 275,
+          "y": 202.5703125
+        },
+        {
+          "bottom": 562.5703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 202.5703125,
+          "width": 378,
+          "x": 653,
+          "y": 202.5703125
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "inline-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 476.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 158.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 158.5703125
+        },
+        {
+          "bottom": 476.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 158.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 158.5703125
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "batch-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 368.5703125
+        },
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 368.5703125
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "conversion-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 717.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 399.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 399.5703125
+        },
+        {
+          "bottom": 717.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 399.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 399.5703125
+        }
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d",
+  "inlineConfigurationPassed": {
+    "inlinePreserved": true,
+    "batchModalPreserved": true,
+    "defaultNonePreserved": true,
+    "inactiveMethodRetainsDistance": true,
+    "analysisInvalidatedOnDistanceChange": true,
+    "checkpoint": "All preceding assertions passed; helper intercepted closing background toast before clicking save on unchanged global settings",
+    "applicationSha256": "3fd2a17455083bcc0ca6972101e61ff5e11be74a82646b5ec12c01e4ed43db58"
+  },
+  "created": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\created\\source.7z",
+  "zip": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\intermediate.zip",
+  "converted": {
+    "files": [
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.001"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.002"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.003"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.004"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.005"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.006"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.007"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.008"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.009"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.010"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.011"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.012"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.013"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.014"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.015"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.016"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.017"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.018"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.019"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.020"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.021"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.022"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.023"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.024"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.025"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.026"
+      },
+      {
+        "bytes": 5517,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.027"
+      }
+    ],
+    "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-delta-create-1651\\a8d24191-cdfd-47a3-8545-e956f9b95b5d\\converted.7z.001",
+    "split": true,
+    "totalBytes": 218509
+  },
+  "passed": true
+}

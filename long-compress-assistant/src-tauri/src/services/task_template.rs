@@ -96,6 +96,10 @@ pub struct TemplateCompression {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub seven_zip_method: Option<super::seven_zip_method::SevenZipMethod>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub seven_zip_filter: Option<super::seven_zip_method::SevenZipFilter>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub seven_zip_delta_distance: Option<u32>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zip_encryption: Option<crate::services::zip_password::ZipEncryption>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub zip_split_mode: Option<crate::services::standard_zip_writer::ZipSplitMode>,
@@ -237,6 +241,8 @@ pub fn template_from_profile(profile: &CompressionProfile) -> TaskTemplate {
             filename_template: profile.config.filename_template.clone(),
         },
         compression: TemplateCompression {
+            seven_zip_filter: profile.config.extra_params.get("seven_zip_filter").and_then(|s|super::seven_zip_method::SevenZipFilter::from_setting(s)),
+            seven_zip_delta_distance: profile.config.extra_params.get("seven_zip_delta_distance").and_then(|s|s.parse().ok()),
             seven_zip_method: profile.config.extra_params.get("seven_zip_method").and_then(|value|super::seven_zip_method::SevenZipMethod::from_setting(value)),
             wim_method: profile.config.extra_params.get("wim_method").map(|method| match method.as_str() { "solid" => super::wim_writer::WimMethod::Solid, "lzms" => super::wim_writer::WimMethod::Lzms, "lzx" => super::wim_writer::WimMethod::Lzx, "xpress" => super::wim_writer::WimMethod::Xpress, _ => super::wim_writer::WimMethod::Store }),
             zip_method: profile.config.extra_params.get("zip_method").map(|value|
@@ -344,6 +350,7 @@ fn validate_template(template: &TaskTemplate) -> Result<Vec<String>> {
     let capability = find_compression_format_capability(&template.compression.format)
         .filter(|capability| capability.can_compress)
         .ok_or_else(|| anyhow::anyhow!("模板使用了不支持创建的压缩格式"))?;
+    anyhow::ensure!(template.compression.seven_zip_delta_distance.is_none_or(|n|(1..=256).contains(&n)),"Delta 距离请输入 1～256 的整数");
     if template.compression.level > 9 {
         anyhow::bail!("压缩等级必须在 0 到 9 之间");
     }
@@ -438,6 +445,8 @@ pub fn export_profile_template(profile: &CompressionProfile, path: &Path) -> Res
     if let Some(value)=profile.config.extra_params.get("seven_zip_method") {
         anyhow::ensure!(super::seven_zip_method::SevenZipMethod::from_setting(value).is_some(),"请选择支持的 7Z 压缩方法：LZMA2、LZMA、Bzip2、Deflate、PPMd 或仅归档（Copy）");
     }
+    if let Some(s)=profile.config.extra_params.get("seven_zip_filter"){anyhow::ensure!(super::seven_zip_method::SevenZipFilter::from_setting(s).is_some(),"7Z 预处理请选择无或 Delta");}
+    if let Some(s)=profile.config.extra_params.get("seven_zip_delta_distance"){anyhow::ensure!(s.parse::<u32>().is_ok_and(|n|(1..=256).contains(&n)),"Delta 距离请输入 1～256 的整数");}
     let template = template_from_profile(profile);
     validate_template(&template)?;
     let json = serde_json::to_vec_pretty(&template)?;
@@ -856,6 +865,8 @@ pub fn import_template_profile(path: &Path, expected_sha256: &str) -> Result<Com
               if let Some(method) = template.compression.wim_method {
                   params.insert("wim_method".into(), match method { super::wim_writer::WimMethod::Solid => "solid", super::wim_writer::WimMethod::Lzms => "lzms", super::wim_writer::WimMethod::Lzx => "lzx", super::wim_writer::WimMethod::Xpress => "xpress", super::wim_writer::WimMethod::Store => "store" }.into());
               }
+              if let Some(filter)=template.compression.seven_zip_filter {params.insert("seven_zip_filter".into(),filter.as_str().into());}
+              if let Some(distance)=template.compression.seven_zip_delta_distance {params.insert("seven_zip_delta_distance".into(),distance.to_string());}
               if let Some(method)=template.compression.seven_zip_method {params.insert("seven_zip_method".into(),method.as_str().into());}
               if let Some(method) = template.compression.zip_method {
                   params.insert("zip_method".into(), match method { crate::services::zip_method::ZipMethod::Store => "store", crate::services::zip_method::ZipMethod::Lzma => "lzma", crate::services::zip_method::ZipMethod::Ppmd => "ppmd", crate::services::zip_method::ZipMethod::Bzip2 => "bzip2", crate::services::zip_method::ZipMethod::Zstd => "zstd", crate::services::zip_method::ZipMethod::Deflate => "deflate" }.into());
@@ -1054,6 +1065,14 @@ mod tests {
         original.config.extra_params.insert("zip_method".into(),"store".into());
         export_profile_template(&original,&path).unwrap();let preview=preview_template_file(&path).unwrap();assert_eq!(preview.template.compression.zip_method,Some(super::super::zip_method::ZipMethod::Store));
         let imported=import_template_profile(&path,&preview.content_sha256).unwrap();assert_eq!(imported.config.extra_params["zip_method"],"store");
+    }
+    #[test]
+    fn sevenz1651_template_method_survives_export_import() {
+        let temp=tempfile::tempdir().unwrap();let path=temp.path().join("store.longtask.json");
+        let mut original=profile();original.config.format="7z".into();original.config.password=None;original.config.create_solid_archive=false;original.config.encrypt_filenames=false;
+        original.config.extra_params.insert("seven_zip_filter".into(),"delta".into());original.config.extra_params.insert("seven_zip_delta_distance".into(),"256".into());
+        export_profile_template(&original,&path).unwrap();let preview=preview_template_file(&path).unwrap();assert_eq!(preview.template.compression.seven_zip_delta_distance,Some(256));
+        let imported=import_template_profile(&path,&preview.content_sha256).unwrap();assert_eq!(imported.config.extra_params["seven_zip_filter"],"delta");assert_eq!(imported.config.extra_params["seven_zip_delta_distance"],"256");
     }
 
 
