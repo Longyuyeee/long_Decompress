@@ -17,6 +17,8 @@ pub enum Encoder<W: Write> {
     BZIP2(Bzip2Encoder<CountingWriter<W>>),
     #[cfg(feature = "additional-codecs")]
     DEFLATE(DeflateEncoder<CountingWriter<W>>),
+    #[cfg(feature = "additional-codecs")]
+    PPMD(PpmdEncoder<CountingWriter<W>>),
     #[cfg(feature = "aes256")]
     AES(Aes256Sha256Encoder<W>),
 }
@@ -30,6 +32,8 @@ impl<W: Write> Write for Encoder<W> {
             Encoder::BZIP2(w) => w.write(buf),
             #[cfg(feature = "additional-codecs")]
             Encoder::DEFLATE(w) => w.write(buf),
+            #[cfg(feature = "additional-codecs")]
+            Encoder::PPMD(w) => w.write(buf),
             #[cfg(feature = "aes256")]
             Encoder::AES(w) => w.write(buf),
         }
@@ -43,6 +47,8 @@ impl<W: Write> Write for Encoder<W> {
             Encoder::BZIP2(w) => w.flush(),
             #[cfg(feature = "additional-codecs")]
             Encoder::DEFLATE(w) => w.flush(),
+            #[cfg(feature = "additional-codecs")]
+            Encoder::PPMD(w) => w.flush(),
             #[cfg(feature = "aes256")]
             Encoder::AES(w) => w.flush(),
         }
@@ -56,6 +62,13 @@ pub fn add_encoder<W: Write>(
     let method = method_config.method;
 
     match method.id() {
+        #[cfg(feature = "additional-codecs")]
+        SevenZMethod::ID_PPMD => {
+            let (order, memory) = ppmd_encoder_settings(method_config.options.as_ref())?;
+            let inner = ppmd_rust::Ppmd7Encoder::new(input, order, memory)
+                .map_err(|e| Error::other(format!("PPMd encoder: {e}")))?;
+            Ok(Encoder::PPMD(PpmdEncoder { active: Some(inner), finished: None }))
+        }
         #[cfg(feature = "additional-codecs")]
         SevenZMethod::ID_DEFLATE => {
             let level = match method_config.options.as_ref() {
@@ -161,12 +174,66 @@ impl<W: Write> Write for DeflateEncoder<W> {
     }
 }
 
+#[cfg(feature = "additional-codecs")]
+fn ppmd_encoder_settings(options: Option<&MethodOptions>) -> Result<(u32, u32), Error> {
+    let level = match options {
+        Some(MethodOptions::Num(level)) => (*level).clamp(1, 9),
+        None => 6,
+        _ => return Err(Error::other("Invalid PPMd encoder options")),
+    };
+    let (order, mib) = [(2,4),(3,4),(4,8),(5,8),(6,16),(7,16),(8,32),(10,32),(12,64)][level as usize - 1];
+    Ok((order, mib * 1024 * 1024))
+}
+
+/// Ppmd7Encoder::flush finalizes its range coder. Only the terminal empty
+/// write may do that; ordinary flush must allow further source bytes.
+#[cfg(feature = "additional-codecs")]
+pub struct PpmdEncoder<W: Write> {
+    active: Option<ppmd_rust::Ppmd7Encoder<W>>,
+    finished: Option<W>,
+}
+
+#[cfg(feature = "additional-codecs")]
+impl<W: Write> Write for PpmdEncoder<W> {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        if !buf.is_empty() {
+            return match &mut self.active {
+                Some(encoder) => encoder.write(buf),
+                None => Err(std::io::Error::new(std::io::ErrorKind::BrokenPipe, "PPMd coder already finished or failed")),
+            };
+        }
+        if let Some(encoder) = self.active.take() {
+            // 7z supplies the unpack size. Do not add a ZIP/PPMd8 end marker.
+            let mut output = encoder.finish(false)?;
+            output.write(&[])?;
+            output.flush()?;
+            self.finished = Some(output);
+        } else if self.finished.is_none() {
+            return Err(std::io::Error::new(std::io::ErrorKind::BrokenPipe, "PPMd coder failed to finish"));
+        }
+        Ok(0)
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        if let Some(encoder) = &mut self.active { return encoder.get_mut().flush(); }
+        if let Some(output) = &mut self.finished { return output.flush(); }
+        Err(std::io::Error::new(std::io::ErrorKind::BrokenPipe, "PPMd coder failed to finish"))
+    }
+}
+
 pub(crate) fn get_options_as_properties<'a>(
     method: SevenZMethod,
     options: Option<&MethodOptions>,
     out: &'a mut [u8],
 ) -> &'a [u8] {
     match method.id() {
+        #[cfg(feature = "additional-codecs")]
+        SevenZMethod::ID_PPMD => {
+            let Ok((order, memory)) = ppmd_encoder_settings(options) else { return &[]; };
+            out[0] = order as u8;
+            out[1..5].copy_from_slice(&memory.to_le_bytes());
+            &out[..5]
+        }
         SevenZMethod::ID_LZMA2 => {
             let dict_size = options
                 .map(|o| o.get_lzma2_dict_size())
@@ -235,3 +302,7 @@ mod sevenz1646_tests {
 #[cfg(all(test, feature = "additional-codecs"))]
 #[path = "deflate_encoder_1647_tests.rs"]
 mod deflate_encoder_1647_tests;
+
+#[cfg(all(test, feature = "additional-codecs"))]
+#[path = "ppmd_encoder_1648_tests.rs"]
+mod ppmd_encoder_1648_tests;

@@ -1,7 +1,7 @@
 # 文档导航与维护规则
 
-- **当前版本 v1.6.47**：[发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.47)、[中文说明](RELEASE_NOTES_1.6.47.md)、[7Z Deflate 创建记录](SEVENZ_DEFLATE_CREATE_FREEZE_1.6.47.md)。已完成功能封板，最终身份/附件在本版 PR 接续。
-- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.47.md)已完成；[v1.6.48 7Z PPMd 创建](ARCHIVE_ROADMAP_1.6.48.md)仅规划，见[交接](DEVELOPMENT_HANDOFF.md)。
+- **当前版本 v1.6.48**：[发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.48)、[中文说明](RELEASE_NOTES_1.6.48.md)、[7Z PPMd 创建记录](SEVENZ_PPMD_CREATE_FREEZE_1.6.48.md)。已完成功能封板，最终身份/附件在本版 PR 接续。
+- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.48.md)已完成；[v1.6.49 7Z 仅归档与不可压缩文件建议](ARCHIVE_ROADMAP_1.6.49.md)仅规划，见[交接](DEVELOPMENT_HANDOFF.md)。
 
 以下为历史阶段记录。
 

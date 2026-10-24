@@ -1,5 +1,7 @@
 # 归档格式支持等级（当前权威口径）
 
+**v1.6.48 7Z PPMd 创建**：原方法选择加入 PPMdH，接通内容/文件名密码、固实、完整数字卷和转换，分析使用实际编码。阶数 2～12、内存 4～64 MiB，和 ZIP PPMd8 分别处理。原 LZMA2 默认、格式计数和依赖保持。见[记录](SEVENZ_PPMD_CREATE_FREEZE_1.6.48.md)。
+
 **v1.6.47 7Z Deflate 创建**：原方法选择新增 Deflate，接通内容/文件名加密、固实、完整数字卷和转换，分析按实际编码。旧默认 LZMA2、格式数、依赖和读取方法保持，Deflate64 创建不在本次范围。见[记录](SEVENZ_DEFLATE_CREATE_FREEZE_1.6.47.md)。
 
 **v1.6.46 7Z 创建方法**：原配置选择 LZMA2（默认）/LZMA/Bzip2，支持密码/隐藏文件名、固实、完整数字卷、转换和方法抽样，旧配置默认不变。不是新增格式数。详见[记录](SEVENZ_COMPRESSION_METHODS_FREEZE_1.6.46.md)。

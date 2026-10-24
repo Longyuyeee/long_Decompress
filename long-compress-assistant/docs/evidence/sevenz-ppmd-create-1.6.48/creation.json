@@ -1,0 +1,59 @@
+[
+  {
+    "method": "ppmd",
+    "kind": "plain",
+    "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-plain\\资料.7z",
+    "members": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-plain\\资料.7z"
+    ],
+    "files": 17,
+    "independentReadback": true,
+    "emptyDirectoryPreserved": true
+  },
+  {
+    "method": "ppmd",
+    "kind": "contents",
+    "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-contents\\资料.7z",
+    "members": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-contents\\资料.7z"
+    ],
+    "files": 17,
+    "independentReadback": true,
+    "emptyDirectoryPreserved": true
+  },
+  {
+    "method": "ppmd",
+    "kind": "headers",
+    "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-headers\\资料.7z",
+    "members": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-headers\\资料.7z"
+    ],
+    "files": 17,
+    "independentReadback": true,
+    "emptyDirectoryPreserved": true
+  },
+  {
+    "method": "ppmd",
+    "kind": "volumes",
+    "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-volumes\\资料.7z.001",
+    "members": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-volumes\\资料.7z.001",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-volumes\\资料.7z.002",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-volumes\\资料.7z.003",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-volumes\\资料.7z.004",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-volumes\\资料.7z.005",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-volumes\\资料.7z.006",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-volumes\\资料.7z.007",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-volumes\\资料.7z.008",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-volumes\\资料.7z.009",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-volumes\\资料.7z.010",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-volumes\\资料.7z.011",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-volumes\\资料.7z.012",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-volumes\\资料.7z.013",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-ppmd-create-1648\\creation-1e9b641f-6924-44e1-8c1c-7e5126b7af3a\\ppmd-volumes\\资料.7z.014"
+    ],
+    "files": 17,
+    "independentReadback": true,
+    "emptyDirectoryPreserved": true
+  }
+]
