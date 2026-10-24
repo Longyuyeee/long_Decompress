@@ -251,3 +251,6 @@ mod sevenz_compression_methods_1646_tests;
 
 #[cfg(test)]
 mod sevenz_deflate_create_1647_tests;
+
+#[cfg(test)]
+mod sevenz_ppmd_create_1648_tests;

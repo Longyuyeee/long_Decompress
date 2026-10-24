@@ -60,7 +60,7 @@ export interface ArchiveConversionConfigV1 {
   sourceZpaqSnapshot?: ZpaqSnapshot
   sourceZipPasswordEncoding?: ZipPasswordEncoding
   wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
-  sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate'
+  sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd'
   zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'
   zipEncryption?: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
@@ -113,7 +113,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
       && !isZipPasswordEncoding(config.settings.zipPasswordEncoding)) return null
   if (config.kind === 'archive-conversion' && config.sourcePasswordRequired !== undefined && typeof config.sourcePasswordRequired !== 'boolean') return null
   const seven = config.kind === 'archive-compression' ? config.settings.sevenZipMethod : config.kind === 'archive-conversion' ? config.sevenZipMethod : undefined
-  if (seven !== undefined && !['lzma2','lzma','bzip2','deflate'].includes(seven)) return null
+  if (seven !== undefined && !['lzma2','lzma','bzip2','deflate','ppmd'].includes(seven)) return null
   const method = config.kind === 'archive-compression' ? config.settings.wimMethod : config.kind === 'archive-conversion' ? config.wimMethod : undefined
   if (method !== undefined && method !== 'store' && method !== 'xpress' && method !== 'lzx' && method !== 'lzms' && method !== 'solid') return null
   if (config.kind === 'archive-edit' && (typeof config.outputPath !== 'string' || !config.outputPath.trim())) return null

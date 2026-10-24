@@ -183,9 +183,9 @@ fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usi
 }
 
 fn compressed_sample_size_with_cancel(sample: &[u8], format: &str, level: u32, cancelled: &AtomicBool) -> Result<usize> {
-    if matches!(format,"7z"|"7z-lzma"|"7z-bzip2"|"7z-deflate") {
+    if matches!(format,"7z"|"7z-lzma"|"7z-bzip2"|"7z-deflate"|"7z-ppmd") {
         check_cancelled(cancelled)?;
-        let method=match format {"7z-lzma"=>super::seven_zip_method::SevenZipMethod::Lzma,"7z-bzip2"=>super::seven_zip_method::SevenZipMethod::Bzip2,"7z-deflate"=>super::seven_zip_method::SevenZipMethod::Deflate,_=>Default::default()};
+        let method=match format {"7z-lzma"=>super::seven_zip_method::SevenZipMethod::Lzma,"7z-bzip2"=>super::seven_zip_method::SevenZipMethod::Bzip2,"7z-deflate"=>super::seven_zip_method::SevenZipMethod::Deflate,"7z-ppmd"=>super::seven_zip_method::SevenZipMethod::Ppmd,_=>Default::default()};
         let size=super::seven_zip_method::sample_size(sample,method,level,cancelled)?;
         check_cancelled(cancelled)?;return Ok(size);
     }
@@ -258,7 +258,7 @@ fn duration_range(total_size: u64, format: &str, level: u32, file_count: usize) 
     let base_mib_per_second = match format {
         "7z" | "7z-lzma" | "xz" | "tar.xz" | "lzma" | "tar.lzma" | "zip-lzma" | "lz" | "tar.lz" => 45.0,
         "7z-bzip2" | "bz2" | "tar.bz2" => 35.0,
-        "zip-ppmd" => 12.0,
+        "7z-ppmd" | "zip-ppmd" => 12.0,
         "zst" | "zstd" | "tar.zst" => 180.0,
         "tar" => 350.0,
         _ => 110.0,

@@ -19,7 +19,7 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 | 工作区 | 用户可以做什么 |
 | --- | --- |
 | 解压中心 | 导入多包、配置目录与子文件夹、使用密码候选、处理文件冲突、查看阶段和结果 |
-| 压缩中心 | 按用途快捷配置（兼容分享/体积优先/加密分享/按大小分包）、文件/文件夹/组归档、ZIP 方法选择（Deflate/Zstandard/BZip2/PPMd/LZMA）、7Z 方法选择（LZMA2/LZMA/Bzip2/Deflate）、ZIP/7Z/RAR 与十七种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码、数字分卷及原生多部分整组另存增量更新、WIM 存储/XPRESS/LZX/LZMS 与固实 ESD、数字分卷、SWM 原生资源分包、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
+| 压缩中心 | 按用途快捷配置（兼容分享/体积优先/加密分享/按大小分包）、文件/文件夹/组归档、ZIP 方法选择（Deflate/Zstandard/BZip2/PPMd/LZMA）、7Z 方法选择（LZMA2/LZMA/Bzip2/Deflate/PPMd）、ZIP/7Z/RAR 与十七种 Long 自有 AES 密码数字分卷、ZPAQ 原生密码、数字分卷及原生多部分整组另存增量更新、WIM 存储/XPRESS/LZX/LZMS 与固实 ESD、数字分卷、SWM 原生资源分包、LZ4/Brotli/LZIP 与 TAR 组合、智能体积分析、配置模板和归档转换 |
 | 特殊压缩 | JPEG/PNG/WebP 图片编码与缩放、视频压缩预设、PDF 分析与结构优化 |
 | 文件浏览器 | 双栏浏览本地文件，查看归档目录、搜索筛选、文本/图片预览与选择性解压（7Z Bzip2 普通/密码、非固实/固实包支持完整文本 ≤1 MiB、图片 ≤8 MiB，含内容/文件名加密和完整数字卷，共享压缩/解码各 ≤64 MiB；Bzip2 非固实/固实大文本可先看前 1 MiB，前置与开头合计 ≤64 MiB，明确未校验整文件并可提取全文；7Z Deflate64 普通/密码非固实及固实包支持完整文本 ≤1 MiB、图片 ≤8 MiB，含内容/文件名加密和完整数字分卷；固实共享压缩/解码分别 ≤64 MiB；非固实及固实大文本可先看前 1 MiB，固实前置内容与开头合计 ≤64 MiB，明确未校验整文件并可提取全文；7Z Deflate 普通/密码包支持完整图文（文本 ≤1 MiB、图片 ≤8 MiB，含固实、内容/文件名加密与数字分卷；共享压缩/解码各 ≤64 MiB）；大文本可先看前 1 MiB，含固实（前置内容与开头合计 ≤64 MiB），标明未校验整文件并可提取全文；7Z PPMd 支持普通/密码、非固实/小型固实的完整小文本与图片，非固实及固实大文本可读前 1 MiB（明确未校验整文件），LZMA/LZMA2 支持普通/密码、非固实/固实完整图文和大文本前 1 MiB；ALZ 支持完整小文本、大文本前缀和图片预览，EGG 支持非固实小文本/大文本前缀、图片和小型未加密固实图文预览、原连续阅读）；按目录/整包连续看图、缩略导航/缩放、异常跳过、阅读记忆、找图分页、跨页挑选与原队列取回；Store/Deflate/Bzip2/LZMA/Zstandard/PPMd ZIP、ZIPX（XZ） 普通/密码内容编辑、添加/替换/删除/改名/批量移动、复核另存与编辑草稿恢复；支持普通压缩流、自有 AES 密码卷组、原生 SWM 多镜像及 ZPAQ 原生多部分确认读取、历史快照对比与变化提取、中断尾部诊断与完整旧快照取回、受损块和文件影响定位 |
 | 密码保险箱 | 本地加密保存常用解压密码，分类、搜索、导入导出与使用统计 |
@@ -96,7 +96,9 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
-**v1.6.47 · 7Z Deflate 创建**。原配置选择 Deflate，接通密码、隐藏文件名、固实、数字分卷和转换，草稿/模板/历史/工作流保留方法，体积分析使用实际编码。[中文说明](docs/RELEASE_NOTES_1.6.47.md) · [记录](docs/SEVENZ_DEFLATE_CREATE_FREEZE_1.6.47.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.47)。下一阶段 [7Z PPMd 创建](docs/ARCHIVE_ROADMAP_1.6.48.md)仅规划。
+**v1.6.48 · 7Z PPMd 创建**。原方法选择加入 PPMdH，接通密码、隐藏文件名、固实、数字分卷及 ZIP PPMd8 转换；草稿/模板/历史/工作流保留方法，体积分析使用实际编码。[中文说明](docs/RELEASE_NOTES_1.6.48.md) · [记录](docs/SEVENZ_PPMD_CREATE_FREEZE_1.6.48.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.48)。下一阶段 [7Z 仅归档与不可压缩文件建议](docs/ARCHIVE_ROADMAP_1.6.49.md)仅规划。
+
+**v1.6.47 · 7Z Deflate 创建**。原配置选择 Deflate，接通密码、隐藏文件名、固实、数字分卷和转换，草稿/模板/历史/工作流保留方法，体积分析使用实际编码。[中文说明](docs/RELEASE_NOTES_1.6.47.md) · [记录](docs/SEVENZ_DEFLATE_CREATE_FREEZE_1.6.47.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.47)。7Z PPMd 创建由上方 v1.6.48 接续。
 
 **v1.6.46 · 7Z 压缩方法可选**。原配置中选择 LZMA2（默认）/LZMA/Bzip2，接通密码、隐藏文件名、固实、数字分卷和转换，配置与草稿保留选择，体积分析按实际方法抽样。[中文说明](docs/RELEASE_NOTES_1.6.46.md) · [记录](docs/SEVENZ_COMPRESSION_METHODS_FREEZE_1.6.46.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.46)。7Z Deflate 创建由上方 v1.6.47 接续。
 
