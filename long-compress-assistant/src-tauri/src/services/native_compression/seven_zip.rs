@@ -133,7 +133,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
     writer.set_encrypt_header(options.encrypt_filenames);
 
     let level = options.level.clamp(1, 9);
-    let lzma_options = sevenz_rust::lzma::LZMA2Options::with_preset(level);
+    let selected_method = options.seven_zip_method.configuration(level);
     let mut methods = Vec::new();
     if let Some(password) = options
         .password
@@ -144,7 +144,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
             sevenz_rust::AesEncoderOptions::new(sevenz_rust::Password::from(password)).into(),
         );
     }
-    methods.push(lzma_options.into());
+    methods.push(selected_method);
     writer.set_content_methods(methods);
 
     if options.create_solid_archive {

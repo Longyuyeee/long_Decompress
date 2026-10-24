@@ -27,12 +27,14 @@ const format = ref('keep'), level = ref('keep'), destination = ref('keep'), dire
 const changePassword = ref(false), password = ref(''), changeSourcePassword = ref(false), sourcePassword = ref('')
 const changeSplit = ref(false), splitMiB = ref(0), hiddenNames = ref('keep'), recovery = ref('keep')
 const recoveryVolumes = ref('keep'), zipMethod = ref('keep')
+const sevenZipMethod = ref('keep')
 const wimMethod = ref('keep')
 const zipSplitMode = ref<'numeric' | 'standard'>('numeric')
 const changeSplitMode = ref(false)
 function fillPurpose(patch: PurposePatch) {
   const next = conversionPurposePatch(patch)
   format.value = next.format || 'keep'; level.value = next.level === undefined ? 'keep' : String(next.level)
+  if (next.sevenZipMethod !== undefined) sevenZipMethod.value = next.sevenZipMethod
   if (next.zipMethod !== undefined) zipMethod.value = next.zipMethod
   if (next.encryptFilenames !== undefined) hiddenNames.value = next.encryptFilenames ? 'yes' : 'no'
   if (next.password !== undefined) { changePassword.value = true; password.value = next.password }
@@ -44,13 +46,13 @@ watch(format, () => { if (format.value === 'swm' && !['keep','store','xpress','l
 const sourceEncoding = ref('keep'), targetEncoding = ref('keep')
 const defaults = ref({ ...store.defaults })
 const keep = { value: 'keep', label: '保持各自设置' }
-const changed = computed(() => changeSplitMode.value || wimMethod.value !== 'keep' || sourceEncoding.value !== 'keep' || targetEncoding.value !== 'keep' || format.value !== 'keep' || zipMethod.value !== 'keep' || level.value !== 'keep' || destination.value !== 'keep' || changePassword.value || changeSourcePassword.value || changeSplit.value || hiddenNames.value !== 'keep' || recovery.value !== 'keep' || recoveryVolumes.value !== 'keep')
+const changed = computed(() => changeSplitMode.value || sevenZipMethod.value !== 'keep' || wimMethod.value !== 'keep' || sourceEncoding.value !== 'keep' || targetEncoding.value !== 'keep' || format.value !== 'keep' || zipMethod.value !== 'keep' || level.value !== 'keep' || destination.value !== 'keep' || changePassword.value || changeSourcePassword.value || changeSplit.value || hiddenNames.value !== 'keep' || recovery.value !== 'keep' || recoveryVolumes.value !== 'keep')
 const valid = computed(() => (mode.value === 'defaults' || changed.value) && (destination.value !== 'custom' || !!directory.value.trim()) && (!changeSplit.value || Number.isFinite(splitMiB.value) && splitMiB.value >= 0))
 function show(nextMode: 'selected' | 'defaults') {
   changeSplitMode.value = false; zipSplitMode.value = 'numeric'
   mode.value = nextMode; format.value = level.value = destination.value = hiddenNames.value = recovery.value = 'keep'
   recoveryVolumes.value = zipMethod.value = 'keep'
-  wimMethod.value = 'keep'
+  wimMethod.value = sevenZipMethod.value = 'keep'
   sourceEncoding.value = targetEncoding.value = 'keep'
   directory.value = password.value = sourcePassword.value = ''
   changePassword.value = changeSourcePassword.value = changeSplit.value = false; splitMiB.value = 0
@@ -67,6 +69,7 @@ const stagedPatch = computed<ConversionPatch>(() => ({
     ...(sourceEncoding.value === 'auto' || isZipPasswordEncoding(sourceEncoding.value) ? {sourceZipPasswordEncoding:sourceEncoding.value === 'auto' ? undefined : sourceEncoding.value} : {}),
     ...(isZipPasswordEncoding(targetEncoding.value) ? {zipPasswordEncoding:targetEncoding.value} : {}),
     ...(format.value === 'keep' ? {} : { format: format.value }),
+    ...(sevenZipMethod.value === 'keep' || (format.value !== 'keep' && format.value !== '7z') ? {} : { sevenZipMethod: sevenZipMethod.value as 'lzma2' | 'lzma' | 'bzip2' }),
     ...(zipMethod.value === 'keep' || (format.value !== 'keep' && format.value !== 'zip') ? {} : { zipMethod: zipMethod.value as 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma' }),
     ...(wimMethod.value === 'keep' || (format.value !== 'keep' && !['wim','swm'].includes(format.value)) ? {} : { wimMethod: wimMethod.value as 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' }),
     ...(level.value === 'keep' ? {} : { level: Number(level.value) }),
@@ -120,6 +123,7 @@ async function apply() {
           <div v-if="!updatesOnly" class="min-w-0 space-y-1.5 text-sm">原包读取编码 <HelpHint label="批量原包编码说明">只修改检测确认的 ZIP/ZIPX、ALZ 或 EGG 原包，清除后使用各格式默认值。EGG 默认 UTF-8，只影响密码；ALZ 默认 CP949，同时影响文件名与密码。与新包编码无关。</HelpHint><ThemedSelect v-model="sourceEncoding" :options="[keep,{value:'auto',label:'使用原包格式默认值'},...ZIP_PASSWORD_ENCODING_OPTIONS]" :disabled="applying" test-id="conversion-batch-source-encoding" floating /></div>
           <div v-if="!updatesOnly" class="min-w-0 space-y-1.5 text-sm">新包 ZIP 密码编码 <HelpHint label="批量新包编码说明">只修改目标为 ZIP/ZIPX 的任务。保持各自设置不会覆盖已有值；UTF-8 是新包默认值。</HelpHint><ThemedSelect v-model="targetEncoding" :options="[keep,...ZIP_PASSWORD_ENCODING_OPTIONS]" :disabled="applying" test-id="conversion-batch-target-encoding" floating /></div>
           <label v-if="!updatesOnly" class="min-w-0 text-sm">目标格式 <HelpHint v-if="format === 'zipx'" label="ZIPX 分卷说明">ZIPX 使用 XZ，支持数字卷和 .zx01/…/.zipx 标准卷；卷型沿用各自设置，可在任务中调整。</HelpHint><ThemedSelect v-model="format" :options="[keep, ...conversionFormats]" test-id="conversion-batch-format" floating /></label>
+          <label v-if="!updatesOnly && (format === 'keep' || format === '7z')" class="min-w-0 text-sm">7Z 压缩方法<HelpHint label="批量 7Z 方法说明">只修改所选 7Z 任务，其他任务保持各自设置。</HelpHint><ThemedSelect v-model="sevenZipMethod" :options="[keep,{value:'lzma2',label:'LZMA2 · 默认'},{value:'lzma',label:'LZMA'},{value:'bzip2',label:'Bzip2'}]" test-id="conversion-batch-sevenz-method" floating /></label>
           <label v-if="!updatesOnly && (format === 'keep' || format === 'zip')" class="min-w-0 text-sm">ZIP 压缩方法<ThemedSelect v-model="zipMethod" :options="[keep, { value: 'deflate', label: '兼容 ZIP · Deflate' }, { value: 'zstd', label: 'Zstandard' }, { value: 'bzip2', label: 'BZip2' }, { value: 'ppmd', label: 'PPMd · 文本归档' }, { value: 'lzma', label: 'LZMA' }]" test-id="conversion-batch-zip-method" floating /><span class="text-xs text-muted">仅修改 ZIP 任务；ZIPX 使用 XZ。</span></label>
           <label v-if="!updatesOnly && (format === 'keep' || ['wim','swm'].includes(format))" class="min-w-0 text-sm">WIM / SWM 压缩方法<ThemedSelect v-model="wimMethod" :options="[keep,{value:'store',label:'仅存储 · 去重'},{value:'xpress',label:'XPRESS · 快速压缩'},{value:'lzx',label:'LZX · 体积优先'},{value:'lzms',label:'LZMS · 高压缩'},{value:'solid',label:'LZMS · 固实归档'}].filter(option => format !== 'swm' || ['keep','store','xpress','lzx'].includes(option.value))" test-id="conversion-batch-wim-method" floating /><span class="text-xs text-muted">仅修改适用的 WIM/SWM 任务；不改变原包密码和分卷。</span></label>
           <label class="min-w-0 text-sm">压缩强度<ThemedSelect v-model="level" :disabled="['wim','esd','swm'].includes(format)" :options="[keep, ...Array.from({ length: 10 }, (_, n) => ({ value: String(n), label: String(n) }))]" test-id="conversion-batch-level" floating /></label>

@@ -1,0 +1,49 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[sevenz-methods-1646] original inline edit automatic individual and batch modal in wide and small windows
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+ElementClickInterceptedError: element click intercepted: Element <button data-testid="start-compression" type="button" class="h-8 md:h-9 px-4 md:px-6 rounded-lg bg-primary text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-primary/25 hover:brightness-110 active:scale-[0.98] transition-all flex items-center gap-2 disabled:opacity-60 disabled:cursor-wait">...</button> is not clickable at point (692, 66). Other element would receive the click: <button data-v-85851b06="" aria-label="鍏抽棴鎴愬姛鎻愮ず" class="pointer-events-auto absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-dim hover:text-content hover:bg-input transition-colors">...</button>
+  (Session info: MicrosoftEdge=155.0.4283.62)
+    at Object.throwDecodedError (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\error.js:523:15)
+    at parseHttpResponse (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\http.js:527:13)
+    at Executor.execute (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\http.js:459:28)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async WebDriver.execute (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:745:17)
+    at async click (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-compression-methods-1646-gate.mjs:15:145)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-compression-methods-1646-gate.mjs:27:23
+    at async step (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-compression-methods-1646-gate.mjs:12:105)
+    at async runSevenzMethods1646Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-compression-methods-1646-gate.mjs:26:2)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:5072:5 {
+  remoteStacktrace: '\tmsedgedriver!GetHandleVerifier [0x7ff77db882b5+4f25]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77dad7e74]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff77df16e0f+393a7f]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77d8b5b42]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77d8b426f]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77d8b2355]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77d8b1937]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77d8a694f]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77d8d0c5a]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77d8a60cd]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77d8a5fca]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77d8a60cd]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77d8edef8]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77d8a590c]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77d8a4b8d]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77d8a5733]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77d9e3121]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77d9f3108]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff77dc30f0a+adb7a]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff77dc37571+b41e1]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77dae361c]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77dade134]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77dade25a]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff77dacfbe8]\n' +
+    '\tKERNEL32!BaseThreadInitThunk [0x7ffc277ddda7+17]\n' +
+    '\tntdll!RtlUserThreadStart [0x7ffc289fee4c+2c]\n'
+}
+
+Node.js v24.14.0

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CompressionPurposePicker from './CompressionPurposePicker.vue'
 import WimMethodField from '@/components/compression/WimMethodField.vue'
+import SevenZipMethodField from '@/components/compression/SevenZipMethodField.vue'
 import ZipMethodField from '@/components/compression/ZipMethodField.vue'
 import SavedLocationPicker from '@/components/ui/SavedLocationPicker.vue'
 import RarRecoveryField from './RarRecoveryField.vue'
@@ -148,10 +149,11 @@ const effectiveOutputExtension = computed(() =>
 
 const presets = computed(() => appStore.compressionPresets)
 
-const applyPreset = (preset: { name: string; format: string; level: number; password?: string; zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'; wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' }) => {
+const applyPreset = (preset: { name: string; format: string; level: number; password?: string; sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2'; zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'; wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' }) => {
   compressionOptions.value.format = preset.format as any
   compressionOptions.value.level = preset.level
   compressionOptions.value.wimMethod = preset.wimMethod ?? 'store'
+  compressionOptions.value.sevenZipMethod = preset.sevenZipMethod ?? 'lzma2'
   compressionOptions.value.zipMethod = preset.zipMethod ?? 'deflate'
   if (preset.password) compressionOptions.value.password = preset.password
 }
@@ -162,7 +164,7 @@ const savePreset = () => {
 }
 const confirmSavePreset = () => {
   if (presetNameInput.value.trim()) {
-    appStore.saveCompressionPreset(presetNameInput.value.trim(), compressionOptions.value.format, compressionOptions.value.level, compressionOptions.value.password, compressionOptions.value.zipMethod, compressionOptions.value.wimMethod)
+    appStore.saveCompressionPreset(presetNameInput.value.trim(), compressionOptions.value.format, compressionOptions.value.level, compressionOptions.value.password, compressionOptions.value.zipMethod, compressionOptions.value.wimMethod, compressionOptions.value.sevenZipMethod)
   }
   showPresetModal.value = false
 }
@@ -271,6 +273,7 @@ const applyProfile = (profile: CompressionProfile) => {
   compressionOptions.value.rarRecoveryVolumes = profile.config.rarRecoveryVolumes ?? 0
   compressionOptions.value.zipPasswordEncoding = profile.config.zipPasswordEncoding ?? 'utf8'
   compressionOptions.value.wimMethod = profile.config.wimMethod ?? 'store'
+  compressionOptions.value.sevenZipMethod = profile.config.sevenZipMethod ?? 'lzma2'
   compressionOptions.value.zipMethod = profile.config.zipMethod ?? 'deflate'
   compressionOptions.value.zipEncryption = profile.config.zipEncryption ?? 'aes256'
   compressionOptions.value.zipSplitMode = profile.config.zipSplitMode ?? 'numeric'
@@ -311,7 +314,7 @@ const saveAsNewProfile = async () => {
         rarRecoveryVolumes: compressionOptions.value.rarRecoveryVolumes ?? 0,
         zipPasswordEncoding: compressionOptions.value.zipPasswordEncoding ?? 'utf8',
         wimMethod: compressionOptions.value.wimMethod ?? 'store',
-        zipMethod: compressionOptions.value.zipMethod ?? 'deflate',
+        sevenZipMethod: compressionOptions.value.sevenZipMethod ?? 'lzma2', zipMethod: compressionOptions.value.zipMethod ?? 'deflate',
         zipEncryption: compressionOptions.value.zipEncryption ?? 'aes256',
         zipSplitMode: compressionOptions.value.zipSplitMode ?? 'numeric',
         filenameTemplate: compressionOptions.value.filename ? `{name}_${compressionOptions.value.filename}` : null,
@@ -365,6 +368,7 @@ const closeVaultPasswordsAfterFocus = () => {
         <ThemedSelect v-model="compressionOptions.format" floating aria-label="目标格式" test-id="compression-format-select"
           :options="compressionFormats.map(fmt => ({ value: fmt.value, label: fmt.name, disabled: isFormatDisabled(fmt), detail: fmt.singleFileOnly ? appStore.t('preset.single_file_only') : undefined }))" />
         <WimMethodField v-model="compressionOptions.wimMethod" :format="compressionOptions.format" :level="compressionOptions.level" test-id="compression-wim-method" />
+        <SevenZipMethodField v-model="compressionOptions.sevenZipMethod" :format="compressionOptions.format" test-id="compression-sevenz-method" />
         <ZipMethodField v-model="compressionOptions.zipMethod" :format="compressionOptions.format" :level="compressionOptions.level" test-id="compression-zip-method" />
       </div>
 
@@ -372,7 +376,7 @@ const closeVaultPasswordsAfterFocus = () => {
       <div class="flex flex-col gap-1.5 min-w-0">
         <div class="flex justify-between items-center px-1">
           <label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.level') }}</label>
-          <span class="text-xs font-mono text-primary font-black">{{ ['wim','esd','swm'].includes(compressionOptions.format) ? (compressionOptions.format === 'esd' || compressionOptions.wimMethod === 'solid' ? 'LZMS · 固实归档' : compressionOptions.wimMethod === 'lzms' ? 'LZMS · 固定算法' : compressionOptions.wimMethod === 'lzx' ? 'LZX · 固定算法' : compressionOptions.wimMethod === 'xpress' ? 'XPRESS · 固定算法' : '仅存储 · 去重') : isLz4Format(compressionOptions.format) ? '快速模式' : `${compressionOptions.format === 'zip' && ['bzip2', 'ppmd', 'lzma'].includes(compressionOptions.zipMethod || '') ? Math.max(1, compressionOptions.level) : compressionOptions.level} / 9` }}</span>
+          <span class="text-xs font-mono text-primary font-black">{{ ['wim','esd','swm'].includes(compressionOptions.format) ? (compressionOptions.format === 'esd' || compressionOptions.wimMethod === 'solid' ? 'LZMS · 固实归档' : compressionOptions.wimMethod === 'lzms' ? 'LZMS · 固定算法' : compressionOptions.wimMethod === 'lzx' ? 'LZX · 固定算法' : compressionOptions.wimMethod === 'xpress' ? 'XPRESS · 固定算法' : '仅存储 · 去重') : isLz4Format(compressionOptions.format) ? '快速模式' : `${(compressionOptions.format === '7z' || compressionOptions.format === 'zip' && ['bzip2', 'ppmd', 'lzma'].includes(compressionOptions.zipMethod || '')) ? Math.max(1, compressionOptions.level) : compressionOptions.level} / 9` }}</span>
         </div>
         <input
           type="range" :disabled="isLz4Format(compressionOptions.format) || ['wim','esd','swm'].includes(compressionOptions.format)" v-model.number="compressionOptions.level" min="1" max="9" step="1"

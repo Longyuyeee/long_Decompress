@@ -151,6 +151,7 @@ fn clean_plan(mut plan: Plan) -> Result<Plan> {
             ("rarRecoveryVolumes", 'n'),
             ("zipPasswordEncoding", 's'),
             ("zipMethod", 's'),
+            ("sevenZipMethod", 's'),
             ("zipEncryption", 's'),
             ("zipSplitMode", 's'),
             ("wimMethod", 's'),
@@ -169,6 +170,9 @@ fn clean_plan(mut plan: Plan) -> Result<Plan> {
                 );
                 settings.insert(key.into(), value.clone());
             }
+        }
+        if let Some(method)=settings.get("sevenZipMethod") {
+            ensure!(method.as_str().and_then(super::seven_zip_method::SevenZipMethod::from_setting).is_some(),"请选择支持的 7Z 压缩方法：LZMA2、LZMA 或 Bzip2");
         }
         settings.insert("deleteAfter".into(), false.into());
         step.settings = serde_json::Value::Object(settings);

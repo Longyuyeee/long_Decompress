@@ -325,9 +325,9 @@ export const useAppStore = defineStore('app', () => {
   }
 
   // 压缩预设
-  const compressionPresets = ref<Array<{ name: string; format: string; level: number; password?: string; zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'; wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' }>>([])
-  const saveCompressionPreset = (name: string, format: string, level: number, password?: string, zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma', wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid') => {
-    compressionPresets.value = [{ name, format, level, password, zipMethod, wimMethod }, ...compressionPresets.value].slice(0, 8)
+  const compressionPresets = ref<Array<{ name: string; format: string; level: number; password?: string; sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2'; zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'; wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' }>>([])
+  const saveCompressionPreset = (name: string, format: string, level: number, password?: string, zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma', wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid', sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2') => {
+    compressionPresets.value = [{ name, format, level, password, zipMethod, wimMethod, sevenZipMethod }, ...compressionPresets.value].slice(0, 8)
     try { localStorage.setItem('compression-presets', JSON.stringify(compressionPresets.value)) } catch { }
   }
   const deleteCompressionPreset = (index: number) => {

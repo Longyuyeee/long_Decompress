@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import WimMethodField from '@/components/compression/WimMethodField.vue'
+import SevenZipMethodField from '@/components/compression/SevenZipMethodField.vue'
 import ZipMethodField from '@/components/compression/ZipMethodField.vue'
 import { computed, onMounted, ref, watch } from 'vue'
 import { open, save } from '@tauri-apps/api/dialog'
@@ -635,6 +636,7 @@ const formatDate = (timestamp: number | null) =>
         </div>
 
         <WimMethodField v-model="formData.config.wimMethod" :format="formData.config.format" test-id="profile-wim-method" />
+        <SevenZipMethodField v-model="formData.config.sevenZipMethod" :format="formData.config.format" test-id="profile-sevenz-method" />
         <ZipMethodField v-model="formData.config.zipMethod" :format="formData.config.format" test-id="profile-zip-method" />
         <label class="block">
           <span class="mb-2 block text-xs font-black text-muted">用途说明（可选）</span>
@@ -767,6 +769,7 @@ const formatDate = (timestamp: number | null) =>
             </div>
             <dl class="mt-3 space-y-2 text-xs">
               <div v-if="['wim','esd','swm'].includes(templatePreview.template.compression.format)" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">WIM 压缩方法</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.format === 'esd' || templatePreview.template.compression.wimMethod === 'solid' ? 'LZMS · 固实归档' : templatePreview.template.compression.wimMethod === 'lzms' ? 'LZMS · 高压缩' : templatePreview.template.compression.wimMethod === 'lzx' ? 'LZX · 体积优先' : templatePreview.template.compression.wimMethod === 'xpress' ? 'XPRESS · 快速压缩' : '仅存储 · 去重' }}</dd></div>
+              <div v-if="templatePreview.template.compression.format === '7z'" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">7Z 压缩方法</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.sevenZipMethod === 'bzip2' ? 'Bzip2' : (templatePreview.template.compression.sevenZipMethod || 'lzma2').toUpperCase() }}</dd></div>
               <div v-if="['zip', 'zipx'].includes(templatePreview.template.compression.format)" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">压缩方法</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.format === 'zipx' ? 'XZ' : templatePreview.template.compression.zipMethod === 'lzma' ? 'LZMA' : templatePreview.template.compression.zipMethod === 'ppmd' ? 'PPMd' : templatePreview.template.compression.zipMethod === 'bzip2' ? 'BZip2' : templatePreview.template.compression.zipMethod === 'zstd' ? 'Zstandard' : '兼容 ZIP · Deflate' }}</dd></div>
               <div data-testid="template-filename-encryption" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">文件名加密</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.encryptFilenames ? '开启' : '关闭' }}</dd></div>
               <div v-if="['zip', 'zipx'].includes(templatePreview.template.compression.format)" class="flex min-w-0 justify-between gap-3"><dt class="shrink-0 text-muted">ZIP 加密方式</dt><dd class="min-w-0 text-right font-bold text-content">{{ templatePreview.template.compression.zipEncryption === 'zipcrypto' ? 'ZipCrypto（传统兼容，较弱）' : 'AES-256' }}</dd></div>

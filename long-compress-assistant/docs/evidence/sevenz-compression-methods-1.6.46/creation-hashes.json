@@ -1,0 +1,267 @@
+{
+  "sourceFiles": {
+    "00-first.txt": "39eaa208804bac1de0261d4c86cf501845032193ccf1c4f52b21ff8e3e4f609b",
+    "empty.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "zz-after.txt": "20684b950ca10e02b0392fb51201f0e53d1292fa7aa2aea7a6372cab0d7338a4",
+    "gallery/01-cover.png": "9b2c072f170548132a8a29fbb5875e6f9673351a036c8ed603377ededec13a3b",
+    "gallery/02-grid.bmp": "6d133ad7dc08719597d3b2b7c528a743c426686268835dd6d035a50e8cef8beb",
+    "gallery/03-bad.png": "45fd6fcb95d858726770810b5b486311c2aa784f49aa8f2c6dbe03b11f7dac92",
+    "gallery/04-cover.jpg": "4fc408d91aee4e4037f06dc6392a35109a5fd26d4aa7c790ff0902a2e3181dc9",
+    "gallery/05-cover.gif": "893ff673b0baa151e8dbacb82e2ffb3b0579441d46ff6bfaf09f4f393b99444a",
+    "gallery/06-cover.webp": "e7aed6ff5eabe4891cdb40c07ee6d4cf6d076cd71f77c92561726ee70f1d3630",
+    "notes/binary.txt": "e6304a473c65ecd0ccffbd2f5925a8f51c44b11f59b66cfcc055e4bb911b8fa0",
+    "notes/empty.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "notes/exact.txt": "ce2442b8b1c15414ca16f054e5331fc8019d24fd50813f43cc9881f7f19d765c",
+    "notes/gbk.txt": "b9c3c07e5240f33737ab43e94ef9c4b0b49625f56e94484e00663201665255a0",
+    "notes/large.txt": "c67906e91b2ceb65fade1f2b958f4ac765b959f3fe79578b207db2874e242e8d",
+    "notes/utf16.txt": "04beeefbfa341e360c26579b387766926b450100ede25839326a746414a6bc42",
+    "notes/说明 1.txt": "c40d449564c21dae0b52c2b76c71dba49cd4cbd246721d228b9c278e07486ca3",
+    "notes/说明 [1].txt": "df4fb2d2d3a278d68096b625428d035ce0427a76e729304bfbb828105533d614"
+  },
+  "created": [
+    {
+      "method": "lzma2",
+      "kind": "plain",
+      "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-plain\\资料.7z",
+      "members": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-plain\\资料.7z"
+      ],
+      "files": 17,
+      "independentReadback": true,
+      "emptyDirectoryPreserved": true,
+      "memberHashes": {
+        "资料.7z": "26b81c0b0fd21dca6819d6a77102bc426e7e1c259a9f7d0097b0bfa16e13bba0"
+      }
+    },
+    {
+      "method": "lzma2",
+      "kind": "contents",
+      "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-contents\\资料.7z",
+      "members": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-contents\\资料.7z"
+      ],
+      "files": 17,
+      "independentReadback": true,
+      "emptyDirectoryPreserved": true,
+      "memberHashes": {
+        "资料.7z": "29014504ff73315b6f268526e131ee3c3769c61a0736fdb505af33dff70ca356"
+      }
+    },
+    {
+      "method": "lzma2",
+      "kind": "headers",
+      "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-headers\\资料.7z",
+      "members": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-headers\\资料.7z"
+      ],
+      "files": 17,
+      "independentReadback": true,
+      "emptyDirectoryPreserved": true,
+      "memberHashes": {
+        "资料.7z": "d004e15cfea2806c62fdbc8ab078c1b4e076a1ddd976b86815df677bbd6eb13c"
+      }
+    },
+    {
+      "method": "lzma2",
+      "kind": "volumes",
+      "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-volumes\\资料.7z.001",
+      "members": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-volumes\\资料.7z.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-volumes\\资料.7z.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-volumes\\资料.7z.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-volumes\\资料.7z.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-volumes\\资料.7z.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-volumes\\资料.7z.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-volumes\\资料.7z.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-volumes\\资料.7z.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-volumes\\资料.7z.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-volumes\\资料.7z.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-volumes\\资料.7z.011",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-volumes\\资料.7z.012",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-volumes\\资料.7z.013",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma2-volumes\\资料.7z.014"
+      ],
+      "files": 17,
+      "independentReadback": true,
+      "emptyDirectoryPreserved": true,
+      "memberHashes": {
+        "资料.7z.001": "26a49f57d638d85df5dbfa2af412512133c4cc69c75c4254921e432d36706c1a",
+        "资料.7z.002": "b91d427b9e00a7d4c84129f9e345078d78e522af95c531d86b20f4a0ea4b2580",
+        "资料.7z.003": "7bebe3457b25682702f65b0f192bc51191f88e64a4a720ec0d800f73a326b297",
+        "资料.7z.004": "531db3bf8aea86129bc310aa4014615dafd42e7d8f86942d2cee78269fde4603",
+        "资料.7z.005": "abf97a40c446b916c5210b8a825263418400df50ebf5770affb3428baf237d3d",
+        "资料.7z.006": "914f5358ec5130282e04f7325ca09e141e0ca070e671d186c47b7c5da5c6d7c3",
+        "资料.7z.007": "2fbccd2551653c64f3ec2f204b8f6b2592840ebc0d42569797eb73dfd1928345",
+        "资料.7z.008": "ca8ba8916133d6806b710618fade7cf173e235c0d1a7246862c00562b63c92af",
+        "资料.7z.009": "8ac9eb4ed2a7136ea76f31e51f442e9b40f7d3808eed75ac3b06831ee39bf5cb",
+        "资料.7z.010": "0dafd713c6de5cf0f3bace6f66b977c23cdcab8bedbea4bd877f8a43a62aa959",
+        "资料.7z.011": "b9bfefb6d397dcbdc4a84740fd2dddbbca940ef34d2d2d6dc3cc79c78cd068d8",
+        "资料.7z.012": "076ce61e5906987951ffa64b392aee94e76d81c4fcaa9326e34df7d4d6092be1",
+        "资料.7z.013": "69a25a8be084950b7dab157adae007539f55333bcb8fbb26775bb0e7689ee658",
+        "资料.7z.014": "d1a3a59d6f7e3d487eec1adfda72b85e3291e782be7755fcaccbd771e5427c07"
+      }
+    },
+    {
+      "method": "lzma",
+      "kind": "plain",
+      "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-plain\\资料.7z",
+      "members": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-plain\\资料.7z"
+      ],
+      "files": 17,
+      "independentReadback": true,
+      "emptyDirectoryPreserved": true,
+      "memberHashes": {
+        "资料.7z": "88bf7939c90f6861439e144764bd1dbb4b0bef9ef575d8727b10ffed6a6577b2"
+      }
+    },
+    {
+      "method": "lzma",
+      "kind": "contents",
+      "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-contents\\资料.7z",
+      "members": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-contents\\资料.7z"
+      ],
+      "files": 17,
+      "independentReadback": true,
+      "emptyDirectoryPreserved": true,
+      "memberHashes": {
+        "资料.7z": "e78ddc454145777e65e4ce2b542a1f46521b8e09a557b90613d878f7aefcf936"
+      }
+    },
+    {
+      "method": "lzma",
+      "kind": "headers",
+      "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-headers\\资料.7z",
+      "members": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-headers\\资料.7z"
+      ],
+      "files": 17,
+      "independentReadback": true,
+      "emptyDirectoryPreserved": true,
+      "memberHashes": {
+        "资料.7z": "1ec858d3e4111699ccd0a3030637b41d2d72a1c4420eba9008ebcfe9e4df7d63"
+      }
+    },
+    {
+      "method": "lzma",
+      "kind": "volumes",
+      "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-volumes\\资料.7z.001",
+      "members": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-volumes\\资料.7z.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-volumes\\资料.7z.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-volumes\\资料.7z.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-volumes\\资料.7z.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-volumes\\资料.7z.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-volumes\\资料.7z.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-volumes\\资料.7z.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-volumes\\资料.7z.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-volumes\\资料.7z.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-volumes\\资料.7z.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-volumes\\资料.7z.011",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-volumes\\资料.7z.012",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-volumes\\资料.7z.013",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\lzma-volumes\\资料.7z.014"
+      ],
+      "files": 17,
+      "independentReadback": true,
+      "emptyDirectoryPreserved": true,
+      "memberHashes": {
+        "资料.7z.001": "b60d4936daa43a06d0432a35e8a4aff6c5ced4421f836baaada12e5c9395b300",
+        "资料.7z.002": "f87e43f1c18444937dd706946228f3825b48e464d690dc775b441175041f6bd3",
+        "资料.7z.003": "e36adae202db802af927fed457ad38e64696b3ef10522d094c475aa6e239ac12",
+        "资料.7z.004": "4c0203a3124a3cf9a9406abad5e6e46083502023fc6085c307266baab44220d7",
+        "资料.7z.005": "4a18b6d4635aeb22405c5beafde616d4f84d9c0ad560251c2ee7ef2d333e7141",
+        "资料.7z.006": "cffb234f6b7c21eac5316bd5671b754d76cff34800c9a2806496637a4304b315",
+        "资料.7z.007": "b1c1e9737bc8e78fa394c58941ac5b1b251013c0311d420bf40fe002f79d6fc0",
+        "资料.7z.008": "ecdf25383817df1ff92f85b9501ad84f979fd3f90aa9ed16daffb775361d1bb0",
+        "资料.7z.009": "f6c6df00c45a446bdfa9334a677d3c12a713ebf346804c55fc32e317bce79765",
+        "资料.7z.010": "cc85dc6f5201c04c788a5d8e1b12f14b6815e452ace4b06cbe16a72e869651fb",
+        "资料.7z.011": "ae4bc8576183b3caf18f9fc60f96d3dbbaed2dfabf139995c8a3dd6d34ec4807",
+        "资料.7z.012": "d2cc1b49eeb65202cdfcdec7faefca3ae7268535603c60e1310557c15bdda78a",
+        "资料.7z.013": "616a5e16c9e98a9873ff132aa6e2c929876a4f74fd6343fcef4f2ac3ffa03e50",
+        "资料.7z.014": "6bc2b38f873437448519dd7d7ad8059452463ca600246a6f0969fc108886b1a3"
+      }
+    },
+    {
+      "method": "bzip2",
+      "kind": "plain",
+      "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-plain\\资料.7z",
+      "members": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-plain\\资料.7z"
+      ],
+      "files": 17,
+      "independentReadback": true,
+      "emptyDirectoryPreserved": true,
+      "memberHashes": {
+        "资料.7z": "5b6d87c63cc2ca9c57e88b2ed746567af2b465e956e6f4a67ca165ba3a63e22d"
+      }
+    },
+    {
+      "method": "bzip2",
+      "kind": "contents",
+      "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-contents\\资料.7z",
+      "members": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-contents\\资料.7z"
+      ],
+      "files": 17,
+      "independentReadback": true,
+      "emptyDirectoryPreserved": true,
+      "memberHashes": {
+        "资料.7z": "9f7b6b37e261c7a8bf68747eed68afa149cac60dc93722d704f648d24f75b32f"
+      }
+    },
+    {
+      "method": "bzip2",
+      "kind": "headers",
+      "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-headers\\资料.7z",
+      "members": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-headers\\资料.7z"
+      ],
+      "files": 17,
+      "independentReadback": true,
+      "emptyDirectoryPreserved": true,
+      "memberHashes": {
+        "资料.7z": "397d46d9a71b4c59f8fff0225fc4203f496f3d6e0f12999eff6d80c83d701ec5"
+      }
+    },
+    {
+      "method": "bzip2",
+      "kind": "volumes",
+      "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-volumes\\资料.7z.001",
+      "members": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-volumes\\资料.7z.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-volumes\\资料.7z.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-volumes\\资料.7z.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-volumes\\资料.7z.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-volumes\\资料.7z.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-volumes\\资料.7z.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-volumes\\资料.7z.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-volumes\\资料.7z.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-volumes\\资料.7z.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-volumes\\资料.7z.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-volumes\\资料.7z.011",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-volumes\\资料.7z.012",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-compression-methods-1646\\bzip2-volumes\\资料.7z.013"
+      ],
+      "files": 17,
+      "independentReadback": true,
+      "emptyDirectoryPreserved": true,
+      "memberHashes": {
+        "资料.7z.001": "6f81ae1d18702127c47bb9c0bc883ff51e3604cde63ad90f0d32369088b5f9d8",
+        "资料.7z.002": "7fee3ca5ecebbd70db5d8f02bef6d5af94594059780decead0f754b3b3bbc615",
+        "资料.7z.003": "32ef2d850d6816c4ef9042feb4382ac4812962342aea96ea871d87ba5724fbde",
+        "资料.7z.004": "69b8d6b4e255a43e4569304b76ffdc562f5fb1857bb4246b966988912506fe43",
+        "资料.7z.005": "7385828df60deebd490e76f83ee7ad19e08775eb196556cfff044277f14dea05",
+        "资料.7z.006": "a71f5e6e862e379cb902b4611f7e5c7407a3f5bdb6e6de8bcd671c208104f39e",
+        "资料.7z.007": "5239d55e30268d0d92692230b72aa19369964c203c956574b1e75990584ad9be",
+        "资料.7z.008": "49680240908346dcd3754b0252365283e6153ad6173314381c1a636f1fd3763a",
+        "资料.7z.009": "a0d484ae34decc847772654e06a484040f82743b361f49f373e1a9aa060df521",
+        "资料.7z.010": "c24c0d8210959c3afba1e777d3358f1737491cd5aae13749e93b65a298ff931b",
+        "资料.7z.011": "a25e885d886d1a31df9d3a41f5b846c2019f5ea1ebb43a061775e16c92f79361",
+        "资料.7z.012": "12aaab749df70a53264e553615600b9ade25413b8fa449b1e3a44baa204a3253",
+        "资料.7z.013": "54b1df659daa34bc1df4092f20b674e6e6c08e161cedfc1ed2bef76a8201133f"
+      }
+    }
+  ]
+}

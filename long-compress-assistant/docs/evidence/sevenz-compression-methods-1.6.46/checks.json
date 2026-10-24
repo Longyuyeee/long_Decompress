@@ -1,0 +1,115 @@
+{
+  "version": "1.6.46",
+  "applicationSha256": "cc8b1738466c6160c005da7013085ce3a3eddb6c83dc906fd15d99db0482e546",
+  "adapter": 2,
+  "frontend": 3,
+  "backend": 5,
+  "creationCases": 12,
+  "desktopGroups": 2,
+  "layouts": [
+    {
+      "name": "inline-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 565.0703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 205.0703125,
+          "width": 378,
+          "x": 275,
+          "y": 205.0703125
+        },
+        {
+          "bottom": 565.0703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 205.0703125,
+          "width": 378,
+          "x": 653,
+          "y": 205.0703125
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "inline-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 531.0703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 213.0703125,
+          "width": 280,
+          "x": 139,
+          "y": 213.0703125
+        },
+        {
+          "bottom": 531.0703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 213.0703125,
+          "width": 280,
+          "x": 419,
+          "y": 213.0703125
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "batch-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 368.5703125
+        },
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 368.5703125
+        }
+      ],
+      "width": 760
+    }
+  ],
+  "shellSha256": "42e9805402a9b50fe1484fc15f90003d4794ee29763c0d1004d1620b9633459a",
+  "build": {
+    "frontend": "vue-tsc / VITE_DESKTOP_E2E=1 Vite",
+    "native": "custom-protocol,desktop-e2e; opt-level=1,LTO=false",
+    "productionConfigChanged": false
+  }
+}

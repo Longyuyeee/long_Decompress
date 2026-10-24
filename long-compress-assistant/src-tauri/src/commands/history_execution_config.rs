@@ -95,6 +95,10 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
             let prefix=value.get("archivePrefix").and_then(Value::as_str).unwrap_or("");if prefix.len()>32768{return None}
             output.insert("operation".into(),operation.clone());output.insert("updateSources".into(),Value::Array(sources.clone()));output.insert("archivePrefix".into(),prefix.into());
         }
+        if let Some(method)=value.get("sevenZipMethod") {
+            crate::services::seven_zip_method::SevenZipMethod::from_setting(method.as_str()?)?;
+            output.insert("sevenZipMethod".into(),method.clone());
+        }
         if let Some(method) = value.get("wimMethod") {
             if !matches!(method.as_str(), Some("store" | "xpress" | "lzx" | "lzms" | "solid")) { return None; }
             output.insert("wimMethod".into(), method.clone());
@@ -129,6 +133,10 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     if !settings_fields.is_empty() {
         let mut settings = project(value.get("settings")?, settings_fields)?;
         if kind == "archive-compression" {
+            if let Some(method)=value.get("settings")?.get("sevenZipMethod") {
+                crate::services::seven_zip_method::SevenZipMethod::from_setting(method.as_str()?)?;
+                settings.insert("sevenZipMethod".into(),method.clone());
+            }
             if let Some(method) = value.get("settings")?.get("wimMethod") {
                 if !matches!(method.as_str(), Some("store" | "xpress" | "lzx" | "lzms" | "solid")) { return None; }
                 settings.insert("wimMethod".into(), method.clone());
@@ -434,4 +442,14 @@ fn zpaq164_history_retains_subset_intent_without_credentials(){
  let selection=serde_json::json!({"snapshot":{"version":3,"date":20261020150000i64},"revision":"a".repeat(64),"paths":["docs/kept.txt"],"password":"not-saved"});
  let value=serde_json::json!({"schemaVersion":1,"kind":"archive-extraction","outputDirectory":"D:/out","extractToSubfolder":false,"zpaqSnapshot":selection["snapshot"],"zpaqRetrieval":selection,"password":"not-saved"});
  let saved=sanitize(value.clone(),"decompression","archive").unwrap();assert_eq!(saved["zpaqRetrieval"]["paths"],value["zpaqRetrieval"]["paths"]);assert!(!saved.to_string().contains("not-saved"));let mut bad=value;bad["zpaqRetrieval"]["paths"]=serde_json::json!([]);assert!(sanitize(bad,"decompression","archive").is_none());
+}
+
+
+#[cfg(test)]#[test]
+fn sevenz1646_history_creation_and_conversion_retain_method_reject_unknown(){
+ for method in ["lzma2","lzma","bzip2"]{
+  let creation=serde_json::json!({"schemaVersion":1,"kind":"archive-compression","outputDirectory":"D:/out","passwordRequired":true,"settings":{"format":"7z","level":1,"filename":"","splitArchive":false,"splitSize":"1","keepStructure":true,"verifyAfter":true,"createSolidArchive":true,"sevenZipMethod":method}});
+  let converted=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","outputPath":"D:/out.7z","format":"7z","level":1,"splitSize":0,"encryptFilenames":false,"passwordRequired":false,"sevenZipMethod":method});
+  for (value,kind) in [(creation,"compression"),(converted,"conversion")]{let saved=sanitize(value.clone(),"compression","archive").unwrap();assert_eq!(if kind=="compression"{&saved["settings"]["sevenZipMethod"]}else{&saved["sevenZipMethod"]},method);let mut bad=value;if kind=="compression"{bad["settings"]["sevenZipMethod"]="bad".into()}else{bad["sevenZipMethod"]="bad".into()}assert!(sanitize(bad,"compression","archive").is_none());}
+ }
 }

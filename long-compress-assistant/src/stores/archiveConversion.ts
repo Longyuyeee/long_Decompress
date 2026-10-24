@@ -233,6 +233,8 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       } finally { preparing.value = false }
     }
     const targets = chosen.filter(item => items.value.includes(item) && item.selected && !item.taskId)
+    const sevenOnly = !sourceEncodingChanged && patch.sevenZipMethod !== undefined && Object.entries(patch).every(([key,v]) => key === 'sevenZipMethod' || v === undefined)
+    if (sevenOnly && !targets.some(item => effectiveSettings(item).format === '7z')) return '所选任务中没有 7Z 任务，请选择 7Z 格式或保持各自方法。'
     const methodOnly = !sourceEncodingChanged && patch.zipMethod !== undefined && Object.entries(patch).every(([field, value]) => field === 'zipMethod' || value === undefined)
     const wimOnly = patch.wimMethod !== undefined && Object.entries(patch).every(([key,v]) => key === 'wimMethod' || v === undefined)
     if (wimOnly && !targets.some(item => ['wim','swm'].includes(effectiveSettings(item).format))) return '所选任务中没有 WIM 任务，请选择 WIM 格式或保持各自方法。'
@@ -247,6 +249,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       const filtered = { ...patch }, format = patch.format || effectiveSettings(item).format
       if (item.intent === 'zpaq-update' && item.sourceNativeParts && filtered.splitMiB !== undefined) { delete filtered.splitMiB; skippedNative++ }
       if (filtered.wimMethod !== undefined && (!['wim','swm'].includes(format) || format === 'swm' && !['store','xpress','lzx'].includes(filtered.wimMethod))) delete filtered.wimMethod
+      if (filtered.sevenZipMethod !== undefined && format !== '7z') delete filtered.sevenZipMethod
       if (filtered.zipMethod !== undefined && format !== 'zip') delete filtered.zipMethod
       if (filtered.zipPasswordEncoding !== undefined && !['zip','zipx'].includes(format)) { delete filtered.zipPasswordEncoding; skippedTarget++ }
       if (sourceEncodingChanged && (!item.sourceFormat || !supportsZipPasswordEncoding(item.sourcePath, item.sourceFormat))) { delete filtered.sourceZipPasswordEncoding; skippedSource++ }
@@ -307,7 +310,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       settings: { ...defaultConversionSettings(), ...(updating ? { updateSources: [...(config.updateSources || [])], archivePrefix: config.archivePrefix || '' } : {}), sourceZpaqSnapshot: config.sourceZpaqSnapshot, outputDirectory: parentDirectory(config.outputPath), outputPath: '', format: config.format,
       ...(config.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: config.sourceZipPasswordEncoding } : {}),
       ...(config.wimMethod ? { wimMethod: config.wimMethod } : {}),
-      zipMethod: config.zipMethod ?? 'deflate',
+      sevenZipMethod: config.sevenZipMethod ?? 'lzma2', zipMethod: config.zipMethod ?? 'deflate',
       zipEncryption: config.zipEncryption ?? 'aes256', zipPasswordEncoding: config.zipPasswordEncoding ?? 'utf8',
       zipSplitMode: config.zipSplitMode ?? 'numeric', rarRecoveryPercent: config.rarRecoveryPercent ?? 0,
       rarRecoveryVolumes: config.rarRecoveryVolumes ?? 0,
@@ -358,7 +361,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       ...(settings.sourceZpaqSnapshot ? { sourceZpaqSnapshot: { ...settings.sourceZpaqSnapshot } } : {}),
       ...(sourceEncoding ? { sourceZipPasswordEncoding: sourceEncoding } : {}),
       ...(settings.wimMethod ? { wimMethod: settings.wimMethod } : {}),
-      zipMethod: settings.zipMethod ?? 'deflate',
+      sevenZipMethod: settings.sevenZipMethod ?? 'lzma2', zipMethod: settings.zipMethod ?? 'deflate',
       zipEncryption: settings.zipEncryption, zipPasswordEncoding: ['zip','zipx'].includes(settings.format) ? settings.zipPasswordEncoding : 'utf8',
       zipSplitMode: settings.zipSplitMode ?? 'numeric',
       outputPath, format: settings.format, level: settings.level, splitSize: settings.splitMiB * 1048576,
@@ -387,7 +390,7 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
           sourcePassword: settings.sourcePassword || null, outputPath, ...snapshotArguments(settings.sourceZpaqSnapshot),
           options: { format: config.format, level: config.level, password: settings.password || null,
             ...(['wim','esd','swm'].includes(config.format) ? { wim_method: settings.wimMethod ?? 'store' } : {}),
-            zip_method: config.zipMethod ?? 'deflate', zip_encryption: config.zipEncryption, zip_password_encoding: config.zipPasswordEncoding,
+            seven_zip_method: config.sevenZipMethod ?? 'lzma2', zip_method: config.zipMethod ?? 'deflate', zip_encryption: config.zipEncryption, zip_password_encoding: config.zipPasswordEncoding,
             zip_split_mode: config.zipSplitMode, rar_recovery_percent: config.rarRecoveryPercent ?? 0,
             rar_recovery_volumes: config.splitSize > 0 ? (config.rarRecoveryVolumes ?? 0) : 0,
             split_size: config.splitSize || null, encrypt_filenames: config.encryptFilenames,

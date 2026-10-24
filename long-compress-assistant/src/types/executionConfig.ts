@@ -60,6 +60,7 @@ export interface ArchiveConversionConfigV1 {
   sourceZpaqSnapshot?: ZpaqSnapshot
   sourceZipPasswordEncoding?: ZipPasswordEncoding
   wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
+  sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2'
   zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'
   zipEncryption?: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
@@ -111,6 +112,8 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
   if (config.kind === 'archive-compression' && config.settings.zipPasswordEncoding !== undefined
       && !isZipPasswordEncoding(config.settings.zipPasswordEncoding)) return null
   if (config.kind === 'archive-conversion' && config.sourcePasswordRequired !== undefined && typeof config.sourcePasswordRequired !== 'boolean') return null
+  const seven = config.kind === 'archive-compression' ? config.settings.sevenZipMethod : config.kind === 'archive-conversion' ? config.sevenZipMethod : undefined
+  if (seven !== undefined && !['lzma2','lzma','bzip2'].includes(seven)) return null
   const method = config.kind === 'archive-compression' ? config.settings.wimMethod : config.kind === 'archive-conversion' ? config.wimMethod : undefined
   if (method !== undefined && method !== 'store' && method !== 'xpress' && method !== 'lzx' && method !== 'lzms' && method !== 'solid') return null
   if (config.kind === 'archive-edit' && (typeof config.outputPath !== 'string' || !config.outputPath.trim())) return null
@@ -122,7 +125,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
       ...(config.sourceZpaqSnapshot ? { sourceZpaqSnapshot: { ...config.sourceZpaqSnapshot } } : {}),
       ...(config.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: config.sourceZipPasswordEncoding } : {}),
       ...(config.wimMethod ? { wimMethod: config.wimMethod } : {}),
-      zipMethod: config.zipMethod ?? 'deflate',
+      sevenZipMethod: config.sevenZipMethod ?? 'lzma2', zipMethod: config.zipMethod ?? 'deflate',
       zipEncryption: config.zipEncryption ?? 'aes256', zipPasswordEncoding: config.zipPasswordEncoding ?? 'utf8',
       ...(config.zipSplitMode ? { zipSplitMode: config.zipSplitMode } : {}),
       outputPath: config.outputPath, format: config.format, level: config.level,
@@ -150,7 +153,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
           ...(s.encryptFilenames !== undefined ? { encryptFilenames: s.encryptFilenames } : {}),
           ...(s.zipPasswordEncoding ? { zipPasswordEncoding: s.zipPasswordEncoding } : {}),
           ...(s.wimMethod ? { wimMethod: s.wimMethod } : {}),
-          ...(s.zipMethod ? { zipMethod: s.zipMethod } : {}),
+          ...(s.sevenZipMethod ? { sevenZipMethod: s.sevenZipMethod } : {}), ...(s.zipMethod ? { zipMethod: s.zipMethod } : {}),
           ...(s.zipEncryption ? { zipEncryption: s.zipEncryption } : {}),
           ...(s.zipSplitMode ? { zipSplitMode: s.zipSplitMode } : {}),
         } }

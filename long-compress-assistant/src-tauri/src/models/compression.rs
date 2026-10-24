@@ -124,6 +124,8 @@ pub struct CompressionOptions {
     pub wim_method: crate::services::wim_writer::WimMethod,
     #[serde(default)]
     pub zip_method: crate::services::zip_method::ZipMethod,
+    #[serde(default)]
+    pub seven_zip_method: crate::services::seven_zip_method::SevenZipMethod,
     // Retired in 1.4.0: accept old payloads, but never deserialize or emit this option.
     #[serde(skip)]
     pub fast_pack: bool,
@@ -211,6 +213,7 @@ impl Default for CompressionOptions {
         Self {
             wim_method: Default::default(),
             zip_method: Default::default(),
+            seven_zip_method: Default::default(),
             fast_pack: false,
             zip_password_encoding: Default::default(),
             zip_encryption: Default::default(),
