@@ -1,0 +1,17 @@
+{
+  "generator": "Python stdlib liblzma ARM + LZMA2, decoded using LZMA2 alone for independent BCJ bytes",
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "seed": 1653,
+  "elf": "Hand-built minimal ELF32 little-endian ARM EABI exit program and synthetic instructions; no external real application benchmark",
+  "references": [
+    "https://github.com/tukaani-project/xz/blob/master/src/liblzma/simple/arm.c",
+    "https://github.com/tukaani-project/xz/blob/master/src/liblzma/simple/simple_coder.c"
+  ],
+  "files": {
+    "filtered-0.bin": "a0708738a9a10d68397283ac78703e07b75ce7e7be212d59998c8aa481acad6f",
+    "filtered-2147483644.bin": "2cc38d208d938d5dbcebe3955a48e5386fbc819d8f23ff29ee60fa504066ce33",
+    "filtered-4294967292.bin": "2cc38d208d938d5dbcebe3955a48e5386fbc819d8f23ff29ee60fa504066ce33",
+    "input.bin": "3aae7edd94f568aaca6016ed9c7c4d5f127f7cae51751281eb0027190c632040",
+    "sample-arm32.elf": "f8dd8635dec8a95162e8f0bb26d03dc31cc13b0e1fb59570a59f39ed8478482b"
+  }
+}

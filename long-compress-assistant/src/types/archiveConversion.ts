@@ -16,7 +16,7 @@ export interface ConversionSettings {
   rarRecoveryPercent?: number
   rarRecoveryVolumes?: number
   wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
-  sevenZipFilter?: 'none' | 'delta' | 'bcj_x86'; sevenZipDeltaDistance?: number; sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'
+  sevenZipFilter?: 'none' | 'delta' | 'bcj_x86' | 'bcj_arm32'; sevenZipDeltaDistance?: number; sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'
   zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma' | 'store'
   zipEncryption: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'

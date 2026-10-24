@@ -523,3 +523,12 @@ fn sevenz1652_history_creation_and_conversion_retain_method_reject_unknown(){
   for (value,kind) in [(creation,"compression"),(converted,"conversion")]{let saved=sanitize(value.clone(),"compression","archive").unwrap();assert_eq!(if kind=="compression"{&saved["settings"]["sevenZipMethod"]}else{&saved["sevenZipMethod"]},method);assert_eq!(if kind=="compression"{&saved["settings"]["sevenZipFilter"]}else{&saved["sevenZipFilter"]},"bcj_x86");let mut bad=value;if kind=="compression"{bad["settings"]["sevenZipFilter"]="bad".into()}else{bad["sevenZipFilter"]="bad".into()}assert!(sanitize(bad,"compression","archive").is_none());}
  }
 }
+
+#[cfg(test)]#[test]
+fn sevenz1653_history_creation_and_conversion_retain_method_reject_unknown(){
+ for method in ["lzma2"]{
+  let creation=serde_json::json!({"schemaVersion":1,"kind":"archive-compression","outputDirectory":"D:/out","passwordRequired":true,"settings":{"format":"7z","level":1,"filename":"","splitArchive":false,"splitSize":"1","keepStructure":true,"verifyAfter":true,"createSolidArchive":true,"sevenZipMethod":method,"sevenZipFilter":"bcj_arm32","sevenZipDeltaDistance":256}});
+  let converted=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","outputPath":"D:/out.7z","format":"7z","level":1,"splitSize":0,"encryptFilenames":false,"passwordRequired":false,"sevenZipMethod":method,"sevenZipFilter":"bcj_arm32","sevenZipDeltaDistance":256});
+  for (value,kind) in [(creation,"compression"),(converted,"conversion")]{let saved=sanitize(value.clone(),"compression","archive").unwrap();assert_eq!(if kind=="compression"{&saved["settings"]["sevenZipMethod"]}else{&saved["sevenZipMethod"]},method);assert_eq!(if kind=="compression"{&saved["settings"]["sevenZipFilter"]}else{&saved["sevenZipFilter"]},"bcj_arm32");let mut bad=value;if kind=="compression"{bad["settings"]["sevenZipFilter"]="bad".into()}else{bad["sevenZipFilter"]="bad".into()}assert!(sanitize(bad,"compression","archive").is_none());}
+ }
+}

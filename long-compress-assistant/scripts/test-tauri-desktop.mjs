@@ -1,3 +1,4 @@
+import { runSevenzArm32Bcj1653Gate } from './sevenz-arm32-bcj-create-1653-gate.mjs'
 import { runSevenzBcj1652Gate } from './sevenz-x86-bcj-create-1652-gate.mjs'
 import { runSevenzDelta1651Gate } from './sevenz-delta-create-1651-gate.mjs'
 import { runZipStore1650Gate } from './zip-store-create-1650-gate.mjs'
@@ -5074,6 +5075,8 @@ try {
     await runSevenzSolidDeflate1635Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--sevenz-password-deflate-preview-1634-only')) {
     await runSevenzPasswordDeflate1634Gate({driver,bridge:callDesktopBridge,root,application})
+  } else if (process.argv.includes('--sevenz-arm32-bcj-create-1653-only')) {
+    await runSevenzArm32Bcj1653Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--sevenz-x86-bcj-create-1652-only')) {
     await runSevenzBcj1652Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--sevenz-delta-create-1651-only')) {

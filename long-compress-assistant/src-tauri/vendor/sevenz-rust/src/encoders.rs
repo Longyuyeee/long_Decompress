@@ -12,6 +12,7 @@ use crate::{
 
 pub enum Encoder<W: Write> {
     BcjX86(crate::bcj::encoder::X86Encoder<CountingWriter<W>>),
+    BcjArm32(crate::bcj::encoder::BcjEncoder<CountingWriter<W>>),
     DELTA(crate::delta_encoder::DeltaEncoder<CountingWriter<W>>),
     COPY(CopyEncoder<CountingWriter<W>>),
     LZMA(LZMAWriter<W>),
@@ -30,6 +31,7 @@ impl<W: Write> Write for Encoder<W> {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         match self {
             Encoder::BcjX86(w) => w.write(buf),
+            Encoder::BcjArm32(w) => w.write(buf),
             Encoder::DELTA(w) => w.write(buf),
             Encoder::COPY(w) => w.write(buf),
             Encoder::LZMA(w) => w.write(buf),
@@ -48,6 +50,7 @@ impl<W: Write> Write for Encoder<W> {
     fn flush(&mut self) -> std::io::Result<()> {
         match self {
             Encoder::BcjX86(w) => w.flush(),
+            Encoder::BcjArm32(w) => w.flush(),
             Encoder::DELTA(w) => w.flush(),
             Encoder::COPY(w) => w.flush(),
             Encoder::LZMA(w) => w.flush(),
@@ -71,6 +74,10 @@ pub fn add_encoder<W: Write>(
     let method = method_config.method;
 
     match method.id() {
+        SevenZMethod::ID_BCJ_ARM => {
+            if method_config.options.is_some() { return Err(Error::other("ARM32 BCJ does not accept output options")); }
+            Ok(Encoder::BcjArm32(crate::bcj::encoder::BcjEncoder::new_arm(input)))
+        }
         SevenZMethod::ID_BCJ_X86 => {
             if method_config.options.is_some() { return Err(Error::other("x86 BCJ does not accept output options")); }
             Ok(Encoder::BcjX86(crate::bcj::encoder::X86Encoder::new(input)))

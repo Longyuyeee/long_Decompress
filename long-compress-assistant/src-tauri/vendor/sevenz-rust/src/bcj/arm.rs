@@ -4,7 +4,7 @@ impl BCJFilter {
     pub fn new_arm(start_pos: usize, encoder: bool) -> Self {
         Self {
             is_encoder: encoder,
-            pos: start_pos + 8,
+            pos: start_pos.wrapping_add(8),
             prev_mask: 0,
             filter: Self::arm_code,
         }
@@ -35,8 +35,8 @@ impl BCJFilter {
                 let b0 = buf[i] as i32;
 
                 let src = ((b2 << 16) | (b1 << 8) | (b0)) << 2;
-                let p = (self.pos + i) as i32;
-                let dest = if self.is_encoder { src + p } else { src - p };
+                let p = self.pos.wrapping_add(i) as i32;
+                let dest = if self.is_encoder { src.wrapping_add(p) } else { src.wrapping_sub(p) };
                 let dest = dest >> 2;
                 buf[i + 2] = ((dest >> 16) & 0xff) as u8;
                 buf[i + 1] = ((dest >> 8) & 0xff) as u8;
@@ -45,7 +45,7 @@ impl BCJFilter {
             i += 4;
         }
 
-        self.pos += i;
+        self.pos = self.pos.wrapping_add(i);
         i
     }
 

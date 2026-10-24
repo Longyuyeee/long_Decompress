@@ -4,22 +4,29 @@ use std::io::{self, Write};
 #[derive(PartialEq)]
 enum State { Active, Finished, Failed }
 
-/// Streaming x86 BCJ. Preserve the final <=4 bytes until the next write;
+/// Streaming x86/ARM32 BCJ. Preserve the final <=4/3 bytes until the next write;
 /// flush must not reset the instruction position or expose an incomplete call.
-pub struct X86Encoder<W: Write> {
+pub struct BcjEncoder<W: Write> {
     inner: W,
     filter: BCJFilter,
     pending: [u8; 8192],
     len: usize,
     state: State,
 }
-impl<W: Write> X86Encoder<W> {
+pub type X86Encoder<W> = BcjEncoder<W>;
+impl<W: Write> BcjEncoder<W> {
     pub(crate) fn new(inner: W) -> Self {
-        Self { inner, filter: BCJFilter::new_x86(0, true), pending: [0; 8192], len: 0, state: State::Active }
+        Self::with_filter(inner, BCJFilter::new_x86(0, true))
     }
-    fn failed() -> io::Error { io::Error::new(io::ErrorKind::BrokenPipe, "x86 BCJ encoder finished or failed") }
+    pub(crate) fn new_arm(inner: W) -> Self {
+        Self::with_filter(inner, BCJFilter::new_arm(0, true))
+    }
+    fn with_filter(inner: W, filter: BCJFilter) -> Self {
+        Self { inner, filter, pending: [0; 8192], len: 0, state: State::Active }
+    }
+    fn failed() -> io::Error { io::Error::new(io::ErrorKind::BrokenPipe, "BCJ encoder finished or failed") }
 }
-impl<W: Write> Write for X86Encoder<W> {
+impl<W: Write> Write for BcjEncoder<W> {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
         if self.state == State::Failed || !bytes.is_empty() && self.state == State::Finished { return Err(Self::failed()); }
         if bytes.is_empty() {
