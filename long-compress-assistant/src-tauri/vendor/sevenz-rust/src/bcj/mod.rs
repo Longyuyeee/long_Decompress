@@ -5,6 +5,9 @@ mod x86;
 #[cfg(all(test, feature = "compress"))]
 #[path = "../bcj_encoder_1652_tests.rs"]
 mod bcj_encoder_1652_tests;
+#[cfg(all(test, feature = "compress"))]
+#[path = "../arm32_bcj_1653_tests.rs"]
+mod arm32_bcj_1653_tests;
 #[cfg(feature = "compress")]
 pub(crate) mod encoder;
 use std::io::Read;
@@ -66,6 +69,9 @@ impl<R> SimpleReader<R> {
     pub fn new_arm(inner: R) -> Self {
         Self::new(inner, BCJFilter::new_arm(0, false))
     }
+    pub(crate) fn new_arm_at(inner: R, start: usize) -> Self {
+        if start == 0 { Self::new_arm(inner) } else { Self::new(inner, BCJFilter::new_arm(start, false)) }
+    }
     #[inline]
     pub fn new_arm_thumb(inner: R) -> Self {
         Self::new(inner, BCJFilter::new_arm_thumb(0, false))
@@ -85,6 +91,11 @@ pub(crate) fn x86_start_position(properties: &[u8]) -> Result<usize, crate::Erro
         [a, b, c, d] => Ok(u32::from_le_bytes([*a, *b, *c, *d]) as usize),
         _ => Err(crate::Error::other("x86 BCJ properties must be empty or a 4-byte start position")),
     }
+}
+pub(crate) fn arm_start_position(properties: &[u8]) -> Result<usize, crate::Error> {
+    let start = x86_start_position(properties).map_err(|_| crate::Error::other("ARM32 BCJ properties must be empty or a 4-byte aligned start position"))?;
+    if start & 3 != 0 { return Err(crate::Error::other("ARM32 BCJ start position must be aligned to four bytes")); }
+    Ok(start)
 }
 impl<R: Read> Read for SimpleReader<R> {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {

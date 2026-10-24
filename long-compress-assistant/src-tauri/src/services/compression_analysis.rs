@@ -187,11 +187,12 @@ fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usi
 }
 
 fn compressed_sample_size_with_cancel(sample: &[u8], format: &str, level: u32, cancelled: &AtomicBool) -> Result<usize> {
-    if let Some(route)=format.strip_prefix("7z-").and_then(|s|s.strip_suffix("-bcj-x86")) {
-        use super::seven_zip_method::{SevenZipMethod as M,SevenZipFilter as F};
-        let method=match route {"lzma2"=>M::Lzma2,"lzma"=>M::Lzma,_=>anyhow::bail!("x86 BCJ 预处理只适用于 LZMA2/LZMA")};
+    use super::seven_zip_method::{SevenZipMethod as M,SevenZipFilter as F};
+    let bcj_route=format.strip_prefix("7z-").and_then(|s|s.strip_suffix("-bcj-x86").map(|m|(m,F::BcjX86)).or_else(||s.strip_suffix("-bcj-arm32").map(|m|(m,F::BcjArm32))));
+    if let Some((route,filter))=bcj_route {
+        let method=match route {"lzma2"=>M::Lzma2,"lzma"=>M::Lzma,_=>anyhow::bail!("BCJ 预处理只适用于 LZMA2/LZMA")};
         check_cancelled(cancelled)?;
-        let size=super::seven_zip_method::sample_size_filtered(sample,method,level,F::BcjX86,1,cancelled)?;
+        let size=super::seven_zip_method::sample_size_filtered(sample,method,level,filter,1,cancelled)?;
         check_cancelled(cancelled)?;return Ok(size);
     }
     if let Some(route)=format.strip_prefix("7z-").and_then(|s|s.split_once("-delta-")) {
@@ -283,7 +284,7 @@ fn compressed_sample_size_with_cancel(sample: &[u8], format: &str, level: u32, c
 
 fn duration_range(total_size: u64, format: &str, level: u32, file_count: usize) -> (u64, u64) {
     let format = format.strip_suffix(".aes").unwrap_or(format);
-    let format = if format.starts_with("7z-lzma2-delta-") || format=="7z-lzma2-bcj-x86" {"7z"} else if format.starts_with("7z-lzma-delta-") || format=="7z-lzma-bcj-x86" {"7z-lzma"} else {format};
+    let format = if format.starts_with("7z-lzma2-delta-") || matches!(format,"7z-lzma2-bcj-x86"|"7z-lzma2-bcj-arm32") {"7z"} else if format.starts_with("7z-lzma-delta-") || matches!(format,"7z-lzma-bcj-x86"|"7z-lzma-bcj-arm32") {"7z-lzma"} else {format};
     let base_mib_per_second = match format {
         "7z" | "7z-lzma" | "xz" | "tar.xz" | "lzma" | "tar.lzma" | "zip-lzma" | "lz" | "tar.lz" => 45.0,
         "7z-bzip2" | "bz2" | "tar.bz2" | "zip-bzip2" => 35.0,
@@ -338,7 +339,7 @@ pub fn analyze_compression(
     let adjusted_ratio = if matches!(format, "7z-copy" | "zip-store") || (format == "zip" && level == 0) { sample_ratio.max(1.0) } else {
         (sample_ratio * (1.0 - low_value_share) + 0.98 * low_value_share).clamp(0.02, 1.08)
     };
-    let recommend_copy = (matches!(format,"7z"|"7z-lzma"|"7z-bzip2"|"7z-deflate"|"7z-ppmd") || format.starts_with("7z-lzma2-delta-") || format.starts_with("7z-lzma-delta-") || matches!(format,"7z-lzma2-bcj-x86"|"7z-lzma-bcj-x86"))
+    let recommend_copy = (matches!(format,"7z"|"7z-lzma"|"7z-bzip2"|"7z-deflate"|"7z-ppmd") || format.starts_with("7z-lzma2-delta-") || format.starts_with("7z-lzma-delta-") || matches!(format,"7z-lzma2-bcj-x86"|"7z-lzma-bcj-x86"|"7z-lzma2-bcj-arm32"|"7z-lzma-bcj-arm32"))
         && sample.len() >= 4096 && sample_ratio >= 0.98;
     let recommend_store = matches!(format, "zip" | "zip-lzma" | "zip-ppmd" | "zip-zstd" | "zip-bzip2")
         && !(format == "zip" && level == 0) && sample.len() >= 4096 && sample_ratio >= 0.98;

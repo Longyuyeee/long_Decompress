@@ -184,7 +184,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 
 | 能力 | 主要格式与说明 |
 | --- | --- |
-| 创建归档 | ZIP（Deflate / Store 仅存储 / Zstandard / BZip2 / PPMd / LZMA）、ZIPX（XZ）、7Z（LZMA2 / LZMA / Bzip2 / Deflate / PPMd / Copy；LZMA2/LZMA 可选 Delta / x86 BCJ）、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码、数字分卷与保留历史的增量更新）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM（存储/XPRESS/LZX/LZMS/固实）、ESD（LZMS 固实），两者支持数字分卷；SWM（仅存储/XPRESS/LZX 原生资源分包） |
+| 创建归档 | ZIP（Deflate / Store 仅存储 / Zstandard / BZip2 / PPMd / LZMA）、ZIPX（XZ）、7Z（LZMA2 / LZMA / Bzip2 / Deflate / PPMd / Copy；LZMA2/LZMA 可选 Delta / x86 BCJ / ARM32 BCJ）、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码、数字分卷与保留历史的增量更新）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM（存储/XPRESS/LZX/LZMS/固实）、ESD（LZMS 固实），两者支持数字分卷；SWM（仅存储/XPRESS/LZX 原生资源分包） |
 | 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式当前内容/日志式历史快照、原生多部分确认读取、版本对比与变化提取）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，原生 SWM（Copy/XPRESS/LZX 整组读取），以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
 | 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷、ZPAQ 原生密码数字切卷及原生多部分只读；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM / ESD / SWM、ZPAQ（含改密与数字分卷）；密码和分卷随目标格式提供 |
@@ -275,7 +275,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.6.52 · 可选 7Z x86 BCJ 预处理**。原折叠高级设置增加面向可执行代码的 BCJ，默认关闭，切回 Delta 保留距离；密码、固实、分卷、预览/提取、配置保存、真实分析和转换贯通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.52.md) · [记录](long-compress-assistant/docs/SEVENZ_X86_BCJ_CREATE_FREEZE_1.6.52.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.52)。下一阶段 [ARM32 BCJ](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.53.md)仅规划。
+**v1.6.53 · 可选 7Z ARM32 BCJ 预处理**。原折叠高级设置增加 ARM32 小端 BCJ，默认关闭；密码、固实、数字卷、预览/提取、配置保存和真实分析/转换接通，修复历史选项恢复。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.53.md) · [记录](long-compress-assistant/docs/SEVENZ_ARM32_BCJ_CREATE_FREEZE_1.6.53.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.53)。下一阶段 [ARM Thumb BCJ](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.54.md)仅规划。
+
+**v1.6.52 · 可选 7Z x86 BCJ 预处理**。原折叠高级设置增加面向可执行代码的 BCJ，默认关闭，切回 Delta 保留距离；密码、固实、分卷、预览/提取、配置保存、真实分析和转换贯通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.52.md) · [记录](long-compress-assistant/docs/SEVENZ_X86_BCJ_CREATE_FREEZE_1.6.52.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.52)。ARM32 BCJ 由上方 v1.6.53 接续。
 
 **v1.6.51 · 可选 7Z Delta 预处理**。LZMA2/LZMA 可选距离 1～256 的 Delta，默认折叠并关闭；密码、固实、分卷、预览和转换贯通，配置保存与真实分析接通，修复距离 256 读取。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.51.md) · [记录](long-compress-assistant/docs/SEVENZ_DELTA_CREATE_FREEZE_1.6.51.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.51)。7Z x86 BCJ 预处理由上方 v1.6.52 接续。
 

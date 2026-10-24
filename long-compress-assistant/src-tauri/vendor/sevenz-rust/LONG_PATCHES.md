@@ -1,5 +1,7 @@
 # Long-Decompress local patch
 
+v1.6.53：在原固定 8 KiB BCJ 写入适配中加入 ARM32 构造，保留 x86 别名/入口；ARM 四字节单位、最多三字节尾部，flush 不重置，明确终止/错误保持。ARM32 加减和位置使用 wrapping，读取接受空/四字节对齐起点属性。严格 LZMA2/LZMA 可选 AES 的完整与开头路径接通 ARM，前看计入原预算。3 项 ARM 检查汇总 + 1 项受影响 x86 连续性，独立 liblzma 与 7-Zip/实际桌面见本版记录；依赖与外部引擎未改。
+
 v1.6.52：可选 x86 BCJ 流式编码（固定 8 KiB，保留 ≤4 字节尾部、flush 不重置、明确结束与失败状态）；x86 加减/位置使用 wrapping，读取支持空/四字节起点属性。原严格 LZMA2/LZMA 完整/开头路径接通可选 BCJ，前看最多四字节并计入预算。独立 liblzma 字节原件、新输出独立 7-Zip 回解及真实桌面见本版记录；版本、依赖和其他方法不变。
 
 Source: crates.io sevenz-rust 0.6.1 (Apache-2.0; LICENSE preserved).

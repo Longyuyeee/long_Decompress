@@ -1,0 +1,11 @@
+{
+  "screenshots": [
+    "collapsed-wide.png",
+    "inline-wide.png",
+    "inline-narrow.png",
+    "batch-narrow.png",
+    "conversion-narrow.png"
+  ],
+  "applicationSha256": "59d4aeb42281468b40b2a458d691c89fbad76a8532aef05cf654c820f4d031eb",
+  "result": "Viewed all five: existing theme, readable ARM32 full-width controls, single inline expansion, batch modal, equal columns, no horizontal overflow."
+}

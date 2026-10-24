@@ -445,7 +445,7 @@ pub fn export_profile_template(profile: &CompressionProfile, path: &Path) -> Res
     if let Some(value)=profile.config.extra_params.get("seven_zip_method") {
         anyhow::ensure!(super::seven_zip_method::SevenZipMethod::from_setting(value).is_some(),"请选择支持的 7Z 压缩方法：LZMA2、LZMA、Bzip2、Deflate、PPMd 或仅归档（Copy）");
     }
-    if let Some(s)=profile.config.extra_params.get("seven_zip_filter"){anyhow::ensure!(super::seven_zip_method::SevenZipFilter::from_setting(s).is_some(),"7Z 预处理请选择无、Delta 或 x86 BCJ");}
+    if let Some(s)=profile.config.extra_params.get("seven_zip_filter"){anyhow::ensure!(super::seven_zip_method::SevenZipFilter::from_setting(s).is_some(),"7Z 预处理请选择无、Delta、x86 BCJ 或 ARM32 BCJ");}
     if let Some(s)=profile.config.extra_params.get("seven_zip_delta_distance"){anyhow::ensure!(s.parse::<u32>().is_ok_and(|n|(1..=256).contains(&n)),"Delta 距离请输入 1～256 的整数");}
     let template = template_from_profile(profile);
     validate_template(&template)?;
@@ -1065,6 +1065,14 @@ mod tests {
         original.config.extra_params.insert("zip_method".into(),"store".into());
         export_profile_template(&original,&path).unwrap();let preview=preview_template_file(&path).unwrap();assert_eq!(preview.template.compression.zip_method,Some(super::super::zip_method::ZipMethod::Store));
         let imported=import_template_profile(&path,&preview.content_sha256).unwrap();assert_eq!(imported.config.extra_params["zip_method"],"store");
+    }
+    #[test]
+    fn sevenz1653_template_method_survives_export_import() {
+        let temp=tempfile::tempdir().unwrap();let path=temp.path().join("store.longtask.json");
+        let mut original=profile();original.config.format="7z".into();original.config.password=None;original.config.create_solid_archive=false;original.config.encrypt_filenames=false;
+        original.config.extra_params.insert("seven_zip_filter".into(),"bcj_arm32".into());original.config.extra_params.insert("seven_zip_delta_distance".into(),"256".into());
+        export_profile_template(&original,&path).unwrap();let preview=preview_template_file(&path).unwrap();assert_eq!(preview.template.compression.seven_zip_delta_distance,Some(256));
+        let imported=import_template_profile(&path,&preview.content_sha256).unwrap();assert_eq!(imported.config.extra_params["seven_zip_filter"],"bcj_arm32");assert_eq!(imported.config.extra_params["seven_zip_delta_distance"],"256");
     }
     #[test]
     fn sevenz1652_template_method_survives_export_import() {

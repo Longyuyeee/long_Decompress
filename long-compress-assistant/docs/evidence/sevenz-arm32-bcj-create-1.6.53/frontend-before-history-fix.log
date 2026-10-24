@@ -1,0 +1,31 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ ❯ src/stores/__tests__/sevenzArm32Bcj1653.test.ts (4 tests | 1 failed) 110ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/stores/__tests__/sevenzArm32Bcj1653.test.ts > history workflow and preset keep target filter independently of method and old defaults
+AssertionError: expected false to match object { sevenZipFilter: 'bcj_arm32', …(1) }
+
+- Expected:
+{
+  "sevenZipDeltaDistance": 256,
+  "sevenZipFilter": "bcj_arm32",
+}
+
++ Received:
+false
+
+ ❯ src/stores/__tests__/sevenzArm32Bcj1653.test.ts:27:200
+   × history workflow and preset keep target filter independently of method and old defaults 17ms
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 1 passed (2)
+      Tests  1 failed | 6 passed (7)
+   Start at  20:36:59
+   Duration  33.49s (transform 3.76s, setup 1.23s, import 5.98s, tests 331ms, environment 54.89s)
+

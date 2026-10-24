@@ -266,3 +266,6 @@ mod sevenz_delta_create_1651_tests;
 
 #[cfg(test)]
 mod sevenz_x86_bcj_create_1652_tests;
+
+#[cfg(test)]
+mod sevenz_arm32_bcj_create_1653_tests;

@@ -1,0 +1,374 @@
+{
+  "version": "1.6.53",
+  "applicationSha256": "59d4aeb42281468b40b2a458d691c89fbad76a8532aef05cf654c820f4d031eb",
+  "checks": [
+    {
+      "name": "inline collapsed advanced settings retain method inheritance and batch modal in wide and small windows",
+      "applicationSha256": "59d4aeb42281468b40b2a458d691c89fbad76a8532aef05cf654c820f4d031eb",
+      "inlinePreserved": true,
+      "batchModalPreserved": true,
+      "defaultNonePreserved": true,
+      "inactiveMethodRetainsDistance": true,
+      "analysisInvalidatedOnFilterChange": true
+    },
+    {
+      "name": "UI ARM32 BCJ creation history previews extraction and target conversion preserve selected chain",
+      "applicationSha256": "59d4aeb42281468b40b2a458d691c89fbad76a8532aef05cf654c820f4d031eb",
+      "creationFilter": "bcj_arm32",
+      "dormantDeltaDistance": 256,
+      "historyPreserved": true,
+      "textAndImagePreview": true,
+      "extraction": true,
+      "zipToLzmaArm32PasswordSolidNumeric": true
+    },
+    {
+      "name": "conversion inline and multiselect keep chosen target ARM32 BCJ and distance",
+      "applicationSha256": "59d4aeb42281468b40b2a458d691c89fbad76a8532aef05cf654c820f4d031eb",
+      "singleSelectionRetained": true,
+      "batchSelectionRetained": true,
+      "actualConversionHistory": true,
+      "targetFilterPreserved": true
+    },
+    {
+      "name": "independent 7-Zip ARM32 originals reopen in the native text image prefix and extraction flow",
+      "applicationSha256": "59d4aeb42281468b40b2a458d691c89fbad76a8532aef05cf654c820f4d031eb",
+      "externalOriginals": [
+        {
+          "name": "plain-lzma2",
+          "method": "LZMA2",
+          "password": null,
+          "solid": false,
+          "volumes": false,
+          "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\external-plain-lzma2.7z",
+          "nativeTextImagePrefix": true,
+          "originalArm32ElfSha256": "f8dd8635dec8a95162e8f0bb26d03dc31cc13b0e1fb59570a59f39ed8478482b"
+        },
+        {
+          "name": "password-solid-lzma",
+          "method": "LZMA",
+          "password": "external1653",
+          "solid": true,
+          "volumes": true,
+          "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\external-password-solid-lzma.7z.001",
+          "nativeTextImagePrefix": true,
+          "originalArm32ElfSha256": "f8dd8635dec8a95162e8f0bb26d03dc31cc13b0e1fb59570a59f39ed8478482b"
+        }
+      ]
+    }
+  ],
+  "layouts": [
+    {
+      "name": "collapsed-wide",
+      "applicationSha256": "59d4aeb42281468b40b2a458d691c89fbad76a8532aef05cf654c820f4d031eb",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 275,
+          "y": 202.0703125
+        },
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 653,
+          "y": 202.0703125
+        }
+      ],
+      "width": 1100,
+      "preprocessing": []
+    },
+    {
+      "name": "inline-wide",
+      "applicationSha256": "59d4aeb42281468b40b2a458d691c89fbad76a8532aef05cf654c820f4d031eb",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 562.5703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 202.5703125,
+          "width": 378,
+          "x": 275,
+          "y": 202.5703125
+        },
+        {
+          "bottom": 562.5703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 202.5703125,
+          "width": 378,
+          "x": 653,
+          "y": 202.5703125
+        }
+      ],
+      "width": 1100,
+      "preprocessing": []
+    },
+    {
+      "name": "inline-narrow",
+      "applicationSha256": "59d4aeb42281468b40b2a458d691c89fbad76a8532aef05cf654c820f4d031eb",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 476.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 158.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 158.5703125
+        },
+        {
+          "bottom": 476.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 158.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 158.5703125
+        }
+      ],
+      "width": 760,
+      "preprocessing": []
+    },
+    {
+      "name": "batch-narrow",
+      "applicationSha256": "59d4aeb42281468b40b2a458d691c89fbad76a8532aef05cf654c820f4d031eb",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 368.5703125
+        },
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 368.5703125
+        }
+      ],
+      "width": 760,
+      "preprocessing": []
+    },
+    {
+      "name": "conversion-narrow",
+      "applicationSha256": "59d4aeb42281468b40b2a458d691c89fbad76a8532aef05cf654c820f4d031eb",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 680.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 362.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 362.5703125
+        },
+        {
+          "bottom": 680.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 362.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 362.5703125
+        }
+      ],
+      "width": 760,
+      "preprocessing": [
+        {
+          "clientWidth": 608,
+          "controls": [
+            {
+              "bottom": 225.921875,
+              "height": 16,
+              "left": 166.109375,
+              "right": 182.109375,
+              "top": 209.921875,
+              "width": 16,
+              "x": 166.109375,
+              "y": 209.921875
+            },
+            {
+              "bottom": 309.3203125,
+              "height": 42.3984375,
+              "left": 83,
+              "right": 667,
+              "top": 266.921875,
+              "width": 584,
+              "x": 83,
+              "y": 266.921875
+            }
+          ],
+          "rect": {
+            "bottom": 322.3203125,
+            "height": 121.3984375,
+            "left": 70,
+            "right": 680,
+            "top": 200.921875,
+            "width": 610,
+            "x": 70,
+            "y": 200.921875
+          },
+          "scrollWidth": 608,
+          "status": {
+            "bottom": 225.921875,
+            "height": 16,
+            "left": 586.5625,
+            "right": 667,
+            "top": 209.921875,
+            "width": 80.4375,
+            "x": 586.5625,
+            "y": 209.921875
+          },
+          "summary": {
+            "bottom": 233.921875,
+            "height": 32,
+            "left": 71,
+            "right": 679,
+            "top": 201.921875,
+            "width": 608,
+            "x": 71,
+            "y": 201.921875
+          }
+        }
+      ]
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8",
+  "created": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\created\\source.7z",
+  "zip": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\intermediate.zip",
+  "converted": {
+    "files": [
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.001"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.002"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.003"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.004"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.005"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.006"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.007"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.008"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.009"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.010"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.011"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.012"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.013"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.014"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.015"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.016"
+      },
+      {
+        "bytes": 2605,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.017"
+      }
+    ],
+    "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm32-bcj-create-1653\\ff000d09-38f4-4121-bc9a-61a66e05a7b8\\converted.7z.001",
+    "split": true,
+    "totalBytes": 133677
+  },
+  "passed": true
+}
