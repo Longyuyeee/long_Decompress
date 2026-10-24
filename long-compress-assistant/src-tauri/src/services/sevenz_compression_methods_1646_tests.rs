@@ -31,7 +31,7 @@ fn sevenz1646_create_three_methods_password_solid_numeric_and_independent_readba
   native_compression::seven_zip::compress(&runtime,None,&name,&[source.to_string_lossy().into()],&output.to_string_lossy(),CompressionOptions{format:Some("7z".into()),level:if method==M::Bzip2{9}else{1},seven_zip_method:method,password:password.map(str::to_owned),encrypt_filenames:header,create_solid_archive:solid,split_size:split,..Default::default()}).unwrap();
   let primary=if split.is_some(){output.with_extension("7z.001")}else{output.clone()};
   let pw=format!("-p{}",password.unwrap_or(""));let listing=independent(&["l".into(),"-slt".into(),pw.clone(),primary.to_string_lossy().into()]);
-  let label=match method{M::Lzma2=>"LZMA2",M::Lzma=>"LZMA:",M::Bzip2=>"BZip2",M::Deflate=>"Deflate",M::Ppmd=>"PPMD"};assert!(listing.contains(label),"{name}: {listing}");
+  let label=match method{M::Lzma2=>"LZMA2",M::Lzma=>"LZMA:",M::Bzip2=>"BZip2",M::Deflate=>"Deflate",M::Ppmd=>"PPMD",M::Copy=>"Copy"};assert!(listing.contains(label),"{name}: {listing}");
   if password.is_some(){let bad=Command::new(root().join("src-tauri/resources/archive-engine/7z.exe")).args(["t","-pwrong",&primary.to_string_lossy()]).output().unwrap();assert!(!bad.status.success());}
   let restored=folder.join("restored");independent(&["x".into(),"-y".into(),pw,format!("-o{}",restored.display()),primary.to_string_lossy().into()]);
   assert_eq!(hashes(&restored.join("source")),expected,"{name}");assert!(restored.join("source/empty-dir").is_dir());

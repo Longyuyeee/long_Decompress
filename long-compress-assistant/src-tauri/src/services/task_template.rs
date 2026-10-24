@@ -436,7 +436,7 @@ fn parse_template(bytes: &[u8]) -> Result<TaskTemplate> {
 
 pub fn export_profile_template(profile: &CompressionProfile, path: &Path) -> Result<TaskTemplate> {
     if let Some(value)=profile.config.extra_params.get("seven_zip_method") {
-        anyhow::ensure!(super::seven_zip_method::SevenZipMethod::from_setting(value).is_some(),"请选择支持的 7Z 压缩方法：LZMA2、LZMA、Bzip2、Deflate 或 PPMd");
+        anyhow::ensure!(super::seven_zip_method::SevenZipMethod::from_setting(value).is_some(),"请选择支持的 7Z 压缩方法：LZMA2、LZMA、Bzip2、Deflate、PPMd 或仅归档（Copy）");
     }
     let template = template_from_profile(profile);
     validate_template(&template)?;
@@ -1374,6 +1374,11 @@ mod tests {
  #[test]fn sevenz1648_profile_template_roundtrip_and_invalid_explicit_method(){
   let dir=tempfile::tempdir().unwrap();
   for method in ["ppmd"]{let mut p=profile();p.config.extra_params.insert("seven_zip_method".into(),method.into());let file=dir.path().join(format!("{method}.longtask.json"));export_profile_template(&p,&file).unwrap();let preview=preview_template_file(&file).unwrap();let imported=import_template_profile(&file,&preview.content_sha256).unwrap();assert_eq!(imported.config.extra_params["seven_zip_method"],method);}
+  let mut p=profile();p.config.extra_params.insert("seven_zip_method".into(),"unknown".into());let file=dir.path().join("invalid.longtask.json");assert!(export_profile_template(&p,&file).is_err());assert!(!file.exists());
+ }
+ #[test]fn sevenz1649_profile_template_roundtrip_and_invalid_explicit_method(){
+  let dir=tempfile::tempdir().unwrap();
+  for method in ["copy"]{let mut p=profile();p.config.extra_params.insert("seven_zip_method".into(),method.into());let file=dir.path().join(format!("{method}.longtask.json"));export_profile_template(&p,&file).unwrap();let preview=preview_template_file(&file).unwrap();let imported=import_template_profile(&file,&preview.content_sha256).unwrap();assert_eq!(imported.config.extra_params["seven_zip_method"],method);}
   let mut p=profile();p.config.extra_params.insert("seven_zip_method".into(),"unknown".into());let file=dir.path().join("invalid.longtask.json");assert!(export_profile_template(&p,&file).is_err());assert!(!file.exists());
  }
 }

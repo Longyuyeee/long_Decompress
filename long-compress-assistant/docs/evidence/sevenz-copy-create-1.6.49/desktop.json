@@ -1,0 +1,172 @@
+{
+  "version": "1.6.49",
+  "applicationSha256": "a1ce3d425270b2dbdd90ce55ebfdf3d95991f275d04bbd0deaec5fff3f388dcd",
+  "checks": [
+    {
+      "name": "original inline edit automatic individual and batch modal in wide and small windows",
+      "inlinePreserved": true,
+      "batchModalPreserved": true,
+      "globalLzma2Preserved": true,
+      "methodVisibleOnlyForSevenZip": true,
+      "applicationSha256": "4fc0a1861538e4db0c0cd6f7d53999fa8ce33c1c7140c53d0203a23b57a090f9"
+    },
+    {
+      "name": "UI Copy creation history and native preview extraction conversion keep selected target method",
+      "applicationSha256": "a1ce3d425270b2dbdd90ce55ebfdf3d95991f275d04bbd0deaec5fff3f388dcd",
+      "creationMethod": "copy",
+      "historyPreserved": true,
+      "textPreviewHash": "df4fb2d2d3a278d68096b625428d035ce0427a76e729304bfbb828105533d614",
+      "extraction": true,
+      "zipToPasswordSolidNumericCopy": true
+    },
+    {
+      "name": "real low gain advice is opt in and retains global default with strength hidden only for Copy",
+      "applicationSha256": "a1ce3d425270b2dbdd90ce55ebfdf3d95991f275d04bbd0deaec5fff3f388dcd",
+      "contentBasedAdvice": true,
+      "explicitAdoption": true,
+      "noAutomaticExecution": true,
+      "globalLzma2Preserved": true,
+      "strengthRestoredWhenSwitchingBack": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "inline-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 275,
+          "y": 202.0703125
+        },
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 653,
+          "y": 202.0703125
+        }
+      ],
+      "width": 1100,
+      "applicationSha256": "4fc0a1861538e4db0c0cd6f7d53999fa8ce33c1c7140c53d0203a23b57a090f9"
+    },
+    {
+      "name": "inline-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 528.0703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 210.0703125,
+          "width": 280,
+          "x": 139,
+          "y": 210.0703125
+        },
+        {
+          "bottom": 528.0703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 210.0703125,
+          "width": 280,
+          "x": 419,
+          "y": 210.0703125
+        }
+      ],
+      "width": 760,
+      "applicationSha256": "4fc0a1861538e4db0c0cd6f7d53999fa8ce33c1c7140c53d0203a23b57a090f9"
+    },
+    {
+      "name": "batch-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 368.5703125
+        },
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 368.5703125
+        }
+      ],
+      "width": 760,
+      "applicationSha256": "4fc0a1861538e4db0c0cd6f7d53999fa8ce33c1c7140c53d0203a23b57a090f9"
+    },
+    {
+      "name": "advice-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 500.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 182.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 182.5703125
+        },
+        {
+          "bottom": 500.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 182.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 182.5703125
+        }
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-copy-create-1649\\591dd6c6-377b-4aed-ad70-3ca412886122",
+  "created": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-copy-create-1649\\591dd6c6-377b-4aed-ad70-3ca412886122\\created\\source.7z",
+  "reusedUnchangedConfiguration": {
+    "applicationSha256": "4fc0a1861538e4db0c0cd6f7d53999fa8ce33c1c7140c53d0203a23b57a090f9",
+    "reason": "Only Copy preview dispatch/prefix access and analysis footer wording changed; configuration controls and three configuration layouts are unchanged. Continue failed preview/conversion and new advice groups."
+  },
+  "zip": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-copy-create-1649\\591dd6c6-377b-4aed-ad70-3ca412886122\\intermediate.zip",
+  "passed": true
+}

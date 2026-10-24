@@ -81,7 +81,9 @@ impl UnpackInfo {
         header.write_u8(K_CRC)?;
         header.write_u8(1)?; // all crc defined
         for f in &self.folders {
-            if f.sub_stream_crcs.len() <= 1 && f.crc != 0 {
+            // Folder CRC is always defined here, including the valid value 0.
+            // Its only substream inherits that CRC instead of storing another.
+            if f.num_sub_unpack_streams == 1 {
                 continue;
             }
             for i in 0..f.sub_stream_crcs.len() {

@@ -279,7 +279,7 @@ const getCompressionEstimate = (
   format: string,
   level: number,
   zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma',
-  sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd',
+  sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy',
 ) => {
   const analysis = compressionStore.compressionAnalysis[jobId]
   if (
@@ -300,7 +300,7 @@ const getCompressionEstimate = (
 
 const runCompressionResourcePreflight = async (
   taskId: string,
-  job: { id: string, files: FileObject[], outputPath: string, settings: { format: string, level: number, sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd', zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma', wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' } },
+  job: { id: string, files: FileObject[], outputPath: string, settings: { format: string, level: number, sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy', zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma', wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' } },
 ) => {
   const task = taskStore.tasks.find(item => item.id === taskId)
   if (!task) return false

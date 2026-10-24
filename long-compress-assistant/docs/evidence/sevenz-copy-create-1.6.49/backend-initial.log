@@ -1,0 +1,68 @@
+   Compiling long-compress-assistant v1.6.49 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+   Compiling sevenz-rust v0.6.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\sevenz-rust)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 48s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-3a36a4c95fd9a0bf.exe)
+
+running 7 tests
+test commands::history_execution_config::sevenz1649_history_creation_and_conversion_retain_method_reject_unknown ... ok
+test services::sevenz_copy_create_1649_tests::sevenz1649_workflow_database_roundtrip ... ok
+test services::task_template::tests::sevenz1649_profile_template_roundtrip_and_invalid_explicit_method ... ok
+test services::sevenz_copy_create_1649_tests::sevenz1649_copy_cancellation_during_source_read_is_returned ... ok
+test services::sevenz_copy_create_1649_tests::sevenz1649_default_analysis_and_cancel_collision ... ok
+
+thread 'services::sevenz_copy_create_1649_tests::sevenz1649_create_copy_password_solid_numeric_and_independent_readback' (40536) panicked at src\services\sevenz_copy_create_1649_tests.rs:16:2:
+
+7-Zip 26.04 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-10-05
+
+Scanning the drive for archives:
+1 file, 2418847 bytes (2363 KiB)
+
+Listing archive: E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\sevenz-copy-create-1649\creation-2ddb403e-de56-4575-9d27-d79dd5297181\copy-plain\璧勬枡.7z
+
+
+Errors: 1
+
+ERROR: E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\sevenz-copy-create-1649\creation-2ddb403e-de56-4575-9d27-d79dd5297181\copy-plain\璧勬枡.7z : E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\test-results\sevenz-copy-create-1649\creation-2ddb403e-de56-4575-9d27-d79dd5297181\copy-plain\璧勬枡.7z
+Open ERROR: Cannot open the file as [7z] archive
+
+
+ERRORS:
+Headers Error
+
+
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::sevenz_copy_create_1649_tests::sevenz1649_create_copy_password_solid_numeric_and_independent_readback ... FAILED
+test services::sevenz_copy_create_1649_tests::sevenz1649_low_gain_advice_uses_content_and_sample_threshold ... ok
+
+failures:
+
+failures:
+    services::sevenz_copy_create_1649_tests::sevenz1649_create_copy_password_solid_numeric_and_independent_readback
+
+test result: FAILED. 6 passed; 1 failed; 0 ignored; 0 measured; 1285 filtered out; finished in 0.74s
+
+error: test failed, to rerun pass `--lib`
