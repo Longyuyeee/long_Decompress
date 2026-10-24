@@ -103,7 +103,7 @@ export interface Task {
   compressionOptions?: {
     fast_pack?: boolean
     zip_password_encoding?: ZipPasswordEncoding
-    seven_zip_method?: 'lzma2' | 'lzma' | 'bzip2'
+    seven_zip_method?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate'
     zip_method?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'
     zip_encryption?: 'aes256' | 'zipcrypto'
     zip_split_mode?: 'numeric' | 'standard'

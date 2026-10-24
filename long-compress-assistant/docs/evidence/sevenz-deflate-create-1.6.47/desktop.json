@@ -1,0 +1,125 @@
+{
+  "version": "1.6.47",
+  "applicationSha256": "410faba257c5fe97b52ca26a902c7bbc7690ed403c2694a41378cf5d676f9752",
+  "checks": [
+    {
+      "name": "original inline edit automatic individual and batch modal in wide and small windows",
+      "inlinePreserved": true,
+      "batchModalPreserved": true,
+      "globalLzma2Preserved": true,
+      "methodVisibleOnlyForSevenZip": true
+    },
+    {
+      "name": "UI Deflate creation history and native preview extraction conversion keep selected target method",
+      "creationMethod": "deflate",
+      "historyPreserved": true,
+      "textPreviewHash": "df4fb2d2d3a278d68096b625428d035ce0427a76e729304bfbb828105533d614",
+      "extraction": true,
+      "zipToPasswordSolidNumericDeflate": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "inline-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 275,
+          "y": 202.0703125
+        },
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 653,
+          "y": 202.0703125
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "inline-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 528.0703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 210.0703125,
+          "width": 280,
+          "x": 139,
+          "y": 210.0703125
+        },
+        {
+          "bottom": 528.0703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 210.0703125,
+          "width": 280,
+          "x": 419,
+          "y": 210.0703125
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "batch-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 368.5703125
+        },
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 368.5703125
+        }
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-deflate-create-1647\\4035b97c-9a29-4420-9496-0747c5686014",
+  "created": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-deflate-create-1647\\4035b97c-9a29-4420-9496-0747c5686014\\created\\source.7z",
+  "zip": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-deflate-create-1647\\4035b97c-9a29-4420-9496-0747c5686014\\intermediate.zip",
+  "passed": true
+}

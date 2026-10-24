@@ -7,7 +7,7 @@ defineEmits<{ 'update:modelValue': [value: SevenZipMethod] }>()
 </script>
 <template>
   <div v-if="format === '7z'" class="min-w-0 space-y-1.5" :data-testid="`${testId || 'sevenz-method'}-field`">
-    <div class="flex items-center gap-1.5 text-xs text-muted"><span>压缩方法</span><HelpHint label="7Z 压缩方法说明">默认 LZMA2，旧配置保持原方式。LZMA 与 Bzip2 提供其他选择，实际效果取决于文件内容。三种方法均可搭配密码、文件名加密、固实和数字分卷；强度为 1～9，旧配置中的 0 按 1 执行。接收方需使用支持对应 7Z 方法的软件。</HelpHint></div>
+    <div class="flex items-center gap-1.5 text-xs text-muted"><span>压缩方法</span><HelpHint label="7Z 压缩方法说明">默认 LZMA2，旧配置保持原方式。LZMA、Bzip2 与 Deflate 提供其他选择，实际效果取决于文件内容。四种方法均可搭配密码、文件名加密、固实和数字分卷；强度为 1～9，旧配置中的 0 按 1 执行。接收方需使用支持对应 7Z 方法的软件。</HelpHint></div>
     <ThemedSelect :model-value="modelValue ?? 'lzma2'" :disabled="disabled" :options="SEVEN_ZIP_METHOD_OPTIONS" :test-id="testId || 'sevenz-method'" aria-label="7Z 压缩方法" floating @update:model-value="$emit('update:modelValue', $event as SevenZipMethod)" />
   </div>
 </template>

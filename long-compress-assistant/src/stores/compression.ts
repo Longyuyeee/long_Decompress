@@ -38,7 +38,7 @@ export interface CompressionOptions {
   fastPack?: boolean
   zipPasswordEncoding?: ZipPasswordEncoding
   wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
-  sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2'
+  sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate'
   zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'
   zipEncryption?: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
@@ -90,7 +90,7 @@ export interface CompressionHistory {
 
 export interface CompressionAnalysisState {
   wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
-  sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2'
+  sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate'
   zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'
   status: 'idle' | 'running' | 'completed' | 'failed' | 'cancelled'
   analysisId?: string

@@ -2,9 +2,9 @@
 use std::{io::{Cursor,Read},sync::atomic::{AtomicBool,Ordering}};
 #[derive(Debug,Clone,Copy,Default,serde::Serialize,serde::Deserialize,PartialEq,Eq)]
 #[serde(rename_all="snake_case")]
-pub enum SevenZipMethod { #[default] Lzma2, Lzma, Bzip2 }
+pub enum SevenZipMethod { #[default] Lzma2, Lzma, Bzip2, Deflate }
 impl SevenZipMethod {
-    pub(crate) fn from_setting(value:&str)->Option<Self>{match value {"lzma2"=>Some(Self::Lzma2),"lzma"=>Some(Self::Lzma),"bzip2"=>Some(Self::Bzip2),_=>None}}
+    pub(crate) fn from_setting(value:&str)->Option<Self>{match value {"lzma2"=>Some(Self::Lzma2),"lzma"=>Some(Self::Lzma),"bzip2"=>Some(Self::Bzip2),"deflate"=>Some(Self::Deflate),_=>None}}
     pub(crate) fn configuration(self,level:u32)->sevenz_rust::SevenZMethodConfiguration {
         use sevenz_rust::{SevenZMethod as M,SevenZMethodConfiguration as C,MethodOptions as O};
         let level=level.clamp(1,9);
@@ -12,9 +12,10 @@ impl SevenZipMethod {
             Self::Lzma2=>sevenz_rust::lzma::LZMA2Options::with_preset(level).into(),
             Self::Lzma=>C::new(M::LZMA).with_options(O::LZMA2(sevenz_rust::lzma::LZMA2Options::with_preset(level))),
             Self::Bzip2=>C::new(M::BZIP2).with_options(O::Num(level)),
+            Self::Deflate=>C::new(M::DEFLATE).with_options(O::Num(level)),
         }
     }
-    pub(crate) fn as_str(self)->&'static str {match self {Self::Lzma2=>"lzma2",Self::Lzma=>"lzma",Self::Bzip2=>"bzip2"}}
+    pub(crate) fn as_str(self)->&'static str {match self {Self::Lzma2=>"lzma2",Self::Lzma=>"lzma",Self::Bzip2=>"bzip2",Self::Deflate=>"deflate"}}
 }
 pub(crate) fn sample_size(sample:&[u8],method:SevenZipMethod,level:u32,cancelled:&AtomicBool)->anyhow::Result<usize>{
     struct Sample<'a>{input:&'a[u8],cancelled:&'a AtomicBool}

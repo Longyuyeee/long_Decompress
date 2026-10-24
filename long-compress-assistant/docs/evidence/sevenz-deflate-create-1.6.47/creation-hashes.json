@@ -1,0 +1,109 @@
+{
+  "sourceFiles": {
+    "00-first.txt": "39eaa208804bac1de0261d4c86cf501845032193ccf1c4f52b21ff8e3e4f609b",
+    "empty.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "zz-after.txt": "20684b950ca10e02b0392fb51201f0e53d1292fa7aa2aea7a6372cab0d7338a4",
+    "gallery/01-cover.png": "9b2c072f170548132a8a29fbb5875e6f9673351a036c8ed603377ededec13a3b",
+    "gallery/02-grid.bmp": "6d133ad7dc08719597d3b2b7c528a743c426686268835dd6d035a50e8cef8beb",
+    "gallery/03-bad.png": "45fd6fcb95d858726770810b5b486311c2aa784f49aa8f2c6dbe03b11f7dac92",
+    "gallery/04-cover.jpg": "4fc408d91aee4e4037f06dc6392a35109a5fd26d4aa7c790ff0902a2e3181dc9",
+    "gallery/05-cover.gif": "893ff673b0baa151e8dbacb82e2ffb3b0579441d46ff6bfaf09f4f393b99444a",
+    "gallery/06-cover.webp": "e7aed6ff5eabe4891cdb40c07ee6d4cf6d076cd71f77c92561726ee70f1d3630",
+    "notes/binary.txt": "e6304a473c65ecd0ccffbd2f5925a8f51c44b11f59b66cfcc055e4bb911b8fa0",
+    "notes/empty.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "notes/exact.txt": "ce2442b8b1c15414ca16f054e5331fc8019d24fd50813f43cc9881f7f19d765c",
+    "notes/gbk.txt": "b9c3c07e5240f33737ab43e94ef9c4b0b49625f56e94484e00663201665255a0",
+    "notes/large.txt": "c67906e91b2ceb65fade1f2b958f4ac765b959f3fe79578b207db2874e242e8d",
+    "notes/utf16.txt": "04beeefbfa341e360c26579b387766926b450100ede25839326a746414a6bc42",
+    "notes/说明 1.txt": "c40d449564c21dae0b52c2b76c71dba49cd4cbd246721d228b9c278e07486ca3",
+    "notes/说明 [1].txt": "df4fb2d2d3a278d68096b625428d035ce0427a76e729304bfbb828105533d614"
+  },
+  "created": [
+    {
+      "method": "deflate",
+      "kind": "plain",
+      "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-plain\\资料.7z",
+      "members": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-plain\\资料.7z"
+      ],
+      "files": 17,
+      "independentReadback": true,
+      "emptyDirectoryPreserved": true,
+      "memberHashes": {
+        "资料.7z": "c0a7bc89501c6be808552fa0b9e9b9ad6ad2336b9c46834b9a4faa6c2d70ec52"
+      }
+    },
+    {
+      "method": "deflate",
+      "kind": "contents",
+      "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-contents\\资料.7z",
+      "members": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-contents\\资料.7z"
+      ],
+      "files": 17,
+      "independentReadback": true,
+      "emptyDirectoryPreserved": true,
+      "memberHashes": {
+        "资料.7z": "f2582e9a4637294470ecdc978d1c4e64432ba8d5c00e31a011811d7459264a82"
+      }
+    },
+    {
+      "method": "deflate",
+      "kind": "headers",
+      "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-headers\\资料.7z",
+      "members": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-headers\\资料.7z"
+      ],
+      "files": 17,
+      "independentReadback": true,
+      "emptyDirectoryPreserved": true,
+      "memberHashes": {
+        "资料.7z": "c2a449fb815e500d087c03a033226282eb9ffacbc20e1f71ac4d8ba37e06b11b"
+      }
+    },
+    {
+      "method": "deflate",
+      "kind": "volumes",
+      "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-volumes\\资料.7z.001",
+      "members": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-volumes\\资料.7z.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-volumes\\资料.7z.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-volumes\\资料.7z.003",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-volumes\\资料.7z.004",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-volumes\\资料.7z.005",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-volumes\\资料.7z.006",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-volumes\\资料.7z.007",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-volumes\\资料.7z.008",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-volumes\\资料.7z.009",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-volumes\\资料.7z.010",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-volumes\\资料.7z.011",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-volumes\\资料.7z.012",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-volumes\\资料.7z.013",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-volumes\\资料.7z.014",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-volumes\\资料.7z.015",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results/sevenz-deflate-create-1647\\creation-34ffbf2e-bf8c-42e1-bdb9-8e1c3e6149d5\\deflate-volumes\\资料.7z.016"
+      ],
+      "files": 17,
+      "independentReadback": true,
+      "emptyDirectoryPreserved": true,
+      "memberHashes": {
+        "资料.7z.001": "d493c8e83f357f7f8528b38e4eaeb61ce56ac51583cda5513311e4fa9dc3d17b",
+        "资料.7z.002": "3d03e1ac0c1eab305bacf594df2ea03f0a92492c56e31138cbeb806001891b57",
+        "资料.7z.003": "c0e34fda0384a11e4972363d94ca05db3b282fac96d7e296f4bebafc535cc8cf",
+        "资料.7z.004": "917db94dacbc8867dfc0f863e4accb70768951719941aaaf50bf69103cc8d12c",
+        "资料.7z.005": "bfeae49c5389f65efe63eeee34bc803a38180607e893da2b9434dffc5478f75b",
+        "资料.7z.006": "d6c65c560b80b560339eb5ab6572d01931013ab7e8335b6e442732630b4683ee",
+        "资料.7z.007": "335945a7466103c84b96412db21faf605f71728559d3087e2030135317ec2445",
+        "资料.7z.008": "bc87af47878a55450fb2153cd7872ff6eeb9212ed9a8365741e387fe6306f9a9",
+        "资料.7z.009": "4b55a5c1d868fbffd113c218f729f8200cca9e5da120982d4af7d93d214e56f8",
+        "资料.7z.010": "7cd219dca2ab7ca9574c1996f75af8624a2594cdbb66dded19097a56dcec13c7",
+        "资料.7z.011": "76124454f8ed562758a8865a00e153b75a4f25c33984c5f65e4eab03d4a938d0",
+        "资料.7z.012": "0e126208cae623305abdc263c5e63ccf5642e9b1b6f80135c54e5e05f38bf150",
+        "资料.7z.013": "ef3606f119b532c520cf49b35ffb51a848b512d245a12d2fbacd358f8e65f7a7",
+        "资料.7z.014": "3cc5a1f0026bc494e152894d7ad1c6417c5638ac6fe60c0623f3848e38f5e0ea",
+        "资料.7z.015": "83867d3b34be320d794b66e542781a009a97a01dde00b2b2d7664d9499ba1f68",
+        "资料.7z.016": "5f8814f6b8bdef72e4cfba35c5243001a05b58ec418847fc4d8b923b1fb33579"
+      }
+    }
+  ]
+}

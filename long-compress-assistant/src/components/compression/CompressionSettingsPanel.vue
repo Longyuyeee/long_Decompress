@@ -149,7 +149,7 @@ const effectiveOutputExtension = computed(() =>
 
 const presets = computed(() => appStore.compressionPresets)
 
-const applyPreset = (preset: { name: string; format: string; level: number; password?: string; sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2'; zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'; wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' }) => {
+const applyPreset = (preset: { name: string; format: string; level: number; password?: string; sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate'; zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'; wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' }) => {
   compressionOptions.value.format = preset.format as any
   compressionOptions.value.level = preset.level
   compressionOptions.value.wimMethod = preset.wimMethod ?? 'store'
