@@ -1,0 +1,39 @@
+   Compiling long-compress-assistant v1.6.50 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3m 42s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-a537448916f857e7.exe)
+
+running 8 tests
+test commands::history_execution_config::zip1650_history_creation_and_conversion_retain_method_reject_unknown ... ok
+test services::task_template::tests::zip1650_template_method_survives_export_import ... ok
+test services::compression_analysis::zip1650_store_analysis_matches_real_writer_and_retained_strength ... ok
+test services::zip_store_create_1650_tests::zip1650_legacy_methods_and_zipx_keep_meaning ... ok
+test services::zip_store_create_1650_tests::zip1650_store_cancel_and_split_conflict_keep_existing_files ... ok
+test services::zip_store_create_1650_tests::zip1650_workflow_database_roundtrip ... ok
+test services::zip_store_create_1650_tests::zip1650_analysis_real_store_content_advice_and_cancel ... ok
+test services::zip_store_create_1650_tests::zip1650_store_plain_aes_zipcrypto_numeric_standard_and_native_preview ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 1294 filtered out; finished in 38.59s

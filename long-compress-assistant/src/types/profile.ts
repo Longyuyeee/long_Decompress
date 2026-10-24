@@ -21,7 +21,7 @@ export interface CompressionConfig {
   zipPasswordEncoding?: ZipPasswordEncoding
   wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
   sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'
-  zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'
+  zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma' | 'store'
   zipEncryption?: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
   format: string
@@ -143,7 +143,7 @@ export interface TaskTemplate {
     zipPasswordEncoding?: ZipPasswordEncoding
     wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
     sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'
-    zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma'
+    zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma' | 'store'
     zipEncryption?: 'aes256' | 'zipcrypto'
     zipSplitMode?: 'numeric' | 'standard'
     keepStructure: boolean

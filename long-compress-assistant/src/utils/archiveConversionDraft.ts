@@ -20,8 +20,8 @@ export function normalizeConversionSettings(settings: ConversionSettings, patch:
     if (patch.format === 'swm' && !next.splitMiB) next.splitMiB = 1024
   }
   if (next.format === 'esd') next.wimMethod = 'solid'
-  if (next.format !== 'zip') next.sevenZipMethod = settings.sevenZipMethod ?? 'lzma2'
-  next.zipMethod = settings.zipMethod ?? 'deflate'
+  next.sevenZipMethod = next.format === '7z' ? next.sevenZipMethod ?? 'lzma2' : settings.sevenZipMethod ?? 'lzma2'
+  next.zipMethod = next.format === 'zip' ? next.zipMethod ?? 'deflate' : settings.zipMethod ?? 'deflate'
   if (patch.format && next.outputPath.toLowerCase().endsWith(`.${settings.format}`)) {
     next.outputPath = next.outputPath.slice(0, -settings.format.length) + patch.format
   }

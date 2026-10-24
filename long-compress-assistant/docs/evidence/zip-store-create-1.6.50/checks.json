@@ -1,0 +1,189 @@
+{
+  "version": "1.6.50",
+  "applicationSha256": "52b4c06775e0206ead2fac5456aa72b37dc5aa34efde8e03ae06a7e8e4dc0ea9",
+  "frontend": {
+    "passed": 7,
+    "initialUnaffectedPassed": 5,
+    "rerunFailedBatchAssertion": 1,
+    "newConversionRegression": 1,
+    "initialFailure": "Test expected a different existing Chinese no-ZIP message; fixed only the assertion and reran that case"
+  },
+  "backend": 8,
+  "creationCases": 9,
+  "desktopGroups": 4,
+  "layouts": [
+    {
+      "name": "inline-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 275,
+          "y": 202.0703125
+        },
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 653,
+          "y": 202.0703125
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "inline-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 528.0703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 210.0703125,
+          "width": 280,
+          "x": 139,
+          "y": 210.0703125
+        },
+        {
+          "bottom": 528.0703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 210.0703125,
+          "width": 280,
+          "x": 419,
+          "y": 210.0703125
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "batch-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 368.5703125
+        },
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 368.5703125
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "conversion-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 680.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 362.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 362.5703125
+        },
+        {
+          "bottom": 680.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 362.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 362.5703125
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "advice-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 476.0703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 158.0703125,
+          "width": 280,
+          "x": 139,
+          "y": 158.0703125
+        },
+        {
+          "bottom": 476.0703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 158.0703125,
+          "width": 280,
+          "x": 419,
+          "y": 158.0703125
+        }
+      ],
+      "width": 760
+    }
+  ],
+  "shellSha256": "63a5da054c50b206dd651414d7b08a462b88e62eb35217c1b21143124c192982",
+  "build": {
+    "frontend": "vue-tsc / VITE_DESKTOP_E2E=1 Vite",
+    "native": "custom-protocol,desktop-e2e; opt-level=1,LTO=false",
+    "productionConfigChanged": false
+  }
+}

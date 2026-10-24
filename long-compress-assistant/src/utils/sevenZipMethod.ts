@@ -13,9 +13,10 @@ export function normalizeSevenZipMethod(value?: unknown): SevenZipMethod {
   if (isSevenZipMethod(value)) return value
   throw new Error('请选择支持的 7Z 压缩方法：LZMA2、LZMA、Bzip2、Deflate、PPMd 或仅归档（Copy）。')
 }
-export function compressionAnalysisFormat(settings: { format: string; sevenZipMethod?: SevenZipMethod; zipMethod?: string }): string {
+export function compressionAnalysisFormat(settings: { format: string; sevenZipMethod?: SevenZipMethod; zipMethod?: string; level?: number }): string {
   if (settings.format === '7z') { const method = normalizeSevenZipMethod(settings.sevenZipMethod); return method === 'lzma2' ? '7z' : `7z-${method}` }
   if (settings.format === 'zipx') return 'xz'
-  if (settings.format === 'zip') return ({ zstd: 'zst', bzip2: 'bz2', lzma: 'zip-lzma', ppmd: 'zip-ppmd' } as Record<string, string>)[settings.zipMethod || 'deflate'] || 'zip'
+  if (settings.format === 'zip' && (settings.zipMethod === 'store' || (!settings.zipMethod || settings.zipMethod === 'deflate') && settings.level === 0)) return 'zip-store'
+  if (settings.format === 'zip') return ({ zstd: 'zip-zstd', bzip2: 'zip-bzip2', lzma: 'zip-lzma', ppmd: 'zip-ppmd' } as Record<string, string>)[settings.zipMethod || 'deflate'] || 'zip'
   return settings.format
 }

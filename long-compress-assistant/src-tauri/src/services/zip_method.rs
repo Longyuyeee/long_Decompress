@@ -4,6 +4,7 @@
 pub enum ZipMethod {
     #[default]
     Deflate,
+    Store,
     Zstd,
     Bzip2,
     Ppmd,
@@ -13,6 +14,8 @@ pub enum ZipMethod {
 pub(crate) fn file_options(zipx: bool, method: ZipMethod, level: u32) -> zip_aes::write::SimpleFileOptions {
     let (method, level) = if zipx {
         (zip_aes::CompressionMethod::Xz, Some(level.min(9) as i64))
+    } else if method == ZipMethod::Store {
+        (zip_aes::CompressionMethod::Stored, None)
     } else if method == ZipMethod::Lzma {
         (zip_aes::CompressionMethod::Lzma, Some(level.clamp(1, 9) as i64))
     } else if method == ZipMethod::Ppmd {

@@ -20,6 +20,9 @@ const state = computed(() => store.compressionAnalysis[props.jobId])
 const result = computed(() => state.value?.result)
 const isCopy = computed(() => props.modelValue.format === '7z' && props.modelValue.sevenZipMethod === 'copy')
 const copyAdvice = computed(() => props.modelValue.format === '7z' && !isCopy.value && result.value?.recommendedSevenZipMethod === 'copy')
+const isStore = computed(() => props.modelValue.format === 'zip' && (props.modelValue.zipMethod === 'store' || (props.modelValue.zipMethod ?? 'deflate') === 'deflate' && props.modelValue.level === 0))
+const storeAdvice = computed(() => props.modelValue.format === 'zip' && !isStore.value && result.value?.recommendedZipMethod === 'store')
+const packingAdvice = computed(() => copyAdvice.value || storeAdvice.value)
 const stale = computed(() => state.value?.status === 'completed' && (
   state.value.format !== props.modelValue.format || state.value.level !== props.modelValue.level ||
   (props.modelValue.format === '7z' && (state.value.sevenZipMethod ?? 'lzma2') !== (props.modelValue.sevenZipMethod ?? 'lzma2')) ||
@@ -75,6 +78,10 @@ const cancel = async () => {
 
 const applyRecommendation = () => {
   if (!result.value || props.disabled || stale.value) return
+  if (storeAdvice.value) {
+    emit('update:modelValue', { ...props.modelValue, zipMethod: 'store' })
+    return
+  }
   if (copyAdvice.value) {
     emit('update:modelValue', { ...props.modelValue, sevenZipMethod: 'copy' })
     return
@@ -114,20 +121,21 @@ const applyRecommendation = () => {
         <div v-if="state?.actualSize !== undefined"><span>实际体积</span><strong>{{ formatBytes(state.actualSize) }}</strong></div>
         <div v-if="state?.predictionErrorPercent !== undefined"><span>预测误差</span><strong>{{ state.predictionErrorPercent }}%</strong></div>
       </div>
-      <div v-if="!isCopy" class="analysis-recommendation" :data-testid="copyAdvice ? 'sevenz-copy-advice' : undefined">
+      <div v-if="!isCopy && !isStore" class="analysis-recommendation" :data-testid="copyAdvice ? 'sevenz-copy-advice' : storeAdvice ? 'zip-store-advice' : undefined">
         <div class="min-w-0">
           <div class="flex flex-wrap items-center gap-2">
-            <strong class="text-sm text-content">{{ copyAdvice ? '建议仅归档 · Copy' : `建议 ${result.recommendedFormat.toUpperCase()} · L${result.recommendedLevel}` }}</strong>
+            <strong class="text-sm text-content">{{ copyAdvice ? '建议仅归档 · Copy' : storeAdvice ? '建议仅存储 · Store' : `建议 ${result.recommendedFormat.toUpperCase()} · L${result.recommendedLevel}` }}</strong>
             <span class="analysis-badge">{{ confidenceLabel(result.confidence) }}置信度</span>
-            <span v-if="!copyAdvice && result.recommendedSolid" class="analysis-badge">固实压缩</span>
+            <span v-if="!packingAdvice && result.recommendedSolid" class="analysis-badge">固实压缩</span>
           </div>
-          <p v-if="copyAdvice" class="mt-2 text-xs text-muted leading-5">样本压缩收益不足 2%，可快速打包。<HelpHint label="仅归档建议说明">仅改当前任务的方法，保留原强度、密码、固实和分卷设置；不会自动执行。仅归档不缩小数据，实际大小还包含目录信息和加密开销。</HelpHint></p>
+          <p v-if="storeAdvice" class="mt-2 text-xs text-muted leading-5">样本压缩收益不足 2%，可快速打包。<HelpHint label="仅存储建议说明">仅改当前任务的 ZIP 方法，保留原强度、密码、加密方式和分卷设置；不会自动执行。仅存储不缩小数据，实际大小还包含目录信息和加密开销。</HelpHint></p>
+          <p v-else-if="copyAdvice" class="mt-2 text-xs text-muted leading-5">样本压缩收益不足 2%，可快速打包。<HelpHint label="仅归档建议说明">仅改当前任务的方法，保留原强度、密码、固实和分卷设置；不会自动执行。仅归档不缩小数据，实际大小还包含目录信息和加密开销。</HelpHint></p>
           <ul v-else class="mt-2 space-y-1 text-xs text-muted leading-5"><li v-for="reason in result.reasons" :key="reason">· {{ reason }}</li></ul>
-          <p class="mt-2 text-xs text-dim">已抽样 {{ formatBytes(result.sampledBytes) }} / {{ result.sampledFiles }} 个文件<template v-if="!copyAdvice">；常见压缩类型 {{ result.lowValueFileCount }} 个</template>。</p>
+          <p class="mt-2 text-xs text-dim">已抽样 {{ formatBytes(result.sampledBytes) }} / {{ result.sampledFiles }} 个文件<template v-if="!packingAdvice">；常见压缩类型 {{ result.lowValueFileCount }} 个</template>。</p>
         </div>
-        <button type="button" class="analysis-apply" :disabled="disabled || stale" @click="applyRecommendation">{{ copyAdvice ? '改用仅归档' : '采用建议' }}</button>
+        <button type="button" class="analysis-apply" :disabled="disabled || stale" @click="applyRecommendation">{{ copyAdvice ? '改用仅归档' : storeAdvice ? '改用仅存储' : '采用建议' }}</button>
       </div>
-      <p v-else class="text-xs text-muted leading-5">仅归档不压缩数据，预计体积包含打包开销；实际结果以生成的文件为准。</p>
+      <p v-else class="text-xs text-muted leading-5">{{ isStore ? '仅存储' : '仅归档' }}不压缩数据，预计体积包含打包开销；实际结果以生成的文件为准。</p>
     </div>
   </section>
 </template>

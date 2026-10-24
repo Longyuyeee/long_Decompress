@@ -1,0 +1,29 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ ❯ src/stores/__tests__/zipStore1650.test.ts (3 tests | 1 failed) 33ms
+   × ZIP-only and mixed method batch preserves unrelated inheritance and passwords 14ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/stores/__tests__/zipStore1650.test.ts > ZIP-only and mixed method batch preserves unrelated inheritance and passwords
+AssertionError: expected [Function] to throw error including '没有适用' but got '所选任务中没有 ZIP 任务，请选择 ZIP 格式或保持各自方法。'
+
+Expected: "没有适用"
+Received: "所选任务中没有 ZIP 任务，请选择 ZIP 格式或保持各自方法。"
+
+ ❯ src/stores/__tests__/zipStore1650.test.ts:22:74
+     20|  expect(s.selectedFiles[0].settings).toMatchObject({zipMethod:'store',…
+     21|  expect(JSON.stringify(s.selectedFiles.slice(1))).toBe(other);expect(J…
+     22|  expect(()=>s.applyBatchConfiguration(['C:/seven'],{zipMethod:'store'}…
+       |                                                                          ^
+     23|  expect(s.applyBatchConfiguration(['C:/zip','C:/seven'],{zipMethod:'st…
+     24|  expect(s.selectedFiles[0].settings?.zipMethod).toBe('store');expect(s…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 5 passed (6)
+   Start at  18:17:31
+   Duration  19.80s (transform 3.64s, setup 1.08s, import 5.56s, tests 161ms, environment 48.02s)

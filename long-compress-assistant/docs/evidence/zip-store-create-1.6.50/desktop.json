@@ -1,0 +1,368 @@
+{
+  "version": "1.6.50",
+  "applicationSha256": "52b4c06775e0206ead2fac5456aa72b37dc5aa34efde8e03ae06a7e8e4dc0ea9",
+  "checks": [
+    {
+      "name": "original ZIP inline edit automatic individual and batch modal in wide and small windows",
+      "applicationSha256": "52b4c06775e0206ead2fac5456aa72b37dc5aa34efde8e03ae06a7e8e4dc0ea9",
+      "inlinePreserved": true,
+      "batchModalPreserved": true,
+      "globalDeflatePreserved": true,
+      "methodVisibleForZip": true
+    },
+    {
+      "name": "UI Store creation history and native preview extraction conversion keep selected target method",
+      "applicationSha256": "52b4c06775e0206ead2fac5456aa72b37dc5aa34efde8e03ae06a7e8e4dc0ea9",
+      "creationMethod": "store",
+      "historyPreserved": true,
+      "textPreviewHash": "df4fb2d2d3a278d68096b625428d035ce0427a76e729304bfbb828105533d614",
+      "extraction": true,
+      "storeToDeflateToPasswordStandardStore": true
+    },
+    {
+      "name": "conversion inline and batch controls retain selected Store and original strength",
+      "applicationSha256": "52b4c06775e0206ead2fac5456aa72b37dc5aa34efde8e03ae06a7e8e4dc0ea9",
+      "singleSelectionRetained": true,
+      "batchSelectionRetained": true,
+      "originalLevelRestored": true,
+      "actualConversions": 2
+    },
+    {
+      "name": "real low gain advice is opt in and retains global default with strength hidden only for explicit Store",
+      "applicationSha256": "52b4c06775e0206ead2fac5456aa72b37dc5aa34efde8e03ae06a7e8e4dc0ea9",
+      "contentBasedAdvice": true,
+      "explicitAdoption": true,
+      "noAutomaticExecution": true,
+      "globalDeflatePreserved": true,
+      "strengthRestoredWhenSwitchingBack": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "inline-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 275,
+          "y": 202.0703125
+        },
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 653,
+          "y": 202.0703125
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "inline-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 528.0703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 210.0703125,
+          "width": 280,
+          "x": 139,
+          "y": 210.0703125
+        },
+        {
+          "bottom": 528.0703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 210.0703125,
+          "width": 280,
+          "x": 419,
+          "y": 210.0703125
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "batch-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 368.5703125
+        },
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 368.5703125
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "conversion-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 680.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 362.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 362.5703125
+        },
+        {
+          "bottom": 680.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 362.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 362.5703125
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "advice-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 476.0703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 158.0703125,
+          "width": 280,
+          "x": 139,
+          "y": 158.0703125
+        },
+        {
+          "bottom": 476.0703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 158.0703125,
+          "width": 280,
+          "x": 419,
+          "y": 158.0703125
+        }
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a",
+  "created": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\created\\source.zip",
+  "zip": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\intermediate.zip",
+  "converted": {
+    "files": [
+      {
+        "bytes": 62088,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.zip"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z01"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z02"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z03"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z04"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z05"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z06"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z07"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z08"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z09"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z10"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z11"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z12"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z13"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z14"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z15"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z16"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z17"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z18"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z19"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z20"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z21"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z22"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z23"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z24"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z25"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z26"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z27"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z28"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z29"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z30"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z31"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z32"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z33"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z34"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z35"
+      },
+      {
+        "bytes": 65536,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.z36"
+      }
+    ],
+    "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-store-create-1650\\dcd7ade1-d8f7-4107-89e1-436204d4e74a\\converted-store.zip",
+    "split": true,
+    "totalBytes": 2421384
+  },
+  "passed": true
+}
