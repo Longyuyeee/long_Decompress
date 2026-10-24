@@ -1902,6 +1902,73 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         check()?;Ok(bytes)
     }
 
+    /// Explicit single/shared Bzip2 prefix: discard bounded dependencies, retain
+    /// only the selected prefix, and make no complete-block/CRC claim.
+    #[cfg(feature="bzip2")]
+    pub fn read_bzip2_entry_prefix(self, selected:usize, max_bytes:usize, max_decoded:u64, mut check:impl FnMut()->Result<(),Error>)->Result<Vec<u8>,Error>{
+        let a=self.archive;
+        let f=a.folders.get(self.folder_index).ok_or_else(||Error::other("Missing Bzip2 prefix block"))?;
+        let files:Vec<_>=a.files.iter().enumerate().filter(|(i,e)|e.has_stream && a.stream_map.file_folder_index.get(*i)==Some(&Some(self.folder_index))).collect();
+        let position=files.iter().position(|(i,_)|*i==selected).ok_or_else(||Error::other("Selected prefix is outside shared Bzip2 block"))?;
+        let e=files[position].1;
+        let total=files.iter().try_fold(0u64,|n,(_,e)|n.checked_add(e.size)).ok_or_else(||Error::other("Shared Bzip2 prefix size overflow"))?;
+        let skip=files[..position].iter().try_fold(0u64,|n,(_,e)|n.checked_add(e.size)).ok_or_else(||Error::other("Shared Bzip2 prefix offset overflow"))?;
+        if max_bytes==0 || max_bytes>1024*1024 || e.size<=max_bytes as u64 || max_decoded==0 || max_decoded>64*1024*1024
+            || files.iter().any(|(_,e)|e.is_directory || e.is_anti_item)
+            || !(1..=2).contains(&f.coders.len()) || f.unpack_sizes.len()!=f.coders.len()
+            || f.total_input_streams!=f.coders.len() || f.total_output_streams!=f.coders.len()
+            || f.bind_pairs.len()!=f.coders.len()-1 || f.packed_streams.len()!=1
+            || f.coders.iter().any(|c|c.num_in_streams!=1 || c.num_out_streams!=1)
+            || files.len()!=f.num_unpack_sub_streams || f.get_unpack_size()!=total
+        {return Err(Error::unsupported("7Z Bzip2 固实开头预览的共享映射或大小无法确认，请先提取后打开"));}
+        let target=skip.checked_add(max_bytes as u64).filter(|n|*n<=max_decoded).ok_or_else(||Error::unsupported("7Z Bzip2 固实预览前置内容与开头合计超过 64 MiB，请先提取后打开"))?;
+        let coders:Vec<_>=f.ordered_coder_iter().take(f.coders.len()+1).collect();
+        if coders.len()!=f.coders.len() || !(coders.len()==1 && coders[0].1.decompression_method_id()==SevenZMethod::ID_BZIP2
+            || coders.len()==2 && coders[0].1.decompression_method_id()==SevenZMethod::ID_AES256SHA256 && coders[1].1.decompression_method_id()==SevenZMethod::ID_BZIP2)
+            || !coders.last().unwrap().1.properties.is_empty()
+        {return Err(Error::unsupported("7Z Bzip2 大文本预览方法或顺序无法确认，请先提取后打开"));}
+        let pack=*a.stream_map.folder_first_pack_stream_index.get(self.folder_index).ok_or_else(||Error::other("Missing Bzip2 prefix pack mapping"))?;
+        let size=*a.pack_sizes.get(pack).ok_or_else(||Error::other("Missing Bzip2 prefix pack size"))?;
+        let encrypted=coders.len()==2;
+        let plain=if encrypted{f.get_unpack_size_at_index(coders[0].0)}else{size};
+        if plain==0{return Err(Error::other("Bzip2 prefix has no compressed plaintext"));}
+        if encrypted && plain.checked_add(15).map(|n|n/16*16)!=Some(size){return Err(Error::other("Bzip2 prefix AES packed size mismatch"));}
+        let start=32u64.checked_add(a.pack_pos).and_then(|n|a.stream_map.pack_stream_offsets.get(pack).and_then(|o|n.checked_add(*o))).ok_or_else(||Error::other("Bzip2 prefix offset overflow"))?;
+        check()?;self.source.seek(SeekFrom::Start(start)).map_err(Error::io)?;
+        let packed=self.source.take(size);
+        let mut stream:Box<dyn Read+'_>=if encrypted{
+            #[cfg(feature="aes256")]
+            {crate::preview::coder(coders[0].1,0)?;let n=usize::try_from(plain).map_err(|_|Error::unsupported("Bzip2 prefix size exceeds platform range"))?;Box::new(crate::aes256sha256::PreviewAes::new_prefix(packed,&coders[0].1.properties,self.password,n)?)}
+            #[cfg(not(feature="aes256"))]
+            {return Err(Error::unsupported("AES is unavailable"));}
+        }else{Box::new(packed)};
+        let mut codec=bzip2::Decompress::new(false);let mut bytes=Vec::with_capacity(max_bytes);
+        let mut input=[0;32*1024];let mut output=[0;32*1024];let(mut offset,mut end,mut read_plain)=(0,0,0u64);
+        while codec.total_out()<target{
+            check()?;
+            let before_in=codec.total_in();let before_out=codec.total_out();let capacity=(output.len() as u64).min(target-before_out) as usize;
+            let status=codec.decompress(&input[offset..end],&mut output[..capacity]).map_err(|e|Error::other(format!("Bzip2 prefix: {e}")))?;
+            let consumed=(codec.total_in()-before_in) as usize;let produced=(codec.total_out()-before_out) as usize;offset+=consumed;
+            // An observed early end is a known short file, not an unread tail.
+            if status==bzip2::Status::StreamEnd{return Err(Error::other("7Z Bzip2 文本在所选开头结束，大小与声明不符，请先提取检查"));}
+            if status==bzip2::Status::MemNeeded{return Err(Error::other("Bzip2 prefix decoder memory unavailable"));}
+            // Try buffered output before asking for more input. Short reads
+            // are valid; never fill a speculative chunk past a usable prefix.
+            if consumed==0 && produced==0{
+                if offset!=end || read_plain>=plain{return Err(Error::other("7Z Bzip2 文本开头前数据不足，请先提取检查"));}
+                check()?;let capacity=(input.len() as u64).min(plain-read_plain) as usize;
+                offset=0;end=stream.read(&mut input[..capacity]).map_err(Error::io)?;
+                if end==0{return Err(Error::other("7Z Bzip2 文本开头前数据结束，大小与声明不符，请先提取检查"));}
+                read_plain+=end as u64;continue;
+            }
+            // Discard dependencies immediately, including a chunk crossing the
+            // selected boundary; only the selected prefix enters the buffer.
+            if codec.total_out()>skip {let first=skip.saturating_sub(before_out) as usize;bytes.extend_from_slice(&output[first..produced]);}
+        }
+        if bytes.len()!=max_bytes{return Err(Error::other("Shared Bzip2 prefix size mismatch"));}
+        check()?;Ok(bytes)
+    }
+
     /// Explicit shared Deflate prefix: discard bounded dependencies, retain
     /// only the selected prefix, and make no complete-block/CRC claim.
     #[cfg(feature="additional-codecs")]

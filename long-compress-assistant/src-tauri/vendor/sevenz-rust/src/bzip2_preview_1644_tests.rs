@@ -3,7 +3,7 @@ use crate::{folder::{Coder,BindPair},Archive,BlockDecoder,Error,SevenZMethod as 
 use aes::cipher::{BlockEncryptMut,KeyIvInit,generic_array::GenericArray};
 use sha2::{Digest,Sha256};use std::io::{Cursor,Read,Seek,SeekFrom,Write};
 const KEY:&[u8]=&[b'k',0];
-fn sample(shared:bool,encrypted:bool,mutation:&str)->(Archive,Cursor<Vec<u8>>,Vec<u8>){
+pub(super) fn sample(shared:bool,encrypted:bool,mutation:&str)->(Archive,Cursor<Vec<u8>>,Vec<u8>){
  let(mut a,_,body)=crate::deflate64_preview_1638_tests::sample(true,false);
  let mut encoder=bzip2::write::BzEncoder::new(Vec::new(),bzip2::Compression::new(9));encoder.write_all(&body).unwrap();let mut packed=encoder.finish().unwrap();
  match mutation {"footer"=>{packed.truncate(packed.len()-5);},"extra"=>packed.push(0),"second"=>{let again=packed.clone();packed.extend(again);},"bad-magic"=>packed[0]^=1,"internal-crc"=>packed[10]^=1,_=>()}

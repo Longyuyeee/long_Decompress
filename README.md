@@ -189,7 +189,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷、ZPAQ 原生密码数字切卷及原生多部分只读；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM / ESD / SWM、ZPAQ（含改密与数字分卷）；密码和分卷随目标格式提供 |
 | 清单校验 | SFV/MD5/SHA256 逐文件状态与原因、待补列表、按需复查；匹配表示与清单一致 |
-| 内部预览 | ZIP/TAR 系列及普通 GZIP/BZIP2/XZ/Zstandard 流、ZPAQ 日志式所选快照中的受支持图片与文本；7Z Bzip2 普通/密码、非固实/固实包支持完整文本 ≤1 MiB、图片 ≤8 MiB，含内容/文件名加密和完整数字卷，共享压缩/解码各 ≤64 MiB；7Z Deflate64 普通/密码非固实及固实包支持完整文本 ≤1 MiB、图片 ≤8 MiB，含内容/文件名加密和完整数字分卷；固实共享压缩/解码分别 ≤64 MiB；非固实及固实大文本可先看前 1 MiB，固实前置内容与开头合计 ≤64 MiB，明确未校验整文件并可提取全文；7Z Deflate 普通/密码包支持完整图文（文本 ≤1 MiB、图片 ≤8 MiB，含固实、内容/文件名加密与数字分卷；共享压缩/解码各 ≤64 MiB）；大文本可先看前 1 MiB，含固实（前置内容与开头合计 ≤64 MiB），标明未校验整文件并可提取全文；7Z PPMd 普通/密码包均支持非固实及小型固实的完整图文，非固实及固实大文本可读前 1 MiB（明确未校验整文件；固实前置与开头合计 ≤64 MiB，完整块压缩/解码各 ≤64 MiB）；7Z LZMA/LZMA2 的普通或密码包均支持完整小文本、图片及大文本前 1 MiB，兼容非固实与固实包（大文本明确未校验整文件，固实前置范围 ≤64 MiB）；ALZ Store/Deflate/Bzip2 支持完整小文本、大文本前 1 MiB（明确未校验整文件）、8 MiB 以内受支持图片及原连续阅读入口；EGG 非固实小文本和图片可直接预览并沿原入口连续阅读；密码和完整原生卷沿原入口使用，预览超出读取范围时可先提取后打开 |
+| 内部预览 | ZIP/TAR 系列及普通 GZIP/BZIP2/XZ/Zstandard 流、ZPAQ 日志式所选快照中的受支持图片与文本；7Z Bzip2 普通/密码、非固实/固实包支持完整文本 ≤1 MiB、图片 ≤8 MiB，含内容/文件名加密和完整数字卷，共享压缩/解码各 ≤64 MiB；Bzip2 非固实/固实大文本可先看前 1 MiB，前置与开头合计 ≤64 MiB，明确未校验整文件并可提取全文；7Z Deflate64 普通/密码非固实及固实包支持完整文本 ≤1 MiB、图片 ≤8 MiB，含内容/文件名加密和完整数字分卷；固实共享压缩/解码分别 ≤64 MiB；非固实及固实大文本可先看前 1 MiB，固实前置内容与开头合计 ≤64 MiB，明确未校验整文件并可提取全文；7Z Deflate 普通/密码包支持完整图文（文本 ≤1 MiB、图片 ≤8 MiB，含固实、内容/文件名加密与数字分卷；共享压缩/解码各 ≤64 MiB）；大文本可先看前 1 MiB，含固实（前置内容与开头合计 ≤64 MiB），标明未校验整文件并可提取全文；7Z PPMd 普通/密码包均支持非固实及小型固实的完整图文，非固实及固实大文本可读前 1 MiB（明确未校验整文件；固实前置与开头合计 ≤64 MiB，完整块压缩/解码各 ≤64 MiB）；7Z LZMA/LZMA2 的普通或密码包均支持完整小文本、图片及大文本前 1 MiB，兼容非固实与固实包（大文本明确未校验整文件，固实前置范围 ≤64 MiB）；ALZ Store/Deflate/Bzip2 支持完整小文本、大文本前 1 MiB（明确未校验整文件）、8 MiB 以内受支持图片及原连续阅读入口；EGG 非固实小文本和图片可直接预览并沿原入口连续阅读；密码和完整原生卷沿原入口使用，预览超出读取范围时可先提取后打开 |
 | 图片压缩 | JPEG、PNG、WebP；质量、尺寸与格式按对应编码能力调整 |
 | 视频压缩 | MP4、MOV、AVI、WMV、WebM、MKV、M4V 等受支持输入，输出 MP4 / H.264 |
 | PDF 优化 | 分析结构、优化体积；是否适合处理会在分析后显示 |
@@ -275,7 +275,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.6.44 · 7Z Bzip2 图文直接看**。普通/密码、非固实/固实包同版接回原双栏完整文本与图片，含内容/文件名加密、完整数字卷/非首卷、连续阅读及仅提取当前页。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.44.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_BZIP2_PREVIEW_FREEZE_1.6.44.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.44)。下一阶段 [Bzip2 大文本开头](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.45.md)仅规划。
+**v1.6.45 · Bzip2 大日志先看开头**。普通/密码、非固实/固实同版先看所选前 1 MiB，接通内容/文件名加密及完整数字卷/非首卷，保留编码/滚动、部分范围和提取全文，达到目标后停止推进。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.45.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_BZIP2_TEXT_PREFIX_FREEZE_1.6.45.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.45)。下一阶段 [7Z 压缩方法可选](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.46.md)仅规划。
+
+**v1.6.44 · 7Z Bzip2 图文直接看**。普通/密码、非固实/固实包同版接回原双栏完整文本与图片，含内容/文件名加密、完整数字卷/非首卷、连续阅读及仅提取当前页。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.44.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_BZIP2_PREVIEW_FREEZE_1.6.44.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.44)。Bzip2 大文本开头由上方 v1.6.45 接续。
 
 **v1.6.43 · 固实 Deflate64 大日志先看开头**。普通/密码固实包的后续大文本也能在原双栏先看前 1 MiB，接通内容/文件名加密与完整数字卷/非首卷；流式跳过前置内容，仅保留所选开头，明确部分范围并可提取全文。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.43.md) · [范围与记录](long-compress-assistant/docs/SEVENZ_SOLID_DEFLATE64_PREFIX_FREEZE_1.6.43.md) · [发布与下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.43)。Bzip2 完整图文由上方 v1.6.44 接续。
 

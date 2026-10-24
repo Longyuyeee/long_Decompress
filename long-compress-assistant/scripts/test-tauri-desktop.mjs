@@ -1,3 +1,4 @@
+import { runSevenzBzip2Prefix1645Gate } from './sevenz-bzip2-text-prefix-1645-gate.mjs'
 import { runSevenzBzip21644Gate } from './sevenz-bzip2-preview-1644-gate.mjs'
 import { runSevenzSolidDeflate64Prefix1643Gate } from './sevenz-solid-deflate64-prefix-1643-gate.mjs'
 import { runSevenzDeflate64Prefix1642Gate } from './sevenz-deflate64-text-prefix-1642-gate.mjs'
@@ -5066,6 +5067,8 @@ try {
     await runSevenzSolidDeflate1635Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--sevenz-password-deflate-preview-1634-only')) {
     await runSevenzPasswordDeflate1634Gate({driver,bridge:callDesktopBridge,root,application})
+  } else if (process.argv.includes('--sevenz-bzip2-text-prefix-1645-only')) {
+    await runSevenzBzip2Prefix1645Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--sevenz-bzip2-preview-1644-only')) {
     await runSevenzBzip21644Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--sevenz-solid-deflate64-prefix-1643-only')) {

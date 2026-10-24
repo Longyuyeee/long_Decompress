@@ -75,3 +75,5 @@ pub use writer::*;
 #[cfg(all(test,feature="aes256",feature="additional-codecs"))] mod deflate64_solid_prefix_1643_tests;
 
 #[cfg(all(test,feature="aes256",feature="bzip2"))] mod bzip2_preview_1644_tests;
+
+#[cfg(all(test,feature="aes256",feature="bzip2",feature="additional-codecs"))] mod bzip2_prefix_1645_tests;
