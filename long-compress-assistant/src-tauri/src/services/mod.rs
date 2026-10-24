@@ -260,3 +260,6 @@ mod sevenz_copy_create_1649_tests;
 
 #[cfg(test)]
 mod zip_store_create_1650_tests;
+
+#[cfg(test)]
+mod sevenz_delta_create_1651_tests;

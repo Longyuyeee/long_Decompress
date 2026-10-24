@@ -65,6 +65,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
     output: &str,
     options: CompressionOptions,
 ) -> Result<()> {
+    let delta = options.seven_zip_filter.configuration(options.seven_zip_method,options.seven_zip_delta_distance)?;
     if options.encrypt_filenames && !options.password.as_deref().is_some_and(|password| !password.is_empty()) {
         return Err(CompressionError::CompressionFailed(
             "文件名加密必须设置压缩密码。".to_string(),
@@ -145,6 +146,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
         );
     }
     methods.push(selected_method);
+    if let Some(delta) = delta { methods.push(delta); }
     writer.set_content_methods(methods);
 
     if options.create_solid_archive {

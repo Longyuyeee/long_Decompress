@@ -32,6 +32,8 @@ mod de_funcs;
 pub(crate) mod decoders;
 mod delta;
 #[cfg(feature = "compress")]
+mod delta_encoder;
+#[cfg(feature = "compress")]
 mod en_funcs;
 #[cfg(feature = "compress")]
 mod encoders;
@@ -77,3 +79,5 @@ pub use writer::*;
 #[cfg(all(test,feature="aes256",feature="bzip2"))] mod bzip2_preview_1644_tests;
 
 #[cfg(all(test,feature="aes256",feature="bzip2",feature="additional-codecs"))] mod bzip2_prefix_1645_tests;
+
+#[cfg(all(test,feature="compress"))] mod delta_encoder_1651_tests;

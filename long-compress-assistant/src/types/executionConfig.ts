@@ -60,7 +60,7 @@ export interface ArchiveConversionConfigV1 {
   sourceZpaqSnapshot?: ZpaqSnapshot
   sourceZipPasswordEncoding?: ZipPasswordEncoding
   wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
-  sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'
+  sevenZipFilter?: 'none' | 'delta'; sevenZipDeltaDistance?: number; sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'
   zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma' | 'store'
   zipEncryption?: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
@@ -114,6 +114,9 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
   if (config.kind === 'archive-conversion' && config.sourcePasswordRequired !== undefined && typeof config.sourcePasswordRequired !== 'boolean') return null
   const seven = config.kind === 'archive-compression' ? config.settings.sevenZipMethod : config.kind === 'archive-conversion' ? config.sevenZipMethod : undefined
   if (seven !== undefined && !['lzma2','lzma','bzip2','deflate','ppmd','copy'].includes(seven)) return null
+  const filterSettings = config.kind === 'archive-compression' ? config.settings : config.kind === 'archive-conversion' ? config : undefined
+  if (filterSettings?.sevenZipFilter !== undefined && !['none','delta'].includes(filterSettings.sevenZipFilter)) return null
+  if (filterSettings?.sevenZipDeltaDistance !== undefined && (!Number.isInteger(filterSettings.sevenZipDeltaDistance) || filterSettings.sevenZipDeltaDistance < 1 || filterSettings.sevenZipDeltaDistance > 256)) return null
   const method = config.kind === 'archive-compression' ? config.settings.wimMethod : config.kind === 'archive-conversion' ? config.wimMethod : undefined
   if (method !== undefined && method !== 'store' && method !== 'xpress' && method !== 'lzx' && method !== 'lzms' && method !== 'solid') return null
   if (config.kind === 'archive-edit' && (typeof config.outputPath !== 'string' || !config.outputPath.trim())) return null
@@ -125,7 +128,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
       ...(config.sourceZpaqSnapshot ? { sourceZpaqSnapshot: { ...config.sourceZpaqSnapshot } } : {}),
       ...(config.sourceZipPasswordEncoding ? { sourceZipPasswordEncoding: config.sourceZipPasswordEncoding } : {}),
       ...(config.wimMethod ? { wimMethod: config.wimMethod } : {}),
-      sevenZipMethod: config.sevenZipMethod ?? 'lzma2', zipMethod: config.zipMethod ?? 'deflate',
+      sevenZipFilter: config.sevenZipFilter ?? 'none', sevenZipDeltaDistance: config.sevenZipDeltaDistance ?? 1, sevenZipMethod: config.sevenZipMethod ?? 'lzma2', zipMethod: config.zipMethod ?? 'deflate',
       zipEncryption: config.zipEncryption ?? 'aes256', zipPasswordEncoding: config.zipPasswordEncoding ?? 'utf8',
       ...(config.zipSplitMode ? { zipSplitMode: config.zipSplitMode } : {}),
       outputPath: config.outputPath, format: config.format, level: config.level,
@@ -153,6 +156,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
           ...(s.encryptFilenames !== undefined ? { encryptFilenames: s.encryptFilenames } : {}),
           ...(s.zipPasswordEncoding ? { zipPasswordEncoding: s.zipPasswordEncoding } : {}),
           ...(s.wimMethod ? { wimMethod: s.wimMethod } : {}),
+          sevenZipFilter: s.sevenZipFilter ?? 'none', sevenZipDeltaDistance: s.sevenZipDeltaDistance ?? 1,
           ...(s.sevenZipMethod ? { sevenZipMethod: s.sevenZipMethod } : {}), ...(s.zipMethod ? { zipMethod: s.zipMethod } : {}),
           ...(s.zipEncryption ? { zipEncryption: s.zipEncryption } : {}),
           ...(s.zipSplitMode ? { zipSplitMode: s.zipSplitMode } : {}),

@@ -126,6 +126,10 @@ pub struct CompressionOptions {
     pub zip_method: crate::services::zip_method::ZipMethod,
     #[serde(default)]
     pub seven_zip_method: crate::services::seven_zip_method::SevenZipMethod,
+    #[serde(default)]
+    pub seven_zip_filter: crate::services::seven_zip_method::SevenZipFilter,
+    #[serde(default = "crate::services::seven_zip_method::default_delta_distance")]
+    pub seven_zip_delta_distance: u32,
     // Retired in 1.4.0: accept old payloads, but never deserialize or emit this option.
     #[serde(skip)]
     pub fast_pack: bool,
@@ -214,6 +218,8 @@ impl Default for CompressionOptions {
             wim_method: Default::default(),
             zip_method: Default::default(),
             seven_zip_method: Default::default(),
+            seven_zip_filter: Default::default(),
+            seven_zip_delta_distance: 1,
             fast_pack: false,
             zip_password_encoding: Default::default(),
             zip_encryption: Default::default(),

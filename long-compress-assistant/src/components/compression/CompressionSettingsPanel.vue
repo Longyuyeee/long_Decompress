@@ -149,10 +149,12 @@ const effectiveOutputExtension = computed(() =>
 
 const presets = computed(() => appStore.compressionPresets)
 
-const applyPreset = (preset: { name: string; format: string; level: number; password?: string; sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'; zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma' | 'store'; wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' }) => {
+const applyPreset = (preset: { name: string; format: string; level: number; password?: string; sevenZipFilter?: 'none' | 'delta'; sevenZipDeltaDistance?: number; sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'; zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma' | 'store'; wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid' }) => {
   compressionOptions.value.format = preset.format as any
   compressionOptions.value.level = preset.level
   compressionOptions.value.wimMethod = preset.wimMethod ?? 'store'
+  compressionOptions.value.sevenZipFilter = preset.sevenZipFilter ?? 'none'
+  compressionOptions.value.sevenZipDeltaDistance = preset.sevenZipDeltaDistance ?? 1
   compressionOptions.value.sevenZipMethod = preset.sevenZipMethod ?? 'lzma2'
   compressionOptions.value.zipMethod = preset.zipMethod ?? 'deflate'
   if (preset.password) compressionOptions.value.password = preset.password
@@ -164,7 +166,7 @@ const savePreset = () => {
 }
 const confirmSavePreset = () => {
   if (presetNameInput.value.trim()) {
-    appStore.saveCompressionPreset(presetNameInput.value.trim(), compressionOptions.value.format, compressionOptions.value.level, compressionOptions.value.password, compressionOptions.value.zipMethod, compressionOptions.value.wimMethod, compressionOptions.value.sevenZipMethod)
+    appStore.saveCompressionPreset(presetNameInput.value.trim(), compressionOptions.value.format, compressionOptions.value.level, compressionOptions.value.password, compressionOptions.value.zipMethod, compressionOptions.value.wimMethod, compressionOptions.value.sevenZipMethod, compressionOptions.value.sevenZipFilter, compressionOptions.value.sevenZipDeltaDistance)
   }
   showPresetModal.value = false
 }
@@ -273,6 +275,8 @@ const applyProfile = (profile: CompressionProfile) => {
   compressionOptions.value.rarRecoveryVolumes = profile.config.rarRecoveryVolumes ?? 0
   compressionOptions.value.zipPasswordEncoding = profile.config.zipPasswordEncoding ?? 'utf8'
   compressionOptions.value.wimMethod = profile.config.wimMethod ?? 'store'
+  compressionOptions.value.sevenZipFilter = profile.config.sevenZipFilter ?? 'none'
+  compressionOptions.value.sevenZipDeltaDistance = profile.config.sevenZipDeltaDistance ?? 1
   compressionOptions.value.sevenZipMethod = profile.config.sevenZipMethod ?? 'lzma2'
   compressionOptions.value.zipMethod = profile.config.zipMethod ?? 'deflate'
   compressionOptions.value.zipEncryption = profile.config.zipEncryption ?? 'aes256'
@@ -314,7 +318,7 @@ const saveAsNewProfile = async () => {
         rarRecoveryVolumes: compressionOptions.value.rarRecoveryVolumes ?? 0,
         zipPasswordEncoding: compressionOptions.value.zipPasswordEncoding ?? 'utf8',
         wimMethod: compressionOptions.value.wimMethod ?? 'store',
-        sevenZipMethod: compressionOptions.value.sevenZipMethod ?? 'lzma2', zipMethod: compressionOptions.value.zipMethod ?? 'deflate',
+        sevenZipFilter: compressionOptions.value.sevenZipFilter ?? 'none', sevenZipDeltaDistance: compressionOptions.value.sevenZipDeltaDistance ?? 1, sevenZipMethod: compressionOptions.value.sevenZipMethod ?? 'lzma2', zipMethod: compressionOptions.value.zipMethod ?? 'deflate',
         zipEncryption: compressionOptions.value.zipEncryption ?? 'aes256',
         zipSplitMode: compressionOptions.value.zipSplitMode ?? 'numeric',
         filenameTemplate: compressionOptions.value.filename ? `{name}_${compressionOptions.value.filename}` : null,
@@ -368,7 +372,7 @@ const closeVaultPasswordsAfterFocus = () => {
         <ThemedSelect v-model="compressionOptions.format" floating aria-label="目标格式" test-id="compression-format-select"
           :options="compressionFormats.map(fmt => ({ value: fmt.value, label: fmt.name, disabled: isFormatDisabled(fmt), detail: fmt.singleFileOnly ? appStore.t('preset.single_file_only') : undefined }))" />
         <WimMethodField v-model="compressionOptions.wimMethod" :format="compressionOptions.format" :level="compressionOptions.level" test-id="compression-wim-method" />
-        <SevenZipMethodField v-model="compressionOptions.sevenZipMethod" :format="compressionOptions.format" test-id="compression-sevenz-method" />
+        <SevenZipMethodField v-model="compressionOptions.sevenZipMethod" v-model:filter="compressionOptions.sevenZipFilter" v-model:distance="compressionOptions.sevenZipDeltaDistance" :format="compressionOptions.format" test-id="compression-sevenz-method" />
         <ZipMethodField v-model="compressionOptions.zipMethod" :format="compressionOptions.format" :level="compressionOptions.level" test-id="compression-zip-method" />
       </div>
 

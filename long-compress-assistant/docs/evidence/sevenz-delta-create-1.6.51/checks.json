@@ -1,0 +1,269 @@
+{
+  "version": "1.6.51",
+  "applicationSha256": "ef029de4f55db37d1c01479c70d3ef34b201a23cb36a44739f9308c707207ebb",
+  "adapter": {
+    "passed": 2,
+    "distances": "1..256",
+    "newEndProtocol": "downstream empty write finishes LZMA/LZMA2; no post-finish flush"
+  },
+  "frontend": {
+    "passed": 8,
+    "initialPassed": 6,
+    "addedDistanceRetyping": 1,
+    "addedConversionLayoutBinding": 1
+  },
+  "backend": {
+    "passed": 5,
+    "initialUnaffectedPassed": 3,
+    "rerunCreationAfterEndFix": 1,
+    "rerunDefaultsAfterFixtureFix": 1,
+    "initialFailures": [
+      "Delta double-flushed an ended LZMA2 coder",
+      "legacy request fixture omitted required level; fixed fixture only"
+    ]
+  },
+  "creationCases": 8,
+  "desktopGroups": 3,
+  "reusedUnchangedCompressionUi": {
+    "applicationSha256": "3fd2a17455083bcc0ca6972101e61ff5e11be74a82646b5ec12c01e4ed43db58",
+    "groups": 2,
+    "screenshots": 4,
+    "reason": "Optional hidePreprocess defaults false; compression UI and backend algorithms unchanged"
+  },
+  "reusedConversionExecution": {
+    "name": "conversion inline and multiselect keep chosen target Delta and distance",
+    "applicationSha256": "3fd2a17455083bcc0ca6972101e61ff5e11be74a82646b5ec12c01e4ed43db58",
+    "singleSelectionRetained": true,
+    "batchSelectionRetained": true,
+    "actualConversionHistory": true,
+    "targetDistance": 16,
+    "reason": "Only conversion settings layout changed; completed IPC, output and history checks reused"
+  },
+  "layouts": [
+    {
+      "name": "collapsed-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 275,
+          "y": 202.0703125
+        },
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 653,
+          "y": 202.0703125
+        }
+      ],
+      "width": 1100,
+      "applicationSha256": "3fd2a17455083bcc0ca6972101e61ff5e11be74a82646b5ec12c01e4ed43db58"
+    },
+    {
+      "name": "inline-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 562.5703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 202.5703125,
+          "width": 378,
+          "x": 275,
+          "y": 202.5703125
+        },
+        {
+          "bottom": 562.5703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 202.5703125,
+          "width": 378,
+          "x": 653,
+          "y": 202.5703125
+        }
+      ],
+      "width": 1100,
+      "applicationSha256": "3fd2a17455083bcc0ca6972101e61ff5e11be74a82646b5ec12c01e4ed43db58"
+    },
+    {
+      "name": "inline-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 476.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 158.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 158.5703125
+        },
+        {
+          "bottom": 476.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 158.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 158.5703125
+        }
+      ],
+      "width": 760,
+      "applicationSha256": "3fd2a17455083bcc0ca6972101e61ff5e11be74a82646b5ec12c01e4ed43db58"
+    },
+    {
+      "name": "batch-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 368.5703125
+        },
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 368.5703125
+        }
+      ],
+      "width": 760,
+      "applicationSha256": "3fd2a17455083bcc0ca6972101e61ff5e11be74a82646b5ec12c01e4ed43db58"
+    },
+    {
+      "name": "conversion-narrow",
+      "applicationSha256": "ef029de4f55db37d1c01479c70d3ef34b201a23cb36a44739f9308c707207ebb",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "width": 760,
+      "preprocessing": [
+        {
+          "clientWidth": 608,
+          "controls": [
+            {
+              "bottom": 225.921875,
+              "height": 16,
+              "left": 166.109375,
+              "right": 182.109375,
+              "top": 209.921875,
+              "width": 16,
+              "x": 166.109375,
+              "y": 209.921875
+            },
+            {
+              "bottom": 309.3203125,
+              "height": 42.3984375,
+              "left": 83,
+              "right": 371,
+              "top": 266.921875,
+              "width": 288,
+              "x": 83,
+              "y": 266.921875
+            },
+            {
+              "bottom": 309.3203125,
+              "height": 40,
+              "left": 379,
+              "right": 667,
+              "top": 269.3203125,
+              "width": 288,
+              "x": 379,
+              "y": 269.3203125
+            }
+          ],
+          "rect": {
+            "bottom": 322.3203125,
+            "height": 121.3984375,
+            "left": 70,
+            "right": 680,
+            "top": 200.921875,
+            "width": 610,
+            "x": 70,
+            "y": 200.921875
+          },
+          "scrollWidth": 608,
+          "status": {
+            "bottom": 225.921875,
+            "height": 16,
+            "left": 591.4453125,
+            "right": 667,
+            "top": 209.921875,
+            "width": 75.5546875,
+            "x": 591.4453125,
+            "y": 209.921875
+          },
+          "summary": {
+            "bottom": 233.921875,
+            "height": 32,
+            "left": 71,
+            "right": 679,
+            "top": 201.921875,
+            "width": 608,
+            "x": 71,
+            "y": 201.921875
+          }
+        }
+      ]
+    }
+  ],
+  "shellSha256": "0801547ea946c15fe21da62198a7dae483e6d3cba67beb5d9ea74ec5bc390b46",
+  "build": {
+    "frontend": "vue-tsc / VITE_DESKTOP_E2E=1 Vite",
+    "native": "custom-protocol,desktop-e2e; opt-level=1,LTO=false",
+    "productionConfigChanged": false
+  }
+}

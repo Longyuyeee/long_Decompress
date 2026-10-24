@@ -29,6 +29,7 @@ pub(crate) fn coder(coder:&Coder,unpacked:usize)->Result<(),Error>{
     let id=coder.decompression_method_id();let p=&coder.properties;
     let valid=if id==M::ID_LZMA {p.len()==5&&u32::from_le_bytes(p[1..5].try_into().unwrap())<=64*1024*1024}
         else if id==M::ID_LZMA2 {p.len()==1&&p[0]<=28}
+        else if id==M::ID_DELTA {p.len()==1}
         else if id==M::ID_PPMD {p.len()==5&&u32::from_le_bytes(p[1..5].try_into().unwrap())<=64*1024*1024}
         // Retain the existing bounded-memory header codecs/filters. Selected
         // payload methods are checked separately by the application.

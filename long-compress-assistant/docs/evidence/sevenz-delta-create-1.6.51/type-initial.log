@@ -1,0 +1,4 @@
+src/composables/useCompressionProfiles.ts(132,298): error TS1117: An object literal cannot have multiple properties with the same name.
+src/composables/useCompressionProfiles.ts(132,357): error TS1117: An object literal cannot have multiple properties with the same name.
+src/composables/useCompressionProfiles.ts(204,249): error TS1117: An object literal cannot have multiple properties with the same name.
+src/composables/useCompressionProfiles.ts(204,306): error TS1117: An object literal cannot have multiple properties with the same name.

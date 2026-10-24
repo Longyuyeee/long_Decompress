@@ -28,3 +28,25 @@ pub(crate) fn sample_size(sample:&[u8],method:SevenZipMethod,level:u32,cancelled
     writer.push_archive_entry(entry,Some(Sample{input:sample,cancelled}))?;
     Ok(writer.finish()?.into_inner().len())
 }
+
+#[derive(Debug,Clone,Copy,Default,serde::Serialize,serde::Deserialize,PartialEq,Eq)]
+#[serde(rename_all="snake_case")]
+pub enum SevenZipFilter { #[default] None, Delta }
+pub(crate) fn default_delta_distance()->u32 {1}
+impl SevenZipFilter {
+    pub(crate) fn as_str(self)->&'static str {match self {Self::None=>"none",Self::Delta=>"delta"}}
+    pub(crate) fn from_setting(s:&str)->Option<Self>{match s {"none"=>Some(Self::None),"delta"=>Some(Self::Delta),_=>None}}
+    pub(crate) fn configuration(self,method:SevenZipMethod,distance:u32)->anyhow::Result<Option<sevenz_rust::SevenZMethodConfiguration>> {
+        if self==Self::None || !matches!(method,SevenZipMethod::Lzma2|SevenZipMethod::Lzma){return Ok(None)}
+        anyhow::ensure!((1..=256).contains(&distance),"Delta 距离请输入 1～256 的整数");
+        Ok(Some(sevenz_rust::SevenZMethodConfiguration::new(sevenz_rust::SevenZMethod::DELTA_FILTER).with_options(sevenz_rust::MethodOptions::Num(distance))))
+    }
+}
+pub(crate) fn sample_size_filtered(sample:&[u8],method:SevenZipMethod,level:u32,filter:SevenZipFilter,distance:u32,cancelled:&AtomicBool)->anyhow::Result<usize>{
+    struct Sample<'a>{input:&'a[u8],cancelled:&'a AtomicBool}
+    impl Read for Sample<'_>{fn read(&mut self,b:&mut[u8])->std::io::Result<usize>{if self.cancelled.load(Ordering::Acquire){return Err(std::io::Error::new(std::io::ErrorKind::Interrupted,"Compression analysis cancelled"));}self.input.read(b)}}
+    let mut methods=vec![method.configuration(level)];if let Some(delta)=filter.configuration(method,distance)? {methods.push(delta)}
+    let mut writer=sevenz_rust::SevenZWriter::new(Cursor::new(Vec::new()))?;writer.set_content_methods(methods);
+    let mut entry=sevenz_rust::SevenZArchiveEntry::default();entry.name="sample".into();writer.push_archive_entry(entry,Some(Sample{input:sample,cancelled}))?;
+    Ok(writer.finish()?.into_inner().len())
+}

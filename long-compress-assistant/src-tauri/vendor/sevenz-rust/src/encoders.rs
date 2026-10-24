@@ -11,6 +11,7 @@ use crate::{
 };
 
 pub enum Encoder<W: Write> {
+    DELTA(crate::delta_encoder::DeltaEncoder<CountingWriter<W>>),
     COPY(CopyEncoder<CountingWriter<W>>),
     LZMA(LZMAWriter<W>),
     LZMA2(LZMA2Writer<W>),
@@ -27,6 +28,7 @@ pub enum Encoder<W: Write> {
 impl<W: Write> Write for Encoder<W> {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         match self {
+            Encoder::DELTA(w) => w.write(buf),
             Encoder::COPY(w) => w.write(buf),
             Encoder::LZMA(w) => w.write(buf),
             Encoder::LZMA2(w) => w.write(buf),
@@ -43,6 +45,7 @@ impl<W: Write> Write for Encoder<W> {
 
     fn flush(&mut self) -> std::io::Result<()> {
         match self {
+            Encoder::DELTA(w) => w.flush(),
             Encoder::COPY(w) => w.flush(),
             Encoder::LZMA(w) => w.flush(),
             Encoder::LZMA2(w) => w.flush(),
@@ -65,6 +68,10 @@ pub fn add_encoder<W: Write>(
     let method = method_config.method;
 
     match method.id() {
+        SevenZMethod::ID_DELTA => {
+            let distance = delta_distance(method_config.options.as_ref())?;
+            Ok(Encoder::DELTA(crate::delta_encoder::DeltaEncoder::new(input, distance).map_err(Error::io)?))
+        }
         SevenZMethod::ID_COPY => {
             if method_config.options.is_some() { return Err(Error::other("Copy does not accept compression options")); }
             Ok(Encoder::COPY(CopyEncoder { inner: input, state: CopyState::Active }))
@@ -123,6 +130,10 @@ pub fn add_encoder<W: Write>(
             method.name().to_string(),
         )),
     }
+}
+
+fn delta_distance(options: Option<&MethodOptions>) -> Result<u32, Error> {
+    match options { None => Ok(1), Some(MethodOptions::Num(n)) if (1..=256).contains(n) => Ok(*n), _ => Err(Error::other("Delta distance must be 1..256")) }
 }
 
 #[derive(PartialEq)]
@@ -262,6 +273,11 @@ pub(crate) fn get_options_as_properties<'a>(
     out: &'a mut [u8],
 ) -> &'a [u8] {
     match method.id() {
+        SevenZMethod::ID_DELTA => {
+            let Ok(distance) = delta_distance(options) else { return &[]; };
+            out[0] = (distance - 1) as u8;
+            &out[..1]
+        }
         #[cfg(feature = "additional-codecs")]
         SevenZMethod::ID_PPMD => {
             let Ok((order, memory)) = ppmd_encoder_settings(options) else { return &[]; };

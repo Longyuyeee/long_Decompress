@@ -1,3 +1,4 @@
+import { runSevenzDelta1651Gate } from './sevenz-delta-create-1651-gate.mjs'
 import { runZipStore1650Gate } from './zip-store-create-1650-gate.mjs'
 import { runSevenzCopy1649Gate } from './sevenz-copy-create-1649-gate.mjs'
 import { runSevenzPpmd1648Gate } from './sevenz-ppmd-create-1648-gate.mjs'
@@ -5072,6 +5073,8 @@ try {
     await runSevenzSolidDeflate1635Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--sevenz-password-deflate-preview-1634-only')) {
     await runSevenzPasswordDeflate1634Gate({driver,bridge:callDesktopBridge,root,application})
+  } else if (process.argv.includes('--sevenz-delta-create-1651-only')) {
+    await runSevenzDelta1651Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--zip-store-create-1650-only')) {
     await runZipStore1650Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--sevenz-copy-create-1649-only')) {

@@ -70,6 +70,8 @@ const normalizeProfile = (raw: any): CompressionProfile => {
   description: raw.description,
   config: {
     format: raw.config.format,
+    sevenZipFilter: raw.config.sevenZipFilter ?? raw.config.extra_params?.seven_zip_filter ?? raw.config.extraParams?.seven_zip_filter ?? 'none',
+    sevenZipDeltaDistance: Number(raw.config.sevenZipDeltaDistance ?? raw.config.extra_params?.seven_zip_delta_distance ?? raw.config.extraParams?.seven_zip_delta_distance ?? 1),
     sevenZipMethod: normalizeSevenZipMethod(raw.config.sevenZipMethod ?? raw.config.extra_params?.seven_zip_method ?? raw.config.extraParams?.seven_zip_method),
     level: raw.config.level,
     password: raw.config.password ?? null,
@@ -127,7 +129,7 @@ const toBackendProfile = (profile: CompressionProfile) => ({
     create_solid_archive: profile.config.createSolidArchive,
     encrypt_filenames: profile.config.encryptFilenames ?? false,
     filename_template: profile.config.filenameTemplate,
-    extra_params: { ...profile.config.extraParams, wim_method: profile.config.wimMethod ?? 'store', zip_password_encoding: profile.config.zipPasswordEncoding ?? 'utf8', seven_zip_method: profile.config.sevenZipMethod ?? 'lzma2', zip_method: profile.config.zipMethod ?? 'deflate', zip_encryption: profile.config.zipEncryption ?? 'aes256',
+    extra_params: { ...profile.config.extraParams, wim_method: profile.config.wimMethod ?? 'store', zip_password_encoding: profile.config.zipPasswordEncoding ?? 'utf8', seven_zip_filter: profile.config.sevenZipFilter ?? 'none', seven_zip_delta_distance: String(profile.config.sevenZipDeltaDistance ?? 1), seven_zip_method: profile.config.sevenZipMethod ?? 'lzma2', zip_method: profile.config.zipMethod ?? 'deflate', zip_encryption: profile.config.zipEncryption ?? 'aes256',
       ...(profile.config.zipSplitMode ? { zip_split_mode: profile.config.zipSplitMode } : {}),
       ...(profile.config.rarRecoveryPercent ? { rar_recovery_percent: String(profile.config.rarRecoveryPercent) } : {}),
       ...(profile.config.rarRecoveryVolumes ? { rar_recovery_volumes: String(profile.config.rarRecoveryVolumes) } : {}) },
@@ -199,7 +201,7 @@ export const useCompressionProfiles = () => {
       } : input
       return await invoke<string>('create_compression_profile', { profile: { ...profile,
         config: { ...input.config, extraParams: { ...input.config.extraParams,
-          wim_method: input.config.wimMethod ?? 'store', zip_password_encoding: input.config.zipPasswordEncoding ?? 'utf8', seven_zip_method: input.config.sevenZipMethod ?? 'lzma2', zip_method: input.config.zipMethod ?? 'deflate', zip_encryption: input.config.zipEncryption ?? 'aes256',
+          wim_method: input.config.wimMethod ?? 'store', zip_password_encoding: input.config.zipPasswordEncoding ?? 'utf8', seven_zip_filter: input.config.sevenZipFilter ?? 'none', seven_zip_delta_distance: String(input.config.sevenZipDeltaDistance ?? 1), seven_zip_method: input.config.sevenZipMethod ?? 'lzma2', zip_method: input.config.zipMethod ?? 'deflate', zip_encryption: input.config.zipEncryption ?? 'aes256',
           ...(input.config.zipSplitMode ? { zip_split_mode: input.config.zipSplitMode } : {}), ...(input.config.rarRecoveryPercent ? { rar_recovery_percent: String(input.config.rarRecoveryPercent) } : {}), ...(input.config.rarRecoveryVolumes ? { rar_recovery_volumes: String(input.config.rarRecoveryVolumes) } : {}) } } } })
     } catch (error) {
       console.error('[useCompressionProfiles] Failed to create profile:', error)
