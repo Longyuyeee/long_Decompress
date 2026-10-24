@@ -1,0 +1,37 @@
+   Compiling long-compress-assistant v1.6.45 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 2m 10s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-669993ad9dfa769c.exe)
+
+running 6 tests
+test services::sevenz_bzip2_text_prefix_1645_tests::sevenz1645_mapping_aes_alignment_short_output_and_skip_cancellation_reject ... ok
+test services::sevenz_bzip2_text_prefix_1645_tests::sevenz1645_cancel_changed_source_missing_volume_and_fresh_shared_prefix ... ok
+test services::sevenz_bzip2_text_prefix_1645_tests::sevenz1645_shared_large_total_and_exact_dependency_boundary_remain_bounded ... ok
+test services::sevenz_bzip2_text_prefix_1645_tests::sevenz1645_partial_tail_does_not_waive_full_shared_aes_or_crc ... ok
+test services::sevenz_bzip2_text_prefix_1645_tests::sevenz1645_vault_manual_password_and_stats_keep_partial_semantics ... ok
+test services::sevenz_bzip2_text_prefix_1645_tests::sevenz1645_original_aes_methods_headers_every_numeric_member_and_boundaries_are_exact ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 1264 filtered out; finished in 34.63s

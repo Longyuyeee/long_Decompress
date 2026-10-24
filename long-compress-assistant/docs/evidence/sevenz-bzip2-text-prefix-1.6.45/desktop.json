@@ -1,0 +1,89 @@
+{
+  "version": "1.6.45",
+  "applicationSha256": "eda72ecec17bf81968d996c93d8f9c0d424b01ca44771d1a7cef09bc02d9d5fe",
+  "checks": [
+    {
+      "name": "large selected text is explicitly partial and scrollable in equal wide and narrow panes with original full-open action",
+      "applicationSha256": "eda72ecec17bf81968d996c93d8f9c0d424b01ca44771d1a7cef09bc02d9d5fe",
+      "meta": "UTF-8\n已读 1.00 MB / 2.52 MB\n11916 行\n部分内容 · 未校验整文件\n只读\n提取后打开",
+      "sha256": "54ce3072ded180bca7539b263ab377437eccb43b82764d11c91a6f9adf607560",
+      "scroll": true,
+      "fullActionVisible": true,
+      "fullSelectedSha256": "2feca96d3651e0c4ccfba9ebc9e4551674cfbc8ad4135f1fbbd61ce3f2dc7b30"
+    },
+    {
+      "name": "original solid Bzip2 non-first numeric member and five encoding boundaries keep exact selected prefix bytes",
+      "applicationSha256": "eda72ecec17bf81968d996c93d8f9c0d424b01ca44771d1a7cef09bc02d9d5fe",
+      "bzip2": true,
+      "nonFirstMember": true,
+      "encodingBoundaries": 5,
+      "largeTotal": 66060288
+    },
+    {
+      "name": "unread damaged tail remains explicitly partial while complete integrity errors and unsupported text keep extraction hints",
+      "applicationSha256": "eda72ecec17bf81968d996c93d8f9c0d424b01ca44771d1a7cef09bc02d9d5fe",
+      "unreadTailUnverified": true,
+      "completeIntegrity": "压缩失败: Newly created 7Z archive failed verification: MaybeBadPassword(Custom { kind: InvalidInput, error: Data })",
+      "errors": {
+        "bad-start": "7Z 密码保险箱未能读取所选文本，请填写密码并核对完整分卷来源，或先提取后打开"
+      },
+      "smallComplete": true
+    },
+    {
+      "name": "cancelled stale and missing-volume requests cannot replace a fresh shared prefix",
+      "applicationSha256": "eda72ecec17bf81968d996c93d8f9c0d424b01ca44771d1a7cef09bc02d9d5fe",
+      "stale": "IMAGE_READER_CHANGED|来源已变化，请返回刷新来源后重新阅读",
+      "cancelled": "文本预览已取消",
+      "freshBytes": 1048576,
+      "missingTail": "IMAGE_READER_CHANGED|来源已变化，请返回刷新来源后重新阅读"
+    }
+  ],
+  "layouts": [
+    {
+      "name": "prefix-wide",
+      "action": {
+        "height": 28.59375,
+        "width": 93.421875,
+        "x": 641.0625,
+        "y": 561.1015625
+      },
+      "dialog": {
+        "height": 531.390625,
+        "width": 832,
+        "x": 134,
+        "y": 59.3046875
+      },
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "prefix-narrow",
+      "action": {
+        "height": 28.59375,
+        "width": 93.421875,
+        "x": 529.859375,
+        "y": 451.796875
+      },
+      "dialog": {
+        "height": 442.78125,
+        "width": 714.40625,
+        "x": 22.796875,
+        "y": 38.609375
+      },
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-bzip2-text-prefix-1645\\3401bf38-821d-45b1-9e87-22ef578f53c2",
+  "passed": true
+}
