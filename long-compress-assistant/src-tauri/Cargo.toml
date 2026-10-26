@@ -1,6 +1,6 @@
 [package]
 name = "long-compress-assistant"
-version = "1.6.54"
+version = "1.6.55"
 description = "智能压缩解压助手"
 authors = ["Longyuyeee"]
 license = "MIT"

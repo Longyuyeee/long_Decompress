@@ -1,0 +1,263 @@
+{
+  "buttons": [
+    {
+      "centerHitsTarget": false,
+      "id": "nav-Decompress",
+      "rect": {
+        "bottom": 134,
+        "height": 40,
+        "left": 6,
+        "right": 81,
+        "top": 94,
+        "width": 75,
+        "x": 6,
+        "y": 94
+      }
+    },
+    {
+      "centerHitsTarget": false,
+      "id": "nav-Compress",
+      "rect": {
+        "bottom": 174,
+        "height": 40,
+        "left": 6,
+        "right": 81,
+        "top": 134,
+        "width": 75,
+        "x": 6,
+        "y": 134
+      }
+    },
+    {
+      "centerHitsTarget": false,
+      "id": "nav-SpecialCompression",
+      "rect": {
+        "bottom": 214,
+        "height": 40,
+        "left": 6,
+        "right": 81,
+        "top": 174,
+        "width": 75,
+        "x": 6,
+        "y": 174
+      }
+    },
+    {
+      "centerHitsTarget": false,
+      "id": "nav-ArchiveBrowser",
+      "rect": {
+        "bottom": 254,
+        "height": 40,
+        "left": 6,
+        "right": 81,
+        "top": 214,
+        "width": 75,
+        "x": 6,
+        "y": 214
+      }
+    },
+    {
+      "centerHitsTarget": false,
+      "id": "nav-ToolsCenter",
+      "rect": {
+        "bottom": 294,
+        "height": 40,
+        "left": 6,
+        "right": 81,
+        "top": 254,
+        "width": 75,
+        "x": 6,
+        "y": 254
+      }
+    },
+    {
+      "centerHitsTarget": false,
+      "id": "nav-Vault",
+      "rect": {
+        "bottom": 334,
+        "height": 40,
+        "left": 6,
+        "right": 81,
+        "top": 294,
+        "width": 75,
+        "x": 6,
+        "y": 294
+      }
+    },
+    {
+      "centerHitsTarget": false,
+      "id": "nav-History",
+      "rect": {
+        "bottom": 374,
+        "height": 40,
+        "left": 6,
+        "right": 81,
+        "top": 334,
+        "width": 75,
+        "x": 6,
+        "y": 334
+      }
+    },
+    {
+      "centerHitsTarget": false,
+      "id": "nav-Settings",
+      "rect": {
+        "bottom": 414,
+        "height": 40,
+        "left": 6,
+        "right": 81,
+        "top": 374,
+        "width": 75,
+        "x": 6,
+        "y": 374
+      }
+    },
+    {
+      "centerHitsTarget": false,
+      "id": "open-zpaq-update",
+      "rect": {
+        "bottom": 116,
+        "height": 32,
+        "left": 85.8515625,
+        "right": 145,
+        "top": 84,
+        "width": 59.1484375,
+        "x": 85.8515625,
+        "y": 84
+      }
+    },
+    {
+      "centerHitsTarget": false,
+      "id": "open-archive-conversion",
+      "rect": {
+        "bottom": 156,
+        "height": 32,
+        "left": 100,
+        "right": 145,
+        "top": 124,
+        "width": 45,
+        "x": 100,
+        "y": 124
+      }
+    },
+    {
+      "centerHitsTarget": false,
+      "id": "open-global-compression-settings",
+      "rect": {
+        "bottom": 196,
+        "height": 32,
+        "left": 106.3984375,
+        "right": 145,
+        "top": 164,
+        "width": 38.6015625,
+        "x": 106.3984375,
+        "y": 164
+      }
+    },
+    {
+      "centerHitsTarget": false,
+      "id": "start-compression",
+      "rect": {
+        "bottom": 236,
+        "height": 32,
+        "left": 79.796875,
+        "right": 145,
+        "top": 204,
+        "width": 65.203125,
+        "x": 79.796875,
+        "y": 204
+      }
+    },
+    {
+      "centerHitsTarget": false,
+      "id": "task-scope-all",
+      "rect": {
+        "bottom": 307.375,
+        "height": 51.578125,
+        "left": 113,
+        "right": 190.7421875,
+        "top": 255.796875,
+        "width": 77.7421875,
+        "x": 113,
+        "y": 255.796875
+      }
+    },
+    {
+      "centerHitsTarget": false,
+      "id": "task-scope-pending",
+      "rect": {
+        "bottom": 383.7421875,
+        "height": 70.7734375,
+        "left": 113,
+        "right": 190.7421875,
+        "top": 312.96875,
+        "width": 77.7421875,
+        "x": 113,
+        "y": 312.96875
+      }
+    },
+    {
+      "centerHitsTarget": false,
+      "id": "task-scope-active",
+      "rect": {
+        "bottom": 460.109375,
+        "height": 70.7734375,
+        "left": 113,
+        "right": 190.7421875,
+        "top": 389.3359375,
+        "width": 77.7421875,
+        "x": 113,
+        "y": 389.3359375
+      }
+    },
+    {
+      "centerHitsTarget": false,
+      "id": "task-scope-completed",
+      "rect": {
+        "bottom": 555.671875,
+        "height": 89.96875,
+        "left": 113,
+        "right": 190.7421875,
+        "top": 465.703125,
+        "width": 77.7421875,
+        "x": 113,
+        "y": 465.703125
+      }
+    },
+    {
+      "centerHitsTarget": false,
+      "id": "task-scope-attention",
+      "rect": {
+        "bottom": 651.234375,
+        "height": 89.96875,
+        "left": 113,
+        "right": 196.265625,
+        "top": 561.265625,
+        "width": 83.265625,
+        "x": 113,
+        "y": 561.265625
+      }
+    },
+    {
+      "centerHitsTarget": false,
+      "id": "compression-group-checkbox",
+      "rect": {
+        "bottom": 909.03125,
+        "height": 16,
+        "left": 126,
+        "right": 146,
+        "top": 893.03125,
+        "width": 20,
+        "x": 126,
+        "y": 893.03125
+      }
+    }
+  ],
+  "heading": "压缩中心",
+  "viewport": {
+    "devicePixelRatio": 2,
+    "height": 25,
+    "scale": 1,
+    "width": 157
+  }
+}

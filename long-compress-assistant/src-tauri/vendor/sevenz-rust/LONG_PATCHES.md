@@ -1,5 +1,7 @@
 # Long-Decompress local patch
 
+v1.6.55：注册 ARM64 方法 0x0A，在固定 8 KiB BCJ 适配新增 ARM64 构造；四字节单位、三字节尾部跨 write/flush/固实条目保留，u32 wrapping 处理 BL/ADRP。内核参考 XZ arm64.c，0BSD 原文与作者/来源保留在新文件。读取接受空/四字节、四字节对齐起点；严格 LZMA2/LZMA 可选 AES 的完整与开头路径接通，前看计入原预算。独立 7-Zip 和实际桌面见本版记录；依赖与外部引擎未改。
+
 v1.6.54：固定 8 KiB BCJ 适配新增 Thumb 构造；两字节扫描、四字节分支、三字节尾部跨 write/flush/固实条目保留，修正位置与加减 wrapping。读取接受空/四字节、两字节对齐起点；严格 LZMA2/LZMA 可选 AES 的完整与开头路径接通，前看计入原预算。独立 liblzma、7-Zip 和实际桌面见本版记录；依赖与外部引擎未改。
 
 v1.6.53：在原固定 8 KiB BCJ 写入适配中加入 ARM32 构造，保留 x86 别名/入口；ARM 四字节单位、最多三字节尾部，flush 不重置，明确终止/错误保持。ARM32 加减和位置使用 wrapping，读取接受空/四字节对齐起点属性。严格 LZMA2/LZMA 可选 AES 的完整与开头路径接通 ARM，前看计入原预算。3 项 ARM 检查汇总 + 1 项受影响 x86 连续性，独立 liblzma 与 7-Zip/实际桌面见本版记录；依赖与外部引擎未改。

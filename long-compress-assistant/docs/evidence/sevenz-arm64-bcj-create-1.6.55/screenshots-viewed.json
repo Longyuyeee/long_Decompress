@@ -1,0 +1,12 @@
+{
+  "result": "Viewed all six final screenshots: existing theme, horizontal titles and wrapped inactive status, equal columns, full-width selector, inline single-task expansion and multiselect dialog retained.",
+  "screenshots": [
+    "collapsed-wide.png",
+    "inline-wide.png",
+    "inline-narrow.png",
+    "inactive-narrow.png",
+    "batch-narrow.png",
+    "conversion-narrow.png"
+  ],
+  "applicationSha256": "964b6d95be210ad237d529aa498742e3a525a26a70d80049f078921d24287417"
+}

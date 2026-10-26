@@ -1083,6 +1083,14 @@ mod tests {
         let imported=import_template_profile(&path,&preview.content_sha256).unwrap();assert_eq!(imported.config.extra_params["seven_zip_filter"],"bcj_arm_thumb");assert_eq!(imported.config.extra_params["seven_zip_delta_distance"],"256");
     }
     #[test]
+    fn sevenz1655_template_method_survives_export_import() {
+        let temp=tempfile::tempdir().unwrap();let path=temp.path().join("store.longtask.json");
+        let mut original=profile();original.config.format="7z".into();original.config.password=None;original.config.create_solid_archive=false;original.config.encrypt_filenames=false;
+        original.config.extra_params.insert("seven_zip_filter".into(),"bcj_arm64".into());original.config.extra_params.insert("seven_zip_delta_distance".into(),"256".into());
+        export_profile_template(&original,&path).unwrap();let preview=preview_template_file(&path).unwrap();assert_eq!(preview.template.compression.seven_zip_delta_distance,Some(256));
+        let imported=import_template_profile(&path,&preview.content_sha256).unwrap();assert_eq!(imported.config.extra_params["seven_zip_filter"],"bcj_arm64");assert_eq!(imported.config.extra_params["seven_zip_delta_distance"],"256");
+    }
+    #[test]
     fn sevenz1652_template_method_survives_export_import() {
         let temp=tempfile::tempdir().unwrap();let path=temp.path().join("store.longtask.json");
         let mut original=profile();original.config.format="7z".into();original.config.password=None;original.config.create_solid_archive=false;original.config.encrypt_filenames=false;

@@ -1,0 +1,38 @@
+   Compiling long-compress-assistant v1.6.55 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+   Compiling sevenz-rust v0.6.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\sevenz-rust)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 5m 09s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-b0b8144a2d7ba82a.exe)
+
+running 5 tests
+test commands::history_execution_config::sevenz1655_history_creation_and_conversion_retain_method_reject_unknown ... ok
+test services::sevenz_arm64_bcj_create_1655_tests::sevenz1655_create_bcj_password_solid_numeric_and_independent_readback ... ok
+test services::sevenz_arm64_bcj_create_1655_tests::sevenz1655_defaults_inactive_filter_analysis_and_preflight_cancel_conflict ... ok
+test services::sevenz_arm64_bcj_create_1655_tests::sevenz1655_workflow_database_roundtrip ... ok
+test services::task_template::tests::sevenz1655_template_method_survives_export_import ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 1322 filtered out; finished in 36.70s
+
