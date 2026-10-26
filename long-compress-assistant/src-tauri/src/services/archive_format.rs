@@ -14,6 +14,7 @@ pub enum ArchiveFormat {
     Lz4,
     Brotli,
     Lzip,
+    Lzop,
     Lzma,
     Iso,
     Cab,
@@ -78,6 +79,7 @@ impl ArchiveFormat {
             return Self::Zstd;
         }
         if header.starts_with(&[0x04, 0x22, 0x4d, 0x18]) { return Self::Lz4; }
+        if header.starts_with(super::lzop::MAGIC) { return Self::Lzop; }
         if header.starts_with(b"LZIP") { return Self::Lzip; }
         if header.starts_with(b"\x5D\x00\x00") {
             return Self::Lzma;
@@ -150,6 +152,7 @@ impl ArchiveFormat {
             "lz4" => Self::Lz4,
             "br" => Self::Brotli,
             "lz" | "tlz" => Self::Lzip,
+            "lzo" | "lzop" => Self::Lzop,
             "iso" | "img" => Self::Iso,
             "cab" => Self::Cab,
             "lzh" | "lha" => Self::Lzh,

@@ -1,0 +1,113 @@
+{
+  "producer": "official Windows lzop 1.03 / LZO 2.04",
+  "url": "https://www.lzop.org/download/lzop103w.zip",
+  "downloadSha256": "0e55b444069eb5eb8addda2379cf12450f8ee68248a125b44bac140f6cdf7d4a",
+  "producerVersion": "lzop 1.03\r\nLZO library 2.04\r\nCopyright (C) 1996-2010 Markus Franz Xaver Johannes Oberhumer\r\n",
+  "cases": [
+    {
+      "file": "method1.txt.lzo",
+      "options": [
+        "-3"
+      ],
+      "size": 52,
+      "sha256": "a6beaf021eaa3d377df7b59f777c4bcb6e134841953054febde55b21d7181027",
+      "archiveSha256": "fc7e1c2da3bf8db186c1d08f3cee21934b9d69ae24ba22512cd5326bc1d488fb",
+      "officialTestAndReadback": true
+    },
+    {
+      "file": "method2.txt.lzo",
+      "options": [
+        "-1"
+      ],
+      "size": 52,
+      "sha256": "a6beaf021eaa3d377df7b59f777c4bcb6e134841953054febde55b21d7181027",
+      "archiveSha256": "5667346911e171386e0ebab7621f0064a23db31ebd10f175031667d9ab8ab60d",
+      "officialTestAndReadback": true
+    },
+    {
+      "file": "method3.txt.lzo",
+      "options": [
+        "-9"
+      ],
+      "size": 52,
+      "sha256": "a6beaf021eaa3d377df7b59f777c4bcb6e134841953054febde55b21d7181027",
+      "archiveSha256": "a75059f43aa037940d979570b06b3272737376093e91505c394397a0afd8ce3d",
+      "officialTestAndReadback": true
+    },
+    {
+      "file": "crc.txt.lzo",
+      "options": [
+        "-9",
+        "--crc32",
+        "-CC"
+      ],
+      "size": 468000,
+      "sha256": "a704d125064a0b778a5fc59e0f3bbefaeaca26d1ba0bb91233e765aee2954522",
+      "archiveSha256": "4d5242b50c90dbd82fbe7afea319a3be54e2871683cc35191a84638a3702a8ec",
+      "officialTestAndReadback": true
+    },
+    {
+      "file": "unchecked.txt.lzo",
+      "options": [
+        "-3",
+        "--no-checksum"
+      ],
+      "size": 52,
+      "sha256": "a6beaf021eaa3d377df7b59f777c4bcb6e134841953054febde55b21d7181027",
+      "archiveSha256": "62b646917f095837a9b829718108121797a38f488d3b2fee6c5ee4e8cb39ad62",
+      "officialTestAndReadback": true
+    },
+    {
+      "file": "stored.bin.lzo",
+      "options": [
+        "-1",
+        "-CC"
+      ],
+      "size": 600000,
+      "sha256": "8e92d15a1a439b4df0a0e7906e3cd3a4a1b2a0451988c999e97d6ebdcce2b363",
+      "archiveSha256": "b30b723421cd50930e50a5c832ff7d42734ddae43c4fbb412ec8f9529efaa51a",
+      "officialTestAndReadback": true
+    },
+    {
+      "file": "picture.png.lzo",
+      "options": [
+        "-9"
+      ],
+      "size": 1713,
+      "sha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+      "archiveSha256": "ee55f0fbcead2a5e8636e63a2a7dedf2f984f390bf34a0bec1173565f408c3f8",
+      "officialTestAndReadback": true
+    },
+    {
+      "file": "empty.txt.lzo",
+      "options": [
+        "-3"
+      ],
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archiveSha256": "43ab30683086f61a1bfaff7ae86c940e6f54bc3446ebebdf951e7c16bf161255",
+      "officialTestAndReadback": true
+    },
+    {
+      "file": "large.txt.lzo",
+      "options": [
+        "-3"
+      ],
+      "size": 10400000,
+      "sha256": "de703d36c7add9d89162185dcab077a8498f1049b26b400c47f2e221b6c96f5c",
+      "archiveSha256": "b76ae9a48494b856f93162af6dc7c5128f56bd35876e14772f9d7e541d9e49e8",
+      "officialTestAndReadback": true
+    },
+    {
+      "file": "directory.tar.lzo",
+      "options": [
+        "-3"
+      ],
+      "size": 10240,
+      "sha256": "5a4d2a5d3570d28725e40f189de015ccf0c16ba2e808e502bc2e99cca281c723",
+      "archiveSha256": "dd14d9aec3cf1e546faa1e41a1a9a84a38ac57e7c83a5a4712103bc6baa05506",
+      "officialTestAndReadback": true
+    }
+  ],
+  "mutations": "Malformed headers, data, truncation, flags and appended members are derived in Rust tests; they are not valid official originals."
+}

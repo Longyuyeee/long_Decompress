@@ -185,7 +185,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 | 能力 | 主要格式与说明 |
 | --- | --- |
 | 创建归档 | ZIP（Deflate / Store 仅存储 / Zstandard / BZip2 / PPMd / LZMA）、ZIPX（XZ）、7Z（LZMA2 / LZMA / Bzip2 / Deflate / PPMd / Copy；LZMA2/LZMA 可选 Delta 及 x86 / ARM32 / Thumb / ARM64 / RISC-V BCJ）、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码、数字分卷与保留历史的增量更新）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM（存储/XPRESS/LZX/LZMS/固实）、ESD（LZMS 固实），两者支持数字分卷；SWM（仅存储/XPRESS/LZX 原生资源分包） |
-| 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式当前内容/日志式历史快照、原生多部分确认读取、版本对比与变化提取）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，原生 SWM（Copy/XPRESS/LZX 整组读取），以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
+| 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式当前内容/日志式历史快照、原生多部分确认读取、版本对比与变化提取）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZOP（单文件只读）、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，原生 SWM（Copy/XPRESS/LZX 整组读取），以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
 | 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷、ZPAQ 原生密码数字切卷及原生多部分只读；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM / ESD / SWM、ZPAQ（含改密与数字分卷）；密码和分卷随目标格式提供 |
 | 清单校验 | SFV/MD5/SHA256 逐文件状态与原因、待补列表、按需复查；匹配表示与清单一致 |
@@ -204,6 +204,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 - ZIP/ZIPX 已验证常用 Store、Deflate、Deflate64、BZip2、LZMA、XZ、PPMd 及部分 Zstandard 读取组合；不等于支持所有 ZIPX 专有算法。
 - 创建 ZIP 可选 Deflate、Zstandard、BZip2、PPMd、LZMA，ZIPX 固定 XZ；密码、转换与配置保存保持方法，二者均支持数字卷与标准卷。接收方需支持对应方法、密码编码与卷型，ZIPX 标准卷兼容范围见格式说明。PPMd 与 LZMA 字典随等级增长，界面就近显示；LZMA 6级8MiB、9级64MiB，编码总内存更多，不自动替换默认方法。
 - 可直接浏览、解压和转换 ZIP/7Z/RAR 自解压 EXE；好压论坛 ZIP 分卷按整组读取，支持已核对的明文与 ZipCrypto 密码样本。收到多个分卷时，把整组放在同一目录即可。具体格式范围见[支持说明](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)。
+- LZOP（`.lzo`）支持单成员只读浏览、图文预览、提取、检查及转换 ZIP/7Z；原生密码、创建、数字切卷、多成员和非零过滤器暂不支持。`.tar.lzo` 本期先取回 `.tar`，目录流程下一版推进；裸 LZO 不能当作 LZOP。
 - LZIP（单文件）与 TAR.LZIP（目录/多文件）支持创建、浏览、解压、检查和转换，兼容 `.lz`、`.tar.lz`、`.tlz`；支持连续多成员 LZIP 与数字切卷创建，普通格式不提供密码；全部卷需放在同一目录，数字切卷不同于原生成员。
 - ZIP 默认 AES-256，可主动选择 ZipCrypto；与 Windows 7-Zip 交换非 ASCII 密码的归档时，可显式选择匹配的 Windows 密码编码。
 - EGG 只读支持已验证的 Store、Deflate、Bzip2、LZMA、AZO、固实 Deflate/LZMA、ZipCrypto、AES/LEA 与原生卷，可浏览、所选/整包提取、检查和转换。大 LZMA 已流式读取，字典仍限 256 MiB；v1.5.11 验证二十组普通中文密码组合并补编码失败指引。加密固实、全局/文件名加密、创建和修复不承诺，工具互通边界见[本版说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.11.md)。
@@ -274,6 +275,8 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 <a id="updates"></a>
 
 ## 📝 更新记录
+
+**v1.6.57 · LZOP 单文件读取与转换**。普通 `.lzo` 可在原双栏中浏览、预览、检查、提取并转成 ZIP/7Z，支持三种常见方法与头/块校验，沿用原交互与结果入口。仅支持单成员只读；TAR.LZO 目录和数字卷分期推进。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.57.md) · [记录](long-compress-assistant/docs/LZOP_READ_CONVERT_FREEZE_1.6.57.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.57) · [下一版 TAR.LZO](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.58.md)。
 
 **v1.6.56 · 可选 7Z RISC-V BCJ 预处理**。原折叠高级设置增加 RISC-V BCJ，默认关闭；密码、固实、数字卷、图文/开头/提取、配置保存与实际分析/转换接通，保持原交互。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.56.md) · [记录](long-compress-assistant/docs/SEVENZ_RISCV_BCJ_CREATE_FREEZE_1.6.56.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.56)。下一阶段 [LZOP 读取与转换](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.57.md)仅规划。
 

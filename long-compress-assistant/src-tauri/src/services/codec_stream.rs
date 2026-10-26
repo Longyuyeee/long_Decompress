@@ -225,6 +225,7 @@ impl<R: Read> Read for LzipReader<R> {
 }
 
 pub(crate) fn decoder(path: &Path, format: &str) -> Result<Box<dyn Read + Send>> {
+    if format=="lzo" {return Ok(Box::new(CompleteStream(Box::new(super::lzop::open(path)?))));}
     let mut input = super::numeric_volume_reader::ZipInputReader::open(path)?;
     let reader: Box<dyn Read + Send> = match format {
         "gz" | "gzip" | "tar.gz" => Box::new(flate2::read::MultiGzDecoder::new(input)),
@@ -274,6 +275,7 @@ pub(crate) fn plain_format(format: &super::archive_format::ArchiveFormat)
         F::Brotli => Some(("br", "BR", &[".br"])),
         F::Lzma => Some(("lzma", "LZMA", &[".lzma"])),
         F::Lzip => Some(("lz", "LZIP", &[".lz"])),
+        F::Lzop => Some(("lzo", "LZOP", &[".lzo"])),
         F::Gzip => Some(("gz", "GZIP", &[".gz", ".gzip"])),
         F::Bzip2 => Some(("bz2", "BZIP2", &[".bz2", ".bzip2"])),
         F::Xz => Some(("xz", "XZ", &[".xz"])),

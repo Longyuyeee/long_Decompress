@@ -632,6 +632,10 @@ pub async fn diagnose_archive_at(
     let verify_password = password.map(str::to_string);
     let verify_cancelled = cancelled.clone();
     let verification = match route {
+        _ if actual_format == "LZOP" => {
+            report.integrity_tested=true;
+            tauri::async_runtime::spawn_blocking(move || super::lzop::verify(&verify_path,||verify_cancelled.load(Ordering::SeqCst))).await.context("LZOP verification worker failed")?
+        }
         _ if actual_format == "EGG" => {
             report.integrity_tested = true;
             super::egg_engine::verify(source, password, &crate::models::compression::DecompressOptions { zip_password_encoding, ..Default::default() }, cancelled.clone()).await

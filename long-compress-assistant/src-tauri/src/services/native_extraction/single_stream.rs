@@ -46,6 +46,9 @@ pub(crate) fn extract<R: ExtractionRuntime, T: Read>(
 
 pub(crate) fn extract_inner<R: ExtractionRuntime, T: Read>(runtime: &R, window: Option<&Window>, task_id: &str, mut reader: T, output: &Path, output_name: String, options: &DecompressOptions) -> Result<()> {
     let relative = PathBuf::from(output_name);
+    if !extraction_transaction::matches_selected_entries(&relative, &options.selected_entries) {
+        return Ok(());
+    }
     let file_filter = extraction_transaction::compile_file_filter(options.file_filter.as_deref());
     if !extraction_transaction::matches_compiled_file_filter(&relative, &file_filter) {
         if let Some(window) = window { runtime.emit_log(

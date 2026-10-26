@@ -1,0 +1,22 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ 鉂?src/utils/__tests__/lzop1657.test.ts (2 tests | 1 failed) 8ms
+     脳 does not advertise creation, native passwords or native splitting 3ms
+
+鈳幆鈳幆鈳幆鈳?Failed Tests 1 鈳幆鈳幆鈳幆鈳?
+ FAIL  src/utils/__tests__/lzop1657.test.ts > LZOP 1.6.57 read-only integration > does not advertise creation, native passwords or native splitting
+TypeError: normalizeFormatId is not a function
+ 鉂?src/utils/__tests__/lzop1657.test.ts:15:12
+     13|     expect(EXTRACT_ONLY_FORMATS.find(c => c.extensions.includes('lzo')鈥?     14|     expect(FORMAT_CAPABILITIES.some(c => c.format === 'lzo')).toBe(fal鈥?     15|     expect(normalizeFormatId('lzo')).toBeUndefined()
+       |            ^
+     16|     expect(supportsArchiveSplit('lzo')).toBe(false)
+     17|     expect(isPasswordSupportedFormat('lzo')).toBe(false)
+
+鈳幆鈳幆鈳幆鈳幆鈳幆鈳幆鈳幆鈳幆鈳幆鈳幆鈳幆鈳幆[1/1]鈳?
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  12:18:18
+   Duration  23.60s (transform 157ms, setup 379ms, import 91ms, tests 8ms, environment 20.88s)
+

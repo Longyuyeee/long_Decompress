@@ -1,5 +1,12 @@
 # 随包兼容引擎
 
+## v1.6.57 LZOP 原生只读
+
+静态链接 [lzokay 2.0.1](https://docs.rs/lzokay/2.0.1/lzokay/)，仅开启 `decompress`，无外部 LZO/lzop 运行程序。MIT 完整许可见 `licenses/lzokay-MIT.txt`；Cargo.lock 固定 crates.io 校验和，复用已有 zerocopy，未升级其他依赖。LZOP 容器由本项目独立实现头/额外字段、块界限及 Adler32/CRC32 检查；参考 [lzop 官方格式源码](https://www.lzop.org/download/lzop-1.04.tar.gz) 与 [libarchive 读取逻辑](https://github.com/libarchive/libarchive/blob/master/libarchive/archive_read_support_filter_lzop.c)，未复制 GPL 程序源码。
+
+原件由官方 Windows lzop 1.03（LZO 2.04）生成，生产版本与源码参考版本分别记录。该测试工具和源码包仅位于忽略的测试目录，不随应用打包；十份非空/空原件及官方回解摘要见 `tests/fixtures/archives/lzop-read-1657/manifest.json`。LZOP 单成员只读边界与后续 TAR.LZO/数字卷分期见开发文档。
+
+
 v1.6.56：此独立引擎生成 RISCV+Copy 精确字节原件及两类普通/密码固实数字卷归档，核对原生读取；另完整逐文件回解八类 RISC-V + LZMA2/LZMA 新输出。公开指令与最小 ELF64 RISC-V 为生成夹具，不作真实应用压缩率基准。引擎本体、版本、许可和格式数未改。
 
 v1.6.55：外部引擎完整逐文件回解八类 ARM64 + LZMA2/LZMA 原生新输出；另生成两类独立 ARM64 归档核对原生完整图文/开头/提取。指令与最小 ELF64 AArch64 为公开生成夹具，不作为真实应用压缩率基准。引擎本体、版本、许可和格式数未改。

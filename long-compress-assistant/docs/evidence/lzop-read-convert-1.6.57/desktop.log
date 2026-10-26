@@ -1,0 +1,7 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[lzop1657] official LZOP remains in equal dual panes with text preview and exact selected extraction
+[lzop1657] LZOP image preview remains bounded and uses existing reader UI
+[lzop1657] full integrity extraction and ZIP/7Z conversion independently read back
+[lzop1657] damaged source does not publish partial output and corrected source can be retried

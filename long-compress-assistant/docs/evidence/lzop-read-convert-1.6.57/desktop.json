@@ -1,0 +1,198 @@
+{
+  "version": "1.6.57",
+  "applicationSha256": "61c7bc0a5811de32aec5d6699ebe300f4b605b192422528b72d0b0f765dde98d",
+  "checks": [
+    {
+      "name": "official LZOP remains in equal dual panes with text preview and exact selected extraction",
+      "dualPanes": true,
+      "selectedExtraction": true,
+      "textPreview": true
+    },
+    {
+      "name": "LZOP image preview remains bounded and uses existing reader UI",
+      "imagePreview": true
+    },
+    {
+      "name": "full integrity extraction and ZIP/7Z conversion independently read back",
+      "diagnosis": {
+        "actualFormat": "LZOP",
+        "canRepair": false,
+        "encrypted": false,
+        "evidence": [
+          "Archive size: 2701 bytes",
+          "Magic/extension format: LZOP",
+          "Entries: 1 files, 0 directories",
+          "Integrity test completed without errors"
+        ],
+        "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\lzop-read-1657\\crc.txt.lzo",
+        "fileSize": 2701,
+        "integrityTested": true,
+        "issues": [],
+        "missingVolumes": [],
+        "recoverability": "not_needed",
+        "splitArchive": false,
+        "status": "healthy",
+        "totalDirectories": 0,
+        "totalFiles": 1,
+        "totalUncompressedSize": 468000,
+        "totalUncompressedSizeKnown": true,
+        "volumesFound": 1
+      },
+      "conversion": [
+        {
+          "format": "zip",
+          "output": {
+            "files": [
+              {
+                "bytes": 3326,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-read-convert-1657\\45505f06-8ce8-43c1-ae39-e4d14fb5897b\\converted.zip"
+              }
+            ],
+            "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-read-convert-1657\\45505f06-8ce8-43c1-ae39-e4d14fb5897b\\converted.zip",
+            "split": false,
+            "totalBytes": 3326
+          },
+          "sha256": "a704d125064a0b778a5fc59e0f3bbefaeaca26d1ba0bb91233e765aee2954522"
+        },
+        {
+          "format": "7z",
+          "output": {
+            "files": [
+              {
+                "bytes": 476,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-read-convert-1657\\45505f06-8ce8-43c1-ae39-e4d14fb5897b\\converted.7z.001"
+              }
+            ],
+            "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-read-convert-1657\\45505f06-8ce8-43c1-ae39-e4d14fb5897b\\converted.7z.001",
+            "split": true,
+            "totalBytes": 476
+          },
+          "sha256": "a704d125064a0b778a5fc59e0f3bbefaeaca26d1ba0bb91233e765aee2954522"
+        }
+      ],
+      "historyPreservesLzopSource": true
+    },
+    {
+      "name": "damaged source does not publish partial output and corrected source can be retried",
+      "failure": "AssertionError [ERR_ASSERTION]: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件\n\nfalse !== true\n",
+      "existingFilePreserved": true,
+      "correctedRetry": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "browser-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 422.796875
+        },
+        {
+          "overflow": 0,
+          "width": 422.8046875
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "browser-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 318.3984375
+        },
+        {
+          "overflow": 0,
+          "width": 318.40625
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "text-narrow",
+      "dialogs": [
+        {
+          "bottom": 460.5859375,
+          "height": 401.1796875,
+          "left": 22.796875,
+          "right": 737.203125,
+          "top": 59.40625,
+          "width": 714.40625,
+          "x": 22.796875,
+          "y": 59.40625
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 318.3984375
+        },
+        {
+          "overflow": 0,
+          "width": 318.40625
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "image-wide",
+      "dialogs": [
+        {
+          "bottom": 558.6953125,
+          "height": 467.390625,
+          "left": 134,
+          "right": 966,
+          "top": 91.3046875,
+          "width": 832,
+          "x": 134,
+          "y": 91.3046875
+        }
+      ],
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 422.796875
+        },
+        {
+          "overflow": 0,
+          "width": 422.8046875
+        }
+      ],
+      "width": 1100
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-read-convert-1657\\45505f06-8ce8-43c1-ae39-e4d14fb5897b",
+  "convertedzip": {
+    "files": [
+      {
+        "bytes": 3326,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-read-convert-1657\\45505f06-8ce8-43c1-ae39-e4d14fb5897b\\converted.zip"
+      }
+    ],
+    "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-read-convert-1657\\45505f06-8ce8-43c1-ae39-e4d14fb5897b\\converted.zip",
+    "split": false,
+    "totalBytes": 3326
+  },
+  "converted7z": {
+    "files": [
+      {
+        "bytes": 476,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-read-convert-1657\\45505f06-8ce8-43c1-ae39-e4d14fb5897b\\converted.7z.001"
+      }
+    ],
+    "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-read-convert-1657\\45505f06-8ce8-43c1-ae39-e4d14fb5897b\\converted.7z.001",
+    "split": true,
+    "totalBytes": 476
+  },
+  "passed": true
+}

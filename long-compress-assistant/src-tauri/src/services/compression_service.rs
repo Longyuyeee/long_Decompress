@@ -327,6 +327,7 @@ impl CompressionService {
             ArchiveFormat::Lzma => wrapped(&[".tar.lzma"], "tar.lzma").unwrap_or_else(|| "lzma".to_string()),
             ArchiveFormat::Lz4 => wrapped(&[".tar.lz4"], "tar.lz4").unwrap_or_else(|| "lz4".to_string()),
             ArchiveFormat::Brotli => wrapped(&[".tar.br"], "tar.br").unwrap_or_else(|| "br".to_string()),
+            ArchiveFormat::Lzop => "lzo".to_string(),
             ArchiveFormat::Lzip => wrapped(&[".tar.lz", ".tlz"], "tar.lz").unwrap_or_else(|| "lz".to_string()),
             ArchiveFormat::Iso => "iso".to_string(),
             ArchiveFormat::Cab => "cab".to_string(),
@@ -2353,7 +2354,7 @@ impl CompressionService {
             "所选快照只适用于 ZPAQ 日志归档，请重新选择原归档");
         anyhow::ensure!(options.zpaq_retrieval.is_none() || format==ArchiveFormat::Zpaq,"部分取回必须使用原 ZPAQ 来源");
         let native_seven_zip = Self::uses_native_seven_zip_volumes(path, &format);
-        let native_stream = matches!(format, ArchiveFormat::Wim | ArchiveFormat::Zpaq | ArchiveFormat::AesEncrypted | ArchiveFormat::Tar | ArchiveFormat::Gzip | ArchiveFormat::Bzip2 | ArchiveFormat::Xz | ArchiveFormat::Zstd | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip | ArchiveFormat::Lzma);
+        let native_stream = matches!(format, ArchiveFormat::Wim | ArchiveFormat::Zpaq | ArchiveFormat::AesEncrypted | ArchiveFormat::Tar | ArchiveFormat::Gzip | ArchiveFormat::Bzip2 | ArchiveFormat::Xz | ArchiveFormat::Zstd | ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip | ArchiveFormat::Lzma | ArchiveFormat::Lzop);
         if is_split_archive && !native_seven_zip && !native_stream && format != ArchiveFormat::Zip && format != ArchiveFormat::Unknown && format != ArchiveFormat::Universal {
             service.emit_log(&window, &task_id, &format!("检测到分卷压缩包 (后缀: .{})，使用 7z CLI 合并解压", ext), TaskLogSeverity::Info);
             format = ArchiveFormat::Universal;
@@ -2721,17 +2722,17 @@ impl CompressionService {
                 let w = window.clone();
                 tokio::task::spawn_blocking(move || srv.do_extract_tar(&w, &t_id, &f_path, &o_dir, None, &opts)).await?
             },
-            ref codec_format @ (ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip | ArchiveFormat::Lzma) => {
+            ref codec_format @ (ArchiveFormat::Lz4 | ArchiveFormat::Brotli | ArchiveFormat::Lzip | ArchiveFormat::Lzma | ArchiveFormat::Lzop) => {
                 let srv = service.clone();
                 let f_path = file_path.clone();
                 let o_dir = out_dir.clone();
                 let opts = options.clone();
                 let t_id = task_id.clone();
                 let w = window.clone();
-                let codec = match codec_format { ArchiveFormat::Lz4 => "lz4", ArchiveFormat::Lzip => "lz", ArchiveFormat::Lzma => "lzma", _ => "br" };
+                let codec = match codec_format { ArchiveFormat::Lz4 => "lz4", ArchiveFormat::Lzip => "lz", ArchiveFormat::Lzma => "lzma", ArchiveFormat::Lzop => "lzo", _ => "br" };
                 tokio::task::spawn_blocking(move || {
                     let decoder = crate::services::codec_stream::decoder(Path::new(&f_path), codec)?;
-                    if compression_format::is_tar_wrapped_archive(Path::new(&f_path), &format!("tar.{codec}")) {
+                    if codec!="lzo" && compression_format::is_tar_wrapped_archive(Path::new(&f_path), &format!("tar.{codec}")) {
                         srv.do_extract_tar(&w, &t_id, &f_path, &o_dir, Some(decoder), &opts)
                     } else {
                         let original = Path::new(&f_path);

@@ -3327,7 +3327,7 @@ checksum = "f9f8bd3e56ce4dfc153cf470fffbfa98c7620958b312ca5c3a4b8d5181fd13c6"
 
 [[package]]
 name = "long-compress-assistant"
-version = "1.6.56"
+version = "1.6.57"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -3358,6 +3358,7 @@ dependencies = [
  "log",
  "lz4_flex",
  "lzma-rust2 0.22.0",
+ "lzokay",
  "md5",
  "memmap2",
  "mockall",
@@ -3461,6 +3462,15 @@ dependencies = [
  "cc",
  "libc",
  "pkg-config",
+]
+
+[[package]]
+name = "lzokay"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "953d350dc065718bb00b61ea2118274ffe2fdf6488f32f720422bcd1c9d6025f"
+dependencies = [
+ "zerocopy",
 ]
 
 [[package]]

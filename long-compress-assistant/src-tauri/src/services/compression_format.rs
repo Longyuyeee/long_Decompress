@@ -21,6 +21,7 @@ pub struct CompressionFormatCapability {
 }
 
 pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
+    CompressionFormatCapability { format:"lzo", extensions:&["lzo"], can_compress:false, can_extract:true, supports_password_compress:false, supports_password_extract:false, single_file_only:true, supports_split:false, requires_7za:false, requires_winrar:false },
     CompressionFormatCapability { format: "swm", extensions: &["swm"], can_compress: true, can_extract: true, supports_password_compress: false, supports_password_extract: false, single_file_only: false, supports_split: true, requires_7za: true, requires_winrar: false },
     CompressionFormatCapability { format: "tar.lzma.aes", extensions: &["tar.lzma.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "lzma.aes", extensions: &["lzma.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: true, supports_split: true, requires_7za: false, requires_winrar: false },
@@ -449,6 +450,7 @@ pub fn validate_compression_request(
 ) -> Result<String> {
     let requested_format = infer_compression_format(output_path, options.format.as_deref());
     let capability = find_compression_format_capability(&requested_format);
+    anyhow::ensure!(!capability.is_some_and(|value| !value.can_compress), "该格式当前仅支持读取，请选择 ZIP 或 7Z 作为目标格式");
     let has_password = options
         .password
         .as_deref()
