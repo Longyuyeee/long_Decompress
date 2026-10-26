@@ -173,7 +173,7 @@ fn add_decoder_inner<I: Read>(input: I, uncompressed_len: usize, coder: &Coder, 
             Ok(Decoder::BCJ(de))
         }
         SevenZMethod::ID_BCJ_ARM_THUMB => {
-            let de = SimpleReader::new_arm_thumb(input);
+            let de = SimpleReader::new_arm_thumb_at(input, crate::bcj::arm_thumb_start_position(&coder.properties)?);
             Ok(Decoder::BCJ(de))
         }
         SevenZMethod::ID_BCJ_PPC => {

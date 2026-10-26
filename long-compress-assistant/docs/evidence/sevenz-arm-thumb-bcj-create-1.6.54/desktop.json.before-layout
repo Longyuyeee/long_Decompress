@@ -1,0 +1,154 @@
+{
+  "version": "1.6.54",
+  "applicationSha256": "6343a5be2b97d3aad7587b4bdfa9546cd3f1bb101fba67be286fe0c8fdd3e232",
+  "checks": [
+    {
+      "name": "inline collapsed advanced settings retain method inheritance and batch modal in wide and small windows",
+      "applicationSha256": "6343a5be2b97d3aad7587b4bdfa9546cd3f1bb101fba67be286fe0c8fdd3e232",
+      "inlinePreserved": true,
+      "batchModalPreserved": true,
+      "defaultNonePreserved": true,
+      "inactiveMethodRetainsDistance": true,
+      "inactiveNarrowSummaryFits": true,
+      "analysisInvalidatedOnFilterChange": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "collapsed-wide",
+      "applicationSha256": "6343a5be2b97d3aad7587b4bdfa9546cd3f1bb101fba67be286fe0c8fdd3e232",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 275,
+          "y": 202.0703125
+        },
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 653,
+          "y": 202.0703125
+        }
+      ],
+      "width": 1100,
+      "preprocessing": []
+    },
+    {
+      "name": "inline-wide",
+      "applicationSha256": "6343a5be2b97d3aad7587b4bdfa9546cd3f1bb101fba67be286fe0c8fdd3e232",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 562.5703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 202.5703125,
+          "width": 378,
+          "x": 275,
+          "y": 202.5703125
+        },
+        {
+          "bottom": 562.5703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 202.5703125,
+          "width": 378,
+          "x": 653,
+          "y": 202.5703125
+        }
+      ],
+      "width": 1100,
+      "preprocessing": []
+    },
+    {
+      "name": "inline-narrow",
+      "applicationSha256": "6343a5be2b97d3aad7587b4bdfa9546cd3f1bb101fba67be286fe0c8fdd3e232",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 476.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 158.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 158.5703125
+        },
+        {
+          "bottom": 476.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 158.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 158.5703125
+        }
+      ],
+      "width": 760,
+      "preprocessing": []
+    },
+    {
+      "name": "batch-narrow",
+      "applicationSha256": "6343a5be2b97d3aad7587b4bdfa9546cd3f1bb101fba67be286fe0c8fdd3e232",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 368.5703125
+        },
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 368.5703125
+        }
+      ],
+      "width": 760,
+      "preprocessing": []
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\f692573c-554d-4460-ab70-3395b3280af9"
+}

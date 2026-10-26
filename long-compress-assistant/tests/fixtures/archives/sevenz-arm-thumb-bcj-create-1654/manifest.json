@@ -1,0 +1,17 @@
+{
+  "generator": "Python stdlib liblzma ARMTHUMB + LZMA2; decoded using LZMA2 alone for independent filter bytes",
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "seed": 1654,
+  "elf": "Hand-built ELF32 ARM EABI Thumb entry and minimal exit program with synthetic instructions; not an external application benchmark",
+  "references": [
+    "https://github.com/tukaani-project/xz/blob/master/src/liblzma/simple/armthumb.c",
+    "https://github.com/tukaani-project/xz/blob/master/src/liblzma/simple/simple_coder.c"
+  ],
+  "files": {
+    "filtered-0.bin": "cca9093cecb402c081e58170da9fc21eee04d590dce494b6b419e3c3f63c251c",
+    "filtered-2147483646.bin": "921a545a8bf37a28485c324053bcf2274d76cda2a97fc0c6d79ea3062d5ef6c8",
+    "filtered-4294967294.bin": "921a545a8bf37a28485c324053bcf2274d76cda2a97fc0c6d79ea3062d5ef6c8",
+    "input.bin": "c03ded9b300d9111e097bc1ab9921aeb77e9b29daa9295e7ce9019562e1d306e",
+    "sample-arm-thumb.elf": "848d1cefccca621ccb94d786a96cb2c8c9d2c79eab27d004c5578fa78d672321"
+  }
+}

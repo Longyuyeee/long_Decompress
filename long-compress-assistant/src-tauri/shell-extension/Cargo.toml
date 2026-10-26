@@ -1,6 +1,6 @@
 [package]
 name = "long-compress-shell-extension"
-version = "1.6.53"
+version = "1.6.54"
 edition = "2021"
 license = "MIT"
 publish = false

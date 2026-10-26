@@ -13,7 +13,7 @@ impl BCJFilter {
     pub fn new_arm_thumb(start_pos: usize, encoder: bool) -> Self {
         Self {
             is_encoder: encoder,
-            pos: start_pos + 4,
+            pos: start_pos.wrapping_add(4),
             prev_mask: 0,
             filter: Self::arm_thumb_code,
         }
@@ -70,9 +70,9 @@ impl BCJFilter {
                 let src = src << 1;
 
                 let dest = if self.is_encoder {
-                    src + (self.pos + i) as i32
+                    src.wrapping_add(self.pos.wrapping_add(i) as i32)
                 } else {
-                    src - (self.pos + i) as i32
+                    src.wrapping_sub(self.pos.wrapping_add(i) as i32)
                 };
                 let dest = dest >> 1;
                 buf[i + 1] = (0xF0 | ((dest >> 19) & 0x07)) as u8;
@@ -84,7 +84,7 @@ impl BCJFilter {
             i += 2;
         }
 
-        self.pos += i;
+        self.pos = self.pos.wrapping_add(i);
         i
     }
 }

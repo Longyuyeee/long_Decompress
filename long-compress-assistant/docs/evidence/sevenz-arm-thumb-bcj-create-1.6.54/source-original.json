@@ -1,0 +1,6 @@
+{
+  "claim": "Byte compatibility and archive readback only; not an external application or compression ratio benchmark",
+  "source": "Public deterministic Python/liblzma vectors, hand-built ARM EABI ELF32 Thumb exit program, synthetic instructions",
+  "manifest": "tests/fixtures/archives/sevenz-arm-thumb-bcj-create-1654/manifest.json",
+  "sha256": "848d1cefccca621ccb94d786a96cb2c8c9d2c79eab27d004c5578fa78d672321"
+}
