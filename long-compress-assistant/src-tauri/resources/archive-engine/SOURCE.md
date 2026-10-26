@@ -1,5 +1,10 @@
 # 随包兼容引擎
 
+## v1.6.58 TAR.LZO 原生只读
+
+复用固定 lzokay 2.0.1 仅解码特性、原生 LZOP 容器和现有 TAR/PAX/GNU sparse 读取。没有新增依赖或外部运行引擎，没有 LZOP 创建、原生密码或卷型承诺。独立 bsdtar 3.8.9 与既有 GNU tar 1.35 生成/提供 TAR 原件，由官方 Windows lzop 1.03 包装，并经官方完整回解及独立 libarchive 逐文件核对；GNU 传统名称的独立回解明确 UTF-8 字符集。九份有效原件与四份派生无效内层样本分别记录，不随应用分发任何测试程序，见 tests/fixtures/archives/tar-lzo-read-1658/manifest.json。
+
+
 ## v1.6.57 LZOP 原生只读
 
 静态链接 [lzokay 2.0.1](https://docs.rs/lzokay/2.0.1/lzokay/)，仅开启 `decompress`，无外部 LZO/lzop 运行程序。MIT 完整许可见 `licenses/lzokay-MIT.txt`；Cargo.lock 固定 crates.io 校验和，复用已有 zerocopy，未升级其他依赖。LZOP 容器由本项目独立实现头/额外字段、块界限及 Adler32/CRC32 检查；参考 [lzop 官方格式源码](https://www.lzop.org/download/lzop-1.04.tar.gz) 与 [libarchive 读取逻辑](https://github.com/libarchive/libarchive/blob/master/libarchive/archive_read_support_filter_lzop.c)，未复制 GPL 程序源码。

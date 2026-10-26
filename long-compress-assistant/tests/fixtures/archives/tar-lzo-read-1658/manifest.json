@@ -1,0 +1,383 @@
+{
+  "lzopProducer": "official Windows lzop 1.03 / LZO 2.04",
+  "lzopDownload": "https://www.lzop.org/download/lzop103w.zip",
+  "lzopDownloadSha256": "0e55b444069eb5eb8addda2379cf12450f8ee68248a125b44bac140f6cdf7d4a",
+  "sources": "Self-authored filesystem data and previously committed GNU TAR originals; no user files",
+  "cases": [
+    {
+      "archive": "directory-1.tar.lzo",
+      "tarProducer": "bsdtar 3.8.9 - libarchive 3.8.9 zlib/1.2.13.1-motley liblzma/5.8.3 bz2lib/1.0.8 libzstd/1.5.7 cng/2.0 libb2/bundled",
+      "lzopOptions": [
+        "-1",
+        "-CC"
+      ],
+      "archiveSha256": "b515678a37acbd1900e707b91af8ff80e809a2b9e53a8bbc3686c6fee5de0932",
+      "tarSha256": "3b620682d267fd00d289bc1e74f54cef1a947c5f8df3166ba3b0f33b6b997790",
+      "tarBytes": 1968128,
+      "expected": [
+        {
+          "path": "notes/说明 [1].txt",
+          "bytes": 73,
+          "sha256": "a6b237c55bf60d554484936ae9f5dde34a301eaae826bb41c5c1ef6668cc3d30"
+        },
+        {
+          "path": "notes/large.txt",
+          "bytes": 1650000,
+          "sha256": "e426fc0fc069d1423864c5a7f481022a1fb28bf02ef21ea15d300bf6f138b731"
+        },
+        {
+          "path": "notes/长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径.txt",
+          "bytes": 73,
+          "sha256": "a6b237c55bf60d554484936ae9f5dde34a301eaae826bb41c5c1ef6668cc3d30"
+        },
+        {
+          "path": "gallery/cover.png",
+          "bytes": 1713,
+          "sha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43"
+        },
+        {
+          "path": "data.bin",
+          "bytes": 300000,
+          "sha256": "19dcc6ed370752aff71c70eb956dbb8fd46cf7ae8faedc39a47a9be8a7ffd14e"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "officialCheckAndReadback": true,
+      "independentTarReadback": true
+    },
+    {
+      "archive": "directory-3.tar.lzo",
+      "tarProducer": "bsdtar 3.8.9 - libarchive 3.8.9 zlib/1.2.13.1-motley liblzma/5.8.3 bz2lib/1.0.8 libzstd/1.5.7 cng/2.0 libb2/bundled",
+      "lzopOptions": [
+        "-3",
+        "-CC"
+      ],
+      "archiveSha256": "8e9352aa32d776011a4990c0bdbf3a4bc9a04612132b3bec4d5324a06578c79c",
+      "tarSha256": "3b620682d267fd00d289bc1e74f54cef1a947c5f8df3166ba3b0f33b6b997790",
+      "tarBytes": 1968128,
+      "expected": [
+        {
+          "path": "notes/说明 [1].txt",
+          "bytes": 73,
+          "sha256": "a6b237c55bf60d554484936ae9f5dde34a301eaae826bb41c5c1ef6668cc3d30"
+        },
+        {
+          "path": "notes/large.txt",
+          "bytes": 1650000,
+          "sha256": "e426fc0fc069d1423864c5a7f481022a1fb28bf02ef21ea15d300bf6f138b731"
+        },
+        {
+          "path": "notes/长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径.txt",
+          "bytes": 73,
+          "sha256": "a6b237c55bf60d554484936ae9f5dde34a301eaae826bb41c5c1ef6668cc3d30"
+        },
+        {
+          "path": "gallery/cover.png",
+          "bytes": 1713,
+          "sha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43"
+        },
+        {
+          "path": "data.bin",
+          "bytes": 300000,
+          "sha256": "19dcc6ed370752aff71c70eb956dbb8fd46cf7ae8faedc39a47a9be8a7ffd14e"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "officialCheckAndReadback": true,
+      "independentTarReadback": true
+    },
+    {
+      "archive": "directory-9.tar.lzo",
+      "tarProducer": "bsdtar 3.8.9 - libarchive 3.8.9 zlib/1.2.13.1-motley liblzma/5.8.3 bz2lib/1.0.8 libzstd/1.5.7 cng/2.0 libb2/bundled",
+      "lzopOptions": [
+        "-9",
+        "-CC"
+      ],
+      "archiveSha256": "4c14a0600e312d0f8d558c1267ad99eeea9e4268006f75fa19f4a47c1ac6cc05",
+      "tarSha256": "3b620682d267fd00d289bc1e74f54cef1a947c5f8df3166ba3b0f33b6b997790",
+      "tarBytes": 1968128,
+      "expected": [
+        {
+          "path": "notes/说明 [1].txt",
+          "bytes": 73,
+          "sha256": "a6b237c55bf60d554484936ae9f5dde34a301eaae826bb41c5c1ef6668cc3d30"
+        },
+        {
+          "path": "notes/large.txt",
+          "bytes": 1650000,
+          "sha256": "e426fc0fc069d1423864c5a7f481022a1fb28bf02ef21ea15d300bf6f138b731"
+        },
+        {
+          "path": "notes/长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径.txt",
+          "bytes": 73,
+          "sha256": "a6b237c55bf60d554484936ae9f5dde34a301eaae826bb41c5c1ef6668cc3d30"
+        },
+        {
+          "path": "gallery/cover.png",
+          "bytes": 1713,
+          "sha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43"
+        },
+        {
+          "path": "data.bin",
+          "bytes": 300000,
+          "sha256": "19dcc6ed370752aff71c70eb956dbb8fd46cf7ae8faedc39a47a9be8a7ffd14e"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "officialCheckAndReadback": true,
+      "independentTarReadback": true
+    },
+    {
+      "archive": "old-gnu.tar.lzo",
+      "tarProducer": "GNU tar 1.35; tar-1513 provenance",
+      "lzopOptions": [
+        "-3",
+        "--crc32",
+        "-CC"
+      ],
+      "archiveSha256": "e4403a613d7a55489cd5c5802213fd1ebe8d984de4e91f6a2f09640b97533f9f",
+      "tarSha256": "166448730162d3554faffd22b436ff7b2f5b28728a970257dce07d4301d85550",
+      "tarBytes": 40960,
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "officialCheckAndReadback": true,
+      "independentTarReadback": true
+    },
+    {
+      "archive": "pax00.tar.lzo",
+      "tarProducer": "GNU tar 1.35; tar-1513 provenance",
+      "lzopOptions": [
+        "-3",
+        "--crc32",
+        "-CC"
+      ],
+      "archiveSha256": "4fb52d37e41d40606b0c2e5be3a48edc8368e6f86b8f6fa4796204e8280e0360",
+      "tarSha256": "5c16ab6d741632bed7bb0d4a225c64f5a6b27741a55ac2e29bcceea88f9af5ee",
+      "tarBytes": 51200,
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "officialCheckAndReadback": true,
+      "independentTarReadback": true
+    },
+    {
+      "archive": "pax01.tar.lzo",
+      "tarProducer": "GNU tar 1.35; tar-1513 provenance",
+      "lzopOptions": [
+        "-3",
+        "--crc32",
+        "-CC"
+      ],
+      "archiveSha256": "009368d37bea31c31969079e9ce1a55aadf2e6a8da00f02101e38d41f1727be3",
+      "tarSha256": "3778172c4024b32fc63292b16b30e77104159630c4ac5b9dd2b6b608209e436e",
+      "tarBytes": 51200,
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "officialCheckAndReadback": true,
+      "independentTarReadback": true
+    },
+    {
+      "archive": "pax10.tar.lzo",
+      "tarProducer": "GNU tar 1.35; tar-1513 provenance",
+      "lzopOptions": [
+        "-3",
+        "--crc32",
+        "-CC"
+      ],
+      "archiveSha256": "8904faf1edd3a582f3c56bb45c1d9be80eba41bae6fa2f307ac7ebf876f6de22",
+      "tarSha256": "55fb4bddc9d88e4f9946e9afee7f2beb1dcbf25395efb4dc1fe265a8abc429f1",
+      "tarBytes": 51200,
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "officialCheckAndReadback": true,
+      "independentTarReadback": true
+    },
+    {
+      "archive": "pax-ordinary.tar.lzo",
+      "tarProducer": "GNU tar 1.35; tar-1513 provenance",
+      "lzopOptions": [
+        "-3",
+        "--crc32",
+        "-CC"
+      ],
+      "archiveSha256": "cd61bcbb3c9a10ce5b79d8acfd8f192f0b56bfd8c4754b1f2f40b995a969b7e9",
+      "tarSha256": "2bfa84962fefc834a3de3072ec276d1398122b6c5cc7210b93aa456fdf04da57",
+      "tarBytes": 8540160,
+      "expected": [
+        {
+          "path": "全零.bin",
+          "bytes": 131072,
+          "sha256": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471"
+        },
+        {
+          "path": "文档/目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级目录层级/说明文件.txt",
+          "bytes": 58,
+          "sha256": "6a0dd5d0e657b2d596e4002646b065ea9dfe20c53171ba333d081d041efdce99"
+        },
+        {
+          "path": "末尾.txt",
+          "bytes": 1360,
+          "sha256": "6f0df6f68731217c27c1359668765096cb0c1163e185e8063ec5803ff23c20a8"
+        },
+        {
+          "path": "稀疏.bin",
+          "bytes": 8388641,
+          "sha256": "4638ac93a168d35e3cd8b8d394f3090b013842eb170bee03d96ff7be7ce0c141"
+        },
+        {
+          "path": "空.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "officialCheckAndReadback": true,
+      "independentTarReadback": true
+    },
+    {
+      "archive": "empty.tar.lzo",
+      "tarProducer": "bsdtar 3.8.9 - libarchive 3.8.9 zlib/1.2.13.1-motley liblzma/5.8.3 bz2lib/1.0.8 libzstd/1.5.7 cng/2.0 libb2/bundled",
+      "lzopOptions": [
+        "-3"
+      ],
+      "archiveSha256": "659530807b4e8f8213e53ade337fadfd9cc101c601c21c92964769a81137461a",
+      "tarSha256": "5f70bf18a086007016e948b04aed3b82103a36bea41755b6cddfaf10ace3c6ef",
+      "tarBytes": 1024,
+      "expected": [],
+      "officialCheckAndReadback": true,
+      "independentTarReadback": true
+    }
+  ],
+  "rejected": [
+    {
+      "archive": "bad-header.tar.lzo",
+      "kind": "derived invalid TAR / valid LZOP envelope",
+      "archiveSha256": "97c14c8f47bae6a68304b456d12af69dc6466da7aec43de9ecd8fb27d5e2cbb3"
+    },
+    {
+      "archive": "short-file.tar.lzo",
+      "kind": "derived invalid TAR / valid LZOP envelope",
+      "archiveSha256": "dbfd3d9ae2a6cf193c3af21969f509d284da79b19ea9264eb05cf3523acb3025"
+    },
+    {
+      "archive": "after-eof.tar.lzo",
+      "kind": "derived invalid TAR / valid LZOP envelope",
+      "archiveSha256": "60226a3439526a52e278bfcb69833ab76a490d1a5db26f76673702dffaf0c72a"
+    },
+    {
+      "archive": "not-tar.tar.lzo",
+      "kind": "derived invalid TAR / valid LZOP envelope",
+      "archiveSha256": "d39b221d628b0c6558cabf31a44ef6b632cdaf170ae5f60a8d20d315d1a744f0"
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+    Blocking waiting for file lock on package cache
+   Compiling long-compress-assistant v1.6.58 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 6m 27s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-d67ba0f36013a090.exe)
+
+running 4 tests
+test services::tar_lzo_1658_tests::tarlzo1658_independent_originals_browse_verify_and_restore_every_file ... ok
+
+thread 'services::tar_lzo_1658_tests::tarlzo1658_invalid_inner_and_damaged_outer_never_report_healthy' (33928) panicked at src\services\tar_lzo_1658_tests.rs:228:9:
+E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\../tests/fixtures/archives/tar-lzo-read-1658\bad-header.tar.lzo: io_error
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test services::tar_lzo_1658_tests::tarlzo1658_invalid_inner_and_damaged_outer_never_report_healthy ... FAILED
+test services::tar_lzo_1658_tests::tarlzo1658_magic_and_suffix_both_required_and_creation_stays_disabled ... ok
+test services::tar_lzo_1658_tests::tarlzo1658_text_image_prefix_diagnostics_and_selection ... ok
+
+failures:
+
+failures:
+    services::tar_lzo_1658_tests::tarlzo1658_invalid_inner_and_damaged_outer_never_report_healthy
+
+test result: FAILED. 3 passed; 1 failed; 0 ignored; 0 measured; 1337 filtered out; finished in 9.97s
+
+error: test failed, to rerun pass `--lib`

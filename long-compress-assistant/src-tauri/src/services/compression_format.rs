@@ -21,6 +21,7 @@ pub struct CompressionFormatCapability {
 }
 
 pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
+    CompressionFormatCapability { format:"tar.lzo", extensions:&["tar.lzo"], can_compress:false, can_extract:true, supports_password_compress:false, supports_password_extract:false, single_file_only:false, supports_split:false, requires_7za:false, requires_winrar:false },
     CompressionFormatCapability { format:"lzo", extensions:&["lzo"], can_compress:false, can_extract:true, supports_password_compress:false, supports_password_extract:false, single_file_only:true, supports_split:false, requires_7za:false, requires_winrar:false },
     CompressionFormatCapability { format: "swm", extensions: &["swm"], can_compress: true, can_extract: true, supports_password_compress: false, supports_password_extract: false, single_file_only: false, supports_split: true, requires_7za: true, requires_winrar: false },
     CompressionFormatCapability { format: "tar.lzma.aes", extensions: &["tar.lzma.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
@@ -567,6 +568,7 @@ pub fn is_tar_wrapped_archive(path: &Path, format: &str) -> bool {
         if number.len() >= 3 && number.bytes().all(|byte| byte.is_ascii_digit()) { file_name = base.to_string(); }
     }
     let suffixes: &[&str] = match normalize_compression_format(format).as_str() {
+        "tar.lzo" => &[".tar.lzo"],
         "tar.lzma" => &[".tar.lzma"],
         "tar.gz" => &[".tar.gz", ".tgz", ".tpz"],
         "tar.bz2" => &[".tar.bz2", ".tbz", ".tbz2"],

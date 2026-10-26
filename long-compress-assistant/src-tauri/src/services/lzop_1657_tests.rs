@@ -161,7 +161,6 @@ async fn lzop1657_browse_preview_integrity_and_large_size_boundary() {
         "method2.txt.lzo",
         "method3.txt.lzo",
         "empty.txt.lzo",
-        "directory.tar.lzo",
     ] {
         let p = fixtures().join(name);
         let result = archive_browser::browse_archive(&p, None).await.unwrap();

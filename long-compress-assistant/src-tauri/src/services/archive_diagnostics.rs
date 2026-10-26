@@ -136,6 +136,7 @@ fn format_label(path: &Path, header: &[u8]) -> String {
     if magic == ArchiveFormat::Unknown && path.extension().is_some_and(|e| e.eq_ignore_ascii_case("zpaq")) { return "ZPAQ".into(); }
     if magic == ArchiveFormat::Unknown && path.extension().is_some_and(|e| e.eq_ignore_ascii_case("alz")) { return "ALZ".into(); }
     if magic == ArchiveFormat::Unknown && path.extension().is_some_and(|e| e.eq_ignore_ascii_case("egg")) { return "EGG".into(); }
+    if super::tar_compatibility::is_tar_lzo(path, &magic) { return "TAR.LZO".into(); }
     match magic {
         ArchiveFormat::Zip => "ZIP".to_string(),
         ArchiveFormat::SevenZip => "7Z".to_string(),
@@ -632,9 +633,14 @@ pub async fn diagnose_archive_at(
     let verify_password = password.map(str::to_string);
     let verify_cancelled = cancelled.clone();
     let verification = match route {
-        _ if actual_format == "LZOP" => {
+        _ if matches!(actual_format.as_str(), "LZOP" | "TAR.LZO") => {
             report.integrity_tested=true;
-            tauri::async_runtime::spawn_blocking(move || super::lzop::verify(&verify_path,||verify_cancelled.load(Ordering::SeqCst))).await.context("LZOP verification worker failed")?
+            let tar_lzo=actual_format=="TAR.LZO";
+            tauri::async_runtime::spawn_blocking(move || {
+                let cancelled=||verify_cancelled.load(Ordering::SeqCst);
+                if tar_lzo {super::compression_verification::verify_tar_reader(super::codec_stream::decoder(&verify_path,"lzo")?, &cancelled)}
+                else {super::lzop::verify(&verify_path,cancelled)}
+            }).await.context("LZOP verification worker failed")?
         }
         _ if actual_format == "EGG" => {
             report.integrity_tested = true;

@@ -327,7 +327,7 @@ impl CompressionService {
             ArchiveFormat::Lzma => wrapped(&[".tar.lzma"], "tar.lzma").unwrap_or_else(|| "lzma".to_string()),
             ArchiveFormat::Lz4 => wrapped(&[".tar.lz4"], "tar.lz4").unwrap_or_else(|| "lz4".to_string()),
             ArchiveFormat::Brotli => wrapped(&[".tar.br"], "tar.br").unwrap_or_else(|| "br".to_string()),
-            ArchiveFormat::Lzop => "lzo".to_string(),
+            ArchiveFormat::Lzop => wrapped(&[".tar.lzo"], "tar.lzo").unwrap_or_else(|| "lzo".to_string()),
             ArchiveFormat::Lzip => wrapped(&[".tar.lz", ".tlz"], "tar.lz").unwrap_or_else(|| "lz".to_string()),
             ArchiveFormat::Iso => "iso".to_string(),
             ArchiveFormat::Cab => "cab".to_string(),
@@ -2732,8 +2732,9 @@ impl CompressionService {
                 let codec = match codec_format { ArchiveFormat::Lz4 => "lz4", ArchiveFormat::Lzip => "lz", ArchiveFormat::Lzma => "lzma", ArchiveFormat::Lzop => "lzo", _ => "br" };
                 tokio::task::spawn_blocking(move || {
                     let decoder = crate::services::codec_stream::decoder(Path::new(&f_path), codec)?;
-                    if codec!="lzo" && compression_format::is_tar_wrapped_archive(Path::new(&f_path), &format!("tar.{codec}")) {
-                        srv.do_extract_tar(&w, &t_id, &f_path, &o_dir, Some(decoder), &opts)
+                    if compression_format::is_tar_wrapped_archive(Path::new(&f_path), &format!("tar.{codec}")) {
+                        let result=srv.do_extract_tar(&w, &t_id, &f_path, &o_dir, Some(decoder), &opts);
+                        if codec=="lzo" {result.map_err(crate::services::tar_compatibility::inspection_error)} else {result}
                     } else {
                         let original = Path::new(&f_path);
                         let name = native_extraction::single_stream::output_name(original, &[&format!(".{codec}")]);

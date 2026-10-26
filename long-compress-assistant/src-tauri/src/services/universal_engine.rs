@@ -653,7 +653,11 @@ impl UniversalCliEngine {
         }
         if format==super::archive_format::ArchiveFormat::Lzop {
             let path=file_path.to_path_buf();
-            return tokio::task::spawn_blocking(move || super::lzop::verify(&path,||false)).await?;
+            return tokio::task::spawn_blocking(move || {
+                if super::tar_compatibility::is_tar_lzo(&path, &format) {
+                    super::compression_verification::verify_tar_reader(super::codec_stream::decoder(&path,"lzo")?, &||false)
+                } else { super::lzop::verify(&path,||false) }
+            }).await?;
         }
         if let Some((codec, _, _)) = super::codec_stream::plain_format(&format) {
             use super::compression_format::CompressionRoute as R;
