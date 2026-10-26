@@ -188,7 +188,7 @@ fn compressed_sample_size(sample: &[u8], format: &str, level: u32) -> Result<usi
 
 fn compressed_sample_size_with_cancel(sample: &[u8], format: &str, level: u32, cancelled: &AtomicBool) -> Result<usize> {
     use super::seven_zip_method::{SevenZipMethod as M,SevenZipFilter as F};
-    let bcj_route=format.strip_prefix("7z-").and_then(|s|s.strip_suffix("-bcj-x86").map(|m|(m,F::BcjX86)).or_else(||s.strip_suffix("-bcj-arm32").map(|m|(m,F::BcjArm32))));
+    let bcj_route=format.strip_prefix("7z-").and_then(|s|s.strip_suffix("-bcj-x86").map(|m|(m,F::BcjX86)).or_else(||s.strip_suffix("-bcj-arm32").map(|m|(m,F::BcjArm32))).or_else(||s.strip_suffix("-bcj-arm-thumb").map(|m|(m,F::BcjArmThumb))));
     if let Some((route,filter))=bcj_route {
         let method=match route {"lzma2"=>M::Lzma2,"lzma"=>M::Lzma,_=>anyhow::bail!("BCJ 预处理只适用于 LZMA2/LZMA")};
         check_cancelled(cancelled)?;

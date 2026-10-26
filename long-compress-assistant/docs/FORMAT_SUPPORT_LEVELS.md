@@ -1,5 +1,7 @@
 # 归档格式支持等级（当前权威口径）
 
+**v1.6.54 7Z ARM Thumb BCJ**：可选 LZMA2/LZMA + Thumb，默认关闭；密码/固实/数字卷、完整图文/大文本开头/提取、配置保存、实际分析和转换接通。无新增格式或依赖，见[记录](SEVENZ_ARM_THUMB_BCJ_CREATE_FREEZE_1.6.54.md)。
+
 **v1.6.53 7Z ARM32 BCJ**：可选 LZMA2/LZMA + ARM32 小端 BCJ，默认关闭；密码/固实/数字卷、图文/大文本开头/提取、配置保存、真实分析与转换贯通。Delta 距离切回保留，修复历史恢复白名单。无新增格式或依赖，见[记录](SEVENZ_ARM32_BCJ_CREATE_FREEZE_1.6.53.md)。
 
 **v1.6.52 7Z x86 BCJ**：可选 LZMA2/LZMA + x86 BCJ，默认关闭；密码/固实/数字卷、完整图文/大文本开头/提取与转换、配置保存和实际分析贯通。Delta 距离切回保留，非兼容方法不执行，不新增格式计数或依赖，见[记录](SEVENZ_X86_BCJ_CREATE_FREEZE_1.6.52.md)。

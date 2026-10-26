@@ -50,3 +50,4 @@ long-compress-assistant/src-tauri/resources/wim-engine/*.txt -whitespace
 # Preserve this release's captured evidence and its byte hashes.
 long-compress-assistant/docs/evidence/sevenz-x86-bcj-create-1.6.52/** -text -whitespace
 long-compress-assistant/docs/evidence/sevenz-arm32-bcj-create-1.6.53/** -text -whitespace
+long-compress-assistant/docs/evidence/sevenz-arm-thumb-bcj-create-1.6.54/** -text -whitespace

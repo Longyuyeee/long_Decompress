@@ -1,0 +1,371 @@
+{
+  "version": "1.6.54",
+  "applicationSha256": "29bf142282e2e67ca394c3f2b998a64ee97ed1fb6f0af0d90449139628b007ec",
+  "checks": [
+    {
+      "name": "inline collapsed advanced settings retain method inheritance and batch modal in wide and small windows",
+      "applicationSha256": "29bf142282e2e67ca394c3f2b998a64ee97ed1fb6f0af0d90449139628b007ec",
+      "inlinePreserved": true,
+      "batchModalPreserved": true,
+      "defaultNonePreserved": true,
+      "inactiveMethodRetainsDistance": true,
+      "inactiveNarrowSummaryFits": true,
+      "analysisInvalidatedOnFilterChange": true
+    },
+    {
+      "name": "UI ARM Thumb BCJ creation history previews extraction and target conversion preserve selected chain",
+      "applicationSha256": "29bf142282e2e67ca394c3f2b998a64ee97ed1fb6f0af0d90449139628b007ec",
+      "creationFilter": "bcj_arm_thumb",
+      "dormantDeltaDistance": 256,
+      "historyPreserved": true,
+      "textAndImagePreview": true,
+      "extraction": true,
+      "zipToLzmaArmThumbPasswordSolidNumeric": true
+    },
+    {
+      "name": "conversion inline and multiselect keep chosen target ARM Thumb BCJ and distance",
+      "applicationSha256": "29bf142282e2e67ca394c3f2b998a64ee97ed1fb6f0af0d90449139628b007ec",
+      "singleSelectionRetained": true,
+      "batchSelectionRetained": true,
+      "actualConversionHistory": true,
+      "targetFilterPreserved": true
+    },
+    {
+      "name": "independent 7-Zip ARM Thumb originals reopen in the native text image prefix and extraction flow",
+      "applicationSha256": "29bf142282e2e67ca394c3f2b998a64ee97ed1fb6f0af0d90449139628b007ec",
+      "externalOriginals": [
+        {
+          "name": "plain-lzma2",
+          "method": "LZMA2",
+          "password": null,
+          "solid": false,
+          "volumes": false,
+          "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\external-plain-lzma2.7z",
+          "nativeTextImagePrefix": true,
+          "originalArmThumbElfSha256": "848d1cefccca621ccb94d786a96cb2c8c9d2c79eab27d004c5578fa78d672321"
+        },
+        {
+          "name": "password-solid-lzma",
+          "method": "LZMA",
+          "password": "external1654",
+          "solid": true,
+          "volumes": true,
+          "primary": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\external-password-solid-lzma.7z.001",
+          "nativeTextImagePrefix": true,
+          "originalArmThumbElfSha256": "848d1cefccca621ccb94d786a96cb2c8c9d2c79eab27d004c5578fa78d672321"
+        }
+      ]
+    }
+  ],
+  "layouts": [
+    {
+      "name": "collapsed-wide",
+      "applicationSha256": "29bf142282e2e67ca394c3f2b998a64ee97ed1fb6f0af0d90449139628b007ec",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 586.5703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 226.5703125,
+          "width": 378,
+          "x": 275,
+          "y": 226.5703125
+        },
+        {
+          "bottom": 586.5703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 226.5703125,
+          "width": 378,
+          "x": 653,
+          "y": 226.5703125
+        }
+      ],
+      "width": 1100,
+      "preprocessing": []
+    },
+    {
+      "name": "inline-wide",
+      "applicationSha256": "29bf142282e2e67ca394c3f2b998a64ee97ed1fb6f0af0d90449139628b007ec",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 587.0703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 227.0703125,
+          "width": 378,
+          "x": 275,
+          "y": 227.0703125
+        },
+        {
+          "bottom": 587.0703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 227.0703125,
+          "width": 378,
+          "x": 653,
+          "y": 227.0703125
+        }
+      ],
+      "width": 1100,
+      "preprocessing": []
+    },
+    {
+      "name": "inline-narrow",
+      "applicationSha256": "29bf142282e2e67ca394c3f2b998a64ee97ed1fb6f0af0d90449139628b007ec",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 501.0703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 183.0703125,
+          "width": 280,
+          "x": 139,
+          "y": 183.0703125
+        },
+        {
+          "bottom": 501.0703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 183.0703125,
+          "width": 280,
+          "x": 419,
+          "y": 183.0703125
+        }
+      ],
+      "width": 760,
+      "preprocessing": []
+    },
+    {
+      "name": "batch-narrow",
+      "applicationSha256": "29bf142282e2e67ca394c3f2b998a64ee97ed1fb6f0af0d90449139628b007ec",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 735.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 417.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 417.5703125
+        },
+        {
+          "bottom": 735.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 417.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 417.5703125
+        }
+      ],
+      "width": 760,
+      "preprocessing": []
+    },
+    {
+      "name": "conversion-narrow",
+      "applicationSha256": "29bf142282e2e67ca394c3f2b998a64ee97ed1fb6f0af0d90449139628b007ec",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 717.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 399.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 399.5703125
+        },
+        {
+          "bottom": 717.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 399.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 399.5703125
+        }
+      ],
+      "width": 760,
+      "preprocessing": [
+        {
+          "clientWidth": 608,
+          "controls": [
+            {
+              "bottom": 225.921875,
+              "height": 16,
+              "left": 166.109375,
+              "right": 182.109375,
+              "top": 209.921875,
+              "width": 16,
+              "x": 166.109375,
+              "y": 209.921875
+            },
+            {
+              "bottom": 309.3203125,
+              "height": 42.3984375,
+              "left": 83,
+              "right": 667,
+              "top": 266.921875,
+              "width": 584,
+              "x": 83,
+              "y": 266.921875
+            }
+          ],
+          "rect": {
+            "bottom": 322.3203125,
+            "height": 121.3984375,
+            "left": 70,
+            "right": 680,
+            "top": 200.921875,
+            "width": 610,
+            "x": 70,
+            "y": 200.921875
+          },
+          "scrollWidth": 608,
+          "status": {
+            "bottom": 225.921875,
+            "height": 16,
+            "left": 557.109375,
+            "right": 667,
+            "top": 209.921875,
+            "width": 109.890625,
+            "x": 557.109375,
+            "y": 209.921875
+          },
+          "summary": {
+            "bottom": 233.921875,
+            "height": 32,
+            "left": 71,
+            "right": 679,
+            "top": 201.921875,
+            "width": 608,
+            "x": 71,
+            "y": 201.921875
+          }
+        }
+      ]
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226",
+  "created": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\created\\source.7z",
+  "zip": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\intermediate.zip",
+  "converted": {
+    "files": [
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\converted.7z.001"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\converted.7z.002"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\converted.7z.003"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\converted.7z.004"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\converted.7z.005"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\converted.7z.006"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\converted.7z.007"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\converted.7z.008"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\converted.7z.009"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\converted.7z.010"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\converted.7z.011"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\converted.7z.012"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\converted.7z.013"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\converted.7z.014"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\converted.7z.015"
+      },
+      {
+        "bytes": 6237,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\converted.7z.016"
+      }
+    ],
+    "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\sevenz-arm-thumb-bcj-create-1654\\0e3204a0-9d35-4d7a-9216-77ac2f74d226\\converted.7z.001",
+    "split": true,
+    "totalBytes": 129117
+  },
+  "passed": true
+}

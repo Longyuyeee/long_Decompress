@@ -1,0 +1,51 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[sevenz-arm-thumb-bcj-1654] inline collapsed advanced settings retain method inheritance and batch modal in wide and small windows
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+StaleElementReferenceError: stale element reference: stale element not found in the current frame
+  (Session info: MicrosoftEdge=155.0.4283.62)
+    at Object.throwDecodedError (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\error.js:523:15)
+    at parseHttpResponse (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\http.js:527:13)
+    at Executor.execute (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\http.js:459:28)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async WebDriver.execute (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:745:17)
+    at async click (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-arm-thumb-bcj-create-1654-gate.mjs:15:284)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-arm-thumb-bcj-create-1654-gate.mjs:27:3
+    at async step (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-arm-thumb-bcj-create-1654-gate.mjs:12:140)
+    at async runSevenzArmThumbBcj1654Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/sevenz-arm-thumb-bcj-create-1654-gate.mjs:26:2)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:5080:5 {
+  remoteStacktrace: '\tmsedgedriver!GetHandleVerifier [0x7ff6b81d82b5+4f25]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b8127e74]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff6b8566e0f+393a7f]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b7eba881]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b7ebccc5]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b7ebcd8f]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b7f03dce]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b7f02355]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b7f01937]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b7ef694f]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b7f20c5a]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b7ef60cd]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b7ef5fca]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b7ef60cd]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b7f3def8]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b7ef590c]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b7ef4b8d]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b7ef5733]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b8033121]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b8043108]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff6b8280f0a+adb7a]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff6b8287571+b41e1]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b813361c]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b812e134]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b812e25a]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff6b811fbe8]\n' +
+    '\tKERNEL32!BaseThreadInitThunk [0x7ffcdba7dda7+17]\n' +
+    '\tntdll!RtlUserThreadStart [0x7ffcddcbee4c+2c]\n'
+}
+
+Node.js v24.14.0

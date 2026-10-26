@@ -269,3 +269,6 @@ mod sevenz_x86_bcj_create_1652_tests;
 
 #[cfg(test)]
 mod sevenz_arm32_bcj_create_1653_tests;
+
+#[cfg(test)]
+mod sevenz_arm_thumb_bcj_create_1654_tests;

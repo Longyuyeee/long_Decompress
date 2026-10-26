@@ -1615,11 +1615,12 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         let delta=coders.len()==codec_position+2 && matches!(coders[codec_position].1.decompression_method_id(),id if id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2) && coders.last().unwrap().1.decompression_method_id()==SevenZMethod::ID_DELTA && coders.last().unwrap().1.properties.len()==1;
         let bcj=coders.len()==codec_position+2 && matches!(coders[codec_position].1.decompression_method_id(),id if id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2) && coders.last().unwrap().1.decompression_method_id()==SevenZMethod::ID_BCJ_X86 && crate::bcj::x86_start_position(&coders.last().unwrap().1.properties).is_ok();
         let arm=coders.len()==codec_position+2 && matches!(coders[codec_position].1.decompression_method_id(),id if id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2) && coders.last().unwrap().1.decompression_method_id()==SevenZMethod::ID_BCJ_ARM && crate::bcj::arm_start_position(&coders.last().unwrap().1.properties).is_ok();
-        if coders.len()!=folder.coders.len() || !(delta || bcj || arm || coders.len()==codec_position+1 && codec(coders[codec_position].1.decompression_method_id())) {
+        let thumb=coders.len()==codec_position+2 && matches!(coders[codec_position].1.decompression_method_id(),id if id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2) && coders.last().unwrap().1.decompression_method_id()==SevenZMethod::ID_BCJ_ARM_THUMB && crate::bcj::arm_thumb_start_position(&coders.last().unwrap().1.properties).is_ok();
+        if coders.len()!=folder.coders.len() || !(delta || bcj || arm || thumb || coders.len()==codec_position+1 && codec(coders[codec_position].1.decompression_method_id())) {
             return Err(Error::unsupported("Shared prefix requires LZMA/LZMA2/PPMd/Copy, optionally preceded by AES"));
         }
-        // x86/ARM32 need at most four/three lookahead bytes; charge the same budget.
-        if offset.checked_add(max_bytes as u64).and_then(|n|n.checked_add(if bcj {4}else if arm {3}else{0})).is_none_or(|n|n>max_decoded) {
+        // x86/ARM32/Thumb need at most four/three/three lookahead bytes; charge the same budget.
+        if offset.checked_add(max_bytes as u64).and_then(|n|n.checked_add(if bcj {4}else if arm || thumb {3}else{0})).is_none_or(|n|n>max_decoded) {
             return Err(Error::unsupported("7Z 固实预览前置内容与开头合计超过 64 MiB，请先提取后打开"));
         }
         check()?;
@@ -1647,7 +1648,7 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
             {return Err(Error::unsupported("AES is unavailable"));}
         } else {Box::new(packed_input)};
         let decoder=crate::decoders::add_prefix_decoder(stream,unpacked,coders[codec_position].1,MAX_MEM_LIMIT_KB)?;
-        let mut decoder:Box<dyn Read+'_>=if delta {Box::new(crate::delta::DeltaReader::new(decoder,coders.last().unwrap().1.properties[0] as usize+1))}else if bcj {Box::new(crate::bcj::SimpleReader::new_x86_at(decoder.take(offset+max_bytes as u64+4),crate::bcj::x86_start_position(&coders.last().unwrap().1.properties)?))}else if arm {Box::new(crate::bcj::SimpleReader::new_arm_at(decoder.take(offset+max_bytes as u64+3),crate::bcj::arm_start_position(&coders.last().unwrap().1.properties)?))}else{Box::new(decoder)};
+        let mut decoder:Box<dyn Read+'_>=if delta {Box::new(crate::delta::DeltaReader::new(decoder,coders.last().unwrap().1.properties[0] as usize+1))}else if bcj {Box::new(crate::bcj::SimpleReader::new_x86_at(decoder.take(offset+max_bytes as u64+4),crate::bcj::x86_start_position(&coders.last().unwrap().1.properties)?))}else if arm {Box::new(crate::bcj::SimpleReader::new_arm_at(decoder.take(offset+max_bytes as u64+3),crate::bcj::arm_start_position(&coders.last().unwrap().1.properties)?))}else if thumb {Box::new(crate::bcj::SimpleReader::new_arm_thumb_at(decoder.take(offset+max_bytes as u64+3),crate::bcj::arm_thumb_start_position(&coders.last().unwrap().1.properties)?))}else{Box::new(decoder)};
         let mut bytes=Vec::with_capacity(max_bytes);let mut buffer=[0;32*1024];
         for (keep,mut remaining) in [(false,offset),(true,max_bytes as u64)] {
             while remaining>0 {
@@ -1684,7 +1685,8 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
         let delta=coders.len()==codec_position+2 && matches!(coders[codec_position].1.decompression_method_id(),id if id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2) && coders.last().unwrap().1.decompression_method_id()==SevenZMethod::ID_DELTA && coders.last().unwrap().1.properties.len()==1;
         let bcj=coders.len()==codec_position+2 && matches!(coders[codec_position].1.decompression_method_id(),id if id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2) && coders.last().unwrap().1.decompression_method_id()==SevenZMethod::ID_BCJ_X86 && crate::bcj::x86_start_position(&coders.last().unwrap().1.properties).is_ok();
         let arm=coders.len()==codec_position+2 && matches!(coders[codec_position].1.decompression_method_id(),id if id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2) && coders.last().unwrap().1.decompression_method_id()==SevenZMethod::ID_BCJ_ARM && crate::bcj::arm_start_position(&coders.last().unwrap().1.properties).is_ok();
-        if coders.len()!=folder.coders.len() || !(delta || bcj || arm || coders.len()==codec_position+1 && codec(coders[codec_position].1.decompression_method_id())) {
+        let thumb=coders.len()==codec_position+2 && matches!(coders[codec_position].1.decompression_method_id(),id if id==SevenZMethod::ID_LZMA || id==SevenZMethod::ID_LZMA2) && coders.last().unwrap().1.decompression_method_id()==SevenZMethod::ID_BCJ_ARM_THUMB && crate::bcj::arm_thumb_start_position(&coders.last().unwrap().1.properties).is_ok();
+        if coders.len()!=folder.coders.len() || !(delta || bcj || arm || thumb || coders.len()==codec_position+1 && codec(coders[codec_position].1.decompression_method_id())) {
             return Err(Error::unsupported("Prefix requires LZMA/LZMA2/PPMd/Copy, optionally preceded by AES"));
         }
         check()?;
@@ -1711,7 +1713,7 @@ impl<'a, R: Read + Seek> BlockDecoder<'a, R> {
             {return Err(Error::unsupported("AES is unavailable"));}
         } else {Box::new(packed)};
         let decoder = crate::decoders::add_prefix_decoder(stream, unpacked, coders[codec_position].1, MAX_MEM_LIMIT_KB)?;
-        let mut decoder:Box<dyn Read+'_>=if delta {Box::new(crate::delta::DeltaReader::new(decoder,coders.last().unwrap().1.properties[0] as usize+1))}else if bcj {Box::new(crate::bcj::SimpleReader::new_x86_at(decoder.take(max_bytes as u64+4),crate::bcj::x86_start_position(&coders.last().unwrap().1.properties)?))}else if arm {Box::new(crate::bcj::SimpleReader::new_arm_at(decoder.take(max_bytes as u64+3),crate::bcj::arm_start_position(&coders.last().unwrap().1.properties)?))}else{Box::new(decoder)};
+        let mut decoder:Box<dyn Read+'_>=if delta {Box::new(crate::delta::DeltaReader::new(decoder,coders.last().unwrap().1.properties[0] as usize+1))}else if bcj {Box::new(crate::bcj::SimpleReader::new_x86_at(decoder.take(max_bytes as u64+4),crate::bcj::x86_start_position(&coders.last().unwrap().1.properties)?))}else if arm {Box::new(crate::bcj::SimpleReader::new_arm_at(decoder.take(max_bytes as u64+3),crate::bcj::arm_start_position(&coders.last().unwrap().1.properties)?))}else if thumb {Box::new(crate::bcj::SimpleReader::new_arm_thumb_at(decoder.take(max_bytes as u64+3),crate::bcj::arm_thumb_start_position(&coders.last().unwrap().1.properties)?))}else{Box::new(decoder)};
         let mut bytes = Vec::with_capacity(max_bytes);
         let mut buffer = [0u8;32*1024];
         while bytes.len() < max_bytes {

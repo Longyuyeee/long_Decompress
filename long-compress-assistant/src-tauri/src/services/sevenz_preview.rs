@@ -78,6 +78,8 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
         || matches!(methods.as_slice(),[a,b,c] if *a==M::ID_AES256SHA256 && (*b==M::ID_LZMA || *b==M::ID_LZMA2) && *c==M::ID_BCJ_X86);
     let arm=matches!(methods.as_slice(),[a,b] if (*a==M::ID_LZMA || *a==M::ID_LZMA2) && *b==M::ID_BCJ_ARM)
         || matches!(methods.as_slice(),[a,b,c] if *a==M::ID_AES256SHA256 && (*b==M::ID_LZMA || *b==M::ID_LZMA2) && *c==M::ID_BCJ_ARM);
+    let thumb=matches!(methods.as_slice(),[a,b] if (*a==M::ID_LZMA || *a==M::ID_LZMA2) && *b==M::ID_BCJ_ARM_THUMB)
+        || matches!(methods.as_slice(),[a,b,c] if *a==M::ID_AES256SHA256 && (*b==M::ID_LZMA || *b==M::ID_LZMA2) && *c==M::ID_BCJ_ARM_THUMB);
     let ppmd=methods.as_slice()==[M::ID_PPMD] || methods.as_slice()==[M::ID_AES256SHA256,M::ID_PPMD];
     let bzip2=methods.as_slice()==[M::ID_BZIP2] || methods.as_slice()==[M::ID_AES256SHA256,M::ID_BZIP2];
     if methods.contains(&M::ID_BZIP2) {
@@ -94,12 +96,13 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
     if methods.contains(&M::ID_PPMD) {
         ensure!(ppmd,"7Z 此 PPMd 方法组合暂不支持内部预览，请先提取后打开");
     }
-    ensure!(methods.len()==folder.coders.len() && (delta || bcj || arm || bzip2 || deflate64 || deflate || ppmd || methods.len()==1 && codec(methods[0]) || methods.len()==2 && methods[0]==M::ID_AES256SHA256 && codec(methods[1])),"7Z 此压缩方法组合暂不支持内部预览，请先提取后打开");
+    ensure!(methods.len()==folder.coders.len() && (delta || bcj || arm || thumb || bzip2 || deflate64 || deflate || ppmd || methods.len()==1 && codec(methods[0]) || methods.len()==2 && methods[0]==M::ID_AES256SHA256 && codec(methods[1])),"7Z 此压缩方法组合暂不支持内部预览，请先提取后打开");
     for c in &folder.coders {
         if c.decompression_method_id()==M::ID_COPY {ensure!(copy && c.properties.is_empty(),"7Z Copy 方法属性或组合无法确认，请先提取检查");}
         if c.decompression_method_id()==M::ID_DELTA {ensure!(delta && c.properties.len()==1,"7Z Delta 属性或链顺序无法确认，请先提取检查");}
         if c.decompression_method_id()==M::ID_BCJ_X86 {ensure!(bcj && (c.properties.is_empty() || c.properties.len()==4),"7Z x86 BCJ 属性或链顺序无法确认，请先提取检查");}
         if c.decompression_method_id()==M::ID_BCJ_ARM {ensure!(arm && (c.properties.is_empty() || c.properties.len()==4 && u32::from_le_bytes(c.properties[..4].try_into().unwrap()) & 3 == 0),"7Z ARM32 BCJ 属性或起始位置无法确认，请先提取检查");}
+        if c.decompression_method_id()==M::ID_BCJ_ARM_THUMB {ensure!(thumb && (c.properties.is_empty() || c.properties.len()==4 && u32::from_le_bytes(c.properties[..4].try_into().unwrap()) & 1 == 0),"7Z ARM Thumb BCJ 属性或起始位置无法确认，请先提取检查");}
         // Bound dictionaries before constructing the existing decoder.
         if c.decompression_method_id()==M::ID_LZMA { ensure!(c.properties.len()==5 && u32::from_le_bytes(c.properties[1..5].try_into().unwrap())<=64*1024*1024,"7Z 预览字典超过预览范围，请先提取后打开"); }
         if c.decompression_method_id()==M::ID_LZMA2 { ensure!(c.properties.len()==1 && c.properties[0]<=28,"7Z 预览字典超过预览范围，请先提取后打开"); }
@@ -127,7 +130,7 @@ fn read_selected(path:&Path, selected:&str, password:Option<&str>, cancelled:Arc
         decoder.read_solid_entry_prefix(index,MAX_TEXT as usize,MAX_INPUT,check)
     } else if prefix {
         decoder.read_single_entry_prefix(index,MAX_TEXT as usize,check)
-    } else if copy || delta || bcj || arm {
+    } else if copy || delta || bcj || arm || thumb {
         // Copy has no codec end marker. Check the complete declared extent,
         // every available file/folder/packed CRC and full AES completion.
         decoder.read_solid_entry(index,max_output as usize,MAX_INPUT,check)
