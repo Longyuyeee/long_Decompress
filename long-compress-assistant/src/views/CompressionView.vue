@@ -181,6 +181,12 @@ const canUseSingleFileFormats = (files: Array<{ isDirectory: boolean }>) => {
   return files.length === 1 && !files[0]?.isDirectory
 }
 
+const canUseRegularFileFormats = (files: Array<{ isDirectory: boolean }>) => files.length > 0 && files.every(file => !file.isDirectory)
+const canGlobalUseRegularFileFormats = computed(() =>
+  compressionStore.groups.every(group => canUseRegularFileFormats(group.files)) &&
+  compressionStore.selectedFiles.every(file => !file.isDirectory)
+)
+
 const canUseSplitArchive = (files: Array<{ isDirectory: boolean }>) => {
   return files.length > 0
 }
@@ -452,6 +458,11 @@ const runCompression = async () => {
     activeOutputPaths.add(normalizedOutputPath)
 
     // 校验失败：跳过当前任务
+    if (job.settings.format === 'lzo' && !canUseRegularFileFormats(job.files)) {
+      appStore.setError('LZOP 只接收普通文件；含文件夹的内容请选择 TAR.LZO，以保留目录和空文件夹。')
+      failed++
+      continue
+    }
     if (isSingleFileStreamFormat(job.settings.format) && !canUseSingleFileFormats(job.files)) {
       appStore.setError(appStore.t('compress.error.single_file').replace('{0}', job.settings.format.toUpperCase()))
       failed++
@@ -904,6 +915,7 @@ const drawerTransition = useDrawerTransition()
                       :modelValue="compressionStore.getEffectiveSettings(group.settings)"
                       :outputPath="compressionStore.getEffectiveOutputPath(group.outputPath)"
                       :allow-single-file-formats="canUseSingleFileFormats(group.files)"
+                      :allow-regular-file-formats="canUseRegularFileFormats(group.files)"
                       :allow-split-archive="canUseSplitArchive(group.files)"
                       :suggested-filename="group.name"
                       @update:modelValue="compressionStore.updateGroupSettings(group.id, $event)"
@@ -1109,6 +1121,7 @@ const drawerTransition = useDrawerTransition()
                       :modelValue="compressionStore.getEffectiveSettings(file.settings)"
                       :outputPath="compressionStore.getEffectiveOutputPath(file.outputPath)"
                       :allow-single-file-formats="canUseSingleFileFormats([file])"
+                      :allow-regular-file-formats="canUseRegularFileFormats([file])"
                       :allow-split-archive="canUseSplitArchive([file])"
                       :suggested-filename="defaultArchiveName(file.path, compressionStore.getEffectiveSettings(file.settings).format)"
                       @update:modelValue="compressionStore.updateFileSettings(file.path, $event)"
@@ -1218,6 +1231,7 @@ const drawerTransition = useDrawerTransition()
       :outputPath="compressionStore.globalOutputPath"
       @update:outputPath="compressionStore.globalOutputPath = $event"
       :allow-single-file-formats="canGlobalUseSingleFileFormats"
+      :allow-regular-file-formats="canGlobalUseRegularFileFormats"
       :allow-split-archive="canGlobalUseSplitArchive"
       @template-draft-created="showGlobalSettingsModal = false"
     />

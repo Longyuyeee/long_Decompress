@@ -475,11 +475,15 @@ export const useCompressionStore = defineStore('compression', () => {
     if ((patch.format === 'zip' || patch.format === 'zipx') && drafts.some(({ id, draft }) => selected.has(id) && !draft.taskId && getEffectiveSettings(draft.settings).encryptFilenames && patch.encryptFilenames !== false)) {
       throw new Error('所选任务中有已开启文件名加密的 7Z 任务。请保持 7Z 格式，或先在该条配置中关闭文件名加密。')
     }
-    if (['lzo', 'lzma', 'lzma.aes'].includes(patch.format || '') && drafts.some(({id,draft}) => {
+    if (['lzma', 'lzma.aes'].includes(patch.format || '') && drafts.some(({id,draft}) => {
       if (!selected.has(id) || draft.taskId) return false
       const files = 'files' in draft ? draft.files : [draft]
       return files.length !== 1 || files[0].isDirectory
-    })) throw new Error(patch.format === 'lzo' ? 'LZOP 每条任务只能压缩一个普通文件；目录或多个文件请选择 ZIP、7Z 或 TAR 组合。所选配置未修改。' : 'LZMA / LZMA.AES 每条任务只能压缩一个普通文件；目录或多个文件请选择 TAR.LZMA / TAR.LZMA.AES。所选配置未修改。')
+    })) throw new Error('LZMA / LZMA.AES 每条任务只能压缩一个普通文件；目录或多个文件请选择 TAR.LZMA / TAR.LZMA.AES。所选配置未修改。')
+    if (patch.format === 'lzo' && targets.some(({draft}) => {
+      const files = 'files' in draft ? draft.files : [draft]
+      return files.length === 0 || files.some(file => file.isDirectory)
+    })) throw new Error('LZOP 只接收普通文件；含文件夹的任务请选择 TAR.LZO，以保留目录和空文件夹。所选配置未修改。')
     for (const { id, draft } of drafts) {
       if (!selected.has(id) || draft.taskId || (methodOnly && getEffectiveSettings(draft.settings).format !== 'zip')) continue
       if (wimOnly && !['wim','swm'].includes(getEffectiveSettings(draft.settings).format)) continue

@@ -19,7 +19,7 @@ import { supportsZipPasswordEncoding, zipPasswordEncodingForSource } from '@/uti
 
 export const conversionFormats = [
   ['tar.lzo', 'TAR.LZO（目录，无加密）'],
-  ['lzo', 'LZOP（单文件）'],
+  ['lzo', 'LZOP（多文件，无目录）'],
   ['zpaq', 'ZPAQ'],
   ['zip', 'ZIP'], ['zipx', 'ZIPX（XZ）'], ['7z', '7Z'], ['rar', 'RAR（需要 WinRAR）'], ['tar', 'TAR'], ['tar.gz', 'TGZ'],
   ['tar.bz2', 'TBZ'], ['tar.xz', 'TXZ'], ['tar.zst', 'TZST'],

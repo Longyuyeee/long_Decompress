@@ -401,8 +401,8 @@ pub async fn convert_archive(
         .collect::<Result<Vec<_>, _>>().map_err(|error| crate::services::archive_io::message(&error.into()))?;
     files.sort();
     if files.is_empty() { return Err("原包没有可转换的条目".to_string()); }
-    if options.format.as_deref().is_some_and(|f| crate::services::compression_format::normalize_compression_format(f) == "lzo") && (files.len() != 1 || !Path::new(&files[0]).is_file()) {
-        return Err("LZOP 只适合原包中的一个顶层文件；目录或多个文件请选择 ZIP、7Z 或 TAR 组合，原包已保留".into());
+    if options.format.as_deref().is_some_and(|f| crate::services::compression_format::normalize_compression_format(f) == "lzo") {
+        crate::services::lzop_writer::prepare_members(&files).map_err(|e| format!("{e}；原包已保留"))?;
     }
     // Extraction and rebuilding share the destination volume. Recheck after
     // staging has consumed space, not only before the source was expanded.

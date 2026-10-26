@@ -295,6 +295,8 @@ mod lzop_paths_1661_tests;
 pub(crate) mod lzop_writer;
 #[cfg(test)]
 mod lzop_create_1662_tests;
+#[cfg(test)]
+mod lzop_multi_create_172_tests;
 
 #[cfg(test)]
 mod tar_lzo_create_171_tests;

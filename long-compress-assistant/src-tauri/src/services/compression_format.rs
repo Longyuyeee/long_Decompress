@@ -22,7 +22,7 @@ pub struct CompressionFormatCapability {
 
 pub const COMPRESSION_FORMAT_CAPABILITIES: &[CompressionFormatCapability] = &[
     CompressionFormatCapability { format:"tar.lzo", extensions:&["tar.lzo"], can_compress:true, can_extract:true, supports_password_compress:false, supports_password_extract:false, single_file_only:false, supports_split:false, requires_7za:false, requires_winrar:false },
-    CompressionFormatCapability { format:"lzo", extensions:&["lzo"], can_compress:true, can_extract:true, supports_password_compress:false, supports_password_extract:false, single_file_only:true, supports_split:false, requires_7za:false, requires_winrar:false },
+    CompressionFormatCapability { format:"lzo", extensions:&["lzo"], can_compress:true, can_extract:true, supports_password_compress:false, supports_password_extract:false, single_file_only:false, supports_split:false, requires_7za:false, requires_winrar:false },
     CompressionFormatCapability { format: "swm", extensions: &["swm"], can_compress: true, can_extract: true, supports_password_compress: false, supports_password_extract: false, single_file_only: false, supports_split: true, requires_7za: true, requires_winrar: false },
     CompressionFormatCapability { format: "tar.lzma.aes", extensions: &["tar.lzma.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: false, supports_split: true, requires_7za: false, requires_winrar: false },
     CompressionFormatCapability { format: "lzma.aes", extensions: &["lzma.aes"], can_compress: true, can_extract: true, supports_password_compress: true, supports_password_extract: true, single_file_only: true, supports_split: true, requires_7za: false, requires_winrar: false },
@@ -501,12 +501,10 @@ pub fn validate_compression_request(
         return Ok("7z".to_string());
     }
 
+    if requested_format == "lzo" { super::lzop_writer::prepare_members(source_files)?; }
     if capability.is_some_and(|capability| capability.single_file_only) {
         let single_regular_file = source_files.len() == 1 && Path::new(&source_files[0]).is_file();
         if !single_regular_file {
-            if requested_format == "lzo" {
-                return Err(CompressionError::CompressionFailed("LZOP 只支持一个普通文件；目录或多个文件请选择 ZIP、7Z 或 TAR 组合，不能遗漏其他内容".into()).into());
-            }
             return Err(CompressionError::CompressionFailed(format!(
                 "{} compression only supports one regular file. Please use a TAR-based format for folders or multiple files.",
                 requested_format

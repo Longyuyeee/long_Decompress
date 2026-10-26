@@ -163,7 +163,7 @@
 - 收到分卷时，将完整组放在同一目录。ZIP 可选择数字卷或标准 `.z01/…/.zip`；7Z、RAR 及其他格式使用各自支持的卷型。
 - `.aes` 是 Long 自有容器，接收方需使用 Long解压；普通 TAR 和多数单文件流格式没有原生密码。
 - ZIP 默认 AES-256，也可选 ZipCrypto。旧工具的非 ASCII 密码可能需要匹配密码编码；保持默认自动兼容，遇到已知编码再调整。
-- ZIPX 不等于支持全部专有算法。LZOP 创建目前为单文件固定模式；TAR.LZO 支持目录和多文件创建与转换，不提供密码或创建分卷。
+- ZIPX 不等于支持全部专有算法。LZOP 支持一个或多个普通文件，重名自动编号；文件夹和空目录请选择 TAR.LZO。两者不提供密码或创建分卷，多成员名超过 255 字节时请选择 TAR.LZO。
 - 缺卷或损坏不保证能完整恢复；救援只输出能够读取并通过对应校验的内容，并标明部分恢复范围。
 - DOCX、XLSX、PPTX、EPUB 等文档容器不作为普通归档导入。已充分压缩的文件，继续压缩可能收益很小。
 
@@ -213,10 +213,10 @@
 
 | 版本 | 主要更新 | 详情 |
 | --- | --- | --- |
+| **v1.7.2** | LZOP 多文件成员创建、重名编号、来源密码转换与逐文件取回 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.2.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.2) |
 | **v1.7.1** | TAR.LZO 文件夹与多文件创建、UTF-8 PAX 路径、完整转换与原流程衔接 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.1.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.1) |
 | **v1.7.0** | Windows 默认打开与四项动作、一次性设置提醒、统一包内外双栏、右键分组、历史操作收纳 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.0.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.0) |
 | **v1.6.62** | LZOP 单文件创建，接通分析、校验、转换与结果 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.62.md) |
 | **v1.6.61** | LZOP 成员路径与旧名称编码兼容，保留所选目录 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.61.md) |
-| **v1.6.60** | LZOP 多成员资料读取、图文预览与按需取回 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.60.md) |
 
 [查看全部历史版本 →](https://github.com/Longyuyeee/long_Decompress/releases)
