@@ -1,0 +1,25 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+
+  assert.ok(history.some(h=>h.sourcePaths?.includes(legacy)&&h.zipPasswordEncoding==='cp936'))
+
+    at file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/lzop-paths-names-1661-gate.mjs:52:52
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async step (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/lzop-paths-names-1661-gate.mjs:11:105)
+    at async runLzopPaths1661Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/lzop-paths-names-1661-gate.mjs:45:2)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:5087:5 {
+  generatedMessage: true,
+  code: 'ERR_ASSERTION',
+  actual: false,
+  expected: true,
+  operator: '==',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

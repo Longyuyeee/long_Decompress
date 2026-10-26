@@ -1,0 +1,54 @@
+{
+  "version": "1.6.61",
+  "applicationSha256": "a14d40795eeca234d11fcacace965aa8a617c2e4a9de0e49aa798a8575861642",
+  "reusedBusinessCandidateSha256": "52b872b368dfa3b5385b29353279923607b8c1dd0fd930372757a56d7c2bf284",
+  "checks": [
+    {
+      "name": "final compact refresh control and source name codepage fit the original secondary options in equal wide/narrow panes",
+      "officialCp936Names": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "final-options-wide",
+      "height": 650,
+      "options": {
+        "bottom": 472.8984375,
+        "height": 322.3046875,
+        "left": 239,
+        "right": 643.796875,
+        "top": 150.59375,
+        "width": 404.796875,
+        "x": 239,
+        "y": 150.59375
+      },
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "final-options-narrow",
+      "height": 520,
+      "options": {
+        "bottom": 472.8984375,
+        "height": 322.3046875,
+        "left": 111,
+        "right": 411.3984375,
+        "top": 150.59375,
+        "width": 300.3984375,
+        "x": 111,
+        "y": 150.59375
+      },
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "passed": true
+}

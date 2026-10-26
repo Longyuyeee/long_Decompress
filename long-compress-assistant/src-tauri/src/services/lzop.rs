@@ -355,8 +355,11 @@ pub(crate) fn open(
     Ok(reader)
 }
 
-pub(crate) fn verify(path: &Path, mut cancelled: impl FnMut() -> bool) -> anyhow::Result<()> {
-    let members = member_index(path, || {
+pub(crate) fn verify(path: &Path, cancelled: impl FnMut() -> bool) -> anyhow::Result<()> {
+    verify_with_encoding(path, None, cancelled)
+}
+pub(crate) fn verify_with_encoding(path: &Path, encoding: Option<super::zip_password::ZipPasswordEncoding>, mut cancelled: impl FnMut() -> bool) -> anyhow::Result<()> {
+    let members = members::member_index_with_encoding(path, encoding, || {
         anyhow::ensure!(!cancelled(), "操作已取消");
         Ok(())
     })?;
@@ -375,4 +378,6 @@ pub(crate) fn verify(path: &Path, mut cancelled: impl FnMut() -> bool) -> anyhow
 
 #[path = "lzop_members.rs"]
 mod members;
-pub(crate) use members::{extract_members, member_index, member_reader, multi_index};
+#[path = "lzop_names.rs"]
+mod names;
+pub(crate) use members::{extract_members, member_index, member_index_with_encoding, member_reader, multi_index, multi_index_with_encoding};

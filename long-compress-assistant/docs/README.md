@@ -1,7 +1,7 @@
 # 文档导航与维护规则
 
-- **当前版本 v1.6.60**：[发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.60)、[中文说明](RELEASE_NOTES_1.6.60.md)、[LZOP 多成员记录](LZOP_MEMBERS_READ_FREEZE_1.6.60.md)。已完成功能封板，正式源码/合并/附件身份在本版 PR 接续。
-- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.60.md) → [v1.6.61 路径与名称兼容](ARCHIVE_ROADMAP_1.6.61.md)仅规划，见[交接](DEVELOPMENT_HANDOFF.md)。
+- **当前版本 v1.6.61**：[发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.61)、[中文说明](RELEASE_NOTES_1.6.61.md)、[LZOP 路径与名称记录](LZOP_PATHS_NAMES_FREEZE_1.6.61.md)。已完成功能封板，正式发布身份在本版 PR 接续。
+- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.61.md) → [v1.6.62 单文件创建](ARCHIVE_ROADMAP_1.6.62.md)仅规划，见[交接](DEVELOPMENT_HANDOFF.md)。
 
 以下为历史阶段记录。
 

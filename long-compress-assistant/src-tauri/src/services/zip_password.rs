@@ -22,6 +22,8 @@ pub enum ZipPasswordEncoding {
     Cp932,
     Cp936,
     Cp950,
+    Cp437,
+    Cp850,
 }
 
 impl ZipPasswordEncoding {
@@ -32,6 +34,8 @@ impl ZipPasswordEncoding {
             Self::Cp932 => "cp932",
             Self::Cp936 => "cp936",
             Self::Cp950 => "cp950",
+            Self::Cp437 => "cp437",
+            Self::Cp850 => "cp850",
         }
     }
 
@@ -42,6 +46,8 @@ impl ZipPasswordEncoding {
             "cp932" => Some(Self::Cp932),
             "cp936" => Some(Self::Cp936),
             "cp950" => Some(Self::Cp950),
+            "cp437" => Some(Self::Cp437),
+            "cp850" => Some(Self::Cp850),
             _ => None,
         }
     }
@@ -92,6 +98,8 @@ pub fn encode(password: &str, encoding: ZipPasswordEncoding) -> Result<Vec<u8>> 
         ZipPasswordEncoding::Cp932 => encode_fixed(password, 932),
         ZipPasswordEncoding::Cp936 => encode_fixed(password, 936),
         ZipPasswordEncoding::Cp950 => encode_fixed(password, 950),
+        ZipPasswordEncoding::Cp437 => encode_fixed(password, 437),
+        ZipPasswordEncoding::Cp850 => encode_fixed(password, 850),
     }
 }
 

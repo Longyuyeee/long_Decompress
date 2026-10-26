@@ -288,3 +288,6 @@ mod lzop_numeric_1659_tests;
 
 #[cfg(test)]
 mod lzop_members_1660_tests;
+
+#[cfg(test)]
+mod lzop_paths_1661_tests;

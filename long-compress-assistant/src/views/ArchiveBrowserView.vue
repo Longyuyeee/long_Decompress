@@ -890,9 +890,9 @@ const extractSelected = async () => {
         <button class="browser-input text-left truncate" type="button" :disabled="inputBusy" :title="archivePath" @click="chooseArchive">{{ archiveName || '选择或拖入需要浏览的压缩包' }}</button>
       </div>
       <div class="min-w-0 browser-field">
-        <span class="browser-label">密码</span>
+        <span class="browser-label">{{ result?.format === 'LZOP' ? '读取目录' : '密码' }}</span>
         <div class="flex min-w-0 gap-2">
-          <input v-model="password" :disabled="inputBusy" class="browser-input min-w-0 flex-1" type="password" placeholder="留空则尝试密码保险箱" @keyup.enter="loadArchive()">
+          <input v-if="result?.format !== 'LZOP'" v-model="password" :disabled="inputBusy" class="browser-input min-w-0 flex-1" type="password" placeholder="留空则尝试密码保险箱" @keyup.enter="loadArchive()">
           <button class="browser-icon-button" type="button" :disabled="!archivePath || loading" @click="loadArchive()" title="重新读取">
             <i :class="loading ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"></i>
           </button>

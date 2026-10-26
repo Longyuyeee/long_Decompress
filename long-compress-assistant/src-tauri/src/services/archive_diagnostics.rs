@@ -181,6 +181,8 @@ fn classify_failure(
         // A path can contain incidental words such as "eof". Explicit format
         // evidence must outrank those free-text heuristics.
         ("damaged", "归档损坏", "归档结构已确认损坏或不完整；请重新获取完整文件，反复尝试密码不能修复损坏")
+    } else if lower.contains("[lzop-encoding]") {
+        ("password_encoding", "LZOP 成员名称编码不匹配", "请选择来源工具使用的成员名称代码页后重新读取；名称编码不匹配不代表文件损坏，也不需要密码")
     } else if lower.contains("[egg-io]") {
         ("io_error", "EGG 文件读写失败", "请检查源文件是否可读、输出目录权限和磁盘可用空间。读写失败不能据此判定密码错误。")
     } else if lower.contains("[egg-password-encoding]") {
@@ -639,7 +641,7 @@ pub async fn diagnose_archive_at(
             tauri::async_runtime::spawn_blocking(move || {
                 let cancelled=||verify_cancelled.load(Ordering::SeqCst);
                 if tar_lzo {super::compression_verification::verify_tar_reader(super::codec_stream::decoder(&verify_path,"lzo")?, &cancelled)}
-                else {super::lzop::verify(&verify_path,cancelled)}
+                else {super::lzop::verify_with_encoding(&verify_path,zip_password_encoding,cancelled)}
             }).await.context("LZOP verification worker failed")?
         }
         _ if actual_format == "EGG" => {
@@ -933,6 +935,14 @@ mod tests {
     use sha2::{Digest, Sha256};
     use std::io::Write;
     use tauri::Window;
+
+    #[test]
+    fn lzop1661_name_choice_failure_is_not_damage_or_password_failure() {
+        let (code,title,detail)=classify_failure("[lzop-encoding] 成员名称不能按 CP932 读取",false,false);
+        assert_eq!(code,"password_encoding");
+        assert!(title.contains("成员名称编码"));
+        assert!(detail.contains("不代表文件损坏") && detail.contains("不需要密码"));
+    }
 
     #[test]
     fn io1516_diagnosis_keeps_explicit_io_before_incidental_password_errors() {

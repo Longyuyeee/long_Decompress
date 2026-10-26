@@ -353,8 +353,19 @@ pub async fn browse_archive_cancellable_at(
                     }
                 }
                 if format == ArchiveFormat::Lzop {
-                    if let Some(members)=super::lzop::multi_index(&path,||ensure_not_cancelled(&native_cancelled))? {
-                        return Ok(summarize("LZOP",members.into_iter().map(|m|ArchiveEntryInfo {size_known:Some(true),name:m.name.clone(),path:m.name,size:m.size,compressed_size:Some(m.compressed_size),modified:None,crc:None,encrypted:false,is_dir:false}).collect()));
+                    if let Some(members)=super::lzop::multi_index_with_encoding(&path,encoding,||ensure_not_cancelled(&native_cancelled))? {
+                        let mut entries = Vec::new();
+                        let mut dirs = std::collections::HashSet::new();
+                        for m in members {
+                            let mut parent = String::new();
+                            let parts: Vec<_> = m.name.split('/').collect();
+                            for part in parts.iter().take(parts.len().saturating_sub(1)) {
+                                parent.push_str(part); parent.push('/');
+                                if dirs.insert(parent.clone()) { entries.push(ArchiveEntryInfo {size_known:Some(true),name:part.to_string(),path:parent.clone(),size:0,compressed_size:None,modified:None,crc:None,encrypted:false,is_dir:true}); }
+                            }
+                            entries.push(ArchiveEntryInfo {size_known:Some(true),name:parts.last().unwrap_or(&"").to_string(),path:m.name.clone(),size:m.size,compressed_size:Some(m.compressed_size),modified:None,crc:None,encrypted:false,is_dir:false});
+                        }
+                        return Ok(summarize("LZOP",entries));
                     }
                 }
                 if let Some((codec, label, suffixes)) = super::codec_stream::plain_format(&format) {

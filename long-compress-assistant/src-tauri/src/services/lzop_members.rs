@@ -7,8 +7,9 @@ use crate::services::{
     numeric_volume_reader::ZipInputReader,
 };
 use anyhow::{Context, Result};
+use super::names::{decode, Names};
+use crate::services::zip_password::ZipPasswordEncoding;
 use std::{
-    collections::HashSet,
     io::{self, Read, Seek, SeekFrom},
     path::Path,
 };
@@ -21,58 +22,14 @@ pub(crate) struct Member {
     offset: u64,
     flags: u32,
 }
-fn member_name(raw: &[u8], flags: u32, index: usize, used: &mut HashSet<String>) -> String {
-    let decoded = if flags & 0x00f00000 == 0x00100000 {
-        Some(raw.iter().map(|&b| char::from(b)).collect())
-    } else {
-        String::from_utf8(raw.to_vec()).ok()
-    };
-    // Like lzop -N, restore names, not embedded paths or permissions. Unknown encodings
-    // get stable member names instead of silently corrupting text or merging files.
-    let mut name: String = decoded
-        .unwrap_or_default()
-        .rsplit(['/', '\\'])
-        .next()
-        .unwrap_or("")
-        .chars()
-        .map(|c| {
-            if c.is_control() || "<>:\"/\\|?*".contains(c) {
-                '_'
-            } else {
-                c
-            }
-        })
-        .collect();
-    name = name.trim_end_matches(['.', ' ']).to_owned();
-    while name.len() > 180 {
-        name.pop();
-    }
-    if name.is_empty() || name == "." || name == ".." {
-        name = format!("member-{index:03}.bin");
-    }
-    let stem = name.split('.').next().unwrap_or("").to_ascii_uppercase();
-    if matches!(stem.as_str(), "CON" | "PRN" | "AUX" | "NUL")
-        || ["COM", "LPT"].iter().any(|p| {
-            stem.strip_prefix(*p)
-                .is_some_and(|n| matches!(n, "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"))
-        })
-    {
-        name = format!("member-{index}-{name}");
-    }
-    let original = name.clone();
-    let mut suffix = index;
-    while !used.insert(name.to_lowercase()) {
-        name = if let Some((stem, ext)) = original.rsplit_once('.') {
-            format!("{stem} (member {suffix}).{ext}")
-        } else {
-            format!("{original} (member {suffix})")
-        };
-        suffix += 1;
-    }
-    name
-}
 pub(crate) fn member_index(
     path: &Path,
+    check: impl FnMut() -> Result<()>,
+) -> Result<Vec<Member>> {
+    member_index_with_encoding(path, None, check)
+}
+pub(crate) fn member_index_with_encoding(
+    path: &Path, encoding: Option<ZipPasswordEncoding>,
     mut check: impl FnMut() -> Result<()>,
 ) -> Result<Vec<Member>> {
     check()?;
@@ -80,7 +37,7 @@ pub(crate) fn member_index(
     let length = input.seek(SeekFrom::End(0))?;
     input.seek(SeekFrom::Start(0))?;
     let mut result = Vec::new();
-    let mut names = HashSet::new();
+    let mut names = Names::default();
     while input.stream_position()? < length {
         check()?;
         anyhow::ensure!(
@@ -90,7 +47,8 @@ pub(crate) fn member_index(
         let offset = input.stream_position()?;
         let mut member =
             LzopReader::with_mode(input, true).map_err(|e| numeric_error(e, numeric))?;
-        let name = member_name(&member.name, member.flags, result.len() + 1, &mut names);
+        let decoded = decode(&member.name, member.flags, encoding)?;
+        let name = names.allocate(decoded.as_deref(), member.flags, result.len() + 1);
         let mut size = 0u64;
         loop {
             check()?;
@@ -127,7 +85,7 @@ pub(crate) fn member_index(
         !result.is_empty(),
         "[archive-inspection:damaged] LZOP 文件为空"
     );
-    if result.len() == 1 && result[0].flags & 0x400 == 0 {
+    if result.len() == 1 && result[0].flags & 0x2400 == 0 {
         result[0].name = native_extraction::single_stream::output_name(path, &[".lzo"]);
     }
     Ok(result)
@@ -136,8 +94,11 @@ pub(crate) fn multi_index(
     path: &Path,
     check: impl FnMut() -> Result<()>,
 ) -> Result<Option<Vec<Member>>> {
-    let index = member_index(path, check)?;
-    Ok((index.len() > 1 || index[0].flags & 0x400 != 0).then_some(index))
+    multi_index_with_encoding(path, None, check)
+}
+pub(crate) fn multi_index_with_encoding(path: &Path, encoding: Option<ZipPasswordEncoding>, check: impl FnMut() -> Result<()>) -> Result<Option<Vec<Member>>> {
+    let index = member_index_with_encoding(path, encoding, check)?;
+    Ok((index.len() > 1 || index[0].flags & 0x2400 != 0).then_some(index))
 }
 struct CheckedMember {
     inner: LzopReader<ZipInputReader>,
@@ -172,12 +133,17 @@ pub(crate) fn extract_members<R: ExtractionRuntime>(
     output: &Path,
     options: &DecompressOptions,
 ) -> Result<bool> {
-    let Some(members) = multi_index(path, || runtime.check_cancellation())? else {
+    let Some(members) = multi_index_with_encoding(path, options.zip_password_encoding, || runtime.check_cancellation())? else {
         return Ok(false);
     };
     let filter = extraction_transaction::compile_file_filter(options.file_filter.as_deref());
     let mut total = 0u64;
-    for member in members {
+    let mut flat_names = Names::default();
+    let mut selected_options = options.clone();
+    selected_options.selected_entries.clear();
+    selected_options.file_filter = None;
+    for (index, member) in members.into_iter().enumerate() {
+        let destination = if options.preserve_paths { member.name.clone() } else { flat_names.allocate(Some(&member.name), 0, index + 1) };
         runtime.check_cancellation()?;
         let relative = Path::new(&member.name);
         if !extraction_transaction::matches_selected_entries(relative, &options.selected_entries)
@@ -198,8 +164,8 @@ pub(crate) fn extract_members<R: ExtractionRuntime>(
             task_id,
             member_reader(path, &member)?,
             output,
-            member.name,
-            options,
+            destination,
+            &selected_options,
         )?;
     }
     Ok(true)

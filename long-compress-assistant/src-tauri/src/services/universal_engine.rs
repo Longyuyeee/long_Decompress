@@ -656,7 +656,7 @@ impl UniversalCliEngine {
             return tokio::task::spawn_blocking(move || {
                 if super::tar_compatibility::is_tar_lzo(&path, &format) {
                     super::compression_verification::verify_tar_reader(super::codec_stream::decoder(&path,"lzo")?, &||false)
-                } else { super::lzop::verify(&path,||false) }
+                } else { super::lzop::verify_with_encoding(&path,encoding,||false) }
             }).await?;
         }
         if let Some((codec, _, _)) = super::codec_stream::plain_format(&format) {

@@ -275,13 +275,13 @@ fn read_tar_family_text(path: &Path, format: &str, entry_path: &str) -> Result<T
 
 // Single compressed files have no entry directory or reliable declared total.
 // Scan at most the existing preview budget, retaining only the displayed prefix.
-fn read_plain_stream(path: &Path, format: &str, entry: &str, max_total: u64, keep: u64) -> Result<TextBytes> {
-    read_plain_stream_controlled(path,format,entry,max_total,keep,None)
+fn read_plain_stream(path: &Path, format: &str, entry: &str, max_total: u64, keep: u64, encoding: Option<ZipPasswordEncoding>) -> Result<TextBytes> {
+    read_plain_stream_controlled(path,format,entry,max_total,keep,None,encoding)
 }
-fn read_plain_stream_controlled(path: &Path, format: &str, entry: &str, max_total: u64, keep: u64,control:Option<&ImageControl>) -> Result<TextBytes> {
+fn read_plain_stream_controlled(path: &Path, format: &str, entry: &str, max_total: u64, keep: u64,control:Option<&ImageControl>,encoding:Option<ZipPasswordEncoding>) -> Result<TextBytes> {
     let detected = if format == "LZIP" { ArchiveFormat::Lzip } else { ArchiveFormat::from_extension(&format.to_ascii_lowercase()) };
     let (codec, _, suffixes) = super::codec_stream::plain_format(&detected).context("Unsupported compressed preview")?;
-    let member=if detected==ArchiveFormat::Lzop {super::lzop::multi_index(path,||{if let Some(c)=control{c.check()?;}Ok(())})?}else{None};
+    let member=if detected==ArchiveFormat::Lzop {super::lzop::multi_index_with_encoding(path,encoding,||{if let Some(c)=control{c.check()?;}Ok(())})?}else{None};
     let mut reader=if let Some(members)=member {
         let selected=members.iter().find(|m|m.name==entry).context("所选 LZOP 成员不存在，请刷新后重试")?;
         super::lzop::member_reader(path,selected)?
@@ -443,7 +443,7 @@ fn preview_archive_image_sync(
         "WIM" => tauri::async_runtime::block_on(super::wim_preview::preview_entry(archive_path, &entry_path, password, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES, control.flag.clone()))?.0,
         "ZPAQ" => tauri::async_runtime::block_on(super::zpaq_engine::preview_entry_controlled_at(archive_path, &entry_path, password, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES, snapshot.as_ref(),control.flag.clone()))?.0,
         format if format.starts_with("TAR") => read_tar_family(archive_path, format, &entry_path,control)?,
-        "GZIP" | "BZIP2" | "XZ" | "ZSTD" | "LZMA" | "LZIP" | "LZOP" | "LZ4" | "BR" => read_plain_stream_controlled(archive_path, format, &entry_path, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES,Some(control))?.bytes,
+        "GZIP" | "BZIP2" | "XZ" | "ZSTD" | "LZMA" | "LZIP" | "LZOP" | "LZ4" | "BR" => read_plain_stream_controlled(archive_path, format, &entry_path, MAX_PREVIEW_BYTES, MAX_PREVIEW_BYTES,Some(control),encoding)?.bytes,
         _ => anyhow::bail!(
             "Safe bounded preview is currently available for ZIP and TAR-family archives only"
         ),
@@ -657,7 +657,7 @@ fn preview_archive_text_sync(
         format if format.starts_with("TAR") => {
             read_tar_family_text(archive_path, format, &entry_path)?
         }
-        "GZIP" | "BZIP2" | "XZ" | "ZSTD" | "LZMA" | "LZIP" | "LZOP" | "LZ4" | "BR" => read_plain_stream(archive_path, format, &entry_path, MAX_TAR_PREVIEW_SCAN_BYTES, MAX_TEXT_PREVIEW_BYTES)?,
+        "GZIP" | "BZIP2" | "XZ" | "ZSTD" | "LZMA" | "LZIP" | "LZOP" | "LZ4" | "BR" => read_plain_stream(archive_path, format, &entry_path, MAX_TAR_PREVIEW_SCAN_BYTES, MAX_TEXT_PREVIEW_BYTES,password_encoding)?,
         _ => anyhow::bail!(
             "Safe bounded text preview is currently available for ZIP and TAR-family archives only"
         ),
