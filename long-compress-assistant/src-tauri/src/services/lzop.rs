@@ -384,3 +384,5 @@ pub(crate) use members::{extract_members, member_index, member_index_with_encodi
 
 #[path = "lzop_recovery.rs"]
 pub(crate) mod recovery;
+#[path = "tar_lzo_recovery.rs"]
+mod tar_recovery;

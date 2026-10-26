@@ -1,0 +1,51 @@
+{
+  "archive": "complete.tar.lzo",
+  "sha256": "68767520bdcfa2d6c79b9c5179c9a56a1d949f3d8b30e0e4350d764c30436add",
+  "producerSha256": "d9b46cf6fa44f4d657e5a3943d361dac24040d0acda37019b19ba285e52e2c53",
+  "packageSha256": "d4cd71272cd18ef2061ffe2a5a75dd11182ed9015c53a2283eeb41acb9a21370",
+  "tarProducer": "Python stdlib tarfile PAX_FORMAT",
+  "entries": [
+    {
+      "name": "资料",
+      "isDirectory": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "资料/空目录",
+      "isDirectory": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "资料/说明.txt",
+      "isDirectory": false,
+      "bytes": 288000,
+      "sha256": "0e2ef73f9f106eeaf1680217bf104e587349bb8dd75af7880e79444e13ad3794"
+    },
+    {
+      "name": "资料/空文件.txt",
+      "isDirectory": false,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "name": "资料/长路径资料长路径资料长路径资料长路径资料长路径资料长路径资料长路径资料长路径资料长路径资料长路径资料长路径资料长路径资料长路径资料长路径资料长路径资料长路径资料长路径资料长路径资料长路径资料长路径资料长路径资料长路径资料/说明.txt",
+      "isDirectory": false,
+      "bytes": 20,
+      "sha256": "9941442f4b7e50289fe1875810d15e3dbe16a112c486dc43f1029936f4b513cb"
+    },
+    {
+      "name": "资料/图标.png",
+      "isDirectory": false,
+      "bytes": 197870,
+      "sha256": "cc55a72db7c7b86461a35f6cf5daa9ac30fd543b8c3eab3b429aef163a63f3e1"
+    },
+    {
+      "name": "late.bin",
+      "isDirectory": false,
+      "bytes": 1200173,
+      "sha256": "a3d85ce08219517229bec20b5d1f51a2d8415411f8ab46b9041aa43b3eebf6b4"
+    }
+  ]
+}

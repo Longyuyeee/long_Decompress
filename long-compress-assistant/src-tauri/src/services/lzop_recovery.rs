@@ -23,12 +23,14 @@ pub struct Entry {
     pub name: String,
     pub bytes: u64,
     pub sha256: String,
+    pub is_directory: bool,
     #[serde(skip)]
-    offset: u64,
+    pub(super) offset: u64,
 }
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Report {
+    pub format: &'static str,
     pub revision: String,
     pub entries: Vec<Entry>,
     pub complete: bool,
@@ -43,6 +45,7 @@ pub struct Report {
 pub struct Outcome {
     pub output_directory: String,
     pub recovered_files: usize,
+    pub recovered_directories: usize,
     pub recovered_bytes: u64,
     pub entries: Vec<Entry>,
     pub stop_reason: String,
@@ -52,13 +55,19 @@ pub struct Outcome {
 #[serde(rename_all = "camelCase")]
 pub(crate) struct HistorySelection {
     pub recovered_files: usize,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub recovered_directories: usize,
     pub stop_reason: String,
     pub revision: String,
+}
+fn is_zero(n: &usize) -> bool {
+    *n == 0
 }
 impl HistorySelection {
     pub fn validate(&self) -> Result<()> {
         anyhow::ensure!(
             self.recovered_files <= 100_000
+                && self.recovered_directories <= 100_000
                 && self.stop_reason.len() <= 32768
                 && self.revision.len() == 64
                 && self.revision.bytes().all(|b| b.is_ascii_hexdigit()),
@@ -67,15 +76,15 @@ impl HistorySelection {
         Ok(())
     }
 }
-struct Source {
-    paths: Vec<PathBuf>,
-    length: u64,
-    ignored: usize,
-    boundary: Option<String>,
-    stamp: String,
+pub(super) struct Source {
+    pub(super) paths: Vec<PathBuf>,
+    pub(super) length: u64,
+    pub(super) ignored: usize,
+    pub(super) boundary: Option<String>,
+    pub(super) stamp: String,
 }
 impl Source {
-    fn open(&self) -> Result<ZipInputReader> {
+    pub(super) fn open(&self) -> Result<ZipInputReader> {
         Ok(if self.paths.len() == 1 && !self.numeric() {
             ZipInputReader::File(File::open(&self.paths[0])?)
         } else {
@@ -105,13 +114,21 @@ pub(crate) fn is_candidate(path: &Path) -> bool {
         .unwrap_or_default()
         .to_string_lossy()
         .to_lowercase();
-    name.ends_with(".lzo") && !name.ends_with(".tar.lzo")
+    name.ends_with(".lzo")
+}
+pub(crate) fn is_tar(path: &Path) -> bool {
+    let name = path
+        .file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_lowercase();
+    name.ends_with(".tar.lzo")
+        || name.rsplit_once('.').is_some_and(|(base, n)| {
+            n.len() >= 3 && n.bytes().all(|b| b.is_ascii_digit()) && base.ends_with(".tar.lzo")
+        })
 }
 fn source(path: &Path) -> Result<Source> {
-    anyhow::ensure!(
-        is_candidate(path),
-        "本入口只支持普通 LZOP 完整成员取回，TAR.LZO 请补齐原包后解压"
-    );
+    anyhow::ensure!(is_candidate(path), "本入口只支持 LZOP / TAR.LZO 部分取回");
     let mut ignored = 0;
     let mut boundary = None;
     let paths = if let Some(group) = SplitArchiveDetector::detect_split_archive(path)? {
@@ -175,7 +192,7 @@ fn source(path: &Path) -> Result<Source> {
         stamp: format!("{:x}", h.finalize()),
     })
 }
-fn check(flag: &AtomicBool) -> Result<()> {
+pub(super) fn check(flag: &AtomicBool) -> Result<()> {
     anyhow::ensure!(!flag.load(Ordering::SeqCst), "LZOP recovery cancelled");
     Ok(())
 }
@@ -185,9 +202,13 @@ fn scan_source(
     cancelled: &AtomicBool,
     progress: &mut impl FnMut(u64, u64),
 ) -> Result<Report> {
+    if src.paths.first().is_some_and(|p| is_tar(p)) {
+        return super::tar_recovery::scan_source(src, encoding, cancelled, progress);
+    }
     let mut input = src.open()?;
     let mut names = super::names::Names::default();
     let mut report = Report {
+        format: "LZOP",
         revision: String::new(),
         entries: Vec::new(),
         complete: false,
@@ -266,6 +287,7 @@ fn scan_source(
             name,
             bytes,
             sha256: format!("{:x}", h.finalize()),
+            is_directory: false,
             offset,
         });
         input = reader.input;
@@ -352,47 +374,54 @@ pub(crate) fn recover(
     let stage = Staging(parent.join(format!(".long-lzop-recovery-{}", uuid::Uuid::new_v4())));
     fs::create_dir(&stage.0)?;
     let mut done = 0u64;
-    for entry in &wanted {
-        check(cancelled)?;
-        let mut input = src.open()?;
-        input.seek(SeekFrom::Start(entry.offset))?;
-        let mut reader = LzopReader::with_mode(input, true)?;
-        let relative = Path::new(&entry.name);
-        anyhow::ensure!(
-            relative
-                .components()
-                .all(|c| matches!(c, std::path::Component::Normal(_))),
-            "成员路径无法取回"
-        );
-        let output = stage.0.join(relative);
-        if let Some(p) = output.parent() {
-            fs::create_dir_all(p)?
-        }
-        let mut file = OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(output)?;
-        let mut h = Sha256::new();
-        let mut count = 0u64;
-        let mut buf = [0u8; 65536];
-        loop {
+    if is_tar(path) {
+        super::tar_recovery::copy_selected(&src, &stage.0, &wanted, cancelled, &mut |bytes| {
+            done = bytes;
+            progress("recovering", done, total)
+        })?;
+    } else {
+        for entry in &wanted {
             check(cancelled)?;
-            let n = reader.read(&mut buf)?;
-            if n == 0 {
-                break;
+            let mut input = src.open()?;
+            input.seek(SeekFrom::Start(entry.offset))?;
+            let mut reader = LzopReader::with_mode(input, true)?;
+            let relative = Path::new(&entry.name);
+            anyhow::ensure!(
+                relative
+                    .components()
+                    .all(|c| matches!(c, std::path::Component::Normal(_))),
+                "成员路径无法取回"
+            );
+            let output = stage.0.join(relative);
+            if let Some(p) = output.parent() {
+                fs::create_dir_all(p)?
             }
-            count += n as u64;
-            anyhow::ensure!(count <= entry.bytes, "成员在取回期间已变化");
-            file.write_all(&buf[..n])?;
-            h.update(&buf[..n]);
-            done += n as u64;
-            progress("recovering", done, total);
+            let mut file = OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(output)?;
+            let mut h = Sha256::new();
+            let mut count = 0u64;
+            let mut buf = [0u8; 65536];
+            loop {
+                check(cancelled)?;
+                let n = reader.read(&mut buf)?;
+                if n == 0 {
+                    break;
+                }
+                count += n as u64;
+                anyhow::ensure!(count <= entry.bytes, "成员在取回期间已变化");
+                file.write_all(&buf[..n])?;
+                h.update(&buf[..n]);
+                done += n as u64;
+                progress("recovering", done, total);
+            }
+            anyhow::ensure!(
+                count == entry.bytes && format!("{:x}", h.finalize()) == entry.sha256,
+                "成员在取回期间已变化，请重新检查"
+            );
+            file.flush()?;
         }
-        anyhow::ensure!(
-            count == entry.bytes && format!("{:x}", h.finalize()) == entry.sha256,
-            "成员在取回期间已变化，请重新检查"
-        );
-        file.flush()?;
     }
     check(cancelled)?;
     anyhow::ensure!(
@@ -419,7 +448,8 @@ pub(crate) fn recover(
     }
     Ok(Outcome {
         output_directory: destination.to_string_lossy().into_owned(),
-        recovered_files: wanted.len(),
+        recovered_files: wanted.iter().filter(|e| !e.is_directory).count(),
+        recovered_directories: wanted.iter().filter(|e| e.is_directory).count(),
         recovered_bytes: done,
         entries: wanted,
         stop_reason: report.stop_reason,

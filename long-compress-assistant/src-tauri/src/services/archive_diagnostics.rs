@@ -404,16 +404,28 @@ pub async fn diagnose_archive_at(
     if super::lzop::recovery::is_candidate(path) {
         let path=path.to_path_buf();let flag=cancelled.clone();
         let scanned=tauri::async_runtime::spawn_blocking(move||super::lzop::recovery::scan(&path,zip_password_encoding,&flag,|_,_|{})).await.context("LZOP recovery check worker failed")?;
-        report.actual_format="LZOP".into();
+        report.actual_format=if super::lzop::recovery::is_tar(Path::new(&report.file_path)){"TAR.LZO"}else{"LZOP"}.into();
         match scanned {
             Ok(prefix)=>{
-                report.total_directories=prefix.entries.iter().flat_map(|e|Path::new(&e.name).ancestors().skip(1).filter(|p|!p.as_os_str().is_empty()).map(|p|p.to_path_buf()).collect::<Vec<_>>()).collect::<std::collections::HashSet<_>>().len();
-                report.total_files=prefix.entries.len();report.total_uncompressed_size=prefix.entries.iter().map(|e|e.bytes).sum();report.total_uncompressed_size_known=prefix.complete;
+                // The partial reader intentionally supports fewer TAR extensions than the
+                // complete reader. Do not downgrade an intact GNU/PAX archive to damaged.
+                if prefix.format=="TAR.LZO" && !prefix.complete && prefix.stop_reason.contains("[archive-inspection:unsupported]") && report.missing_volumes.is_empty() {
+                    if let Ok(metadata)=archive_browser::browse_archive_cancellable_at(source,password,cancelled.clone(),zip_password_encoding,None).await {
+                        let full_path=source.to_path_buf();let full_cancel=cancelled.clone();
+                        let full=tauri::async_runtime::spawn_blocking(move||super::compression_verification::verify_tar_reader(super::codec_stream::decoder(&full_path,"lzo")?, &||full_cancel.load(Ordering::SeqCst))).await.context("TAR.LZO complete verification worker failed")?;
+                        check_cancelled(&cancelled)?;
+                        if full.is_ok() {
+                            report.total_files=metadata.total_files;report.total_directories=metadata.total_directories;report.total_uncompressed_size=metadata.total_uncompressed_size;report.total_uncompressed_size_known=true;report.integrity_tested=true;report.status="healthy".into();report.recoverability="not_needed".into();report.evidence.push("完整 TAR 扩展及外层 LZOP 已沿原读取流程校验".into());return Ok(report);
+                        }
+                    }
+                }
+                report.total_directories=prefix.entries.iter().flat_map(|e|Path::new(&e.name).ancestors().skip(if e.is_directory {0}else{1}).filter(|p|!p.as_os_str().is_empty()).map(|p|p.to_path_buf()).collect::<Vec<_>>()).collect::<std::collections::HashSet<_>>().len();
+                report.total_files=prefix.entries.iter().filter(|e|!e.is_directory).count();report.total_uncompressed_size=prefix.entries.iter().map(|e|e.bytes).sum();report.total_uncompressed_size_known=prefix.complete;
                 report.integrity_tested=prefix.complete;
                 report.status=if prefix.complete {"healthy"}else if prefix.entries.is_empty(){if prefix.stop_reason.contains("[archive-inspection:unsupported]"){"unsupported_feature"}else if prefix.stop_reason.contains("未提供内容校验"){"structure_only"}else if prefix.stop_reason.contains("[lzop-encoding]"){"password_encoding"}else{"damaged"}}else{"partial_recovery"}.into();
                 report.recoverability=if prefix.complete {"not_needed"}else{"lzop_prefix"}.into();
-                report.evidence.push(format!("已解码并校验 {} 个完整成员；{}",prefix.entries.len(),prefix.stop_reason));
-                if !prefix.complete{report.issues.push(DiagnosticIssue{code:"lzop_prefix".into(),severity:"warning".into(),title:if prefix.entries.is_empty(){"没有可确认完好的完整成员".into()}else{format!("可选择部分取回 {} 个完整成员",prefix.entries.len())},detail:format!("{}。仅检查从首卷起的连续前缀，后续清单未知；原件保持不变。",prefix.stop_reason)});}
+                report.evidence.push(format!("已解码并校验 {} 个文件、{} 个目录；{}",report.total_files,report.total_directories,prefix.stop_reason));
+                if !prefix.complete{report.issues.push(DiagnosticIssue{code:"lzop_prefix".into(),severity:"warning".into(),title:if prefix.entries.is_empty(){"没有可确认完好的条目".into()}else{format!("可选择部分取回 {} 个完整条目",prefix.entries.len())},detail:format!("{}。仅检查从首卷起的连续前缀，后续清单未知；原件保持不变。",prefix.stop_reason)});}
                 report.lzop_prefix=Some(prefix);
             }
             Err(e)=>{check_cancelled(&cancelled)?;record_failure(&mut report,&e,false,false,source);}
