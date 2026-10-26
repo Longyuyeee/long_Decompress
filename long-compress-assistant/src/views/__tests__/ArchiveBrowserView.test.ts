@@ -69,6 +69,22 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('ArchiveBrowserView', () => {
+  it('selects an embedded folder like a disk row and extracts only its files and empty subfolders',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'ZIP',totalFiles:2,totalUncompressedSize:8,encrypted:false,entries:[
+      {path:'docs/one.txt',name:'one.txt',size:4,isDir:false,compressedSize:4},
+      {path:'docs/empty/',name:'empty',size:0,isDir:true,compressedSize:0},
+      {path:'other.txt',name:'other.txt',size:4,isDir:false,compressedSize:4},
+    ]})
+    const view=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:315,path:'C:/folder.zip'},destination:'D:/out'},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
+    expect(view.findAll('.file-row.selected')).toHaveLength(0)
+    expect(view.get('.file-head').text()).toContain('修改时间')
+    await view.get('[data-entry-path="docs/"]').trigger('click')
+    expect(view.findAll('.file-row.selected')).toHaveLength(1)
+    await view.vm.extractToDestination('D:/out');await flushPromises()
+    expect(mocks.decompressFile).toHaveBeenCalledWith('C:/folder.zip',expect.objectContaining({outputPath:'D:/out',selectedEntries:expect.arrayContaining(['docs/one.txt','docs/empty/'])}))
+    expect(mocks.decompressFile.mock.calls.at(-1)![1].selectedEntries).not.toContain('other.txt')
+    expect(view.emitted('pane-state')?.at(-1)).toEqual([{busy:false,selected:1}]);view.unmount()
+  })
   it('sevenz1626 encrypted shared prefix keeps exact selection and existing full-open flow',async()=>{
     mocks.browseArchive.mockResolvedValueOnce({format:'7Z',revision:'6'.repeat(64),totalFiles:1,totalDirectories:0,totalUncompressedSize:2097152,encrypted:true,entries:[{path:'logs/readme.txt',name:'readme.txt',size:2097152,isDir:false,compressedSize:null,encrypted:true}]})
     mocks.previewArchiveText.mockResolvedValueOnce({entryPath:'logs/readme.txt',content:'INFO 密码固实开头',encoding:'UTF-8',byteSize:1048576,totalSize:2097152,truncated:true,lineCount:1});mocks.openArchiveEntry.mockResolvedValueOnce({status:'opened',path:'D:/temp/readme.txt'})

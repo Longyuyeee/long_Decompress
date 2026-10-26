@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref, onMounted, inject, watch, nextTick } from 'vue'
+import { routeLocationKey } from 'vue-router'
 import { getVersion } from '@tauri-apps/api/app'
 import { useAppStore } from '@/stores/app'
 import { useTauriCommands } from '@/composables/useTauriCommands'
@@ -7,6 +8,7 @@ import { useArchiveEngine } from '@/composables/useArchiveEngine'
 import { FORMAT_CAPABILITIES, EXTRACT_ONLY_FORMATS, type CompressionFormatCapability } from '@/utils/compressionFormat'
 import { APP_THEMES } from '@/utils/themes'
 import AccessibilitySettings from '@/components/settings/AccessibilitySettings.vue'
+import ArchiveOpeningSettings from '@/components/settings/ArchiveOpeningSettings.vue'
 import WorkspaceHeader from '@/components/ui/WorkspaceHeader.vue'
 import HelpHint from '@/components/ui/HelpHint.vue'
 import { useUpdateStore } from '@/stores/update'
@@ -27,6 +29,17 @@ const settingsSections = [
   { id:'formats', label:'格式支持', icon:'pi pi-box' },
 ]
 const selectSettings = (section: string) => { settingsSection.value = section; settingsScroll.value?.scrollTo?.({ top:0 }) }
+const route = inject(routeLocationKey, undefined)
+watch(() => [route?.query.section, route?.query.focus], async ([section, focus]) => {
+  if (typeof section !== 'string' || !settingsSections.some(item => item.id === section)) return
+  selectSettings(section)
+  if (focus === 'archive-opening') {
+    await nextTick()
+    const target = settingsScroll.value?.querySelector<HTMLElement>('[data-testid="archive-opening-settings"]')
+    target?.scrollIntoView?.({ block: 'nearest' })
+    target?.focus({ preventScroll: true })
+  }
+}, { immediate: true })
 
 const rarEncoder = ref<{ available: boolean; message: string } | null>(null)
 const currentVersion = ref('—')
@@ -517,6 +530,7 @@ const removeWordlist = (index: number) => {
                 </div>
               </button><HelpHint :label="appStore.t('settings.behavior.context_menu')+'说明'">{{ appStore.t('settings.behavior.context_menu.desc') }}</HelpHint></div>
             </div>
+            <ArchiveOpeningSettings />
           </section>
         </div>
 

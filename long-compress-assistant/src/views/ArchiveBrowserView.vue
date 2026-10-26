@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import type { ArchivePaneSource } from '@/types/fileBrowser'
+import FilePaneNavigation from '@/components/file-manager/FilePaneNavigation.vue'
+import FilePaneList, { type FilePaneEntry } from '@/components/file-manager/FilePaneList.vue'
+import { browserBreadcrumbs } from '@/utils/browserPath'
+import type { useSavedLocations } from '@/composables/useSavedLocations'
+import { parentDirectory as diskParentDirectory } from '@/utils/resultLocation'
 import {prepareZpaqSource,type ZpaqGroup} from '@/utils/zpaqMultipart'
 import ArchiveImageReader from '@/components/archive/ArchiveImageReader.vue'
 import {readerError} from '@/composables/useArchiveImageReader'
@@ -28,10 +33,15 @@ import ZpaqSnapshotDiff from '@/components/archive/ZpaqSnapshotDiff.vue'
 import { type ZpaqSnapshot } from '@/types/zpaqSnapshot'
 import { useArchiveConversionStore } from '@/stores/archiveConversion'
 
-const props = withDefaults(defineProps<{ embedded?: boolean; source?: ArchivePaneSource; destination?: string; active?: boolean }>(), { embedded: false, active: true })
-const emit = defineEmits<{ leave: []; extracted: [destination: string]; 'pane-state': [state: { busy: boolean; selected: number }] }>()
+const props = withDefaults(defineProps<{ embedded?: boolean; source?: ArchivePaneSource; destination?: string; active?: boolean; paneId?:string; locations?:Array<{name:string;path:string;kind:string}>; savedLocations?:ReturnType<typeof useSavedLocations> }>(), { embedded: false, active: true, paneId:'left', locations:()=>[] })
+const emit = defineEmits<{ leave: []; 'navigate-disk':[path:string]; extracted: [destination: string]; 'pane-state': [state: { busy: boolean; selected: number }] }>()
 const browserRoot = ref<HTMLElement | null>(null)
 const paneToolsOpen = ref(false), sourceError = ref(''), customOutput = ref(false)
+function closePaneTools(restoreFocus=false){paneToolsOpen.value=false;if(restoreFocus)browserRoot.value?.querySelector<HTMLButtonElement>('[data-testid="archive-pane-tools"]')?.focus()}
+function dismissPaneTools(event:Event){
+  const target=event.target as Element|null
+  if(props.embedded&&paneToolsOpen.value&&!target?.closest('[data-testid="archive-pane-tools"]')&&!browserRoot.value?.querySelector('.archive-options')?.contains(target))closePaneTools()
+}
 let disposed = false, sourceSequence = 0
 const leavePane = () => {
   if (extracting.value || zipEditBusy.value || openingEntryPath.value) return
@@ -46,6 +56,8 @@ interface ArchiveWorkspaceFrame {
   outputPath: string
   result: ArchiveBrowseResult
   selected: string[]
+  paneSelected: string[]
+  paneSelectionMode: boolean
   query: string
   typeFilter: string
   activeDirectory: string
@@ -83,10 +95,11 @@ const canEditZip = computed(() => (['ZIP','ZIPX'].includes(result.value?.format 
 const editingZip = computed(() => canEditZip.value && zipEditing.sessionFor(archivePath.value)?.editing)
 const zipEditBusy = computed(() => !!zipEditing.sessionFor(archivePath.value)?.busy)
 const selected = ref(new Set<string>())
+const paneSelection = ref(new Set<string>()), paneSelectionMode = ref(false)
 const query = ref('')
 const typeFilter = ref('all')
 let selectionAnchorPath = ''
-const navigation = useArchiveWorkspaceNavigation(result, () => { selectionAnchorPath = '' })
+const navigation = useArchiveWorkspaceNavigation(result, () => { selectionAnchorPath = ''; if(props.embedded){paneSelection.value=new Set();selected.value=new Set()} })
 const {
   activeDirectory, focusedEntryPath, navigationBack, navigationForward, expandedDirectories,
   directories, visibleDirectories, directoryEntries, canNavigateBack, canNavigateForward,
@@ -202,10 +215,7 @@ const formatBytes = (value: number) => {
   return `${size.toFixed(size >= 100 ? 0 : size >= 10 ? 1 : 2)} ${units[index]}`
 }
 
-const parentDirectory = (path: string) => {
-  const index = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'))
-  return index > 0 ? path.slice(0, index) : ''
-}
+const parentDirectory = diskParentDirectory
 
 const archiveName = computed(() => archivePath.value.split(/[\\/]/).pop() || archivePath.value)
 const archiveChain = computed(() => [
@@ -251,6 +261,7 @@ const openArchivePath = async (path: string, options: ArchiveReadOptions = {}) =
       const entry = result.value.entries.find(row => row.path === options.focusEntryPath && !row.isDir)
       if (!entry && (options.entryAction!=='read'||!options.resumeReading)) { selected.value = new Set(); throw new Error('当前归档已找不到所选条目，请返回资源库刷新索引') }
       selected.value = new Set(entry?[entry.path]:[])
+      if(props.embedded)paneSelection.value=new Set(selected.value)
       if(entry){navigateToDirectory(entryParent(entry));focusedEntryPath.value=entry.path}
       if(options.entryAction==='read'){
         await capabilitiesReady
@@ -305,7 +316,8 @@ const loadArchive = async (snapshot = requestedSnapshot.value, selectAll = !prop
     result.value = loaded
     if (props.embedded && loaded.zpaqHistory?.interruptedTail) paneToolsOpen.value = false
     requestedSnapshot.value = loaded.zpaqHistory?.selected
-    selected.value = new Set(selectAll ? loaded.entries.filter(entry => !entry.isDir).map(entry => entry.path) : [])
+    selected.value = new Set(selectAll && !props.embedded ? loaded.entries.filter(entry => !entry.isDir).map(entry => entry.path) : [])
+    paneSelection.value = new Set()
     nestedLoadError.value = ''
     nestedLoadRevision.value = 0
   } catch (error) {
@@ -413,7 +425,10 @@ const refreshDirectory = async () => {
     if (sequence !== archiveLoadSequence) return
     result.value = refreshed
     const availableFiles = new Set(refreshed.entries.filter(entry => !entry.isDir).map(entry => entry.path))
-    selected.value = new Set([...selected.value].filter(path => availableFiles.has(path)))
+    if(props.embedded){
+      const available=new Set([...availableFiles,...directoryEntries.value.map(entry=>entry.path)])
+      setPaneSelection(new Set([...paneSelection.value].filter(path=>available.has(path))))
+    }else selected.value = new Set([...selected.value].filter(path => availableFiles.has(path)))
     navigation.reconcile()
     return true
   } catch (error) {
@@ -458,6 +473,8 @@ const captureCurrentFrame = (contentSha256: string): ArchiveWorkspaceFrame | nul
     outputPath: outputPath.value,
     result: result.value,
     selected: [...selected.value],
+    paneSelected: [...paneSelection.value],
+    paneSelectionMode: paneSelectionMode.value,
     query: query.value,
     typeFilter: typeFilter.value,
     activeDirectory: activeDirectory.value,
@@ -482,6 +499,8 @@ const restoreFrame = (index: number) => {
   result.value = frame.result
   requestedSnapshot.value = frame.result.zpaqHistory?.selected
   selected.value = new Set(frame.selected)
+  paneSelection.value = new Set(frame.paneSelected)
+  paneSelectionMode.value = frame.paneSelectionMode
   query.value = frame.query
   typeFilter.value = frame.typeFilter
   activeDirectory.value = frame.activeDirectory
@@ -631,7 +650,7 @@ const extractPaths = async (paths: string[], destination: string, readerSelectio
       selectedEntries: paths,
       conflictPolicy: 'rename'
     })
-    appStore.setSuccess(`已解压 ${paths.length} 个所选文件`)
+    appStore.setSuccess('已取回所选内容')
     emit('extracted', destination)
   } catch (error) {
     appStore.setError(String(error))
@@ -696,6 +715,8 @@ const handleWorkspaceKeydown = (event: KeyboardEvent) => {
     else if (dangerousOpenEntry.value) dangerousOpenEntry.value = null
     else if (contextMenu.value) closeContextMenu()
     else if (detailEntries.value.length > 0) closeDetails()
+    else if (paneToolsOpen.value) closePaneTools(true)
+    else if (props.embedded && paneSelectionMode.value) { paneSelectionMode.value=false;setPaneSelection(new Set()) }
     return
   }
   if (isEditableKeyboardTarget(event.target)) return
@@ -703,7 +724,7 @@ const handleWorkspaceKeydown = (event: KeyboardEvent) => {
   const keyboardEntries = contextEntriesFor(focusedEntry)
   const keyboardDisplayEntries = focusedEntry?.isDir ? [focusedEntry] : keyboardEntries
   if (props.embedded && (event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a') {
-    event.preventDefault(); selected.value = new Set(visibleFiles.value.map(entry => entry.path))
+    event.preventDefault(); paneSelectionMode.value=true;setPaneSelection(new Set(filteredEntries.value.map(entry => entry.path)))
   } else if ((event.shiftKey && event.key === 'F10') || event.key === 'ContextMenu') {
     event.preventDefault()
     const focusedElement = focusedEntryPath.value
@@ -773,13 +794,14 @@ watch(() => appStore.pendingArchiveBrowserPath, path => {
 watch(() => props.source, source => { if (props.embedded && source) void openArchivePath(source.path, source.options) }, { immediate: true })
 watch(() => props.destination, value => { if (props.embedded && !customOutput.value) outputPath.value = value || '' })
 watch(() => props.active, active => { if (!active) { closeContextMenu(); isDraggingArchive.value = false; paneToolsOpen.value = false } })
-watch([inputBusy, () => selected.value.size], () => emit('pane-state', { busy: inputBusy.value, selected: selected.value.size }), { immediate: true })
+watch([inputBusy, () => selected.value.size, () => paneSelection.value.size], () => emit('pane-state', { busy: inputBusy.value, selected: props.embedded ? paneSelection.value.size : selected.value.size }), { immediate: true })
 
 watch([password, zipPasswordEncoding], () => { void closeImageReader();closePreview(); dangerousOpenEntry.value = null })
 
 onMounted(() => {
   if (import.meta.env.MODE === 'test') return
   window.addEventListener('keydown', handleWorkspaceKeydown)
+  window.addEventListener('pointerdown', dismissPaneTools)
   void Promise.all([
     listen('tauri://file-drop-hover', () => { if (!props.embedded || props.active) isDraggingArchive.value = true }).then(value => { if (disposed) value(); else unlistenHover = value }),
     listen<string[]>('tauri://file-drop', event => {
@@ -793,6 +815,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+  window.removeEventListener('pointerdown', dismissPaneTools)
   cancelEntryPreview()
   disposed = true; sourceSequence++; archiveLoadSequence++
   readerOpen.value=false
@@ -819,6 +842,58 @@ const toggleVisible = () => {
 const extractSelected = async () => {
   await extractPaths([...selected.value], outputPath.value)
 }
+const paneEntries = computed<FilePaneEntry[]>(() => filteredEntries.value.map(entry => ({
+  ...entry, extension:entry.isDir?'':entry.name.split('.').pop(), icon:entry.isDir?'pi pi-folder':archiveCapabilities.entryCategory(entry.name)==='archive'?'pi pi-box':'pi pi-file',
+  preview:canPreviewEntry(entry),previewDisabled:!entryPreviewSupported(entry),
+})))
+const paneCrumbs = computed(() => {
+  const source = nativeZpaqGroup.value?.members[0]?.path || props.source?.path || archivePath.value
+  const disk = browserBreadcrumbs(diskParentDirectory(source)).map(crumb=>({...crumb,kind:'disk',frame:-1}))
+  const frames = [...parentFrames.value.map(frame=>frame.displayName),archiveName.value || source.split(/[\\/]/).pop() || '压缩包']
+  const packages = frames.map((name,index)=>({name,path:source+(index?'/'+frames.slice(1,index+1).join('/'):''),kind:'archive',frame:index}))
+  const root = packages.at(-1)!.path
+  return [...disk,...packages,...breadcrumbs.value.slice(1).map(crumb=>({name:crumb.name,path:`${root}/${crumb.path}`,kind:'directory',frame:-1,directory:crumb.path}))]
+})
+const paneVirtualRoot = computed(() => paneCrumbs.value.filter(crumb=>crumb.kind==='archive').at(-1)?.path || props.source?.path || '')
+const paneVirtualPath = computed(() => paneVirtualRoot.value+(activeDirectory.value?'/'+activeDirectory.value:''))
+function paneBreadcrumb(index:number) {
+  const crumb=paneCrumbs.value[index];if(!crumb||inputBusy.value)return
+  if(crumb.kind==='disk')emit('navigate-disk',crumb.path)
+  else if(crumb.kind==='archive'){if(crumb.frame<parentFrames.value.length)restoreFrame(crumb.frame);else navigateToDirectory('')}
+  else navigateToDirectory('directory' in crumb?String(crumb.directory):'')
+}
+function navigatePanePath(path:string) {
+  const normalized=path.replace(/\\/g,'/').replace(/\/+$/,''),root=paneVirtualRoot.value.replace(/\\/g,'/').replace(/\/+$/,'')
+  if(normalized.toLowerCase()===root.toLowerCase())navigateToDirectory('')
+  else if(normalized.toLowerCase().startsWith(root.toLowerCase()+'/')){
+    const directory=normalized.slice(root.length+1)
+    if(directories.value.includes(directory))navigateToDirectory(directory)
+    else appStore.setError('压缩包中找不到此文件夹')
+  }else emit('navigate-disk',path)
+}
+function setPaneSelection(paths:Set<string>) {
+  paneSelection.value=paths
+  const underSelection=(path:string)=>paths.has(path)||[...paths].some(parent=>path.startsWith(parent.replace(/\/+$/,'')+'/'))
+  const emptyDirectories=directoryEntries.value.filter(entry=>underSelection(entry.path)&&!files.value.some(file=>file.path.startsWith(entry.path))).map(entry=>entry.path)
+  const emptyRoots=emptyDirectories.filter(path=>!emptyDirectories.some(parent=>parent!==path&&path.startsWith(parent)))
+  selected.value=new Set([...emptyRoots,...files.value.filter(entry=>underSelection(entry.path)).map(entry=>entry.path)])
+}
+function selectPaneEntry(entry:FilePaneEntry,event:MouseEvent) {
+  focusedEntryPath.value=entry.path
+  const additive=paneSelectionMode.value||event.ctrlKey||event.metaKey
+  const next=new Set(additive?paneSelection.value:[])
+  if(additive&&next.has(entry.path))next.delete(entry.path);else next.add(entry.path)
+  setPaneSelection(next)
+}
+const sourceEntry = (entry:FilePaneEntry) => filteredEntries.value.find(item=>item.path===entry.path)
+function activatePaneEntry(entry:FilePaneEntry) { const source=sourceEntry(entry);if(source)void activateEntry(source) }
+function previewPaneEntry(entry:FilePaneEntry) { const source=sourceEntry(entry);if(source)void openPreview(source) }
+function contextPaneEntry(entry:FilePaneEntry|null,event:MouseEvent) {
+  if(entry&&!paneSelection.value.has(entry.path))setPaneSelection(new Set([entry.path]))
+  openContextMenu(entry?sourceEntry(entry)||null:null,event)
+}
+async function extractToDestination(destination:string){if(inputBusy.value||!destination)return;customOutput.value=false;outputPath.value=destination;await extractSelected()}
+defineExpose({extractToDestination})
 </script>
 
 <template>
@@ -847,13 +922,7 @@ const extractSelected = async () => {
       </div>
     </header>
 
-    <header v-if="embedded" class="pane-archive-nav">
-      <button type="button" data-testid="archive-pane-leave" :disabled="extracting || zipEditBusy || !!openingEntryPath" title="返回此栏文件夹" @click="leavePane"><i class="pi pi-arrow-left"/></button>
-      <span class="pane-archive-location" :title="nativeZpaqGroup?.members[0]?.path || archivePath"><i class="pi pi-box"/><strong>{{ archiveName || source?.path.replace(/\\/g,'/').split('/').pop() || '正在打开压缩包' }}</strong></span>
-      <button type="button" :disabled="inputBusy" title="重新读取压缩包" @click="loadArchive()"><i class="pi pi-refresh"/></button>
-      <button type="button" data-testid="archive-pane-tools" :aria-expanded="paneToolsOpen" title="密码与压缩包选项" :class="{active:paneToolsOpen}" @click="paneToolsOpen=!paneToolsOpen"><i class="pi pi-sliders-h"/></button>
-    </header>
-    <div v-if="embedded && result" class="pane-archive-status"><span>{{ result.format }} · {{ result.totalFiles }} 个文件 · {{ formatBytes(result.totalUncompressedSize) }}<i v-if="result.encrypted" class="pi pi-lock" title="密码压缩包"/></span><button v-if="readerCandidates.length" type="button" :disabled="inputBusy" @click="openImageReader()"><i class="pi pi-images"/>阅读图片</button></div>
+    <FilePaneNavigation v-if="embedded" :pane-id="paneId" :path="paneVirtualPath" :crumbs="paneCrumbs" :folders="filteredEntries.filter(entry=>entry.isDir).length" :files="filteredEntries.filter(entry=>!entry.isDir).length" :locations="locations" :saved="savedLocations" archive :loading="inputBusy" :selection-mode="paneSelectionMode" :tools-open="paneToolsOpen" :filter-active="!!query || typeFilter!=='all'" :can-back="true" :can-forward="canNavigateForward" :can-up="true" @back="canNavigateBack?goBack():parentFrames.length?restoreFrame(parentFrames.length-1):leavePane()" @forward="goForward" @up="canNavigateUp?goUp():parentFrames.length?restoreFrame(parentFrames.length-1):leavePane()" @refresh="result?refreshDirectory():loadArchive()" @selection="paneSelectionMode=!paneSelectionMode;!paneSelectionMode&&setPaneSelection(new Set())" @tools="paneToolsOpen=!paneToolsOpen" @navigate="navigatePanePath" @breadcrumb="paneBreadcrumb"/>
     <section v-if="result?.zpaqHistory?.interruptedTail" class="mx-2 mb-2 flex shrink-0 flex-wrap items-center gap-2 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs" data-testid="zpaq-interrupted-tail">
       <i class="pi pi-exclamation-triangle text-amber-400"/><strong>尾部更新中断</strong><span class="text-muted">当前显示旧快照 {{result.zpaqHistory.selected.version}}</span><HelpHint label="ZPAQ 中断尾部">当前列表来自中断之前的完整快照。中断更新的内容与条目范围无法确定；不代表最新备份完整，也不会自动拼入未知尾卷。</HelpHint>
       <button class="browser-secondary ml-auto" :disabled="inputBusy" data-testid="zpaq-recovery-open" @click="recoveryVisible=true">取回完整快照</button>
@@ -862,7 +931,7 @@ const extractSelected = async () => {
     <p v-if="result && browseNotice" class="shrink-0 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs text-primary" data-testid="archive-result-notice">{{ browseNotice }}</p>
     <div v-if="librarySourceId" class="shrink-0 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-xs" data-testid="archive-library-origin"><span class="min-w-0 break-all text-muted">来自归档资源库 · {{ libraryEntryPath }}</span><RouterLink to="/library" class="font-bold text-primary">返回搜索结果</RouterLink></div>
 
-    <nav v-if="archivePath && (!embedded || parentFrames.length)" class="archive-chain shrink-0" aria-label="嵌套归档链" data-testid="archive-chain">
+    <nav v-if="archivePath && !embedded" class="archive-chain shrink-0" aria-label="嵌套归档链" data-testid="archive-chain">
       <template v-for="(item, index) in archiveChain" :key="`${item.index}-${item.name}`">
         <i v-if="index > 0" class="pi pi-angle-right" aria-hidden="true"></i>
         <button type="button" :disabled="item.current" :class="{ current: item.current }" :title="item.name" @click="restoreFrame(item.index)">
@@ -872,7 +941,9 @@ const extractSelected = async () => {
       <span class="archive-depth">{{ archiveDepth }} / 3 层</span>
     </nav>
 
-    <div v-show="!embedded || paneToolsOpen" class="archive-options custom-scrollbar">
+    <div v-show="!embedded || paneToolsOpen" class="archive-options custom-scrollbar" @keydown.esc.stop.prevent="paneToolsOpen=false">
+      <div v-if="embedded" class="pane-search-options"><label class="browser-search"><i class="pi pi-search"/><input v-model="query" placeholder="搜索文件名或路径" aria-label="搜索包内文件"/></label><select v-model="typeFilter" class="browser-select" aria-label="包内文件类型"><option value="all">全部类型</option><option value="image">图片</option><option value="document">文档</option><option value="archive">压缩包</option><option value="other">其他</option></select><button v-if="query||typeFilter!=='all'" type="button" @click="query='';typeFilter='all'">清除筛选</button></div>
+      <div v-if="embedded && result" class="pane-source-facts"><span>{{result.format}} · {{formatBytes(result.totalUncompressedSize)}}<i v-if="result.encrypted" class="pi pi-lock"/></span><button v-if="readerCandidates.length" type="button" @click="openImageReader()">阅读图片</button><button type="button" @click="chooseOutput">选择其他提取位置…</button></div>
       <div v-if="embedded && result && !parentFrames.length" class="pane-option-actions"><button class="browser-secondary" type="button" data-testid="browser-add-library" :disabled="inputBusy || addingToLibrary" @click="addToLibrary"><i class="pi pi-database"/>加入 / 刷新资料库</button><button v-if="result.format==='ZPAQ'" class="browser-secondary" type="button" data-testid="zpaq-diagnose-current" :disabled="inputBusy" @click="appStore.openArchiveForDiagnosis({path:archivePath,password,zpaqSnapshot:selectedSnapshot})"><i class="pi pi-search"/>诊断文件影响</button><RouterLink v-if="addedToLibrary" to="/library">前往资料库</RouterLink></div>
     <details v-if="nativeZpaqGroup && !parentFrames.length" class="native-zpaq-source shrink-0" data-testid="zpaq-multipart-source"><summary><i class="pi pi-link"/> 已确认 ZPAQ 来源 · {{nativeZpaqGroup.members.length}} 个部分 <span>查看成员</span></summary><ul><li v-for="member in nativeZpaqGroup.members" :key="member.path">{{member.path}}</li></ul></details>
     <ZpaqSnapshotPicker v-if="result?.zpaqHistory && !result.zpaqHistory.interruptedTail && result.zpaqHistory.snapshots.length > 1" :history="result.zpaqHistory" :disabled="inputBusy" class="shrink-0" @change="changeSnapshot">
@@ -946,6 +1017,8 @@ const extractSelected = async () => {
         />
 
         <div class="min-h-0 min-w-0 overflow-hidden flex flex-col">
+          <FilePaneList v-if="embedded" :entries="paneEntries" :selected="paneSelection" :selection-mode="paneSelectionMode" @select="selectPaneEntry" @activate="activatePaneEntry" @preview="previewPaneEntry" @context="contextPaneEntry"/>
+          <template v-else>
           <nav class="browser-navigation shrink-0 border-b border-subtle/70" aria-label="压缩包目录导航">
             <div class="browser-navigation-actions">
               <button type="button" data-testid="archive-nav-back" :disabled="!canNavigateBack" title="后退 (Alt+左箭头)" aria-label="后退" @click="goBack"><i class="pi pi-arrow-left"></i></button>
@@ -1004,10 +1077,11 @@ const extractSelected = async () => {
             </div>
             <div v-if="filteredEntries.length === 0" class="h-full grid place-items-center text-muted text-sm">没有符合条件的文件</div>
           </div>
+          </template>
         </div>
       </section>
 
-      <footer class="shrink-0 flex flex-wrap items-center justify-between gap-3">
+      <footer v-if="!embedded" class="shrink-0 flex flex-wrap items-center justify-between gap-3">
         <div class="footer-status min-w-0">
           <span class="text-sm font-bold text-muted">已选择 <strong class="text-primary">{{ selected.size }}</strong> / {{ result.totalFiles }} 个文件</span>
           <button class="output-target" type="button" :title="outputPath" @click="chooseOutput"><i class="pi pi-folder"></i><span class="truncate">解压到：{{ outputPath || '选择输出目录' }}</span><i class="pi pi-pencil"></i></button>
@@ -1016,6 +1090,7 @@ const extractSelected = async () => {
           <i :class="extracting ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i><span>{{ extracting ? '正在解压' : usesPeerOutput ? '解压到另一栏' : '解压所选文件' }}</span>
         </button>
       </footer>
+      <footer v-if="embedded" class="pane-folder-footer"><span>{{paneSelection.size?`已选择 ${paneSelection.size} 项`:paneSelectionMode?'多选模式 · 单击切换选择 · Esc 退出':'单击选择 · Ctrl 多选 · 双击打开 · 右键操作'}}</span><button v-if="paneSelectionMode" type="button" @click="paneSelectionMode=false;setPaneSelection(new Set())">退出多选</button></footer>
     </template>
 
     <div v-if="isDraggingArchive" class="browser-drop-overlay" aria-live="polite">
@@ -1271,4 +1346,6 @@ const extractSelected = async () => {
 .archive-pane-browser .browser-table-head,.archive-pane-browser .browser-row{grid-template-columns:20px minmax(0,1fr) 55px;gap:7px;padding:9px 10px;font-size:11px}.archive-pane-browser .browser-table-head>span:nth-last-child(-n+2),.archive-pane-browser .browser-row>span:nth-last-child(-n+2){display:none}.archive-pane-browser .browser-table-head>span:nth-child(3),.archive-pane-browser .browser-row>span:nth-child(3){display:block!important;font-size:10px}.archive-pane-browser .browser-row small{font-size:10px}.archive-pane-browser .browser-checkbox{width:16px;height:16px;border-radius:5px}.archive-pane-browser .preview-trigger{width:24px;height:26px;font-size:11px;border-radius:7px}
 .archive-pane-browser>footer{padding:9px 10px;border-top:1px solid var(--border-subtle);gap:8px;flex-wrap:nowrap}.archive-pane-browser>footer>.browser-primary{flex-shrink:0;white-space:nowrap}.archive-pane-browser .footer-status{display:flex;flex-direction:column;align-items:stretch;gap:3px;flex:1 1 0;min-width:0}.archive-pane-browser .footer-status>span{font-size:10px}.archive-pane-browser .output-target{width:100%;max-width:100%;font-size:10px;padding:4px 6px;min-height:26px}.archive-pane-browser .archive-chain{padding:6px 10px}.archive-pane-browser .archive-chain button{font-size:10px;padding:4px 7px}.pane-directory-options{font-size:11px;color:var(--text-muted)}.pane-directory-options>summary{cursor:pointer;padding:6px}.pane-directory-options :deep(aside){max-height:180px;overflow:auto}.pane-read-error{flex:1;min-height:0;overflow:auto;display:flex;align-items:center;flex-direction:column;justify-content:center;gap:12px;text-align:center;padding:16px;font-size:12px}.pane-read-error>i{font-size:24px;color:var(--dynamic-accent)}.pane-read-error>p{font-size:11px;color:var(--text-muted);line-height:1.8;overflow-wrap:anywhere}.pane-read-error>div{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
 @container archive-pane (max-width:360px){.archive-pane-browser .browser-table-head,.archive-pane-browser .browser-row{grid-template-columns:18px minmax(0,1fr) 44px;gap:5px;padding:8px}.archive-pane-browser .browser-navigation{flex-wrap:wrap}.archive-pane-browser .browser-navigation-actions{flex-shrink:0}.archive-pane-browser .browser-breadcrumbs{flex:1;min-width:0}}
+
+.archive-pane-browser>.pane-folder-footer{display:flex;min-height:2rem;align-items:center;justify-content:space-between;gap:.5rem;padding:.4rem .7rem;border-top:1px solid var(--border-subtle);color:var(--text-muted);font-size:.6rem;font-weight:700}.pane-folder-footer>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pane-folder-footer>button{flex-shrink:0;color:var(--dynamic-accent);font-weight:800}.pane-search-options{display:flex;flex-wrap:wrap;gap:8px}.pane-search-options>.browser-search{flex:1 1 150px}.pane-search-options>button,.pane-source-facts>button{color:var(--dynamic-accent);font-size:11px}.pane-source-facts{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--text-muted)}
 </style>

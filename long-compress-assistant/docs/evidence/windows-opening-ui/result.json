@@ -1,0 +1,296 @@
+{
+  "fixtureNativeIPC": true,
+  "checks": [
+    "one-time reminder opens exact settings section; restart keeps receipt and does not change defaults",
+    "archive keeps pane, shared navigation/list and opposite selection",
+    "single selection plus common text and image preview inside archive",
+    "up exits archive to original directory and forward restores archive",
+    "four-action ask dialog opens dual pane directly",
+    "cancel folder picker keeps ask; chosen folder enters extraction center",
+    "settings group and format selection fit small window",
+    "choosing default browse in settings persists and bypasses the ask dialog",
+    "running extraction survives settings navigation; next system opening runs after it completes"
+  ],
+  "layouts": [
+    {
+      "width": 1440,
+      "height": 900,
+      "overflow": 0,
+      "panes": [
+        {
+          "box": {
+            "x": 230,
+            "y": 93.59375,
+            "width": 592.796875,
+            "height": 743.21875,
+            "right": 822.796875,
+            "bottom": 836.8125
+          },
+          "nav": {
+            "x": 231,
+            "y": 94.59375,
+            "width": 590.796875,
+            "height": 91.6875,
+            "right": 821.796875,
+            "bottom": 186.28125
+          },
+          "head": {
+            "x": 231,
+            "y": 186.28125,
+            "width": 590.796875,
+            "height": 32.875,
+            "right": 821.796875,
+            "bottom": 219.15625
+          },
+          "list": {
+            "x": 231,
+            "y": 219.15625,
+            "width": 590.796875,
+            "height": 584.65625,
+            "right": 821.796875,
+            "bottom": 803.8125
+          },
+          "footer": {
+            "x": 231,
+            "y": 803.8125,
+            "width": 590.796875,
+            "height": 32,
+            "right": 821.796875,
+            "bottom": 835.8125
+          },
+          "overflow": 0
+        },
+        {
+          "box": {
+            "x": 833.1875,
+            "y": 93.59375,
+            "width": 592.8125,
+            "height": 743.21875,
+            "right": 1426,
+            "bottom": 836.8125
+          },
+          "nav": {
+            "x": 834.1875,
+            "y": 94.59375,
+            "width": 590.8125,
+            "height": 91.6875,
+            "right": 1425,
+            "bottom": 186.28125
+          },
+          "head": {
+            "x": 834.1875,
+            "y": 186.28125,
+            "width": 590.8125,
+            "height": 32.875,
+            "right": 1425,
+            "bottom": 219.15625
+          },
+          "list": {
+            "x": 834.1875,
+            "y": 219.15625,
+            "width": 590.8125,
+            "height": 584.65625,
+            "right": 1425,
+            "bottom": 803.8125
+          },
+          "footer": {
+            "x": 834.1875,
+            "y": 803.8125,
+            "width": 590.8125,
+            "height": 32,
+            "right": 1425,
+            "bottom": 835.8125
+          },
+          "overflow": 0
+        }
+      ]
+    },
+    {
+      "width": 1100,
+      "height": 700,
+      "overflow": 0,
+      "panes": [
+        {
+          "box": {
+            "x": 230,
+            "y": 93.59375,
+            "width": 422.796875,
+            "height": 543.21875,
+            "right": 652.796875,
+            "bottom": 636.8125
+          },
+          "nav": {
+            "x": 231,
+            "y": 94.59375,
+            "width": 420.796875,
+            "height": 130.078125,
+            "right": 651.796875,
+            "bottom": 224.671875
+          },
+          "head": {
+            "x": 231,
+            "y": 224.671875,
+            "width": 420.796875,
+            "height": 32.875,
+            "right": 651.796875,
+            "bottom": 257.546875
+          },
+          "list": {
+            "x": 231,
+            "y": 257.546875,
+            "width": 420.796875,
+            "height": 346.265625,
+            "right": 651.796875,
+            "bottom": 603.8125
+          },
+          "footer": {
+            "x": 231,
+            "y": 603.8125,
+            "width": 420.796875,
+            "height": 32,
+            "right": 651.796875,
+            "bottom": 635.8125
+          },
+          "overflow": 0
+        },
+        {
+          "box": {
+            "x": 663.1875,
+            "y": 93.59375,
+            "width": 422.8125,
+            "height": 543.21875,
+            "right": 1086,
+            "bottom": 636.8125
+          },
+          "nav": {
+            "x": 664.1875,
+            "y": 94.59375,
+            "width": 420.8125,
+            "height": 130.078125,
+            "right": 1085,
+            "bottom": 224.671875
+          },
+          "head": {
+            "x": 664.1875,
+            "y": 224.671875,
+            "width": 420.8125,
+            "height": 32.875,
+            "right": 1085,
+            "bottom": 257.546875
+          },
+          "list": {
+            "x": 664.1875,
+            "y": 257.546875,
+            "width": 420.8125,
+            "height": 346.265625,
+            "right": 1085,
+            "bottom": 603.8125
+          },
+          "footer": {
+            "x": 664.1875,
+            "y": 603.8125,
+            "width": 420.8125,
+            "height": 32,
+            "right": 1085,
+            "bottom": 635.8125
+          },
+          "overflow": 0
+        }
+      ]
+    },
+    {
+      "width": 760,
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        {
+          "box": {
+            "x": 102,
+            "y": 93.59375,
+            "width": 318.40625,
+            "height": 368.015625,
+            "right": 420.40625,
+            "bottom": 461.609375
+          },
+          "nav": {
+            "x": 103,
+            "y": 94.59375,
+            "width": 316.40625,
+            "height": 122.078125,
+            "right": 419.40625,
+            "bottom": 216.671875
+          },
+          "head": {
+            "x": 103,
+            "y": 216.671875,
+            "width": 316.40625,
+            "height": 32.875,
+            "right": 419.40625,
+            "bottom": 249.546875
+          },
+          "list": {
+            "x": 103,
+            "y": 249.546875,
+            "width": 316.40625,
+            "height": 179.0625,
+            "right": 419.40625,
+            "bottom": 428.609375
+          },
+          "footer": {
+            "x": 103,
+            "y": 428.609375,
+            "width": 316.40625,
+            "height": 32,
+            "right": 419.40625,
+            "bottom": 460.609375
+          },
+          "overflow": 0
+        },
+        {
+          "box": {
+            "x": 427.59375,
+            "y": 93.59375,
+            "width": 318.40625,
+            "height": 368.015625,
+            "right": 746,
+            "bottom": 461.609375
+          },
+          "nav": {
+            "x": 428.59375,
+            "y": 94.59375,
+            "width": 316.40625,
+            "height": 122.078125,
+            "right": 745,
+            "bottom": 216.671875
+          },
+          "head": {
+            "x": 428.59375,
+            "y": 216.671875,
+            "width": 316.40625,
+            "height": 32.875,
+            "right": 745,
+            "bottom": 249.546875
+          },
+          "list": {
+            "x": 428.59375,
+            "y": 249.546875,
+            "width": 316.40625,
+            "height": 179.0625,
+            "right": 745,
+            "bottom": 428.609375
+          },
+          "footer": {
+            "x": 428.59375,
+            "y": 428.609375,
+            "width": 316.40625,
+            "height": 32,
+            "right": 745,
+            "bottom": 460.609375
+          },
+          "overflow": 0
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, nextTick, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { getVersion } from '@tauri-apps/api/app'
 import { invoke } from '@tauri-apps/api/tauri'
@@ -17,6 +17,15 @@ const router = useRouter()
 const appStore = useAppStore()
 const isFocused = ref(true)
 const appVersion = ref('')
+const routeContent = ref<HTMLElement>()
+let routeAnimation: Animation | undefined
+// Animate one stable element: several workspaces have multiple root nodes,
+// while the extraction component must remain mounted when navigating away.
+watch(()=>route.fullPath,async()=>{
+  await nextTick();routeAnimation?.cancel()
+  if(appStore.settings.accessibility?.reduceMotion || window.matchMedia('(prefers-reduced-motion: reduce)').matches)return
+  routeAnimation=routeContent.value?.animate?.([{opacity:.45,transform:'translateY(5px)'},{opacity:1,transform:'translateY(0)'}],{duration:180,easing:'cubic-bezier(.4,0,.2,1)'})
+})
 let unlistenFocus: any = null
 let isUnmounted = false
 
@@ -38,6 +47,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+  routeAnimation?.cancel()
   isUnmounted = true
   if (unlistenFocus) unlistenFocus()
 })
@@ -126,11 +136,9 @@ const navigateTo = (name: string) => {
           <PendingDraftRecovery />
           <ZipEditRecoveryNotice />
           <router-view v-slot="{ Component }">
-            <transition name="aero-page" mode="out-in">
-              <div :key="route.matched[0]?.path || route.path" class="min-h-0 flex-1 w-full overflow-hidden">
-                <component :is="Component" />
-              </div>
-            </transition>
+            <div ref="routeContent" class="min-h-0 flex-1 w-full overflow-hidden">
+              <KeepAlive include="DecompressView"><component :is="Component" :key="route.matched[0]?.path || route.path" /></KeepAlive>
+            </div>
           </router-view>
 
         </main>

@@ -278,7 +278,7 @@ Function PageLeaveReinstall
     ${Else}
       ReadRegStr $4 SHCTX "${MANUPRODUCTKEY}" ""
       ReadRegStr $R1 SHCTX "${UNINSTKEY}" "UninstallString"
-      ExecWait '$R1 /P _?=$4' $0
+      ExecWait '$R1 /P /KEEPARCHIVEASSOCIATIONS _?=$4' $0
     ${EndIf}
 
     BringToFront
@@ -915,11 +915,75 @@ FunctionEnd
   DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.z\shell\LongDecompress"
   DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.z\shell\LongDecompressQuickExtract"
   DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.udf\shell\LongDecompressQuickExtract"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.alz\shell\LongDecompress"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.alz\shell\LongDecompressQuickExtract"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.egg\shell\LongDecompress"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.egg\shell\LongDecompressQuickExtract"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.zpaq\shell\LongDecompress"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.zpaq\shell\LongDecompressQuickExtract"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.001\shell\LongDecompress"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.001\shell\LongDecompressQuickExtract"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.z01\shell\LongDecompress"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.z01\shell\LongDecompressQuickExtract"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.r00\shell\LongDecompress"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.r00\shell\LongDecompressQuickExtract"
 !macroend
 
 Section Uninstall
   !insertmacro CheckIfAppIsRunning
   !insertmacro RemoveLongDecompressContextMenu
+
+
+  ; Preserve the chosen handler during upgrade; a real uninstall removes our candidates.
+  ClearErrors
+  ${GetOptions} $CMDLINE "/KEEPARCHIVEASSOCIATIONS" $0
+  ${If} ${Errors}
+  DeleteRegValue HKCU "Software\RegisteredApplications" "LongDecompress"
+  DeleteRegKey HKCU "Software\LongDecompress\Capabilities"
+  DeleteRegKey HKCU "Software\Classes\Applications\${MAINBINARYNAME}.exe"
+  DeleteRegValue HKCU "Software\Classes\.zip\OpenWithProgids" "LongDecompress.Archive.zip"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.zip"
+  DeleteRegValue HKCU "Software\Classes\.7z\OpenWithProgids" "LongDecompress.Archive.7z"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.7z"
+  DeleteRegValue HKCU "Software\Classes\.rar\OpenWithProgids" "LongDecompress.Archive.rar"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.rar"
+  DeleteRegValue HKCU "Software\Classes\.zipx\OpenWithProgids" "LongDecompress.Archive.zipx"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.zipx"
+  DeleteRegValue HKCU "Software\Classes\.tar\OpenWithProgids" "LongDecompress.Archive.tar"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.tar"
+  DeleteRegValue HKCU "Software\Classes\.gz\OpenWithProgids" "LongDecompress.Archive.gz"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.gz"
+  DeleteRegValue HKCU "Software\Classes\.bz2\OpenWithProgids" "LongDecompress.Archive.bz2"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.bz2"
+  DeleteRegValue HKCU "Software\Classes\.xz\OpenWithProgids" "LongDecompress.Archive.xz"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.xz"
+  DeleteRegValue HKCU "Software\Classes\.zst\OpenWithProgids" "LongDecompress.Archive.zst"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.zst"
+  DeleteRegValue HKCU "Software\Classes\.tgz\OpenWithProgids" "LongDecompress.Archive.tgz"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.tgz"
+  DeleteRegValue HKCU "Software\Classes\.tbz2\OpenWithProgids" "LongDecompress.Archive.tbz2"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.tbz2"
+  DeleteRegValue HKCU "Software\Classes\.txz\OpenWithProgids" "LongDecompress.Archive.txz"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.txz"
+  DeleteRegValue HKCU "Software\Classes\.lz\OpenWithProgids" "LongDecompress.Archive.lz"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.lz"
+  DeleteRegValue HKCU "Software\Classes\.lzo\OpenWithProgids" "LongDecompress.Archive.lzo"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.lzo"
+  DeleteRegValue HKCU "Software\Classes\.lz4\OpenWithProgids" "LongDecompress.Archive.lz4"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.lz4"
+  DeleteRegValue HKCU "Software\Classes\.br\OpenWithProgids" "LongDecompress.Archive.br"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.br"
+  DeleteRegValue HKCU "Software\Classes\.cab\OpenWithProgids" "LongDecompress.Archive.cab"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.cab"
+  DeleteRegValue HKCU "Software\Classes\.arj\OpenWithProgids" "LongDecompress.Archive.arj"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.arj"
+  DeleteRegValue HKCU "Software\Classes\.alz\OpenWithProgids" "LongDecompress.Archive.alz"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.alz"
+  DeleteRegValue HKCU "Software\Classes\.egg\OpenWithProgids" "LongDecompress.Archive.egg"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.egg"
+  DeleteRegValue HKCU "Software\Classes\.zpaq\OpenWithProgids" "LongDecompress.Archive.zpaq"
+  DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.zpaq"
+  ${EndIf}
 
   ; Remove every startup value owned by current or legacy product identities.
   DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${PRODUCTNAME}"

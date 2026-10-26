@@ -530,13 +530,11 @@ pub(crate) fn prepare_staging_layout_with_tar_plan(
     // folders. Prune empty remnants only after flattening or filtering entries.
     let mut retained_selected_directories = 0usize;
     if !options.preserve_paths || !file_filter.is_empty() || !options.selected_entries.is_empty() {
-        let selected_directories: HashSet<_> = if options.zpaq_catalog_id.is_some() && options.preserve_paths && file_filter.is_empty() {
-            options.selected_entries.iter().filter_map(|p| normalized_selected_entry(p)).collect()
-        } else { HashSet::new() };
         directories.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
         for directory in directories {
             let relative = directory.strip_prefix(staging)?.to_string_lossy().replace('\\', "/");
-            if selected_directories.contains(&relative) {
+            if options.preserve_paths && file_filter.is_empty() && !options.selected_entries.is_empty()
+                && matches_selected_entries(Path::new(&relative), &options.selected_entries) {
                 retained_selected_directories += 1;
                 continue;
             }
@@ -1413,6 +1411,17 @@ mod tests {
             Path::new("../docs/readme.txt"),
             &selected
         ));
+    }
+
+    #[test]
+    fn archive_opening_selected_folders_preserve_empty_children_and_exclude_other_folders() {
+        let temp=tempfile::tempdir().unwrap();let staging=temp.path().join("staging");
+        std::fs::create_dir_all(staging.join("资料/空目录/内层")).unwrap();
+        std::fs::create_dir_all(staging.join("未选空目录")).unwrap();
+        let source=temp.path().join("source.zip");std::fs::write(&source,b"fixture").unwrap();
+        let options=DecompressOptions{selected_entries:vec!["资料/".into()],preserve_paths:true,..Default::default()};
+        prepare_staging_layout(&source,&staging,&options).unwrap();
+        assert!(staging.join("资料/空目录/内层").is_dir());assert!(!staging.join("未选空目录").exists());
     }
 
     #[test]

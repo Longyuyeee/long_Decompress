@@ -5,6 +5,9 @@ import { APP_THEMES, parseAppTheme, accentForeground, type AppTheme } from '@/ut
 import { translations } from '../i18n'
 import { invoke } from '@tauri-apps/api/tauri'
 import type { ZipPasswordEncoding } from '@/types/zipPassword'
+import { isArchiveOpenBehavior, type ArchiveOpenBehavior } from '@/utils/archiveOpening'
+
+export interface PendingContextAction { action: string; files: string[]; outputPath?: string; extractToSubfolder?: boolean; openResultFolder?: boolean }
 
 export interface ArchiveReadOptions { librarySourceId?: string; focusEntryPath?: string; entryAction?: 'locate' | 'preview' | 'extract' | 'read'; resumeReading?: boolean; zpaqSnapshot?: import('@/types/zpaqSnapshot').ZpaqSnapshot; password?: string; zipPasswordEncoding?: ZipPasswordEncoding }
 export interface ArchiveDiagnosisRequest extends ArchiveReadOptions {
@@ -59,6 +62,8 @@ export interface AppSettings {
   bruteForceWordlists: string[]
   autoStart: boolean
   contextMenuEnabled: boolean
+  archiveOpenBehavior: ArchiveOpenBehavior
+  archiveAfterExtract: 'show-results' | 'open-folder'
   closeToTray: boolean
   autoCheckUpdates: boolean
   conflictPolicy: 'ask' | 'overwrite' | 'skip' | 'rename'
@@ -83,7 +88,9 @@ export const useAppStore = defineStore('app', () => {
   const recentFiles = ref<string[]>([])
   const errorMessage = ref<string | null>(null)
   const decompressTasks = ref<DecompressTask[]>([])
-  const pendingContextActions = ref<Array<{ action: string; files: string[]; outputPath?: string }>>([])
+  const pendingContextActions = ref<PendingContextAction[]>([])
+  const pendingArchiveOpenFiles = ref<string[]>([])
+  const settingsLoaded = ref(false)
   const pendingArchiveBrowserPath = ref('')
   const pendingArchiveBrowserOptions = ref<ArchiveReadOptions>({})
   const pendingArchiveDiagnosis = ref<ArchiveDiagnosisRequest | null>(null)
@@ -123,7 +130,7 @@ export const useAppStore = defineStore('app', () => {
     sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
     bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
     bruteForceWordlists: [], autoStart: false, contextMenuEnabled: true, closeToTray: true, autoCheckUpdates: true, conflictPolicy: 'ask', autoDeleteSource: false, preserveMarkOfWeb: true,
-    uiScale: 100,
+    uiScale: 100, archiveOpenBehavior: 'ask', archiveAfterExtract: 'show-results',
     accessibility: {
       fontSize: 'normal',
       highContrast: false,
@@ -235,7 +242,7 @@ export const useAppStore = defineStore('app', () => {
       sendCrashReports: true, cacheSize: 200, logLevel: 'info', enableBruteForce: false,
       bruteForceCharset: '0123456789abcdefghijklmnopqrstuvwxyz', bruteForceMaxLen: 6,
       bruteForceWordlists: [], autoStart, contextMenuEnabled: true, closeToTray: true, autoCheckUpdates: true, conflictPolicy: 'ask', autoDeleteSource: false, preserveMarkOfWeb: true,
-      uiScale: 100,
+      uiScale: 100, archiveOpenBehavior: 'ask', archiveAfterExtract: 'show-results',
       accessibility: {
         fontSize: 'normal',
         highContrast: false,
@@ -267,6 +274,8 @@ export const useAppStore = defineStore('app', () => {
 
   const mergeStoredSettings = (parsed: Partial<AppSettings>) => {
     const merged = { ...settings.value, ...parsed }
+    merged.archiveOpenBehavior = isArchiveOpenBehavior(parsed.archiveOpenBehavior) ? parsed.archiveOpenBehavior : 'ask'
+    merged.archiveAfterExtract = parsed.archiveAfterExtract === 'open-folder' ? 'open-folder' : 'show-results'
     merged.smartExtractionDirectory = parsed.smartExtractionDirectory === true
     merged.parallelZipExtraction = parsed.parallelZipExtraction === true
     // autoStart is display state only. Loading it must never register or repair
@@ -315,7 +324,9 @@ export const useAppStore = defineStore('app', () => {
             console.warn('Failed to synchronize Explorer context menu:', e)
           })
         }
-      }).catch(() => {})
+      }).catch(() => {}).finally(() => { settingsLoaded.value = true })
+    } else {
+      settingsLoaded.value = true
     }
   }
 
@@ -351,7 +362,8 @@ export const useAppStore = defineStore('app', () => {
   })
 
   return {
-    theme, language, accentColor, error, successMessage, errorMessage, decompressTasks, settings,
+    theme, language, accentColor, error, successMessage, errorMessage, decompressTasks, settings, settingsLoaded, pendingArchiveOpenFiles,
+    enqueueArchiveOpen: (files: string[]) => { pendingArchiveOpenFiles.value = uniqueContextPaths([...pendingArchiveOpenFiles.value, ...files]) },
     pendingContextActions, pendingArchiveBrowserPath, pendingArchiveDiagnosis, pendingChecksumSources, pendingExplorerChecksums,
     recentFiles, addRecentFile,
     compressionPresets, saveCompressionPreset, deleteCompressionPreset,
@@ -367,7 +379,7 @@ export const useAppStore = defineStore('app', () => {
       if (msg) successTimer = setTimeout(() => { successMessage.value = null }, 3000)
     },
     clearError: () => { error.value = null; if (errorTimer) clearTimeout(errorTimer) },
-    enqueueContextAction: (action: { action: string; files: string[]; outputPath?: string }) => pendingContextActions.value.push(action),
+    enqueueContextAction: (action: PendingContextAction) => pendingContextActions.value.push(action),
     takeContextActions: () => pendingContextActions.value.splice(0),
     openArchiveInBrowser: (path: string, options: ArchiveReadOptions = {}) => { pendingArchiveBrowserOptions.value = { ...options }; pendingArchiveBrowserPath.value = path },
     takeArchiveBrowserOptions: () => { const options = pendingArchiveBrowserOptions.value; pendingArchiveBrowserOptions.value = {}; return options },

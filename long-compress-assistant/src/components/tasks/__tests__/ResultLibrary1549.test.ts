@@ -13,7 +13,7 @@ it('library1549 keeps an unavailable result reason beside its actions without na
 it('library1549 does not offer archive-library indexing for extracted folders or media results',()=>{for(const props of [{path:'D:/out',directory:true},{path:'D:/photo.png'},{path:'D:/video.mp4'}]){const view=mount(ResultActions,{props});expect(view.find('[data-testid="result-add-library"]').exists()).toBe(false);view.unmount()}})
 
 it('compact history results keep extra actions reachable and reset the menu for a new output',async()=>{
- const view=mount(ResultActions,{props:{path:'D:/new.zip',compact:true}})
+ const view=mount(ResultActions,{props:{path:'D:/new.zip',compact:true},global:{stubs:{Teleport:true}}})
  expect(view.find('[data-testid="result-add-library"]').exists()).toBe(false)
  await view.get('[aria-label="更多结果操作"]').trigger('click')
  expect(view.get('[data-testid="result-add-library"]').isVisible()).toBe(true)

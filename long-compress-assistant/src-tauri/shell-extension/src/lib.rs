@@ -31,6 +31,7 @@ const REGISTRATION_KEY: &str = r"Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79
 const CREATE_NO_WINDOW: u32 = 0x0800_0000;
 
 const ARCHIVE_EXTENSIONS: &[&str] = &[
+    "alz", "egg", "zpaq",
     "zip", "zipx", "7z", "rar", "wim", "swm", "tar", "ova", "gz", "gzip", "tgz", "tpz", "bz2", "bzip2",
     "tbz", "tbz2", "xz", "txz", "zst", "zstd", "tzst", "aes", "lzma", "lzo", "lz4", "br", "lz", "tlz", "jar", "xpi", "ipa", "apk",
     "appx", "iso", "img", "dmg", "vhd", "vhdx", "qcow", "qcow2", "qcow2c", "vdi", "vmdk", "cab",
@@ -64,6 +65,9 @@ enum CommandKind {
     QuickExtract,
     ExtractHere,
     ExtractTo,
+    ExtractChoose,
+    MoreArchive,
+    RepackArchiveFiles,
     TestArchive,
     RepairArchive,
     ConvertArchive,
@@ -75,18 +79,21 @@ enum CommandKind {
 }
 
 const SUBCOMMANDS: &[CommandKind] = &[
-    CommandKind::BrowseArchive,
-    CommandKind::QuickExtract,
     CommandKind::ExtractHere,
     CommandKind::ExtractTo,
+    CommandKind::ExtractChoose,
+    CommandKind::BrowseArchive,
+    CommandKind::MoreArchive,
+    CommandKind::CompressZip,
+    CommandKind::Compress7z,
+    CommandKind::CompressCustom,
+];
+const MORE_ARCHIVE_COMMANDS: &[CommandKind] = &[
     CommandKind::TestArchive,
     CommandKind::RepairArchive,
     CommandKind::ConvertArchive,
     CommandKind::ReconfigureArchive,
-    CommandKind::QuickPack,
-    CommandKind::CompressZip,
-    CommandKind::Compress7z,
-    CommandKind::CompressCustom,
+    CommandKind::RepackArchiveFiles,
 ];
 
 impl CommandKind {
@@ -97,24 +104,29 @@ impl CommandKind {
             Self::QuickExtract => "一键解压到同名文件夹",
             Self::ExtractHere => "解压到此处",
             Self::ExtractTo => "解压到同名文件夹",
+            Self::ExtractChoose => "选择解压文件夹…",
+            Self::MoreArchive => "更多操作",
+            Self::RepackArchiveFiles => "将压缩包作为文件重新打包…",
             Self::TestArchive => "测试压缩包完整性",
             Self::RepairArchive => "检查与尝试修复…",
             Self::ConvertArchive => "转换压缩包格式…",
             Self::ReconfigureArchive => "修改密码 / 调整分卷…",
             Self::QuickPack => "一键打包为 ZIP",
-            Self::CompressZip => "压缩为 ZIP",
-            Self::Compress7z => "压缩为 7Z",
+            Self::CompressZip => "压缩为 ZIP…",
+            Self::Compress7z => "压缩为 7Z…",
             Self::CompressCustom => "更多压缩选项…",
         }
     }
 
     fn cli_flag(self) -> Option<&'static str> {
         match self {
-            Self::Root => None,
+            Self::Root | Self::MoreArchive => None,
             Self::BrowseArchive => Some("--browse-archive"),
             Self::QuickExtract => Some("--quick-extract"),
             Self::ExtractHere => Some("--extract-here"),
             Self::ExtractTo => Some("--extract-to"),
+            Self::ExtractChoose => Some("--extract-choose"),
+            Self::RepackArchiveFiles => Some("--compress-custom"),
             Self::TestArchive => Some("--test-archive"),
             Self::RepairArchive => Some("--repair-archive"),
             Self::ConvertArchive => Some("--convert-archive"),
@@ -133,6 +145,8 @@ impl CommandKind {
                 | Self::QuickExtract
                 | Self::ExtractHere
                 | Self::ExtractTo
+                | Self::ExtractChoose
+                | Self::RepackArchiveFiles
                 | Self::TestArchive
                 | Self::ConvertArchive
                 | Self::ReconfigureArchive
@@ -146,6 +160,9 @@ impl CommandKind {
             Self::QuickExtract => 1,
             Self::ExtractHere => 2,
             Self::ExtractTo => 3,
+            Self::ExtractChoose => 23,
+            Self::MoreArchive => 24,
+            Self::RepackArchiveFiles => 25,
             Self::TestArchive => 4,
             Self::RepairArchive => 22,
             Self::ConvertArchive => 20,
@@ -197,6 +214,9 @@ impl IExplorerCommand_Impl for ShellCommand_Impl {
         items: Ref<IShellItemArray>,
         _ok_to_be_slow: windows::core::BOOL,
     ) -> Result<u32> {
+        // Retain the old COM class for package compatibility, without exposing
+        // a second copy of the same extraction command in Explorer.
+        if self.kind == CommandKind::QuickExtract { return Ok(ECS_HIDDEN.0 as u32); }
         let Some(selection) = items.as_ref() else {
             return Ok(ECS_DISABLED.0 as u32);
         };
@@ -204,9 +224,13 @@ impl IExplorerCommand_Impl for ShellCommand_Impl {
         if count == 0 {
             return Ok(ECS_DISABLED.0 as u32);
         }
-        if self.kind == CommandKind::RepairArchive {
+        if matches!(self.kind, CommandKind::QuickPack | CommandKind::CompressZip | CommandKind::Compress7z | CommandKind::CompressCustom) {
+            let paths=selected_paths(selection).unwrap_or_default();
+            if !paths.is_empty() && paths.iter().all(|path|is_archive_path(path)){return Ok(ECS_HIDDEN.0 as u32)}
+        }
+        if matches!(self.kind, CommandKind::RepairArchive | CommandKind::MoreArchive) {
             let paths = selected_paths(selection).unwrap_or_default();
-            if paths.is_empty() || !paths.iter().all(|path| is_repair_path(path)) { return Ok(ECS_HIDDEN.0 as u32); }
+            if paths.is_empty() || !paths.iter().all(|path| is_repair_path(path) || self.kind == CommandKind::MoreArchive && is_archive_path(path)) { return Ok(ECS_HIDDEN.0 as u32); }
         } else if self.kind.requires_archive() {
             let paths = selected_paths(selection).unwrap_or_default();
             if paths.is_empty() || !paths.iter().all(|path| is_archive_path(path)) {
@@ -233,7 +257,7 @@ impl IExplorerCommand_Impl for ShellCommand_Impl {
     }
 
     fn GetFlags(&self) -> Result<u32> {
-        Ok(if self.kind == CommandKind::Root {
+        Ok(if matches!(self.kind, CommandKind::Root | CommandKind::MoreArchive) {
             ECF_HASSUBCOMMANDS.0 as u32
         } else {
             ECF_DEFAULT.0 as u32
@@ -241,23 +265,29 @@ impl IExplorerCommand_Impl for ShellCommand_Impl {
     }
 
     fn EnumSubCommands(&self) -> Result<IEnumExplorerCommand> {
-        if self.kind != CommandKind::Root {
-            return Err(Error::from(E_NOTIMPL));
+        match self.kind {
+            CommandKind::Root => Ok(CommandEnumerator::new(0).into()),
+            CommandKind::MoreArchive => Ok(CommandEnumerator::with_commands(0, MORE_ARCHIVE_COMMANDS).into()),
+            _ => Err(Error::from(E_NOTIMPL)),
         }
-        Ok(CommandEnumerator::new(0).into())
     }
 }
 
 #[implement(IEnumExplorerCommand)]
 struct CommandEnumerator {
     position: Mutex<usize>,
+    commands: &'static [CommandKind],
     _lifetime: ObjectLifetime,
 }
 
 impl CommandEnumerator {
     fn new(position: usize) -> Self {
+        Self::with_commands(position, SUBCOMMANDS)
+    }
+    fn with_commands(position: usize, commands: &'static [CommandKind]) -> Self {
         Self {
-            position: Mutex::new(position.min(SUBCOMMANDS.len())),
+            position: Mutex::new(position.min(commands.len())),
+            commands,
             _lifetime: ObjectLifetime::new(),
         }
     }
@@ -278,8 +308,8 @@ impl IEnumExplorerCommand_Impl for CommandEnumerator_Impl {
         };
 
         let mut produced = 0u32;
-        while produced < count && *position < SUBCOMMANDS.len() {
-            let command: IExplorerCommand = ShellCommand::new(SUBCOMMANDS[*position]).into();
+        while produced < count && *position < self.commands.len() {
+            let command: IExplorerCommand = ShellCommand::new(self.commands[*position]).into();
             unsafe { commands.add(produced as usize).write(Some(command)) };
             *position += 1;
             produced += 1;
@@ -298,7 +328,7 @@ impl IEnumExplorerCommand_Impl for CommandEnumerator_Impl {
         let mut position = self.position.lock().map_err(|_| Error::from(E_FAIL))?;
         *position = position
             .saturating_add(count as usize)
-            .min(SUBCOMMANDS.len());
+            .min(self.commands.len());
         Ok(())
     }
 
@@ -309,7 +339,7 @@ impl IEnumExplorerCommand_Impl for CommandEnumerator_Impl {
 
     fn Clone(&self) -> Result<IEnumExplorerCommand> {
         let position = *self.position.lock().map_err(|_| Error::from(E_FAIL))?;
-        Ok(CommandEnumerator::new(position).into())
+        Ok(CommandEnumerator::with_commands(position, self.commands).into())
     }
 }
 
@@ -439,6 +469,7 @@ pub extern "system" fn DllCanUnloadNow() -> HRESULT {
 
 #[cfg(test)]
 mod tests {
+    use super::MORE_ARCHIVE_COMMANDS;
     use std::ffi::c_void;
     use std::sync::Mutex;
 
@@ -473,16 +504,17 @@ mod tests {
 
     #[test]
     fn native_menu_contains_expected_commands() {
-        assert_eq!(SUBCOMMANDS.len(), 12);
-        assert_eq!(SUBCOMMANDS[0], CommandKind::BrowseArchive);
-        assert_eq!(SUBCOMMANDS[1], CommandKind::QuickExtract);
-        assert_eq!(SUBCOMMANDS[6], CommandKind::ConvertArchive);
-        assert_eq!(SUBCOMMANDS[7], CommandKind::ReconfigureArchive);
-        assert_eq!(SUBCOMMANDS[8], CommandKind::QuickPack);
-        assert_eq!(SUBCOMMANDS[11], CommandKind::CompressCustom);
+        assert_eq!(SUBCOMMANDS.len(), 8);
+        assert_eq!(SUBCOMMANDS[0], CommandKind::ExtractHere);
+        assert_eq!(SUBCOMMANDS[2], CommandKind::ExtractChoose);
+        assert_eq!(SUBCOMMANDS[3], CommandKind::BrowseArchive);
+        assert_eq!(SUBCOMMANDS[4], CommandKind::MoreArchive);
+        assert!(!SUBCOMMANDS.contains(&CommandKind::QuickExtract));
+        assert!(MORE_ARCHIVE_COMMANDS.contains(&CommandKind::ConvertArchive));
+        assert!(MORE_ARCHIVE_COMMANDS.contains(&CommandKind::ReconfigureArchive));
         assert!(is_archive_path(r"C:\archives\sample.ZIP"));
         assert!(!is_archive_path(r"C:\documents\sample.txt"));
-        assert_eq!(SUBCOMMANDS[5], CommandKind::RepairArchive);
+        assert!(MORE_ARCHIVE_COMMANDS.contains(&CommandKind::RepairArchive));
         assert!(is_repair_path(r"C:\archives\parts.part1.rev"));
         assert!(is_repair_path(r"C:\archives\parts.r00"));
         assert!(!is_repair_path(r"C:\documents\sample.txt"));
@@ -510,11 +542,21 @@ mod tests {
             assert_eq!(root.GetFlags().unwrap(), ECF_HASSUBCOMMANDS.0 as u32);
 
             let enumerator = root.EnumSubCommands().unwrap();
-            let mut commands: [Option<IExplorerCommand>; 9] = std::array::from_fn(|_| None);
+            let mut commands: [Option<IExplorerCommand>; SUBCOMMANDS.len()] = std::array::from_fn(|_| None);
             let mut fetched = 0;
             assert_eq!(enumerator.Next(&mut commands, Some(&mut fetched)), S_OK);
-            assert_eq!(fetched, 9);
+            assert_eq!(fetched as usize, SUBCOMMANDS.len());
             assert!(commands.iter().all(Option::is_some));
+            {
+                let more=commands[4].as_ref().unwrap();
+                assert_eq!(more.GetFlags().unwrap(),ECF_HASSUBCOMMANDS.0 as u32);
+                let nested=more.EnumSubCommands().unwrap();
+                let mut children:[Option<IExplorerCommand>;MORE_ARCHIVE_COMMANDS.len()]=std::array::from_fn(|_|None);
+                let mut count=0;
+                assert_eq!(nested.Next(&mut children,Some(&mut count)),S_OK);
+                assert_eq!(count as usize,MORE_ARCHIVE_COMMANDS.len());
+                assert!(children.iter().all(Option::is_some));
+            }
             assert_eq!(DllCanUnloadNow(), S_FALSE);
 
             drop(commands);

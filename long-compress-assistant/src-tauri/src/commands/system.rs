@@ -284,6 +284,24 @@ pub async fn load_app_settings(app: AppHandle) -> Result<String, String> {
     std::fs::read_to_string(&settings_path).map_err(|e| format!("读取设置文件失败: {}", e))
 }
 
+/// Atomically consume the per-user setup suggestion, independently of preferences.
+fn take_archive_opening_reminder_in(data_dir: &std::path::Path) -> Result<bool, String> {
+    std::fs::create_dir_all(data_dir).map_err(|error| error.to_string())?;
+    // Separate from resettable preferences and independent of release versions.
+    match std::fs::OpenOptions::new().write(true).create_new(true)
+        .open(data_dir.join("archive-opening-reminder-shown")) {
+        Ok(_) => Ok(true),
+        Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => Ok(false),
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+#[command]
+pub fn take_archive_opening_reminder(app: AppHandle) -> Result<bool, String> {
+    if !cfg!(target_os = "windows") { return Ok(false); }
+    take_archive_opening_reminder_in(&app_settings_directory(&app)?)
+}
+
 /// 将应用设置持久化到数据目录 (JSON)
 #[command]
 pub async fn save_app_settings(app: AppHandle, settings_json: String) -> Result<(), String> {
@@ -296,6 +314,17 @@ pub async fn save_app_settings(app: AppHandle, settings_json: String) -> Result<
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn archive_opening_reminder_survives_restarts_upgrades_and_settings_reset() {
+        let directory = tempfile::tempdir().unwrap();
+        assert!(take_archive_opening_reminder_in(directory.path()).unwrap());
+        assert!(!take_archive_opening_reminder_in(directory.path()).unwrap());
+        std::fs::write(directory.path().join("app_settings.json"), "{}").unwrap();
+        assert!(!take_archive_opening_reminder_in(directory.path()).unwrap());
+        let other_user = tempfile::tempdir().unwrap();
+        assert!(take_archive_opening_reminder_in(other_user.path()).unwrap());
+    }
 
     #[test]
     fn auto_start_command_quotes_the_executable_and_marks_the_activation() {
