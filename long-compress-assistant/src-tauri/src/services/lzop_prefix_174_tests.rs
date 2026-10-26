@@ -182,7 +182,8 @@ fn lzop174_numeric_prefix_never_bridges_gaps_and_repaired_source_requires_a_new_
     );
     let tar = temp.path().join("archive.tar.lzo");
     std::fs::write(&tar, &data).unwrap();
-    assert!(recovery::scan(&tar, None, &flag(), |_, _| {}).is_err());
+    let report = recovery::scan(&tar, None, &flag(), |_, _| {}).unwrap();
+    assert!(report.entries.is_empty() && !report.complete);
 }
 #[test]
 fn lzop174_duplicate_names_unchecked_members_and_runtime_cancel_do_not_publish_partial_files() {

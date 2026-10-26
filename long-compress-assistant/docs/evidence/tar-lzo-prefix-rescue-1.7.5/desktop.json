@@ -1,0 +1,168 @@
+{
+  "version": "1.7.5",
+  "applicationSha256": "286c4eda0b199fb7cb9530bb8c8d0c7ca9186a6c9eedfab91b9c67bd2294bd54",
+  "checks": [
+    {
+      "name": "failed TAR.LZO extraction offers selected PAX files and empty folder in the original recovery modal",
+      "originalFailureRetained": true,
+      "selectedFiles": 4,
+      "selectedEmptyDirectories": 1,
+      "paxLongPath": true,
+      "originalUnchanged": true,
+      "historyLabel": "已部分取回",
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzo-prefix-rescue-175\\2464ac56-8d76-4858-a489-a6f97156c713\\tail.tar.lzo.部分取回-09642fd1"
+    },
+    {
+      "name": "nonfirst missing-volume prefix supports a folder alone then normal complete extraction after replacement",
+      "nonfirstEntry": true,
+      "missingMiddleNotBridged": true,
+      "emptyFolderAlone": true,
+      "replacedGroupExtractedFiles": 5
+    },
+    {
+      "name": "actual TAR file copy cancellation cleans staged files and a subsequent recovery succeeds",
+      "copyStage": {
+        "bytes": 65536,
+        "total": 100663296
+      },
+      "partialFilesPublished": 0,
+      "nextRecoverySucceeded": true,
+      "sourceUnchanged": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "selection-wide",
+      "dialogs": [
+        {
+          "bottom": 650,
+          "height": 650,
+          "left": 0,
+          "right": 1100,
+          "top": 0,
+          "width": 1100,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 650,
+      "overflow": 0,
+      "panes": [],
+      "width": 1100
+    },
+    {
+      "name": "selection-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panes": [],
+      "width": 760
+    },
+    {
+      "name": "selection-wide",
+      "dialogs": [
+        {
+          "bottom": 650,
+          "height": 650,
+          "left": 0,
+          "right": 1100,
+          "top": 0,
+          "width": 1100,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 650,
+      "overflow": 0,
+      "panes": [],
+      "width": 1100
+    },
+    {
+      "name": "selection-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panes": [],
+      "width": 760
+    },
+    {
+      "name": "result-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panes": [],
+      "width": 760
+    },
+    {
+      "name": "history-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panes": [],
+      "width": 1100
+    },
+    {
+      "name": "history-detail-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panes": [],
+      "width": 760
+    },
+    {
+      "name": "volume-gap-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panes": [],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzo-prefix-rescue-175\\2464ac56-8d76-4858-a489-a6f97156c713",
+  "failedId": "desktop-e2e-extract-only-1793050846102-115fb8a1081f3",
+  "passed": true
+}

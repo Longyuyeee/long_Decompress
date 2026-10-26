@@ -29,7 +29,7 @@ watch(() => props.paths, async paths => { error.value = ''; try { await batch.lo
 watch(() => busy.value || preparing.value, value => emit('busy', value), {immediate:true})
 onUnmounted(() => { disposed = true; emit('busy', false); sharedPassword.value = '' })
 const labels: Record<string,string> = {partial_recovery:'缺卷，可部分救援',healthy:'正常',missing_volume:'缺少分卷',password_required:'需要密码',wrong_password:'请核对密码',ambiguous_data:'密码或内容异常',directory_lost:'目录丢失，可救援',crc_error:'内容校验失败',damaged:'归档损坏',truncated:'归档被截断',unsupported_feature:'暂不支持此特性',structure_only:'仅检查结构'}
-const status = (row:ArchiveRecoveryRow) => row.queuedId ? '已加入解压队列' : row.state === 'checking' ? '检查中…' : row.state === 'repairing' ? '修复中…' : row.state === 'cancelled' ? '已停止，可重试' : row.error ? '处理未完成' : row.result ? row.result.partial ? '已部分恢复' : '已修复' : row.needsRecheck ? '已恢复配置，请重新检查' : (row.report?.recoverability==='lzop_prefix'?'可部分取回完整成员':labels[row.report?.status || '']) || (row.report ? '请查看详情' : '待检查')
+const status = (row:ArchiveRecoveryRow) => row.queuedId ? '已加入解压队列' : row.state === 'checking' ? '检查中…' : row.state === 'repairing' ? '修复中…' : row.state === 'cancelled' ? '已停止，可重试' : row.error ? '处理未完成' : row.result ? row.result.partial ? '已部分恢复' : '已修复' : row.needsRecheck ? '已恢复配置，请重新检查' : (row.report?.recoverability==='lzop_prefix'?'可部分取回完整条目':labels[row.report?.status || '']) || (row.report ? '请查看详情' : '待检查')
 labels.password_encoding = '原包编码不兼容'
 function toggleAll() { const value = !allSelected.value; rows.value.forEach(row => { row.selected = value }) }
 async function locate(path:string) { try { await invoke('open_in_explorer',{path}) } catch { ui.showToast('error','无法定位结果，请确认文件仍在原位置') } }

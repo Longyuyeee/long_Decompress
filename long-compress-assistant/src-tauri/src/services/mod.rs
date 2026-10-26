@@ -305,3 +305,5 @@ mod tar_lzo_create_171_tests;
 
 #[cfg(test)]
 mod lzop_prefix_174_tests;
+#[cfg(test)]
+mod tar_lzo_prefix_175_tests;
