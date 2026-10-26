@@ -1,6 +1,7 @@
 pub mod zip_edit;
 pub mod archive_engine;
 pub mod archive_browser;
+pub(crate) mod lzop;
 pub(crate) mod standard_zip_reader;
 pub mod standard_zip_writer;
 pub(crate) mod zip_recovery_reader;
@@ -277,3 +278,5 @@ mod sevenz_arm_thumb_bcj_create_1654_tests;
 mod sevenz_arm64_bcj_create_1655_tests;
 #[cfg(test)]
 mod sevenz_riscv_bcj_create_1656_tests;
+#[cfg(test)]
+mod lzop_1657_tests;

@@ -1,7 +1,7 @@
 # 文档导航与维护规则
 
-- **当前版本 v1.6.56**：[发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.56)、[中文说明](RELEASE_NOTES_1.6.56.md)、[RISC-V BCJ 记录](SEVENZ_RISCV_BCJ_CREATE_FREEZE_1.6.56.md)。已完成功能封板，身份/附件在本版 PR 接续。
-- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.56.md)已完成；[v1.6.57 LZOP](ARCHIVE_ROADMAP_1.6.57.md)仅规划，见[交接](DEVELOPMENT_HANDOFF.md)。
+- **当前版本 v1.6.57**：[发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.57)、[中文说明](RELEASE_NOTES_1.6.57.md)、[LZOP 记录](LZOP_READ_CONVERT_FREEZE_1.6.57.md)。已完成功能封板，正式源码/合并/附件状态在本版 PR 接续。
+- **当前接续**：[本版路线](ARCHIVE_ROADMAP_1.6.57.md) → [v1.6.58 TAR.LZO](ARCHIVE_ROADMAP_1.6.58.md)仅规划，见[交接](DEVELOPMENT_HANDOFF.md)。
 
 以下为历史阶段记录。
 
