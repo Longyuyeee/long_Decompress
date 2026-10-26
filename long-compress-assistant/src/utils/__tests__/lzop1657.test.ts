@@ -9,9 +9,9 @@ describe('LZOP 1.6.57 read-only integration', () => {
     expect(isDecompressArchivePath('C:\\资料\\notes.TXT.LZO')).toBe(true)
     expect(isDecompressArchivePath('notes.lzo.backup')).toBe(false)
   })
-  it('does not advertise creation, native passwords or native splitting', () => {
-    expect(EXTRACT_ONLY_FORMATS.find(c => c.extensions.includes('lzo'))?.requires7za).toBe(false)
-    expect(FORMAT_CAPABILITIES.some(c => c.format === 'lzo')).toBe(false)
+  it('supports native single-file creation without passwords or creating volumes', () => {
+    expect(EXTRACT_ONLY_FORMATS.some(c => c.extensions.includes('lzo'))).toBe(false)
+    expect(FORMAT_CAPABILITIES.find(c => c.format === 'lzo')).toMatchObject({canCompress:true,singleFileOnly:true,requires7za:false})
     expect(supportsArchiveSplit('lzo')).toBe(false)
     expect(isPasswordSupportedFormat('lzo')).toBe(false)
   })

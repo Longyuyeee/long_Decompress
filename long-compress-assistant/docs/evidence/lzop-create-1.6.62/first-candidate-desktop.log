@@ -1,0 +1,28 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[lzop1662] single row expands inline and independent batch modal configures LZOP while global ZIP remains
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: 压缩失败: [archive-io:io] 文件读写未完成，请按原始路径检查来源、输出目录和设备连接，处理后创建新任务。原始原因：系统找不到指定的路径。 (os error 3)
++ actual - expected
+
++ 'failed'
+- 'completed'
+
+    at file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/lzop-create-1662-gate.mjs:37:59
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async step (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/lzop-create-1662-gate.mjs:12:105)
+    at async runLzopCreate1662Gate (file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/lzop-create-1662-gate.mjs:34:2)
+    at async file:///E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant/scripts/test-tauri-desktop.mjs:5088:5 {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 'failed',
+  expected: 'completed',
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v24.14.0

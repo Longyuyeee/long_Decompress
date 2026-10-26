@@ -299,13 +299,13 @@ fn lzop1657_single_stream_selection_and_file_filter_are_respected() {
 }
 
 #[test]
-fn lzop1657_read_only_capability_never_falls_back_to_another_creation_codec() {
+fn lzop1662_single_creation_capability_never_falls_back_to_another_codec() {
     let cap = compression_format::COMPRESSION_FORMAT_CAPABILITIES
         .iter()
         .find(|c| c.format == "lzo")
         .unwrap();
     assert!(cap.can_extract);
-    assert!(!cap.can_compress);
+    assert!(cap.can_compress && cap.single_file_only);
     assert!(!cap.supports_split);
     assert!(!cap.requires_7za);
     assert!(!cap.supports_password_extract);
@@ -321,6 +321,6 @@ fn lzop1657_read_only_capability_never_falls_back_to_another_creation_codec() {
         "out.lzo",
         &options
     )
-    .is_err());
-    assert!(compression_format::compression_route("lzo").is_none());
+    .is_ok());
+    assert_eq!(compression_format::compression_route("lzo"),Some(compression_format::CompressionRoute::Lzop));
 }

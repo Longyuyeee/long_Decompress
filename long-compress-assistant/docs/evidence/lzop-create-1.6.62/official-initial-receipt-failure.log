@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\scripts\verify-lzop-create-1662.py", line 8, in <module>
+    assert sha(exe.read_bytes())=='0e55b444069eb5eb8addda2379cf12450f8ee68248a125b44bac140f6cdf7d4a'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError

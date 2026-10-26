@@ -1,0 +1,86 @@
+{
+  "version": "1.6.62",
+  "verifierDownloadSha256": "0e55b444069eb5eb8addda2379cf12450f8ee68248a125b44bac140f6cdf7d4a",
+  "verifierSha256": "0de04c88c0820f981869b3a1c7eb1803318638537ad9d8afc5032ef3915e2597",
+  "verifier": "official lzop 1.03 Windows / LZO 2.04",
+  "checks": [
+    {
+      "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/lzop-create-1662/generated\\case-0.lzo",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/lzop-create-1662/generated\\empty.txt",
+      "sourceBytes": 0,
+      "sourceSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "archiveSha256": "2ba755c20c63b8bf4a92995fe6062175c6d84fbc45197b03111b73e495627996",
+      "displayedPath": "empty.txt",
+      "officialTestExit": 0,
+      "officialDecompressExit": 0,
+      "officialDecompressedSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/lzop-create-1662/generated\\case-1.lzo",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/lzop-create-1662/generated\\notes.txt",
+      "sourceBytes": 2940000,
+      "sourceSha256": "e3569748fca78341cc449ed992a7934bd2fadebef68e688ab20bdd5a4469e49c",
+      "archiveSha256": "1b31519b36dd5d111cbff6d4ae4e1b8c1ef96e3c42834ee2b064fb743dbc947e",
+      "displayedPath": "notes.txt",
+      "officialTestExit": 0,
+      "officialDecompressExit": 0,
+      "officialDecompressedSha256": "e3569748fca78341cc449ed992a7934bd2fadebef68e688ab20bdd5a4469e49c"
+    },
+    {
+      "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/lzop-create-1662/generated\\case-2.lzo",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/lzop-create-1662/generated\\资料.txt",
+      "sourceBytes": 4000,
+      "sourceSha256": "a848733ddb3fb82c6a545679c68cf318ae22df3dadcc57cfc5f42c54e7e0284c",
+      "archiveSha256": "1cb950215c21b6b4f4e6b4f5bae66da3ca4f6b7da18e461ef37ed16b8a19f7e5",
+      "displayedPath": "资料.txt",
+      "officialTestExit": 0,
+      "officialDecompressExit": 0,
+      "officialDecompressedSha256": "a848733ddb3fb82c6a545679c68cf318ae22df3dadcc57cfc5f42c54e7e0284c"
+    },
+    {
+      "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/lzop-create-1662/generated\\case-3.lzo",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/lzop-create-1662/generated\\cover.png",
+      "sourceBytes": 1713,
+      "sourceSha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+      "archiveSha256": "c0ffc106a2706cb3f7e6759761b2f0b94a6a7f0a31cd55999c87a0b21bab3b78",
+      "displayedPath": "cover.png",
+      "officialTestExit": 0,
+      "officialDecompressExit": 0,
+      "officialDecompressedSha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43"
+    },
+    {
+      "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/lzop-create-1662/generated\\case-4.lzo",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/lzop-create-1662/generated\\random.bin",
+      "sourceBytes": 700001,
+      "sourceSha256": "3b4dc3aaee384530742a0831e35834f7ac484f8a0d6912d5192db1194c6a9017",
+      "archiveSha256": "b2e7ff6011dd7f5cb2aa194c8667c683205f02de6ae8ad049e5dfdd4cdb8a163",
+      "displayedPath": "random.bin",
+      "officialTestExit": 0,
+      "officialDecompressExit": 0,
+      "officialDecompressedSha256": "3b4dc3aaee384530742a0831e35834f7ac484f8a0d6912d5192db1194c6a9017"
+    },
+    {
+      "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/lzop-create-1662/generated\\case-5.lzo",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/lzop-create-1662/generated\\aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.txt",
+      "sourceBytes": 18,
+      "sourceSha256": "387e4dfcdf81a6d77fd82992be55195e46e3f4223bee96297850604ee919c049",
+      "archiveSha256": "6251a34948632fd39c0c81e872f9d61c975eff51362f2c82c24704f93bb8ee72",
+      "displayedPath": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.txt",
+      "officialTestExit": 0,
+      "officialDecompressExit": 0,
+      "officialDecompressedSha256": "387e4dfcdf81a6d77fd82992be55195e46e3f4223bee96297850604ee919c049"
+    },
+    {
+      "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/lzop-create-1662/generated\\case-6.lzo",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/lzop-create-1662/generated\\文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文.txt",
+      "sourceBytes": 39,
+      "sourceSha256": "dfb32771d8574cc60a6d738e36a70a0a23dfb6d5b3a39850c09f91909314ed29",
+      "archiveSha256": "fc2bd2123963458b69647df507738cb5bd876933a3112b7047e1b101de520bbe",
+      "displayedPath": "case-6",
+      "officialTestExit": 0,
+      "officialDecompressExit": 0,
+      "officialDecompressedSha256": "dfb32771d8574cc60a6d738e36a70a0a23dfb6d5b3a39850c09f91909314ed29"
+    }
+  ],
+  "passed": true
+}

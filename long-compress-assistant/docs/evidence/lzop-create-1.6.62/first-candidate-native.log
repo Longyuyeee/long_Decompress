@@ -1,0 +1,92 @@
+   Compiling zerocopy v0.8.40
+   Compiling long-compress-assistant v1.6.62 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+   Compiling ppv-lite86 v0.2.21
+   Compiling ahash v0.8.12
+   Compiling lzokay v2.0.1
+   Compiling hashbrown v0.14.5
+   Compiling rand_chacha v0.3.1
+   Compiling rand v0.8.5
+   Compiling hashlink v0.8.4
+   Compiling dashmap v5.5.3
+   Compiling sqlx-core v0.7.4
+   Compiling tauri-runtime v0.14.6
+   Compiling sevenz-rust v0.6.1 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri\vendor\sevenz-rust)
+   Compiling tauri-runtime-wry v0.14.11
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+   Compiling tauri v1.8.3
+   Compiling sqlx-sqlite v0.7.4
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+   Compiling sqlx v0.7.4
+warning: unused imports: `member_index_with_encoding`, `member_index`, and `multi_index`
+   --> src\services\lzop.rs:383:43
+    |
+383 | pub(crate) use members::{extract_members, member_index, member_index_with_encoding, member_reader, multi_index, multi_index_with_encoding};
+    |                                           ^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^                 ^^^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `File`
+ --> src\services\aes_wrapper.rs:8:15
+  |
+8 | use std::fs::{File, OpenOptions};
+  |               ^^^^
+
+warning: function `member_index` is never used
+  --> src\services\lzop_members.rs:25:15
+   |
+25 | pub(crate) fn member_index(
+   |               ^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `multi_index` is never used
+  --> src\services\lzop_members.rs:93:15
+   |
+93 | pub(crate) fn multi_index(
+   |               ^^^^^^^^^^^
+
+warning: method `prepare_staging_layout` is never used
+    --> src\services\compression_service.rs:3181:8
+     |
+ 298 | impl CompressionService {
+     | ----------------------- method in this implementation
+...
+3181 |     fn prepare_staging_layout(
+     |        ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `prepare_staging_layout` is never used
+   --> src\services\extraction_transaction.rs:428:15
+    |
+428 | pub(crate) fn prepare_staging_layout(
+    |               ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `stats` is never used
+ --> src\services\rar_preflight.rs:7:15
+  |
+7 | pub(crate) fn stats(
+  |               ^^^^^
+
+warning: `long-compress-assistant` (lib) generated 7 warnings (run `cargo fix --lib -p long-compress-assistant` to apply 2 suggestions)
+    Finished `release` profile [optimized] target(s) in 5m 00s

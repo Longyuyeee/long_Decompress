@@ -51,6 +51,13 @@ const mountPanel = (modelValue: CompressionOptions, allowSplitArchive = true) =>
 })
 
 describe('CompressionSettingsPanel split archive settings', () => {
+  it('lzop1662 keeps valid inherited single-file settings and removes unusable strength/password controls', async () => {
+    const wrapper=mountPanel(settings({format:'lzo'}));await flushPromises()
+    expect(wrapper.find('[data-testid="compression-level-control"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="compression-password-input"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="compression-split-toggle"]').attributes('disabled')).toBeDefined()
+    expect(wrapper.emitted('update:modelValue')).toBeUndefined();wrapper.unmount()
+  })
   it('wim1527 keeps inherited numeric volumes and presents the no-password boundary without editing on open', async () => {
     const wrapper=mountPanel(settings({format:'wim',splitArchive:true,splitSize:'2'}));await flushPromises()
     expect(wrapper.emitted('update:modelValue')).toBeUndefined()
