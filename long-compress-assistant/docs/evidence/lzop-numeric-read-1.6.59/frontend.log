@@ -1,0 +1,29 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ 鉂?src/utils/__tests__/lzopNumeric1659.test.ts (2 tests | 1 failed) 12ms
+     脳 shares existing import and picker paths for the compound suffix 9ms
+
+鈳幆鈳幆鈳幆鈳?Failed Tests 1 鈳幆鈳幆鈳幆鈳?
+ FAIL  src/utils/__tests__/lzopNumeric1659.test.ts > LZOP numeric 1.6.59 import integration > shares existing import and picker paths for the compound suffix
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ 鉂?src/utils/__tests__/lzopNumeric1659.test.ts:8:126
+      6|   expect(DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS).toContain('tar.lzo')
+      7|   expect(isDecompressArchivePath('C:\\璧勬枡\\BACKUP.TAR.LZO')).toBe(true)
+      8|   for (const name of ['backup.tar.lzo.001','photo.png.lzo.003','backup鈥?       |                                                                                                                              ^
+      9|   expect(isDecompressArchivePath('backup.tar.lzo.partial')).toBe(false)
+     10|   expect(EXTRACT_ONLY_FORMATS.find(f=>f.extensions.includes('tar.lzo')鈥?
+鈳幆鈳幆鈳幆鈳幆鈳幆鈳幆鈳幆鈳幆鈳幆鈳幆鈳幆鈳幆[1/1]鈳?
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed (2)
+   Start at  13:58:23
+   Duration  18.10s (transform 133ms, setup 358ms, import 86ms, tests 12ms, environment 16.48s)
+

@@ -86,6 +86,7 @@ pub(crate) struct LzopReader<R> {
     offset: usize,
     finished: bool,
     failed: Option<(io::ErrorKind, String)>,
+    numeric: bool,
 }
 impl<R: Read> LzopReader<R> {
     pub(crate) fn new(mut input: R) -> io::Result<Self> {
@@ -168,6 +169,7 @@ impl<R: Read> LzopReader<R> {
             offset: 0,
             finished: false,
             failed: None,
+            numeric: false,
         })
     }
     fn next_block(&mut self) -> io::Result<()> {
@@ -256,6 +258,7 @@ impl<R: Read> Read for LzopReader<R> {
         }
         if self.offset == self.block.len() {
             if let Err(e) = self.next_block() {
+                let e = numeric_error(e, self.numeric);
                 self.failed = Some((e.kind(), e.to_string()));
                 return Err(e);
             }
@@ -270,16 +273,30 @@ impl<R: Read> Read for LzopReader<R> {
     }
 }
 
-pub(crate) fn open(path: &Path) -> io::Result<LzopReader<std::fs::File>> {
-    if super::numeric_volume_reader::ZipInputReader::is_numeric_first(path)
-        || path
-            .extension()
-            .and_then(|s| s.to_str())
-            .is_some_and(|s| s.len() >= 3 && s.bytes().all(|b| b.is_ascii_digit()))
-    {
-        return Err(unsupported("数字切卷暂不支持，请先合并为完整 .lzo 文件"));
+// A numeric suffix describes byte slices of one member, not LZOP native multipart.
+fn numeric_error(error: io::Error, numeric: bool) -> io::Error {
+    if numeric && error.to_string().contains("LZOP 数据不完整") {
+        io::Error::new(error.kind(), format!("{error}。数字卷数据未完整结束，可能缺少后续卷或卷已截断；总卷数无法确认，请补齐原始分卷后重试"))
+    } else { error }
+}
+
+pub(crate) fn open(path: &Path) -> anyhow::Result<LzopReader<super::numeric_volume_reader::ZipInputReader>> {
+    use super::{numeric_volume_reader::ZipInputReader, split_archive_detector::{SplitArchiveDetector, SplitFormat}};
+    if let Some(group) = SplitArchiveDetector::detect_split_archive(path)? {
+        if group.format == SplitFormat::GenericNumeric {
+            let mut numbers = std::collections::HashSet::new();
+            for part in &group.parts {
+                let index = part.extension().and_then(|s| s.to_str()).and_then(|s| s.parse::<usize>().ok()).unwrap_or(0);
+                anyhow::ensure!(index > 0 && numbers.insert(index), "[archive-inspection:incomplete] LZOP 数字分卷编号为 0 或重复，请检查同目录文件");
+            }
+        }
     }
-    LzopReader::new(std::fs::File::open(path)?)
+    let source = SplitArchiveDetector::complete_source(path)?;
+    let numeric = ZipInputReader::is_numeric_first(&source);
+    let input = ZipInputReader::open(&source)?;
+    let mut reader = LzopReader::new(input).map_err(|e| numeric_error(e, numeric))?;
+    reader.numeric = numeric;
+    Ok(reader)
 }
 
 pub(crate) fn verify(path: &Path, mut cancelled: impl FnMut() -> bool) -> anyhow::Result<()> {

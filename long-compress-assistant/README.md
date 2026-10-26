@@ -96,6 +96,8 @@ docs/                  开发路线、格式说明与历史记录
 
 ## 更新记录
 
+**v1.6.59 · LZOP / TAR.LZO 数字分卷读取**。集齐数字分卷后可从任意一卷沿原双栏打开、预览、按需取回、完整检查并转成 ZIP/7Z，保留来源与结果/历史。缺卷给出具体原因，补齐后重试；数字切片不等于原生多部分或多成员。[中文说明](docs/RELEASE_NOTES_1.6.59.md) · [记录](docs/LZOP_NUMERIC_READ_FREEZE_1.6.59.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.59) · [下一版多成员资料读取](docs/ARCHIVE_ROADMAP_1.6.60.md)。
+
 **v1.6.58 · TAR.LZO 目录读取与转换**。`.tar.lzo` 直接在原双栏中浏览目录、搜索、图文预览和选择性取回，接通完整检查、整包提取与 ZIP/7Z 转换，保留中文长路径和已验证 GNU/PAX 内容。普通 `.lzo` 仍按单文件读取，本版只读、不新增原生密码或创建。[中文说明](docs/RELEASE_NOTES_1.6.58.md) · [记录](docs/TAR_LZO_READ_CONVERT_FREEZE_1.6.58.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.58) · [下一版完整数字切卷](docs/ARCHIVE_ROADMAP_1.6.59.md)。
 
 **v1.6.57 · LZOP 单文件读取与转换**。普通 `.lzo` 可在原双栏中浏览、预览、检查、提取并转成 ZIP/7Z，支持三种常见方法与头/块校验，沿用原交互与结果入口。仅支持单成员只读；TAR.LZO 目录和数字卷分期推进。[中文说明](docs/RELEASE_NOTES_1.6.57.md) · [记录](docs/LZOP_READ_CONVERT_FREEZE_1.6.57.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.57) · [下一版 TAR.LZO](docs/ARCHIVE_ROADMAP_1.6.58.md)。

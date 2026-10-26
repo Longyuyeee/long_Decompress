@@ -1,0 +1,44 @@
+[
+  {
+    "source": "tests/fixtures/archives/lzop-read-1657/crc.txt.lzo",
+    "archiveSha256": "4d5242b50c90dbd82fbe7afea319a3be54e2871683cc35191a84638a3702a8ec",
+    "bytes": 2701,
+    "origin": "reuse committed official lzop original; see adjacent manifest and generator",
+    "numericFixtures": "derived byte slices at runtime, not native multipart originals"
+  },
+  {
+    "source": "tests/fixtures/archives/lzop-read-1657/stored.bin.lzo",
+    "archiveSha256": "b30b723421cd50930e50a5c832ff7d42734ddae43c4fbb412ec8f9529efaa51a",
+    "bytes": 600078,
+    "origin": "reuse committed official lzop original; see adjacent manifest and generator",
+    "numericFixtures": "derived byte slices at runtime, not native multipart originals"
+  },
+  {
+    "source": "tests/fixtures/archives/tar-lzo-read-1658/directory-1.tar.lzo",
+    "archiveSha256": "b515678a37acbd1900e707b91af8ff80e809a2b9e53a8bbc3686c6fee5de0932",
+    "bytes": 311408,
+    "origin": "reuse committed official lzop original; see adjacent manifest and generator",
+    "numericFixtures": "derived byte slices at runtime, not native multipart originals"
+  },
+  {
+    "source": "tests/fixtures/archives/lzop-read-1657/picture.png.lzo",
+    "archiveSha256": "ee55f0fbcead2a5e8636e63a2a7dedf2f984f390bf34a0bec1173565f408c3f8",
+    "bytes": 1767,
+    "origin": "reuse committed official lzop original; see adjacent manifest and generator",
+    "numericFixtures": "derived byte slices at runtime, not native multipart originals"
+  },
+  {
+    "source": "tests/fixtures/archives/lzop-read-1657/large.txt.lzo",
+    "archiveSha256": "b76ae9a48494b856f93162af6dc7c5128f56bd35876e14772f9d7e541d9e49e8",
+    "bytes": 42426,
+    "origin": "reuse committed official lzop original; see adjacent manifest and generator",
+    "numericFixtures": "derived byte slices at runtime, not native multipart originals"
+  },
+  {
+    "source": "tests/fixtures/archives/lzop-read-1657/method1.txt.lzo",
+    "archiveSha256": "fc7e1c2da3bf8db186c1d08f3cee21934b9d69ae24ba22512cd5326bc1d488fb",
+    "bytes": 106,
+    "origin": "reuse committed official lzop original; see adjacent manifest and generator",
+    "numericFixtures": "derived byte slices at runtime, not native multipart originals"
+  }
+]

@@ -287,7 +287,7 @@ async fn tarlzo1658_invalid_inner_and_damaged_outer_never_report_healthy() {
     }
     let p = temp.path().join("parts.tar.lzo.001");
     std::fs::write(&p, original).unwrap();
-    assert!(UniversalCliEngine::test_integrity(&p, None).await.is_err());
+    UniversalCliEngine::test_integrity(&p, None).await.unwrap();
     assert!(compression_verification::verify_tar_reader(
         codec_stream::decoder(&root().join("directory-1.tar.lzo"), "lzo").unwrap(),
         &|| true

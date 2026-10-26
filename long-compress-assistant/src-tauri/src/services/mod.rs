@@ -282,3 +282,6 @@ mod sevenz_riscv_bcj_create_1656_tests;
 mod lzop_1657_tests;
 #[cfg(test)]
 mod tar_lzo_1658_tests;
+
+#[cfg(test)]
+mod lzop_numeric_1659_tests;
