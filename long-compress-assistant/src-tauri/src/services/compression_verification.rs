@@ -318,6 +318,7 @@ pub(crate) fn verify_native_with_zip_encoding(
             drain_reader(crate::services::codec_stream::decoder(path, "xz")?, &is_cancelled)?;
             Ok(true)
         }
+        CompressionRoute::Lzop => { super::lzop::verify(path, is_cancelled)?; Ok(true) },
         CompressionRoute::Lzma => {
             drain_reader(crate::services::codec_stream::decoder(path, "lzma")?, &is_cancelled)?;
             Ok(true)

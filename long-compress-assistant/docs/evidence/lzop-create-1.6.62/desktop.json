@@ -1,0 +1,559 @@
+{
+  "version": "1.6.62",
+  "checks": [
+    {
+      "name": "single row expands inline and independent batch modal configures LZOP while global ZIP remains",
+      "inlinePreserved": true,
+      "batchModalPreserved": true,
+      "globalZipPreserved": true,
+      "realAnalysis": true,
+      "invalidControlsHidden": true
+    },
+    {
+      "name": "UI creation publishes verified results history and reusable text image previews in equal dual panes",
+      "outputs": [
+        {
+          "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created\\资料.txt.lzo",
+          "sourceSha256": "a848733ddb3fb82c6a545679c68cf318ae22df3dadcc57cfc5f42c54e7e0284c",
+          "archiveSha256": "1cb950215c21b6b4f4e6b4f5bae66da3ca4f6b7da18e461ef37ed16b8a19f7e5",
+          "officialTestExit": 0,
+          "officialReadbackExit": 0
+        },
+        {
+          "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created\\cover.png.lzo",
+          "sourceSha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43",
+          "archiveSha256": "c0ffc106a2706cb3f7e6759761b2f0b94a6a7f0a31cd55999c87a0b21bab3b78",
+          "officialTestExit": 0,
+          "officialReadbackExit": 0
+        }
+      ],
+      "historyFormat": "lzo",
+      "previewHashesMatch": true,
+      "sourcePreserved": true
+    },
+    {
+      "name": "encrypted ZIP single-file conversion keeps source filename and multi-file or folder input rejects without loss then corrects target",
+      "conversion": {
+        "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\renamed-output.lzo",
+        "sourceSha256": "a848733ddb3fb82c6a545679c68cf318ae22df3dadcc57cfc5f42c54e7e0284c",
+        "archiveSha256": "1cb950215c21b6b4f4e6b4f5bae66da3ca4f6b7da18e461ef37ed16b8a19f7e5",
+        "officialTestExit": 0,
+        "officialReadbackExit": 0
+      },
+      "sourcePasswordOnly": true,
+      "sourceBasenameRetained": true,
+      "failure": [
+        {
+          "kind": "multiple",
+          "error": "AssertionError [ERR_ASSERTION]: LZOP 只适合原包中的一个顶层文件；目录或多个文件请选择 ZIP、7Z 或 TAR 组合，原包已保留\n\nfalse !== true\n",
+          "sourceUnchanged": true,
+          "noPublishedOutput": true
+        },
+        {
+          "kind": "folder",
+          "error": "AssertionError [ERR_ASSERTION]: LZOP 只适合原包中的一个顶层文件；目录或多个文件请选择 ZIP、7Z 或 TAR 组合，原包已保留\n\nfalse !== true\n",
+          "sourceUnchanged": true,
+          "noPublishedOutput": true
+        }
+      ],
+      "correctedTargetKeepsAllFiles": true
+    },
+    {
+      "name": "real active LZOP cancellation does not publish and subsequent creation completes verified output",
+      "taskId": "desktop-e2e-7z-cancel-1793005459011",
+      "activeProgress": true,
+      "published": false,
+      "sourceUnchanged": true,
+      "retry": {
+        "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\retry.lzo",
+        "sourceSha256": "3b4dc3aaee384530742a0831e35834f7ac484f8a0d6912d5192db1194c6a9017",
+        "archiveSha256": "b2e7ff6011dd7f5cb2aa194c8667c683205f02de6ae8ad049e5dfdd4cdb8a163",
+        "officialTestExit": 0,
+        "officialReadbackExit": 0
+      }
+    }
+  ],
+  "layouts": [
+    {
+      "name": "inline-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 275,
+          "y": 202.0703125
+        },
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 653,
+          "y": 202.0703125
+        }
+      ],
+      "panes": [],
+      "width": 1100
+    },
+    {
+      "name": "inline-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 476.0703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 158.0703125,
+          "width": 280,
+          "x": 139,
+          "y": 158.0703125
+        },
+        {
+          "bottom": 476.0703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 158.0703125,
+          "width": 280,
+          "x": 419,
+          "y": 158.0703125
+        }
+      ],
+      "panes": [],
+      "width": 760
+    },
+    {
+      "name": "controls-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 476.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 158.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 158.5703125
+        },
+        {
+          "bottom": 476.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 158.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 158.5703125
+        }
+      ],
+      "panes": [],
+      "width": 760
+    },
+    {
+      "name": "batch-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 368.5703125
+        },
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 368.5703125
+        }
+      ],
+      "panes": [],
+      "width": 760
+    },
+    {
+      "name": "result-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 714.5703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 354.5703125,
+          "width": 378,
+          "x": 275,
+          "y": 354.5703125
+        },
+        {
+          "bottom": 714.5703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 354.5703125,
+          "width": 378,
+          "x": 653,
+          "y": 354.5703125
+        }
+      ],
+      "panes": [],
+      "width": 1100
+    },
+    {
+      "name": "result-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 680.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 362.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 362.5703125
+        },
+        {
+          "bottom": 680.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 362.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 362.5703125
+        }
+      ],
+      "panes": [],
+      "width": 760
+    },
+    {
+      "name": "browser-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [],
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 422.796875
+        },
+        {
+          "overflow": 0,
+          "width": 422.8046875
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "browser-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 318.3984375
+        },
+        {
+          "overflow": 0,
+          "width": 318.40625
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "text-narrow",
+      "dialogs": [
+        {
+          "bottom": 481.390625,
+          "height": 442.78125,
+          "left": 22.796875,
+          "right": 737.203125,
+          "top": 38.609375,
+          "width": 714.40625,
+          "x": 22.796875,
+          "y": 38.609375
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 318.3984375
+        },
+        {
+          "overflow": 0,
+          "width": 318.40625
+        }
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76",
+  "previousCandidates": [
+    {
+      "applicationSha256": "b94e63d5be00f7283e11c511d16c3ac49868319536938ca6b00750a9ab8281eb",
+      "reused": "backend stream/format/decoder checks only; final inline/batch UI will be rechecked after hiding irrelevant controls",
+      "reason": "backend missing output-parent creation fixed"
+    }
+  ],
+  "reseedCreation": false,
+  "applicationSha256": "9d2f467853ddd9d558dac75c58790b1604257fdbbd70eb0d20ca3539f4e09ee3",
+  "created": [
+    {
+      "archiveOutput": {
+        "files": [
+          {
+            "bytes": 137,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created\\资料.txt.lzo"
+          }
+        ],
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created\\资料.txt.lzo",
+        "split": false,
+        "totalBytes": 137
+      },
+      "completedAt": "2026-10-26T09:03:57.010Z",
+      "durationMs": 256,
+      "errorMessage": null,
+      "executionConfig": {
+        "kind": "archive-compression",
+        "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created",
+        "passwordRequired": false,
+        "schemaVersion": 1,
+        "settings": {
+          "createSolidArchive": false,
+          "encryptFilenames": false,
+          "fastPack": false,
+          "filename": "资料.txt",
+          "format": "lzo",
+          "keepStructure": true,
+          "level": 6,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "sevenZipDeltaDistance": 1,
+          "sevenZipFilter": "none",
+          "sevenZipMethod": "lzma2",
+          "splitArchive": false,
+          "splitSize": "1024",
+          "verifyAfter": true,
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        }
+      },
+      "failure": null,
+      "format": "lzo",
+      "id": "eyy9e37x1mvp155bw",
+      "logs": [
+        {
+          "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 63.2 GiB，预计输出 4.10 KiB）",
+          "severity": "info",
+          "timestamp": "2026-10-26T09:03:56.777Z"
+        },
+        {
+          "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created\\资料.txt.lzo",
+          "severity": "info",
+          "timestamp": "2026-10-26T09:03:56.956503900Z"
+        },
+        {
+          "message": "正在校验新压缩包的完整性",
+          "severity": "info",
+          "timestamp": "2026-10-26T09:03:56.965418200Z"
+        },
+        {
+          "message": "压缩包完整性校验通过",
+          "severity": "success",
+          "timestamp": "2026-10-26T09:03:56.998647600Z"
+        },
+        {
+          "message": "压缩完成",
+          "severity": "success",
+          "timestamp": "2026-10-26T09:03:57.000165700Z"
+        }
+      ],
+      "metrics": {
+        "inputBytes": 4000,
+        "media": null,
+        "outputBytes": 137,
+        "savingsRatio": 0.96575,
+        "schemaVersion": 1
+      },
+      "name": "资料.txt",
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created\\资料.txt.lzo",
+      "processedBytes": 4000,
+      "retryOfTaskId": null,
+      "sourcePaths": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\generated\\资料.txt"
+      ],
+      "startedAt": "2026-10-26T09:03:56.754Z",
+      "status": "completed",
+      "taskType": "compression",
+      "totalBytes": 4000,
+      "workloadKind": "archive"
+    },
+    {
+      "archiveOutput": {
+        "files": [
+          {
+            "bytes": 1778,
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created\\cover.png.lzo"
+          }
+        ],
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created\\cover.png.lzo",
+        "split": false,
+        "totalBytes": 1778
+      },
+      "completedAt": "2026-10-26T09:03:57.136Z",
+      "durationMs": 120,
+      "errorMessage": null,
+      "executionConfig": {
+        "kind": "archive-compression",
+        "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created",
+        "passwordRequired": false,
+        "schemaVersion": 1,
+        "settings": {
+          "createSolidArchive": false,
+          "encryptFilenames": false,
+          "fastPack": false,
+          "filename": "cover.png",
+          "format": "lzo",
+          "keepStructure": true,
+          "level": 6,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "sevenZipDeltaDistance": 1,
+          "sevenZipFilter": "none",
+          "sevenZipMethod": "lzma2",
+          "splitArchive": false,
+          "splitSize": "1024",
+          "verifyAfter": true,
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        }
+      },
+      "failure": null,
+      "format": "lzo",
+      "id": "fxvb3ua2dmvp155bx",
+      "logs": [
+        {
+          "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 63.2 GiB，预计输出 1.76 KiB）",
+          "severity": "info",
+          "timestamp": "2026-10-26T09:03:57.045Z"
+        },
+        {
+          "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created\\cover.png.lzo",
+          "severity": "info",
+          "timestamp": "2026-10-26T09:03:57.050713200Z"
+        },
+        {
+          "message": "正在校验新压缩包的完整性",
+          "severity": "info",
+          "timestamp": "2026-10-26T09:03:57.067303400Z"
+        },
+        {
+          "message": "压缩包完整性校验通过",
+          "severity": "success",
+          "timestamp": "2026-10-26T09:03:57.133455100Z"
+        },
+        {
+          "message": "压缩完成",
+          "severity": "success",
+          "timestamp": "2026-10-26T09:03:57.135317100Z"
+        }
+      ],
+      "metrics": {
+        "inputBytes": 1713,
+        "media": null,
+        "outputBytes": 1778,
+        "savingsRatio": -0.03794512551079977,
+        "schemaVersion": 1
+      },
+      "name": "cover.png",
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created\\cover.png.lzo",
+      "processedBytes": 1713,
+      "retryOfTaskId": null,
+      "sourcePaths": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\generated\\cover.png"
+      ],
+      "startedAt": "2026-10-26T09:03:57.016Z",
+      "status": "completed",
+      "taskType": "compression",
+      "totalBytes": 1713,
+      "workloadKind": "archive"
+    }
+  ],
+  "converted": {
+    "files": [
+      {
+        "bytes": 137,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\renamed-output.lzo"
+      }
+    ],
+    "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\renamed-output.lzo",
+    "split": false,
+    "totalBytes": 137
+  },
+  "corrected": {
+    "files": [
+      {
+        "bytes": 2572,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\corrected.7z"
+      }
+    ],
+    "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\corrected.7z",
+    "split": false,
+    "totalBytes": 2572
+  },
+  "cancel": {
+    "taskId": "desktop-e2e-7z-cancel-1793005459011",
+    "activeProgress": true,
+    "published": false
+  },
+  "retry": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\retry-restored",
+  "passed": true
+}

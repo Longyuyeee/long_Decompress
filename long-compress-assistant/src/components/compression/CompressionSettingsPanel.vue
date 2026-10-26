@@ -368,7 +368,7 @@ const closeVaultPasswordsAfterFocus = () => {
           </span>
         </div>
 
-        <div class="flex items-center gap-2 ml-1"><label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.format') }}</label><HelpHint label="目标格式说明">{{ ['lz', 'tar.lz', 'zpaq', 'tar.lzma', 'lzma.aes', 'tar.lzma.aes'].includes(compressionOptions.format) ? selectedFormat?.knownLimitations : compressionOptions.format === 'zip' ? '兼容性较好，适合分享；加密和编码方式会影响其他软件的支持。' : compressionOptions.format === '7z' ? '压缩率通常较高，适合归档。' : selectedFormat?.singleFileOnly ? '仅支持单个文件；多个文件或目录请使用 TAR 组合或 ZIP、7Z。' : '按用途选择归档格式；可用能力以当前引擎和任务设置为准。' }}</HelpHint></div>
+        <div class="flex items-center gap-2 ml-1"><label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.format') }}</label><HelpHint label="目标格式说明">{{ ['lzo', 'lz', 'tar.lz', 'zpaq', 'tar.lzma', 'lzma.aes', 'tar.lzma.aes'].includes(compressionOptions.format) ? selectedFormat?.knownLimitations : compressionOptions.format === 'zip' ? '兼容性较好，适合分享；加密和编码方式会影响其他软件的支持。' : compressionOptions.format === '7z' ? '压缩率通常较高，适合归档。' : selectedFormat?.singleFileOnly ? '仅支持单个文件；多个文件或目录请使用 TAR 组合或 ZIP、7Z。' : '按用途选择归档格式；可用能力以当前引擎和任务设置为准。' }}</HelpHint></div>
         <ThemedSelect v-model="compressionOptions.format" floating aria-label="目标格式" test-id="compression-format-select"
           :options="compressionFormats.map(fmt => ({ value: fmt.value, label: fmt.name, disabled: isFormatDisabled(fmt), detail: fmt.singleFileOnly ? appStore.t('preset.single_file_only') : undefined }))" />
         <WimMethodField v-model="compressionOptions.wimMethod" :format="compressionOptions.format" :level="compressionOptions.level" test-id="compression-wim-method" />
@@ -377,7 +377,7 @@ const closeVaultPasswordsAfterFocus = () => {
       </div>
 
       <!-- 压缩强度 (精致 Range) -->
-      <div v-if="!((compressionOptions.format === '7z' && compressionOptions.sevenZipMethod === 'copy') || (compressionOptions.format === 'zip' && compressionOptions.zipMethod === 'store'))" data-testid="compression-level-control" class="flex flex-col gap-1.5 min-w-0">
+      <div v-if="compressionOptions.format !== 'lzo' && !((compressionOptions.format === '7z' && compressionOptions.sevenZipMethod === 'copy') || (compressionOptions.format === 'zip' && compressionOptions.zipMethod === 'store'))" data-testid="compression-level-control" class="flex flex-col gap-1.5 min-w-0">
         <div class="flex justify-between items-center px-1">
           <label class="text-xs font-black text-muted uppercase tracking-widest">{{ appStore.t('compress.level') }}</label>
           <span class="text-xs font-mono text-primary font-black">{{ ['wim','esd','swm'].includes(compressionOptions.format) ? (compressionOptions.format === 'esd' || compressionOptions.wimMethod === 'solid' ? 'LZMS · 固实归档' : compressionOptions.wimMethod === 'lzms' ? 'LZMS · 固定算法' : compressionOptions.wimMethod === 'lzx' ? 'LZX · 固定算法' : compressionOptions.wimMethod === 'xpress' ? 'XPRESS · 固定算法' : '仅存储 · 去重') : isLz4Format(compressionOptions.format) ? '快速模式' : `${(compressionOptions.format === '7z' || compressionOptions.format === 'zip' && ['bzip2', 'ppmd', 'lzma'].includes(compressionOptions.zipMethod || '')) ? Math.max(1, compressionOptions.level) : compressionOptions.level} / 9` }}</span>
@@ -410,7 +410,7 @@ const closeVaultPasswordsAfterFocus = () => {
       </div>
 
       <!-- 密码保护 (主行可见) 带生成器按钮 -->
-      <div class="archive-password-card flex flex-col gap-1.5 min-w-0">
+      <div v-if="compressionOptions.format !== 'lzo'" class="archive-password-card flex flex-col gap-1.5 min-w-0">
         <label class="text-xs font-black text-muted uppercase tracking-widest ml-1">{{ appStore.t('decompress.password') }}</label>
         <div ref="passwordField" class="password-field flex gap-1" @focusout="closeVaultPasswordsAfterFocus">
           <div class="relative min-w-0 flex-1">

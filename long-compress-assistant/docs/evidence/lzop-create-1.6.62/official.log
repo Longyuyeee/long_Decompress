@@ -1,0 +1,1 @@
+Official lzop verified and fully decompressed 7 fresh LZOP outputs, including empty, UTF-8, long-name and stored/compressed-block cases; all content SHA256 values match.

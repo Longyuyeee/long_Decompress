@@ -291,3 +291,7 @@ mod lzop_members_1660_tests;
 
 #[cfg(test)]
 mod lzop_paths_1661_tests;
+
+pub(crate) mod lzop_writer;
+#[cfg(test)]
+mod lzop_create_1662_tests;

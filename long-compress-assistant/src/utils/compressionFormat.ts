@@ -1,4 +1,5 @@
 export type CompressionFormatId =
+  | 'lzo'
   | 'tar.lzma'
   | 'lzma.aes'
   | 'tar.lzma.aes'
@@ -61,6 +62,7 @@ export interface CompressionFormatCapability {
 }
 
 export const FORMAT_CAPABILITIES: CompressionFormatCapability[] = [
+  { format: 'lzo', displayName: 'LZOP', extensions: ['lzo'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: '单文件固定 LZO1X 模式，没有可调压缩等级、密码或创建分卷。目录或多个文件请选择 ZIP、7Z 或 TAR 组合。超长名称取回时沿用输出文件名，请保留原扩展名。' },
   { format: 'zpaq', displayName: 'ZPAQ', extensions: ['zpaq'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', engineFormat: 'ZPAQ', knownLimitations: '创建新的日志式归档，支持原生密码；密码同时保护目录和内容。压缩强度 1～9 对应引擎 1～5 级，使用 16 MiB 块和两个线程。支持数字切片分卷，解压需集齐全部成员；不是 ZPAQ 原生多卷。不提供增量更新或历史恢复。' },
   { format: 'zip', displayName: 'ZIP', extensions: ['zip'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
   { format: 'zipx', knownLimitations: '使用 XZ 方法；支持数字卷与 .zx01/…/.zipx 标准卷，接收方需使用支持该卷型及方法的软件。', displayName: 'ZIPX（XZ）', extensions: ['zipx'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
@@ -113,7 +115,6 @@ export interface ExtractOnlyFormatCapability {
 
 export const EXTRACT_ONLY_FORMATS: ExtractOnlyFormatCapability[] = [
   { displayName: 'TAR.LZO（目录）', extensions: ['tar.lzo'], requires7za: false },
-  { displayName: 'LZOP' , extensions: ['lzo'], requires7za: false },
   { displayName: 'ALZ', extensions: ['alz'], requires7za: false },
   { displayName: 'EGG', extensions: ['egg'], requires7za: false },
   { displayName: 'Application packages', extensions: ['jar', 'xpi', 'ipa', 'apk', 'appx'], requires7za: false },
@@ -189,7 +190,7 @@ export const DECOMPRESS_ARCHIVE_ACCEPT = DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS
 
 export const DECOMPRESS_ARCHIVE_HINT = 'ZIP · 7Z · RAR · TAR · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · LZIP · TAR.LZIP · ISO · IMG · DMG · WIM · SWM · VHD · CAB · DEB · RPM · MSI · JAR · APK · IPA · LZH · CPIO · XAR + 更多'
 
-export const COMPRESSION_FORMAT_HINT = 'ZIP · ZIPX（XZ） · 7Z · RAR · WIM · ESD · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · TAR.Zst · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · TAR.LZ4 · TAR.BR · LZIP · TAR.LZIP · LZMA · TAR.LZMA · LZMA.AES 🔒 · TAR.LZMA.AES 🔒 · TAR.AES 🔒 · TGZ.AES 🔒 · TBZ.AES 🔒 · TXZ.AES 🔒 · TZST.AES 🔒 · GZ.AES 🔒 · BZ2.AES 🔒 · XZ.AES 🔒 · ZST.AES 🔒'
+export const COMPRESSION_FORMAT_HINT = 'LZOP · ZIP · ZIPX（XZ） · 7Z · RAR · WIM · ESD · TAR · TAR.GZ · TAR.BZ2 · TAR.XZ · TAR.Zst · GZ · BZ2 · XZ · Zstd · LZ4 · Brotli · TAR.LZ4 · TAR.BR · LZIP · TAR.LZIP · LZMA · TAR.LZMA · LZMA.AES 🔒 · TAR.LZMA.AES 🔒 · TAR.AES 🔒 · TGZ.AES 🔒 · TBZ.AES 🔒 · TXZ.AES 🔒 · TZST.AES 🔒 · GZ.AES 🔒 · BZ2.AES 🔒 · XZ.AES 🔒 · ZST.AES 🔒'
 
 const TAR_FORMATS = new Set(
   FORMAT_CAPABILITIES

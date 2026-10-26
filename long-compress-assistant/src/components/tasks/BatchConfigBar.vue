@@ -47,7 +47,7 @@ const applying = ref(false)
 const destination = ref<'keep' | 'source' | 'custom'>('keep')
 const outputDirectory = ref('')
 const keep = { value: 'keep', label: '保持各自设置' }
-const formats = [keep, { value: 'swm', label: 'SWM · 原生分包（无加密）' }, { value: 'wim', label: 'WIM（无加密）' }, { value: 'esd', label: 'ESD · 固实（无加密）' }, { value: 'zpaq', label: 'ZPAQ' }, { value: 'zip', label: 'ZIP' }, { value: 'zipx', label: 'ZIPX（XZ）' }, { value: '7z', label: '7Z' }, { value: 'rar', label: 'RAR（需要 WinRAR）' }, { value: 'tar.lz', label: 'TAR.LZIP（无加密）' }, { value: 'lzma', label: 'LZMA（单文件，无加密）' }, { value: 'tar.lzma', label: 'TAR.LZMA（多文件，无加密）' }, { value: 'lzma.aes', label: 'LZMA.AES（单文件加密）' }, { value: 'tar.lzma.aes', label: 'TAR.LZMA.AES（多文件加密）' }]
+const formats = [keep, { value: 'lzo', label: 'LZOP（单文件，无加密）' }, { value: 'swm', label: 'SWM · 原生分包（无加密）' }, { value: 'wim', label: 'WIM（无加密）' }, { value: 'esd', label: 'ESD · 固实（无加密）' }, { value: 'zpaq', label: 'ZPAQ' }, { value: 'zip', label: 'ZIP' }, { value: 'zipx', label: 'ZIPX（XZ）' }, { value: '7z', label: '7Z' }, { value: 'rar', label: 'RAR（需要 WinRAR）' }, { value: 'tar.lz', label: 'TAR.LZIP（无加密）' }, { value: 'lzma', label: 'LZMA（单文件，无加密）' }, { value: 'tar.lzma', label: 'TAR.LZMA（多文件，无加密）' }, { value: 'lzma.aes', label: 'LZMA.AES（单文件加密）' }, { value: 'tar.lzma.aes', label: 'TAR.LZMA.AES（多文件加密）' }]
 const levels = [keep, ...Array.from({ length: 10 }, (_, value) => ({ value: String(value), label: `${value}${value === 0 ? ' · 最低强度（兼容 ZIP 仅存储）' : value === 9 ? ' · 最小体积' : value === 1 ? ' · 更快' : ''}` }))]
 const subfolders = [keep, { value: 'yes', label: '创建同名子文件夹' }, { value: 'no', label: '直接放入输出目录' }]
 const hasChanges = computed(() => Object.keys(purposeExtras.value).length > 0 || destination.value !== 'keep' || (props.mode === 'compression'
@@ -85,10 +85,10 @@ const stagedPatch = computed(() => {
     if ((format.value === 'keep' || format.value === '7z') && ['lzma2','lzma','bzip2','deflate','ppmd','copy'].includes(sevenZipMethod.value)) patch.sevenZipMethod = sevenZipMethod.value as BatchConfigPatch['sevenZipMethod']
     if ((format.value === 'keep' || format.value === 'zip') && ['store','lzma','ppmd','bzip2','zstd','deflate'].includes(zipMethod.value)) patch.zipMethod = zipMethod.value as BatchConfigPatch['zipMethod']
     if (wimMethod.value !== 'keep' && (format.value === 'keep' || ['wim','swm'].includes(format.value))) patch.wimMethod = wimMethod.value as 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
-    if (level.value !== 'keep' && !['wim','esd','swm'].includes(format.value) && !((format.value === '7z' && sevenZipMethod.value === 'copy') || (format.value === 'zip' && zipMethod.value === 'store'))) patch.level = Number(level.value)
-    if (recovery.value !== 'keep') patch.rarRecoveryPercent = Number(recovery.value)
-    if (recoveryVolumes.value !== 'keep') patch.rarRecoveryVolumes = Number(recoveryVolumes.value)
-    if (isZipPasswordEncoding(zipPasswordEncoding.value)) patch.zipPasswordEncoding = zipPasswordEncoding.value
+    if (level.value !== 'keep' && !['lzo','wim','esd','swm'].includes(format.value) && !((format.value === '7z' && sevenZipMethod.value === 'copy') || (format.value === 'zip' && zipMethod.value === 'store'))) patch.level = Number(level.value)
+    if (format.value !== 'lzo' && recovery.value !== 'keep') patch.rarRecoveryPercent = Number(recovery.value)
+    if (format.value !== 'lzo' && recoveryVolumes.value !== 'keep') patch.rarRecoveryVolumes = Number(recoveryVolumes.value)
+    if (format.value !== 'lzo' && isZipPasswordEncoding(zipPasswordEncoding.value)) patch.zipPasswordEncoding = zipPasswordEncoding.value
   } else {
     if (subfolder.value !== 'keep') patch.extractToSubfolder = subfolder.value === 'yes'
     if (zipPasswordEncoding.value === 'auto' || isZipPasswordEncoding(zipPasswordEncoding.value)) patch.zipPasswordEncoding = zipPasswordEncoding.value
@@ -134,10 +134,10 @@ function apply() {
         <label v-if="mode === 'compression'" class="min-w-0 space-y-1.5 text-xs text-muted">压缩格式 <HelpHint v-if="format === 'zipx'" label="ZIPX 分卷说明">ZIPX 使用 XZ，支持数字卷和 .zx01/…/.zipx 标准卷；卷型沿用各自设置。</HelpHint>
           <ThemedSelect v-model="format" :options="formats" aria-label="批量压缩格式" test-id="batch-format" floating />
         </label>
-        <label v-if="mode === 'compression' && !((format === '7z' && sevenZipMethod === 'copy') || (format === 'zip' && zipMethod === 'store'))" class="min-w-0 space-y-1.5 text-xs text-muted">压缩等级
+        <label v-if="mode === 'compression' && format !== 'lzo' && !((format === '7z' && sevenZipMethod === 'copy') || (format === 'zip' && zipMethod === 'store'))" class="min-w-0 space-y-1.5 text-xs text-muted">压缩等级
           <ThemedSelect v-model="level" :options="levels" aria-label="批量压缩等级" test-id="batch-level" :disabled="['wim','esd','swm'].includes(format)" floating />
         </label>
-        <label v-else class="min-w-0 space-y-1.5 text-xs text-muted">文件放置方式
+        <label v-else-if="mode === 'decompression'" class="min-w-0 space-y-1.5 text-xs text-muted">文件放置方式
           <ThemedSelect v-model="subfolder" :options="subfolders" aria-label="批量解压子文件夹" test-id="batch-subfolder" floating />
         </label>
       </div>
@@ -145,7 +145,7 @@ function apply() {
         <HelpHint label="批量 ZIP 密码编码说明">仅修改已检测为 ZIP/ZIPX、ALZ 或 EGG 的来源。ZIP/EGG 只影响密码；ALZ 同时影响文件名和密码。清除后回到各格式默认值，EGG 默认 UTF-8、ALZ 默认 CP949。其他格式保持原值。</HelpHint>
         <ThemedSelect v-model="zipPasswordEncoding" :disabled="applying" :options="[keep, {value:'auto',label:'自动兼容（默认）'}, ...ZIP_PASSWORD_ENCODING_OPTIONS]" aria-label="批量 ZIP 密码编码" test-id="batch-zip-password-encoding" floating />
       </div>
-      <div v-if="mode === 'compression'" class="min-w-0 space-y-1.5 text-xs text-muted">新包 ZIP 密码编码
+      <div v-if="mode === 'compression' && format !== 'lzo'" class="min-w-0 space-y-1.5 text-xs text-muted">新包 ZIP 密码编码
         <HelpHint label="批量新包密码编码说明">只修改目标为 ZIP/ZIPX 的任务，其他任务保持各自设置。新包默认 UTF-8；代码页不改变文件名。</HelpHint>
         <ThemedSelect v-model="zipPasswordEncoding" :disabled="applying" :options="[keep, ...ZIP_PASSWORD_ENCODING_OPTIONS]" aria-label="批量新包 ZIP 密码编码" test-id="batch-zip-password-encoding" floating />
       </div>
@@ -159,11 +159,11 @@ function apply() {
         <ThemedSelect v-model="zipMethod" :options="[keep, { value: 'deflate', label: '兼容 ZIP · Deflate' }, { value: 'store', label: '仅存储（Store）' }, { value: 'zstd', label: 'Zstandard' }, { value: 'bzip2', label: 'BZip2' }, { value: 'ppmd', label: 'PPMd · 文本归档' }, { value: 'lzma', label: 'LZMA' }]" test-id="batch-zip-method" floating />
         <span class="block leading-relaxed">只修改所选 ZIP 任务的方法；ZIPX 始终使用 XZ。</span>
       </label>
-      <label v-if="mode === 'compression'" class="block min-w-0 space-y-1.5 text-xs text-muted">RAR 分包恢复卷
+      <label v-if="mode === 'compression' && format !== 'lzo'" class="block min-w-0 space-y-1.5 text-xs text-muted">RAR 分包恢复卷
         <ThemedSelect v-model="recoveryVolumes" :options="[keep, ...[0,1,2,3,5,10].map(value => ({value:String(value),label:value ? `${value} 个 .rev 恢复卷` : '不生成恢复卷'}))]" test-id="batch-rar-recovery-volumes" floating />
         <span class="block leading-relaxed">仅实际生成多个 RAR 分包时生效，分卷设置保持各自原值。</span>
       </label>
-      <label v-if="mode === 'compression'" class="block min-w-0 space-y-1.5 text-xs text-muted">RAR 恢复保护
+      <label v-if="mode === 'compression' && format !== 'lzo'" class="block min-w-0 space-y-1.5 text-xs text-muted">RAR 恢复保护
         <ThemedSelect v-model="recovery" :options="[keep, {value:'0',label:'关闭'}, {value:'3',label:'3%'}, {value:'5',label:'5%'}, {value:'10',label:'10%'}]" test-id="batch-rar-recovery" floating />
         <span class="block text-xs leading-relaxed">启用时所选任务需为 RAR；其他配置保持原值。</span>
       </label>

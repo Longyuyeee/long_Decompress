@@ -139,7 +139,7 @@ export interface DesktopE2EBridge {
     verifyAfter: boolean
     logs: string[]
   }>
-  startSevenZipCompression: (sourcePath: string, archivePath: string) => Promise<string>
+  startSevenZipCompression: (sourcePath: string, archivePath: string, format?: '7z' | 'lzo') => Promise<string>
   startArchiveCompressionBatch: (
     jobs: Array<{ sourcePath: string; archivePath: string }>,
   ) => Promise<string[]>
@@ -700,16 +700,17 @@ export const installDesktopE2EBridge = () => {
       }))
     },
 
-    async startSevenZipCompression(sourcePath, archivePath) {
+    async startSevenZipCompression(sourcePath, archivePath, format = '7z') {
       const taskId = `desktop-e2e-7z-cancel-${Date.now()}`
       addArchiveTask(taskId, 'compression', sourcePath, archivePath)
+      const active = taskStore.tasks.find(task => task.id === taskId); if(active) active.format = format
       taskStore.updateTaskStatus(taskId, 'compressing')
       await syncActiveState()
       void invoke('compress_files', {
         taskId,
         files: [sourcePath],
         outputPath: archivePath,
-        options: { ...sevenZipOptions, level: 1 },
+        options: { ...sevenZipOptions, format, level: 1 },
       })
         .then(() => {
           const task = taskStore.tasks.find(item => item.id === taskId)

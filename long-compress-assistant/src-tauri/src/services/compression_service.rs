@@ -1325,6 +1325,7 @@ impl CompressionService {
                 CompressionRoute::Xz => service.do_compress_xz(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::Zstd => service.do_compress_zstd(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::TarZstd => service.do_compress_tar_zstd(&window, &task_id, &source_files, &working_output_string, options),
+                CompressionRoute::Lzop => crate::services::lzop_writer::compress(&service, Some(&window), &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::Lzma => service.do_compress_lzma(&window, &task_id, &source_files, &working_output_string, options),
                 CompressionRoute::Lz4 | CompressionRoute::Brotli | CompressionRoute::TarLz4 | CompressionRoute::TarBrotli | CompressionRoute::Lzip | CompressionRoute::TarLzip | CompressionRoute::TarLzma => {
                     crate::services::codec_stream::compress(&service, Some(&window), &task_id, &source_files, &working_output_string, options, &requested_format)

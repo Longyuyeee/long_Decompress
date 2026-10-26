@@ -1,0 +1,272 @@
+{
+  "version": "1.6.62",
+  "applicationSha256": "b94e63d5be00f7283e11c511d16c3ac49868319536938ca6b00750a9ab8281eb",
+  "checks": [
+    {
+      "name": "single row expands inline and independent batch modal configures LZOP while global ZIP remains",
+      "inlinePreserved": true,
+      "batchModalPreserved": true,
+      "globalZipPreserved": true,
+      "realAnalysis": true,
+      "invalidControlsHidden": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "inline-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 275,
+          "right": 653,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 275,
+          "y": 202.0703125
+        },
+        {
+          "bottom": 562.0703125,
+          "height": 360,
+          "left": 653,
+          "right": 1031,
+          "top": 202.0703125,
+          "width": 378,
+          "x": 653,
+          "y": 202.0703125
+        }
+      ],
+      "panes": [],
+      "width": 1100
+    },
+    {
+      "name": "inline-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 476.0703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 158.0703125,
+          "width": 280,
+          "x": 139,
+          "y": 158.0703125
+        },
+        {
+          "bottom": 476.0703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 158.0703125,
+          "width": 280,
+          "x": 419,
+          "y": 158.0703125
+        }
+      ],
+      "panes": [],
+      "width": 760
+    },
+    {
+      "name": "batch-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panels": [
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 139,
+          "right": 419,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 139,
+          "y": 368.5703125
+        },
+        {
+          "bottom": 686.5703125,
+          "height": 318,
+          "left": 419,
+          "right": 699,
+          "top": 368.5703125,
+          "width": 280,
+          "x": 419,
+          "y": 368.5703125
+        }
+      ],
+      "panes": [],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76",
+  "created": [
+    {
+      "archiveOutput": null,
+      "completedAt": "2026-10-26T08:52:36.087Z",
+      "durationMs": 266,
+      "errorMessage": "压缩失败: [archive-io:io] 文件读写未完成，请按原始路径检查来源、输出目录和设备连接，处理后创建新任务。原始原因：系统找不到指定的路径。 (os error 3)",
+      "executionConfig": {
+        "kind": "archive-compression",
+        "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created",
+        "passwordRequired": false,
+        "schemaVersion": 1,
+        "settings": {
+          "createSolidArchive": false,
+          "encryptFilenames": false,
+          "fastPack": false,
+          "filename": "资料.txt",
+          "format": "lzo",
+          "keepStructure": true,
+          "level": 6,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "sevenZipDeltaDistance": 1,
+          "sevenZipFilter": "none",
+          "sevenZipMethod": "lzma2",
+          "splitArchive": false,
+          "splitSize": "1024",
+          "verifyAfter": true,
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        }
+      },
+      "failure": {
+        "category": "io",
+        "evidence": "recorded-marker",
+        "schemaVersion": 1,
+        "stage": "unknown"
+      },
+      "format": "lzo",
+      "id": "hgylnxjenmvp0qjx4",
+      "logs": [
+        {
+          "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 64.5 GiB，预计输出 4.10 KiB）",
+          "severity": "info",
+          "timestamp": "2026-10-26T08:52:35.840Z"
+        },
+        {
+          "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created\\资料.txt.lzo",
+          "severity": "info",
+          "timestamp": "2026-10-26T08:52:36.082644Z"
+        },
+        {
+          "message": "压缩失败: 系统找不到指定的路径。 (os error 3)",
+          "severity": "error",
+          "timestamp": "2026-10-26T08:52:36.086178200Z"
+        },
+        {
+          "message": "最终失败原因：压缩失败: [archive-io:io] 文件读写未完成，请按原始路径检查来源、输出目录和设备连接，处理后创建新任务。原始原因：系统找不到指定的路径。 (os error 3)",
+          "severity": "error",
+          "timestamp": "2026-10-26T08:52:36.087Z"
+        }
+      ],
+      "metrics": null,
+      "name": "资料.txt",
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created\\资料.txt.lzo",
+      "processedBytes": 0,
+      "retryOfTaskId": null,
+      "sourcePaths": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\generated\\资料.txt"
+      ],
+      "startedAt": "2026-10-26T08:52:35.821Z",
+      "status": "failed",
+      "taskType": "compression",
+      "totalBytes": 0,
+      "workloadKind": "archive"
+    },
+    {
+      "archiveOutput": null,
+      "completedAt": "2026-10-26T08:52:36.176Z",
+      "durationMs": 82,
+      "errorMessage": "压缩失败: [archive-io:io] 文件读写未完成，请按原始路径检查来源、输出目录和设备连接，处理后创建新任务。原始原因：系统找不到指定的路径。 (os error 3)",
+      "executionConfig": {
+        "kind": "archive-compression",
+        "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created",
+        "passwordRequired": false,
+        "schemaVersion": 1,
+        "settings": {
+          "createSolidArchive": false,
+          "encryptFilenames": false,
+          "fastPack": false,
+          "filename": "cover.png",
+          "format": "lzo",
+          "keepStructure": true,
+          "level": 6,
+          "rarRecoveryPercent": 0,
+          "rarRecoveryVolumes": 0,
+          "sevenZipDeltaDistance": 1,
+          "sevenZipFilter": "none",
+          "sevenZipMethod": "lzma2",
+          "splitArchive": false,
+          "splitSize": "1024",
+          "verifyAfter": true,
+          "zipEncryption": "aes256",
+          "zipMethod": "deflate",
+          "zipPasswordEncoding": "utf8",
+          "zipSplitMode": "numeric"
+        }
+      },
+      "failure": {
+        "category": "io",
+        "evidence": "recorded-marker",
+        "schemaVersion": 1,
+        "stage": "unknown"
+      },
+      "format": "lzo",
+      "id": "nkqjxy2gumvp0qjx5",
+      "logs": [
+        {
+          "message": "资源预检：目标盘空间满足当前估算；运行时仍会持续执行事务与容量检查。（local/ssd，可用 64.5 GiB，预计输出 1.76 KiB）",
+          "severity": "info",
+          "timestamp": "2026-10-26T08:52:36.159Z"
+        },
+        {
+          "message": "开始压缩到: E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created\\cover.png.lzo",
+          "severity": "info",
+          "timestamp": "2026-10-26T08:52:36.168214Z"
+        },
+        {
+          "message": "压缩失败: 系统找不到指定的路径。 (os error 3)",
+          "severity": "error",
+          "timestamp": "2026-10-26T08:52:36.170697300Z"
+        },
+        {
+          "message": "最终失败原因：压缩失败: [archive-io:io] 文件读写未完成，请按原始路径检查来源、输出目录和设备连接，处理后创建新任务。原始原因：系统找不到指定的路径。 (os error 3)",
+          "severity": "error",
+          "timestamp": "2026-10-26T08:52:36.176Z"
+        }
+      ],
+      "metrics": null,
+      "name": "cover.png",
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\9f583f05-bc10-427b-bcfe-806c2f3a4f76\\created\\cover.png.lzo",
+      "processedBytes": 0,
+      "retryOfTaskId": null,
+      "sourcePaths": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-create-1662\\generated\\cover.png"
+      ],
+      "startedAt": "2026-10-26T08:52:36.094Z",
+      "status": "failed",
+      "taskType": "compression",
+      "totalBytes": 0,
+      "workloadKind": "archive"
+    }
+  ]
+}

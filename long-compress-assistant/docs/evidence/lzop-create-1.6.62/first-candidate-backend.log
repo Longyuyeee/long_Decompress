@@ -1,0 +1,39 @@
+   Compiling long-compress-assistant v1.6.62 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 4m 04s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-bb9abff7efad290c.exe)
+
+running 7 tests
+test services::lzop_1657_tests::lzop1662_single_creation_capability_never_falls_back_to_another_codec ... ok
+test services::lzop_create_1662_tests::lzop1662_analysis_uses_the_fixed_real_encoder_and_rejects_ineligible_sources ... ok
+test services::lzop_create_1662_tests::lzop1662_bounded_short_reads_stored_blocks_and_integrity_are_not_level_dependent ... ok
+test services::lzop_create_1662_tests::lzop1662_cancel_and_output_errors_keep_their_actual_causes ... ok
+test services::lzop_create_1662_tests::lzop1662_new_outputs_roundtrip_paths_previews_and_official_verifier_inputs ... ok
+test services::lzop_create_1662_tests::lzop1662_rejects_multi_file_directory_password_and_volume_requests ... ok
+test services::lzop_paths_1661_tests::lzop1661_official_paths_directories_previews_selection_flat_and_complete_readback ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 1352 filtered out; finished in 8.69s
+
