@@ -1,0 +1,178 @@
+{
+  "version": "1.7.2",
+  "windowsVerifierSha256": "0de04c88c0820f981869b3a1c7eb1803318638537ad9d8afc5032ef3915e2597",
+  "linuxVerifierSha256": "d9b46cf6fa44f4d657e5a3943d361dac24040d0acda37019b19ba285e52e2c53",
+  "linuxDownload": "https://www.lzop.org/download/lzop-1.03-i386_linux.tar.gz",
+  "checks": [
+    {
+      "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/lzop-multi-create-172/generated\\multiple.lzo",
+      "archiveSha256": "e87900d678f75abc177e29a92c8a92bd8b01d3b5a2f1835afb01cd5c27c4edf4",
+      "entries": [
+        {
+          "path": "notes.txt",
+          "bytes": 15,
+          "sha256": "158dae6eb12449ba2959dca01c5091019b07fb10e2c83fc8ad5135076b2e815b"
+        },
+        {
+          "path": "notes (1).txt",
+          "bytes": 16,
+          "sha256": "2d9ae16975908b725376585425d8d850250a97f945370139029b43bd1696ade6"
+        },
+        {
+          "path": "NOTES (2).TXT",
+          "bytes": 26,
+          "sha256": "0d577c3b1245612bdf7f39a222ea85957848f0ca457ad3a99501654d4adc4297"
+        },
+        {
+          "path": "资料.txt",
+          "bytes": 252000,
+          "sha256": "6a10c0c1081141b653f78c419fa5ea22cb58b776909f3691411fc3f3f31e81a9"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "cover.png",
+          "bytes": 1713,
+          "sha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43"
+        },
+        {
+          "path": "random.bin",
+          "bytes": 700001,
+          "sha256": "4136b80d801cb6fdab98a76885379daf41e6b3428501fa56d1ec625138f017cc"
+        },
+        {
+          "path": "文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文文aa.txt",
+          "bytes": 15,
+          "sha256": "cef790f466e8ed09999da95eeff019674997ebb32dce855f7d7dfada9d1227de"
+        },
+        {
+          "path": ".hidden",
+          "bytes": 11,
+          "sha256": "28a3cc6944205069775507e410770e90656776793d2342e390057c116984136a"
+        }
+      ],
+      "windowsTestExit": 0,
+      "linuxRestoreExit": 0,
+      "exactNamesAndHashes": true
+    },
+    {
+      "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/lzop-multi-create-172/generated\\single-renamed.lzo",
+      "archiveSha256": "214a28712261a09489b7e4ea298eb532d517246aef52549f53367f6e20f23c06",
+      "entries": [
+        {
+          "path": "资料.txt",
+          "bytes": 252000,
+          "sha256": "6a10c0c1081141b653f78c419fa5ea22cb58b776909f3691411fc3f3f31e81a9"
+        }
+      ],
+      "windowsTestExit": 0,
+      "linuxRestoreExit": 0,
+      "exactNamesAndHashes": true
+    },
+    {
+      "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/lzop-multi-create-172/generated\\all-empty.lzo",
+      "archiveSha256": "1dbb92e01b25bcdd5a10d25a92b191c42844d7231e506c2cf255762072edbde6",
+      "entries": [
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "empty (1).txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "windowsTestExit": 0,
+      "linuxRestoreExit": 0,
+      "exactNamesAndHashes": true
+    },
+    {
+      "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-multi-create-172\\627108be-ac67-4f32-a15f-ba7eaaa37f4c\\created\\新建压缩组 1.lzo",
+      "archiveSha256": "1a3ebf8ce59ecac58629d128fe619c6687787127c7cf7f7f07a7d699cd078e67",
+      "entries": [
+        {
+          "path": "notes.txt",
+          "bytes": 15,
+          "sha256": "158dae6eb12449ba2959dca01c5091019b07fb10e2c83fc8ad5135076b2e815b"
+        },
+        {
+          "path": "notes (1).txt",
+          "bytes": 16,
+          "sha256": "2d9ae16975908b725376585425d8d850250a97f945370139029b43bd1696ade6"
+        },
+        {
+          "path": "资料.txt",
+          "bytes": 252000,
+          "sha256": "6a10c0c1081141b653f78c419fa5ea22cb58b776909f3691411fc3f3f31e81a9"
+        },
+        {
+          "path": "cover.png",
+          "bytes": 1713,
+          "sha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "windowsTestExit": 0,
+      "linuxRestoreExit": 0,
+      "exactNamesAndHashes": true
+    },
+    {
+      "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-multi-create-172\\627108be-ac67-4f32-a15f-ba7eaaa37f4c\\converted.lzo",
+      "archiveSha256": "f92fee7ed42a46e68085b01787b4f1b508db379cf4b909450529e43149eaa76a",
+      "entries": [
+        {
+          "path": "资料.txt",
+          "bytes": 252000,
+          "sha256": "6a10c0c1081141b653f78c419fa5ea22cb58b776909f3691411fc3f3f31e81a9"
+        },
+        {
+          "path": "cover.png",
+          "bytes": 1713,
+          "sha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "windowsTestExit": 0,
+      "linuxRestoreExit": 0,
+      "exactNamesAndHashes": true
+    },
+    {
+      "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-multi-create-172\\627108be-ac67-4f32-a15f-ba7eaaa37f4c\\retry.lzo",
+      "archiveSha256": "f92fee7ed42a46e68085b01787b4f1b508db379cf4b909450529e43149eaa76a",
+      "entries": [
+        {
+          "path": "资料.txt",
+          "bytes": 252000,
+          "sha256": "6a10c0c1081141b653f78c419fa5ea22cb58b776909f3691411fc3f3f31e81a9"
+        },
+        {
+          "path": "cover.png",
+          "bytes": 1713,
+          "sha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ],
+      "windowsTestExit": 0,
+      "linuxRestoreExit": 0,
+      "exactNamesAndHashes": true
+    }
+  ],
+  "passed": true
+}

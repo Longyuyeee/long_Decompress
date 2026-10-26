@@ -38,6 +38,7 @@ interface Props {
   modelValue?: CompressionOptions
   outputPath?: string
   allowSingleFileFormats?: boolean
+  allowRegularFileFormats?: boolean
   allowSplitArchive?: boolean
   suggestedFilename?: string
   compact?: boolean
@@ -49,6 +50,7 @@ const props = withDefaults(defineProps<Props>(), {
   modelValue: undefined,
   outputPath: '',
   allowSingleFileFormats: true,
+  allowRegularFileFormats: true,
   allowSplitArchive: true,
   suggestedFilename: '',
   compact: false,
@@ -172,8 +174,8 @@ const confirmSavePreset = () => {
   showPresetModal.value = false
 }
 
-const isFormatDisabled = (format: { singleFileOnly?: boolean }) => {
-  return Boolean(format.singleFileOnly && !props.allowSingleFileFormats)
+const isFormatDisabled = (format: { value?: string; singleFileOnly?: boolean }) => {
+  return Boolean(format.singleFileOnly && !props.allowSingleFileFormats || format.value === 'lzo' && !props.allowRegularFileFormats)
 }
 
 const selectOutputPath = async () => {
@@ -245,8 +247,7 @@ watch(() => props.outputPath, (newPath) => {
   })
 })
 
-watch(() => props.allowSingleFileFormats, (allowSingleFileFormats) => {
-  if (allowSingleFileFormats) return
+watch(() => [props.allowSingleFileFormats, props.allowRegularFileFormats], () => {
   const currentFormat = compressionFormats.value.find(format => format.value === compressionOptions.value.format)
   if (currentFormat && isFormatDisabled(currentFormat)) {
     compressionOptions.value.format = 'zip'

@@ -14,7 +14,7 @@ describe('batch ZIP output encoding',()=>{
     await wrapper.get('[data-testid="batch-config-apply"]').trigger('click')
     expect(wrapper.emitted('apply')?.[0]?.[0]).toEqual({format:'tar.lzo'});wrapper.unmount()
   })
-  it('lzop1662 applies the single-file format through the existing modal without irrelevant extraction/strength fields',async()=>{
+  it('lzop172 applies the multi-file format through the existing modal without irrelevant extraction/strength fields',async()=>{
     const wrapper=mount(BatchConfigBar,{props:{count:2,mode:'compression'},global:{plugins:[createPinia()],stubs:{Teleport:true,Transition:false}}})
     await wrapper.get('button[aria-haspopup="dialog"]').trigger('click');await wrapper.get('[data-testid="batch-format"]').trigger('click')
     await wrapper.findAll('[role="option"]').find(o=>o.text().includes('LZOP'))!.trigger('click')

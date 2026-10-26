@@ -16,7 +16,7 @@ it('lzop1662 conversion retains source password while removing unsupported targe
  const wrapper=mount(ConversionSettingsFields,{props:{settings},global:{plugins:[createPinia()],stubs:{Teleport:true}}});await flushPromises()
  expect(wrapper.get('[data-testid="conversion-source-password"]').element).toHaveProperty('value','source-only')
  for(const id of ['conversion-password','conversion-split','conversion-level-control','conversion-hidden-names'])expect(wrapper.find(`[data-testid="${id}"]`).exists()).toBe(false)
- expect(wrapper.get('[data-testid="conversion-single-file-hint"]').text()).toContain('一个顶层文件')
+ expect(wrapper.find('[data-testid="conversion-single-file-hint"]').exists()).toBe(false)
  expect(wrapper.emitted('update')).toBeUndefined();wrapper.unmount()
 })
 it('lzop1662 conversion modal drops hidden RAR recovery choices after switching to LZOP',async()=>{
@@ -26,7 +26,7 @@ it('lzop1662 conversion modal drops hidden RAR recovery choices after switching 
  await wrapper.get('[data-testid="conversion-batch-config"]').trigger('click')
  const choose=async(id:string,label:string)=>{await wrapper.get(`[data-testid="${id}"]`).trigger('click');await wrapper.findAll('[role="option"]').find(o=>o.find('strong').text()===label)!.trigger('click');await flushPromises()}
  await choose('conversion-batch-rar-recovery','3%');await choose('conversion-batch-rar-recovery-volumes','1 个 .rev 恢复卷')
- await choose('conversion-batch-format','LZOP（单文件）')
+ await choose('conversion-batch-format','LZOP（多文件，无目录）')
  expect(wrapper.find('[data-testid="conversion-batch-level"]').exists()).toBe(false)
  await wrapper.get('[data-testid="conversion-batch-apply"]').trigger('click');await flushPromises()
  expect(apply).toHaveBeenCalledWith({format:'lzo'});wrapper.unmount()

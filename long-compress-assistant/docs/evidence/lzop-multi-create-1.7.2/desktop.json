@@ -1,0 +1,190 @@
+{
+  "version": "1.7.2",
+  "applicationSha256": "a71f54489db3bda2bf44b98daf16f113d49b7bbe2ad1e5b419af3e8242954c4f",
+  "checks": [
+    {
+      "name": "real UI groups ordinary files and creates all members using inline and batch modal without changing global ZIP",
+      "allMemberHashesMatch": true,
+      "inlinePreserved": true,
+      "batchModalPreserved": true,
+      "globalZipPreserved": true,
+      "historySourceCount": 5,
+      "archive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-multi-create-172\\627108be-ac67-4f32-a15f-ba7eaaa37f4c\\created\\新建压缩组 1.lzo"
+    },
+    {
+      "name": "new members remain special folders in equal dual panes with text image preview and selective extraction",
+      "equalPanes": true,
+      "selectiveEmptyFileRetained": true,
+      "textPreview": true,
+      "imageMemberReadable": true
+    },
+    {
+      "name": "password ZIP converts all top-level files to LZOP and back while folder input offers TAR.LZO without publishing loss",
+      "sourcePasswordOnly": true,
+      "allFilesConverted": true,
+      "sourcePreserved": true,
+      "folderFailure": "AssertionError [ERR_ASSERTION]: LZOP 只接收普通文件；含文件夹的内容请选择 TAR.LZO，以保留目录和空文件夹；原包已保留\n\nfalse !== true\n",
+      "folderRetryKeptEmptyDirectory": true
+    },
+    {
+      "name": "cancellation during a later member publishes no earlier member and the next creation succeeds",
+      "id": "desktop-e2e-7z-cancel-1793039588435",
+      "activeLaterMember": true,
+      "published": false,
+      "sourceUnchanged": true,
+      "retry": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-multi-create-172\\627108be-ac67-4f32-a15f-ba7eaaa37f4c\\retry.lzo"
+    }
+  ],
+  "layouts": [
+    {
+      "name": "inline-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panes": [],
+      "width": 1100
+    },
+    {
+      "name": "inline-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panes": [],
+      "width": 760
+    },
+    {
+      "name": "batch-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panes": [],
+      "width": 760
+    },
+    {
+      "name": "browser-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 422.796875
+        },
+        {
+          "overflow": 0,
+          "width": 422.8046875
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "browser-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 318.3984375
+        },
+        {
+          "overflow": 0,
+          "width": 318.40625
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "text-narrow",
+      "dialogs": [
+        {
+          "bottom": 481.390625,
+          "height": 442.78125,
+          "left": 22.796875,
+          "right": 737.203125,
+          "top": 38.609375,
+          "width": 714.40625,
+          "x": 22.796875,
+          "y": 38.609375
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 318.3984375
+        },
+        {
+          "overflow": 0,
+          "width": 318.40625
+        }
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-multi-create-172\\627108be-ac67-4f32-a15f-ba7eaaa37f4c",
+  "groupArchive": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-multi-create-172\\627108be-ac67-4f32-a15f-ba7eaaa37f4c\\created\\新建压缩组 1.lzo",
+  "encryptedZip": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-multi-create-172\\627108be-ac67-4f32-a15f-ba7eaaa37f4c\\encrypted.zip",
+  "converted": {
+    "files": [
+      {
+        "bytes": 3284,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-multi-create-172\\627108be-ac67-4f32-a15f-ba7eaaa37f4c\\converted.lzo"
+      }
+    ],
+    "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-multi-create-172\\627108be-ac67-4f32-a15f-ba7eaaa37f4c\\converted.lzo",
+    "split": false,
+    "totalBytes": 3284
+  },
+  "back": {
+    "files": [
+      {
+        "bytes": 2220,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-multi-create-172\\627108be-ac67-4f32-a15f-ba7eaaa37f4c\\back.7z"
+      }
+    ],
+    "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-multi-create-172\\627108be-ac67-4f32-a15f-ba7eaaa37f4c\\back.7z",
+    "split": false,
+    "totalBytes": 2220
+  },
+  "folderRetry": {
+    "files": [
+      {
+        "bytes": 220,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-multi-create-172\\627108be-ac67-4f32-a15f-ba7eaaa37f4c\\folder.tar.lzo"
+      }
+    ],
+    "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-multi-create-172\\627108be-ac67-4f32-a15f-ba7eaaa37f4c\\folder.tar.lzo",
+    "split": false,
+    "totalBytes": 220
+  },
+  "cancel": {
+    "id": "desktop-e2e-7z-cancel-1793039588435",
+    "activeLaterMember": true,
+    "published": false
+  },
+  "retry": {
+    "files": [
+      {
+        "bytes": 3284,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-multi-create-172\\627108be-ac67-4f32-a15f-ba7eaaa37f4c\\retry.lzo"
+      }
+    ],
+    "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-multi-create-172\\627108be-ac67-4f32-a15f-ba7eaaa37f4c\\retry.lzo",
+    "split": false,
+    "totalBytes": 3284
+  },
+  "passed": true
+}

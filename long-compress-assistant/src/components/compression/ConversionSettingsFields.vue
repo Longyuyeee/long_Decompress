@@ -7,6 +7,7 @@ import SevenZipMethodField from '@/components/compression/SevenZipMethodField.vu
 import SevenZipPreprocessField from '@/components/compression/SevenZipPreprocessField.vue'
 import ZipMethodField from '@/components/compression/ZipMethodField.vue'
 import ThemedSelect from '@/components/ui/ThemedSelect.vue'
+import HelpHint from '@/components/ui/HelpHint.vue'
 import RarRecoveryField from './RarRecoveryField.vue'
 import type { ConversionSettings, ConversionPatch } from '@/types/archiveConversion'
 import { conversionFormats, useArchiveConversionStore } from '@/stores/archiveConversion'
@@ -27,7 +28,7 @@ const value = (event: Event) => (event.target as HTMLInputElement).value
       <span>{{ store.rarSupport === null ? '正在检测 RAR 编码器…' : store.rarSupport.available ? '已检测到 RAR 编码器，可创建密码和分卷归档。' : '创建 RAR 需要本机安装 WinRAR；也可选择 ZIP 或 7Z。' }}</span>
       <button type="button" class="text-primary hover:underline" @click="store.refreshRarSupport()">重新检测</button>
     </div>
-    <label class="conversion-label">目标格式<ThemedSelect :model-value="settings.format" :options="conversionFormats" :disabled="disabled" test-id="conversion-format" floating @update:model-value="emit('update', { format: $event })" /></label>
+    <label class="conversion-label"><span class="inline-flex items-center gap-1">目标格式<HelpHint v-if="settings.format === 'lzo'" label="LZOP 多文件转换说明">支持原包中的多个顶层普通文件；含文件夹或超长名称时请选择 TAR.LZO，避免丢失目录。老 Windows lzop 可能按本地编码显示中文成员名。</HelpHint></span><ThemedSelect :model-value="settings.format" :options="conversionFormats" :disabled="disabled" test-id="conversion-format" floating @update:model-value="emit('update', { format: $event })" /></label>
     <WimMethodField :format="settings.format" :model-value="settings.wimMethod" :disabled="disabled" test-id="conversion-wim-method" @update:model-value="emit('update', { wimMethod: $event })" />
     <SevenZipMethodField hide-preprocess :format="settings.format" :model-value="settings.sevenZipMethod" :disabled="disabled" test-id="conversion-sevenz-method" @update:model-value="emit('update', { sevenZipMethod: $event })" />
     <SevenZipPreprocessField class="sm:col-span-2" :format="settings.format" :method="settings.sevenZipMethod" :model-value="settings.sevenZipFilter" :distance="settings.sevenZipDeltaDistance" :disabled="disabled" test-id="conversion-sevenz-method-preprocess" @update:model-value="emit('update', {sevenZipFilter:$event as 'none'|'delta'|'bcj_x86'|'bcj_arm32'|'bcj_arm_thumb'|'bcj_arm64' | 'bcj_riscv'})" @update:distance="emit('update', {sevenZipDeltaDistance:$event})" />

@@ -464,7 +464,7 @@ describe('Compression Store', () => {
   })
 })
 
-it('lzop1662 batch configures independent single files and rejects ineligible selections atomically',()=>{
+it('lzop172 batch accepts regular-file groups and rejects folders atomically',()=>{
   setActivePinia(createPinia());const store=useCompressionStore()
   const first=mockFile('first.txt',10),second=mockFile('second.txt',20),third=mockFile('third.txt',30)
   ;[first,second,third].forEach(f=>store.addFile(f))
@@ -472,9 +472,9 @@ it('lzop1662 batch configures independent single files and rejects ineligible se
   expect(store.applyBatchConfiguration([first.path,second.path],{format:'lzo'})).toBe(2)
   expect(store.selectedFiles[0].settings).toMatchObject({format:'lzo',password:'',splitArchive:false,encryptFilenames:false,createSolidArchive:false})
   expect(store.selectedFiles[1].settings?.format).toBe('lzo');expect(store.globalSettings.format).toBe('zip')
-  const groupId=store.createGroup([second.path,third.path]);const snapshot=JSON.stringify({files:store.selectedFiles,groups:store.groups})
-  expect(()=>store.applyBatchConfiguration([first.path,groupId],{format:'lzo'})).toThrow('配置未修改')
-  expect(JSON.stringify({files:store.selectedFiles,groups:store.groups})).toBe(snapshot)
+  const groupId=store.createGroup([second.path,third.path]);const global=JSON.stringify(store.globalSettings)
+  expect(store.applyBatchConfiguration([first.path,groupId],{format:'lzo'})).toBe(2)
+  expect(store.groups[0].settings?.format).toBe('lzo');expect(JSON.stringify(store.globalSettings)).toBe(global)
   const folder={...mockFile('folder',20),isDirectory:true};store.addFile(folder)
   const before=JSON.stringify(store.selectedFiles);expect(()=>store.applyBatchConfiguration([first.path,folder.path],{format:'lzo'})).toThrow('配置未修改')
   expect(JSON.stringify(store.selectedFiles)).toBe(before)

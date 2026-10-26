@@ -29,7 +29,7 @@ function updateSettings(index:number,value:CompressionOptions){const step=plan.v
             <label class="block text-xs">步骤名称<input v-model="step.name" class="from-select mt-2" maxlength="60"></label>
             <label v-if="step.kind==='filter'" class="block text-xs">保留扩展名<input v-model="step.extensions" class="from-select mt-2" data-testid="workflow-recovery-extensions"></label>
             <p v-else-if="step.kind==='extract'" class="text-xs leading-6 text-muted">读取密码和编码在下方填写；已完成的解压产物仍可保留。</p>
-            <template v-else><label class="flex items-center gap-2 text-xs"><input v-model="step.passwordRequired" type="checkbox" :data-recovery-require-password="index" @change="!step.passwordRequired&&(step.settings.password='')">本步生成密码包，运行时填写输出密码</label><CompressionSettingsPanel :model-value="step.settings" :show-output-path="false" :allow-delete-after="false" :allow-single-file-formats="false" compact @update:model-value="updateSettings(index,$event)" /></template>
+            <template v-else><label class="flex items-center gap-2 text-xs"><input v-model="step.passwordRequired" type="checkbox" :data-recovery-require-password="index" @change="!step.passwordRequired&&(step.settings.password='')">本步生成密码包，运行时填写输出密码</label><CompressionSettingsPanel :model-value="step.settings" :show-output-path="false" :allow-delete-after="false" :allow-single-file-formats="false" :allow-regular-file-formats="false" compact @update:model-value="updateSettings(index,$event)" /></template>
           </fieldset>
         </article>
       </section>

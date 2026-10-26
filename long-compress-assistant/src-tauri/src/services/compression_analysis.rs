@@ -151,13 +151,15 @@ fn read_chunk(file: &mut File, offset: u64, length: usize, target: &mut Vec<u8>)
     Ok(())
 }
 
-fn sample_files(files: &[SourceFile], cancelled: &AtomicBool) -> Result<(Vec<u8>, usize)> {
+fn sample_files(files: &[SourceFile], cancelled: &AtomicBool) -> Result<(Vec<u8>, usize, Vec<usize>)> {
     let mut candidates: Vec<&SourceFile> = files.iter().filter(|file| file.size > 0).collect();
     candidates.sort_by_key(|file| file.score);
     candidates.truncate(MAX_SAMPLE_FILES);
     let mut sample = Vec::new();
     let mut sampled_files = 0;
+    let mut segments = Vec::new();
     for source in candidates {
+        let start = sample.len();
         check_cancelled(cancelled)?;
         let mut file = File::open(&source.path)?;
         let chunk = SAMPLE_CHUNK_BYTES.min(source.size as usize);
@@ -174,11 +176,12 @@ fn sample_files(files: &[SourceFile], cancelled: &AtomicBool) -> Result<(Vec<u8>
             )?;
         }
         sampled_files += 1;
+        segments.push(sample.len() - start);
         if sample.len() >= MAX_SAMPLE_BYTES {
             break;
         }
     }
-    Ok((sample, sampled_files))
+    Ok((sample, sampled_files, segments))
 }
 
 #[cfg(test)]
@@ -315,7 +318,7 @@ pub fn analyze_compression(
     level: u32,
     cancelled: &AtomicBool,
 ) -> Result<CompressionAnalysisResult> {
-    if format == "lzo" { anyhow::ensure!(paths.len() == 1 && Path::new(&paths[0]).is_file(), "LZOP 只支持一个普通文件；目录或多个文件请选择 ZIP、7Z 或 TAR 组合"); }
+    if format == "lzo" { super::lzop_writer::prepare_members(paths)?; }
     let mut files = collect_sources(paths, cancelled)?;
     let total_size = files
         .iter()
@@ -329,10 +332,19 @@ pub fn analyze_compression(
         .sum();
     let low_value_file_count = files.iter().filter(|file| file.low_value).count();
     files.sort_by_key(|file| file.score);
-    let (sample, sampled_files) = sample_files(&files, cancelled)?;
+    let (sample, sampled_files, segments) = sample_files(&files, cancelled)?;
     check_cancelled(cancelled)?;
     let sample_ratio = if sample.is_empty() {
         1.0
+    } else if format == "lzo" {
+        // Members reset their encoder; do not invent cross-file compression.
+        let mut offset = 0;
+        let mut size = 0usize;
+        for length in segments {
+            size += compressed_sample_size_with_cancel(&sample[offset..offset + length], format, level, cancelled)?;
+            offset += length;
+        }
+        size as f64 / sample.len() as f64
     } else {
         compressed_sample_size_with_cancel(&sample, format, level, cancelled)? as f64 / sample.len() as f64
     };

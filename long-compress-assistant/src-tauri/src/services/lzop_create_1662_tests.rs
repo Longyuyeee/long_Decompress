@@ -51,15 +51,16 @@ fn lzop1662_cancel_and_output_errors_keep_their_actual_causes(){
  let e=lzop_writer::write_stream(&mut std::io::Cursor::new([0u8;10]),&mut Failed,None,|_|Ok(())).unwrap_err();assert_eq!(e.downcast_ref::<std::io::Error>().unwrap().raw_os_error(),Some(112));
 }
 #[test]
-fn lzop1662_rejects_multi_file_directory_password_and_volume_requests(){
+fn lzop1662_rejects_directory_password_and_volume_requests(){
  let t=tempfile::tempdir().unwrap();let a=t.path().join("one.txt");let b=t.path().join("two.txt");std::fs::write(&a,b"one").unwrap();std::fs::write(&b,b"two").unwrap();let a=a.to_string_lossy().into_owned();let b=b.to_string_lossy().into_owned();
  let options=CompressionOptions{format:Some("lzo".into()),..Default::default()};
- for sources in [vec![a.clone(),b],vec![t.path().to_string_lossy().into_owned()]]{assert!(compression_format::validate_compression_request(&sources,"out.lzo",&options).is_err());}
+ assert!(compression_format::validate_compression_request(&[a.clone(),b],"out.lzo",&options).is_ok());
+ for sources in [vec![t.path().to_string_lossy().into_owned()]]{assert!(compression_format::validate_compression_request(&sources,"out.lzo",&options).is_err());}
  for changed in [CompressionOptions{password:Some("not supported".into()),..options.clone()},CompressionOptions{split_size:Some(1024),..options.clone()}]{assert!(compression_format::validate_compression_request(&[a.clone()],"out.lzo",&changed).is_err());}
 }
 #[test]
 fn lzop1662_analysis_uses_the_fixed_real_encoder_and_rejects_ineligible_sources(){
  let t=tempfile::tempdir().unwrap();let p=t.path().join("notes.txt");std::fs::write(&p,b"real LZOP sampling\n".repeat(50000)).unwrap();let paths=vec![p.to_string_lossy().into_owned()];
  let a=super::compression_analysis::analyze_compression(&paths,"lzo",1,&AtomicBool::new(false)).unwrap();let b=super::compression_analysis::analyze_compression(&paths,"lzo",9,&AtomicBool::new(false)).unwrap();assert_eq!(a.estimated_size,b.estimated_size);assert_eq!(a.estimated_seconds_high,b.estimated_seconds_high);assert!(a.estimated_ratio<0.2);
- assert!(super::compression_analysis::analyze_compression(&[paths[0].clone(),paths[0].clone()],"lzo",9,&AtomicBool::new(false)).is_err());
+ assert!(super::compression_analysis::analyze_compression(&[paths[0].clone(),paths[0].clone()],"lzo",9,&AtomicBool::new(false)).is_ok());
 }
