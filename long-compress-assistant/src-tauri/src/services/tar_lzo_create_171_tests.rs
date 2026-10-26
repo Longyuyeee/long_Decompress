@@ -61,7 +61,7 @@ async fn tarlzo171_new_outputs_preserve_every_file_directory_and_preview() {
 fn tarlzo171_fixed_analysis_and_target_options_preserve_sources() {
     let temp = tempfile::tempdir().unwrap(); let source = temp.path().join("notes.txt"); write(&source, &b"actual LZO encoder sample\n".repeat(50000));
     let sources = vec![source.to_string_lossy().into_owned()];
-    for changed in [CompressionOptions { password:Some("unsupported".into()), ..options() }, CompressionOptions { split_size:Some(1024), ..options() }] {
+    for changed in [CompressionOptions { password:Some("unsupported".into()), ..options() }] {
         assert!(compression_format::validate_compression_request(&sources, "output.tar.lzo", &changed).is_err());
     }
     let a = super::compression_analysis::analyze_compression(&sources, "tar.lzo", 1, &AtomicBool::new(false)).unwrap();

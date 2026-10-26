@@ -217,10 +217,6 @@ fn lzop172_preflight_rejects_lossy_requests_before_output_and_analysis_respects_
             password: Some("not-supported".into()),
             ..options()
         },
-        CompressionOptions {
-            split_size: Some(1024),
-            ..options()
-        },
     ] {
         assert!(
             compression_format::validate_compression_request(&sources, "out.lzo", &changed)

@@ -11,11 +11,11 @@ vi.mock('@tauri-apps/api/dialog',()=>({ask:vi.fn()}))
 it('lzop1662 conversion retains source password while removing unsupported target settings and controls',async()=>{
  const original={...defaultConversionSettings(),format:'7z',sourcePassword:'source-only',password:'target-only',splitMiB:2,encryptFilenames:true,outputPath:'D:/out.7z'}
  const settings=normalizeConversionSettings(original,{format:'lzo'})
- expect(settings).toMatchObject({format:'lzo',sourcePassword:'source-only',password:'',splitMiB:0,encryptFilenames:false,outputPath:'D:/out.lzo'})
+ expect(settings).toMatchObject({format:'lzo',sourcePassword:'source-only',password:'',splitMiB:2,encryptFilenames:false,outputPath:'D:/out.lzo'})
  expect(original.password).toBe('target-only');expect(conversionOutputPath('C:/input.zip',settings)).toBe('D:/out.lzo')
  const wrapper=mount(ConversionSettingsFields,{props:{settings},global:{plugins:[createPinia()],stubs:{Teleport:true}}});await flushPromises()
  expect(wrapper.get('[data-testid="conversion-source-password"]').element).toHaveProperty('value','source-only')
- for(const id of ['conversion-password','conversion-split','conversion-level-control','conversion-hidden-names'])expect(wrapper.find(`[data-testid="${id}"]`).exists()).toBe(false)
+ for(const id of ['conversion-password','conversion-level-control','conversion-hidden-names'])expect(wrapper.find(`[data-testid="${id}"]`).exists()).toBe(false)
  expect(wrapper.find('[data-testid="conversion-single-file-hint"]').exists()).toBe(false)
  expect(wrapper.emitted('update')).toBeUndefined();wrapper.unmount()
 })

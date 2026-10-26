@@ -11,7 +11,7 @@ describe('LZOP numeric 1.6.59 import integration',()=>{
  })
  it('allows TAR.LZO creation without claiming native passwords or split targets',()=>{
   expect(FORMAT_CAPABILITIES.find(f=>f.format==='tar.lzo')).toMatchObject({canCompress:true,singleFileOnly:false})
-  expect(supportsArchiveSplit('tar.lzo')).toBe(false)
+  expect(supportsArchiveSplit('tar.lzo')).toBe(true)
   expect(isPasswordSupportedFormat('tar.lzo')).toBe(false)
  })
 })

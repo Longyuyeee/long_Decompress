@@ -196,7 +196,7 @@ async fn tarlzo1658_magic_and_suffix_both_required_with_native_creation_route() 
     let cap = compression_format::find_compression_format_capability("tar.lzo").unwrap();
     assert!(cap.can_extract);
     assert!(cap.can_compress);
-    assert!(!cap.supports_split);
+    assert!(cap.supports_split);
     assert!(!cap.supports_password_extract);
     assert!(!cap.requires_7za);
     assert!(!cap.single_file_only);

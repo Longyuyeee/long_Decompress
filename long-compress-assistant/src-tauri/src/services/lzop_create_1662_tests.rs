@@ -56,7 +56,7 @@ fn lzop1662_rejects_directory_password_and_volume_requests(){
  let options=CompressionOptions{format:Some("lzo".into()),..Default::default()};
  assert!(compression_format::validate_compression_request(&[a.clone(),b],"out.lzo",&options).is_ok());
  for sources in [vec![t.path().to_string_lossy().into_owned()]]{assert!(compression_format::validate_compression_request(&sources,"out.lzo",&options).is_err());}
- for changed in [CompressionOptions{password:Some("not supported".into()),..options.clone()},CompressionOptions{split_size:Some(1024),..options.clone()}]{assert!(compression_format::validate_compression_request(&[a.clone()],"out.lzo",&changed).is_err());}
+ for changed in [CompressionOptions{password:Some("not supported".into()),..options.clone()}]{assert!(compression_format::validate_compression_request(&[a.clone()],"out.lzo",&changed).is_err());}
 }
 #[test]
 fn lzop1662_analysis_uses_the_fixed_real_encoder_and_rejects_ineligible_sources(){

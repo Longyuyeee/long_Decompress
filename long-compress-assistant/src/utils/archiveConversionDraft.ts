@@ -29,5 +29,6 @@ export function normalizeConversionSettings(settings: ConversionSettings, patch:
   if (!supportsFilenameEncryption(next.format)) next.encryptFilenames = false
   if (!supportsNativePassword(next.format)) next.password = ''
   if (!supportsArchiveSplit(next.format)) next.splitMiB = 0
+  if (next.format === 'lzo' || next.format === 'tar.lzo') next.zipSplitMode = 'numeric'
   return next
 }

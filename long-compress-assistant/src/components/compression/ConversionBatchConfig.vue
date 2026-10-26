@@ -46,7 +46,7 @@ function fillPurpose(patch: PurposePatch) {
   if (next.zipSplitMode !== undefined) { changeSplitMode.value = true; zipSplitMode.value = next.zipSplitMode }
 }
 
-watch(format, () => { if (isFixedLzopFormat(format.value)) {level.value='keep';changePassword.value=false;changeSplit.value=false;changeSplitMode.value=false;hiddenNames.value=recovery.value=recoveryVolumes.value='keep'}; if (format.value === 'swm' && !['keep','store','xpress','lzx'].includes(wimMethod.value)) wimMethod.value = 'keep' })
+watch(format, () => { if (isFixedLzopFormat(format.value)) {level.value='keep';changePassword.value=false;changeSplitMode.value=false;hiddenNames.value=recovery.value=recoveryVolumes.value='keep'}; if (format.value === 'swm' && !['keep','store','xpress','lzx'].includes(wimMethod.value)) wimMethod.value = 'keep' })
 const sourceEncoding = ref('keep'), targetEncoding = ref('keep')
 const defaults = ref({ ...store.defaults })
 const keep = { value: 'keep', label: '保持各自设置' }
@@ -139,7 +139,7 @@ async function apply() {
           <label v-if="!updatesOnly && !isFixedLzopFormat(format)" class="min-w-0 text-sm">RAR 分包恢复卷<ThemedSelect v-model="recoveryVolumes" :options="[keep, ...[0,1,2,3,5,10].map(value => ({value:String(value),label:value ? `${value} 个 .rev 恢复卷` : '不生成恢复卷'}))]" test-id="conversion-batch-rar-recovery-volumes" floating /></label>
           <label v-if="!updatesOnly && !isFixedLzopFormat(format)" class="min-w-0 text-sm">文件名加密<ThemedSelect v-model="hiddenNames" :options="[keep, { value: 'yes', label: '启用（7Z/RAR，需要新包密码）' }, { value: 'no', label: '关闭' }]" floating /></label>
           <label v-if="changeSplitMode && ['keep','zip','zipx'].includes(format)" class="min-w-0 text-sm">ZIP 卷型<ThemedSelect v-model="zipSplitMode" :options="[{value:'numeric',label:'数字切卷'},{value:'standard',label:'标准 ZIP 分卷'}]" test-id="conversion-batch-zip-split-mode" floating /></label>
-          <div v-if="!isFixedLzopFormat(format)" class="space-y-2 text-sm"><label class="flex items-center gap-2"><input v-model="changeSplit" type="checkbox" />修改分卷大小</label><input v-if="changeSplit" v-model.number="splitMiB" type="number" min="0" class="conversion-input w-full" placeholder="0 表示不分卷" /></div>
+          <div class="space-y-2 text-sm"><label class="flex items-center gap-2"><input v-model="changeSplit" type="checkbox" data-testid="conversion-batch-change-split" />修改分卷大小<HelpHint v-if="isFixedLzopFormat(format)" label="LZOP 批量分卷说明">0 表示不分卷；数字切片需集齐整组，可从任意卷打开，分享给其他工具时先按序合并。</HelpHint></label><input v-if="changeSplit" v-model.number="splitMiB" data-testid="conversion-batch-split" type="number" min="0" step="any" class="conversion-input w-full" placeholder="0 表示不分卷" /></div>
           <div class="space-y-2 text-sm"><label class="flex items-center gap-2"><input v-model="changeSourcePassword" type="checkbox" />填写共用原包密码</label><input v-if="changeSourcePassword" v-model="sourcePassword" type="password" autocomplete="off" class="conversion-input w-full" placeholder="原包未加密可留空" /></div>
           <div v-if="!updatesOnly && !isFixedLzopFormat(format)" class="space-y-2 text-sm"><label class="flex items-center gap-2"><input v-model="changePassword" type="checkbox" />修改新包密码</label><input v-if="changePassword" v-model="password" type="password" autocomplete="new-password" class="conversion-input w-full" placeholder="留空则新包不加密" /></div>
         </div>
