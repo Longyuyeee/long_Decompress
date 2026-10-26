@@ -1,3 +1,4 @@
+import { runLzopMembers1660Gate, runLzopName1660Gate } from './lzop-members-read-1660-gate.mjs'
 import { runLzopNumeric1659Gate } from './lzop-numeric-read-1659-gate.mjs'
 import { runTarLzo1658Gate } from './tar-lzo-read-convert-1658-gate.mjs'
 import { runLzop1657Gate } from './lzop-read-convert-1657-gate.mjs'
@@ -5081,6 +5082,10 @@ try {
     await runSevenzSolidDeflate1635Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--sevenz-password-deflate-preview-1634-only')) {
     await runSevenzPasswordDeflate1634Gate({driver,bridge:callDesktopBridge,root,application})
+  } else if (process.argv.includes('--lzop-name-1660-only')) {
+    await runLzopName1660Gate({driver,bridge:callDesktopBridge,root,application})
+  } else if (process.argv.includes('--lzop-members-read-1660-only')) {
+    await runLzopMembers1660Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--lzop-numeric-read-1659-only')) {
     await runLzopNumeric1659Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--tar-lzo-read-convert-1658-only')) {

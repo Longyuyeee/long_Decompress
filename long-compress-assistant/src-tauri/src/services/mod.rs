@@ -285,3 +285,6 @@ mod tar_lzo_1658_tests;
 
 #[cfg(test)]
 mod lzop_numeric_1659_tests;
+
+#[cfg(test)]
+mod lzop_members_1660_tests;

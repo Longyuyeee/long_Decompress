@@ -352,6 +352,11 @@ pub async fn browse_archive_cancellable_at(
                         return Ok(result);
                     }
                 }
+                if format == ArchiveFormat::Lzop {
+                    if let Some(members)=super::lzop::multi_index(&path,||ensure_not_cancelled(&native_cancelled))? {
+                        return Ok(summarize("LZOP",members.into_iter().map(|m|ArchiveEntryInfo {size_known:Some(true),name:m.name.clone(),path:m.name,size:m.size,compressed_size:Some(m.compressed_size),modified:None,crc:None,encrypted:false,is_dir:false}).collect()));
+                    }
+                }
                 if let Some((codec, label, suffixes)) = super::codec_stream::plain_format(&format) {
                     let mut reader = super::codec_stream::decoder(&path, codec)?;
                     let mut buffer = [0u8; 64 * 1024];

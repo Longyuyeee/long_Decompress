@@ -1,0 +1,125 @@
+{
+  "producer": "official Windows lzop 1.03 / LZO 2.04",
+  "source": "https://www.lzop.org/download/lzop103w.zip",
+  "downloadSha256": "0e55b444069eb5eb8addda2379cf12450f8ee68248a125b44bac140f6cdf7d4a",
+  "cases": [
+    {
+      "archive": "members-1.lzo",
+      "archiveSha256": "1567e2d05b271e201b4d1d900c6adcaf1a0f27e26ee1e2d47222a0d5c5c15ef3",
+      "options": [
+        "-1",
+        "--crc32",
+        "-CC",
+        "-o"
+      ],
+      "officialTestExit": 0,
+      "officialRestoreExit": 0,
+      "expected": [
+        {
+          "path": "notes.txt",
+          "bytes": 70,
+          "sha256": "2a92daa9e549e6c05f45133f4dd338ffc4fd7cd3dbe3a5dc1ca1841b9a928192"
+        },
+        {
+          "path": "large.txt",
+          "bytes": 1620000,
+          "sha256": "1c3b920297c63b26580fa2e120d5f3465a5e76645f47922ca1066a607a4df4d7"
+        },
+        {
+          "path": "cover.png",
+          "bytes": 1713,
+          "sha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43"
+        },
+        {
+          "path": "data.bin",
+          "bytes": 300000,
+          "sha256": "9c7368a5e569c96b668c00a2ce498656b97b931c0ef1e61d7be7406c3944b2d3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "archive": "members-3.lzo",
+      "archiveSha256": "b758b221ee727c78b2677ad4e5057641aff000acc75688fe70a12dfd1b776673",
+      "options": [
+        "-3",
+        "--crc32",
+        "-CC",
+        "-o"
+      ],
+      "officialTestExit": 0,
+      "officialRestoreExit": 0,
+      "expected": [
+        {
+          "path": "notes.txt",
+          "bytes": 70,
+          "sha256": "2a92daa9e549e6c05f45133f4dd338ffc4fd7cd3dbe3a5dc1ca1841b9a928192"
+        },
+        {
+          "path": "large.txt",
+          "bytes": 1620000,
+          "sha256": "1c3b920297c63b26580fa2e120d5f3465a5e76645f47922ca1066a607a4df4d7"
+        },
+        {
+          "path": "cover.png",
+          "bytes": 1713,
+          "sha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43"
+        },
+        {
+          "path": "data.bin",
+          "bytes": 300000,
+          "sha256": "9c7368a5e569c96b668c00a2ce498656b97b931c0ef1e61d7be7406c3944b2d3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "archive": "members-9.lzo",
+      "archiveSha256": "abd35b31024bdd3ac25629551c876640137f9ef652c17b972edd154d26ed401f",
+      "options": [
+        "-9",
+        "--crc32",
+        "-CC",
+        "-o"
+      ],
+      "officialTestExit": 0,
+      "officialRestoreExit": 0,
+      "expected": [
+        {
+          "path": "notes.txt",
+          "bytes": 70,
+          "sha256": "2a92daa9e549e6c05f45133f4dd338ffc4fd7cd3dbe3a5dc1ca1841b9a928192"
+        },
+        {
+          "path": "large.txt",
+          "bytes": 1620000,
+          "sha256": "1c3b920297c63b26580fa2e120d5f3465a5e76645f47922ca1066a607a4df4d7"
+        },
+        {
+          "path": "cover.png",
+          "bytes": 1713,
+          "sha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43"
+        },
+        {
+          "path": "data.bin",
+          "bytes": 300000,
+          "sha256": "9c7368a5e569c96b668c00a2ce498656b97b931c0ef1e61d7be7406c3944b2d3"
+        },
+        {
+          "path": "empty.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ],
+  "derivedTests": "Concatenated stdin members, name collisions/invalid names, damaged CRC, truncation and byte slices are derived tests, not native multipart or external application originals."
+}

@@ -113,7 +113,7 @@ export interface ExtractOnlyFormatCapability {
 
 export const EXTRACT_ONLY_FORMATS: ExtractOnlyFormatCapability[] = [
   { displayName: 'TAR.LZO（目录）', extensions: ['tar.lzo'], requires7za: false },
-  { displayName: 'LZOP（单文件）', extensions: ['lzo'], requires7za: false },
+  { displayName: 'LZOP' , extensions: ['lzo'], requires7za: false },
   { displayName: 'ALZ', extensions: ['alz'], requires7za: false },
   { displayName: 'EGG', extensions: ['egg'], requires7za: false },
   { displayName: 'Application packages', extensions: ['jar', 'xpi', 'ipa', 'apk', 'appx'], requires7za: false },

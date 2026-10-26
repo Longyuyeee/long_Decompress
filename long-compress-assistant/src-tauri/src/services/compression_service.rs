@@ -2731,6 +2731,8 @@ impl CompressionService {
                 let w = window.clone();
                 let codec = match codec_format { ArchiveFormat::Lz4 => "lz4", ArchiveFormat::Lzip => "lz", ArchiveFormat::Lzma => "lzma", ArchiveFormat::Lzop => "lzo", _ => "br" };
                 tokio::task::spawn_blocking(move || {
+                    if codec=="lzo" && !compression_format::is_tar_wrapped_archive(Path::new(&f_path), "tar.lzo")
+                        && crate::services::lzop::extract_members(&srv,Some(&w),&t_id,Path::new(&f_path),&o_dir,&opts)? {return Ok(());}
                     let decoder = crate::services::codec_stream::decoder(Path::new(&f_path), codec)?;
                     if compression_format::is_tar_wrapped_archive(Path::new(&f_path), &format!("tar.{codec}")) {
                         let result=srv.do_extract_tar(&w, &t_id, &f_path, &o_dir, Some(decoder), &opts);

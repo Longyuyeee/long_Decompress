@@ -1,4 +1,4 @@
-//! One ordinary LZOP member. The container is distinct from raw LZO blocks.
+//! LZOP member framing and checked block decoding. The container is distinct from raw LZO blocks.
 //! Framing follows lzop 1.04 src/lzop.c and src/p_lzo.c; no external executable.
 use std::io::{self, Read};
 use std::path::Path;
@@ -79,6 +79,15 @@ impl<R: Read> Header<'_, R> {
     }
 }
 
+struct Block {
+    unpacked: u32,
+    packed: u32,
+    expected_adler: Option<u32>,
+    expected_crc: Option<u32>,
+    packed_adler: Option<u32>,
+    packed_crc: Option<u32>,
+}
+
 pub(crate) struct LzopReader<R> {
     input: R,
     flags: u32,
@@ -87,9 +96,14 @@ pub(crate) struct LzopReader<R> {
     finished: bool,
     failed: Option<(io::ErrorKind, String)>,
     numeric: bool,
+    member_mode: bool,
+    name: Vec<u8>,
 }
 impl<R: Read> LzopReader<R> {
-    pub(crate) fn new(mut input: R) -> io::Result<Self> {
+    pub(crate) fn new(input: R) -> io::Result<Self> {
+        Self::with_mode(input, false)
+    }
+    fn with_mode(mut input: R, member_mode: bool) -> io::Result<Self> {
         let mut magic = [0; 9];
         exact(&mut input, &mut magic)?;
         if magic != MAGIC {
@@ -119,7 +133,7 @@ impl<R: Read> LzopReader<R> {
             header.u32()?;
         }
         let name_len = header.byte()? as usize;
-        header.take(name_len)?;
+        let name = header.take(name_len)?.to_vec();
         let expected = checksum(&header.bytes, flags & HEADER_CRC != 0);
         if read_u32(header.input)? != expected {
             return Err(damaged("文件头校验失败"));
@@ -137,7 +151,7 @@ impl<R: Read> LzopReader<R> {
                 "文件头扩展标记暂不支持，请用 lzop 解压后再导入",
             ));
         }
-        if flags & 0x400 != 0 {
+        if flags & 0x400 != 0 && !member_mode {
             return Err(unsupported(
                 "原生多部分文件暂不支持，请先使用 lzop 合并解压",
             ));
@@ -170,24 +184,28 @@ impl<R: Read> LzopReader<R> {
             finished: false,
             failed: None,
             numeric: false,
+            member_mode,
+            name,
         })
     }
-    fn next_block(&mut self) -> io::Result<()> {
+    fn block_header(&mut self) -> io::Result<Option<Block>> {
         let unpacked = read_u32(&mut self.input)?;
         if unpacked == 0 {
             let mut tail = Vec::new();
-            self.input.by_ref().take(9).read_to_end(&mut tail)?;
-            if tail == MAGIC {
-                return Err(unsupported(
-                    "当前按单文件读取；此文件包含多个成员，请先用 lzop 分别解压",
-                ));
-            }
-            if !tail.is_empty() {
-                return Err(damaged("结束标记后仍有额外数据"));
+            if !self.member_mode {
+                self.input.by_ref().take(9).read_to_end(&mut tail)?;
+                if tail == MAGIC {
+                    return Err(unsupported(
+                        "当前按单文件读取；此文件包含多个成员，请先用 lzop 分别解压",
+                    ));
+                }
+                if !tail.is_empty() {
+                    return Err(damaged("结束标记后仍有额外数据"));
+                }
             }
             self.finished = true;
             self.block.clear();
-            return Ok(());
+            return Ok(None);
         }
         if unpacked == u32::MAX {
             return Err(unsupported("原生分段标记暂不支持，请先使用 lzop 合并解压"));
@@ -218,6 +236,27 @@ impl<R: Read> LzopReader<R> {
             Some(read_u32(&mut self.input)?)
         } else {
             None
+        };
+        Ok(Some(Block {
+            unpacked,
+            packed,
+            expected_adler,
+            expected_crc,
+            packed_adler,
+            packed_crc,
+        }))
+    }
+    fn next_block(&mut self) -> io::Result<()> {
+        let Some(Block {
+            unpacked,
+            packed,
+            expected_adler,
+            expected_crc,
+            packed_adler,
+            packed_crc,
+        }) = self.block_header()?
+        else {
+            return Ok(());
         };
         let mut data = vec![0; packed as usize];
         exact(&mut self.input, &mut data)?;
@@ -277,16 +316,27 @@ impl<R: Read> Read for LzopReader<R> {
 fn numeric_error(error: io::Error, numeric: bool) -> io::Error {
     if numeric && error.to_string().contains("LZOP 数据不完整") {
         io::Error::new(error.kind(), format!("{error}。数字卷数据未完整结束，可能缺少后续卷或卷已截断；总卷数无法确认，请补齐原始分卷后重试"))
-    } else { error }
+    } else {
+        error
+    }
 }
 
-pub(crate) fn open(path: &Path) -> anyhow::Result<LzopReader<super::numeric_volume_reader::ZipInputReader>> {
-    use super::{numeric_volume_reader::ZipInputReader, split_archive_detector::{SplitArchiveDetector, SplitFormat}};
+fn source_input(
+    path: &Path,
+) -> anyhow::Result<(super::numeric_volume_reader::ZipInputReader, bool)> {
+    use super::{
+        numeric_volume_reader::ZipInputReader,
+        split_archive_detector::{SplitArchiveDetector, SplitFormat},
+    };
     if let Some(group) = SplitArchiveDetector::detect_split_archive(path)? {
         if group.format == SplitFormat::GenericNumeric {
             let mut numbers = std::collections::HashSet::new();
             for part in &group.parts {
-                let index = part.extension().and_then(|s| s.to_str()).and_then(|s| s.parse::<usize>().ok()).unwrap_or(0);
+                let index = part
+                    .extension()
+                    .and_then(|s| s.to_str())
+                    .and_then(|s| s.parse::<usize>().ok())
+                    .unwrap_or(0);
                 anyhow::ensure!(index > 0 && numbers.insert(index), "[archive-inspection:incomplete] LZOP 数字分卷编号为 0 或重复，请检查同目录文件");
             }
         }
@@ -294,18 +344,35 @@ pub(crate) fn open(path: &Path) -> anyhow::Result<LzopReader<super::numeric_volu
     let source = SplitArchiveDetector::complete_source(path)?;
     let numeric = ZipInputReader::is_numeric_first(&source);
     let input = ZipInputReader::open(&source)?;
+    Ok((input, numeric))
+}
+pub(crate) fn open(
+    path: &Path,
+) -> anyhow::Result<LzopReader<super::numeric_volume_reader::ZipInputReader>> {
+    let (input, numeric) = source_input(path)?;
     let mut reader = LzopReader::new(input).map_err(|e| numeric_error(e, numeric))?;
     reader.numeric = numeric;
     Ok(reader)
 }
 
 pub(crate) fn verify(path: &Path, mut cancelled: impl FnMut() -> bool) -> anyhow::Result<()> {
-    let mut reader = open(path)?;
-    let mut bytes = [0; 64 * 1024];
-    loop {
+    let members = member_index(path, || {
         anyhow::ensure!(!cancelled(), "操作已取消");
-        if reader.read(&mut bytes)? == 0 {
-            return Ok(());
+        Ok(())
+    })?;
+    let mut bytes = [0; 64 * 1024];
+    for member in &members {
+        let mut reader = member_reader(path, member)?;
+        loop {
+            anyhow::ensure!(!cancelled(), "操作已取消");
+            if reader.read(&mut bytes)? == 0 {
+                break;
+            }
         }
     }
+    Ok(())
 }
+
+#[path = "lzop_members.rs"]
+mod members;
+pub(crate) use members::{extract_members, member_index, member_reader, multi_index};
