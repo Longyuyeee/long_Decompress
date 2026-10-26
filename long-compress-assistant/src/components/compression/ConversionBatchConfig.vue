@@ -29,7 +29,7 @@ const changePassword = ref(false), password = ref(''), changeSourcePassword = re
 const changeSplit = ref(false), splitMiB = ref(0), hiddenNames = ref('keep'), recovery = ref('keep')
 const recoveryVolumes = ref('keep'), zipMethod = ref('keep')
 const sevenZipMethod = ref('keep')
-const sevenZipFilter = ref<'keep'|'none'|'delta'|'bcj_x86'|'bcj_arm32'|'bcj_arm_thumb'>('keep')
+const sevenZipFilter = ref<'keep'|'none'|'delta'|'bcj_x86'|'bcj_arm32'|'bcj_arm_thumb'|'bcj_arm64'>('keep')
 const sevenZipDeltaDistance = ref<number>()
 const wimMethod = ref('keep')
 const zipSplitMode = ref<'numeric' | 'standard'>('numeric')

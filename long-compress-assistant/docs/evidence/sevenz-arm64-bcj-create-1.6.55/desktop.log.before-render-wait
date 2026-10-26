@@ -1,0 +1,48 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+StaleElementReferenceError: stale element reference: stale element not found in the current frame
+  (Session info: MicrosoftEdge=155.0.4283.62)
+    at Object.throwDecodedError (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\error.js:523:15)
+    at parseHttpResponse (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\http.js:527:13)
+    at Executor.execute (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\http.js:459:28)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async WebDriver.execute (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:745:17)
+    at async toWireValue (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:149:15)
+    at async E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:195:16
+    at async forEachKey (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:189:9)
+    at async convertKeys (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:194:3)
+    at async WebDriver.execute (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:743:22) {
+  remoteStacktrace: '\tmsedgedriver!GetHandleVerifier [0x7ff66ca882b5+4f25]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c9d7e74]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff66ce16e0f+393a7f]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c76a881]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c76ccc5]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c76cd8f]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c7af939]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c7b00ea]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c7a611c]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c7a60cd]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c7a5fca]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c7a60cd]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c7edef8]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c7a590c]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c7a4b8d]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c7a5733]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c8e3121]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c8f3108]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff66cb30f0a+adb7a]\n' +
+    '\tmsedgedriver!GetHandleVerifier [0x7ff66cb37571+b41e1]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c9e361c]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c9de134]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c9de25a]\n' +
+    '\tmsedgedriver!(No symbol) [0x7ff66c9cfbe8]\n' +
+    '\tKERNEL32!BaseThreadInitThunk [0x7ffcdba7dda7+17]\n' +
+    '\tntdll!RtlUserThreadStart [0x7ffcddcbee4c+2c]\n'
+}
+
+Node.js v24.14.0

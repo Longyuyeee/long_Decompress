@@ -4,7 +4,7 @@ use std::io::{self, Write};
 #[derive(PartialEq)]
 enum State { Active, Finished, Failed }
 
-/// Streaming x86/ARM32/Thumb BCJ. Preserve the final <=4/3/3 bytes until the next write;
+/// Streaming x86/ARM32/Thumb/ARM64 BCJ. Preserve the final <=4/3/3/3 bytes until the next write;
 /// flush must not reset the instruction position or expose an incomplete call.
 pub struct BcjEncoder<W: Write> {
     inner: W,
@@ -23,6 +23,9 @@ impl<W: Write> BcjEncoder<W> {
     }
     pub(crate) fn new_arm_thumb(inner: W) -> Self {
         Self::with_filter(inner, BCJFilter::new_arm_thumb(0, true))
+    }
+    pub(crate) fn new_arm64(inner: W) -> Self {
+        Self::with_filter(inner, BCJFilter::new_arm64(0, true))
     }
     fn with_filter(inner: W, filter: BCJFilter) -> Self {
         Self { inner, filter, pending: [0; 8192], len: 0, state: State::Active }

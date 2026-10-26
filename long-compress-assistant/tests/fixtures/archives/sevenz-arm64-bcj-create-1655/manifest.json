@@ -1,0 +1,20 @@
+{
+  "generator": "Bundled independently implemented 7-Zip ARM64 + Copy; exact unencrypted packed stream is the filter byte oracle; independent complete readback checked",
+  "engineSha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53",
+  "seed": 1655,
+  "elf": "Hand-built ELF64 little-endian AArch64 Linux exit program with synthetic BL/ADRP instructions, not an external real application or compression benchmark",
+  "references": [
+    "https://github.com/tukaani-project/xz/blob/master/src/liblzma/simple/arm64.c",
+    "https://github.com/ip7z/7zip/blob/main/CPP/7zip/Compress/BranchRegister.cpp"
+  ],
+  "files": {
+    "filtered-0.bin": "0eef7f6246b11ba7d37aa9bc618c1b2fa81f4f1ba729f90d2a98d5464fc011f3",
+    "filtered-2147483644.bin": "b4d9130c14e09f4b0470fcef87cb4f83283c902b435aede17a33ba3dca5b134c",
+    "filtered-4294967292.bin": "b4d9130c14e09f4b0470fcef87cb4f83283c902b435aede17a33ba3dca5b134c",
+    "input.bin": "07a7a304f29121263e14fba606525ebf5d42b101b0a14813aaefc78584f1cf84",
+    "original-0.7z": "7b2a6afe7a4078e97b3ceedf5e61f1851d4f27e457a2b97b15799a263078f6d4",
+    "original-2147483644.7z": "86e1792ed3a756f3938813ff7a990bf8cd04b8e3730641b53e43cdfdfdc0866d",
+    "original-4294967292.7z": "aafb5cc86af59407c374c867bf7fc3d11f5e6a7008f0ff815d57cb42ae4bb7af",
+    "sample-arm64.elf": "f9a225a7f824bc1f574c588bb6cd707665089df67eaba3841b5c4cbf44c3a185"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "filterSource": "XZ arm64.c, 0BSD, ported to Rust; native engine method 0x0A",
+  "sha256": "f9a225a7f824bc1f574c588bb6cd707665089df67eaba3841b5c4cbf44c3a185",
+  "claim": "Byte compatibility and full readback; not a real application or compression ratio benchmark",
+  "manifest": "tests/fixtures/archives/sevenz-arm64-bcj-create-1655/manifest.json",
+  "source": "Public deterministic independent 7-Zip ARM64+Copy byte vectors and hand-built minimal ELF64 AArch64 exit program with synthetic BL/ADRP"
+}
