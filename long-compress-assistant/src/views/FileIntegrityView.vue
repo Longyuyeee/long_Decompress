@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LzopRecoveryDialog from '@/components/archive/LzopRecoveryDialog.vue'
 import HelpHint from '@/components/ui/HelpHint.vue'
 import ZpaqBlockDetails from '@/components/archive/ZpaqBlockDetails.vue'
 import {zpaqReportLines} from '@/types/zpaqBlocks'
@@ -83,6 +84,7 @@ async function inspectBatchItem(row: ArchiveRecoveryRow) {
   await nextTick()
   diagnosticReport.value = row.report || null
 }
+const lzopRecoveryVisible=ref(false)
 const isRar = computed(() => diagnosticReport.value?.actualFormat === 'RAR')
 const archivePassword = ref('')
 const diagnosticReport = ref<ArchiveDiagnosticReport | null>(null)
@@ -378,7 +380,7 @@ const statusLabel = (status: string) => ({
   zpaq_affected:'发现受损数据块', interrupted_tail:'尾部更新中断',
   password_encoding: diagnosticReport.value?.actualFormat === 'ZIP' ? 'ZIP 密码编码不兼容' : '原包编码不兼容',
   directory_lost: '目录信息丢失，可尝试救援',
-  partial_recovery: '缺少分卷，可尝试部分救援',
+  partial_recovery: diagnosticReport.value?.actualFormat==='LZOP'?'可部分取回完整成员':'缺少分卷，可尝试部分救援',
   missing_volume: '缺少分卷', crc_error: '内容校验失败', truncated: '归档被截断',
   damaged: '归档损坏', checking: '检查中',
   ambiguous_data: '密码或加密内容异常', unsupported_feature: '暂不支持此归档特性',
@@ -743,7 +745,7 @@ onUnmounted(() => {
             <button v-if="isRar && diagnosticReport.status === 'healthy' && diagnosticReport.volumesFound > 1 && diagnosticReport.recoverability !== 'sfx_readonly'" class="archive-secondary mt-4" data-testid="open-create-recovery-volumes" @click="showRecoveryVolumes(archivePath, archivePassword)"><i class="pi pi-shield"></i>为这组分包创建恢复卷</button>
             <div class="diagnostic-metrics mt-6">
               <div><span>归档大小</span><strong>{{ formatBytes(diagnosticReport.fileSize) }}</strong></div>
-              <div><span>{{ diagnosticReport.recoverability === 'missing_volume_entries' ? '可尝试文件 / 目录' : diagnosticReport.recoverability === 'local_entries' ? '已找到文件 / 目录' : '文件 / 目录' }}</span><strong>{{ diagnosticReport.integrityTested || diagnosticReport.totalFiles || diagnosticReport.totalDirectories ? `${diagnosticReport.totalFiles} / ${diagnosticReport.totalDirectories}` : '未能确认' }}</strong></div>
+              <div><span>{{ diagnosticReport.recoverability === 'missing_volume_entries' ? '可尝试文件 / 目录' : diagnosticReport.recoverability === 'local_entries' ? '已找到文件 / 目录' : diagnosticReport.recoverability === 'lzop_prefix' ? '已确认文件 / 目录' : '文件 / 目录' }}</span><strong>{{ diagnosticReport.integrityTested || diagnosticReport.totalFiles || diagnosticReport.totalDirectories ? `${diagnosticReport.totalFiles} / ${diagnosticReport.totalDirectories}` : '未能确认' }}</strong></div>
               <div><span>展开大小</span><strong>{{ diagnosticReport.totalUncompressedSizeKnown === false ? '大小未知' : formatBytes(diagnosticReport.totalUncompressedSize) }}</strong></div>
               <div><span>加密 / 分卷</span><strong>{{ encryptionLabel(diagnosticReport) }} / {{ diagnosticReport.splitArchive ? diagnosticReport.volumesFound + ' 卷' : '否' }}</strong></div>
             </div>
@@ -758,6 +760,7 @@ onUnmounted(() => {
               <ul class="mt-2 space-y-1 text-xs text-muted break-all"><li v-for="item in diagnosticReport.evidence" :key="item">· {{ item }}</li></ul>
             </details>
 
+            <button v-if="diagnosticReport.recoverability==='lzop_prefix'" class="archive-secondary mt-4" data-testid="open-lzop-recovery" @click="lzopRecoveryVisible=true"><i class="pi pi-folder-open"/>{{diagnosticReport.totalFiles?'选择完整成员部分取回':'查看部分取回范围'}}</button>
             <div v-if="diagnosticReport.canRepair" class="mt-6 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-5">
               <strong class="text-sm text-content">{{ isRar ? diagnosticReport.recoverability === 'rar_recovery_volumes' ? '可尝试使用恢复卷补齐或修复 RAR' : '可尝试修复 RAR' : diagnosticReport.encrypted ? '可尝试救回密码 ZIP 中的完整文件' : '可尝试恢复 ZIP 中的完整文件' }}</strong>
               <p class="mt-2 text-xs leading-5 text-muted">{{ isRar ? '在副本中使用本机 RAR 工具处理，完整校验通过后保存到新的 .repaired 文件夹；原件保持不变。恢复数据不足时可能无法修复。' : '只把仍能完整读取的条目写入新文件，跳过损坏条目；原压缩包不会被覆盖或删除。' }}</p>
@@ -787,6 +790,7 @@ onUnmounted(() => {
       </div>
     </div>
   </div>
+  <LzopRecoveryDialog v-if="lzopRecoveryVisible" :path="archivePath" :encoding="sourceEncoding" :initial="diagnosticReport?.lzopPrefix" :origin-task-id="recoveryTaskId || undefined" @close="lzopRecoveryVisible=false" />
   <RarRecoveryVolumesDialog v-model:visible="recoveryVolumesVisible" :path="recoveryVolumesSource" :password="recoveryVolumesPassword" />
 </template>
 

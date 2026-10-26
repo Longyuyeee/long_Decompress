@@ -32,6 +32,8 @@ pub struct DiagnosticIssue {
 #[serde(rename_all = "camelCase")]
 pub struct ArchiveDiagnosticReport {
     #[serde(skip_serializing_if="Option::is_none")]
+    pub lzop_prefix: Option<super::lzop::recovery::Report>,
+    #[serde(skip_serializing_if="Option::is_none")]
     pub zpaq_blocks: Option<super::zpaq_engine::blocks::Report>,
     pub file_path: String,
     pub file_size: u64,
@@ -372,6 +374,7 @@ pub async fn diagnose_archive_at(
         .collect()).unwrap_or_default();
     let mut report = ArchiveDiagnosticReport {
         zpaq_blocks: None,
+        lzop_prefix: None,
         file_path: path.to_string_lossy().to_string(),
         file_size: group.as_ref().map(|group| group.total_size).unwrap_or(path.metadata()?.len()),
         actual_format: format_label(logical, &[]),
@@ -396,6 +399,25 @@ pub async fn diagnose_archive_at(
     if let Some(error) = alz_structure_error {
         report.actual_format = if super::egg_volumes::is_candidate(path) { "EGG" } else { "ALZ" }.into();
         record_failure(&mut report, &error, password.is_some(), false, path);
+        return Ok(report);
+    }
+    if super::lzop::recovery::is_candidate(path) {
+        let path=path.to_path_buf();let flag=cancelled.clone();
+        let scanned=tauri::async_runtime::spawn_blocking(move||super::lzop::recovery::scan(&path,zip_password_encoding,&flag,|_,_|{})).await.context("LZOP recovery check worker failed")?;
+        report.actual_format="LZOP".into();
+        match scanned {
+            Ok(prefix)=>{
+                report.total_directories=prefix.entries.iter().flat_map(|e|Path::new(&e.name).ancestors().skip(1).filter(|p|!p.as_os_str().is_empty()).map(|p|p.to_path_buf()).collect::<Vec<_>>()).collect::<std::collections::HashSet<_>>().len();
+                report.total_files=prefix.entries.len();report.total_uncompressed_size=prefix.entries.iter().map(|e|e.bytes).sum();report.total_uncompressed_size_known=prefix.complete;
+                report.integrity_tested=prefix.complete;
+                report.status=if prefix.complete {"healthy"}else if prefix.entries.is_empty(){if prefix.stop_reason.contains("[archive-inspection:unsupported]"){"unsupported_feature"}else if prefix.stop_reason.contains("未提供内容校验"){"structure_only"}else if prefix.stop_reason.contains("[lzop-encoding]"){"password_encoding"}else{"damaged"}}else{"partial_recovery"}.into();
+                report.recoverability=if prefix.complete {"not_needed"}else{"lzop_prefix"}.into();
+                report.evidence.push(format!("已解码并校验 {} 个完整成员；{}",prefix.entries.len(),prefix.stop_reason));
+                if !prefix.complete{report.issues.push(DiagnosticIssue{code:"lzop_prefix".into(),severity:"warning".into(),title:if prefix.entries.is_empty(){"没有可确认完好的完整成员".into()}else{format!("可选择部分取回 {} 个完整成员",prefix.entries.len())},detail:format!("{}。仅检查从首卷起的连续前缀，后续清单未知；原件保持不变。",prefix.stop_reason)});}
+                report.lzop_prefix=Some(prefix);
+            }
+            Err(e)=>{check_cancelled(&cancelled)?;record_failure(&mut report,&e,false,false,source);}
+        }
         return Ok(report);
     }
     if !report.missing_volumes.is_empty() {

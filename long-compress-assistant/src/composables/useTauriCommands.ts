@@ -211,6 +211,7 @@ export interface ArchiveDiagnosticIssue {
 }
 
 export interface ArchiveDiagnosticReport {
+  lzopPrefix?: import('@/types/lzopRecovery').LzopRecoveryReport
   zpaqBlocks?: import('@/types/zpaqBlocks').ZpaqBlockReport
   filePath: string
   fileSize: number

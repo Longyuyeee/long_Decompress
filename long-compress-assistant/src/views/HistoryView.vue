@@ -13,6 +13,8 @@ import HistoryExtractionDraft from '@/components/tasks/HistoryExtractionDraft.vu
 import HistoryCompressionDraft from '@/components/tasks/HistoryCompressionDraft.vue'
 import { useArchiveConversionStore } from '@/stores/archiveConversion'
 const conversion = useArchiveConversionStore()
+const isRecovery = (record:TaskHistoryRecord) => record.executionConfig?.kind === 'archive-recovery'
+const inspectRecovery = (record:TaskHistoryRecord) => {selectedRecord.value=null; appStore.openArchiveForDiagnosis({path:record.sourcePaths[0]})}
 const isEdit = (record: TaskHistoryRecord) => record.executionConfig?.kind === 'archive-edit'
 const openEditSource = (record: TaskHistoryRecord) => { selectedRecord.value = null; appStore.openArchiveInBrowser(record.sourcePaths[0]); window.location.hash = '#/browser' }
 const isConversion = (record: TaskHistoryRecord) => record.executionConfig?.kind === 'archive-conversion'
@@ -195,8 +197,8 @@ const formatDateTime = (value?: string | null) => {
   }).format(time) : '—'
 }
 
-const typeLabel = (record: TaskHistoryRecord) => isEdit(record) ? 'ZIP 编辑另存' : isConversion(record) ? (record.executionConfig?.kind === 'archive-conversion' && record.executionConfig.operation === 'zpaq-update' ? 'ZPAQ 增量更新' : '归档转换') : appStore.t(`history.type.${record.taskType}`)
-const statusLabel = (record: TaskHistoryRecord) => appStore.t(`history.status.${record.status}`)
+const typeLabel = (record: TaskHistoryRecord) => isRecovery(record) ? 'LZOP 部分取回' : isEdit(record) ? 'ZIP 编辑另存' : isConversion(record) ? (record.executionConfig?.kind === 'archive-conversion' && record.executionConfig.operation === 'zpaq-update' ? 'ZPAQ 增量更新' : '归档转换') : appStore.t(`history.type.${record.taskType}`)
+const statusLabel = (record: TaskHistoryRecord) => isRecovery(record) && record.status==='completed' ? '已部分取回' : appStore.t(`history.status.${record.status}`)
 
 const refresh = async () => {
   clearTimeout(searchTimer)
@@ -381,7 +383,8 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
                 <div class="min-w-0"><h3 class="font-black text-content truncate">{{ record.name }}</h3><p class="text-xs text-muted truncate mt-0.5">{{ record.outputPath || record.sourcePaths[0] }}</p>
                   <ResultActions compact class="history-record-actions mt-2" :available="!!resultLocation(record)" :path="record.archiveOutput?.primaryPath || record.outputPath" :directory="record.taskType === 'decompression'" :split="record.archiveOutput?.split" :retrieval="record.executionConfig?.kind==='archive-extraction'?record.executionConfig.zpaqRetrieval:undefined" :output="record.archiveOutput" @keydown.enter.stop>
                     <template #primary>
-                      <button v-if="record.taskType === 'decompression' && (!record.workloadKind || record.workloadKind === 'archive')" class="history-repeat-action" data-testid="history-retry" @click.stop="openRetry(record)">再次解压</button>
+                      <button v-if="isRecovery(record)" class="history-repeat-action" data-testid="history-recovery-inspect" @click.stop="inspectRecovery(record)">重新检查原包</button>
+                      <button v-if="!isRecovery(record) && record.taskType === 'decompression' && (!record.workloadKind || record.workloadKind === 'archive')" class="history-repeat-action" data-testid="history-retry" @click.stop="openRetry(record)">再次解压</button>
                       <button v-if="isEdit(record)" class="history-repeat-action" data-testid="history-edit-source" @click.stop="openEditSource(record)">打开原包编辑</button>
                       <button v-else-if="isConversion(record)" :disabled="conversion.busy" class="history-repeat-action" data-testid="history-conversion-retry" @click.stop="retryConversion(record)">{{ record.executionConfig?.kind === 'archive-conversion' && record.executionConfig.operation === 'zpaq-update' ? '再次更新' : '再次转换' }}</button>
                       <button v-else-if="record.taskType === 'compression' && (!record.workloadKind || record.workloadKind === 'archive')" class="history-repeat-action" data-testid="history-compression-retry" @click.stop="openRetry(record)">再次压缩</button>
@@ -393,7 +396,7 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
               <div class="hidden md:flex items-center gap-2 text-xs text-muted"><span class="history-chip">{{ typeLabel(record) }}</span><span v-if="record.format" class="history-chip uppercase">{{ record.format }}</span></div>
               <div class="text-xs text-muted"><strong class="block text-content">{{ formatBytes(Math.max(record.processedBytes, record.totalBytes)) }}</strong><span>{{ formatDuration(record.durationMs) }}</span></div>
               <div class="history-status-cluster">
-                <span data-testid="history-status-badge" class="history-status-badge px-2.5 py-1 rounded-full border text-xs font-black" :class="terminalColor[record.status]">{{ statusLabel(record) }}</span>
+                <span data-testid="history-status-badge" class="history-status-badge px-2.5 py-1 rounded-full border text-xs font-black" :class="isRecovery(record) && record.status==='completed' ? 'text-amber-600 border-amber-500/30 bg-amber-500/10' : terminalColor[record.status]">{{ statusLabel(record) }}</span>
                 <time class="history-completed-at text-xs text-dim hidden sm:block">{{ formatDateTime(record.completedAt) }}</time>
                 <i class="pi pi-chevron-right text-dim shrink-0"></i>
               </div>
@@ -421,10 +424,11 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
               <p class="text-sm text-red-500 font-bold mt-2">{{ selectedFailure.categoryLabel }} · {{ selectedFailure.stageLabel }}</p>
               <p class="text-sm text-red-500/90 break-words mt-3">{{ archiveInspectionMessageForDisplay(selectedFailure.message) }}</p>
             </section>
-            <div class="grid grid-cols-2 gap-3 mb-5"><div class="detail-metric"><span>{{ appStore.t('history.detail.status') }}</span><strong :class="terminalColor[selectedRecord.status].split(' ')[0]">{{ statusLabel(selectedRecord) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.duration') }}</span><strong>{{ formatDuration(selectedRecord.durationMs) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.volume') }}</span><strong>{{ formatBytes(Math.max(selectedRecord.processedBytes, selectedRecord.totalBytes)) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.completed_at') }}</span><strong>{{ formatDateTime(selectedRecord.completedAt) }}</strong></div></div>
+            <div class="grid grid-cols-2 gap-3 mb-5"><div class="detail-metric"><span>{{ appStore.t('history.detail.status') }}</span><strong :class="isRecovery(selectedRecord) && selectedRecord.status==='completed' ? 'text-amber-600' : terminalColor[selectedRecord.status].split(' ')[0]">{{ statusLabel(selectedRecord) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.duration') }}</span><strong>{{ formatDuration(selectedRecord.durationMs) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.volume') }}</span><strong>{{ formatBytes(Math.max(selectedRecord.processedBytes, selectedRecord.totalBytes)) }}</strong></div><div class="detail-metric"><span>{{ appStore.t('history.detail.completed_at') }}</span><strong>{{ formatDateTime(selectedRecord.completedAt) }}</strong></div></div>
             <section class="detail-section"><h3><i class="pi pi-sign-in"></i>{{ appStore.t('history.detail.sources') }}</h3><div class="space-y-2 mt-3"><code v-for="source in selectedRecord.sourcePaths" :key="source" class="detail-path">{{ source }}</code><p v-if="!selectedRecord.sourcePaths.length" class="text-sm text-dim">—</p></div></section>
+            <section v-if="selectedRecord.executionConfig?.kind==='archive-recovery'" class="detail-section" data-testid="history-recovery-details"><h3 class="text-amber-600">部分取回记录</h3><p class="mt-2 text-sm">已取回 {{selectedRecord.executionConfig.recoveredFiles}} 个完整文件；后续内容未确认。</p><p class="mt-2 break-words text-xs text-muted">{{archiveInspectionMessageForDisplay(selectedRecord.executionConfig.stopReason)}}</p><button class="history-chip text-primary mt-3" @click="inspectRecovery(selectedRecord)">重新检查原包</button></section>
             <section v-if="selectedRecord.retryOfTaskId" class="detail-section" data-testid="history-retry-origin"><h3>从失败任务重新创建</h3><p class="text-xs text-muted mt-2">这是独立的新任务，原失败记录保持不变。原任务编号：</p><code class="detail-path mt-2">{{ selectedRecord.retryOfTaskId }}</code></section>
-            <section v-if="selectedRecord.status === 'completed' && selectedRecord.taskType === 'decompression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" class="detail-section"><CompletedExtractionOutput :path="selectedRecord.outputPath" :retrieval="selectedRecord.executionConfig?.kind==='archive-extraction'?selectedRecord.executionConfig.zpaqRetrieval:undefined" /></section>
+            <section v-if="!isRecovery(selectedRecord) && selectedRecord.status === 'completed' && selectedRecord.taskType === 'decompression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" class="detail-section"><CompletedExtractionOutput :path="selectedRecord.outputPath" :retrieval="selectedRecord.executionConfig?.kind==='archive-extraction'?selectedRecord.executionConfig.zpaqRetrieval:undefined" /></section>
             <section v-else class="detail-section"><h3><i class="pi pi-sign-out"></i>{{ appStore.t('history.detail.output') }}</h3><code class="detail-path mt-3">{{ selectedRecord.outputPath || '—' }}</code><ArchiveOutputSummary v-if="selectedRecord.status === 'completed' && selectedRecord.archiveOutput" :output="selectedRecord.archiveOutput" /><ResultActions v-else-if="resultLocation(selectedRecord)" class="mt-3" :path="selectedRecord.outputPath" /></section>
             <section v-if="recoveryGuidance" class="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4" data-testid="history-recovery-guidance" :aria-label="recoveryGuidance.title">
               <h3 class="font-bold">{{ recoveryGuidance.title }}</h3>
@@ -436,7 +440,7 @@ onMounted(() => { historyStore.prepareQuery({ text: '' }); void refresh() })
               <button class="history-control" data-testid="history-export" :disabled="exporting || detailLoading || !!detailError" @click="exportDiagnostic">{{ exporting ? '正在导出…' : '导出诊断报告' }}</button>
               <p class="text-xs text-muted mt-2">报告包含此任务已保存的文件路径、错误和日志；旧记录缺失的信息不会补写。</p>
             </section>
-            <HistoryExtractionDraft v-if="selectedRecord.taskType === 'decompression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" :record="selectedRecord" />
+            <HistoryExtractionDraft v-if="!isRecovery(selectedRecord) && selectedRecord.taskType === 'decompression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" :record="selectedRecord" />
             <section v-if="isEdit(selectedRecord)" class="detail-section"><p class="text-xs leading-relaxed text-muted">本条为 ZIP 编辑另存的结果记录。未完成的修改可从“编辑草稿”恢复；密码需重新填写，已完成的记录不会自动重复执行。</p><button class="history-chip text-primary mt-2" data-testid="history-edit-source" @click="openEditSource(selectedRecord)">打开原包编辑</button></section>
             <button v-else-if="isConversion(selectedRecord)" :disabled="conversion.busy" class="history-chip text-primary" @click="retryConversion(selectedRecord)">{{ selectedRecord.executionConfig?.kind === 'archive-conversion' && selectedRecord.executionConfig.operation === 'zpaq-update' ? '再次更新' : '再次转换' }}</button>
             <HistoryCompressionDraft v-else-if="selectedRecord.taskType === 'compression' && (!selectedRecord.workloadKind || selectedRecord.workloadKind === 'archive')" :record="selectedRecord" />

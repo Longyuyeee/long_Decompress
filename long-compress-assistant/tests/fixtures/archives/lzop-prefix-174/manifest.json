@@ -1,0 +1,46 @@
+{
+  "archive": "complete.lzo",
+  "sha256": "d12f6c3f7ad483639a8bae5eab95541c84c3fd330b223bb22644cbb47830ff62",
+  "entries": [
+    {
+      "name": "资料/说明.txt",
+      "bytes": 132000,
+      "sha256": "0f240f338a24d0d9c7ed80072007d8951a63ee3eec46d3382118f4d5d1c5dd17",
+      "offset": 0,
+      "encodedBytes": 623
+    },
+    {
+      "name": "资料/空文件.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "offset": 623,
+      "encodedBytes": 62
+    },
+    {
+      "name": "资料/图标.png",
+      "bytes": 781477,
+      "sha256": "d61f46dc6d838619f542ccc60e99719011a86c27cf2573d7a5d19aaca43fec0f",
+      "offset": 685,
+      "encodedBytes": 781572
+    },
+    {
+      "name": "other/说明.txt",
+      "bytes": 22,
+      "sha256": "5a5853a05fc94e4588a5c1d4559249908efbbcf08508bff43f4b7fdbf29fd584",
+      "offset": 782257,
+      "encodedBytes": 92
+    },
+    {
+      "name": "late.bin",
+      "bytes": 900173,
+      "sha256": "12f5cb880bbb6926118d74ae7622ade66827338269a2f3c23b5dfc359d3670eb",
+      "offset": 782349,
+      "encodedBytes": 900271
+    }
+  ],
+  "producerSha256": "d9b46cf6fa44f4d657e5a3943d361dac24040d0acda37019b19ba285e52e2c53",
+  "officialReadback": true,
+  "producer": "Official lzop 1.03 i386 Linux, independently generated -c -N -P members concatenated in manifest order",
+  "packageSha256": "d4cd71272cd18ef2061ffe2a5a75dd11182ed9015c53a2283eeb41acb9a21370",
+  "source": "https://www.lzop.org/download/"
+}

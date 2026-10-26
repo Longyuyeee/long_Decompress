@@ -568,6 +568,8 @@ fn main() {
             long_compress_assistant::commands::compression::open_archive_entry,
             long_compress_assistant::commands::compression::test_archive_integrity,
             long_compress_assistant::commands::compression::repair_zip,
+            long_compress_assistant::commands::compression::scan_lzop_recovery,
+            long_compress_assistant::commands::compression::recover_lzop_members,
             long_compress_assistant::commands::compression::repair_rar,
             long_compress_assistant::commands::compression::create_rar_recovery_volumes,
             long_compress_assistant::commands::compression::group_archive_diagnosis_sources,

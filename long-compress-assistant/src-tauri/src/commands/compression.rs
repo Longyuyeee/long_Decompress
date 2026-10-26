@@ -2016,6 +2016,21 @@ pub async fn repair_zip(
 }
 
 #[command]
+pub async fn scan_lzop_recovery(window:Window, operation_id:String, file_path:String, zip_password_encoding:Option<ZipPasswordEncoding>) -> Result<crate::services::lzop::recovery::Report,String> {
+ let flag=Arc::new(AtomicBool::new(false));
+ match ZIP_REPAIR_FLAGS.entry(operation_id.clone()){Entry::Vacant(e)=>{e.insert(flag.clone());},Entry::Occupied(_)=>return Err("LZOP recovery is already running".into())}
+ let _guard=ZipRepairGuard{repair_id:operation_id.clone()};
+ tauri::async_runtime::spawn_blocking(move||crate::services::lzop::recovery::scan(Path::new(&file_path),zip_password_encoding,&flag,|bytes,total|{let _=window.emit("lzop-recovery-progress",serde_json::json!({"operationId":operation_id,"bytes":bytes,"total":total,"phase":"checking"}));})).await.map_err(|e|e.to_string())?.map_err(|e|crate::services::archive_io::message(&e))
+}
+#[command]
+pub async fn recover_lzop_members(window:Window, operation_id:String, file_path:String, output_directory:String, revision:String, selected:Vec<usize>, zip_password_encoding:Option<ZipPasswordEncoding>) -> Result<crate::services::lzop::recovery::Outcome,String> {
+ let flag=Arc::new(AtomicBool::new(false));
+ match ZIP_REPAIR_FLAGS.entry(operation_id.clone()){Entry::Vacant(e)=>{e.insert(flag.clone());},Entry::Occupied(_)=>return Err("LZOP recovery is already running".into())}
+ let _guard=ZipRepairGuard{repair_id:operation_id.clone()};
+ tauri::async_runtime::spawn_blocking(move||crate::services::lzop::recovery::recover(Path::new(&file_path),Path::new(&output_directory),&revision,&selected,zip_password_encoding,&flag,|phase,bytes,total|{let _=window.emit("lzop-recovery-progress",serde_json::json!({"operationId":operation_id,"bytes":bytes,"total":total,"phase":phase}));})).await.map_err(|e|e.to_string())?.map_err(|e|crate::services::archive_io::message(&e))
+}
+
+#[command]
 pub async fn cancel_zip_repair(repair_id: String) -> Result<(), String> {
     let flag = ZIP_REPAIR_FLAGS
         .get(&repair_id)

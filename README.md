@@ -62,7 +62,7 @@
 
 ### 🔐 密码与分卷，接入同一流程
 
-密码保险箱管理常用密码，分卷按整组识别。浏览、预览、解压、转换和结果沿用同一套操作；针对可支持的损坏 ZIP 提供部分抢救与明确的恢复结果。
+密码保险箱管理常用密码，分卷按整组识别。浏览、预览、解压、转换和结果沿用同一套操作；针对可支持的损坏 ZIP 提供部分抢救，普通 LZOP 可单独取回通过校验的完整前缀成员，明确展示部分结果。
 
 </td>
 <td width="50%" valign="top">
@@ -213,10 +213,10 @@
 
 | 版本 | 主要更新 | 详情 |
 | --- | --- | --- |
+| **v1.7.4** | LZOP 完整成员部分取回、所选范围、独立结果与明确的恢复历史 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.4.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.4) |
 | **v1.7.3** | LZOP / TAR.LZO 数字分卷创建、批量大小配置、密码来源转换与整组结果 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.3.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.3) |
 | **v1.7.2** | LZOP 多文件成员创建、重名编号、来源密码转换与逐文件取回 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.2.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.2) |
 | **v1.7.1** | TAR.LZO 文件夹与多文件创建、UTF-8 PAX 路径、完整转换与原流程衔接 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.1.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.1) |
 | **v1.7.0** | Windows 默认打开与四项动作、一次性设置提醒、统一包内外双栏、右键分组、历史操作收纳 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.0.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.0) |
-| **v1.6.62** | LZOP 单文件创建，接通分析、校验、转换与结果 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.62.md) |
 
 [查看全部历史版本 →](https://github.com/Longyuyeee/long_Decompress/releases)
