@@ -184,7 +184,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 
 | 能力 | 主要格式与说明 |
 | --- | --- |
-| 创建归档 | ZIP（Deflate / Store 仅存储 / Zstandard / BZip2 / PPMd / LZMA）、ZIPX（XZ）、7Z（LZMA2 / LZMA / Bzip2 / Deflate / PPMd / Copy；LZMA2/LZMA 可选 Delta 及 x86 / ARM32 / Thumb / ARM64 BCJ）、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码、数字分卷与保留历史的增量更新）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM（存储/XPRESS/LZX/LZMS/固实）、ESD（LZMS 固实），两者支持数字分卷；SWM（仅存储/XPRESS/LZX 原生资源分包） |
+| 创建归档 | ZIP（Deflate / Store 仅存储 / Zstandard / BZip2 / PPMd / LZMA）、ZIPX（XZ）、7Z（LZMA2 / LZMA / Bzip2 / Deflate / PPMd / Copy；LZMA2/LZMA 可选 Delta 及 x86 / ARM32 / Thumb / ARM64 / RISC-V BCJ）、RAR（需要 WinRAR）、ZPAQ（日志式、原生密码、数字分卷与保留历史的增量更新）、TAR / TGZ / TBZ / TXZ / TZST、TAR.LZ4 / TAR.BR / TAR.LZIP / TAR.LZMA、GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、WIM（存储/XPRESS/LZX/LZMS/固实）、ESD（LZMS 固实），两者支持数字分卷；SWM（仅存储/XPRESS/LZX 原生资源分包） |
 | 读取与解压 | ZIP / ZIPX、7Z、RAR、ZPAQ（流式当前内容/日志式历史快照、原生多部分确认读取、版本对比与变化提取）、ALZ、EGG（基础方法、AZO、固实、传统及 AES/LEA 密码与已验证原生分卷）、自解压 SFX、TAR 系列、GZIP/BZIP2/XZ/Zstandard 多段压缩流、LZIP、LZ4、Brotli、ARJ、Unix `.Z`，原生 SWM（Copy/XPRESS/LZX 整组读取），以及 CAB、ISO、UDF、DMG、VHD / VHDX 等镜像与容器 |
 | 密码与分卷 | ZIP 密码数字卷/标准 `.z01/.zip`、7Z 密码数字卷、RAR 原生密码卷、ZPAQ 原生密码数字切卷及原生多部分只读；十七种 Long 自有 AES 格式数字切卷；7Z / RAR 可加密文件名 |
 | 转换归档 | ZIP / ZIPX、7Z、RAR、TAR 系列（含 LZ4/Brotli/LZIP 组合及八种 TAR 自有 AES 密码分卷目标及三种新增单文件加密目标）、WIM / ESD / SWM、ZPAQ（含改密与数字分卷）；密码和分卷随目标格式提供 |
@@ -275,7 +275,9 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
-**v1.6.55 · 可选 7Z ARM64 BCJ 预处理**。原折叠高级设置增加 ARM64 BCJ，默认关闭；密码、固实、数字卷、图文/开头/提取、配置保存与实际分析/转换接通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.55.md) · [记录](long-compress-assistant/docs/SEVENZ_ARM64_BCJ_CREATE_FREEZE_1.6.55.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.55)。下一阶段 [RISC-V BCJ](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.56.md)仅规划。
+**v1.6.56 · 可选 7Z RISC-V BCJ 预处理**。原折叠高级设置增加 RISC-V BCJ，默认关闭；密码、固实、数字卷、图文/开头/提取、配置保存与实际分析/转换接通，保持原交互。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.56.md) · [记录](long-compress-assistant/docs/SEVENZ_RISCV_BCJ_CREATE_FREEZE_1.6.56.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.56)。下一阶段 [LZOP 读取与转换](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.57.md)仅规划。
+
+**v1.6.55 · 可选 7Z ARM64 BCJ 预处理**。原折叠高级设置增加 ARM64 BCJ，默认关闭；密码、固实、数字卷、图文/开头/提取、配置保存与实际分析/转换接通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.55.md) · [记录](long-compress-assistant/docs/SEVENZ_ARM64_BCJ_CREATE_FREEZE_1.6.55.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.55)。RISC-V BCJ 由上方 v1.6.56 接续。
 
 **v1.6.54 · 可选 7Z ARM Thumb BCJ 预处理**。原折叠高级设置增加 Thumb BCJ，默认关闭；密码、固实、数字卷、图文/开头/提取、配置保存与实际分析/转换接通。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.54.md) · [记录](long-compress-assistant/docs/SEVENZ_ARM_THUMB_BCJ_CREATE_FREEZE_1.6.54.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.54)。ARM64 BCJ 由上方 v1.6.55 接续。
 

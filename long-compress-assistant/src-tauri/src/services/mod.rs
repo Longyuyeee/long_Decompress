@@ -275,3 +275,5 @@ mod sevenz_arm_thumb_bcj_create_1654_tests;
 
 #[cfg(test)]
 mod sevenz_arm64_bcj_create_1655_tests;
+#[cfg(test)]
+mod sevenz_riscv_bcj_create_1656_tests;

@@ -1,0 +1,26 @@
+{
+  "generator": "Bundled independent 7-Zip RISC-V + Copy; exact unencrypted packed stream is filter byte oracle; complete independent readback checked",
+  "engineSha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53",
+  "seed": 1656,
+  "coverage": [
+    "JAL x1/x5 and non-target registers",
+    "AUIPC matched/mismatched pairs, sign extension, special x2 fake pairs, x0 landing pads",
+    "compressed 16-bit instructions, 32-bit instructions at two-byte phases",
+    "signed/unsigned 32-bit PC wrapping"
+  ],
+  "elf": "Hand-built ELF64 little-endian RISC-V Linux exit program with synthetic instructions, not an external real application or compression benchmark",
+  "references": [
+    "https://github.com/tukaani-project/xz/blob/master/src/liblzma/simple/riscv.c",
+    "https://github.com/ip7z/7zip/blob/main/CPP/7zip/Compress/BranchRegister.cpp"
+  ],
+  "files": {
+    "filtered-0.bin": "3695c080f7691caf4e44303b7eda689a81e77bb50dae9cf30087ad2847a7d7b8",
+    "filtered-2147483646.bin": "b33f12f46b418dd977b4fae9574eae2aa914c487908e8e214ff2e39b9de8de6e",
+    "filtered-4294967294.bin": "cab3ffb2a979d00013c9adb06ed29e66a30e41a13bd871a44ef402b6b23264ac",
+    "input.bin": "decb29f3dca3ac65e87f28e73096367b4f0c0da31256b0c8dc0ae8e0dfe67039",
+    "original-0.7z": "afe144dccc649152b49d9a56703166a5e10cf00175bb128e824e197444e9bf21",
+    "original-2147483646.7z": "5dbc9b56c26e46a9608bdbcf45fb2d0aa0c8819b87c81232c7c1668934910316",
+    "original-4294967294.7z": "337b99dea5b7db38966f5a58757c9ca187deb855f5058f86a50153226f100fdf",
+    "sample-riscv.elf": "ad62685ffc17580c7c24e4e83a0c0b36dd419fd6190b140137e8f27653962922"
+  }
+}

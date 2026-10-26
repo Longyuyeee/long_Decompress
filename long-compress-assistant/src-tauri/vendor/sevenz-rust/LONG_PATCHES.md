@@ -1,5 +1,7 @@
 # Long-Decompress local patch
 
+v1.6.56：注册 RISC-V 方法 0x0B，内核参考 XZ riscv.c，作者/来源及 0BSD 原文保留。两字节扫描、JAL/AUIPC 成对与假转换、最多七字节尾部和 u32 wrapping，固定 8 KiB 封装新增构造；普通 flush/结束/失败语义和旧内核保持。属性为空/四字节且两字节对齐；可选 AES + LZMA2/LZMA 完整/开头路径接通，七字节前看计入原预算。独立工具及本版桌面见封板记录，依赖与外部引擎未改。
+
 v1.6.55：注册 ARM64 方法 0x0A，在固定 8 KiB BCJ 适配新增 ARM64 构造；四字节单位、三字节尾部跨 write/flush/固实条目保留，u32 wrapping 处理 BL/ADRP。内核参考 XZ arm64.c，0BSD 原文与作者/来源保留在新文件。读取接受空/四字节、四字节对齐起点；严格 LZMA2/LZMA 可选 AES 的完整与开头路径接通，前看计入原预算。独立 7-Zip 和实际桌面见本版记录；依赖与外部引擎未改。
 
 v1.6.54：固定 8 KiB BCJ 适配新增 Thumb 构造；两字节扫描、四字节分支、三字节尾部跨 write/flush/固实条目保留，修正位置与加减 wrapping。读取接受空/四字节、两字节对齐起点；严格 LZMA2/LZMA 可选 AES 的完整与开头路径接通，前看计入原预算。独立 liblzma、7-Zip 和实际桌面见本版记录；依赖与外部引擎未改。

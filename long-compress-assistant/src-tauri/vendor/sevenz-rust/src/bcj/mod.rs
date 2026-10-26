@@ -1,5 +1,6 @@
 mod arm;
 mod arm64;
+mod riscv;
 mod ppc;
 mod sparc;
 mod x86;
@@ -15,6 +16,9 @@ mod arm_thumb_bcj_1654_tests;
 #[cfg(all(test, feature = "compress"))]
 #[path = "../arm64_bcj_1655_tests.rs"]
 mod arm64_bcj_1655_tests;
+#[cfg(all(test, feature = "compress"))]
+#[path = "../riscv_bcj_1656_tests.rs"]
+mod riscv_bcj_1656_tests;
 #[cfg(feature = "compress")]
 pub(crate) mod encoder;
 use std::io::Read;
@@ -89,6 +93,9 @@ impl<R> SimpleReader<R> {
     pub(crate) fn new_arm64_at(inner: R, start: usize) -> Self {
         Self::new(inner, BCJFilter::new_arm64(start, false))
     }
+    pub(crate) fn new_riscv_at(inner: R, start: usize) -> Self {
+        Self::new(inner, BCJFilter::new_riscv(start, false))
+    }
     #[inline]
     pub fn new_ppc(inner: R) -> Self {
         Self::new(inner, BCJFilter::new_power_pc(0, false))
@@ -118,6 +125,11 @@ pub(crate) fn arm_thumb_start_position(properties: &[u8]) -> Result<usize, crate
 pub(crate) fn arm64_start_position(properties: &[u8]) -> Result<usize, crate::Error> {
     let start = x86_start_position(properties).map_err(|_| crate::Error::other("ARM64 BCJ properties must be empty or a 4-byte start position"))?;
     if start & 3 != 0 { return Err(crate::Error::other("ARM64 BCJ start position must be aligned to four bytes")); }
+    Ok(start)
+}
+pub(crate) fn riscv_start_position(properties: &[u8]) -> Result<usize, crate::Error> {
+    let start = x86_start_position(properties).map_err(|_| crate::Error::other("RISC-V BCJ properties must be empty or a 4-byte start position"))?;
+    if start & 1 != 0 { return Err(crate::Error::other("RISC-V BCJ start position must be aligned to two bytes")); }
     Ok(start)
 }
 impl<R: Read> Read for SimpleReader<R> {

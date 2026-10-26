@@ -214,6 +214,7 @@ impl SevenZMethod {
     pub const ID_BCJ_IA64: &'static [u8] = &[0x03, 0x03, 0x04, 0x01];
     pub const ID_BCJ_ARM: &'static [u8] = &[0x03, 0x03, 0x05, 0x01];
     pub const ID_BCJ_ARM64: &'static [u8] = &[0x0a];
+    pub const ID_BCJ_RISCV: &'static [u8] = &[0x0b];
     pub const ID_BCJ_ARM_THUMB: &'static [u8] = &[0x03, 0x03, 0x07, 0x01];
     pub const ID_BCJ_SPARC: &'static [u8] = &[0x03, 0x03, 0x08, 0x05];
     pub const ID_DELTA: &'static [u8] = &[0x03];
@@ -239,6 +240,7 @@ impl SevenZMethod {
     pub const BCJ_IA64_FILTER: Self = Self("BCJ_IA64", Self::ID_BCJ_IA64);
     pub const BCJ_ARM_FILTER: Self = Self("BCJ_ARM", Self::ID_BCJ_ARM);
     pub const BCJ_ARM64_FILTER: Self = Self("BCJ_ARM64", Self::ID_BCJ_ARM64);
+    pub const BCJ_RISCV_FILTER: Self = Self("BCJ_RISCV", Self::ID_BCJ_RISCV);
     pub const BCJ_ARM_THUMB_FILTER: Self = Self("BCJ_ARM_THUMB", Self::ID_BCJ_ARM_THUMB);
     pub const BCJ_SPARC_FILTER: Self = Self("BCJ_SPARC", Self::ID_BCJ_SPARC);
     pub const DELTA_FILTER: Self = Self("DELTA", Self::ID_DELTA);
@@ -260,6 +262,7 @@ impl SevenZMethod {
         &Self::BCJ_ARM_FILTER,
         &Self::BCJ_ARM_THUMB_FILTER,
         &Self::BCJ_ARM64_FILTER,
+        &Self::BCJ_RISCV_FILTER,
         &Self::BCJ_SPARC_FILTER,
         &Self::DELTA_FILTER,
         &Self::BCJ2_FILTER,

@@ -38,7 +38,7 @@ export interface CompressionOptions {
   fastPack?: boolean
   zipPasswordEncoding?: ZipPasswordEncoding
   wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
-  sevenZipFilter?: 'none' | 'delta' | 'bcj_x86' | 'bcj_arm32' | 'bcj_arm_thumb' | 'bcj_arm64'; sevenZipDeltaDistance?: number; sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'
+  sevenZipFilter?: 'none' | 'delta' | 'bcj_x86' | 'bcj_arm32' | 'bcj_arm_thumb' | 'bcj_arm64' | 'bcj_riscv'; sevenZipDeltaDistance?: number; sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'
   zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma' | 'store'
   zipEncryption?: 'aes256' | 'zipcrypto'
   zipSplitMode?: 'numeric' | 'standard'
@@ -90,7 +90,7 @@ export interface CompressionHistory {
 
 export interface CompressionAnalysisState {
   wimMethod?: 'store' | 'xpress' | 'lzx' | 'lzms' | 'solid'
-  sevenZipFilter?: 'none' | 'delta' | 'bcj_x86' | 'bcj_arm32' | 'bcj_arm_thumb' | 'bcj_arm64'; sevenZipDeltaDistance?: number; sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'
+  sevenZipFilter?: 'none' | 'delta' | 'bcj_x86' | 'bcj_arm32' | 'bcj_arm_thumb' | 'bcj_arm64' | 'bcj_riscv'; sevenZipDeltaDistance?: number; sevenZipMethod?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'
   zipMethod?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma' | 'store'
   status: 'idle' | 'running' | 'completed' | 'failed' | 'cancelled'
   analysisId?: string

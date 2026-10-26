@@ -1,0 +1,5 @@
+{
+  "observedCompleted": true,
+  "finished": "2026-10-26T11:29:38.0898920+08:00",
+  "evidence": "vue-tsc && vite build completed; Vite success footer and output retained. Windows PowerShell native stderr stopped wrapper before exit receipt; passed build reused."
+}
