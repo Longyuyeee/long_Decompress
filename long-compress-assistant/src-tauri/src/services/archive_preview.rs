@@ -208,6 +208,7 @@ fn preview_format(path: &Path) -> Result<&'static str> {
     let format = super::archive_browser::detect_format(path)?;
     if format == ArchiveFormat::Zip { return Ok("ZIP"); }
     if format == ArchiveFormat::Zpaq { return Ok("ZPAQ"); }
+    if super::tar_compatibility::is_tar_lzo(path, &format) { return Ok("TAR.LZO"); }
     if format == ArchiveFormat::Wim { return Ok("WIM"); }
     if format == ArchiveFormat::Alz { return Ok("ALZ"); }
     if format == ArchiveFormat::Egg { return Ok("EGG"); }
@@ -231,6 +232,7 @@ fn read_tar_family(path: &Path, format: &str, entry_path: &str,control:&ImageCon
         "TAR.LZ4" => read_tar_entry(super::codec_stream::decoder(path, "lz4")?, entry_path,control),
         "TAR.BR" => read_tar_entry(super::codec_stream::decoder(path, "br")?, entry_path,control),
         "TAR.LZIP" => read_tar_entry(super::codec_stream::decoder(path, "lz")?, entry_path,control),
+        "TAR.LZO" => read_tar_entry(super::codec_stream::decoder(path, "lzo")?, entry_path,control),
         "TAR.LZMA" => read_tar_entry(super::codec_stream::decoder(path, "lzma")?, entry_path,control),
         "TAR" => read_tar_entry(super::numeric_volume_reader::ZipInputReader::open(path)?, entry_path,control),
         "TAR.GZ" => read_tar_entry(crate::services::codec_stream::decoder(path, "gz")?, entry_path,control),
@@ -251,6 +253,7 @@ fn read_tar_family_text(path: &Path, format: &str, entry_path: &str) -> Result<T
         "TAR.LZ4" => read_tar_text_entry(super::codec_stream::decoder(path, "lz4")?, entry_path),
         "TAR.BR" => read_tar_text_entry(super::codec_stream::decoder(path, "br")?, entry_path),
         "TAR.LZIP" => read_tar_text_entry(super::codec_stream::decoder(path, "lz")?, entry_path),
+        "TAR.LZO" => read_tar_text_entry(super::codec_stream::decoder(path, "lzo")?, entry_path),
         "TAR.LZMA" => read_tar_text_entry(super::codec_stream::decoder(path, "lzma")?, entry_path),
         "TAR" => read_tar_text_entry(super::numeric_volume_reader::ZipInputReader::open(path)?, entry_path),
         "TAR.GZ" => {

@@ -158,7 +158,7 @@ fn drain_reader(mut reader: impl Read, is_cancelled: &impl Fn() -> bool) -> Resu
     }
 }
 
-fn verify_tar_reader(reader: impl Read, is_cancelled: &impl Fn() -> bool) -> Result<()> {
+pub(crate) fn verify_tar_reader(reader: impl Read, is_cancelled: &impl Fn() -> bool) -> Result<()> {
     let result=(|| -> Result<()> {
     let mut archive = tar::Archive::new(reader);
     for entry in archive.entries()? {

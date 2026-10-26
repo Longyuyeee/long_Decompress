@@ -21,6 +21,13 @@ pub(crate) fn finish_stream(mut reader: impl Read, mut check: impl FnMut() -> an
     }
 }
 
+/// Read-only TAR.LZO is deliberately separate from creation routes.
+/// Both the LZOP magic and explicit compound suffix are required.
+pub(crate) fn is_tar_lzo(path: &Path, format: &super::archive_format::ArchiveFormat) -> bool {
+    *format == super::archive_format::ArchiveFormat::Lzop
+        && super::compression_format::is_tar_wrapped_archive(path, "tar.lzo")
+}
+
 pub(crate) fn integrity_route(
     path: &Path,
     format: &super::archive_format::ArchiveFormat,
@@ -59,6 +66,16 @@ pub(crate) fn inspection_error(error: anyhow::Error) -> anyhow::Error {
     }
     if error.to_string().contains("[archive-inspection:") {
         return error;
+    }
+    // tar 0.4 reports these parser failures as ErrorKind::Other. Preserve
+    // structural evidence instead of reporting a storage/device failure.
+    let structural = error.chain().filter_map(|cause| cause.downcast_ref::<io::Error>()).any(|cause| {
+        cause.kind() == io::ErrorKind::Other && matches!(cause.to_string().as_str(),
+            "archive header checksum mismatch" | "failed to read entire block" | "unexpected EOF during skip")
+    });
+    if structural {
+        return io::Error::new(io::ErrorKind::InvalidData,
+            format!("[archive-inspection:damaged] TAR 文件头或内容不完整，请重新获取完整原包：{error:#}")).into();
     }
     if error
         .chain()

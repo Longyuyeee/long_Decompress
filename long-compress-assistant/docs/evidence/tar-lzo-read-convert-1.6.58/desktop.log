@@ -1,0 +1,7 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[tarlzo1658] TAR.LZO directories search text and folder selection stay in equal dual panes
+[tarlzo1658] TAR.LZO image preview uses existing compact dialog
+[tarlzo1658] TAR.LZO full extraction and ZIP/7Z conversion keep directories and history
+[tarlzo1658] invalid TAR inside valid LZOP cannot publish partial results and corrected input succeeds

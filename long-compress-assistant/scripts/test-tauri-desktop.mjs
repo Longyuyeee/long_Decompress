@@ -1,3 +1,4 @@
+import { runTarLzo1658Gate } from './tar-lzo-read-convert-1658-gate.mjs'
 import { runLzop1657Gate } from './lzop-read-convert-1657-gate.mjs'
 import { runSevenzRiscvBcj1656Gate } from './sevenz-riscv-bcj-create-1656-gate.mjs'
 import { runSevenzArm64Bcj1655Gate } from './sevenz-arm64-bcj-create-1655-gate.mjs'
@@ -5079,6 +5080,8 @@ try {
     await runSevenzSolidDeflate1635Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--sevenz-password-deflate-preview-1634-only')) {
     await runSevenzPasswordDeflate1634Gate({driver,bridge:callDesktopBridge,root,application})
+  } else if (process.argv.includes('--tar-lzo-read-convert-1658-only')) {
+    await runTarLzo1658Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--lzop-read-convert-1657-only')) {
     await runLzop1657Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--sevenz-riscv-bcj-create-1656-only')) {

@@ -1,0 +1,15 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+node:internal/modules/run_main:107
+    triggerUncaughtException(
+    ^
+
+TimeoutError: [data-file-pane="left"] [data-entry-path="notes/璇存槑 [1].txt"]
+Wait timed out after 21189ms
+    at E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\node_modules\selenium-webdriver\lib\webdriver.js:929:22
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  remoteStacktrace: ''
+}
+
+Node.js v24.14.0

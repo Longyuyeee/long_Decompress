@@ -54,3 +54,4 @@ long-compress-assistant/docs/evidence/sevenz-arm-thumb-bcj-create-1.6.54/** -tex
 long-compress-assistant/docs/evidence/sevenz-arm64-bcj-create-1.6.55/** -text -whitespace
 long-compress-assistant/docs/evidence/sevenz-riscv-bcj-create-1.6.56/** -text -whitespace
 long-compress-assistant/docs/evidence/lzop-read-convert-1.6.57/** -text -whitespace
+long-compress-assistant/docs/evidence/tar-lzo-read-convert-1.6.58/** -text -whitespace

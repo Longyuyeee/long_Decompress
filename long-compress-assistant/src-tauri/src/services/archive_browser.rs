@@ -257,6 +257,10 @@ fn browse_tar_family(
         )
         .map(Some);
     }
+    if super::compression_format::is_tar_wrapped_archive(path, "tar.lzo") {
+        return browse_tar_reader(super::codec_stream::decoder(path,"lzo")?, "TAR.LZO", cancelled)
+            .map_err(super::tar_compatibility::inspection_error).map(Some);
+    }
     for codec in ["lz4", "br", "lz", "lzma"] {
         if super::compression_format::is_tar_wrapped_archive(path, &format!("tar.{codec}")) {
             let label = if codec == "lz" { "TAR.LZIP".to_string() } else { format!("TAR.{}", codec.to_uppercase()) };
@@ -301,7 +305,8 @@ pub async fn browse_archive_cancellable_at(
     ensure_not_cancelled(&cancelled)?;
     let path = super::split_archive_detector::SplitArchiveDetector::complete_source(path)?;
     let format = detect_format(&path)?;
-    let is_tar_family = super::tar_compatibility::integrity_route(&path, &format).is_some();
+    let is_tar_family = super::tar_compatibility::integrity_route(&path, &format).is_some()
+        || super::tar_compatibility::is_tar_lzo(&path, &format);
     let password = password.map(str::to_string);
     let operation_cancelled = cancelled.clone();
     let operation = async move {

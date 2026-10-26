@@ -280,3 +280,5 @@ mod sevenz_arm64_bcj_create_1655_tests;
 mod sevenz_riscv_bcj_create_1656_tests;
 #[cfg(test)]
 mod lzop_1657_tests;
+#[cfg(test)]
+mod tar_lzo_1658_tests;
