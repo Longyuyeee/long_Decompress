@@ -139,7 +139,7 @@ export interface DesktopE2EBridge {
     verifyAfter: boolean
     logs: string[]
   }>
-  startSevenZipCompression: (sourcePath: string, archivePath: string, format?: '7z' | 'lzo') => Promise<string>
+  startSevenZipCompression: (sourcePath: string, archivePath: string, format?: '7z' | 'lzo' | 'tar.lzo') => Promise<string>
   startArchiveCompressionBatch: (
     jobs: Array<{ sourcePath: string; archivePath: string }>,
   ) => Promise<string[]>

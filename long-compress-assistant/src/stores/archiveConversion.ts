@@ -18,6 +18,7 @@ import { isPotentialSplitArchivePath, supportsNativePassword, supportsArchiveSpl
 import { supportsZipPasswordEncoding, zipPasswordEncodingForSource } from '@/utils/zipPasswordSource'
 
 export const conversionFormats = [
+  ['tar.lzo', 'TAR.LZO（目录，无加密）'],
   ['lzo', 'LZOP（单文件）'],
   ['zpaq', 'ZPAQ'],
   ['zip', 'ZIP'], ['zipx', 'ZIPX（XZ）'], ['7z', '7Z'], ['rar', 'RAR（需要 WinRAR）'], ['tar', 'TAR'], ['tar.gz', 'TGZ'],

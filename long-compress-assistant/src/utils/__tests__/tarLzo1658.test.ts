@@ -6,10 +6,10 @@ describe('TAR.LZO 1.6.58 read-only integration',()=>{
   expect(DECOMPRESS_ARCHIVE_PICKER_EXTENSIONS).toContain('tar.lzo')
   expect(isDecompressArchivePath('C:\\资料\\BACKUP.TAR.LZO')).toBe(true)
   expect(isDecompressArchivePath('backup.tar.lzo.partial')).toBe(false)
-  expect(EXTRACT_ONLY_FORMATS.find(f=>f.extensions.includes('tar.lzo'))?.requires7za).toBe(false)
+  expect(FORMAT_CAPABILITIES.find(f=>f.format==='tar.lzo')?.requires7za).toBe(false)
  })
- it('does not invent creation, native passwords or native split targets',()=>{
-  expect(FORMAT_CAPABILITIES.map(f=>f.format)).not.toContain('tar.lzo')
+ it('allows TAR.LZO creation without claiming native passwords or split targets',()=>{
+  expect(FORMAT_CAPABILITIES.find(f=>f.format==='tar.lzo')).toMatchObject({canCompress:true,singleFileOnly:false})
   expect(supportsArchiveSplit('tar.lzo')).toBe(false)
   expect(isPasswordSupportedFormat('tar.lzo')).toBe(false)
  })

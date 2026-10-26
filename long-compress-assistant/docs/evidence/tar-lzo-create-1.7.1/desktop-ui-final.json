@@ -1,0 +1,50 @@
+{
+  "version": "1.7.1",
+  "applicationSha256": "18725fc10bd522c54d000969741df73d89e7cd011ef9d71fda524660974a9c45",
+  "checks": [
+    {
+      "name": "real native file timestamps render readable dates instead of objects",
+      "passed": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "dates-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panels": [],
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 422.796875
+        },
+        {
+          "overflow": 0,
+          "width": 422.8046875
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "dates-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panels": [],
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 318.3984375
+        },
+        {
+          "overflow": 0,
+          "width": 318.40625
+        }
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-lzo-create-171\\408194d3-da1b-412c-b2c4-ecd5ea34d02a",
+  "passed": true
+}

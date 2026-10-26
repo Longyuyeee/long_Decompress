@@ -99,13 +99,13 @@ pub(crate) fn compress<R: CompressionRuntime + Sync>(
     let path = Path::new(output);
     let parent = path.parent().unwrap_or(Path::new("."));
     std::fs::create_dir_all(parent)?;
-    if matches!(format, "tar.lz4" | "tar.br" | "tar.lzma") {
+    if matches!(format, "tar.lz4" | "tar.br" | "tar.lzma" | "tar.lzo") {
         // Collect before creating the output; the producer uses the same TAR
         // entry policy as every other TAR route, without a full TAR disk copy.
         let entries = crate::services::compression_entries::collect(sources, options.preserve_paths.unwrap_or(true), true)?;
         runtime.check_cancellation()?;
         let destination = File::create(path)?;
-        let destination = tar_stream::with_reader(runtime, window, task_id, entries, |input| {
+        let destination = tar_stream::with_reader(runtime, window, task_id, entries, format == "tar.lzo", |input| {
             encode_stream(runtime, input, destination, &options, format, None)
         })?;
         destination.sync_all()?;
@@ -161,7 +161,12 @@ fn encode_stream<R: CompressionRuntime, I: Read, W: Write>(
     format: &str,
     total: Option<u64>,
 ) -> Result<W> {
-    if matches!(format, "lzma" | "tar.lzma") {
+    if format == "tar.lzo" {
+        let mut destination = destination;
+        super::lzop_writer::write_stream(input, &mut destination, None, |_| runtime.check_cancellation())?;
+        runtime.check_cancellation()?;
+        Ok(destination)
+    } else if matches!(format, "lzma" | "tar.lzma") {
         let settings = xz2::stream::LzmaOptions::new_preset(options.level.clamp(1, 9))?;
         let stream = xz2::stream::Stream::new_lzma_encoder(&settings)?;
         let mut encoder = xz2::write::XzEncoder::new_stream(destination, stream);

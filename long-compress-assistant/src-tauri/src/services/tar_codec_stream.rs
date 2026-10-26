@@ -49,6 +49,7 @@ pub(super) fn with_reader<R: CompressionRuntime + Sync, T>(
     window: Option<&Window>,
     task_id: &str,
     entries: Vec<CompressionEntry>,
+    utf8_pax_paths: bool,
     encode: impl FnOnce(&mut PipeReader<'_, R>) -> Result<T>,
 ) -> Result<T> {
     let (sender, receiver) = mpsc::sync_channel(QUEUED_CHUNKS);
@@ -58,7 +59,7 @@ pub(super) fn with_reader<R: CompressionRuntime + Sync, T>(
             let mut builder = ::tar::Builder::new(writer);
             // Source bytes are real progress, but leave room for codec finish
             // and the service's existing verification/publication stages.
-            tar::write_collected_entries(&TarPreparation(runtime, 0.95), window, task_id, &entries, &mut builder)?;
+            tar::write_collected_entries_with_pax(&TarPreparation(runtime, 0.95), window, task_id, &entries, &mut builder, utf8_pax_paths)?;
             builder.into_inner()?.flush()?;
             Ok(())
         });
@@ -104,7 +105,7 @@ mod tests {
         let entries = source_entries(temp.path());
         std::fs::remove_file(&entries[0].path).unwrap();
         let runtime = crate::services::compression_service::CompressionService::for_testing();
-        let error = with_reader(&runtime, None, "source-disappeared", entries, |input| {
+        let error = with_reader(&runtime, None, "source-disappeared", entries, false, |input| {
             Ok(std::io::copy(input, &mut std::io::sink())?)
         }).unwrap_err();
         assert!(error.chain().any(|cause| cause.downcast_ref::<io::Error>()
@@ -116,7 +117,7 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let entries = source_entries(temp.path());
         let runtime = crate::services::compression_service::CompressionService::for_testing();
-        let error = with_reader(&runtime, None, "storage-full", entries, |_input| {
+        let error = with_reader(&runtime, None, "storage-full", entries, false, |_input| {
             Err::<(), _>(io::Error::new(io::ErrorKind::StorageFull, "simulated destination full").into())
         }).unwrap_err();
         assert_eq!(error.downcast_ref::<io::Error>().unwrap().kind(), io::ErrorKind::StorageFull);
@@ -127,7 +128,7 @@ mod tests {
         let temp = tempfile::tempdir().unwrap();
         let entries = source_entries(temp.path());
         let runtime = crate::services::compression_service::CompressionService::for_testing();
-        let error = with_reader(&runtime, None, "cancel", entries, |input| {
+        let error = with_reader(&runtime, None, "cancel", entries, false, |input| {
             input.read_exact(&mut [0u8; 1])?;
             runtime.cancel();
             Ok(std::io::copy(input, &mut std::io::sink())?)

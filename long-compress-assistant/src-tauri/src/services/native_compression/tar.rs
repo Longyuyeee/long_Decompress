@@ -93,12 +93,28 @@ pub(crate) fn write_collected_entries<R: CompressionRuntime, W: Write>(
     entries: &[compression_entries::CompressionEntry],
     builder: &mut tar::Builder<W>,
 ) -> Result<()> {
+    write_collected_entries_with_pax(runtime, window, task_id, entries, builder, false)
+}
+
+pub(crate) fn write_collected_entries_with_pax<R: CompressionRuntime, W: Write>(
+    runtime: &R, window: Option<&Window>, task_id: &str,
+    entries: &[compression_entries::CompressionEntry], builder: &mut tar::Builder<W>,
+    utf8_pax_paths: bool,
+) -> Result<()> {
     let total_entries = entries.len().max(1);
     let mut progress = ByteProgress::new(source_total_bytes(&entries)?);
     for (index, entry) in entries.iter().enumerate() {
         runtime.check_cancellation()?;
+        // PAX paths explicitly declare UTF-8. A safe, unique ASCII fallback
+        // avoids Windows bsdtar interpreting GNU name bytes as its ANSI locale.
+        let fallback;
+        let archive_name = if utf8_pax_paths && !entry.archive_name.is_ascii() {
+            builder.append_pax_extensions([("path", entry.archive_name.as_bytes())])?;
+            fallback = format!("entry-{index}");
+            &fallback
+        } else { &entry.archive_name };
         if entry.is_dir {
-            builder.append_dir(&entry.archive_name, &entry.path)?;
+            builder.append_dir(archive_name, &entry.path)?;
             if progress.total() == 0 {
                 if let Some(window) = window {
                     runtime.emit_progress(
@@ -124,7 +140,7 @@ pub(crate) fn write_collected_entries<R: CompressionRuntime, W: Write>(
                 task_id,
                 current_file: entry.archive_name.clone(),
             };
-            if let Err(error) = builder.append_data(&mut header, &entry.archive_name, reader) {
+            if let Err(error) = builder.append_data(&mut header, archive_name, reader) {
                 runtime.check_cancellation()?;
                 return Err(error.into());
             }

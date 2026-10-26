@@ -192,22 +192,15 @@ async fn tarlzo1658_text_image_prefix_diagnostics_and_selection() {
     }
 }
 #[tokio::test]
-async fn tarlzo1658_magic_and_suffix_both_required_and_creation_stays_disabled() {
+async fn tarlzo1658_magic_and_suffix_both_required_with_native_creation_route() {
     let cap = compression_format::find_compression_format_capability("tar.lzo").unwrap();
     assert!(cap.can_extract);
-    assert!(!cap.can_compress);
+    assert!(cap.can_compress);
     assert!(!cap.supports_split);
     assert!(!cap.supports_password_extract);
     assert!(!cap.requires_7za);
     assert!(!cap.single_file_only);
-    assert!(compression_format::compression_route("tar.lzo").is_none());
-    let options = crate::models::compression::CompressionOptions {
-        format: Some("tar.lzo".into()),
-        ..Default::default()
-    };
-    assert!(
-        compression_format::validate_compression_request(&[], "output.tar.lzo", &options).is_err()
-    );
+    assert_eq!(compression_format::compression_route("tar.lzo"), Some(compression_format::CompressionRoute::TarLzop));
     assert!(tar_compatibility::is_tar_lzo(
         Path::new("BACKUP.TAR.LZO"),
         &ArchiveFormat::Lzop

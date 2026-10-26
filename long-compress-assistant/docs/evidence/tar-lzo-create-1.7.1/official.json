@@ -1,0 +1,29 @@
+{
+  "version": "1.7.1",
+  "lzopSha256": "0de04c88c0820f981869b3a1c7eb1803318638537ad9d8afc5032ef3915e2597",
+  "tar": "bsdtar 3.8.9 - libarchive 3.8.9 zlib/1.2.13.1-motley liblzma/5.8.3 bz2lib/1.0.8 libzstd/1.5.7 cng/2.0 libb2/bundled",
+  "checks": [
+    {
+      "archive": "directory.tar.lzo",
+      "archiveSha256": "ec9a2ba62426559c827d5edf5e69b202b95a6618ecfd32037a3602accf9ebf04",
+      "files": 5,
+      "directories": 3,
+      "allHashesMatch": true
+    },
+    {
+      "archive": "multiple.tar.lzo",
+      "archiveSha256": "a1393810e9686d7a05f73f91b97cb5893665739c10b0df0da7afda49b04951be",
+      "files": 6,
+      "directories": 3,
+      "allHashesMatch": true
+    },
+    {
+      "archive": "empty-directory.tar.lzo",
+      "archiveSha256": "f649818604f60429c3fa7b3c7827827fc2f1cb2abfe104319a42b2fbf8678212",
+      "files": 0,
+      "directories": 1,
+      "allHashesMatch": true
+    }
+  ],
+  "passed": true
+}

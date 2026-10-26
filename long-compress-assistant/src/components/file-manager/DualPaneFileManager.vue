@@ -22,7 +22,7 @@ export interface LocalFileEntry {
   size: number
   isDir: boolean
   extension?: string | null
-  modified?: string | number | null
+  modified?: string | number | { secs_since_epoch: number; nanos_since_epoch?: number } | null
 }
 
 interface Location { name: string; path: string; kind: string }

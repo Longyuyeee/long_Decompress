@@ -1,3 +1,4 @@
+import { runTarLzoCreate171Gate, runTarLzoUiFinal171 } from './tar-lzo-create-171-gate.mjs'
 import { runLzopCreate1662Gate } from './lzop-create-1662-gate.mjs'
 import { runLzopPaths1661Gate, runLzopFinal1661Gate } from './lzop-paths-names-1661-gate.mjs'
 import { runLzopMembers1660Gate, runLzopName1660Gate } from './lzop-members-read-1660-gate.mjs'
@@ -5084,6 +5085,10 @@ try {
     await runSevenzSolidDeflate1635Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--sevenz-password-deflate-preview-1634-only')) {
     await runSevenzPasswordDeflate1634Gate({driver,bridge:callDesktopBridge,root,application})
+  } else if (process.argv.includes('--tar-lzo-create-171-ui-only')) {
+    await runTarLzoUiFinal171({driver,bridge:callDesktopBridge,root,application})
+  } else if (process.argv.includes('--tar-lzo-create-171-only')) {
+    await runTarLzoCreate171Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--lzop-create-1662-only')) {
     await runLzopCreate1662Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--lzop-paths-names-1661-ui-only')) {

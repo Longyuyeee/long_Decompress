@@ -1,5 +1,6 @@
 export type CompressionFormatId =
   | 'lzo'
+  | 'tar.lzo'
   | 'tar.lzma'
   | 'lzma.aes'
   | 'tar.lzma.aes'
@@ -62,6 +63,7 @@ export interface CompressionFormatCapability {
 }
 
 export const FORMAT_CAPABILITIES: CompressionFormatCapability[] = [
+  { format: 'tar.lzo', displayName: 'TAR.LZO', extensions: ['tar.lzo'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: false, singleFileOnly: false, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: '适合文件夹或多个文件，保留目录和空文件夹；固定 LZO1X 模式，无可调强度、密码或创建分卷。' },
   { format: 'lzo', displayName: 'LZOP', extensions: ['lzo'], canCompress: true, canExtract: true, supportsPasswordCompress: false, supportsPasswordExtract: false, singleFileOnly: true, supportsSplit: false, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', knownLimitations: '单文件固定 LZO1X 模式，没有可调压缩等级、密码或创建分卷。目录或多个文件请选择 ZIP、7Z 或 TAR 组合。超长名称取回时沿用输出文件名，请保留原扩展名。' },
   { format: 'zpaq', displayName: 'ZPAQ', extensions: ['zpaq'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native', engineFormat: 'ZPAQ', knownLimitations: '创建新的日志式归档，支持原生密码；密码同时保护目录和内容。压缩强度 1～9 对应引擎 1～5 级，使用 16 MiB 块和两个线程。支持数字切片分卷，解压需集齐全部成员；不是 ZPAQ 原生多卷。不提供增量更新或历史恢复。' },
   { format: 'zip', displayName: 'ZIP', extensions: ['zip'], canCompress: true, canExtract: true, supportsPasswordCompress: true, supportsPasswordExtract: true, singleFileOnly: false, supportsSplit: true, requires7za: false, requiresWinRar: false, fallbackEngine: 'native' },
@@ -114,7 +116,6 @@ export interface ExtractOnlyFormatCapability {
 }
 
 export const EXTRACT_ONLY_FORMATS: ExtractOnlyFormatCapability[] = [
-  { displayName: 'TAR.LZO（目录）', extensions: ['tar.lzo'], requires7za: false },
   { displayName: 'ALZ', extensions: ['alz'], requires7za: false },
   { displayName: 'EGG', extensions: ['egg'], requires7za: false },
   { displayName: 'Application packages', extensions: ['jar', 'xpi', 'ipa', 'apk', 'appx'], requires7za: false },
@@ -238,3 +239,6 @@ export const supportsFilenameEncryption = (format: string) => ['7z', 'rar'].incl
 export const supportsSolidCompression = (format: string) => ['7z', 'rar'].includes(format)
 
 export const isLz4Format = (format: string) => /(?:^|\.)lz4(?:\.aes)?$/.test(format)
+
+/** LZOP-based writers use a fixed encoding mode. */
+export const isFixedLzopFormat = (format: string) => format === 'lzo' || format === 'tar.lzo'
