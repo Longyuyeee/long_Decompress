@@ -592,7 +592,7 @@ const runCompression = async () => {
   })
 
   if (succeeded > 0 && failed === 0) {
-    appStore.setSuccess(appStore.t('compress.status_success').replace('{0}', String(succeeded)).replace('{1}', succeeded === 1 ? '' : 's'))
+    appStore.setSuccess(appStore.t('compress.status_success').replace('{0}', String(succeeded)).replace('{1}', ''))
   } else if (succeeded > 0) {
     appStore.setSuccess(appStore.t('compress.status_result').replace('{0}', String(succeeded)).replace('{1}', String(failed)))
   }

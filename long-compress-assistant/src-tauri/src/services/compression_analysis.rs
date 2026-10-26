@@ -233,7 +233,7 @@ fn compressed_sample_size_with_cancel(sample: &[u8], format: &str, level: u32, c
         return Ok(output.into_inner().len());
     }
     let format = format.strip_suffix(".aes").unwrap_or(format);
-    if format == "lzo" {
+    if matches!(format, "lzo" | "tar.lzo") {
         let mut output = Vec::new();
         super::lzop_writer::write_stream(&mut std::io::Cursor::new(sample), &mut output, None, |_| check_cancelled(cancelled))?;
         return Ok(output.len());
@@ -290,9 +290,9 @@ fn compressed_sample_size_with_cancel(sample: &[u8], format: &str, level: u32, c
 fn duration_range(total_size: u64, format: &str, level: u32, file_count: usize) -> (u64, u64) {
     let format = format.strip_suffix(".aes").unwrap_or(format);
     let format = if format.starts_with("7z-lzma2-delta-") || matches!(format,"7z-lzma2-bcj-x86"|"7z-lzma2-bcj-arm32") {"7z"} else if format.starts_with("7z-lzma-delta-") || matches!(format,"7z-lzma-bcj-x86"|"7z-lzma-bcj-arm32") {"7z-lzma"} else {format};
-    let level = if format == "lzo" { 9 } else { level };
+    let level = if matches!(format, "lzo" | "tar.lzo") { 9 } else { level };
     let base_mib_per_second = match format {
-        "lzo" => 45.0,
+        "lzo" | "tar.lzo" => 45.0,
         "7z" | "7z-lzma" | "xz" | "tar.xz" | "lzma" | "tar.lzma" | "zip-lzma" | "lz" | "tar.lz" => 45.0,
         "7z-bzip2" | "bz2" | "tar.bz2" | "zip-bzip2" => 35.0,
         "7z-ppmd" | "zip-ppmd" => 12.0,

@@ -1,9 +1,15 @@
 <script setup lang="ts">
-export interface FilePaneEntry { path:string; name:string; size:number; isDir:boolean; extension?:string|null; modified?:string|number|null; icon?:string; preview?:boolean; previewDisabled?:boolean; sizeKnown?:boolean }
+export type FilePaneModified = string | number | { secs_since_epoch:number; nanos_since_epoch?:number } | null
+export interface FilePaneEntry { path:string; name:string; size:number; isDir:boolean; extension?:string|null; modified?:FilePaneModified; icon?:string; preview?:boolean; previewDisabled?:boolean; sizeKnown?:boolean }
 withDefaults(defineProps<{ entries: FilePaneEntry[]; selected: Set<string>; selectionMode?:boolean; loading?:boolean; error?:string }>(), { loading:false, error:'' })
 const emit = defineEmits<{ select:[entry:FilePaneEntry,event:MouseEvent]; activate:[entry:FilePaneEntry]; preview:[entry:FilePaneEntry]; context:[entry:FilePaneEntry|null,event:MouseEvent] }>()
 function bytes(value:number){if(!value)return '0 B';const units=['B','KiB','MiB','GiB','TiB'],index=Math.min(Math.floor(Math.log(value)/Math.log(1024)),4);return `${(value/1024**index).toFixed(index>1?1:0)} ${units[index]}`}
-function date(value?:string|number|null){if(value===null||value===undefined||value==='')return '—';const parsed=new Date(typeof value==='number'&&value<1e12?value*1000:value);return Number.isNaN(parsed.getTime())?String(value):parsed.toLocaleString('zh-CN',{hour12:false})}
+function date(value?:FilePaneModified){
+  if(value===null||value===undefined||value==='')return '—'
+  const timestamp=typeof value==='object'?value.secs_since_epoch*1000+(value.nanos_since_epoch||0)/1e6:typeof value==='number'&&value<1e12?value*1000:value
+  const parsed=new Date(timestamp)
+  return Number.isNaN(parsed.getTime())?'—':parsed.toLocaleString('zh-CN',{hour12:false})
+}
 </script>
 <template>
   <div class="file-pane-content">

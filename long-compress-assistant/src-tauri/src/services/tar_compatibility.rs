@@ -21,7 +21,7 @@ pub(crate) fn finish_stream(mut reader: impl Read, mut check: impl FnMut() -> an
     }
 }
 
-/// Read-only TAR.LZO is deliberately separate from creation routes.
+/// Detect TAR.LZO independently of creation route availability.
 /// Both the LZOP magic and explicit compound suffix are required.
 pub(crate) fn is_tar_lzo(path: &Path, format: &super::archive_format::ArchiveFormat) -> bool {
     *format == super::archive_format::ArchiveFormat::Lzop

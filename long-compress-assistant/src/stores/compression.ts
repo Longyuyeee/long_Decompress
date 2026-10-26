@@ -408,7 +408,7 @@ export const useCompressionStore = defineStore('compression', () => {
     if (file) {
       file.outputPath ??= globalOutputPath.value
       file.settings = cloneSettings(settings)
-      if (settings.password || settings.format === 'lzo' || settings.format === 'lz' || settings.format === 'tar.lz' || settings.format === 'tar.lzma') file.draftPasswordRequired = false
+      if (settings.password || settings.format === 'lzo' || settings.format === 'tar.lzo' || settings.format === 'lz' || settings.format === 'tar.lz' || settings.format === 'tar.lzma') file.draftPasswordRequired = false
     }
   }
 
@@ -430,7 +430,7 @@ export const useCompressionStore = defineStore('compression', () => {
     if (group) {
       group.outputPath ??= globalOutputPath.value
       group.settings = cloneSettings(settings)
-      if (settings.password || settings.format === 'lzo' || settings.format === 'lz' || settings.format === 'tar.lz' || settings.format === 'tar.lzma') group.draftPasswordRequired = false
+      if (settings.password || settings.format === 'lzo' || settings.format === 'tar.lzo' || settings.format === 'lz' || settings.format === 'tar.lz' || settings.format === 'tar.lzma') group.draftPasswordRequired = false
     }
   }
 
@@ -490,8 +490,8 @@ export const useCompressionStore = defineStore('compression', () => {
       if (formatOptionsOnly && !(((patch.sevenZipMethod !== undefined || patch.sevenZipFilter !== undefined || patch.sevenZipDeltaDistance !== undefined) && currentFormat === '7z') || (patch.wimMethod !== undefined && ['wim','swm'].includes(currentFormat)) || (patch.zipMethod !== undefined && currentFormat === 'zip') || (patch.zipPasswordEncoding !== undefined && ['zip','zipx'].includes(currentFormat)))) continue
       const settings = cloneSettings(getEffectiveSettings(draft.settings))
       if (patch.format !== undefined) settings.format = patch.format
-      if (patch.format === 'lzo') settings.splitArchive = false
-      if (patch.format === 'lzo' || patch.format === 'tar.lz' || patch.format === 'lzma' || patch.format === 'tar.lzma') {
+      if (patch.format === 'lzo' || patch.format === 'tar.lzo') settings.splitArchive = false
+      if (patch.format === 'lzo' || patch.format === 'tar.lzo' || patch.format === 'tar.lz' || patch.format === 'lzma' || patch.format === 'tar.lzma') {
         draft.draftPasswordRequired = false
         settings.password = ''
         settings.encryptFilenames = false

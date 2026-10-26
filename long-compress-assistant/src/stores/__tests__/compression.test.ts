@@ -24,6 +24,14 @@ const mockFile = (name: string, size: number): FileObject => ({
 })
 
 describe('Compression Store', () => {
+  it('tarlzo171 accepts a selected folder and file, removes inherited encryption and split, and preserves global settings',()=>{
+    const store=useCompressionStore();Object.assign(store.globalSettings,{format:'7z',password:'old-password',splitArchive:true,createSolidArchive:true,encryptFilenames:true})
+    const files=[{...mockFile('folder',1),isDirectory:true},mockFile('file',1)];files.forEach(file=>store.addFile(file))
+    const global=JSON.stringify(store.globalSettings)
+    expect(store.applyBatchConfiguration(files.map(file=>file.path),{format:'tar.lzo'})).toBe(2)
+    for(const file of store.selectedFiles)expect(file.settings).toMatchObject({format:'tar.lzo',password:'',splitArchive:false,createSolidArchive:false,encryptFilenames:false})
+    expect(JSON.stringify(store.globalSettings)).toBe(global)
+  })
   it('zip1535 PPMd batch edits ZIP only and preserves other inheritance, passwords and volumes',()=>{
     const store=useCompressionStore();store.globalSettings.format='7z';const files=['zip','zipx','other'].map(n=>mockFile(n,1));files.forEach(f=>store.addFile(f))
     store.updateFileSettings(files[0].path,{...defaultOptions(),password:'keep',splitArchive:true,splitSize:'2',zipMethod:'zstd'});store.updateFileSettings(files[1].path,{...defaultOptions(),format:'zipx'})

@@ -248,6 +248,10 @@ pub(crate) fn verify_native_with_zip_encoding(
 ) -> Result<bool> {
     check_cancelled(&is_cancelled)?;
     match route {
+        CompressionRoute::TarLzop => {
+            verify_tar_reader(super::codec_stream::decoder(path, "lzo")?, &is_cancelled)?;
+            Ok(true)
+        }
         CompressionRoute::TarLzma => {
             verify_tar_reader(super::codec_stream::decoder(path, "lzma")?, &is_cancelled)?;
             Ok(true)

@@ -7,10 +7,10 @@ describe('LZOP numeric 1.6.59 import integration',()=>{
   expect(isDecompressArchivePath('C:\\资料\\BACKUP.TAR.LZO')).toBe(true)
   for (const name of ['backup.tar.lzo.001','photo.png.lzo.003','backup.tar.lzo.0002']) expect(isPotentialSplitArchivePath(name)).toBe(true)
   expect(isDecompressArchivePath('backup.tar.lzo.partial')).toBe(false)
-  expect(EXTRACT_ONLY_FORMATS.find(f=>f.extensions.includes('tar.lzo'))?.requires7za).toBe(false)
+  expect(FORMAT_CAPABILITIES.find(f=>f.format==='tar.lzo')?.requires7za).toBe(false)
  })
- it('does not invent creation, native passwords or native split targets',()=>{
-  expect(FORMAT_CAPABILITIES.map(f=>f.format)).not.toContain('tar.lzo')
+ it('allows TAR.LZO creation without claiming native passwords or split targets',()=>{
+  expect(FORMAT_CAPABILITIES.find(f=>f.format==='tar.lzo')).toMatchObject({canCompress:true,singleFileOnly:false})
   expect(supportsArchiveSplit('tar.lzo')).toBe(false)
   expect(isPasswordSupportedFormat('tar.lzo')).toBe(false)
  })
