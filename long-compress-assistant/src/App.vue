@@ -6,6 +6,7 @@
     <ArchiveConversionModal />
     <ZpaqMultipartDialog />
     <ArchiveOpenDialog />
+    <ArchiveOpeningReminder />
     <Modal
       :visible="showExitConfirmation"
       :title="appStore.t('exit.confirm.title')"
@@ -35,6 +36,7 @@
 </template>
 
 <script setup lang="ts">
+import ArchiveOpeningReminder from '@/components/settings/ArchiveOpeningReminder.vue'
 import ArchiveOpenDialog from '@/components/archive/ArchiveOpenDialog.vue'
 import { open } from '@tauri-apps/api/dialog'
 import { navigationPathForShortcut } from '@/utils/navigation'

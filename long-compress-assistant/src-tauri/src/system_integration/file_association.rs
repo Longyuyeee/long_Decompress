@@ -163,6 +163,20 @@ pub fn register_archive_opening(exe: &std::path::Path, extensions: &[String]) ->
     Ok(())
 }
 
+/// Refresh only candidates the user previously configured, e.g. after moving
+/// an installation. This never chooses a default or registers new formats.
+#[cfg(target_os = "windows")]
+pub fn refresh_archive_opening_if_present(exe: &std::path::Path) -> std::result::Result<(), String> {
+    use winreg::{RegKey, enums::HKEY_CURRENT_USER};
+    let Ok(key) = RegKey::predef(HKEY_CURRENT_USER)
+        .open_subkey(r"Software\LongDecompress\Capabilities\FileAssociations") else { return Ok(()) };
+    let extensions: Vec<String> = ARCHIVE_ASSOCIATION_EXTENSIONS.iter()
+        .filter(|extension| key.get_value::<String, _>(**extension).is_ok())
+        .map(|extension| (*extension).to_string()).collect();
+    if extensions.is_empty() { return Ok(()); }
+    register_archive_opening(exe, &extensions)
+}
+
 #[cfg(not(target_os = "windows"))]
 pub fn association_status() -> std::result::Result<Vec<ArchiveAssociationStatus>, String> { Ok(vec![]) }
 

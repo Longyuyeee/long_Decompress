@@ -30,9 +30,13 @@ try {
       let value
       if (message.cmd === 'load_app_settings') value = '{}'
       if (message.cmd === 'is_context_menu_registered') value = true
+      if (message.cmd === 'take_archive_opening_reminder') {
+        value = !localStorage.getItem('fixture-opening-reminded')
+        localStorage.setItem('fixture-opening-reminded', '1')
+      }
       if (message.cmd === 'take_pending_context_actions') value = []
       if (message.cmd === 'list_task_history_page') value = { records: [], nextCursor: null }
-      if (message.cmd === 'archive_file_associations') value = ['zip', '7z', 'rar', 'zipx', 'tar', 'gz', 'bz2', 'xz', 'zst', 'alz', 'egg', 'zpaq'].map(extension => ({ extension: '.' + extension, registered: true, isDefault: extension === 'zip' }))
+      if (message.cmd === 'archive_file_associations') value = ['zip', '7z', 'rar', 'zipx', 'tar', 'gz', 'bz2', 'xz', 'zst', 'alz', 'egg', 'zpaq'].map(extension => ({ extension: '.' + extension, registered: true, isDefault: false }))
       if (message.cmd === 'get_archive_engine_capabilities') value = { available: true, fullEngine: true, formats: [{ name: 'zip', extensions: ['zip'], canCreate: true }], browseExtensions: ['zip', '7z', 'rar'], nestedExtensions: ['zip'], boundedPreviewFormats: ['ZIP'], boundedTextPreviewFormats: ['ZIP'], imagePreviewExtensions: ['png', 'jpg'], textPreviewExtensions: ['txt', 'md', 'json'], message: 'ready' }
       if (message.cmd === 'file_manager_locations') value = [{ name: '下载', path: 'C:\\Downloads', kind: 'drive' }, { name: '目标目录', path: 'D:\\Target', kind: 'drive' }]
       if (message.cmd === 'list_files') value = message.path.startsWith('D:') ? [{ path: 'D:\\Target\\目标资料', name: '目标资料', size: 0, is_dir: true }] : [{ path: 'C:\\Downloads\\docs', name: 'docs', size: 0, is_dir: true }, { path: 'C:\\Downloads\\bundle.zip', name: 'bundle.zip', size: 1024, is_dir: false, extension: 'zip' }, { path: 'C:\\Downloads\\notes.txt', name: 'notes.txt', size: 32, is_dir: false, extension: 'txt' }, { path: 'C:\\Downloads\\cover.png', name: 'cover.png', size: 68, is_dir: false, extension: 'png' }]
@@ -55,6 +59,21 @@ try {
     await page.screenshot({ path: `${output}/${name}.png` })
   }
   await page.goto(`${base}/#/browser`, { waitUntil: 'domcontentloaded', timeout: 60000 })
+  await page.getByTestId('archive-opening-reminder').waitFor()
+  await page.locator('[data-file-pane="left"] .file-row').first().waitFor({ timeout: 60000 })
+  await page.setViewportSize({ width: 760, height: 520 })
+  await shot('first-opening-reminder-760x520')
+  await page.getByTestId('archive-opening-reminder-configure').click()
+  await page.getByTestId('archive-opening-settings').waitFor({ state: 'visible' })
+  assert.ok(await page.getByTestId('archive-opening-settings').evaluate(el => el.closest('[data-settings-panel]').getAttribute('data-settings-panel') === 'behavior'))
+  assert.ok((await page.getByTestId('archive-opening-settings').innerText()).includes('请先在 Windows 设置'))
+  assert.equal(await page.evaluate(() => window.__calls.filter(call => ['configure_archive_file_associations', 'open_default_archive_apps'].includes(call.cmd)).length), 0)
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  await page.getByTestId('archive-opening-settings').waitFor({ state: 'visible' })
+  assert.equal(await page.getByTestId('archive-opening-reminder').count(), 0)
+  checks.push('one-time reminder opens exact settings section; restart keeps receipt and does not change defaults')
+  await page.goto(`${base}/#/browser`, { waitUntil: 'domcontentloaded' })
+  await page.setViewportSize({ width: 1440, height: 900 })
   await page.locator('[data-file-pane="left"] .file-row').first().waitFor({ timeout: 60000 })
   const left = page.locator('[data-file-pane="left"]'), right = page.locator('[data-file-pane="right"]')
   await right.locator('.file-row').first().click()

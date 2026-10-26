@@ -45,9 +45,10 @@ onUnmounted(() => window.removeEventListener('focus', refresh))
 </script>
 
 <template>
-  <section class="archive-opening-settings" data-testid="archive-opening-settings">
+  <section class="archive-opening-settings" data-testid="archive-opening-settings" tabindex="-1">
     <div class="opening-heading"><h3>默认打开压缩包</h3><HelpHint label="系统打开压缩包说明">从 Windows 双击、按 Enter 或通过“打开方式”打开压缩包时使用下面的行为。右键明确指定的操作直接执行；软件内双击保持当前栏浏览。</HelpHint></div>
     <div v-if="windows" class="association-row"><div><strong>{{ status }}</strong><span v-if="error && !formatsOpen" role="alert">{{ error }}</span></div><button type="button" data-testid="archive-association-configure" @click="editFormats">设置默认打开方式…</button><button v-if="defaultCount" type="button" @click="changeDefault">更改 / 取消默认…</button></div>
+    <p v-if="windows && loaded && !defaultCount" class="association-note">请先在 Windows 设置中将 Long解压选为默认应用；下面的选项只决定打开后的操作。</p>
     <div class="opening-fields">
       <label><span>打开后</span><ThemedSelect :model-value="app.settings.archiveOpenBehavior" :options="options" aria-label="打开压缩包后的操作" test-id="archive-open-behavior" floating @update:model-value="app.updateSettings({ archiveOpenBehavior: $event as ArchiveOpenBehavior })"/></label>
       <label><span>解压完成后</span><ThemedSelect :model-value="app.settings.archiveAfterExtract" :options="[{value:'show-results',label:'在解压中心查看结果'},{value:'open-folder',label:'打开结果文件夹'}]" aria-label="系统解压完成后的操作" test-id="archive-after-extract" floating @update:model-value="app.updateSettings({ archiveAfterExtract: $event as 'show-results' | 'open-folder' })"/></label>

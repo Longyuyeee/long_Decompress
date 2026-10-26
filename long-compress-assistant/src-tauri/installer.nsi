@@ -278,7 +278,7 @@ Function PageLeaveReinstall
     ${Else}
       ReadRegStr $4 SHCTX "${MANUPRODUCTKEY}" ""
       ReadRegStr $R1 SHCTX "${UNINSTKEY}" "UninstallString"
-      ExecWait '$R1 /P _?=$4' $0
+      ExecWait '$R1 /P /KEEPARCHIVEASSOCIATIONS _?=$4' $0
     ${EndIf}
 
     BringToFront
@@ -934,7 +934,10 @@ Section Uninstall
   !insertmacro RemoveLongDecompressContextMenu
 
 
-  ; Remove only Long解压-owned default-app candidates; Windows UserChoice remains system-managed.
+  ; Preserve the chosen handler during upgrade; a real uninstall removes our candidates.
+  ClearErrors
+  ${GetOptions} $CMDLINE "/KEEPARCHIVEASSOCIATIONS" $0
+  ${If} ${Errors}
   DeleteRegValue HKCU "Software\RegisteredApplications" "LongDecompress"
   DeleteRegKey HKCU "Software\LongDecompress\Capabilities"
   DeleteRegKey HKCU "Software\Classes\Applications\${MAINBINARYNAME}.exe"
@@ -980,6 +983,7 @@ Section Uninstall
   DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.egg"
   DeleteRegValue HKCU "Software\Classes\.zpaq\OpenWithProgids" "LongDecompress.Archive.zpaq"
   DeleteRegKey HKCU "Software\Classes\LongDecompress.Archive.zpaq"
+  ${EndIf}
 
   ; Remove every startup value owned by current or legacy product identities.
   DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "${PRODUCTNAME}"

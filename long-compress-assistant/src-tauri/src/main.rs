@@ -352,6 +352,10 @@ fn main() {
 
             #[cfg(not(feature = "desktop-e2e"))]
             if let Ok(exe_path) = std::env::current_exe() {
+                #[cfg(all(target_os = "windows", not(debug_assertions)))]
+                if let Err(error) = long_compress_assistant::system_integration::file_association::refresh_archive_opening_if_present(&exe_path) {
+                    eprintln!("Failed to refresh archive opening candidates: {}", error);
+                }
                 let exe_path = exe_path.to_string_lossy().into_owned();
                 if let Err(error) = long_compress_assistant::system_integration::context_menu::refresh_context_menu_if_present(
                     &exe_path,
@@ -592,6 +596,7 @@ fn main() {
             long_compress_assistant::commands::system::set_auto_start,
             long_compress_assistant::commands::system::check_auto_start,
             long_compress_assistant::commands::system::load_app_settings,
+            long_compress_assistant::commands::system::take_archive_opening_reminder,
             long_compress_assistant::commands::system::save_app_settings,
             long_compress_assistant::commands::system::start_native_window_drag,
             long_compress_assistant::commands::system::start_native_window_resize,

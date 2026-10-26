@@ -1,6 +1,7 @@
 {
   "fixtureNativeIPC": true,
   "checks": [
+    "one-time reminder opens exact settings section; restart keeps receipt and does not change defaults",
     "archive keeps pane, shared navigation/list and opposite selection",
     "single selection plus common text and image preview inside archive",
     "up exits archive to original directory and forward restores archive",
