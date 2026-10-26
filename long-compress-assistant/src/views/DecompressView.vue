@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { invoke } from '@tauri-apps/api/tauri'
 import HelpHint from '@/components/ui/HelpHint.vue'
 import {archiveSourceDirectory} from '@/utils/zpaqMultipart'
 import TaskScopeBar from '@/components/tasks/TaskScopeBar.vue'
@@ -30,7 +31,7 @@ import FailedExtractionRetry from '@/components/tasks/FailedExtractionRetry.vue'
 import { inferExtractionSubfolder } from '@/utils/smartExtraction'
 import BatchConfigBar from '@/components/tasks/BatchConfigBar.vue'
 import type { BatchConfigPatch } from '@/types/batchConfig'
-import { parentDirectory } from '@/utils/resultLocation'
+import { parentDirectory, uniqueResultDirectories } from '@/utils/resultLocation'
 import { storeToRefs } from 'pinia'
 import { useDecompressionPreferences } from '@/stores/decompressionPreferences'
 import { zipPasswordEncodingForSource } from '@/utils/zipPasswordSource'
@@ -128,6 +129,24 @@ watch(
 )
 
 let contextActionDrain: Promise<void> | null = null
+const automaticTaskIds = new Set<string>(), revealTaskIds = new Set<string>()
+let automaticDrain: Promise<void> | null = null
+function startAutomaticTasks() {
+  if (automaticDrain || isProcessing.value || disposed || !automaticTaskIds.size) return automaticDrain
+  automaticDrain = (async () => {
+    while (automaticTaskIds.size && !disposed) {
+      if (isProcessing.value) return
+      const ids=[...automaticTaskIds];automaticTaskIds.clear()
+      await startDecompression(ids)
+      const locations=decompressionTasks.value.filter(task=>ids.includes(task.id)&&revealTaskIds.has(task.id)&&task.status==='completed').map(task=>({path:task.outputPath,directory:true}))
+      ids.forEach(id=>revealTaskIds.delete(id))
+      const directories=uniqueResultDirectories(locations)
+      if(directories.length===1){try{await invoke('open_in_explorer',{path:directories[0]})}catch{appStore.setError('解压已完成，无法自动打开文件夹，可从结果入口重新打开。')}}
+      else if(directories.length>1)appStore.setSuccess(`已完成 ${locations.length} 项解压，可在解压中心统一查看结果。`)
+    }
+  })().finally(()=>{automaticDrain=null})
+  return automaticDrain
+}
 
 const drainPendingContextActions = () => {
   if (contextActionDrain) return contextActionDrain
@@ -150,25 +169,26 @@ const drainPendingContextActions = () => {
           continue
         }
 
-        const createdTaskIds = await onFilesSelected(files.map(path => ({ path })) as any)
+        const createdTaskIds = await onFilesSelected(files.map(path => ({ path })) as any, true)
         if (request.action === 'context-open') continue
 
         const createdTasks = decompressionTasks.value.filter(
           task => createdTaskIds.includes(task.id) && task.status === 'pending'
         )
-        if (request.outputPath) createdTasks.forEach(task => { task.outputPath = request.outputPath! })
-        const extractToSubfolder = request.action !== 'context-extract-here'
-        createdTasks.forEach(task => {
+        const extractToSubfolder = request.extractToSubfolder ?? request.action !== 'context-extract-here'
+        let queuedCount = 0
+        for (const task of createdTasks) {
+          try { task.outputPath = request.outputPath || await archiveSourceDirectory(task.sourceFiles[0]) }
+          catch(cause){appStore.setError(String(cause));continue}
           task.extractToSubfolder = extractToSubfolder
           task.configurationMode = 'individual'
-        })
-        if (createdTasks.length > 0) {
-          appStore.setSuccess(
-            request.action === 'context-quick-extract'
-              ? appStore.t('decompress.quick_extract_started').replace('{0}', String(createdTasks.length))
-              : appStore.t('decompress.context_menu_added').replace('{0}', String(createdTasks.length))
-          )
-          await startDecompression(createdTaskIds)
+          automaticTaskIds.add(task.id)
+          queuedCount++
+          if(request.openResultFolder ?? appStore.settings.archiveAfterExtract==='open-folder')revealTaskIds.add(task.id)
+        }
+        if (queuedCount > 0) {
+          appStore.setSuccess(isProcessing.value ? `已将 ${queuedCount} 个压缩包加入队列，当前任务结束后继续解压。` : `正在解压 ${queuedCount} 个压缩包`)
+          void startAutomaticTasks()
         }
       }
     }
@@ -193,7 +213,7 @@ onUnmounted(() => {
   unsubConflict()
 })
 
-const onFilesSelected = async (files: any[]) => {
+const onFilesSelected = async (files: any[], reusePending = false) => {
   batchStore.showingFailures = false
   const createdTaskIds: string[] = []
   const errors: string[] = []
@@ -215,12 +235,16 @@ const onFilesSelected = async (files: any[]) => {
 
   const handledPaths = new Set<string>()
   const existingSources = new Set(
-    decompressionTasks.value.flatMap(task => task.sourceFiles.map(normalizePath))
+    decompressionTasks.value.filter(task=>!['completed','failed','cancelled'].includes(task.status)).flatMap(task => task.sourceFiles.map(normalizePath))
   )
+  const reuseExisting = (path:string) => {
+    const task=decompressionTasks.value.find(task=>task.sourceFiles.some(source=>normalizePath(source)===path)&&task.status==='pending')
+    if(reusePending&&task&&!createdTaskIds.includes(task.id))createdTaskIds.push(task.id)
+  }
 
   const createTask = (sourcePath: string, name: string, splitCount?: number, actualFormat?: string | null, originPath?:string) => {
     const location=originPath||sourcePath
-    const parentDir = location.substring(0, Math.max(location.lastIndexOf('/'), location.lastIndexOf('\\')))
+    const parentDir = parentDirectory(location)
     const taskId = taskStore.addTask({
       id: generateId(),
       name: splitCount ? `${name} (${splitCount} 个分卷)` : name,
@@ -248,7 +272,8 @@ const onFilesSelected = async (files: any[]) => {
   for (const file of uniqueFiles.values()) {
     const sourcePath = file.path as string
     const normalizedSource = normalizePath(sourcePath)
-    if (handledPaths.has(normalizedSource) || existingSources.has(normalizedSource)) continue
+    if (handledPaths.has(normalizedSource)) continue
+    if (existingSources.has(normalizedSource)) { reuseExisting(normalizedSource);continue }
     handledPaths.add(normalizedSource)
 
     let detectedFormat: string | null | undefined
@@ -276,7 +301,7 @@ const onFilesSelected = async (files: any[]) => {
           continue
         }
         const normalizedFirst = normalizePath(firstPart)
-        if (existingSources.has(normalizedFirst)) continue
+        if (existingSources.has(normalizedFirst)) { reuseExisting(normalizedFirst);continue }
         const displayName = splitInfo.base_name || firstPart.split(/[\\/]/).pop() || file.name || 'Unknown'
         createTask(firstPart, displayName, Number(splitInfo.total_parts || groupPaths.length || 1), detectedFormat, splitInfo.format==='ZpaqNativeSplit'?groupPaths[0]:undefined)
         groupedSplitCount++
@@ -392,6 +417,7 @@ const deselectAll = () => {
 }
 
 const isProcessing = ref(false)
+watch(isProcessing, processing=>{if(!processing)void startAutomaticTasks()})
 
 const runDecompressionResourcePreflight = async (task: Task) => {
   if(task.zpaqRetrieval){task.executionConfig={schemaVersion:1,kind:'archive-extraction',outputDirectory:task.outputPath,extractToSubfolder:false,zpaqSnapshot:task.zpaqRetrieval.snapshot,zpaqRetrieval:task.zpaqRetrieval};return task.status!=='cancelled'&&task.status!=='cancelling'}

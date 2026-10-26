@@ -33,6 +33,8 @@ Long解压将归档压缩、批量解压、文件与压缩包浏览、密码管�
 
 详细格式能力见 [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md)；RAR 创建依赖用户安装的 WinRAR，视频暂不保证支持 Windows N。功能介绍和快速上手见 [项目首页](../README.md)。
 
+当前开发分支已加入 Windows 默认打开与四项动作、包内外共用的双栏布局、右键操作分组及历史操作菜单，尚未正式发布。功能与界面记录见 [本轮说明](docs/WINDOWS_OPEN_AND_BROWSER_UI.md)，原 TAR.LZO 目录创建保留在 [后续格式主线](docs/ARCHIVE_TAR_LZO_NEXT.md)。
+
 ## 本地开发
 
 Windows 构建需要受支持的 Node.js（20.19+、22.12+ 或 24）、npm、稳定版 Rust、MSVC C++ 构建工具及 WebView2。

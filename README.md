@@ -276,6 +276,13 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 
 ## 📝 更新记录
 
+### 开发分支 · Windows 打开与双栏体验（待发布）
+
+- 从 Windows 打开压缩包可询问或按设置直接执行：解压到当前目录、同名目录、自选目录、双栏浏览。
+- 包内外使用相同导航与文件列表；图片和常用文本直接预览，选项按需收纳；右键与历史操作菜单同步整理。
+- 正式发布版本仍见上方下载入口；[实现与功能/UI 记录](long-compress-assistant/docs/WINDOWS_OPEN_AND_BROWSER_UI.md)。
+
+
 **v1.6.62 · LZOP 单文件创建**。原压缩中心可直接生成标准 `.lzo`，多选文件分别创建；分析、进度/取消、校验、统一结果及历史接通。仅含一个顶层文件的归档可转成 LZOP，目录/多文件明确改选格式，保留原包。固定模式收起无效的强度与密码选项，保持原交互。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.62.md) · [记录](long-compress-assistant/docs/LZOP_CREATE_FREEZE_1.6.62.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.62) · [下一版 TAR.LZO 创建](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.63.md)。
 
 **v1.6.61 · LZOP 目录还原与旧名称编码**。带路径成员可在原双栏进入目录、搜索、预览、按目录取回并转成 ZIP/7Z；名称代码页收在原选项区，所有流程沿用同一选择。重名/路径相交与扁平取回保留独立结果，合法长名称不再任意截短。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.61.md) · [记录](long-compress-assistant/docs/LZOP_PATHS_NAMES_FREEZE_1.6.61.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.61) · [下一版单文件创建](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.62.md)。

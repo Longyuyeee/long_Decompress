@@ -337,6 +337,27 @@ pub fn open_pdf_output_with_default_application(path: String) -> Result<(), Stri
 
 /// 注册 Windows 右键上下文菜单
 #[tauri::command]
+pub fn archive_file_associations() -> Result<Vec<crate::system_integration::file_association::ArchiveAssociationStatus>, String> {
+    crate::system_integration::file_association::association_status()
+}
+
+#[tauri::command]
+pub fn configure_archive_file_associations(extensions: Vec<String>) -> Result<(), String> {
+    #[cfg(feature = "desktop-e2e")]
+    { let _ = extensions; Err("隔离测试程序不修改默认打开方式".into()) }
+    #[cfg(not(feature = "desktop-e2e"))]
+    { crate::system_integration::file_association::register_archive_opening(&std::env::current_exe().map_err(|error| error.to_string())?, &extensions) }
+}
+
+#[tauri::command]
+pub fn open_default_archive_apps() -> Result<(), String> {
+    #[cfg(all(target_os = "windows", not(feature = "desktop-e2e")))]
+    { std::process::Command::new("explorer.exe").arg("ms-settings:defaultapps?registeredAppUser=LongDecompress").spawn().map(|_| ()).map_err(|error| error.to_string()) }
+    #[cfg(any(not(target_os = "windows"), feature = "desktop-e2e"))]
+    { Err("请在 Windows 设置中选择默认应用".into()) }
+}
+
+#[tauri::command]
 #[cfg(not(feature = "desktop-e2e"))]
 pub async fn register_context_menu() -> Result<bool, String> {
     let exe_path = std::env::current_exe().map_err(|e| format!("无法获取应用路径: {}", e))?;

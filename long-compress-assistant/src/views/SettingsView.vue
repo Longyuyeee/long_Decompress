@@ -7,6 +7,7 @@ import { useArchiveEngine } from '@/composables/useArchiveEngine'
 import { FORMAT_CAPABILITIES, EXTRACT_ONLY_FORMATS, type CompressionFormatCapability } from '@/utils/compressionFormat'
 import { APP_THEMES } from '@/utils/themes'
 import AccessibilitySettings from '@/components/settings/AccessibilitySettings.vue'
+import ArchiveOpeningSettings from '@/components/settings/ArchiveOpeningSettings.vue'
 import WorkspaceHeader from '@/components/ui/WorkspaceHeader.vue'
 import HelpHint from '@/components/ui/HelpHint.vue'
 import { useUpdateStore } from '@/stores/update'
@@ -517,6 +518,7 @@ const removeWordlist = (index: number) => {
                 </div>
               </button><HelpHint :label="appStore.t('settings.behavior.context_menu')+'说明'">{{ appStore.t('settings.behavior.context_menu.desc') }}</HelpHint></div>
             </div>
+            <ArchiveOpeningSettings />
           </section>
         </div>
 

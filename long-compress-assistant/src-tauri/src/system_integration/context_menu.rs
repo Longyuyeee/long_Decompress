@@ -73,6 +73,7 @@ fn context_menu_package_version() -> String {
 }
 
 const ARCHIVE_EXTENSIONS: &[&str] = &[
+    ".alz", ".egg", ".zpaq", ".001", ".z01", ".r00",
     ".zip", ".zipx", ".7z", ".rar", ".wim", ".swm", ".tar", ".ova", ".gz", ".gzip", ".tgz",
     ".tpz", ".bz2", ".bzip2", ".tbz", ".tbz2", ".xz", ".txz", ".zst", ".zstd",
     ".tzst", ".aes", ".lzma", ".lzo", ".lz4", ".br", ".lz", ".tlz", ".jar", ".xpi", ".ipa", ".apk", ".appx", ".iso", ".img",
@@ -98,17 +99,13 @@ const COMPRESS_VERBS: &[&str] = &[
 
 #[cfg(target_os = "windows")]
 const ARCHIVE_VERBS: &[&str] = &[
-    "LongDecompress.open",
-    "LongDecompress.quickExtract",
-    "LongDecompress.extractHere",
-    "LongDecompress.extractTo",
-    "LongDecompress.testArchive",
-    "LongDecompress.repairArchive",
-    "LongDecompress.convertArchive",
-    "LongDecompress.reconfigureArchive",
-    "LongDecompress.compressZip",
-    "LongDecompress.compress7z",
-    "LongDecompress.compressCustom",
+    "LongDecompress.extractHere", "LongDecompress.extractTo", "LongDecompress.extractChoose",
+    "LongDecompress.open", "LongDecompress.moreArchive",
+];
+#[cfg(target_os = "windows")]
+const MORE_ARCHIVE_VERBS: &[&str] = &[
+    "LongDecompress.testArchive", "LongDecompress.repairArchive", "LongDecompress.convertArchive",
+    "LongDecompress.reconfigureArchive", "LongDecompress.repackArchiveFiles",
 ];
 
 #[cfg(target_os = "windows")]
@@ -141,6 +138,9 @@ fn verbs() -> Vec<VerbDef> {
             label: "解压到此处",
             cli: "--extract-here \"%1\"",
         },
+        VerbDef { verb: "LongDecompress.extractChoose", label: "选择解压文件夹…", cli: "--extract-choose \"%1\"" },
+        VerbDef { verb: "LongDecompress.moreArchive", label: "更多操作", cli: "" },
+        VerbDef { verb: "LongDecompress.repackArchiveFiles", label: "将压缩包作为文件重新打包…", cli: "--compress-custom \"%1\"" },
         VerbDef {
             verb: "LongDecompress.extractTo",
             label: "解压到同名文件夹",
@@ -153,7 +153,7 @@ fn verbs() -> Vec<VerbDef> {
         },
         VerbDef {
             verb: "LongDecompress.testArchive",
-            label: "测试归档完整性",
+            label: "测试压缩包完整性",
             cli: "--test-archive \"%1\"",
         },
         VerbDef {
@@ -168,17 +168,17 @@ fn verbs() -> Vec<VerbDef> {
         },
         VerbDef {
             verb: "LongDecompress.compressZip",
-            label: "压缩为 ZIP",
+            label: "压缩为 ZIP…",
             cli: "--compress-zip \"%1\"",
         },
         VerbDef {
             verb: "LongDecompress.compress7z",
-            label: "压缩为 7Z",
+            label: "压缩为 7Z…",
             cli: "--compress-7z \"%1\"",
         },
         VerbDef {
             verb: "LongDecompress.compressCustom",
-            label: "添加到压缩包...",
+            label: "更多压缩选项…",
             cli: "--compress-custom \"%1\"",
         },
         VerbDef {
@@ -310,13 +310,7 @@ fn register_legacy_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
             ARCHIVE_VERBS,
             app_path,
         )?;
-        reg_direct_shell_entry(
-            hkcu,
-            &format!(r"{}\{}", association_root, LEGACY_QUICK_EXTRACT_VERB),
-            "一键解压到同名文件夹",
-            "--quick-extract \"%1\"",
-            app_path,
-        )?;
+
     }
 
     for extension in recovery_extensions() {
@@ -647,7 +641,7 @@ fn reg_shell_entry(
     app_path: &str,
 ) -> Result<()> {
     let (key, _) = hkcu.create_subkey(path)?;
-    key.set_value("MUIVerb", &"Long解压")?;
+    key.set_value("MUIVerb", &if selected_verbs == MORE_ARCHIVE_VERBS { "更多操作" } else { "Long解压" })?;
     key.set_value("Icon", &format!(r#""{}""#, app_path))?;
     key.set_value("MultiSelectModel", &"Document")?;
     key.set_value("SubCommands", &"")?;
@@ -662,6 +656,10 @@ fn reg_shell_entry(
         // Prefixes make Explorer's registry enumeration deterministic while
         // the stable verb name remains available for diagnostics.
         let verb_path = format!(r"{}\{:02}.{}", submenu_path, index + 1, verb.verb);
+        if verb.verb == "LongDecompress.moreArchive" {
+            reg_shell_entry(hkcu, &verb_path, all_verbs, MORE_ARCHIVE_VERBS, app_path)?;
+            continue;
+        }
         let (verb_key, _) = hkcu.create_subkey(&verb_path)?;
         verb_key.set_value("MUIVerb", &verb.label)?;
         verb_key.set_value("Icon", &format!(r#""{}""#, app_path))?;
@@ -753,7 +751,7 @@ fn legacy_shell_entry_is_current(
     };
     if root
         .get_value::<String, _>("MUIVerb")
-        .map(|label| label != "Long解压")
+        .map(|label| label != if selected_verbs == MORE_ARCHIVE_VERBS { "更多操作" } else { "Long解压" })
         .unwrap_or(true)
         || root
             .get_value::<String, _>("Position")
@@ -774,6 +772,9 @@ fn legacy_shell_entry_is_current(
         else {
             return false;
         };
+        if verb.verb == "LongDecompress.moreArchive" {
+            return legacy_shell_entry_is_current(hkcu, &format!(r"{}\shell\{:02}.{}", path, index+1, verb.verb), all_verbs, MORE_ARCHIVE_VERBS, app_path);
+        }
         let command_path = format!(
             r"{}\shell\{:02}.{}\command",
             path,
@@ -922,14 +923,6 @@ pub fn is_context_menu_registered() -> bool {
             ),
             &all_verbs,
             ARCHIVE_VERBS,
-            &app_path,
-        ) && legacy_direct_entry_is_current(
-            &hkcu,
-            &format!(
-                r"Software\Classes\SystemFileAssociations\{}\shell\{}",
-                extension, LEGACY_QUICK_EXTRACT_VERB
-            ),
-            "--quick-extract \"%1\"",
             &app_path,
         )
     }) && recovery_extensions().iter().all(|extension| legacy_shell_entry_is_current(&hkcu,

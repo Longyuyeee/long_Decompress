@@ -5,6 +5,7 @@
     <UpdateDialog />
     <ArchiveConversionModal />
     <ZpaqMultipartDialog />
+    <ArchiveOpenDialog />
     <Modal
       :visible="showExitConfirmation"
       :title="appStore.t('exit.confirm.title')"
@@ -34,6 +35,8 @@
 </template>
 
 <script setup lang="ts">
+import ArchiveOpenDialog from '@/components/archive/ArchiveOpenDialog.vue'
+import { open } from '@tauri-apps/api/dialog'
 import { navigationPathForShortcut } from '@/utils/navigation'
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -261,6 +264,12 @@ onMounted(async () => {
   const handleContextAction = async (request: ContextAction) => {
     const files = request.files.filter(file => file && !file.startsWith('%'))
     if (files.length === 0) return
+    if (request.action === 'context-system-open') { appStore.enqueueArchiveOpen(files); return }
+    if (request.action === 'context-extract-choose') {
+      const directory = await open({ directory: true, multiple: false, title: '选择解压文件夹' })
+      if (typeof directory === 'string') { appStore.enqueueContextAction({ action: 'context-extract-to', files, outputPath: directory, extractToSubfolder: files.length > 1, openResultFolder: appStore.settings.archiveAfterExtract === 'open-folder' }); void router.push('/decompress') }
+      return
+    }
 
     if (request.action === 'context-checksum-create' || request.action === 'context-checksum-verify') {
       const kind = request.action === 'context-checksum-create' ? 'calculate' : 'verify'

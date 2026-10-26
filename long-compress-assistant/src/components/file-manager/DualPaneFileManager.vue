@@ -8,6 +8,9 @@ import type { ArchiveReadOptions } from '@/stores/app'
 import type { ArchivePaneSource } from '@/types/fileBrowser'
 import ArchiveBrowserView from '@/views/ArchiveBrowserView.vue'
 import LocalFilePreview from './LocalFilePreview.vue'
+import FilePaneNavigation from './FilePaneNavigation.vue'
+import FilePaneList from './FilePaneList.vue'
+import { browserBreadcrumbs } from '@/utils/browserPath'
 import { archiveSourceDirectory } from '@/utils/zpaqMultipart'
 import { localPreviewKind } from '@/utils/filePreview'
 import { useSavedLocations } from '@/composables/useSavedLocations'
@@ -36,6 +39,7 @@ interface PaneState {
   loading: boolean
   error: string
   archive: ArchivePaneSource | null
+  archiveCache?: ArchivePaneSource
   archiveBusy: boolean
   archiveSelected: number
   scrollTop: number
@@ -64,6 +68,9 @@ const editor = reactive<{ type: '' | 'rename' | 'mkdir' | 'delete'; pane: PaneSt
 const createPane = (id: 'left' | 'right'): PaneState => reactive({ id, path: '', pathDraft: '', locationMenuOpen: false, entries: [], selected: new Set<string>(), history: [], historyIndex: -1, selectionMode: false, loading: false, error: '', archive: null, archiveBusy: false, archiveSelected: 0, scrollTop: 0 })
 const left = createPane('left')
 const right = createPane('right')
+const archiveApis = new Map<string, InstanceType<typeof ArchiveBrowserView>>()
+const bindArchiveApi = (id:string, component:unknown) => { if(component) archiveApis.set(id,component as InstanceType<typeof ArchiveBrowserView>);else archiveApis.delete(id) }
+const canResumeArchive = (pane:PaneState) => !!pane.archiveCache && parentPath(pane.archiveCache.path).replace(/\\/g,'/').toLowerCase()===pane.path.replace(/\\/g,'/').toLowerCase()
 const otherPane = (pane: PaneState) => pane.id === 'left' ? right : left
 const isArchive = (entry: LocalFileEntry) => !entry.isDir && (isDecompressArchivePath(entry.path) || isPotentialSfxPath(entry.path) || isPotentialSplitArchivePath(entry.path))
 const selectedEntries = (pane: PaneState) => pane.entries.filter(entry => pane.selected.has(entry.path))
@@ -139,6 +146,7 @@ const locationIcon = (location: Location) => location.kind === 'drive'
 
 const navigateHistory = (pane: PaneState, delta: number) => {
   const index = pane.historyIndex + delta
+  if (delta > 0 && index === pane.history.length && canResumeArchive(pane)) { pane.archive = pane.archiveCache!; return }
   if (index < 0 || index >= pane.history.length) return
   pane.historyIndex = index
   void loadPane(pane, pane.history[index], false)
@@ -186,9 +194,11 @@ const breadcrumbs = (path: string) => {
 const openInPane = (pane: PaneState, path: string, options?: ArchiveReadOptions) => {
   if (pane.archiveBusy) { notice.value = '此栏仍在处理，请完成或停止后再打开其他压缩包。'; return }
   context.value = null; pane.locationMenuOpen = false
-  pane.scrollTop = managerRoot.value?.querySelector(`[data-file-pane="${pane.id}"] .file-list`)?.scrollTop || 0
+  pane.history = pane.history.slice(0,pane.historyIndex+1)
+  pane.scrollTop = managerRoot.value?.querySelector(`[data-file-pane="${pane.id}"] > .file-pane-content .file-list`)?.scrollTop || 0
   activePane.value = pane.id
   pane.archive = { id: ++archiveId, path, options }
+  pane.archiveCache = pane.archive
   emit('openArchive', path)
   const request = pane.archive.id
   void archiveSourceDirectory(path).then(directory => {
@@ -198,8 +208,17 @@ const openInPane = (pane: PaneState, path: string, options?: ArchiveReadOptions)
 const leaveArchive = async (pane: PaneState) => {
   pane.archive = null; pane.archiveBusy = false; pane.archiveSelected = 0
   await nextTick()
-  const list = managerRoot.value?.querySelector(`[data-file-pane="${pane.id}"] .file-list`)
+  const list = managerRoot.value?.querySelector(`[data-file-pane="${pane.id}"] > .file-pane-content .file-list`)
   if (list) list.scrollTop = pane.scrollTop
+}
+const navigateDisk = async (pane:PaneState,path:string) => {
+  if (pane.archiveBusy) return
+  if (isDecompressArchivePath(path) || isPotentialSplitArchivePath(path)) { openInPane(pane,path); return }
+  pane.pathDraft = path
+  if (await loadPane(pane,path)) { pane.scrollTop=0; await leaveArchive(pane) }
+}
+const transferArchiveSelection = (pane:PaneState) => {
+  if (requireDiskDestination(pane)) void archiveApis.get(pane.id)?.extractToDestination(otherPane(pane).path)
 }
 const refreshDestination = async (pane: PaneState, destination: string) => {
   const other = otherPane(pane)
@@ -414,7 +433,7 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
 })
 
-const activeSelectionCount = computed(() => (activePane.value === 'left' ? left : right).selected.size)
+const activeSelectionCount = computed(() => {const pane=activePane.value==='left'?left:right;return pane.archive?pane.archiveSelected:pane.selected.size})
 </script>
 
 <template>
@@ -427,92 +446,21 @@ const activeSelectionCount = computed(() => (activePane.value === 'left' ? left 
     <p v-if="savedLocations.error.value" role="alert" class="text-sm text-red-500">{{ savedLocations.error.value }}</p>
     <main class="pane-grid flex-1 min-h-0">
       <section v-for="pane in [left, right]" :key="pane.id" class="file-pane" :data-file-pane="pane.id" :class="{ active: activePane === pane.id }" @pointerdown="activePane = pane.id" @focusin="activePane = pane.id">
-        <ArchiveBrowserView v-if="pane.archive" :key="pane.archive.id" embedded :source="pane.archive" :destination="otherPane(pane).archive ? '' : otherPane(pane).path" :active="activePane===pane.id" @leave="leaveArchive(pane)" @pane-state="state=>{pane.archiveBusy=state.busy;pane.archiveSelected=state.selected}" @extracted="refreshDestination(pane,$event)"/>
-        <template v-else>
-        <nav class="pane-nav">
-          <button :disabled="pane.historyIndex <= 0" title="后退" @click="navigateHistory(pane, -1)"><i class="pi pi-arrow-left"></i></button>
-          <button :disabled="pane.historyIndex >= pane.history.length - 1" title="前进" @click="navigateHistory(pane, 1)"><i class="pi pi-arrow-right"></i></button>
-          <button :disabled="parentPath(pane.path) === pane.path" title="上一级" @click="loadPane(pane, parentPath(pane.path))"><i class="pi pi-arrow-up"></i></button>
-          <div class="path-combobox" :class="{ open: pane.locationMenuOpen }" @pointerdown.stop>
-            <i class="pi pi-folder path-combobox-icon"></i>
-            <input
-              v-model="pane.pathDraft"
-              type="text"
-              autocomplete="off"
-              spellcheck="false"
-              :aria-label="`${pane.id === 'left' ? '左' : '右'}栏路径`"
-              :aria-expanded="pane.locationMenuOpen"
-              aria-haspopup="listbox"
-              :data-testid="`file-manager-path-input-${pane.id}`"
-              title="输入或粘贴路径，按 Enter 跳转"
-              @focus="pane.locationMenuOpen = true"
-              @keydown.enter.prevent="submitPath(pane)"
-              @keydown.esc.prevent="cancelPathEditing(pane)"
-            >
-            <button
-              type="button"
-              class="path-combobox-toggle"
-              :class="{ open: pane.locationMenuOpen }"
-              title="常用位置与磁盘"
-              :aria-label="pane.locationMenuOpen ? '收起常用位置' : '展开常用位置'"
-              @click="toggleLocationMenu(pane)"
-            ><i class="pi pi-chevron-down"></i></button>
-            <div v-if="pane.locationMenuOpen" class="location-menu" role="listbox" :aria-label="`${pane.id === 'left' ? '左' : '右'}栏常用位置`">
-              <div class="location-menu-heading"><span>书签</span><small>仅跳转当前栏</small></div>
-              <button v-for="path in savedLocations.bookmarks.value" :key="`bookmark-${path}`" type="button" role="option" :aria-selected="path === pane.path" :data-testid="`saved-location-${pane.id}`" @click="selectLocation(pane, path)"><i class="pi pi-star-fill"></i><span><strong>{{ path }}</strong></span></button>
-              <p v-if="!savedLocations.bookmarks.value.length" class="px-3 text-xs text-muted">点击地址栏旁的星标收藏当前目录</p>
-              <div class="location-menu-heading"><span>最近使用</span></div>
-              <button v-for="path in savedLocations.recent.value" :key="`recent-${path}`" type="button" role="option" :aria-selected="path === pane.path" @click="selectLocation(pane, path)"><i class="pi pi-history"></i><span><strong>{{ path }}</strong></span></button>
-              <div class="location-menu-heading"><span>常用位置</span><small>也可直接粘贴路径</small></div>
-              <button
-                v-for="location in locations"
-                :key="`${pane.id}-${location.path}`"
-                type="button"
-                role="option"
-                :aria-selected="location.path === pane.path"
-                :class="{ selected: location.path === pane.path }"
-                @click="selectLocation(pane, location.path)"
-              >
-                <i :class="locationIcon(location)"></i>
-                <span><strong>{{ location.name }}</strong><small>{{ location.path }}</small></span>
-                <i v-if="location.path === pane.path" class="pi pi-check selected-mark"></i>
-              </button>
-            </div>
-          </div>
-          <button :disabled="!pane.path || pane.loading" :title="savedLocations.isBookmarked(pane.path) ? '取消收藏当前目录' : '收藏当前目录'" :aria-pressed="savedLocations.isBookmarked(pane.path)" :data-testid="`bookmark-current-${pane.id}`" @click="savedLocations.toggleBookmark(pane.path)"><i :class="savedLocations.isBookmarked(pane.path) ? 'pi pi-star-fill' : 'pi pi-star'"></i></button>
-          <button title="刷新" @click="loadPane(pane, pane.path, false)"><i :class="pane.loading ? 'pi pi-spin pi-spinner' : 'pi pi-refresh'"></i></button>
-          <button title="新建文件夹" @click="beginEditor('mkdir', pane)"><i class="pi pi-plus"></i></button>
-          <button class="selection-mode-button" :class="{ active: pane.selectionMode }" :title="pane.selectionMode ? '退出多选模式（Esc）' : '进入多选模式'" :aria-pressed="pane.selectionMode" :data-testid="`file-manager-selection-mode-${pane.id}`" @click="toggleSelectionMode(pane)"><i :class="pane.selectionMode ? 'pi pi-times' : 'pi pi-check-square'"></i></button>
-        </nav>
-        <div class="path-strip" :title="pane.path">
-          <i class="pi pi-folder-open"></i>
-          <nav class="path-breadcrumbs" :aria-label="`${pane.id === 'left' ? '左' : '右'}栏路径`" :data-testid="`file-manager-breadcrumbs-${pane.id}`">
-            <template v-for="(crumb, index) in breadcrumbs(pane.path)" :key="crumb.path">
-              <i v-if="index" class="pi pi-angle-right"></i>
-              <button :class="{ current: index === breadcrumbs(pane.path).length - 1 }" :title="crumb.path" @click="loadPane(pane, crumb.path)">{{ crumb.name }}</button>
-            </template>
-          </nav>
-          <span>{{ pane.entries.filter(item => item.isDir).length }} 文件夹 · {{ pane.entries.filter(item => !item.isDir).length }} 文件</span>
-        </div>
-        <div class="file-head"><span>名称</span><span>大小</span><span>修改时间</span></div>
-        <div class="file-list custom-scrollbar" @contextmenu="openBlankContext(pane, $event)">
-          <div v-for="entry in pane.entries" :key="entry.path" class="file-row" role="row" tabindex="0" @keydown.enter.prevent="activate(pane,entry)" @keydown.space.prevent="toggle(pane,entry,$event as unknown as MouseEvent)" :class="{ selected: pane.selected.has(entry.path) }" :data-path="entry.path" @click="toggle(pane, entry, $event)" @dblclick="activate(pane, entry)" @contextmenu.stop="openContext(pane, entry, $event)">
-            <span class="file-name"><i :class="icon(entry)"></i><span class="truncate" :title="entry.name"><strong>{{ entry.name }}</strong><small>{{ entry.isDir ? '文件夹' : (entry.extension || '文件').toUpperCase() }}</small></span><button v-if="!entry.isDir && localPreviewKind(entry.name)" type="button" class="file-preview-trigger" data-testid="file-manager-preview" :aria-label="'预览 '+entry.name" title="预览" @click.stop="previewLocal(entry)" @dblclick.stop @keydown.space.stop @keydown.enter.stop.prevent="previewLocal(entry)"><i class="pi pi-eye"/></button></span>
-            <span :title="entry.isDir ? '文件夹' : formatBytes(entry.size)">{{ entry.isDir ? '—' : formatBytes(entry.size) }}</span><span :title="formatDate(entry.modified)">{{ formatDate(entry.modified) }}</span>
-          </div>
-          <div v-if="pane.loading" class="pane-empty"><i class="pi pi-spin pi-spinner"></i><span>正在读取…</span></div>
-          <div v-else-if="pane.error" class="pane-empty error"><i class="pi pi-exclamation-triangle"></i><span>{{ pane.error }}</span><button v-if="savedLocations.isBookmarked(pane.pathDraft)" :data-testid="`remove-unavailable-bookmark-${pane.id}`" @click="savedLocations.toggleBookmark(pane.pathDraft)">移除此位置的书签（不删除文件）</button></div>
-          <div v-else-if="!pane.entries.length" class="pane-empty"><i class="pi pi-folder"></i><span>此文件夹为空</span></div>
-        </div>
+        <ArchiveBrowserView v-if="pane.archiveCache" v-show="!!pane.archive" :ref="component=>bindArchiveApi(pane.id,component)" :key="pane.archiveCache.id" embedded :pane-id="pane.id" :locations="locations" :saved-locations="savedLocations" :source="pane.archiveCache" :destination="otherPane(pane).archive ? '' : otherPane(pane).path" :active="activePane===pane.id && !!pane.archive" @leave="leaveArchive(pane)" @navigate-disk="navigateDisk(pane,$event)" @pane-state="state=>{pane.archiveBusy=state.busy;pane.archiveSelected=state.selected}" @extracted="refreshDestination(pane,$event)"/>
+        <template v-if="!pane.archive">
+        <FilePaneNavigation :pane-id="pane.id" :path="pane.path" :crumbs="browserBreadcrumbs(pane.path)" :folders="pane.entries.filter(item=>item.isDir).length" :files="pane.entries.filter(item=>!item.isDir).length" :locations="locations" :saved="savedLocations" :loading="pane.loading" :selection-mode="pane.selectionMode" :can-back="pane.historyIndex>0" :can-forward="pane.historyIndex<pane.history.length-1 || canResumeArchive(pane)" :can-up="parentPath(pane.path)!==pane.path" @back="navigateHistory(pane,-1)" @forward="navigateHistory(pane,1)" @up="loadPane(pane,parentPath(pane.path))" @refresh="loadPane(pane,pane.path,false)" @create="beginEditor('mkdir',pane)" @selection="toggleSelectionMode(pane)" @tools="openBlankContext(pane,$event)" @navigate="path=>{pane.pathDraft=path;submitPath(pane)}" @breadcrumb="index=>loadPane(pane,browserBreadcrumbs(pane.path)[index].path)"/>
+        <FilePaneList :entries="pane.entries.map(entry=>({...entry,icon:icon(entry),preview:!entry.isDir && !!localPreviewKind(entry.name)}))" :selected="pane.selected" :selection-mode="pane.selectionMode" :loading="pane.loading" :error="pane.error" @select="(entry,event)=>toggle(pane,entry,event)" @activate="entry=>activate(pane,entry)" @preview="previewLocal" @context="(entry,event)=>entry ? openContext(pane,entry,event) : openBlankContext(pane,event)">
+          <template #error><button v-if="savedLocations.isBookmarked(pane.pathDraft)" :data-testid="`remove-unavailable-bookmark-${pane.id}`" @click="savedLocations.toggleBookmark(pane.pathDraft)">移除此位置的书签（不删除文件）</button></template>
+        </FilePaneList>
         <footer><span>{{ pane.selected.size ? `已选择 ${pane.selected.size} 项` : pane.selectionMode ? '多选模式 · 单击切换选择 · Esc 退出' : '单击选择 · Ctrl 多选 · 双击打开 · 右键操作' }}</span><button v-if="pane.selectionMode" @click="toggleSelectionMode(pane)">退出多选</button></footer>
         </template>
       </section>
     </main>
-    <footer v-if="!activePaneState().archive" class="transfer-bar shrink-0">
+    <footer class="transfer-bar shrink-0">
       <span>当前栏已选 <b>{{ activeSelectionCount }}</b> 项</span>
-      <button title="复制到另一栏" :disabled="!activeSelectionCount || busy || !!otherPane(activePaneState()).archive" @click="runTransfer('copy', activePane === 'left' ? left : right)"><i class="pi pi-copy"></i><span>复制到另一栏</span></button>
-      <button :title="`移动到另一栏 ${transferDirection(activePaneState())}`" :disabled="!activeSelectionCount || busy || !!otherPane(activePaneState()).archive" @click="runTransfer('move', activePaneState())"><i :class="transferIcon(activePaneState())"></i><span>移动到另一栏 {{ transferDirection(activePaneState()) }}</span></button>
-      <button title="压缩到另一栏" :disabled="!activeSelectionCount || busy || !!otherPane(activePaneState()).archive" @click="compressToOther(activePane === 'left' ? left : right)"><i class="pi pi-box"></i><span>压缩到另一栏</span></button>
+      <button title="复制到另一栏" :disabled="!activeSelectionCount || busy || activePaneState().archiveBusy || !!otherPane(activePaneState()).archive" @click="activePaneState().archive ? transferArchiveSelection(activePaneState()) : runTransfer('copy', activePaneState())"><i class="pi pi-copy"></i><span>复制到另一栏</span></button>
+      <button :title="`移动到另一栏 ${transferDirection(activePaneState())}`" :disabled="!activeSelectionCount || busy || !!activePaneState().archive || !!otherPane(activePaneState()).archive" @click="runTransfer('move', activePaneState())"><i :class="transferIcon(activePaneState())"></i><span>移动到另一栏 {{ transferDirection(activePaneState()) }}</span></button>
+      <button title="压缩到另一栏" :disabled="!activeSelectionCount || busy || !!activePaneState().archive || !!otherPane(activePaneState()).archive" @click="compressToOther(activePane === 'left' ? left : right)"><i class="pi pi-box"></i><span>压缩到另一栏</span></button>
     </footer>
 
     <LocalFilePreview v-if="previewEntry" :entry="previewEntry" @close="previewEntry=null"/>
@@ -580,7 +528,7 @@ const activeSelectionCount = computed(() => (activePane.value === 'left' ? left 
 @media(max-width:620px){.manager-actions>button{width:2.2rem;padding:0;justify-content:center}.manager-actions>button span{display:none}.file-head,.file-row{grid-template-columns:minmax(0,1fr)}.file-head span:nth-child(n+2),.file-row>span:nth-child(n+2){display:none}.path-strip{grid-template-columns:auto minmax(0,1fr)}.path-strip>span{display:none}.transfer-bar>span{display:none}.transfer-bar button{width:2.15rem;padding:0;justify-content:center}.transfer-bar button span{display:none}.transfer-bar button i{font-size:.8rem}.file-pane>footer{padding:.35rem .45rem}.file-pane>footer button{display:none}}
 @media(max-width:1100px){.pane-nav{flex-wrap:wrap}.pane-nav>.path-combobox{order:2;flex:1 0 100%;min-width:0}.pane-nav>button{flex-shrink:0}}
 @media(min-width:901px) and (max-width:1100px){.file-head,.file-row{grid-template-columns:minmax(0,1fr) 4rem 6rem}}
-.file-pane>.archive-pane-browser{flex:1;min-height:0}.file-row{cursor:pointer}.file-row:focus-visible{outline:2px solid var(--dynamic-accent);outline-offset:-2px}.file-preview-trigger{display:grid;place-items:center;flex-shrink:0;width:25px;height:28px;margin-left:auto;border-radius:7px;color:var(--dynamic-accent);background:color-mix(in srgb,var(--dynamic-accent) 9%,transparent)}.file-preview-trigger:hover{background:color-mix(in srgb,var(--dynamic-accent) 18%,transparent)}.file-name>.truncate{min-width:0;flex:1}.file-context button:disabled{opacity:.4;cursor:default}
+.file-pane{container:file-pane / inline-size}.file-pane>.archive-pane-browser{flex:1;min-height:0}.file-row{cursor:pointer}.file-row:focus-visible{outline:2px solid var(--dynamic-accent);outline-offset:-2px}.file-preview-trigger{display:grid;place-items:center;flex-shrink:0;width:25px;height:28px;margin-left:auto;border-radius:7px;color:var(--dynamic-accent);background:color-mix(in srgb,var(--dynamic-accent) 9%,transparent)}.file-preview-trigger:hover{background:color-mix(in srgb,var(--dynamic-accent) 18%,transparent)}.file-name>.truncate{min-width:0;flex:1}.file-context button:disabled{opacity:.4;cursor:default}
 </style>
 
 <style>

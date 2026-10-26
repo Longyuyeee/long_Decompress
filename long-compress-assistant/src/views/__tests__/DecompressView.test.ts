@@ -53,6 +53,25 @@ const mountView = (pinia = createPinia()) => mount(DecompressView, {
 })
 
 describe('DecompressView', () => {
+  it('queues a second Windows opening behind the running extraction and allows a completed archive to run again',async()=>{
+    const view=mountView(),app=useAppStore(),store=useTaskStore()
+    let finish!:()=>void
+    mocks.decompressFile.mockImplementationOnce(async(_path,_options,id)=>{
+      store.updateTaskStatus(id,'extracting')
+      await new Promise<void>(resolve=>{finish=resolve})
+      store.updateTaskStatus(id,'completed')
+    }).mockImplementation(async(_path,_options,id)=>{store.updateTaskStatus(id,'completed')})
+    app.enqueueContextAction({action:'context-extract-here',files:['C:/first.zip']});await flushPromises()
+    expect(mocks.decompressFile).toHaveBeenCalledTimes(1)
+    app.enqueueContextAction({action:'context-extract-to',files:['D:/second.zip']});await flushPromises()
+    expect(mocks.decompressFile).toHaveBeenCalledTimes(1)
+    finish();await flushPromises()
+    expect(mocks.decompressFile).toHaveBeenNthCalledWith(2,'D:/second.zip',expect.objectContaining({outputPath:'D:/',createSubdirectory:true}),expect.any(String))
+    app.enqueueContextAction({action:'context-extract-here',files:['C:/first.zip']});await flushPromises()
+    expect(mocks.decompressFile).toHaveBeenCalledTimes(3)
+    expect(store.tasks.filter(task=>task.sourceFiles[0]==='C:/first.zip')).toHaveLength(2)
+    view.unmount()
+  })
   it.each([true,false])('library1549 dispatches original queue with exact library selection and keeps scope even when preflight canStart=%s',async canStart=>{
     const view=mountView(),store=useTaskStore();store.addTask({id:'library',name:'source.zip',type:'decompression',sourceFiles:['C:/source.zip'],outputPath:'D:/out',configurationMode:'individual',librarySourceId:'source',libraryRevision:'revision',libraryKeepStructure:false,libraryConflictPolicy:'skip',selectedEntries:['docs/合同.txt']})
     mocks.preflightOperationResources.mockResolvedValueOnce({canStart,summary:'space',warnings:[],sourceBytes:10,availableBytes:100,requiredBytes:20})
@@ -254,7 +273,7 @@ describe('DecompressView', () => {
     const bar = wrapper.findComponent({ name: 'BatchConfigBar' })
     expect(bar.props('count')).toBe(2)
     bar.vm.$emit('apply', { outputDirectory: '', extractToSubfolder: false })
-    await nextTick()
+    await flushPromises()
     expect(store.tasks[0]).toMatchObject({ outputPath: 'C:/', extractToSubfolder: false, password: 'first-secret', configurationMode: 'individual' })
     expect(store.tasks[1]).toMatchObject({ outputPath: 'C:/', extractToSubfolder: false, password: 'second-secret' })
     expect(store.tasks[2]).toMatchObject({ outputPath: 'D:/other', extractToSubfolder: true, configurationMode: 'global' })
@@ -468,8 +487,7 @@ describe('DecompressView', () => {
       name: 'bundle.zip',
       path: 'C:/archives/bundle.zip',
     }])
-    await nextTick()
-    await nextTick()
+    await flushPromises()
 
     const task = useTaskStore().tasks[0]
     expect(task).toMatchObject({
@@ -625,14 +643,14 @@ describe('DecompressView', () => {
       name: 'bundle.zip',
       path: 'C:/archives/bundle.zip',
     }])
-    await nextTick()
-    await nextTick()
+    await flushPromises()
 
     // Explicit user choice after importing, independent of the opt-in analysis.
     await wrapper.get('[data-testid="global-subfolder"]').trigger('click')
     const appStore = useAppStore()
     const startButton = wrapper.findAll('button').find(button => button.text().includes(appStore.t('decompress.start_queue')))
     await startButton!.trigger('click')
+    await flushPromises()
 
     expect(mocks.decompressFile).toHaveBeenCalledWith(
       'C:/archives/bundle.zip',
@@ -693,8 +711,7 @@ describe('DecompressView', () => {
       name: 'bundle.zip',
       path: 'C:/archives/bundle.zip',
     }])
-    await nextTick()
-    await nextTick()
+    await flushPromises()
 
     const appStore = useAppStore()
     const taskStore = useTaskStore()
@@ -772,8 +789,7 @@ describe('DecompressView', () => {
       name: 'bundle.zip',
       path: 'C:/archives/bundle.zip',
     }])
-    await nextTick()
-    await nextTick()
+    await flushPromises()
 
     const table = wrapper.findComponent({ name: 'AeroTable' })
     expect(table.props('taskType')).toBe('decompression')
@@ -783,6 +799,7 @@ describe('DecompressView', () => {
     )
     await startButton!.trigger('click')
 
+    await flushPromises()
     expect(mocks.decompressFile).toHaveBeenCalledTimes(1)
     expect(mocks.decompressFile).toHaveBeenCalledWith(
       'C:/archives/bundle.zip',

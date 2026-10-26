@@ -270,6 +270,7 @@ describe('DualPaneFileManager', () => {
   it('keeps both panes and the opposite location/selection when entering and leaving an archive', async () => {
     const wrapper=mount(DualPaneFileManager); await flushPromises()
     await wrapper.get('[data-file-pane="right"] .file-row').trigger('click')
+    wrapper.get('[data-file-pane="left"] > .file-pane-content .file-list').element.scrollTop=120
     const row=wrapper.findAll('[data-file-pane="left"] .file-row').find(row=>row.text().includes('photos.zip'))!
     await row.trigger('click'); await row.trigger('dblclick'); await flushPromises()
     expect(wrapper.findAll('.file-pane')).toHaveLength(2)
@@ -277,7 +278,8 @@ describe('DualPaneFileManager', () => {
     expect((wrapper.get('[data-testid="file-manager-path-input-right"]').element as HTMLInputElement).value).toBe('D:\\')
     expect(wrapper.get('[data-file-pane="right"] .file-row').classes()).toContain('selected')
     await wrapper.get('[data-testid="pane-leave-stub"]').trigger('click'); await flushPromises()
-    expect(wrapper.find('[data-testid="pane-archive-stub"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="pane-archive-stub"]').isVisible()).toBe(false)
+    expect(wrapper.get('[data-file-pane="left"] > .file-pane-content .file-list').element.scrollTop).toBe(120)
     expect(wrapper.findAll('[data-file-pane="left"] .file-row').find(row=>row.text().includes('photos.zip'))!.classes()).toContain('selected')
     wrapper.unmount()
   })

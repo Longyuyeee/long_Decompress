@@ -89,6 +89,8 @@ fn parse_context_action(args: &[String]) -> Option<ContextAction> {
         ("--checksum-verify", "context-checksum-verify"),
         ("--extract-here", "context-extract-here"),
         ("--extract-to", "context-extract-to"),
+        ("--extract-choose", "context-extract-choose"),
+        ("--open-archive", "context-system-open"),
         ("--quick-extract", "context-quick-extract"),
         ("--quick-pack", "context-quick-pack"),
         ("--test-archive", "context-test-archive"),
@@ -117,6 +119,12 @@ fn parse_context_action(args: &[String]) -> Option<ContextAction> {
                 files,
             });
         }
+    }
+    // Windows Open With also invokes applications with bare file arguments.
+    // Other command-line switches (including autostart) are never file opens.
+    let files: Vec<String> = args.iter().skip(1).filter(|arg| !arg.starts_with('%')).cloned().collect();
+    if !files.is_empty() && files.iter().all(|arg| !arg.starts_with('-') && std::path::Path::new(arg).is_absolute()) {
+        return Some(ContextAction { action: "context-system-open".into(), files });
     }
     None
 }
@@ -600,6 +608,9 @@ fn main() {
             long_compress_assistant::commands::system_integration::register_context_menu,
             long_compress_assistant::commands::system_integration::unregister_context_menu,
             long_compress_assistant::commands::system_integration::is_context_menu_registered,
+            long_compress_assistant::commands::system_integration::archive_file_associations,
+            long_compress_assistant::commands::system_integration::configure_archive_file_associations,
+            long_compress_assistant::commands::system_integration::open_default_archive_apps,
             long_compress_assistant::commands::system_integration::set_close_to_tray,
             long_compress_assistant::commands::system_integration::request_window_close,
             long_compress_assistant::commands::system_integration::set_has_active_tasks,
@@ -673,7 +684,18 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    use super::is_auto_start_activation;
+    use super::{is_auto_start_activation, parse_context_action};
+    #[test]
+    fn archive_opening_keeps_windows_and_explicit_extraction_distinct() {
+        let path = std::env::temp_dir().join("中文 空格.zip").to_string_lossy().into_owned();
+        for args in [vec!["app.exe".into(), path.clone()],vec!["app.exe".into(),"--open-archive".into(),path.clone()]] {
+            let action=parse_context_action(&args).unwrap();assert_eq!(action.action,"context-system-open");assert_eq!(action.files,vec![path.clone()]);
+        }
+        assert_eq!(parse_context_action(&["app.exe".into(),"--extract-choose".into(),path.clone()]).unwrap().action,"context-extract-choose");
+        assert_eq!(parse_context_action(&["app.exe".into(),"--extract-here".into(),path.clone()]).unwrap().action,"context-extract-here");
+        assert!(parse_context_action(&["app.exe".into(),"--autostart".into(),path]).is_none());
+        assert!(parse_context_action(&["app.exe".into(),"--unknown".into()]).is_none());
+    }
 
     #[test]
     fn only_the_dedicated_flag_is_treated_as_logon_activation() {
