@@ -34,6 +34,7 @@ pub(crate) fn coder(coder:&Coder,unpacked:usize)->Result<(),Error>{
         else if id==M::ID_BCJ_ARM {crate::bcj::arm_start_position(p).is_ok()}
         else if id==M::ID_BCJ_ARM_THUMB {crate::bcj::arm_thumb_start_position(p).is_ok()}
         else if id==M::ID_BCJ_ARM64 {crate::bcj::arm64_start_position(p).is_ok()}
+        else if id==M::ID_BCJ_RISCV {crate::bcj::riscv_start_position(p).is_ok()}
         else if id==M::ID_PPMD {p.len()==5&&u32::from_le_bytes(p[1..5].try_into().unwrap())<=64*1024*1024}
         // Retain the existing bounded-memory header codecs/filters. Selected
         // payload methods are checked separately by the application.

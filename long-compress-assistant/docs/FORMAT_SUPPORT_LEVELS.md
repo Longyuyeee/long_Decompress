@@ -1,5 +1,7 @@
 # 归档格式支持等级（当前权威口径）
 
+**v1.6.56 7Z RISC-V BCJ**：可选 LZMA2/LZMA + RISC-V，默认关闭；密码/固实/数字卷、完整图文/大文本开头/提取、配置保存、实际分析与转换接通。无新增格式/依赖，见[记录](SEVENZ_RISCV_BCJ_CREATE_FREEZE_1.6.56.md)。
+
 **v1.6.55 7Z ARM64 BCJ**：可选 LZMA2/LZMA + ARM64，默认关闭；密码/固实/数字卷、完整图文/大文本开头/提取、配置保存、实际分析和转换接通。无新增格式或依赖，见[记录](SEVENZ_ARM64_BCJ_CREATE_FREEZE_1.6.55.md)。
 
 **v1.6.54 7Z ARM Thumb BCJ**：可选 LZMA2/LZMA + Thumb，默认关闭；密码/固实/数字卷、完整图文/大文本开头/提取、配置保存、实际分析和转换接通。无新增格式或依赖，见[记录](SEVENZ_ARM_THUMB_BCJ_CREATE_FREEZE_1.6.54.md)。

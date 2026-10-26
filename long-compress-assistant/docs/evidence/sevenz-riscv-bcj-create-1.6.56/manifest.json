@@ -1,0 +1,125 @@
+{
+  "applicationSha256": "683a25ca1aafde389761d5a31c138501d928664a65d7899f3791aac53a33bc45",
+  "files": {
+    "vendor.log": {
+      "size": 2668,
+      "sha256": "ee9857792ded1c16f86b3e03b501db1531c1a346b3eb1fc357e267b699a881ed"
+    },
+    "vendor-exit.json": {
+      "size": 204,
+      "sha256": "84028544731c8fd3740131626de05210133a110751c07cbf2125ecd0e8a50657"
+    },
+    "arm64-continuity.log": {
+      "size": 2724,
+      "sha256": "b8a0192c84534fee77323b4ed2d53a1c6f5c51e7fdf7d9dd1262641e49b4d3fa"
+    },
+    "arm64-continuity-exit.json": {
+      "size": 73,
+      "sha256": "2b9bda65b449f5d873306440be78d738ddfdc6c04d9eb22011e4676d7fd37d6f"
+    },
+    "backend.log": {
+      "size": 2355,
+      "sha256": "21eee19a0615770accf35a9ebc0797f6165f9e4f806481470e7fba0df9bf6432"
+    },
+    "backend-exit.json": {
+      "size": 73,
+      "sha256": "c15a0d1be2f12872b270efdd847301f2c6942b16f9b69d8f03ffa14609008102"
+    },
+    "frontend.log": {
+      "size": 276,
+      "sha256": "277667d4141140c451b1d44fca711072574eda0bc82c1e0dd5961bda29c297ac"
+    },
+    "frontend-exit.json": {
+      "size": 79,
+      "sha256": "4991a66949751c4774c0bdfca73bfb4d60403b40cf536f19475cbc680a418a5f"
+    },
+    "frontend-production-build.log": {
+      "size": 6087,
+      "sha256": "f2afb45917ffe7449958a464e31d6713f4ce70b6e9780c0cd60055766485eef2"
+    },
+    "frontend-production-observed.json": {
+      "size": 270,
+      "sha256": "9a4504c059eea3fe3c76a5088ce07907f88538f6c7faa35be57c74495dec4069"
+    },
+    "frontend-e2e-build.log": {
+      "size": 5949,
+      "sha256": "fd31fe02d3ee6e201577e61078bc165eef357e8cfb11deb5e62175391b7fd7b6"
+    },
+    "frontend-build-exit.json": {
+      "size": 73,
+      "sha256": "7ab222ca6abcebf74abe4e048a2d033c22f644979825ffabcb50b35b2a9d31a0"
+    },
+    "shell.log": {
+      "size": 539,
+      "sha256": "d9f30bef1dcf41851abdd4727b2c9ebe85817d7d7977f99140e8f7168e0c4698"
+    },
+    "shell-exit.json": {
+      "size": 73,
+      "sha256": "bbba3dc1e80e2dd11071acce43fc0224d856a2be79fd44e7a890ad72a32c7ce7"
+    },
+    "identity.log": {
+      "size": 564,
+      "sha256": "d5e49a71ce309206a08091cdad4c5e3e4db9679e1d6c6078f82b97462c8d640e"
+    },
+    "identity-exit.json": {
+      "size": 73,
+      "sha256": "609455c8f93a790a8d068d15c95dd0892741904eefb7bb4fdc34f9cc34f02cf9"
+    },
+    "native.log": {
+      "size": 2521,
+      "sha256": "985d2b6e3e8c94030c667bfcc0fc693f362b3e8be9c14018846ed335ca9d9949"
+    },
+    "native-exit.json": {
+      "size": 73,
+      "sha256": "844248e2502a0f0fc017073f5e894ecbeb8f745e8c80ac15257c26f2632ed045"
+    },
+    "desktop.log": {
+      "size": 1206,
+      "sha256": "c2fa2b98d087a1ce061bd456110fbcb38a818f359a607bc395f344256b684234"
+    },
+    "desktop-exit.json": {
+      "size": 73,
+      "sha256": "2c7c4d1f27d76ea0717947ebefd3b64842358ac1b49e4b26cf0357c2e1a0e986"
+    },
+    "desktop.json": {
+      "size": 13217,
+      "sha256": "e27e0f817ab627625404d956bf9e2e68eb8f4176ff7b1e3c7a39fe082ff57bb8"
+    },
+    "creation.json": {
+      "size": 11988,
+      "sha256": "5013d9b7bcb2db81dcd52178c68c95fbfbc668371dfa79c7ee0ca6ad83d371c4"
+    },
+    "source-original.json": {
+      "size": 1671,
+      "sha256": "a15c32522ce303b9281fe5d9d241440bad4f712c65ccc3e63a5776da3812287b"
+    },
+    "screenshots-viewed.json": {
+      "size": 492,
+      "sha256": "869f89a575cd2412c8093326566f2358a532e66edde4107d1d2df5fe0468c478"
+    },
+    "collapsed-wide.png": {
+      "size": 381694,
+      "sha256": "60fb78a42c857965d60c8438b82e80e9ab5060c428723349c93031f64ca23aad"
+    },
+    "inline-wide.png": {
+      "size": 379541,
+      "sha256": "ddda5311a937fa86b4bca5dde931184abbe6d85348924e36627c3cb0a5121232"
+    },
+    "inline-narrow.png": {
+      "size": 279754,
+      "sha256": "a4bc07f4ac78905a1f7ed1c955416ef3361dc4f53db2943ef1ea7435a6f864fa"
+    },
+    "inactive-narrow.png": {
+      "size": 268112,
+      "sha256": "1a1f268c1b2c15d73b9c81fa431400b007407a4fd4665ee7543a69c40bd850b2"
+    },
+    "batch-narrow.png": {
+      "size": 212066,
+      "sha256": "a7f6ce126b3528dc2d43a780c7d3840bf3d8698bec89141fcc8c4335670a1916"
+    },
+    "conversion-narrow.png": {
+      "size": 129617,
+      "sha256": "08786eee40622eea20b8b079d00d00a6e2f20819a88ec525cc4936f47adf5105"
+    }
+  }
+}

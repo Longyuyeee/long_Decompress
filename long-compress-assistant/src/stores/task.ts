@@ -103,7 +103,7 @@ export interface Task {
   compressionOptions?: {
     fast_pack?: boolean
     zip_password_encoding?: ZipPasswordEncoding
-    seven_zip_filter?: 'none' | 'delta' | 'bcj_x86' | 'bcj_arm32' | 'bcj_arm_thumb' | 'bcj_arm64'; seven_zip_delta_distance?: number; seven_zip_method?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'
+    seven_zip_filter?: 'none' | 'delta' | 'bcj_x86' | 'bcj_arm32' | 'bcj_arm_thumb' | 'bcj_arm64' | 'bcj_riscv'; seven_zip_delta_distance?: number; seven_zip_method?: 'lzma2' | 'lzma' | 'bzip2' | 'deflate' | 'ppmd' | 'copy'
     zip_method?: 'deflate' | 'zstd' | 'bzip2' | 'ppmd' | 'lzma' | 'store'
     zip_encryption?: 'aes256' | 'zipcrypto'
     zip_split_mode?: 'numeric' | 'standard'

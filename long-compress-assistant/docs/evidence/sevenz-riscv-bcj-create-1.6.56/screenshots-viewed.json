@@ -1,0 +1,13 @@
+{
+  "finished": "2026-10-26T11:42:34.6462443+08:00",
+  "viewed": [
+    "collapsed-wide.png",
+    "inline-wide.png",
+    "inline-narrow.png",
+    "inactive-narrow.png",
+    "batch-narrow.png",
+    "conversion-narrow.png"
+  ],
+  "applicationSha256": "683a25ca1aafde389761d5a31c138501d928664a65d7899f3791aac53a33bc45",
+  "result": "All six screenshots visually reviewed; themed folded setting, equal columns, narrow status wrapping and modal bounds clear; no horizontal overflow"
+}

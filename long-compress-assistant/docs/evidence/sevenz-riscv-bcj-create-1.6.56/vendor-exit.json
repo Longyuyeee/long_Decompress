@@ -1,0 +1,5 @@
+{
+  "finished": "2026-10-26T11:27:22.5492542+08:00",
+  "capture": "Foreground cargo test final output; first background Windows PowerShell stopped on native stderr before results",
+  "exitCode": 0
+}

@@ -15,6 +15,7 @@ pub enum Encoder<W: Write> {
     BcjArm32(crate::bcj::encoder::BcjEncoder<CountingWriter<W>>),
     BcjArmThumb(crate::bcj::encoder::BcjEncoder<CountingWriter<W>>),
     BcjArm64(crate::bcj::encoder::BcjEncoder<CountingWriter<W>>),
+    BcjRiscv(crate::bcj::encoder::BcjEncoder<CountingWriter<W>>),
     DELTA(crate::delta_encoder::DeltaEncoder<CountingWriter<W>>),
     COPY(CopyEncoder<CountingWriter<W>>),
     LZMA(LZMAWriter<W>),
@@ -36,6 +37,7 @@ impl<W: Write> Write for Encoder<W> {
             Encoder::BcjArm32(w) => w.write(buf),
             Encoder::BcjArmThumb(w) => w.write(buf),
             Encoder::BcjArm64(w) => w.write(buf),
+            Encoder::BcjRiscv(w) => w.write(buf),
             Encoder::DELTA(w) => w.write(buf),
             Encoder::COPY(w) => w.write(buf),
             Encoder::LZMA(w) => w.write(buf),
@@ -57,6 +59,7 @@ impl<W: Write> Write for Encoder<W> {
             Encoder::BcjArm32(w) => w.flush(),
             Encoder::BcjArmThumb(w) => w.flush(),
             Encoder::BcjArm64(w) => w.flush(),
+            Encoder::BcjRiscv(w) => w.flush(),
             Encoder::DELTA(w) => w.flush(),
             Encoder::COPY(w) => w.flush(),
             Encoder::LZMA(w) => w.flush(),
@@ -83,6 +86,10 @@ pub fn add_encoder<W: Write>(
         SevenZMethod::ID_BCJ_ARM64 => {
             if method_config.options.is_some() { return Err(Error::other("ARM64 BCJ does not accept output options")); }
             Ok(Encoder::BcjArm64(crate::bcj::encoder::BcjEncoder::new_arm64(input)))
+        }
+        SevenZMethod::ID_BCJ_RISCV => {
+            if method_config.options.is_some() { return Err(Error::other("RISCV BCJ does not accept output options")); }
+            Ok(Encoder::BcjRiscv(crate::bcj::encoder::BcjEncoder::new_riscv(input)))
         }
         SevenZMethod::ID_BCJ_ARM_THUMB => {
             if method_config.options.is_some() { return Err(Error::other("ARM Thumb BCJ does not accept output options")); }
