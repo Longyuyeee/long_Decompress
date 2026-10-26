@@ -1,0 +1,70 @@
+{
+  "version": "1.6.60",
+  "applicationSha256": "a754502cf7e56377b96ecad744c0f43d5c529fde813ddcab72782f5e4133cf71",
+  "reusedBusinessCandidateSha256": "636262e7ad1930e53dda4511769ba884c0d87c942dd9430fbbcf9ea74cc8c0ae",
+  "checks": [
+    {
+      "name": "explicit Latin-1 and UTF-8 names with identical header bytes stay distinct in list preview and retrieval",
+      "diagnosis": {
+        "actualFormat": "LZOP",
+        "canRepair": false,
+        "encrypted": false,
+        "evidence": [
+          "Archive size: 224 bytes",
+          "Magic/extension format: LZOP",
+          "Entries: 2 files, 0 directories",
+          "Integrity test completed without errors"
+        ],
+        "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-members-read-1660\\name-fixture\\encodings.lzo",
+        "fileSize": 224,
+        "integrityTested": true,
+        "issues": [],
+        "missingVolumes": [],
+        "recoverability": "not_needed",
+        "splitArchive": false,
+        "status": "healthy",
+        "totalDirectories": 0,
+        "totalFiles": 2,
+        "totalUncompressedSize": 104,
+        "totalUncompressedSizeKnown": true,
+        "volumesFound": 1
+      }
+    }
+  ],
+  "layouts": [
+    {
+      "name": "names-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        422.796875,
+        422.8046875
+      ],
+      "width": 1100
+    },
+    {
+      "name": "name-text-narrow",
+      "dialogs": [
+        {
+          "bottom": 460.5859375,
+          "height": 401.1796875,
+          "left": 22.796875,
+          "right": 737.203125,
+          "top": 59.40625,
+          "width": 714.40625,
+          "x": 22.796875,
+          "y": 59.40625
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        318.3984375,
+        318.40625
+      ],
+      "width": 760
+    }
+  ],
+  "passed": true
+}

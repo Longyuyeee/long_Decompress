@@ -281,9 +281,15 @@ fn read_plain_stream(path: &Path, format: &str, entry: &str, max_total: u64, kee
 fn read_plain_stream_controlled(path: &Path, format: &str, entry: &str, max_total: u64, keep: u64,control:Option<&ImageControl>) -> Result<TextBytes> {
     let detected = if format == "LZIP" { ArchiveFormat::Lzip } else { ArchiveFormat::from_extension(&format.to_ascii_lowercase()) };
     let (codec, _, suffixes) = super::codec_stream::plain_format(&detected).context("Unsupported compressed preview")?;
-    let name = super::native_extraction::single_stream::output_name(path, suffixes);
-    anyhow::ensure!(entry == name, "The selected entry was not found in the compressed file");
-    let mut reader = super::codec_stream::decoder(path, codec)?;
+    let member=if detected==ArchiveFormat::Lzop {super::lzop::multi_index(path,||{if let Some(c)=control{c.check()?;}Ok(())})?}else{None};
+    let mut reader=if let Some(members)=member {
+        let selected=members.iter().find(|m|m.name==entry).context("所选 LZOP 成员不存在，请刷新后重试")?;
+        super::lzop::member_reader(path,selected)?
+    }else{
+        let name = super::native_extraction::single_stream::output_name(path, suffixes);
+        anyhow::ensure!(entry == name, "The selected entry was not found in the compressed file");
+        super::codec_stream::decoder(path, codec)?
+    };
     let mut bytes = Vec::new();
     let mut total = 0u64;
     let mut buffer = [0u8; 64 * 1024];

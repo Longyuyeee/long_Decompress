@@ -1,0 +1,49 @@
+    Blocking waiting for file lock on package cache
+   Compiling long-compress-assistant v1.6.60 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+warning: unused import: `Member`
+   --> src\services\lzop.rs:378:85
+    |
+378 | pub(crate) use members::{extract_members, member_index, member_reader, multi_index, Member};
+    |                                                                                     ^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `long-compress-assistant` (lib test) generated 1 warning (run `cargo fix --lib -p long-compress-assistant --tests` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 3m 24s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-73da440fce10fdef.exe)
+
+running 7 tests
+test services::lzop_1657_tests::lzop1657_damage_unsupported_limits_and_numeric_slices_remain_explicit ... ok
+test services::lzop_1657_tests::lzop1657_official_methods_checksums_stored_multiblock_and_short_reads ... ok
+test services::lzop_members_1660_tests::lzop1660_names_duplicates_and_unnamed_members_keep_distinct_contents ... ok
+test services::lzop_members_1660_tests::lzop1660_numeric_slices_second_member_damage_and_cancel_are_not_healthy ... ok
+test services::lzop_members_1660_tests::lzop1660_official_members_browse_verify_preview_and_extract_each_file ... ok
+test services::lzop_numeric_1659_tests::lzop1659_non_first_text_image_prefix_and_cancellation ... ok
+test services::tar_lzo_1658_tests::tarlzo1658_invalid_inner_and_damaged_outer_never_report_healthy ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 1341 filtered out; finished in 26.17s
+
