@@ -4,6 +4,15 @@ import ZipPasswordEncodingField from '../ZipPasswordEncodingField.vue'
 import ThemedSelect from '../ThemedSelect.vue'
 
 describe('ZIP input encoding field', () => {
+  it('offers LZOP name codepages without changing ZIP output password options', () => {
+    const wrapper=mount(ZipPasswordEncodingField,{props:{sourcePath:'paths.lzo.002',sourceFormat:'LZOP'}})
+    const select=wrapper.getComponent(ThemedSelect)
+    expect(select.props('ariaLabel')).toBe('LZOP 成员名称编码')
+    expect(select.props('options')[0].label).toBe('按成员标记（默认）')
+    expect(select.props('options').map(o=>o.value)).toContain('cp850')
+    select.vm.$emit('update:modelValue','cp437');expect(wrapper.emitted('update:modelValue')).toEqual([['cp437']])
+    wrapper.unmount()
+  })
   it('uses an accurate EGG key-only label and UTF-8 default', () => {
     const wrapper=mount(ZipPasswordEncodingField,{props:{sourcePath:'native.vol3.egg',modelValue:'cp936'}})
     const select=wrapper.getComponent(ThemedSelect)
@@ -30,6 +39,7 @@ describe('ZIP input encoding field', () => {
     expect(select.props('modelValue')).toBe('utf8')
     expect(select.props('options').map(o=>o.value)).toEqual(['utf8','windows_local','cp932','cp936','cp950'])
     expect(select.props('ariaLabel')).toBe('新包 ZIP 密码编码')
+    select.vm.$emit('update:modelValue','cp850');expect(wrapper.emitted('update:modelValue')).toBeUndefined()
     select.vm.$emit('update:modelValue','auto');expect(wrapper.emitted('update:modelValue')).toBeUndefined()
     select.vm.$emit('update:modelValue','cp950');expect(wrapper.emitted('update:modelValue')).toEqual([['cp950']])
     wrapper.unmount()

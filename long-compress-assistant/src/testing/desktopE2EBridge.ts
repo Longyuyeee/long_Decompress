@@ -16,7 +16,7 @@ const TEST_TASK_ID = 'desktop-e2e-lifecycle-task'
 
 export interface DesktopE2EBridge {
   convertArchive: (sourcePath: string, sourcePassword: string | null, outputPath: string,
-    options: Record<string, unknown>) => Promise<unknown>
+    options: Record<string, unknown>, sourceEncoding?: string) => Promise<unknown>
   startCancellableTask: (outputPath: string) => Promise<string>
   seedActiveTask: () => Promise<string>
   cancelTask: (taskId: string) => Promise<boolean>
@@ -53,6 +53,7 @@ export interface DesktopE2EBridge {
     archivePath: string,
     outputPath: string,
     password?: string | null,
+    options?: Record<string, unknown>,
   ) => Promise<string>
   diagnoseArchive: (filePath: string, password?: string) => Promise<{
     actualFormat: string
@@ -354,10 +355,10 @@ export const installDesktopE2EBridge = () => {
   }
 
   const bridge: DesktopE2EBridge = {
-    async convertArchive(sourcePath, sourcePassword, outputPath, options) {
+    async convertArchive(sourcePath, sourcePassword, outputPath, options, sourceEncoding) {
       return invoke('convert_archive', {
         taskId: `desktop-e2e-conversion-${Date.now()}`,
-        sourcePath, sourcePassword, outputPath,
+        sourcePath, sourcePassword, outputPath, sourceZipPasswordEncoding: sourceEncoding || null,
         options: { ...sevenZipOptions, verify_after: true, ...options },
       })
     },
@@ -542,7 +543,7 @@ export const installDesktopE2EBridge = () => {
       return extractedPath
     },
 
-    async extractArchive(archivePath, outputPath, password = null) {
+    async extractArchive(archivePath, outputPath, password = null, options = {}) {
       const nonce = `${Date.now()}-${Math.random().toString(16).slice(2)}`
       const taskId = `desktop-e2e-extract-only-${nonce}`
       addArchiveTask(taskId, 'decompression', archivePath, outputPath)
@@ -554,7 +555,7 @@ export const installDesktopE2EBridge = () => {
           filePath: archivePath,
           outputPath,
           password,
-          options: extractionOptions,
+          options: { ...extractionOptions, ...options },
         })
         taskStore.updateTaskStatus(taskId, 'completed')
         return extractedPath

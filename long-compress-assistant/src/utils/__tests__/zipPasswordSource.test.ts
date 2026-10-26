@@ -2,6 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { supportsZipPasswordEncoding, zipPasswordEncodingForSource } from '../zipPasswordSource'
 
 describe('ZIP password input scope', () => {
+  it.each(['paths.lzo','paths.lzo.002'])('retains legacy LZOP names for %s while excluding TAR.LZO', path => {
+    expect(zipPasswordEncodingForSource(path,'cp850')).toBe('cp850')
+    expect(zipPasswordEncodingForSource(path,'cp936','LZOP')).toBe('cp936')
+    expect(zipPasswordEncodingForSource(path,'cp850','TAR.LZO')).toBeUndefined()
+    expect(zipPasswordEncodingForSource('paths.tar.lzo','cp936')).toBeUndefined()
+  })
   it.each(['native.egg','native.vol1.egg','native.vol3.egg'])('preserves explicit EGG password encoding for %s',path=>{
     expect(zipPasswordEncodingForSource(path,'cp936')).toBe('cp936')
     expect(zipPasswordEncodingForSource(path)).toBeUndefined()

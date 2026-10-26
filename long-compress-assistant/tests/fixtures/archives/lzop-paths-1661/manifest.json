@@ -1,0 +1,64 @@
+{
+  "producer": "official Windows lzop 1.03 / LZO 2.04",
+  "toolDownloadSha256": "0e55b444069eb5eb8addda2379cf12450f8ee68248a125b44bac140f6cdf7d4a",
+  "options": [
+    "-1",
+    "-P",
+    "--crc32",
+    "-CC",
+    "-o"
+  ],
+  "archive": "paths.lzo",
+  "archiveSha256": "f76dea6422a5f6680d15121d58b06051621eff0844d568dd620883eb53a9a8fd",
+  "officialTestExit": 0,
+  "officialRestoreExit": 0,
+  "members": [
+    {
+      "flags": "0xe303730",
+      "rawNameHex": "646f63732f6e6f7465732e747874",
+      "pathFlag": true,
+      "multipartFlag": true
+    },
+    {
+      "flags": "0xe303730",
+      "rawNameHex": "646f63732f6d6f72652f6e6f7465732e747874",
+      "pathFlag": true,
+      "multipartFlag": true
+    },
+    {
+      "flags": "0xe303730",
+      "rawNameHex": "70696374757265732f636f7665722e706e67",
+      "pathFlag": true,
+      "multipartFlag": true
+    },
+    {
+      "flags": "0xe301730",
+      "rawNameHex": "656d7074792e747874",
+      "pathFlag": false,
+      "multipartFlag": true
+    }
+  ],
+  "expected": [
+    {
+      "path": "docs/notes.txt",
+      "bytes": 52,
+      "sha256": "d5bf853cfb96294d17226e1970988f2546a9ddd86342e82be787ef0c730d5f09"
+    },
+    {
+      "path": "docs/more/notes.txt",
+      "bytes": 34,
+      "sha256": "2ad6c1ea737bd1abc7bc010809286fdbac5f53b9f059b2d7dea2f1dd0b61dfa6"
+    },
+    {
+      "path": "pictures/cover.png",
+      "bytes": 1713,
+      "sha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43"
+    },
+    {
+      "path": "empty.txt",
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "scope": "Path original only. Legacy codepage/collision/unsafe paths/numeric/damage cases are explicitly derived tests, not external original compatibility claims. LZOP cannot represent independent empty directories."
+}

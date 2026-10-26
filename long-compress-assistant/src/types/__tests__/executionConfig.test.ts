@@ -28,7 +28,7 @@ describe('actual execution snapshots', () => {
   const configs: ExecutionConfigV1[] = [
     { schemaVersion: 1, kind: 'archive-compression', outputDirectory: 'D:/打包', passwordRequired: true,
       settings: { format: 'zip', level: 8, filename: '照片', splitArchive: false, splitSize: '100', keepStructure: true,
-        verifyAfter: true, createSolidArchive: false, fastPack: false, zipMethod: 'zstd', zipPasswordEncoding: 'windows_local', zipSplitMode: 'standard' } },
+        verifyAfter: true, createSolidArchive: false, fastPack: false, sevenZipFilter: 'none', sevenZipDeltaDistance: 1, zipMethod: 'zstd', zipPasswordEncoding: 'windows_local', zipSplitMode: 'standard' } },
     { schemaVersion: 1, kind: 'image-compression', settings: createDefaultImageSettings() },
     { schemaVersion: 1, kind: 'video-compression', outputDirectory: 'D:/视频', settings: createDefaultVideoSettings() },
     { schemaVersion: 1, kind: 'pdf-optimization', outputDirectory: '', mode: 'compatible-image-optimization', allowLargerOutput: true },

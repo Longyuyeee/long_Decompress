@@ -1,0 +1,26 @@
+{
+  "version": "1.6.61",
+  "businessApplicationSha256": "52b872b368dfa3b5385b29353279923607b8c1dd0fd930372757a56d7c2bf284",
+  "finalApplicationSha256": "a14d40795eeca234d11fcacace965aa8a617c2e4a9de0e49aa798a8575861642",
+  "backend": "7 affected/new checks + 1 new encoding diagnosis check passed",
+  "frontend": "35 unique checks passed after refreshing a stale execution snapshot fixture; 4 copy cases resumed, other passed tests reused",
+  "desktop": "5 business groups on the business candidate; final candidate changes only the compact refresh label and has 1 affected UI group / 2 new screenshots",
+  "visuallyReviewed": [
+    "paths-wide",
+    "paths-narrow",
+    "path-text-narrow",
+    "path-image-wide",
+    "final-options-wide",
+    "final-options-narrow"
+  ],
+  "profile": "custom-protocol,desktop-e2e; opt-level=1 / LTO=false, not signed production assets",
+  "officialOriginals": [
+    "tests/fixtures/archives/lzop-paths-1661/manifest.json",
+    "tests/fixtures/archives/lzop-paths-1661/legacy-manifest.json"
+  ],
+  "scriptCorrections": [
+    "Close secondary options after refresh before interacting with rows.",
+    "History source codepage is nested in executionConfig; confirmed actual SQLite execution record and saved content readback, no passed legacy business repeated."
+  ],
+  "formalRelease": "Exact source, required Windows package, merge tree, annotated tag and formal asset status continue in PR receipt."
+}

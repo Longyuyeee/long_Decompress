@@ -1,0 +1,20 @@
+{
+  "scriptCorrection": "History codepage is nested in executionConfig, not a top-level field. Prior preview/retrieval/conversion/readback passed before this assertion. No passed business flow repeated.",
+  "records": [
+    {
+      "id": "1793000704977",
+      "status": "completed",
+      "sourcePaths": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-paths-names-1661\\fixtures\\legacy.lzo"
+      ],
+      "executionConfig": {
+        "schemaVersion": 1,
+        "kind": "archive-extraction",
+        "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-paths-names-1661\\e9d37053-2166-403b-9119-9b948cdcd767\\legacy-selected",
+        "extractToSubfolder": false,
+        "zipPasswordEncoding": "cp936"
+      }
+    }
+  ],
+  "readbackSha256": "ebbe84068f455ebfe2ba077169e63fc75e63f506293d7b5f8cf7c21fdccfc711"
+}

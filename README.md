@@ -204,7 +204,7 @@ Long解压把日常文件处理放在一个顺手的工作区里。收到一批�
 - ZIP/ZIPX 已验证常用 Store、Deflate、Deflate64、BZip2、LZMA、XZ、PPMd 及部分 Zstandard 读取组合；不等于支持所有 ZIPX 专有算法。
 - 创建 ZIP 可选 Deflate、Zstandard、BZip2、PPMd、LZMA，ZIPX 固定 XZ；密码、转换与配置保存保持方法，二者均支持数字卷与标准卷。接收方需支持对应方法、密码编码与卷型，ZIPX 标准卷兼容范围见格式说明。PPMd 与 LZMA 字典随等级增长，界面就近显示；LZMA 6级8MiB、9级64MiB，编码总内存更多，不自动替换默认方法。
 - 可直接浏览、解压和转换 ZIP/7Z/RAR 自解压 EXE；好压论坛 ZIP 分卷按整组读取，支持已核对的明文与 ZipCrypto 密码样本。收到多个分卷时，把整组放在同一目录即可。具体格式范围见[支持说明](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)。
-- LZOP（`.lzo`）支持单成员只读浏览、图文预览、提取、检查及转换 ZIP/7Z；原生密码、创建、数字切卷、多成员和非零过滤器暂不支持。`.tar.lzo` 可直接按目录浏览、图文预览、选择性提取、检查及转换；裸 LZO 不能当作 LZOP。
+- LZOP（`.lzo`）支持单成员、多成员及带路径目录的只读浏览、图文预览、按需/完整提取、检查与 ZIP/7Z 转换；完整数字切卷可从任意卷打开，旧名称代码页在原选项区选择。`.tar.lzo` 保持单流目录读取。创建、原生密码、原生块分段、非零过滤器和缺卷内容救援仍不支持；裸 LZO 不能当作 LZOP。
 - LZIP（单文件）与 TAR.LZIP（目录/多文件）支持创建、浏览、解压、检查和转换，兼容 `.lz`、`.tar.lz`、`.tlz`；支持连续多成员 LZIP 与数字切卷创建，普通格式不提供密码；全部卷需放在同一目录，数字切卷不同于原生成员。
 - ZIP 默认 AES-256，可主动选择 ZipCrypto；与 Windows 7-Zip 交换非 ASCII 密码的归档时，可显式选择匹配的 Windows 密码编码。
 - EGG 只读支持已验证的 Store、Deflate、Bzip2、LZMA、AZO、固实 Deflate/LZMA、ZipCrypto、AES/LEA 与原生卷，可浏览、所选/整包提取、检查和转换。大 LZMA 已流式读取，字典仍限 256 MiB；v1.5.11 验证二十组普通中文密码组合并补编码失败指引。加密固实、全局/文件名加密、创建和修复不承诺，工具互通边界见[本版说明](long-compress-assistant/docs/RELEASE_NOTES_1.5.11.md)。
@@ -275,6 +275,8 @@ ZIP 目录损坏时可尝试救回可靠的完整条目；坏文件和未恢复�
 <a id="updates"></a>
 
 ## 📝 更新记录
+
+**v1.6.61 · LZOP 目录还原与旧名称编码**。带路径成员可在原双栏进入目录、搜索、预览、按目录取回并转成 ZIP/7Z；名称代码页收在原选项区，所有流程沿用同一选择。重名/路径相交与扁平取回保留独立结果，合法长名称不再任意截短。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.61.md) · [记录](long-compress-assistant/docs/LZOP_PATHS_NAMES_FREEZE_1.6.61.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.61) · [下一版单文件创建](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.62.md)。
 
 **v1.6.60 · LZOP 多成员资料读取**。同一个 `.lzo` 中的文件可在原双栏中分别浏览、图文预览、按需取回、完整检查并转成 ZIP/7Z，完整数字卷保留非首卷入口。重名/缺名称提供稳定成员名；整包任务遇到坏成员不发布半成品。[中文说明](long-compress-assistant/docs/RELEASE_NOTES_1.6.60.md) · [记录](long-compress-assistant/docs/LZOP_MEMBERS_READ_FREEZE_1.6.60.md) · [发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.60) · [下一版路径与名称兼容](long-compress-assistant/docs/ARCHIVE_ROADMAP_1.6.61.md)。
 

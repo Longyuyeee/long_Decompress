@@ -1,0 +1,44 @@
+
+ RUN  v4.1.10 E:/Project/AIProject/GeminiProject/long_Decompress/long-compress-assistant
+
+ ❯ src/types/__tests__/executionConfig.test.ts (14 tests | 1 failed) 93ms
+     × copies 'archive-compression' without later global mutations or transient secrets 66ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/types/__tests__/executionConfig.test.ts > actual execution snapshots > copies 'archive-compression' without later global mutations or transient secrets
+AssertionError: expected { schemaVersion: 1, …(4) } to deeply equal { schemaVersion: 1, …(4) }
+
+- Expected
++ Received
+
+@@ -8,10 +8,12 @@
+      "fastPack": false,
+      "filename": "照片",
+      "format": "zip",
+      "keepStructure": true,
+      "level": 8,
++     "sevenZipDeltaDistance": 1,
++     "sevenZipFilter": "none",
+      "splitArchive": false,
+      "splitSize": "100",
+      "verifyAfter": true,
+      "zipMethod": "zstd",
+      "zipPasswordEncoding": "windows_local",
+
+ ❯ src/types/__tests__/executionConfig.test.ts:40:18
+     38|       ...('settings' in config ? { settings: { ...config.settings, pas…
+     39|     const copy = copyExecutionConfig(polluted as ExecutionConfigV1)
+     40|     expect(copy).toEqual(config)
+       |                  ^
+     41|     expect(JSON.stringify(copy)).not.toContain('never-save')
+     42|     expect(JSON.stringify(copy)).not.toContain('deleteAfter')
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 34 passed (35)
+   Start at  15:29:21
+   Duration  66.60s (transform 13.91s, setup 2.57s, import 14.31s, tests 521ms, environment 170.88s)
+

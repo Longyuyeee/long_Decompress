@@ -1,5 +1,5 @@
-/** ZIP password bytes, not archive filenames or text-preview encoding. */
-export const ZIP_PASSWORD_ENCODINGS = ['utf8', 'windows_local', 'cp932', 'cp936', 'cp950'] as const
+/** Persisted source code page; LZOP uses it only for member names. */
+export const ZIP_PASSWORD_ENCODINGS = ['utf8', 'windows_local', 'cp932', 'cp936', 'cp950', 'cp437', 'cp850'] as const
 export type ZipPasswordEncoding = typeof ZIP_PASSWORD_ENCODINGS[number]
 
 export const ZIP_PASSWORD_ENCODING_OPTIONS = [
@@ -8,6 +8,11 @@ export const ZIP_PASSWORD_ENCODING_OPTIONS = [
   { value: 'cp932', label: '日文（CP932）' },
   { value: 'cp936', label: '简体中文（CP936）' },
   { value: 'cp950', label: '繁体中文（CP950）' },
+]
+
+export const LZOP_NAME_ENCODING_OPTIONS = [...ZIP_PASSWORD_ENCODING_OPTIONS,
+  { value: 'cp437', label: 'DOS 西文（CP437）' },
+  { value: 'cp850', label: 'DOS 西欧（CP850）' },
 ]
 
 export function isZipPasswordEncoding(value: unknown): value is ZipPasswordEncoding {
@@ -20,5 +25,5 @@ export function zipPasswordEncodingArguments(encoding?: ZipPasswordEncoding): []
 }
 
 export function zipPasswordEncodingLabel(encoding: ZipPasswordEncoding) {
-  return ZIP_PASSWORD_ENCODING_OPTIONS.find(option => option.value === encoding)!.label
+  return LZOP_NAME_ENCODING_OPTIONS.find(option => option.value === encoding)!.label
 }

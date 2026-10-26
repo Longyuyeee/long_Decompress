@@ -1,0 +1,40 @@
+    Blocking waiting for file lock on package cache
+   Compiling long-compress-assistant v1.6.61 (E:\Project\AIProject\GeminiProject\long_Decompress\long-compress-assistant\src-tauri)
+warning: trait `SeedRead` is never used
+  --> vendor\sevenz-rust\src\reader.rs:14:18
+   |
+14 | pub(crate) trait SeedRead: Read + Seek {}
+   |                  ^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: hiding a lifetime that's elided elsewhere is confusing
+  --> vendor\sevenz-rust\src\folder.rs:52:31
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter {
+   |                               ^^^^^     ^^^^^^^^^^^^^^^^ the same lifetime is hidden here
+   |                               |
+   |                               the lifetime is elided here
+   |
+   = help: the same lifetime is referred to in inconsistent ways, making the signature confusing
+   = note: `#[warn(mismatched_lifetime_syntaxes)]` on by default
+help: use `'_` for type paths
+   |
+52 |     pub fn ordered_coder_iter(&self) -> OrderedCoderIter<'_> {
+   |                                                         ++++
+
+warning: `sevenz-rust` (lib) generated 2 warnings (run `cargo fix --lib -p sevenz-rust` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 8m 23s
+     Running unittests src\lib.rs (src-tauri\target\debug\deps\long_compress_assistant-2d42fc95ff545fd1.exe)
+
+running 7 tests
+test services::lzop_members_1660_tests::lzop1660_explicit_latin1_precedes_utf8_guess_for_the_same_name_bytes ... ok
+test services::lzop_members_1660_tests::lzop1660_names_duplicates_and_unnamed_members_keep_distinct_contents ... ok
+test services::lzop_paths_1661_tests::lzop1661_legacy_codepages_share_names_between_listing_preview_and_retrieval ... ok
+test services::lzop_paths_1661_tests::lzop1661_official_paths_directories_previews_selection_flat_and_complete_readback ... ok
+test services::lzop_paths_1661_tests::lzop1661_path_original_numeric_non_first_damaged_tail_and_cancellation ... ok
+test services::lzop_paths_1661_tests::lzop1661_paths_case_collisions_intersections_unknown_and_long_names_remain_distinct ... ok
+test services::tar_lzo_1658_tests::tarlzo1658_invalid_inner_and_damaged_outer_never_report_healthy ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 1346 filtered out; finished in 26.58s
+
