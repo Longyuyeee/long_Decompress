@@ -1,0 +1,8 @@
+[desktop-e2e] waiting for desktop heading
+[desktop-e2e] desktop heading is ready; waiting for the E2E bridge
+[desktop-e2e] desktop E2E bridge is ready
+[lzop1659] TAR.LZO directories search text and folder selection stay in equal dual panes
+[lzop1659] TAR.LZO image preview uses existing compact dialog
+[lzop1659] TAR.LZO full extraction and ZIP/7Z conversion keep directories and history
+[lzop1659] missing tail cannot publish partial results and restored volume retries successfully
+[lzop1659] plain LZOP non-first volume keeps single-file preview extraction and history

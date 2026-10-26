@@ -1,0 +1,687 @@
+{
+  "version": "1.6.59",
+  "applicationSha256": "9cf7eb3b587ce0383b0f0ce494874bdde18898e6c56d9557692597c05c684e69",
+  "checks": [
+    {
+      "name": "TAR.LZO directories search text and folder selection stay in equal dual panes",
+      "equalDualPanes": true,
+      "folderSelection": true,
+      "searchAndTextPreview": true
+    },
+    {
+      "name": "TAR.LZO image preview uses existing compact dialog",
+      "imagePreview": true
+    },
+    {
+      "name": "TAR.LZO full extraction and ZIP/7Z conversion keep directories and history",
+      "diagnosis": {
+        "actualFormat": "TAR.LZO",
+        "canRepair": false,
+        "encrypted": false,
+        "evidence": [
+          "Archive size: 311408 bytes",
+          "Magic/extension format: TAR.LZO",
+          "Entries: 6 files, 3 directories",
+          "Integrity test completed without errors"
+        ],
+        "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\fixtures\\directory.tar.lzo.002",
+        "fileSize": 311408,
+        "integrityTested": true,
+        "issues": [],
+        "missingVolumes": [],
+        "recoverability": "not_needed",
+        "splitArchive": true,
+        "status": "healthy",
+        "totalDirectories": 3,
+        "totalFiles": 6,
+        "totalUncompressedSize": 1951859,
+        "totalUncompressedSizeKnown": true,
+        "volumesFound": 3
+      },
+      "conversion": [
+        {
+          "format": "zip",
+          "output": {
+            "files": [
+              {
+                "bytes": 315946,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.zip"
+              }
+            ],
+            "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.zip",
+            "split": false,
+            "totalBytes": 315946
+          },
+          "files": [
+            {
+              "path": "notes/说明 [1].txt",
+              "bytes": 73,
+              "sha256": "a6b237c55bf60d554484936ae9f5dde34a301eaae826bb41c5c1ef6668cc3d30"
+            },
+            {
+              "path": "notes/large.txt",
+              "bytes": 1650000,
+              "sha256": "e426fc0fc069d1423864c5a7f481022a1fb28bf02ef21ea15d300bf6f138b731"
+            },
+            {
+              "path": "notes/长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径.txt",
+              "bytes": 73,
+              "sha256": "a6b237c55bf60d554484936ae9f5dde34a301eaae826bb41c5c1ef6668cc3d30"
+            },
+            {
+              "path": "gallery/cover.png",
+              "bytes": 1713,
+              "sha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43"
+            },
+            {
+              "path": "data.bin",
+              "bytes": 300000,
+              "sha256": "19dcc6ed370752aff71c70eb956dbb8fd46cf7ae8faedc39a47a9be8a7ffd14e"
+            },
+            {
+              "path": "empty.txt",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          ]
+        },
+        {
+          "format": "7z",
+          "output": {
+            "files": [
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.001"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.002"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.003"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.004"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.005"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.006"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.007"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.008"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.009"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.010"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.011"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.012"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.013"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.014"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.015"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.016"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.017"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.018"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.019"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.020"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.021"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.022"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.023"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.024"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.025"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.026"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.027"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.028"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.029"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.030"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.031"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.032"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.033"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.034"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.035"
+              },
+              {
+                "bytes": 8192,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.036"
+              },
+              {
+                "bytes": 7821,
+                "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.037"
+              }
+            ],
+            "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.001",
+            "split": true,
+            "totalBytes": 302733
+          },
+          "files": [
+            {
+              "path": "notes/说明 [1].txt",
+              "bytes": 73,
+              "sha256": "a6b237c55bf60d554484936ae9f5dde34a301eaae826bb41c5c1ef6668cc3d30"
+            },
+            {
+              "path": "notes/large.txt",
+              "bytes": 1650000,
+              "sha256": "e426fc0fc069d1423864c5a7f481022a1fb28bf02ef21ea15d300bf6f138b731"
+            },
+            {
+              "path": "notes/长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径.txt",
+              "bytes": 73,
+              "sha256": "a6b237c55bf60d554484936ae9f5dde34a301eaae826bb41c5c1ef6668cc3d30"
+            },
+            {
+              "path": "gallery/cover.png",
+              "bytes": 1713,
+              "sha256": "f2395a2055c6ce96906e5268e1dc50be0b7ef7c0536c8d355253992e362d7c43"
+            },
+            {
+              "path": "data.bin",
+              "bytes": 300000,
+              "sha256": "19dcc6ed370752aff71c70eb956dbb8fd46cf7ae8faedc39a47a9be8a7ffd14e"
+            },
+            {
+              "path": "empty.txt",
+              "bytes": 0,
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            }
+          ]
+        }
+      ],
+      "historyPreservesTarLzoSource": true,
+      "history": [
+        {
+          "id": "desktop-e2e-extract-only-1792994864569-cab388e1f51f1",
+          "format": "tar.lzo",
+          "sourcePaths": [
+            "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\fixtures\\directory.tar.lzo.002"
+          ]
+        },
+        {
+          "id": "1792994859248",
+          "format": "tar.lzo",
+          "sourcePaths": [
+            "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\fixtures\\directory.tar.lzo.002"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "missing tail cannot publish partial results and restored volume retries successfully",
+      "failure": "AssertionError [ERR_ASSERTION]: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件。数字卷数据未完整结束，可能缺少后续卷或卷已截断；总卷数无法确认，请补齐原始分卷后重试\n\nfalse !== true\n",
+      "diagnosis": {
+        "actualFormat": "TAR.LZO",
+        "canRepair": false,
+        "encrypted": false,
+        "evidence": [
+          "Archive size: 311406 bytes",
+          "Magic/extension format: TAR.LZO",
+          "Integrity failure class: damaged"
+        ],
+        "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\fixtures\\directory.tar.lzo.002",
+        "fileSize": 311406,
+        "integrityTested": true,
+        "issues": [
+          {
+            "code": "damaged",
+            "detail": "归档结构已确认损坏或不完整；请重新获取完整文件，反复尝试密码不能修复损坏",
+            "severity": "error",
+            "title": "归档损坏"
+          }
+        ],
+        "missingVolumes": [],
+        "recoverability": "diagnostic_only",
+        "splitArchive": true,
+        "status": "damaged",
+        "totalDirectories": 0,
+        "totalFiles": 0,
+        "totalUncompressedSize": 0,
+        "totalUncompressedSizeKnown": false,
+        "volumesFound": 2
+      },
+      "existingFilePreserved": true,
+      "restoredVolumeRetry": true
+    },
+    {
+      "name": "plain LZOP non-first volume keeps single-file preview extraction and history",
+      "diagnosis": {
+        "actualFormat": "LZOP",
+        "canRepair": false,
+        "encrypted": false,
+        "evidence": [
+          "Archive size: 106 bytes",
+          "Magic/extension format: LZOP",
+          "Entries: 1 files, 0 directories",
+          "Integrity test completed without errors"
+        ],
+        "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\fixtures\\method1.txt.lzo.002",
+        "fileSize": 106,
+        "integrityTested": true,
+        "issues": [],
+        "missingVolumes": [],
+        "recoverability": "not_needed",
+        "splitArchive": true,
+        "status": "healthy",
+        "totalDirectories": 0,
+        "totalFiles": 1,
+        "totalUncompressedSize": 52,
+        "totalUncompressedSizeKnown": true,
+        "volumesFound": 3
+      },
+      "selectedSourcePreserved": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "directory-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 422.796875
+        },
+        {
+          "overflow": 0,
+          "width": 422.8046875
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "directory-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 318.3984375
+        },
+        {
+          "overflow": 0,
+          "width": 318.40625
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "text-narrow",
+      "dialogs": [
+        {
+          "bottom": 460.5859375,
+          "height": 401.1796875,
+          "left": 22.796875,
+          "right": 737.203125,
+          "top": 59.40625,
+          "width": 714.40625,
+          "x": 22.796875,
+          "y": 59.40625
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 318.3984375
+        },
+        {
+          "overflow": 0,
+          "width": 318.40625
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "folder-menu-narrow",
+      "dialogs": [
+        {
+          "bottom": 512,
+          "height": 368.3515625,
+          "left": 265,
+          "right": 537,
+          "top": 143.6484375,
+          "width": 272,
+          "x": 265,
+          "y": 143.6484375
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 318.3984375
+        },
+        {
+          "overflow": 0,
+          "width": 318.40625
+        }
+      ],
+      "width": 760
+    },
+    {
+      "name": "image-wide",
+      "dialogs": [
+        {
+          "bottom": 558.6953125,
+          "height": 467.390625,
+          "left": 134,
+          "right": 966,
+          "top": 91.3046875,
+          "width": 832,
+          "x": 134,
+          "y": 91.3046875
+        }
+      ],
+      "height": 650,
+      "overflow": 0,
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 422.796875
+        },
+        {
+          "overflow": 0,
+          "width": 422.8046875
+        }
+      ],
+      "width": 1100
+    },
+    {
+      "name": "plain-text-narrow",
+      "dialogs": [
+        {
+          "bottom": 460.5859375,
+          "height": 401.1796875,
+          "left": 22.796875,
+          "right": 737.203125,
+          "top": 59.40625,
+          "width": 714.40625,
+          "x": 22.796875,
+          "y": 59.40625
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panes": [
+        {
+          "overflow": 0,
+          "width": 318.3984375
+        },
+        {
+          "overflow": 0,
+          "width": 318.40625
+        }
+      ],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49",
+  "searchDiagnostics": {
+    "query": "notes/",
+    "rows": [
+      "notes/",
+      "notes/说明 [1].txt",
+      "notes/长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径长路径.txt",
+      "notes/large.txt"
+    ]
+  },
+  "convertedzip": {
+    "files": [
+      {
+        "bytes": 315946,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.zip"
+      }
+    ],
+    "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.zip",
+    "split": false,
+    "totalBytes": 315946
+  },
+  "converted7z": {
+    "files": [
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.001"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.002"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.003"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.004"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.005"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.006"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.007"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.008"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.009"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.010"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.011"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.012"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.013"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.014"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.015"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.016"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.017"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.018"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.019"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.020"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.021"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.022"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.023"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.024"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.025"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.026"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.027"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.028"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.029"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.030"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.031"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.032"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.033"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.034"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.035"
+      },
+      {
+        "bytes": 8192,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.036"
+      },
+      {
+        "bytes": 7821,
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.037"
+      }
+    ],
+    "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-read-1659\\afb8b9e3-c6f1-449c-a62d-b6b88db71a49\\converted.7z.001",
+    "split": true,
+    "totalBytes": 302733
+  },
+  "passed": true
+}
