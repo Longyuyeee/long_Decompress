@@ -1,0 +1,56 @@
+{
+  "version": "1.7.3",
+  "applicationSha256": "5289c3be2198981b7f32dbdb1c2a39984b96f101dcd35cd75184d2e434adf63f",
+  "checks": [
+    {
+      "name": "final batch modal shows only applicable controls for existing LZOP tasks and preserves other configuration",
+      "noUnrelatedControls": true,
+      "formatRetained": true,
+      "sizeOnlyApplied": true,
+      "nativeFlowsReusedFrom": "desktop.json",
+      "onlyChange": "batch modal hides irrelevant controls when all selected formats are LZOP family"
+    }
+  ],
+  "layouts": [
+    {
+      "name": "batch-final-wide",
+      "dialogs": [
+        {
+          "bottom": 650,
+          "height": 650,
+          "left": 0,
+          "right": 1100,
+          "top": 0,
+          "width": 1100,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 650,
+      "overflow": 0,
+      "panes": [],
+      "width": 1100
+    },
+    {
+      "name": "batch-final-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panes": [],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-numeric-create-173\\8b9bc8b7-7f80-48da-a880-72b210421468",
+  "passed": true
+}

@@ -1,6 +1,6 @@
 import type { BatchConfigPatch } from '@/types/batchConfig'
 import type { ConversionPatch } from '@/types/archiveConversion'
-export interface BatchSubject { name: string; path?: string }
+export interface BatchSubject { name: string; path?: string; format?: string }
 /** Describe only the staged patch. Never include credential values. */
 export function batchConfigSummary(patch: BatchConfigPatch | ConversionPatch): string[] {
   const rows: string[] = []

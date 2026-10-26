@@ -37,6 +37,8 @@ export interface DesktopE2EBridge {
   }>
   taskStatus: (taskId: string) => TaskStatus | null
   taskProgress: (taskId: string) => number | null
+  taskStage: (taskId: string) => string | null
+  taskSplitCancellation: (taskId: string) => { processedBytes: number; totalBytes: number } | null
   runSevenZipRoundTrip: (
     sourcePath: string,
     archivePath: string,
@@ -139,7 +141,7 @@ export interface DesktopE2EBridge {
     verifyAfter: boolean
     logs: string[]
   }>
-  startSevenZipCompression: (sourcePath: string | string[], archivePath: string, format?: '7z' | 'lzo' | 'tar.lzo') => Promise<string>
+  startSevenZipCompression: (sourcePath: string | string[], archivePath: string, format?: '7z' | 'lzo' | 'tar.lzo', splitSize?: number, cancelDuringSplit?: boolean) => Promise<string>
   startArchiveCompressionBatch: (
     jobs: Array<{ sourcePath: string; archivePath: string }>,
   ) => Promise<string[]>
@@ -266,6 +268,7 @@ declare global {
 }
 
 export const installDesktopE2EBridge = () => {
+  const splitCancellations = new Map<string, { processedBytes: number; totalBytes: number }>()
   const taskStore = useTaskStore()
   const compressionStore = useCompressionStore()
   const updateStore = useUpdateStore()
@@ -450,6 +453,12 @@ export const installDesktopE2EBridge = () => {
 
     taskProgress(taskId) {
       return taskStore.tasks.find(item => item.id === taskId)?.progress ?? null
+    },
+    taskStage(taskId) {
+      return taskStore.tasks.find(item => item.id === taskId)?.stage ?? null
+    },
+    taskSplitCancellation(taskId) {
+      return splitCancellations.get(taskId) ?? null
     },
 
     async fileManagerCopyMove(sourcePath, copyDestination, moveDestination) {
@@ -700,18 +709,26 @@ export const installDesktopE2EBridge = () => {
       }))
     },
 
-    async startSevenZipCompression(sourcePath, archivePath, format = '7z') {
+    async startSevenZipCompression(sourcePath, archivePath, format = '7z', splitSize, cancelDuringSplit = false) {
       const taskId = `desktop-e2e-7z-cancel-${Date.now()}`
       const sources = Array.isArray(sourcePath) ? sourcePath : [sourcePath]
       addArchiveTask(taskId, 'compression', sources[0], archivePath)
       const active = taskStore.tasks.find(task => task.id === taskId); if(active) active.format = format
       taskStore.updateTaskStatus(taskId, 'compressing')
       await syncActiveState()
+      let splitCancelRequested = false
+      const unlistenSplit = cancelDuringSplit ? await listen<{ task_id: string; stage?: string; processed_bytes: number; total_bytes: number }>('task-progress', event => {
+        if (event.payload.task_id === taskId && event.payload.stage === 'Splitting' && event.payload.processed_bytes > 0 && !splitCancelRequested) {
+          splitCancelRequested = true
+          splitCancellations.set(taskId, { processedBytes: event.payload.processed_bytes, totalBytes: event.payload.total_bytes })
+          void taskStore.cancelTask(taskId)
+        }
+      }) : undefined
       void invoke('compress_files', {
         taskId,
         files: sources,
         outputPath: archivePath,
-        options: { ...sevenZipOptions, format, level: 1 },
+        options: { ...sevenZipOptions, format, level: 1, split_size: splitSize || null },
       })
         .then(() => {
           const task = taskStore.tasks.find(item => item.id === taskId)
@@ -726,7 +743,7 @@ export const installDesktopE2EBridge = () => {
             taskStore.updateTaskStatus(taskId, 'failed')
           }
         })
-        .finally(() => void syncActiveState())
+        .finally(() => { unlistenSplit?.(); void syncActiveState() })
       return taskId
     },
 

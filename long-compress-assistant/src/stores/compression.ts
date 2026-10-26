@@ -494,7 +494,6 @@ export const useCompressionStore = defineStore('compression', () => {
       if (formatOptionsOnly && !(((patch.sevenZipMethod !== undefined || patch.sevenZipFilter !== undefined || patch.sevenZipDeltaDistance !== undefined) && currentFormat === '7z') || (patch.wimMethod !== undefined && ['wim','swm'].includes(currentFormat)) || (patch.zipMethod !== undefined && currentFormat === 'zip') || (patch.zipPasswordEncoding !== undefined && ['zip','zipx'].includes(currentFormat)))) continue
       const settings = cloneSettings(getEffectiveSettings(draft.settings))
       if (patch.format !== undefined) settings.format = patch.format
-      if (patch.format === 'lzo' || patch.format === 'tar.lzo') settings.splitArchive = false
       if (patch.format === 'lzo' || patch.format === 'tar.lzo' || patch.format === 'tar.lz' || patch.format === 'lzma' || patch.format === 'tar.lzma') {
         draft.draftPasswordRequired = false
         settings.password = ''
@@ -519,6 +518,7 @@ export const useCompressionStore = defineStore('compression', () => {
       if (patch.splitArchive !== undefined) settings.splitArchive = patch.splitArchive
       if (patch.splitSize !== undefined) settings.splitSize = patch.splitSize
       if (patch.zipSplitMode !== undefined) settings.zipSplitMode = patch.zipSplitMode
+      if (settings.format === 'lzo' || settings.format === 'tar.lzo') settings.zipSplitMode = 'numeric'
       if (patch.level !== undefined) settings.level = patch.level
       if (patch.rarRecoveryPercent !== undefined) settings.rarRecoveryPercent = patch.rarRecoveryPercent
       if (patch.rarRecoveryVolumes !== undefined) settings.rarRecoveryVolumes = patch.rarRecoveryVolumes

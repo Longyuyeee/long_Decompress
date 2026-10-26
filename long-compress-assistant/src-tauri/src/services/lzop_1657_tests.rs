@@ -306,7 +306,7 @@ fn lzop1662_single_creation_capability_never_falls_back_to_another_codec() {
         .unwrap();
     assert!(cap.can_extract);
     assert!(cap.can_compress && !cap.single_file_only);
-    assert!(!cap.supports_split);
+    assert!(cap.supports_split);
     assert!(!cap.requires_7za);
     assert!(!cap.supports_password_extract);
     let options = crate::models::compression::CompressionOptions {

@@ -116,8 +116,8 @@ const jobStatuses = computed(() => [...compressionStore.groups, ...compressionSt
 const visibleGroups = computed(() => compressionStore.groups.filter(job => matchesTaskScope(scope.value, taskForJob(job.taskId)?.status)))
 const visibleFiles = computed(() => compressionStore.selectedFiles.filter(job => matchesTaskScope(scope.value, taskForJob(job.taskId)?.status)))
 const selectedSubjects = computed(() => [
-  ...compressionStore.groups.filter(job => selectedRows.value.has(job.id)).map(job => ({ name: job.name, path: getGroupArchivePath(job) })),
-  ...compressionStore.selectedFiles.filter(job => selectedRows.value.has(job.path)).map(job => ({ name: job.name, path: job.path })),
+  ...compressionStore.groups.filter(job => selectedRows.value.has(job.id)).map(job => ({ name: job.name, path: getGroupArchivePath(job), format: compressionStore.getEffectiveSettings(job.settings).format })),
+  ...compressionStore.selectedFiles.filter(job => selectedRows.value.has(job.path)).map(job => ({ name: job.name, path: job.path, format: compressionStore.getEffectiveSettings(job.settings).format })),
 ])
 function changeScope(value: TaskScope) { if (scope.value !== value) selectedRows.value = new Set(); scope.value = value }
 watch(selectableJobIds, (ids, previous) => { if (scope.value !== 'all' && ids.some(id => !previous.includes(id))) scope.value = 'pending' })

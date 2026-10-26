@@ -536,7 +536,7 @@ const closeVaultPasswordsAfterFocus = () => {
         />
         <span class="split-settings-icon"><i class="pi pi-clone"></i></span>
         <span class="split-settings-copy">
-          <strong>{{ compressionOptions.format === 'swm' ? '原生 SWM 分包' : appStore.t('preset.split_archive') }} <HelpHint label="分卷压缩说明">{{ splitArchiveUnavailableReason || '把大压缩包拆成多个便于传输和存储的分卷；解压时请将全部分卷放在同一目录' }}</HelpHint></strong>
+          <strong>{{ compressionOptions.format === 'swm' ? '原生 SWM 分包' : appStore.t('preset.split_archive') }} <HelpHint label="分卷压缩说明">{{ splitArchiveUnavailableReason || (isFixedLzopFormat(compressionOptions.format) ? '生成 .' + compressionOptions.format + '.001、.002 等数字切片；请集齐整组，可从任意卷打开。其他工具需先按序合并，不是 LZOP 原生多卷格式。' : '把大压缩包拆成多个便于传输和存储的分卷；解压时请将全部分卷放在同一目录') }}</HelpHint></strong>
         </span>
       </label>
       <label v-if="compressionOptions.splitArchive" class="split-size-field">
