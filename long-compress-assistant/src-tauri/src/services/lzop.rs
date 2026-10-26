@@ -381,3 +381,6 @@ mod members;
 #[path = "lzop_names.rs"]
 mod names;
 pub(crate) use members::{extract_members, member_index, member_index_with_encoding, member_reader, multi_index, multi_index_with_encoding};
+
+#[path = "lzop_recovery.rs"]
+pub(crate) mod recovery;

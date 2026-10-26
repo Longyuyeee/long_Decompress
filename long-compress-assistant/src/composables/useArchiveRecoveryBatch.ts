@@ -47,7 +47,7 @@ export const useArchiveRecoveryStore = defineStore('archiveRecovery', () => {
     try {
       if (!rows.value.length) localStorage.removeItem(ARCHIVE_RECOVERY_DRAFT_KEY)
       else localStorage.setItem(ARCHIVE_RECOVERY_DRAFT_KEY, JSON.stringify({version:1, paths:sourcePaths.value, rootDirectory:rootDirectory.value,
-        rows:rows.value.map(({password: _password, resultPassword: _resultPassword, ...row}) => ({...row,report:row.report?{...row.report,zpaqBlocks:undefined}:undefined}))}))
+        rows:rows.value.map(({password: _password, resultPassword: _resultPassword, ...row}) => ({...row,report:row.report?{...row.report,zpaqBlocks:undefined,lzopPrefix:undefined}:undefined}))}))
       saveError.value = ''
     } catch { saveError.value = '检查修复进度未能保存，请勿依赖重启恢复' }
   }

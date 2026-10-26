@@ -14,7 +14,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     if value.get("schemaVersion")?.as_u64()? != 1 || value.to_string().len() > if value.get("operation").and_then(Value::as_str)==Some("zpaq-update") || value.get("zpaqCatalogId").is_some() || value.get("librarySourceId").is_some() || value.get("comparisonSelection").is_some() || value.get("readerSelection").is_some() || value.get("zpaqRetrieval").is_some() {262_144} else {16_384} { return None; }
     let kind = value.get("kind")?.as_str()?;
     let expected = match kind {
-        "archive-extraction" => ("decompression", "archive"),
+        "archive-extraction" | "archive-recovery" => ("decompression", "archive"),
         "archive-compression" => ("compression", "archive"),
         "archive-conversion" | "archive-edit" => ("compression", "archive"),
         "image-compression" => ("compression", "image"),
@@ -28,6 +28,7 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
     ]);
     let fields: &[(&str, char)] = match kind {
         "archive-edit" => &[("outputPath", 's')],
+        "archive-recovery" => &[("outputDirectory",'s')],
         "archive-extraction" => &[("outputDirectory", 's'), ("extractToSubfolder", 'b')],
         "archive-compression" => &[("outputDirectory", 's'), ("passwordRequired", 'b')],
         "archive-conversion" => &[("outputPath", 's'), ("format", 's'), ("level", 'n'), ("splitSize", 'n'), ("encryptFilenames", 'b'), ("passwordRequired", 'b')],
@@ -54,6 +55,10 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
             if snapshot.version == 0 || snapshot.version > 9_999_999 || !(19000101000000..=29991231235959).contains(&snapshot.date) { return None; }
             output.insert(key.into(), serde_json::to_value(snapshot).ok()?);
         }
+    }
+    if kind=="archive-recovery" {
+        let selection:crate::services::lzop::recovery::HistorySelection=serde_json::from_value(value.clone()).ok()?;selection.validate().ok()?;
+        for(key,v)in serde_json::to_value(selection).ok()?.as_object()? {output.insert(key.clone(),v.clone());}
     }
     if kind=="archive-extraction" {if let Some(selection)=value.get("zpaqRetrieval") {
         let selection:crate::services::zpaq_engine::retrieval::Selection=serde_json::from_value(selection.clone()).ok()?;selection.validate().ok()?;
@@ -557,5 +562,13 @@ fn sevenz1656_history_creation_and_conversion_retain_method_reject_unknown(){
   let creation=serde_json::json!({"schemaVersion":1,"kind":"archive-compression","outputDirectory":"D:/out","passwordRequired":true,"settings":{"format":"7z","level":1,"filename":"","splitArchive":false,"splitSize":"1","keepStructure":true,"verifyAfter":true,"createSolidArchive":true,"sevenZipMethod":method,"sevenZipFilter":"bcj_riscv","sevenZipDeltaDistance":256}});
   let converted=serde_json::json!({"schemaVersion":1,"kind":"archive-conversion","outputPath":"D:/out.7z","format":"7z","level":1,"splitSize":0,"encryptFilenames":false,"passwordRequired":false,"sevenZipMethod":method,"sevenZipFilter":"bcj_riscv","sevenZipDeltaDistance":256});
   for (value,kind) in [(creation,"compression"),(converted,"conversion")]{let saved=sanitize(value.clone(),"compression","archive").unwrap();assert_eq!(if kind=="compression"{&saved["settings"]["sevenZipMethod"]}else{&saved["sevenZipMethod"]},method);assert_eq!(if kind=="compression"{&saved["settings"]["sevenZipFilter"]}else{&saved["sevenZipFilter"]},"bcj_riscv");let mut bad=value;if kind=="compression"{bad["settings"]["sevenZipFilter"]="bad".into()}else{bad["sevenZipFilter"]="bad".into()}assert!(sanitize(bad,"compression","archive").is_none());}
+ }
+}
+
+#[cfg(test)]
+mod lzop_recovery_history_174 {
+ #[test] fn lzop174_history_retains_partial_scope_without_normal_extraction_semantics(){
+  let value=serde_json::json!({"schemaVersion":1,"kind":"archive-recovery","outputDirectory":"D:/result","recoveredFiles":2,"stopReason":"后续截断","revision":"a".repeat(64),"password":"discard"});
+  let clean=super::sanitize(value.clone(),"decompression","archive").unwrap();assert_eq!(clean["kind"],"archive-recovery");assert_eq!(clean["recoveredFiles"],2);assert!(clean.get("password").is_none());let mut invalid=value;invalid["recoveredFiles"]=(-1).into();assert!(super::sanitize(invalid,"decompression","archive").is_none());
  }
 }

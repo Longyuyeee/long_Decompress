@@ -1,0 +1,135 @@
+{
+  "version": "1.7.4",
+  "applicationSha256": "cfd6709153bf7b626188a970dd0b1b964da4555857f9fe55cbfc760c7d688098",
+  "checks": [
+    {
+      "name": "failed extraction opens compact rescue modal and saves selected checked members with distinct history",
+      "originalFailureRetained": true,
+      "selectedFiles": 3,
+      "emptyFileRetained": true,
+      "originalUnchanged": true,
+      "historyLabel": "已部分取回",
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-prefix-rescue-174\\2eb1ce0c-a5e0-4657-8b17-e2708f2cbb6b\\tail.lzo.部分取回-82155b2b"
+    },
+    {
+      "name": "nonfirst numeric volume offers only continuous-prefix files and complete group restores normally after replacement",
+      "nonfirstEntry": true,
+      "missingMiddleNotBridged": true,
+      "verifiedPrefixFiles": 2,
+      "replacedGroupExtractedFiles": 5
+    },
+    {
+      "name": "no complete member disables rescue and source replacement requires a fresh check",
+      "noFabricatedFiles": true,
+      "changedSourcePublishedNothing": true,
+      "recheckReturnsNormalFlow": true
+    },
+    {
+      "name": "real copy-stage cancellation removes staged output and a subsequent small rescue succeeds",
+      "copyStage": {
+        "bytes": 65536,
+        "total": 100663296
+      },
+      "partialFilesPublished": 0,
+      "nextRescueSucceeded": true,
+      "sourceUnchanged": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "selection-wide",
+      "dialogs": [
+        {
+          "bottom": 650,
+          "height": 650,
+          "left": 0,
+          "right": 1100,
+          "top": 0,
+          "width": 1100,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 650,
+      "overflow": 0,
+      "panes": [],
+      "width": 1100
+    },
+    {
+      "name": "selection-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panes": [],
+      "width": 760
+    },
+    {
+      "name": "result-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panes": [],
+      "width": 760
+    },
+    {
+      "name": "history-wide",
+      "dialogs": [],
+      "height": 650,
+      "overflow": 0,
+      "panes": [],
+      "width": 1100
+    },
+    {
+      "name": "history-detail-narrow",
+      "dialogs": [],
+      "height": 520,
+      "overflow": 0,
+      "panes": [],
+      "width": 760
+    },
+    {
+      "name": "volume-gap-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panes": [],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\lzop-prefix-rescue-174\\2eb1ce0c-a5e0-4657-8b17-e2708f2cbb6b",
+  "failedId": "desktop-e2e-extract-only-1793047426556-07b3a537c4a5d8",
+  "passed": true
+}

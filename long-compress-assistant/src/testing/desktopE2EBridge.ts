@@ -1,3 +1,4 @@
+import {useAppStore} from '@/stores/app'
 import { appWindow } from '@tauri-apps/api/window'
 import { invoke } from '@tauri-apps/api/tauri'
 import { listen, emit, TauriEvent } from '@tauri-apps/api/event'
@@ -15,6 +16,9 @@ import type { TaskHistoryRecord } from '@/types/taskHistory'
 const TEST_TASK_ID = 'desktop-e2e-lifecycle-task'
 
 export interface DesktopE2EBridge {
+  armLzopRecoveryCancellation: () => Promise<void>
+  lzopRecoveryCancellation: () => {bytes:number;total:number}|null
+  openRecoveryDiagnosis: (path:string) => Promise<void>
   convertArchive: (sourcePath: string, sourcePassword: string | null, outputPath: string,
     options: Record<string, unknown>, sourceEncoding?: string) => Promise<unknown>
   startCancellableTask: (outputPath: string) => Promise<string>
@@ -268,6 +272,7 @@ declare global {
 }
 
 export const installDesktopE2EBridge = () => {
+  let lzopCancellation:{bytes:number;total:number}|null=null
   const splitCancellations = new Map<string, { processedBytes: number; totalBytes: number }>()
   const taskStore = useTaskStore()
   const compressionStore = useCompressionStore()
@@ -453,6 +458,14 @@ export const installDesktopE2EBridge = () => {
 
     taskProgress(taskId) {
       return taskStore.tasks.find(item => item.id === taskId)?.progress ?? null
+    },
+    async openRecoveryDiagnosis(path) { useAppStore().openArchiveForDiagnosis({path}) },
+    lzopRecoveryCancellation() {return lzopCancellation},
+    async armLzopRecoveryCancellation() {
+      lzopCancellation=null;let requested=false;
+      const stop=await listen<{operationId:string;phase:string;bytes:number;total:number}>('lzop-recovery-progress',event=>{
+        if(!requested&&event.payload.phase==='recovering'&&event.payload.bytes>0){requested=true;lzopCancellation={bytes:event.payload.bytes,total:event.payload.total};void invoke('cancel_zip_repair',{repairId:event.payload.operationId}).catch(()=>{});stop();}
+      });
     },
     taskStage(taskId) {
       return taskStore.tasks.find(item => item.id === taskId)?.stage ?? null

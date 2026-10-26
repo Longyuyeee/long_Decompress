@@ -77,7 +77,8 @@ export interface ArchiveConversionConfigV1 {
   passwordRequired: boolean
 }
 export interface ArchiveEditConfigV1 { schemaVersion: 1; kind: 'archive-edit'; outputPath: string }
-export type ExecutionConfigV1 = ArchiveEditConfigV1 | ExtractionConfigV1 | ArchiveCompressionConfigV1 | ArchiveConversionConfigV1 | ImageConfigV1 | VideoConfigV1 | PdfConfigV1
+export interface ArchiveRecoveryConfigV1 { schemaVersion:1; kind:'archive-recovery'; outputDirectory:string; recoveredFiles:number; stopReason:string; revision:string }
+export type ExecutionConfigV1 = ArchiveRecoveryConfigV1 | ArchiveEditConfigV1 | ExtractionConfigV1 | ArchiveCompressionConfigV1 | ArchiveConversionConfigV1 | ImageConfigV1 | VideoConfigV1 | PdfConfigV1
 
 /** Explicit fields only: never serialize passwords, deletion or transient consent. */
 export function copyExecutionConfig(config?: ExecutionConfigV1 | null): ExecutionConfigV1 | null {
@@ -120,7 +121,9 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
   const method = config.kind === 'archive-compression' ? config.settings.wimMethod : config.kind === 'archive-conversion' ? config.wimMethod : undefined
   if (method !== undefined && method !== 'store' && method !== 'xpress' && method !== 'lzx' && method !== 'lzms' && method !== 'solid') return null
   if (config.kind === 'archive-edit' && (typeof config.outputPath !== 'string' || !config.outputPath.trim())) return null
+  if(config.kind==='archive-recovery' && (typeof config.outputDirectory!=='string'||!config.outputDirectory.trim()||config.outputDirectory.length>32768||!Number.isSafeInteger(config.recoveredFiles)||config.recoveredFiles<0||config.recoveredFiles>100000||typeof config.stopReason!=='string'||config.stopReason.length>32768||!/^[a-f0-9]{64}$/i.test(config.revision))) return null
   switch (config.kind) {
+    case 'archive-recovery': return {schemaVersion:1,kind:config.kind,outputDirectory:config.outputDirectory,recoveredFiles:config.recoveredFiles,stopReason:config.stopReason,revision:config.revision}
     case 'archive-edit': return { schemaVersion: 1, kind: config.kind, outputPath: config.outputPath }
     case 'archive-conversion': return { schemaVersion: 1, kind: config.kind,
       ...(config.sourcePasswordRequired !== undefined ? { sourcePasswordRequired: config.sourcePasswordRequired } : {}),
