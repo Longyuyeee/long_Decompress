@@ -1,0 +1,190 @@
+{
+  "passed": true,
+  "original": {
+    "archive": "complete.tar.lzo",
+    "sha256": "6f1a65a8736b11281616e0666c69f5a75d36b43762250bd0d2114bfd58ba1c99",
+    "tarSha256": "3d538fc3f69eb2736c9d19366016b51861d02268218cf84740ea23481795b74b",
+    "tarProducer": "tar (GNU tar) 1.35",
+    "lzopProducerSha256": "d9b46cf6fa44f4d657e5a3943d361dac24040d0acda37019b19ba285e52e2c53",
+    "lzopPackageSha256": "d4cd71272cd18ef2061ffe2a5a75dd11182ed9015c53a2283eeb41acb9a21370",
+    "sources": "Self-authored test files; no user files",
+    "longDirectory": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件",
+    "longFile": "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt",
+    "entries": [
+      {
+        "name": "prefix.txt",
+        "isDirectory": false,
+        "bytes": 35,
+        "sha256": "e8f6827e9476d984eae7ebebb892bfb9ea4938eb256589b5cb05117b89da2552"
+      },
+      {
+        "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件",
+        "isDirectory": true,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/empty",
+        "isDirectory": true,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/readme.txt",
+        "isDirectory": false,
+        "bytes": 22,
+        "sha256": "76d29294e4c069156a2d3cab4da5878b817abba20a1ac6b2766fe5bc8592b511"
+      },
+      {
+        "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/data.bin",
+        "isDirectory": false,
+        "bytes": 200033,
+        "sha256": "50b77cb6afa2eeab707934db13edafb1912051e910893b1bc1660284866f5a51"
+      },
+      {
+        "name": "other/readme.txt",
+        "isDirectory": false,
+        "bytes": 33,
+        "sha256": "9a7b3b205ecad81a30b884da53801e92d12fa5d753862de8dc8c832fa0c5fe89"
+      },
+      {
+        "name": "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt",
+        "isDirectory": false,
+        "bytes": 25,
+        "sha256": "70c173b4a0be4a649452e09310d05a70ac7a5247cbe1a703cfce7e2cc4107c8b"
+      },
+      {
+        "name": "after.txt",
+        "isDirectory": false,
+        "bytes": 43,
+        "sha256": "42eff66e16c363aee79aa1063397ff614934c79927e18ee3269bc46942bbc45c"
+      },
+      {
+        "name": "late.bin",
+        "isDirectory": false,
+        "bytes": 1100178,
+        "sha256": "6f348ceb8d0ab3f960e1082360f53e679cf880b5f4f35c624f8a65b75bf361bc"
+      }
+    ],
+    "records": [
+      {
+        "offset": 0,
+        "type": "0",
+        "size": 35
+      },
+      {
+        "offset": 1024,
+        "type": "L",
+        "size": 207
+      },
+      {
+        "offset": 2048,
+        "type": "5",
+        "size": 0
+      },
+      {
+        "offset": 2560,
+        "type": "L",
+        "size": 213
+      },
+      {
+        "offset": 3584,
+        "type": "5",
+        "size": 0
+      },
+      {
+        "offset": 4096,
+        "type": "L",
+        "size": 217
+      },
+      {
+        "offset": 5120,
+        "type": "0",
+        "size": 22
+      },
+      {
+        "offset": 6144,
+        "type": "L",
+        "size": 215
+      },
+      {
+        "offset": 7168,
+        "type": "0",
+        "size": 200033
+      },
+      {
+        "offset": 207872,
+        "type": "0",
+        "size": 33
+      },
+      {
+        "offset": 208896,
+        "type": "L",
+        "size": 119
+      },
+      {
+        "offset": 209920,
+        "type": "0",
+        "size": 25
+      },
+      {
+        "offset": 210944,
+        "type": "0",
+        "size": 43
+      },
+      {
+        "offset": 211968,
+        "type": "0",
+        "size": 1100178
+      }
+    ]
+  },
+  "officialLzopDecoded": true,
+  "gnuTarListingAndContents": true,
+  "pythonTarfileAgrees": true,
+  "recoveryChecks": [
+    {
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-lzo-gnu-178\\generated\\b311485e-a2d2-4326-b737-f7bc317bc80b\\tail.tar.lzo",
+      "entries": [
+        "prefix.txt",
+        "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件",
+        "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/empty",
+        "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/readme.txt",
+        "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/data.bin",
+        "other/readme.txt",
+        "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt",
+        "after.txt"
+      ],
+      "exactNamesDirectoriesAndHashes": true
+    },
+    {
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-lzo-gnu-178\\generated\\b311485e-a2d2-4326-b737-f7bc317bc80b\\checksum.tar.lzo",
+      "entries": [
+        "prefix.txt",
+        "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件",
+        "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/empty",
+        "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/readme.txt",
+        "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/data.bin",
+        "other/readme.txt",
+        "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt",
+        "after.txt"
+      ],
+      "exactNamesDirectoriesAndHashes": true
+    },
+    {
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-lzo-gnu-178\\generated\\b311485e-a2d2-4326-b737-f7bc317bc80b\\end.tar.lzo",
+      "entries": [
+        "prefix.txt",
+        "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件",
+        "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/empty",
+        "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/readme.txt",
+        "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/data.bin",
+        "other/readme.txt",
+        "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt",
+        "after.txt",
+        "late.bin"
+      ],
+      "exactNamesDirectoriesAndHashes": true
+    }
+  ]
+}

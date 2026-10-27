@@ -63,7 +63,7 @@ docs/               产品路线、格式说明和发布记录
 | --- | --- |
 | [开发交接](docs/DEVELOPMENT_HANDOFF.md) / [产品路线](docs/PRODUCT_ENHANCEMENT_ROADMAP.md) | 当前状态、下一步及已有验证 |
 | [v1.7.0 范围](docs/ARCHIVE_ROADMAP_1.7.0.md) / [实现与检查](docs/WINDOWS_OPEN_AND_BROWSER_UI.md) | Windows 打开、双栏统一与历史菜单 |
-| [v1.7.7 默认打开修复](docs/DEFAULT_APP_SETTINGS_FIX_1.7.7.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.8.md) | 全选、取消、真实生效状态和 Windows 设置跳转；GNU/PAX 扩展元数据兼容仅规划 |
+| [v1.7.8 GNU 长名称取回](docs/TAR_LZO_GNU_NAME_FREEZE_1.7.8.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.9.md) | TAR.LZO GNU 长文件名/目录部分取回；全局 PAX 完整流程一致性仅规划 |
 | [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md) | 创建、读取、密码、分卷和限制 |
 | [桌面测试说明](docs/DESKTOP_E2E.md) / [测试指南](tests/README.md) | 本地和隔离场景 |
 
