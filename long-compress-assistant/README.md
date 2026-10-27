@@ -63,7 +63,7 @@ docs/               产品路线、格式说明和发布记录
 | --- | --- |
 | [开发交接](docs/DEVELOPMENT_HANDOFF.md) / [产品路线](docs/PRODUCT_ENHANCEMENT_ROADMAP.md) | 当前状态、下一步及已有验证 |
 | [v1.7.0 范围](docs/ARCHIVE_ROADMAP_1.7.0.md) / [实现与检查](docs/WINDOWS_OPEN_AND_BROWSER_UI.md) | Windows 打开、双栏统一与历史菜单 |
-| [v1.7.11 取回文件修改时间](docs/TAR_RECOVERY_TIME_FREEZE_1.7.11.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.12.md) | 普通/GNU/PAX 文件时间与原结果、历史接通；目录时间仅规划 |
+| [v1.7.12 取回目录修改时间](docs/TAR_DIRECTORY_TIME_FREEZE_1.7.12.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.13.md) | 子项写完后保存所选目录时间，文件/目录分别统计；旧 GNU 稀疏取回仅规划 |
 | [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md) | 创建、读取、密码、分卷和限制 |
 | [桌面测试说明](docs/DESKTOP_E2E.md) / [测试指南](tests/README.md) | 本地和隔离场景 |
 

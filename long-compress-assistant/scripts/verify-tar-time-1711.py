@@ -16,7 +16,7 @@ for record,case in zip(native,manifest['cases']):
         expected=oracle['modifiedTime'];ns=expected['seconds']*1_000_000_000+expected['nanoseconds'];actual_ns=p.stat().st_mtime_ns
         if not e.get('timeWarning'):assert actual_ns==ns;preserved+=1
         else:assert actual_ns!=ns;warnings.append({'name':e['name'],'expectedNanoseconds':ns,'actualNanoseconds':actual_ns,'warning':e['timeWarning']})
-    assert record['result']['timePreservation']=={'preservedFiles':preserved,'unpreservedFiles':len(warnings)}
+    assert {k:record['result']['timePreservation'][k]for k in('preservedFiles','unpreservedFiles')}=={'preservedFiles':preserved,'unpreservedFiles':len(warnings)}
     checks.append({'case':case['name'],'files':len(actual),'preservedFiles':preserved,'warnings':warnings,'exactContentAndPreservedTimes':True})
 (base/'verified.json').write_text(json.dumps({'passed':True,'checks':checks},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 print('2 actual recovery trees: 14 file hashes, exact preserved times and separate warnings verified with os.stat.')

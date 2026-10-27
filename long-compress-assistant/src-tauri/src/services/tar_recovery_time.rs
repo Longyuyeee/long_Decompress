@@ -53,6 +53,25 @@ impl ModificationTime {
         }
         Ok(())
     }
+    pub(crate) fn apply_directory(&self, path: &std::path::Path) -> Result<(), &'static str> {
+        let mut options = std::fs::OpenOptions::new();
+        #[cfg(windows)]
+        {
+            use std::os::windows::fs::OpenOptionsExt;
+            // Directory handles need backup semantics; request only read/write
+            // attributes, not write access to the directory's child entries.
+            options.access_mode(0x80 | 0x100).custom_flags(0x02000000);
+        }
+        #[cfg(not(windows))]
+        options.read(true);
+        let file = options.open(path).map_err(|_| "保存位置无法打开目录以保留修改时间，已取回内容仍保留")?;
+        self.apply(&file).map_err(|message| match message {
+            "原修改时间早于 Windows 支持范围，文件内容已取回" => "目录原修改时间早于 Windows 支持范围，已取回内容仍保留",
+            "保存位置无法写入原修改时间，文件内容已取回" => "保存位置无法写入目录原修改时间，已取回内容仍保留",
+            "无法确认保存后的修改时间，文件内容已取回" => "无法确认保存后的目录修改时间，已取回内容仍保留",
+            _ => "保存位置的时间精度或范围有限，目录原修改时间未完整保留，已取回内容仍保留",
+        })
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -60,9 +79,18 @@ impl ModificationTime {
 pub struct TimePreservation {
     pub preserved_files: usize,
     pub unpreserved_files: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub preserved_directories: Option<usize>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unpreserved_directories: Option<usize>,
 }
 impl TimePreservation {
-    pub(crate) fn valid_for(&self, files: usize) -> bool {
-        self.preserved_files <= files && self.unpreserved_files == files - self.preserved_files
+    pub(crate) fn valid_for(&self, files: usize, directories: usize) -> bool {
+        let directory_counts_valid = match (self.preserved_directories, self.unpreserved_directories) {
+            (None, None) => true,
+            (Some(preserved), Some(unpreserved)) => preserved <= directories && unpreserved == directories - preserved,
+            _ => false,
+        };
+        self.preserved_files <= files && self.unpreserved_files == files - self.preserved_files && directory_counts_valid
     }
 }

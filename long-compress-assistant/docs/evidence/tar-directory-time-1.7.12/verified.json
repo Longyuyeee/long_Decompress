@@ -1,0 +1,41 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "case": "gnu",
+      "mode": "full",
+      "files": 3,
+      "preservedDirectories": 5,
+      "directoryWarnings": 1,
+      "exactPathsContentsAndRecordedTimes": true,
+      "implicitParentsNotGivenOriginalTimes": true
+    },
+    {
+      "case": "pax",
+      "mode": "full",
+      "files": 3,
+      "preservedDirectories": 4,
+      "directoryWarnings": 2,
+      "exactPathsContentsAndRecordedTimes": true,
+      "implicitParentsNotGivenOriginalTimes": true
+    },
+    {
+      "case": "pax",
+      "mode": "selected",
+      "files": 1,
+      "preservedDirectories": 1,
+      "directoryWarnings": 0,
+      "exactPathsContentsAndRecordedTimes": true,
+      "implicitParentsNotGivenOriginalTimes": true
+    },
+    {
+      "case": "pax",
+      "mode": "directory-only",
+      "files": 0,
+      "preservedDirectories": 1,
+      "directoryWarnings": 0,
+      "exactPathsContentsAndRecordedTimes": true,
+      "implicitParentsNotGivenOriginalTimes": true
+    }
+  ]
+}

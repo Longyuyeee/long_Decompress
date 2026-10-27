@@ -1,0 +1,224 @@
+{
+  "passed": true,
+  "sources": "Self-authored Python GNU/PAX producer originals, fixed-SHA official lzop. Python/Decimal directory times and GNU/Python contents independently checked. GNU 1.35 negative-fraction disagreement recorded as in v1.7.11, not claimed as consensus. Explicit state-deletion boundaries are separate tests. No application writer.",
+  "lzopProducerSha256": "d9b46cf6fa44f4d657e5a3943d361dac24040d0acda37019b19ba285e52e2c53",
+  "gnuVersion": "tar (GNU tar) 1.35",
+  "negativeFractionDifferences": [
+    {
+      "name": "资料/deep",
+      "value": "-1.25",
+      "decimalPython": {
+        "seconds": -2,
+        "nanoseconds": 750000000
+      },
+      "gnu135": {
+        "seconds": -1,
+        "nanoseconds": 250000000
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "gnu",
+      "tar": "gnu.tar",
+      "archive": "gnu.tar.lzo",
+      "tarSha256": "0bf8a20172785dfe315e2dfdee35c82774120d023ac1c4c4efb81375ae9de389",
+      "sha256": "e6a6d597c47b0ec15942fb6c0c89c096a7ae60000deb2c2c14ecee0263d24176",
+      "entries": [
+        {
+          "name": "资料",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "modifiedTime": {
+            "seconds": 1700001712,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "资料/deep/nested",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "modifiedTime": {
+            "seconds": 1700001713,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "资料/deep/nested/first.txt",
+          "isDirectory": false,
+          "bytes": 43,
+          "sha256": "e50afc4fc278d687ccaf598e347c84daaf390e3a9227d0ece57935251050fe4f",
+          "modifiedTime": {
+            "seconds": 1700000001,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "资料/deep",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "modifiedTime": {
+            "seconds": -1,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "资料/deep/nested/empty",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "modifiedTime": {
+            "seconds": 0,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "solo-empty",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "modifiedTime": {
+            "seconds": -12000000000,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "other",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "modifiedTime": {
+            "seconds": 1700001715,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "资料/deep/nested/late.bin",
+          "isDirectory": false,
+          "bytes": 1100178,
+          "sha256": "1a1b6d2aff50fb9c86cf8f203ff4ea035051c162079b67266e6bcc76609f3dbf",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "implicit-only/file.txt",
+          "isDirectory": false,
+          "bytes": 37,
+          "sha256": "a2a42ce81ec19ff0bf0509d65fb1eada313fb6288029aa58c0f22a942f7b9770",
+          "modifiedTime": {
+            "seconds": 1700001716,
+            "nanoseconds": 0
+          }
+        }
+      ],
+      "gnuFullTimeListing": "drwxr-xr-x 0/0               0 2023-11-14 22:41:52 资料/\ndrwxr-xr-x 0/0               0 2023-11-14 22:41:53 资料/deep/nested/\n-rw-r--r-- 0/0              43 2023-11-14 22:13:21 资料/deep/nested/first.txt\ndrwxr-xr-x 0/0               0 1969-12-31 23:59:59 资料/deep/\ndrwxr-xr-x 0/0               0 1970-01-01 00:00:00 资料/deep/nested/empty/\ndrwxr-xr-x 0/0               0 1589-09-26 02:40:00 solo-empty/\ndrwxr-xr-x 0/0               0 2023-11-14 22:41:55 other/\n-rw-r--r-- 0/0         1100178 2023-11-14 22:41:57 资料/deep/nested/late.bin\n-rw-r--r-- 0/0              37 2023-11-14 22:41:56 implicit-only/file.txt\n",
+      "independentContentAgree": true
+    },
+    {
+      "name": "pax",
+      "tar": "pax.tar",
+      "archive": "pax.tar.lzo",
+      "tarSha256": "2b01114ce59b5323902d746641b3118d62afebb094a55125ed7798b49b7d5588",
+      "sha256": "5dd2165e89081d40bcc9b64eca058a6a22477982acf0623bba1c9edf16490d6d",
+      "entries": [
+        {
+          "name": "资料",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "modifiedTime": {
+            "seconds": 1700001712,
+            "nanoseconds": 125000000
+          }
+        },
+        {
+          "name": "资料/deep/nested",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "modifiedTime": {
+            "seconds": 1700001713,
+            "nanoseconds": 123456700
+          }
+        },
+        {
+          "name": "资料/deep/nested/first.txt",
+          "isDirectory": false,
+          "bytes": 43,
+          "sha256": "e50afc4fc278d687ccaf598e347c84daaf390e3a9227d0ece57935251050fe4f",
+          "modifiedTime": {
+            "seconds": 1700000001,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "资料/deep",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "modifiedTime": {
+            "seconds": -2,
+            "nanoseconds": 750000000
+          }
+        },
+        {
+          "name": "资料/deep/nested/empty",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "modifiedTime": {
+            "seconds": 0,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "solo-empty",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "modifiedTime": {
+            "seconds": -12000000000,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "other",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "modifiedTime": {
+            "seconds": 1700001715,
+            "nanoseconds": 123456789
+          }
+        },
+        {
+          "name": "资料/deep/nested/late.bin",
+          "isDirectory": false,
+          "bytes": 1100178,
+          "sha256": "1a1b6d2aff50fb9c86cf8f203ff4ea035051c162079b67266e6bcc76609f3dbf",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 500000000
+          }
+        },
+        {
+          "name": "implicit-only/file.txt",
+          "isDirectory": false,
+          "bytes": 37,
+          "sha256": "a2a42ce81ec19ff0bf0509d65fb1eada313fb6288029aa58c0f22a942f7b9770",
+          "modifiedTime": {
+            "seconds": 1700001716,
+            "nanoseconds": 0
+          }
+        }
+      ],
+      "gnuFullTimeListing": "drwxr-xr-x 0/0               0 2023-11-14 22:41:52.125 资料/\ndrwxr-xr-x 0/0               0 2023-11-14 22:41:53.1234567 资料/deep/nested/\n-rw-r--r-- 0/0              43 2023-11-14 22:13:21         资料/deep/nested/first.txt\ndrwxr-xr-x 0/0               0 1969-12-31 23:59:59.25      资料/deep/\ndrwxr-xr-x 0/0               0 1970-01-01 00:00:00         资料/deep/nested/empty/\ndrwxr-xr-x 0/0               0 1589-09-26 02:40:00         solo-empty/\ndrwxr-xr-x 0/0               0 2023-11-14 22:41:55.123456789 other/\n-rw-r--r-- 0/0         1100178 2023-11-14 22:41:57.5         资料/deep/nested/late.bin\n-rw-r--r-- 0/0              37 2023-11-14 22:41:56           implicit-only/file.txt\n",
+      "independentContentAgree": true
+    }
+  ]
+}
