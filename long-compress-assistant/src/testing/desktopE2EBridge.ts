@@ -198,6 +198,7 @@ export interface DesktopE2EBridge {
     outputPaths: string[]
   }
   showAvailableUpdate: () => void
+  exerciseUpdater: (action:string) => Promise<unknown>
   previewUpdateDownload: (chunkLength: number, contentLength: number | null, reset?: boolean) => Promise<void>
   previewUpdateStatus: (status: 'DOWNLOADED' | 'DONE' | 'ERROR' | 'RESET') => Promise<void>
   seedResponsiveWorkspace: (type: 'compression' | 'decompression', state?: 'running' | 'completed', typical?: boolean) => string
@@ -1032,6 +1033,16 @@ export const installDesktopE2EBridge = () => {
         errorMessage: '',
         dialogVisible: true,
       })
+    },
+
+    async exerciseUpdater(action) {
+      if(action==='gold-theme'){useAppStore().theme='obsidian';return}
+      if(action==='legacy-check')return invoke('desktop_e2e_legacy_update_check')
+      if(action==='legacy-start'){await updateStore.initialize();updateStore.$patch({status:'installing',manifest:{version:'99.0.0',date:'',body:''},dialogVisible:true,downloadedBytes:0,totalBytes:null,installPhase:'preparing',errorMessage:''});return emit(TauriEvent.INSTALL_UPDATE)}
+      if(action==='check')return updateStore.checkForUpdates(true)
+      if(action==='start'){void updateStore.install(0);return}
+      if(action==='duplicate-install'||action==='native-check'){try{await invoke(action==='native-check'?'check_app_update':'install_app_update',{expectedVersion:'99.0.0'});return{accepted:true}}catch(e){return{error:String(e)}}}
+      return{status:updateStore.status,phase:updateStore.installPhase,bytes:updateStore.downloadedBytes,total:updateStore.totalBytes,percent:updateStore.downloadPercent,error:updateStore.errorMessage}
     },
 
     // UI fixtures use the real Tauri event transport without starting an installer.

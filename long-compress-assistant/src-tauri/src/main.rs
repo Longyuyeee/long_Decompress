@@ -475,7 +475,11 @@ fn main() {
             }
             Ok(())
         })
+        .manage(long_compress_assistant::commands::updater::UpdaterState::default())
         .invoke_handler(tauri::generate_handler![
+            long_compress_assistant::commands::updater::check_app_update,
+            long_compress_assistant::commands::updater::desktop_e2e_legacy_update_check,
+            long_compress_assistant::commands::updater::install_app_update,
             long_compress_assistant::commands::compression::extract_file,
             long_compress_assistant::commands::compression::resolve_extraction_conflict,
             long_compress_assistant::commands::compression::verify_archive_password,

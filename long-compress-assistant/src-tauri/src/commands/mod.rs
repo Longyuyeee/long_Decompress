@@ -6,6 +6,7 @@ pub mod password;
 pub mod file;
 pub mod file_manager;
 pub mod system;
+pub mod updater;
 pub mod task_queue;
 pub mod system_integration;
 pub mod file_integrity;

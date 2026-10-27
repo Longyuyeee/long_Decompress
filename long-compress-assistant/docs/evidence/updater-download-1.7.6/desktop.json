@@ -1,0 +1,119 @@
+{
+  "version": "1.7.6",
+  "applicationSha256": "1516ab3659195ecebf9fe1f3a135fcb110a0c3e269504743b1cf49aff764614c",
+  "checks": [
+    {
+      "name": "the original framework API retains two installers after two checks and combines both transfers",
+      "nativeChecks": 2,
+      "actualDownloadRequests": 2,
+      "combinedBytesObserved": 4325376,
+      "singlePayloadBytes": 4194304,
+      "impossibleFractionHidden": true,
+      "noInstallerStarted": true
+    },
+    {
+      "name": "three new checks retain one response and one real download with native reentry blocked",
+      "nativeChecks": 3,
+      "actualDownloadRequests": 1,
+      "bytes": 4194304,
+      "total": 4194304,
+      "monotonic": true,
+      "nativeDuplicateInstallRejected": "更新操作正在进行，请勿重复启动。",
+      "nativeCheckDuringInstallRejected": "更新操作正在进行，请勿重复启动。",
+      "invalidSignatureStopsBeforeInstallation": true
+    },
+    {
+      "name": "retry clears the old transfer and consumes only the newly checked response",
+      "counterReset": true,
+      "actualDownloadRequests": 1,
+      "responseConsumedOnce": true,
+      "noInstallerStarted": true
+    }
+  ],
+  "layouts": [
+    {
+      "name": "legacy-overlap-indeterminate",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panes": [],
+      "width": 760
+    },
+    {
+      "name": "single-transfer-wide",
+      "dialogs": [
+        {
+          "bottom": 650,
+          "height": 650,
+          "left": 0,
+          "right": 1100,
+          "top": 0,
+          "width": 1100,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 650,
+      "overflow": 0,
+      "panes": [],
+      "width": 1100
+    },
+    {
+      "name": "single-transfer-narrow",
+      "dialogs": [
+        {
+          "bottom": 520,
+          "height": 520,
+          "left": 0,
+          "right": 760,
+          "top": 0,
+          "width": 760,
+          "x": 0,
+          "y": 0
+        }
+      ],
+      "height": 520,
+      "overflow": 0,
+      "panes": [],
+      "width": 760
+    }
+  ],
+  "work": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\updater-download-176\\c347cffb-3dee-438d-b365-7910303f0945",
+  "network": {
+    "manifestRequests": 6,
+    "downloads": [
+      {
+        "mode": "legacy",
+        "bytes": 4194304,
+        "complete": true
+      },
+      {
+        "mode": "legacy",
+        "bytes": 4194304,
+        "complete": true
+      },
+      {
+        "mode": "fixed",
+        "bytes": 4194304,
+        "complete": true
+      },
+      {
+        "mode": "retry",
+        "bytes": 4194304,
+        "complete": true
+      }
+    ]
+  },
+  "passed": true
+}

@@ -1,3 +1,4 @@
+import { runUpdaterDownload176Gate } from './updater-download-176-gate.mjs'
 import { runTarLzoPrefix175Gate } from './tar-lzo-prefix-rescue-175-gate.mjs'
 import { runLzopPrefix174Gate } from './lzop-prefix-rescue-174-gate.mjs'
 import { runLzopVolumes173Gate, runLzopVolumesUiFinal173 } from './lzop-numeric-create-173-gate.mjs'
@@ -5089,6 +5090,8 @@ try {
     await runSevenzSolidDeflate1635Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--sevenz-password-deflate-preview-1634-only')) {
     await runSevenzPasswordDeflate1634Gate({driver,bridge:callDesktopBridge,root,application})
+  } else if (process.argv.includes('--updater-download-176-only')) {
+    await runUpdaterDownload176Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--tar-lzo-prefix-rescue-175-only')) {
     await runTarLzoPrefix175Gate({driver,bridge:callDesktopBridge,root,application})
   } else if (process.argv.includes('--lzop-prefix-rescue-174-only')) {
