@@ -213,10 +213,10 @@
 
 | 版本 | 主要更新 | 详情 |
 | --- | --- | --- |
+| **v1.7.11** | TAR.LZO 取回文件保留原修改时间，范围/精度提示与内容结果分离，接通原历史详情 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.11.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.11) |
 | **v1.7.10** | GNU/PAX 混合名称记录部分取回，兼容零填充长名称，统一冲突名称的明确停止 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.10.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.10) |
 | **v1.7.9** | 统一全局 PAX 的浏览、预览、解压、转换与部分取回，修正属性覆盖、内容边界和修改时间 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.9.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.9) |
 | **v1.7.8** | TAR.LZO GNU 长文件名与长目录部分取回，跨块/缺卷名称边界、原恢复结果与诊断衔接 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.8.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.8) |
 | **v1.7.7** | 默认打开方式支持全选与全部取消，统一弹窗配置，修正 Windows 设置跳转和实际生效状态 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.7.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.7) |
-| **v1.7.6** | 修复多次检查后的重复更新下载、进度超出总大小、重试计数和重复安装 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.6.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.6) |
 
 [查看全部历史版本 →](https://github.com/Longyuyeee/long_Decompress/releases)

@@ -1,0 +1,198 @@
+{
+  "passed": true,
+  "sources": "Self-authored Python tarfile GNU/PAX producer originals; GNU/Python contents agree. Exact PAX times use Decimal plus Python reader and Go parsePAXTime signed semantics; GNU 1.35 negative-fraction disagreement is recorded, not claimed as consensus. Global/local deletion reuses v1.7.9 explicit POSIX-state boundary specimen. No application writer.",
+  "signedTimeReference": "https://go.dev/src/archive/tar/strconv.go",
+  "gnuVersion": "tar (GNU tar) 1.35",
+  "lzopProducerSha256": "d9b46cf6fa44f4d657e5a3943d361dac24040d0acda37019b19ba285e52e2c53",
+  "negativeFractionDifferences": [
+    {
+      "case": "pax",
+      "name": "资料/负时间.txt",
+      "paxValue": "-1.123456700",
+      "decimalAndPythonTime": {
+        "seconds": -2,
+        "nanoseconds": 876543300
+      },
+      "gnu135Time": {
+        "seconds": -1,
+        "nanoseconds": 123456700
+      }
+    }
+  ],
+  "cases": [
+    {
+      "name": "gnu",
+      "tar": "gnu.tar",
+      "archive": "gnu.tar.lzo",
+      "tarSha256": "e7461616f686633c788fe759eca284b6c80daa29f107556d199f66eb1bb390ed",
+      "sha256": "f8ce66f920111973b799115d7006f844e6efd11ff78424009a046a11158740ae",
+      "entries": [
+        {
+          "name": "empty",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "global.txt",
+          "isDirectory": false,
+          "bytes": 38,
+          "sha256": "b5713da553a4c178427db6c375ad347be86eb6518312c6da0c16d6a7af55969b",
+          "modifiedTime": {
+            "seconds": 1700001711,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "资料/负时间.txt",
+          "isDirectory": false,
+          "bytes": 30,
+          "sha256": "c174bc5a9f1591f8b4706d2f3839f894b2d78c436fc1770a424f8ea7da2cc3ee",
+          "modifiedTime": {
+            "seconds": -1,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "zero.txt",
+          "isDirectory": false,
+          "bytes": 29,
+          "sha256": "6197bb0d1cd239cd3651036dd780485ad894c4dde778ea725abc2bd6cb59d7ad",
+          "modifiedTime": {
+            "seconds": 0,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "precision.txt",
+          "isDirectory": false,
+          "bytes": 38,
+          "sha256": "0343d1be631d1b21c8f468c62853d127c302d43c80a3a58cd97e5c3b778c57fa",
+          "modifiedTime": {
+            "seconds": 1700001712,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "outside-windows.txt",
+          "isDirectory": false,
+          "bytes": 29,
+          "sha256": "aee702b6c412f5b42fce429fae78d2588c75581da751a04d180ac0b0d8949fbe",
+          "modifiedTime": {
+            "seconds": 1,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "empty-file.txt",
+          "isDirectory": false,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "modifiedTime": {
+            "seconds": 42,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "late.bin",
+          "isDirectory": false,
+          "bytes": 180033,
+          "sha256": "6bf40b5ab4089c4a7209fef13c6c6f963fe780ab691b20b49fc8acce0ccfec7c",
+          "modifiedTime": {
+            "seconds": 1700001714,
+            "nanoseconds": 0
+          }
+        }
+      ],
+      "gnuFullTimeListing": "drw-r--r-- 0/0               0 2023-11-14 22:13:20 empty/\n-rw-r--r-- 0/0              38 2023-11-14 22:41:51 global.txt\n-rw-r--r-- 0/0              30 1969-12-31 23:59:59 资料/负时间.txt\n-rw-r--r-- 0/0              29 1970-01-01 00:00:00 zero.txt\n-rw-r--r-- 0/0              38 2023-11-14 22:41:52 precision.txt\n-rw-r--r-- 0/0              29 1970-01-01 00:00:01 outside-windows.txt\n-rw-r--r-- 0/0               0 1970-01-01 00:00:42 empty-file.txt\n-rw-r--r-- 0/0          180033 2023-11-14 22:41:54 late.bin\n",
+      "independentContentAgree": true
+    },
+    {
+      "name": "pax",
+      "tar": "pax.tar",
+      "archive": "pax.tar.lzo",
+      "tarSha256": "9b178892af981ecd3fc2d18f487e7194f3026c3975696bb4ae5e8a70a1e1952b",
+      "sha256": "b3a7519b5dc67c0396820ef90464b460ebc16810458dc291c10952867efd8a78",
+      "entries": [
+        {
+          "name": "empty",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "global.txt",
+          "isDirectory": false,
+          "bytes": 48,
+          "sha256": "978845a7e8f7e2a01156838d71e4e37fd2a6cd75cd520d3588df2013474b1726",
+          "modifiedTime": {
+            "seconds": 1700001711,
+            "nanoseconds": 123456700
+          }
+        },
+        {
+          "name": "资料/负时间.txt",
+          "isDirectory": false,
+          "bytes": 40,
+          "sha256": "1f2c18668fd4273db785e3cfaf376efdf20f5b6b7bb9320f19ba3b0e47c4f652",
+          "modifiedTime": {
+            "seconds": -2,
+            "nanoseconds": 876543300
+          }
+        },
+        {
+          "name": "zero.txt",
+          "isDirectory": false,
+          "bytes": 29,
+          "sha256": "6197bb0d1cd239cd3651036dd780485ad894c4dde778ea725abc2bd6cb59d7ad",
+          "modifiedTime": {
+            "seconds": 0,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "precision.txt",
+          "isDirectory": false,
+          "bytes": 48,
+          "sha256": "b444a98fa57d4a151d64dde1c7795ad57878296ff885e96b915c0d44f73e56d3",
+          "modifiedTime": {
+            "seconds": 1700001712,
+            "nanoseconds": 123456789
+          }
+        },
+        {
+          "name": "outside-windows.txt",
+          "isDirectory": false,
+          "bytes": 40,
+          "sha256": "84d986bba329274c413b9266077c2b0026d3e08854738cf1463f2690aa0e55f0",
+          "modifiedTime": {
+            "seconds": -12000000000,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "name": "empty-file.txt",
+          "isDirectory": false,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "modifiedTime": {
+            "seconds": 1700001713,
+            "nanoseconds": 500000000
+          }
+        },
+        {
+          "name": "late.bin",
+          "isDirectory": false,
+          "bytes": 180033,
+          "sha256": "6bf40b5ab4089c4a7209fef13c6c6f963fe780ab691b20b49fc8acce0ccfec7c",
+          "modifiedTime": {
+            "seconds": 1700001714,
+            "nanoseconds": 0
+          }
+        }
+      ],
+      "gnuFullTimeListing": "drw-r--r-- 0/0               0 2023-11-14 22:41:51.1234567 empty/\n-rw-r--r-- 0/0              48 2023-11-14 22:41:51.1234567 global.txt\n-rw-r--r-- 0/0              40 1969-12-31 23:59:59.1234567 资料/负时间.txt\n-rw-r--r-- 0/0              29 1970-01-01 00:00:00         zero.txt\n-rw-r--r-- 0/0              48 2023-11-14 22:41:52.123456789 precision.txt\n-rw-r--r-- 0/0              40 1589-09-26 02:40:00           outside-windows.txt\n-rw-r--r-- 0/0               0 2023-11-14 22:41:53.5         empty-file.txt\n-rw-r--r-- 0/0          180033 2023-11-14 22:41:54           late.bin\n",
+      "independentContentAgree": true
+    }
+  ]
+}

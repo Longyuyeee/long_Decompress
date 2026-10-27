@@ -2,6 +2,18 @@ use serde_json::{Map, Value};
 
 #[cfg(test)]
 #[test]
+fn time1711_history_keeps_optional_time_totals_and_rejects_impossible_counts() {
+    let old=serde_json::json!({"schemaVersion":1,"kind":"archive-recovery","outputDirectory":"D:/out","recoveredFiles":2,"stopReason":"tail","revision":"a".repeat(64)});
+    assert!(sanitize(old.clone(),"decompression","archive").unwrap().get("timePreservation").is_none());
+    let mut current=old.clone();current["timePreservation"]=serde_json::json!({"preservedFiles":1,"unpreservedFiles":1,"unrelated":"discard"});
+    let clean=sanitize(current,"decompression","archive").unwrap();assert_eq!(clean["timePreservation"],serde_json::json!({"preservedFiles":1,"unpreservedFiles":1}));
+    for counts in [serde_json::json!({"preservedFiles":3,"unpreservedFiles":0}),serde_json::json!({"preservedFiles":1,"unpreservedFiles":0}),serde_json::json!({"preservedFiles":-1,"unpreservedFiles":3}),serde_json::json!({"preservedFiles":1.5,"unpreservedFiles":0.5})] {
+        let mut invalid=old.clone();invalid["timePreservation"]=counts;assert!(sanitize(invalid,"decompression","archive").is_none());
+    }
+}
+
+#[cfg(test)]
+#[test]
 fn zpaq1537_final_history_preserves_guarded_selection_and_rejects_missing_identity(){
     let config=serde_json::json!({"schemaVersion":1,"kind":"archive-extraction","outputDirectory":"D:/out","extractToSubfolder":false,"zpaqSnapshot":{"version":1,"date":20261020130000i64},"zpaqCatalogId":"a".repeat(64),"selectedEntries":["资料/后来删除.txt"],"password":"not-persisted"});
     let saved=sanitize(config.clone(),"decompression","archive").unwrap();assert_eq!(saved["selectedEntries"],config["selectedEntries"]);assert_eq!(saved["zpaqCatalogId"],config["zpaqCatalogId"]);assert!(saved.get("password").is_none());

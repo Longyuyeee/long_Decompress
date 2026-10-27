@@ -316,3 +316,6 @@ pub(crate) mod tar_pax;
 mod tar_pax_179_tests;
 #[cfg(test)]
 mod tar_mixed_1710_tests;
+pub(crate) mod tar_recovery_time;
+#[cfg(test)]
+mod tar_time_1711_tests;

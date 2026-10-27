@@ -1,0 +1,644 @@
+[
+  {
+    "case": "gnu",
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-time-1711\\bd4c310b-d74d-43fc-864c-dabb26cc027d\\gnu-tail.tar.lzo",
+    "report": {
+      "format": "TAR.LZO",
+      "revision": "7926294a12a416650d7fc23360ffa410c9b2e40f04f4c9daf1504a633edd9e23",
+      "entries": [
+        {
+          "id": 0,
+          "name": "empty",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true
+        },
+        {
+          "id": 1,
+          "name": "global.txt",
+          "bytes": 38,
+          "sha256": "b5713da553a4c178427db6c375ad347be86eb6518312c6da0c16d6a7af55969b",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001711,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 2,
+          "name": "资料/负时间.txt",
+          "bytes": 30,
+          "sha256": "c174bc5a9f1591f8b4706d2f3839f894b2d78c436fc1770a424f8ea7da2cc3ee",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": -1,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 3,
+          "name": "zero.txt",
+          "bytes": 29,
+          "sha256": "6197bb0d1cd239cd3651036dd780485ad894c4dde778ea725abc2bd6cb59d7ad",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 0,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 4,
+          "name": "precision.txt",
+          "bytes": 38,
+          "sha256": "0343d1be631d1b21c8f468c62853d127c302d43c80a3a58cd97e5c3b778c57fa",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001712,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 5,
+          "name": "outside-windows.txt",
+          "bytes": 29,
+          "sha256": "aee702b6c412f5b42fce429fae78d2588c75581da751a04d180ac0b0d8949fbe",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 6,
+          "name": "empty-file.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 42,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 7,
+          "name": "late.bin",
+          "bytes": 180033,
+          "sha256": "6bf40b5ab4089c4a7209fef13c6c6f963fe780ab691b20b49fc8acce0ccfec7c",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001714,
+            "nanoseconds": 0
+          }
+        }
+      ],
+      "complete": false,
+      "stopReason": "[archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件",
+      "stoppedMember": null,
+      "stoppedOffset": 186880,
+      "availableVolumes": 1,
+      "ignoredVolumes": 0
+    },
+    "result": {
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-time-1711\\bd4c310b-d74d-43fc-864c-dabb26cc027d\\gnu-tail.tar.lzo.部分取回-2965397a",
+      "recoveredFiles": 7,
+      "recoveredDirectories": 1,
+      "recoveredBytes": 180197,
+      "entries": [
+        {
+          "id": 0,
+          "name": "empty",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true
+        },
+        {
+          "id": 1,
+          "name": "global.txt",
+          "bytes": 38,
+          "sha256": "b5713da553a4c178427db6c375ad347be86eb6518312c6da0c16d6a7af55969b",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001711,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 2,
+          "name": "资料/负时间.txt",
+          "bytes": 30,
+          "sha256": "c174bc5a9f1591f8b4706d2f3839f894b2d78c436fc1770a424f8ea7da2cc3ee",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": -1,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 3,
+          "name": "zero.txt",
+          "bytes": 29,
+          "sha256": "6197bb0d1cd239cd3651036dd780485ad894c4dde778ea725abc2bd6cb59d7ad",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 0,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 4,
+          "name": "precision.txt",
+          "bytes": 38,
+          "sha256": "0343d1be631d1b21c8f468c62853d127c302d43c80a3a58cd97e5c3b778c57fa",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001712,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 5,
+          "name": "outside-windows.txt",
+          "bytes": 29,
+          "sha256": "aee702b6c412f5b42fce429fae78d2588c75581da751a04d180ac0b0d8949fbe",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 6,
+          "name": "empty-file.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 42,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 7,
+          "name": "late.bin",
+          "bytes": 180033,
+          "sha256": "6bf40b5ab4089c4a7209fef13c6c6f963fe780ab691b20b49fc8acce0ccfec7c",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001714,
+            "nanoseconds": 0
+          }
+        }
+      ],
+      "stopReason": "[archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件",
+      "partial": true,
+      "timePreservation": {
+        "preservedFiles": 7,
+        "unpreservedFiles": 0
+      }
+    },
+    "actualTimes": [
+      {
+        "name": "global.txt",
+        "actualSeconds": 1700001711,
+        "actualNanoseconds": 0,
+        "warning": null
+      },
+      {
+        "name": "资料/负时间.txt",
+        "actualSeconds": -1,
+        "actualNanoseconds": 0,
+        "warning": null
+      },
+      {
+        "name": "zero.txt",
+        "actualSeconds": 0,
+        "actualNanoseconds": 0,
+        "warning": null
+      },
+      {
+        "name": "precision.txt",
+        "actualSeconds": 1700001712,
+        "actualNanoseconds": 0,
+        "warning": null
+      },
+      {
+        "name": "outside-windows.txt",
+        "actualSeconds": 1,
+        "actualNanoseconds": 0,
+        "warning": null
+      },
+      {
+        "name": "empty-file.txt",
+        "actualSeconds": 42,
+        "actualNanoseconds": 0,
+        "warning": null
+      },
+      {
+        "name": "late.bin",
+        "actualSeconds": 1700001714,
+        "actualNanoseconds": 0,
+        "warning": null
+      }
+    ],
+    "entries": [
+      {
+        "name": "empty",
+        "isDirectory": true,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "global.txt",
+        "isDirectory": false,
+        "bytes": 38,
+        "sha256": "b5713da553a4c178427db6c375ad347be86eb6518312c6da0c16d6a7af55969b",
+        "modifiedTime": {
+          "seconds": 1700001711,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "资料/负时间.txt",
+        "isDirectory": false,
+        "bytes": 30,
+        "sha256": "c174bc5a9f1591f8b4706d2f3839f894b2d78c436fc1770a424f8ea7da2cc3ee",
+        "modifiedTime": {
+          "seconds": -1,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "zero.txt",
+        "isDirectory": false,
+        "bytes": 29,
+        "sha256": "6197bb0d1cd239cd3651036dd780485ad894c4dde778ea725abc2bd6cb59d7ad",
+        "modifiedTime": {
+          "seconds": 0,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "precision.txt",
+        "isDirectory": false,
+        "bytes": 38,
+        "sha256": "0343d1be631d1b21c8f468c62853d127c302d43c80a3a58cd97e5c3b778c57fa",
+        "modifiedTime": {
+          "seconds": 1700001712,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "outside-windows.txt",
+        "isDirectory": false,
+        "bytes": 29,
+        "sha256": "aee702b6c412f5b42fce429fae78d2588c75581da751a04d180ac0b0d8949fbe",
+        "modifiedTime": {
+          "seconds": 1,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "empty-file.txt",
+        "isDirectory": false,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 42,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "late.bin",
+        "isDirectory": false,
+        "bytes": 180033,
+        "sha256": "6bf40b5ab4089c4a7209fef13c6c6f963fe780ab691b20b49fc8acce0ccfec7c",
+        "modifiedTime": {
+          "seconds": 1700001714,
+          "nanoseconds": 0
+        }
+      }
+    ]
+  },
+  {
+    "case": "pax",
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-time-1711\\bd4c310b-d74d-43fc-864c-dabb26cc027d\\pax-tail.tar.lzo",
+    "report": {
+      "format": "TAR.LZO",
+      "revision": "164d7cf4167ff567f3a10759e28b02d7e42a046f4bb23e0183163a126a278a68",
+      "entries": [
+        {
+          "id": 0,
+          "name": "empty",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true
+        },
+        {
+          "id": 1,
+          "name": "global.txt",
+          "bytes": 48,
+          "sha256": "978845a7e8f7e2a01156838d71e4e37fd2a6cd75cd520d3588df2013474b1726",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001711,
+            "nanoseconds": 123456700
+          }
+        },
+        {
+          "id": 2,
+          "name": "资料/负时间.txt",
+          "bytes": 40,
+          "sha256": "1f2c18668fd4273db785e3cfaf376efdf20f5b6b7bb9320f19ba3b0e47c4f652",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": -2,
+            "nanoseconds": 876543300
+          }
+        },
+        {
+          "id": 3,
+          "name": "zero.txt",
+          "bytes": 29,
+          "sha256": "6197bb0d1cd239cd3651036dd780485ad894c4dde778ea725abc2bd6cb59d7ad",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 0,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 4,
+          "name": "precision.txt",
+          "bytes": 48,
+          "sha256": "b444a98fa57d4a151d64dde1c7795ad57878296ff885e96b915c0d44f73e56d3",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001712,
+            "nanoseconds": 123456789
+          }
+        },
+        {
+          "id": 5,
+          "name": "outside-windows.txt",
+          "bytes": 40,
+          "sha256": "84d986bba329274c413b9266077c2b0026d3e08854738cf1463f2690aa0e55f0",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": -12000000000,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 6,
+          "name": "empty-file.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001713,
+            "nanoseconds": 500000000
+          }
+        },
+        {
+          "id": 7,
+          "name": "late.bin",
+          "bytes": 180033,
+          "sha256": "6bf40b5ab4089c4a7209fef13c6c6f963fe780ab691b20b49fc8acce0ccfec7c",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001714,
+            "nanoseconds": 0
+          }
+        }
+      ],
+      "complete": false,
+      "stopReason": "[archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件",
+      "stoppedMember": null,
+      "stoppedOffset": 194048,
+      "availableVolumes": 1,
+      "ignoredVolumes": 0
+    },
+    "result": {
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-time-1711\\bd4c310b-d74d-43fc-864c-dabb26cc027d\\pax-tail.tar.lzo.部分取回-771a2dfa",
+      "recoveredFiles": 7,
+      "recoveredDirectories": 1,
+      "recoveredBytes": 180238,
+      "entries": [
+        {
+          "id": 0,
+          "name": "empty",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true
+        },
+        {
+          "id": 1,
+          "name": "global.txt",
+          "bytes": 48,
+          "sha256": "978845a7e8f7e2a01156838d71e4e37fd2a6cd75cd520d3588df2013474b1726",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001711,
+            "nanoseconds": 123456700
+          }
+        },
+        {
+          "id": 2,
+          "name": "资料/负时间.txt",
+          "bytes": 40,
+          "sha256": "1f2c18668fd4273db785e3cfaf376efdf20f5b6b7bb9320f19ba3b0e47c4f652",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": -2,
+            "nanoseconds": 876543300
+          }
+        },
+        {
+          "id": 3,
+          "name": "zero.txt",
+          "bytes": 29,
+          "sha256": "6197bb0d1cd239cd3651036dd780485ad894c4dde778ea725abc2bd6cb59d7ad",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 0,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 4,
+          "name": "precision.txt",
+          "bytes": 48,
+          "sha256": "b444a98fa57d4a151d64dde1c7795ad57878296ff885e96b915c0d44f73e56d3",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001712,
+            "nanoseconds": 123456789
+          },
+          "timeWarning": "保存位置的时间精度或范围有限，原修改时间未完整保留，文件内容已取回"
+        },
+        {
+          "id": 5,
+          "name": "outside-windows.txt",
+          "bytes": 40,
+          "sha256": "84d986bba329274c413b9266077c2b0026d3e08854738cf1463f2690aa0e55f0",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": -12000000000,
+            "nanoseconds": 0
+          },
+          "timeWarning": "原修改时间早于 Windows 支持范围，文件内容已取回"
+        },
+        {
+          "id": 6,
+          "name": "empty-file.txt",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001713,
+            "nanoseconds": 500000000
+          }
+        },
+        {
+          "id": 7,
+          "name": "late.bin",
+          "bytes": 180033,
+          "sha256": "6bf40b5ab4089c4a7209fef13c6c6f963fe780ab691b20b49fc8acce0ccfec7c",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001714,
+            "nanoseconds": 0
+          }
+        }
+      ],
+      "stopReason": "[archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件",
+      "partial": true,
+      "timePreservation": {
+        "preservedFiles": 5,
+        "unpreservedFiles": 2
+      }
+    },
+    "actualTimes": [
+      {
+        "name": "global.txt",
+        "actualSeconds": 1700001711,
+        "actualNanoseconds": 123456700,
+        "warning": null
+      },
+      {
+        "name": "资料/负时间.txt",
+        "actualSeconds": -2,
+        "actualNanoseconds": 876543300,
+        "warning": null
+      },
+      {
+        "name": "zero.txt",
+        "actualSeconds": 0,
+        "actualNanoseconds": 0,
+        "warning": null
+      },
+      {
+        "name": "precision.txt",
+        "actualSeconds": 1700001712,
+        "actualNanoseconds": 123456700,
+        "warning": "保存位置的时间精度或范围有限，原修改时间未完整保留，文件内容已取回"
+      },
+      {
+        "name": "outside-windows.txt",
+        "actualSeconds": 1793084622,
+        "actualNanoseconds": 260219700,
+        "warning": "原修改时间早于 Windows 支持范围，文件内容已取回"
+      },
+      {
+        "name": "empty-file.txt",
+        "actualSeconds": 1700001713,
+        "actualNanoseconds": 500000000,
+        "warning": null
+      },
+      {
+        "name": "late.bin",
+        "actualSeconds": 1700001714,
+        "actualNanoseconds": 0,
+        "warning": null
+      }
+    ],
+    "entries": [
+      {
+        "name": "empty",
+        "isDirectory": true,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "global.txt",
+        "isDirectory": false,
+        "bytes": 48,
+        "sha256": "978845a7e8f7e2a01156838d71e4e37fd2a6cd75cd520d3588df2013474b1726",
+        "modifiedTime": {
+          "seconds": 1700001711,
+          "nanoseconds": 123456700
+        }
+      },
+      {
+        "name": "资料/负时间.txt",
+        "isDirectory": false,
+        "bytes": 40,
+        "sha256": "1f2c18668fd4273db785e3cfaf376efdf20f5b6b7bb9320f19ba3b0e47c4f652",
+        "modifiedTime": {
+          "seconds": -2,
+          "nanoseconds": 876543300
+        }
+      },
+      {
+        "name": "zero.txt",
+        "isDirectory": false,
+        "bytes": 29,
+        "sha256": "6197bb0d1cd239cd3651036dd780485ad894c4dde778ea725abc2bd6cb59d7ad",
+        "modifiedTime": {
+          "seconds": 0,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "precision.txt",
+        "isDirectory": false,
+        "bytes": 48,
+        "sha256": "b444a98fa57d4a151d64dde1c7795ad57878296ff885e96b915c0d44f73e56d3",
+        "modifiedTime": {
+          "seconds": 1700001712,
+          "nanoseconds": 123456789
+        }
+      },
+      {
+        "name": "outside-windows.txt",
+        "isDirectory": false,
+        "bytes": 40,
+        "sha256": "84d986bba329274c413b9266077c2b0026d3e08854738cf1463f2690aa0e55f0",
+        "modifiedTime": {
+          "seconds": -12000000000,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "empty-file.txt",
+        "isDirectory": false,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001713,
+          "nanoseconds": 500000000
+        }
+      },
+      {
+        "name": "late.bin",
+        "isDirectory": false,
+        "bytes": 180033,
+        "sha256": "6bf40b5ab4089c4a7209fef13c6c6f963fe780ab691b20b49fc8acce0ccfec7c",
+        "modifiedTime": {
+          "seconds": 1700001714,
+          "nanoseconds": 0
+        }
+      }
+    ]
+  }
+]
