@@ -14,6 +14,7 @@ vi.mock('@tauri-apps/api/updater', () => ({
   installUpdate: mocks.installUpdate,
   onUpdaterEvent: mocks.onUpdaterEvent,
 }))
+vi.mock('@tauri-apps/api/tauri',()=>({invoke:(command:string,args?:unknown)=>command==='check_app_update'?mocks.checkUpdate():command==='install_app_update'?mocks.installUpdate(args):Promise.reject(Error('unexpected command'))}))
 vi.mock('@tauri-apps/api/event', () => ({ listen: mocks.listen, TauriEvent: { DOWNLOAD_PROGRESS: 'tauri://update-download-progress' } }))
 
 const manifest = {
@@ -182,7 +183,9 @@ describe('update store', () => {
       expect(store.totalBytes).toBeNull()
       expect(store.installPhase).toBe('preparing')
       mocks.listen.mock.calls[0][1]({ payload: { chunkLength: 120, contentLength: 100 } })
-      expect(store.downloadPercent).toBe(100)
+      expect(store.downloadPercent).toBeNull()
+      expect(store.totalBytes).toBeNull()
+      expect(store.downloadedBytes).toBe(120)
     })
     await store.install(0)
     expect(mocks.listen).toHaveBeenCalledOnce()
@@ -199,4 +202,31 @@ describe('update store', () => {
     expect(stopStatus).toHaveBeenCalledOnce()
     expect(stopProgress).toHaveBeenCalledOnce()
   })
+  it('keeps inconsistent content length indeterminate across later chunks instead of showing excess bytes over total', async () => {
+    const store=useUpdateStore();store.manifest=manifest
+    mocks.installUpdate.mockImplementation(async()=>{
+      const progress=mocks.listen.mock.calls[0][1]
+      progress({payload:{chunkLength:60,contentLength:100}})
+      expect(store.downloadPercent).toBe(60)
+      progress({payload:{chunkLength:60,contentLength:100}})
+      expect(store.downloadedBytes).toBe(120);expect(store.totalBytes).toBeNull();expect(store.downloadPercent).toBeNull()
+      progress({payload:{chunkLength:5,contentLength:100}})
+      expect(store.downloadedBytes).toBe(125);expect(store.totalBytes).toBeNull()
+      for(const chunkLength of [-1,NaN,Infinity,1.5])progress({payload:{chunkLength,contentLength:null}})
+      expect(store.downloadedBytes).toBe(125)
+    })
+    await store.install(0)
+  })
+  it('ignores a second install even if its caller reports a running task', async () => {
+    const store=useUpdateStore();store.manifest=manifest
+    mocks.installUpdate.mockImplementation(async()=>{await store.install(1);expect(store.status).toBe('installing')})
+    await store.install(0);expect(mocks.installUpdate).toHaveBeenCalledOnce();expect(mocks.installUpdate).toHaveBeenCalledWith({expectedVersion:manifest.version})
+  })
+  it('ignores callbacks belonging to disposed listeners', async () => {
+    const store=useUpdateStore();await store.initialize();const previous=mocks.listen.mock.calls[0][1];store.cleanup()
+    store.$patch({status:'installing',installPhase:'downloading',downloadedBytes:0,totalBytes:100})
+    previous({payload:{chunkLength:10,contentLength:100}});expect(store.downloadedBytes).toBe(0)
+    mocks.onUpdaterEvent.mock.calls[0][0]({status:'ERROR',error:'stale event'});expect(store.status).toBe('installing')
+  })
+
 })

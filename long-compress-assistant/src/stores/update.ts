@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref } from 'vue'
-import { checkUpdate, installUpdate, onUpdaterEvent, type UpdateManifest } from '@tauri-apps/api/updater'
+import { onUpdaterEvent, type UpdateManifest } from '@tauri-apps/api/updater'
+import { invoke } from '@tauri-apps/api/tauri'
 import { listen, TauriEvent } from '@tauri-apps/api/event'
 
 export type UpdateStatus = 'idle' | 'checking' | 'available' | 'up-to-date' | 'installing' | 'error'
@@ -35,6 +36,7 @@ export const useUpdateStore = defineStore('update', () => {
   let unlistenProgress: (() => void) | null = null
   let initializing: Promise<void> | null = null
   let listenerGeneration = 0
+  let unreliableLength = false
 
   const busy = computed(() => status.value === 'checking' || status.value === 'installing')
   const availableVersion = computed(() => manifest.value?.version || '')
@@ -44,6 +46,7 @@ export const useUpdateStore = defineStore('update', () => {
     installPhase.value = 'preparing'
     downloadedBytes.value = 0
     totalBytes.value = null
+    unreliableLength = false
   }
 
   const initialize = async () => {
@@ -54,6 +57,7 @@ export const useUpdateStore = defineStore('update', () => {
       const registered: Array<() => void> = []
       try {
         const stopStatus = await onUpdaterEvent(({ status: eventStatus, error }) => {
+          if (generation !== listenerGeneration) return
           const phase: string = eventStatus // Tauri 1.8 also emits DOWNLOADED, absent in v1 JS typings.
           if (phase === 'ERROR' && busy.value) {
             status.value = 'error'
@@ -66,10 +70,17 @@ export const useUpdateStore = defineStore('update', () => {
         })
         registered.push(stopStatus)
         const stopProgress = await listen<{ chunkLength: number; contentLength?: number | null }>(TauriEvent.DOWNLOAD_PROGRESS, ({ payload }) => {
+          if (generation !== listenerGeneration) return
           if (status.value !== 'installing' || !['preparing', 'downloading'].includes(installPhase.value)) return
           installPhase.value = 'downloading'
-          if (Number.isFinite(payload.chunkLength) && payload.chunkLength > 0) downloadedBytes.value += payload.chunkLength
-          if (payload.contentLength && Number.isFinite(payload.contentLength) && payload.contentLength > 0) totalBytes.value = payload.contentLength
+          if (!unreliableLength && Number.isSafeInteger(payload.contentLength) && payload.contentLength! > 0) totalBytes.value = payload.contentLength!
+          if (Number.isSafeInteger(payload.chunkLength) && payload.chunkLength > 0 && Number.isSafeInteger(downloadedBytes.value + payload.chunkLength)) downloadedBytes.value += payload.chunkLength
+          if (totalBytes.value !== null && downloadedBytes.value > totalBytes.value) {
+            // An inconsistent server length must not display an impossible fraction
+            // or a false 100%; retain bytes received and use indeterminate progress.
+            unreliableLength = true
+            totalBytes.value = null
+          }
         })
         registered.push(stopProgress)
         if (generation !== listenerGeneration) { registered.forEach(stop => stop()); return }
@@ -100,7 +111,7 @@ export const useUpdateStore = defineStore('update', () => {
     }
 
     try {
-      const result = await checkUpdate()
+      const result = await invoke<{shouldUpdate:boolean;manifest?:UpdateManifest}>('check_app_update')
       lastSuccessAt.value = Date.now()
       localStorage.setItem(LAST_SUCCESS_KEY, String(lastSuccessAt.value))
       if (result.shouldUpdate && result.manifest) {
@@ -131,13 +142,13 @@ export const useUpdateStore = defineStore('update', () => {
   }
 
   const install = async (activeTaskCount: number) => {
+    if (!manifest.value || status.value === 'installing') return
     if (activeTaskCount > 0) {
       status.value = 'error'
       errorMessage.value = `还有 ${activeTaskCount} 个任务正在运行，请等待任务结束后再更新。`
       dialogVisible.value = true
       return
     }
-    if (!manifest.value || status.value === 'installing') return
 
     status.value = 'installing'
     errorMessage.value = ''
@@ -146,7 +157,7 @@ export const useUpdateStore = defineStore('update', () => {
     try {
       // Register before triggering the native download, including manual updates.
       await initialize()
-      await installUpdate()
+      await invoke('install_app_update', {expectedVersion:manifest.value.version})
       if (status.value === 'installing') installPhase.value = 'restarting'
     } catch (error) {
       status.value = 'error'

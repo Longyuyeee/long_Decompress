@@ -13,7 +13,7 @@ const updaterMocks = vi.hoisted(() => ({
   onUpdaterEvent: vi.fn(),
 }))
 const tauriMocks = vi.hoisted(() => ({
-  invoke: vi.fn(async (command: string) => command === 'load_app_settings' ? '{}' : undefined),
+  invoke: vi.fn(async (command: string) => command === 'load_app_settings' ? '{}' : command==='install_app_update'?updaterMocks.installUpdate():undefined),
 }))
 
 vi.mock('@tauri-apps/api/updater', () => updaterMocks)
@@ -38,6 +38,7 @@ describe('UpdateDialog', () => {
     localStorage.clear()
     updaterMocks.checkUpdate.mockReset()
     updaterMocks.installUpdate.mockReset()
+    updaterMocks.installUpdate.mockImplementation(()=>new Promise(()=>{}))
     updaterMocks.onUpdaterEvent.mockReset()
     tauriMocks.invoke.mockClear()
     setActivePinia(createPinia())
