@@ -66,7 +66,7 @@ try {
   await page.getByTestId('archive-opening-reminder-configure').click()
   await page.getByTestId('archive-opening-settings').waitFor({ state: 'visible' })
   assert.ok(await page.getByTestId('archive-opening-settings').evaluate(el => el.closest('[data-settings-panel]').getAttribute('data-settings-panel') === 'behavior'))
-  assert.ok((await page.getByTestId('archive-opening-settings').innerText()).includes('请先在 Windows 设置'))
+  assert.ok((await page.getByTestId('archive-opening-settings').innerText()).includes('尚未设为默认打开应用'))
   assert.equal(await page.evaluate(() => window.__calls.filter(call => ['configure_archive_file_associations', 'open_default_archive_apps'].includes(call.cmd)).length), 0)
   await page.reload({ waitUntil: 'domcontentloaded' })
   await page.getByTestId('archive-opening-settings').waitFor({ state: 'visible' })

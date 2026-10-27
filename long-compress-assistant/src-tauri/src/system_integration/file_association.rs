@@ -82,7 +82,7 @@ pub struct ArchiveAssociationStatus {
 }
 
 pub fn validate_archive_associations(extensions: &[String]) -> std::result::Result<(), String> {
-    if extensions.is_empty() || extensions.iter().any(|extension| !ARCHIVE_ASSOCIATION_EXTENSIONS.contains(&extension.as_str())) {
+    if extensions.iter().any(|extension| !ARCHIVE_ASSOCIATION_EXTENSIONS.contains(&extension.as_str())) {
         return Err("请选择支持的压缩文件类型".into());
     }
     Ok(())
@@ -118,6 +118,23 @@ pub fn register_archive_opening(exe: &std::path::Path, extensions: &[String]) ->
     use winreg::{RegKey, enums::HKEY_CURRENT_USER};
     validate_archive_associations(extensions)?;
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+    // A current, explicit Windows choice must remain launchable and visible in
+    // Settings until the user chooses its replacement. Never rewrite UserChoice.
+    let statuses = association_status()?;
+    let retained: Vec<String> = statuses.iter().filter(|item| item.is_default)
+        .filter(|item| hkcu.open_subkey(format!(r"Software\Microsoft\Windows\CurrentVersion\Explorer\FileExts\{}\UserChoice", item.extension))
+            .ok().and_then(|key| key.get_value::<String, _>("ProgId").ok()).is_some())
+        .map(|item| item.extension.clone()).collect();
+    let offered: Vec<String> = ARCHIVE_ASSOCIATION_EXTENSIONS.iter()
+        .filter(|extension| extensions.iter().chain(retained.iter()).any(|chosen| chosen == **extension))
+        .map(|extension| (*extension).to_string()).collect();
+    write_archive_candidates(&hkcu, exe, &offered)?;
+    notify_association_changes();
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn write_archive_candidates(hkcu: &winreg::RegKey, exe: &std::path::Path, extensions: &[String]) -> std::result::Result<(), String> {
     let command = format!("\"{}\" --open-archive \"%1\"", exe.display());
     let write = |path: &str, name: &str, value: &str| -> std::result::Result<(), String> {
         hkcu.create_subkey(path).and_then(|(key, _)| key.set_value(name, &value)).map_err(|error| error.to_string())
@@ -157,10 +174,54 @@ pub fn register_archive_opening(exe: &std::path::Path, extensions: &[String]) ->
             }
         }
     }
+    Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn notify_association_changes() {
     #[link(name = "shell32")]
     extern "system" { fn SHChangeNotify(event: i32, flags: u32, item1: *const std::ffi::c_void, item2: *const std::ffi::c_void); }
     unsafe { SHChangeNotify(0x08000000, 0, std::ptr::null(), std::ptr::null()) };
-    Ok(())
+}
+
+fn default_apps_settings_uri(build: u32, revision: u32) -> &'static str {
+    if build > 22_621 || build == 22_621 && revision >= 1555 || build == 22_000 && revision >= 1817 {
+        "ms-settings:defaultapps?registeredAppUser=LongDecompress"
+    } else {
+        "ms-settings:defaultapps"
+    }
+}
+
+/// Launch the URI handler, not Explorer's folder parser. ShellExecute also
+/// reports activation errors instead of treating a spawned explorer as success.
+#[cfg(target_os = "windows")]
+pub fn open_default_apps_settings() -> std::result::Result<(), String> {
+    use std::os::windows::ffi::OsStrExt;
+    use winreg::{RegKey, enums::HKEY_LOCAL_MACHINE};
+    #[link(name = "shell32")]
+    extern "system" {
+        fn ShellExecuteW(hwnd: *mut std::ffi::c_void, operation: *const u16, file: *const u16, parameters: *const u16, directory: *const u16, show: i32) -> isize;
+    }
+    #[link(name = "ole32")]
+    extern "system" {
+        fn CoInitializeEx(reserved: *const std::ffi::c_void, coinit: u32) -> i32;
+        fn CoUninitialize();
+    }
+    let key = RegKey::predef(HKEY_LOCAL_MACHINE).open_subkey(r"SOFTWARE\Microsoft\Windows NT\CurrentVersion").ok();
+    let build = key.as_ref().and_then(|key| key.get_value::<String, _>("CurrentBuildNumber").ok()).and_then(|value| value.parse().ok()).unwrap_or(0);
+    let revision = key.as_ref().and_then(|key| key.get_value::<u32, _>("UBR").ok()).unwrap_or(0);
+    let uri = default_apps_settings_uri(build, revision);
+    let wide = |value: &str| std::ffi::OsStr::new(value).encode_wide().chain(Some(0)).collect::<Vec<u16>>();
+    let verb = wide("open");
+    let initialized = unsafe { CoInitializeEx(std::ptr::null(), 0x2 | 0x4) };
+    let launch = |uri: &str| {
+        let target = wide(uri);
+        unsafe { ShellExecuteW(std::ptr::null_mut(), verb.as_ptr(), target.as_ptr(), std::ptr::null(), std::ptr::null(), 1) }
+    };
+    let mut result = launch(uri);
+    if result <= 32 && uri != "ms-settings:defaultapps" { result = launch("ms-settings:defaultapps"); }
+    if initialized >= 0 { unsafe { CoUninitialize() }; }
+    if result > 32 { Ok(()) } else { Err(format!("无法打开 Windows 默认应用设置（错误 {result}）。请在系统设置的“应用 → 默认应用”中搜索 Long解压。")) }
 }
 
 /// Refresh only candidates the user previously configured, e.g. after moving
@@ -174,7 +235,9 @@ pub fn refresh_archive_opening_if_present(exe: &std::path::Path) -> std::result:
         .filter(|extension| key.get_value::<String, _>(**extension).is_ok())
         .map(|extension| (*extension).to_string()).collect();
     if extensions.is_empty() { return Ok(()); }
-    register_archive_opening(exe, &extensions)
+    write_archive_candidates(&RegKey::predef(HKEY_CURRENT_USER), exe, &extensions)?;
+    notify_association_changes();
+    Ok(())
 }
 
 #[cfg(not(target_os = "windows"))]
@@ -192,6 +255,48 @@ mod archive_opening_tests {
         for extension in [".exe",".docx",".xlsx",".pdf",".txt",r".zip\shell"] {
             assert!(validate_archive_associations(&[extension.into()]).is_err());
         }
-        assert!(validate_archive_associations(&[]).is_err());
+        assert!(validate_archive_associations(&[]).is_ok());
     }
+
+    #[test]
+    fn default_apps_links_match_supported_windows_versions() {
+        assert_eq!(default_apps_settings_uri(19045, 6000), "ms-settings:defaultapps");
+        assert_eq!(default_apps_settings_uri(22000, 1816), "ms-settings:defaultapps");
+        assert!(default_apps_settings_uri(22000, 1817).contains("registeredAppUser="));
+        assert_eq!(default_apps_settings_uri(22621, 1554), "ms-settings:defaultapps");
+        assert!(default_apps_settings_uri(22621, 1555).contains("registeredAppUser="));
+        assert!(default_apps_settings_uri(26100, 0).contains("registeredAppUser="));
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn candidates_support_all_formats_and_empty_selection_without_changing_other_apps() {
+        use winreg::{RegKey, enums::HKEY_CURRENT_USER};
+        let root = RegKey::predef(HKEY_CURRENT_USER);
+        let path = format!(r"Software\LongDecompressTests\Associations-{}", uuid::Uuid::new_v4());
+        struct Cleanup<'a>(&'a RegKey, String);
+        impl Drop for Cleanup<'_> { fn drop(&mut self) { let _ = self.0.delete_subkey_all(&self.1); } }
+        let _cleanup = Cleanup(&root, path.clone());
+        let (fixture, _) = root.create_subkey(&path).unwrap();
+        let (other, _) = fixture.create_subkey(r"Software\Classes\.zip\OpenWithProgids").unwrap();
+        other.set_value("Other.Archive", &"keep").unwrap();
+        let exe = std::path::Path::new(r"C:\Fixture\Long 解压.exe");
+        let all: Vec<String> = ARCHIVE_ASSOCIATION_EXTENSIONS.iter().map(|extension| extension.to_string()).collect();
+        write_archive_candidates(&fixture, exe, &all).unwrap();
+        let capabilities = fixture.open_subkey(r"Software\LongDecompress\Capabilities\FileAssociations").unwrap();
+        assert_eq!(capabilities.enum_values().count(), 21);
+        for extension in &all { assert!(capabilities.get_value::<String, _>(extension).unwrap().starts_with("LongDecompress.Archive.")); }
+        write_archive_candidates(&fixture, exe, &[]).unwrap();
+        assert_eq!(capabilities.enum_values().count(), 0);
+        assert_eq!(other.get_value::<String, _>("Other.Archive").unwrap(), "keep");
+        assert!(other.get_raw_value("LongDecompress.Archive.zip").is_err());
+        // An old explicit choice remains a valid launch target until replaced.
+        let command = fixture.open_subkey(r"Software\Classes\LongDecompress.Archive.zip\shell\open\command").unwrap();
+        assert_eq!(command.get_value::<String, _>("").unwrap(), r#""C:\Fixture\Long 解压.exe" --open-archive "%1""#);
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    #[ignore = "opens the real Windows Default apps page; does not change associations"]
+    fn manually_launch_real_default_apps_page() { open_default_apps_settings().unwrap(); }
 }

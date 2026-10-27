@@ -1,0 +1,29 @@
+{
+  "fixtureNativeIPC": true,
+  "checks": [
+    "760x520 body scroll reaches ZPAQ and confirmation notice while the fixed footer remains visible"
+  ],
+  "layouts": [
+    {
+      "scrollTop": 108,
+      "body": {
+        "top": 98.203125,
+        "bottom": 424.609375
+      },
+      "last": {
+        "top": 351.609375,
+        "bottom": 366.609375
+      },
+      "notice": {
+        "top": 391.703125,
+        "bottom": 412.09375
+      },
+      "save": {
+        "top": 434.609375,
+        "bottom": 471.796875
+      },
+      "height": 520
+    }
+  ],
+  "errors": []
+}

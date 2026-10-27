@@ -352,7 +352,7 @@ pub fn configure_archive_file_associations(extensions: Vec<String>) -> Result<()
 #[tauri::command]
 pub fn open_default_archive_apps() -> Result<(), String> {
     #[cfg(all(target_os = "windows", not(feature = "desktop-e2e")))]
-    { std::process::Command::new("explorer.exe").arg("ms-settings:defaultapps?registeredAppUser=LongDecompress").spawn().map(|_| ()).map_err(|error| error.to_string()) }
+    { crate::system_integration::file_association::open_default_apps_settings() }
     #[cfg(any(not(target_os = "windows"), feature = "desktop-e2e"))]
     { Err("请在 Windows 设置中选择默认应用".into()) }
 }
