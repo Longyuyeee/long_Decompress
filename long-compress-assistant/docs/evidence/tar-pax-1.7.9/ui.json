@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "fixtureNativeIPC": true,
+  "nativeReportsReplayed": true,
+  "checks": [
+    "global and local names, filename-first presentation, filtering, recovery result and partial history",
+    "wide/narrow dialog overflow and reachable footer"
+  ],
+  "layouts": [
+    {
+      "width": 1100,
+      "height": 700,
+      "overflow": 0,
+      "buttonTop": 602.21875,
+      "buttonBottom": 641
+    },
+    {
+      "width": 760,
+      "height": 520,
+      "overflow": 0,
+      "buttonTop": 433.015625,
+      "buttonBottom": 471.796875
+    }
+  ],
+  "errors": []
+}

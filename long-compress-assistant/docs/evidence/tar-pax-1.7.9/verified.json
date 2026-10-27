@@ -1,0 +1,128 @@
+{
+  "passed": true,
+  "producerOriginals": 2,
+  "constructedStateSpecimens": 1,
+  "stateSpecimenIsNotClaimedAsToolConsensus": true,
+  "checks": [
+    {
+      "kind": "full",
+      "case": "state",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-pax-179\\state.tar",
+      "files": 8,
+      "directories": 3,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "full",
+      "case": "state",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-pax-179\\state.tar.lzo",
+      "files": 8,
+      "directories": 3,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "full",
+      "case": "gnu",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-pax-179\\gnu.tar",
+      "files": 3,
+      "directories": 1,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "full",
+      "case": "gnu",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-pax-179\\gnu.tar.lzo",
+      "files": 3,
+      "directories": 1,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "full",
+      "case": "python",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-pax-179\\python.tar",
+      "files": 3,
+      "directories": 1,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "full",
+      "case": "python",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-pax-179\\python.tar.lzo",
+      "files": 3,
+      "directories": 1,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "state",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-pax-179\\prefix\\8b3da625-7340-4b4a-9d80-ab67cd8c2ef9\\state-tail.tar.lzo",
+      "files": 7,
+      "directories": 3,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "state",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-pax-179\\prefix\\8b3da625-7340-4b4a-9d80-ab67cd8c2ef9\\state-checksum.tar.lzo",
+      "files": 7,
+      "directories": 3,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "state",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-pax-179\\prefix\\8b3da625-7340-4b4a-9d80-ab67cd8c2ef9\\state-end.tar.lzo",
+      "files": 8,
+      "directories": 3,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "gnu",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-pax-179\\prefix\\8b3da625-7340-4b4a-9d80-ab67cd8c2ef9\\gnu-tail.tar.lzo",
+      "files": 2,
+      "directories": 1,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "gnu",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-pax-179\\prefix\\8b3da625-7340-4b4a-9d80-ab67cd8c2ef9\\gnu-checksum.tar.lzo",
+      "files": 2,
+      "directories": 1,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "gnu",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-pax-179\\prefix\\8b3da625-7340-4b4a-9d80-ab67cd8c2ef9\\gnu-end.tar.lzo",
+      "files": 3,
+      "directories": 1,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "python",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-pax-179\\prefix\\8b3da625-7340-4b4a-9d80-ab67cd8c2ef9\\python-tail.tar.lzo",
+      "files": 2,
+      "directories": 1,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "python",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-pax-179\\prefix\\8b3da625-7340-4b4a-9d80-ab67cd8c2ef9\\python-checksum.tar.lzo",
+      "files": 2,
+      "directories": 1,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "python",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-pax-179\\prefix\\8b3da625-7340-4b4a-9d80-ab67cd8c2ef9\\python-end.tar.lzo",
+      "files": 3,
+      "directories": 1,
+      "exactPathsAndHashes": true
+    }
+  ]
+}

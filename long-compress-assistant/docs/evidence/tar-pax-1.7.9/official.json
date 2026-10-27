@@ -1,0 +1,283 @@
+{
+  "passed": true,
+  "tarProducer": "tar (GNU tar) 1.35",
+  "lzopProducerSha256": "d9b46cf6fa44f4d657e5a3943d361dac24040d0acda37019b19ba285e52e2c53",
+  "lzopPackageSha256": "d4cd71272cd18ef2061ffe2a5a75dd11182ed9015c53a2283eeb41acb9a21370",
+  "sources": "Self-authored files. GNU/Python producer originals independently agree. The constructed state specimen uses Python TarInfo headers, explicit source payload hashes and POSIX field semantics; GNU/Python readers do not agree on its boundary semantics.",
+  "stateRecords": [
+    {
+      "offset": 0,
+      "type": "0",
+      "name": "prefix.txt"
+    },
+    {
+      "offset": 1024,
+      "type": "g",
+      "fields": {
+        "path": "global/first.bin",
+        "size": "700",
+        "mtime": "1700000179",
+        "uid": "179",
+        "comment": "persistent global state"
+      }
+    },
+    {
+      "offset": 2048,
+      "type": "0",
+      "name": "raw-first"
+    },
+    {
+      "offset": 3584,
+      "type": "x",
+      "fields": {
+        "path": "local/说明.txt",
+        "size": "19",
+        "mtime": "-1.25"
+      }
+    },
+    {
+      "offset": 4608,
+      "type": "0",
+      "name": "raw-local"
+    },
+    {
+      "offset": 5632,
+      "type": "g",
+      "fields": {
+        "path": "global/second.bin"
+      }
+    },
+    {
+      "offset": 6656,
+      "type": "0",
+      "name": "raw-second"
+    },
+    {
+      "offset": 8192,
+      "type": "g",
+      "fields": {
+        "path": "",
+        "size": "",
+        "mtime": ""
+      }
+    },
+    {
+      "offset": 9216,
+      "type": "0",
+      "name": "after.txt"
+    },
+    {
+      "offset": 10240,
+      "type": "g",
+      "fields": {
+        "path": "hidden-global",
+        "size": "700",
+        "mtime": "1700000180"
+      }
+    },
+    {
+      "offset": 11264,
+      "type": "x",
+      "fields": {
+        "path": "",
+        "size": "",
+        "mtime": ""
+      }
+    },
+    {
+      "offset": 12288,
+      "type": "0",
+      "name": "local-empty.txt"
+    },
+    {
+      "offset": 13312,
+      "type": "g",
+      "fields": {
+        "path": "global/again.bin"
+      }
+    },
+    {
+      "offset": 14336,
+      "type": "0",
+      "name": "raw-again"
+    },
+    {
+      "offset": 15872,
+      "type": "g",
+      "fields": {
+        "path": "",
+        "size": "",
+        "mtime": "",
+        "uid": "",
+        "comment": ""
+      }
+    },
+    {
+      "offset": 16896,
+      "type": "5",
+      "name": "empty"
+    },
+    {
+      "offset": 17408,
+      "type": "0",
+      "name": "late.bin"
+    }
+  ],
+  "cases": [
+    {
+      "name": "state",
+      "tar": "state.tar",
+      "archive": "state.tar.lzo",
+      "tarSha256": "de8de64a7ca495d7ec500a30da18c661c22069f32d4bdcb572da690fd4f4a08a",
+      "sha256": "4c1fa76bff16e0aed7c9db22c78f2596eb40438eeef80f4370b71468a4280f12",
+      "entries": [
+        {
+          "name": "prefix.txt",
+          "isDirectory": false,
+          "bytes": 30,
+          "sha256": "8212c2cc7b58809e5a693d42eda00f6fa374d14e4668c1077c25c976f739b1c2",
+          "mtime": 1700000000
+        },
+        {
+          "name": "global/first.bin",
+          "isDirectory": false,
+          "bytes": 700,
+          "sha256": "a345d1edcde57f129561bdec40ac233ebcf0f932739170a44b62b425dc926ef3",
+          "mtime": 1700000179
+        },
+        {
+          "name": "local/说明.txt",
+          "isDirectory": false,
+          "bytes": 19,
+          "sha256": "03b9768b1e5e7fac280805cd8a965908d1cc7bb6d23dff438b6978646e0775de",
+          "mtime": -1.25
+        },
+        {
+          "name": "global/second.bin",
+          "isDirectory": false,
+          "bytes": 700,
+          "sha256": "ad5fef7b54c6b51449ce0a21aee6561cd46d5825cc27fcc0d85d98b94b276ed8",
+          "mtime": 1700000179
+        },
+        {
+          "name": "after.txt",
+          "isDirectory": false,
+          "bytes": 36,
+          "sha256": "1abb9b060b992e4c3cd5eabd3790bbeafafb577a9bf4aca8fb0e4f28df1e9e92",
+          "mtime": 1700000000
+        },
+        {
+          "name": "local-empty.txt",
+          "isDirectory": false,
+          "bytes": 38,
+          "sha256": "d437e19f6d47e2eb53fcdd17a298e25da6ff347d58b110a54cc9637715dbf542",
+          "mtime": 1700000000
+        },
+        {
+          "name": "global/again.bin",
+          "isDirectory": false,
+          "bytes": 700,
+          "sha256": "18a5a633ca6e374bb109452186ba3f4cb99363e69d0b2f23f2bbbeae2d694f9d",
+          "mtime": 1700000180
+        },
+        {
+          "name": "empty",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "mtime": 1700000000
+        },
+        {
+          "name": "late.bin",
+          "isDirectory": false,
+          "bytes": 1100179,
+          "sha256": "b8adf095ccc5d28ee3b53d684f5a4b5c62e869a343333e30ddf49dd471a8df1c",
+          "mtime": 1700000000
+        }
+      ],
+      "gnuListingAndContent": false,
+      "pythonReaderAgrees": false,
+      "constructedStateBoundary": true
+    },
+    {
+      "name": "gnu",
+      "tar": "gnu.tar",
+      "archive": "gnu.tar.lzo",
+      "tarSha256": "d89f6eaa607da8eca9b0c52ffd7d654017d0a9bc6019e8b6d1e7516c14210408",
+      "sha256": "8f0f1a32f2159db0c14131d0140385c2ba5f7dbefb8d1eb0b7c5421b43409ead",
+      "entries": [
+        {
+          "name": "prefix.txt",
+          "isDirectory": false,
+          "bytes": 30,
+          "sha256": "8212c2cc7b58809e5a693d42eda00f6fa374d14e4668c1077c25c976f739b1c2",
+          "mtime": 1700000179
+        },
+        {
+          "name": "empty",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "mtime": 1700000179
+        },
+        {
+          "name": "说明.txt",
+          "isDirectory": false,
+          "bytes": 34,
+          "sha256": "27fe94f96e35eddbc657e878d2a51b44e853ca85e2072e9ce4d9df21019d3f12",
+          "mtime": 1700000179
+        },
+        {
+          "name": "late.bin",
+          "isDirectory": false,
+          "bytes": 1100179,
+          "sha256": "b8adf095ccc5d28ee3b53d684f5a4b5c62e869a343333e30ddf49dd471a8df1c",
+          "mtime": 1700000179
+        }
+      ],
+      "gnuListingAndContent": true,
+      "pythonReaderAgrees": true,
+      "constructedStateBoundary": false
+    },
+    {
+      "name": "python",
+      "tar": "python.tar",
+      "archive": "python.tar.lzo",
+      "tarSha256": "bd2eb64be9bb614b6d6044e980365c85e68cf3dd605f428d8cd4b9b1a9254829",
+      "sha256": "026ebbfbc0da90e40e80ceecf1391aed4890dfd38e12521d6af6a6bea238bf53",
+      "entries": [
+        {
+          "name": "prefix.txt",
+          "isDirectory": false,
+          "bytes": 30,
+          "sha256": "8212c2cc7b58809e5a693d42eda00f6fa374d14e4668c1077c25c976f739b1c2",
+          "mtime": 1700000179.0
+        },
+        {
+          "name": "empty",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "mtime": 1700000179.0
+        },
+        {
+          "name": "说明.txt",
+          "isDirectory": false,
+          "bytes": 34,
+          "sha256": "27fe94f96e35eddbc657e878d2a51b44e853ca85e2072e9ce4d9df21019d3f12",
+          "mtime": 1700000179.0
+        },
+        {
+          "name": "late.bin",
+          "isDirectory": false,
+          "bytes": 1100179,
+          "sha256": "b8adf095ccc5d28ee3b53d684f5a4b5c62e869a343333e30ddf49dd471a8df1c",
+          "mtime": 1700000179.0
+        }
+      ],
+      "gnuListingAndContent": true,
+      "pythonReaderAgrees": true,
+      "constructedStateBoundary": false
+    }
+  ]
+}

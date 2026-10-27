@@ -41,7 +41,7 @@ pub(crate) fn extract_inner<R: ExtractionRuntime>(runtime: &R, window: Option<&W
     };
     let file_filter = extraction_transaction::compile_file_filter(options.file_filter.as_deref());
     let reader = CheckedReader { runtime, reader, output, read: 0 };
-    let mut archive = tar::Archive::new(reader);
+    let mut archive = tar::Archive::new(crate::services::tar_pax::Reader::new(reader));
     let mut expanded_bytes = 0u64;
     let mut buffer = vec![0u8; runtime.copy_buffer_size().clamp(64 * 1024, 1024 * 1024)];
 
@@ -75,7 +75,7 @@ pub(crate) fn extract_inner<R: ExtractionRuntime>(runtime: &R, window: Option<&W
             if let Some(parent) = target.parent() {
                 std::fs::create_dir_all(parent)?;
             }
-            let modified = entry.header().mtime().ok();
+            let modified = entry.modified();
             let mut writer = std::fs::File::create(&target)?;
             let mut copied = 0u64;
             loop {
@@ -89,7 +89,7 @@ pub(crate) fn extract_inner<R: ExtractionRuntime>(runtime: &R, window: Option<&W
                 }
             }
             if options.preserve_timestamps {
-                if let Some(time) = modified.and_then(|seconds| std::time::UNIX_EPOCH.checked_add(std::time::Duration::from_secs(seconds))) {
+                if let Some(time) = modified {
                     writer.set_modified(time)?;
                 }
             }

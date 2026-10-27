@@ -1,0 +1,234 @@
+{
+  "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-pax-179\\prefix\\8b3da625-7340-4b4a-9d80-ab67cd8c2ef9\\state-tail.tar.lzo",
+  "report": {
+    "format": "TAR.LZO",
+    "revision": "50863e4ef1abb6529f8ef45376cc7cd96f9bb01b0fe39444d38c131527501a2d",
+    "entries": [
+      {
+        "id": 0,
+        "name": "prefix.txt",
+        "bytes": 30,
+        "sha256": "8212c2cc7b58809e5a693d42eda00f6fa374d14e4668c1077c25c976f739b1c2",
+        "isDirectory": false
+      },
+      {
+        "id": 1,
+        "name": "global/first.bin",
+        "bytes": 700,
+        "sha256": "a345d1edcde57f129561bdec40ac233ebcf0f932739170a44b62b425dc926ef3",
+        "isDirectory": false
+      },
+      {
+        "id": 2,
+        "name": "local/说明.txt",
+        "bytes": 19,
+        "sha256": "03b9768b1e5e7fac280805cd8a965908d1cc7bb6d23dff438b6978646e0775de",
+        "isDirectory": false
+      },
+      {
+        "id": 3,
+        "name": "global/second.bin",
+        "bytes": 700,
+        "sha256": "ad5fef7b54c6b51449ce0a21aee6561cd46d5825cc27fcc0d85d98b94b276ed8",
+        "isDirectory": false
+      },
+      {
+        "id": 4,
+        "name": "after.txt",
+        "bytes": 36,
+        "sha256": "1abb9b060b992e4c3cd5eabd3790bbeafafb577a9bf4aca8fb0e4f28df1e9e92",
+        "isDirectory": false
+      },
+      {
+        "id": 5,
+        "name": "local-empty.txt",
+        "bytes": 38,
+        "sha256": "d437e19f6d47e2eb53fcdd17a298e25da6ff347d58b110a54cc9637715dbf542",
+        "isDirectory": false
+      },
+      {
+        "id": 6,
+        "name": "global/again.bin",
+        "bytes": 700,
+        "sha256": "18a5a633ca6e374bb109452186ba3f4cb99363e69d0b2f23f2bbbeae2d694f9d",
+        "isDirectory": false
+      },
+      {
+        "id": 7,
+        "name": "empty",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "isDirectory": true
+      }
+    ],
+    "complete": false,
+    "stopReason": "TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件",
+    "stoppedMember": "late.bin",
+    "stoppedOffset": 17408,
+    "availableVolumes": 1,
+    "ignoredVolumes": 0
+  },
+  "result": {
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-pax-179\\prefix\\8b3da625-7340-4b4a-9d80-ab67cd8c2ef9\\state-tail.tar.lzo.部分取回-61eb3acf",
+    "recoveredFiles": 7,
+    "recoveredDirectories": 1,
+    "recoveredBytes": 2223,
+    "entries": [
+      {
+        "id": 0,
+        "name": "prefix.txt",
+        "bytes": 30,
+        "sha256": "8212c2cc7b58809e5a693d42eda00f6fa374d14e4668c1077c25c976f739b1c2",
+        "isDirectory": false
+      },
+      {
+        "id": 1,
+        "name": "global/first.bin",
+        "bytes": 700,
+        "sha256": "a345d1edcde57f129561bdec40ac233ebcf0f932739170a44b62b425dc926ef3",
+        "isDirectory": false
+      },
+      {
+        "id": 2,
+        "name": "local/说明.txt",
+        "bytes": 19,
+        "sha256": "03b9768b1e5e7fac280805cd8a965908d1cc7bb6d23dff438b6978646e0775de",
+        "isDirectory": false
+      },
+      {
+        "id": 3,
+        "name": "global/second.bin",
+        "bytes": 700,
+        "sha256": "ad5fef7b54c6b51449ce0a21aee6561cd46d5825cc27fcc0d85d98b94b276ed8",
+        "isDirectory": false
+      },
+      {
+        "id": 4,
+        "name": "after.txt",
+        "bytes": 36,
+        "sha256": "1abb9b060b992e4c3cd5eabd3790bbeafafb577a9bf4aca8fb0e4f28df1e9e92",
+        "isDirectory": false
+      },
+      {
+        "id": 5,
+        "name": "local-empty.txt",
+        "bytes": 38,
+        "sha256": "d437e19f6d47e2eb53fcdd17a298e25da6ff347d58b110a54cc9637715dbf542",
+        "isDirectory": false
+      },
+      {
+        "id": 6,
+        "name": "global/again.bin",
+        "bytes": 700,
+        "sha256": "18a5a633ca6e374bb109452186ba3f4cb99363e69d0b2f23f2bbbeae2d694f9d",
+        "isDirectory": false
+      },
+      {
+        "id": 7,
+        "name": "empty",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "isDirectory": true
+      }
+    ],
+    "stopReason": "TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件",
+    "partial": true
+  },
+  "diagnosis": {
+    "lzopPrefix": {
+      "format": "TAR.LZO",
+      "revision": "50863e4ef1abb6529f8ef45376cc7cd96f9bb01b0fe39444d38c131527501a2d",
+      "entries": [
+        {
+          "id": 0,
+          "name": "prefix.txt",
+          "bytes": 30,
+          "sha256": "8212c2cc7b58809e5a693d42eda00f6fa374d14e4668c1077c25c976f739b1c2",
+          "isDirectory": false
+        },
+        {
+          "id": 1,
+          "name": "global/first.bin",
+          "bytes": 700,
+          "sha256": "a345d1edcde57f129561bdec40ac233ebcf0f932739170a44b62b425dc926ef3",
+          "isDirectory": false
+        },
+        {
+          "id": 2,
+          "name": "local/说明.txt",
+          "bytes": 19,
+          "sha256": "03b9768b1e5e7fac280805cd8a965908d1cc7bb6d23dff438b6978646e0775de",
+          "isDirectory": false
+        },
+        {
+          "id": 3,
+          "name": "global/second.bin",
+          "bytes": 700,
+          "sha256": "ad5fef7b54c6b51449ce0a21aee6561cd46d5825cc27fcc0d85d98b94b276ed8",
+          "isDirectory": false
+        },
+        {
+          "id": 4,
+          "name": "after.txt",
+          "bytes": 36,
+          "sha256": "1abb9b060b992e4c3cd5eabd3790bbeafafb577a9bf4aca8fb0e4f28df1e9e92",
+          "isDirectory": false
+        },
+        {
+          "id": 5,
+          "name": "local-empty.txt",
+          "bytes": 38,
+          "sha256": "d437e19f6d47e2eb53fcdd17a298e25da6ff347d58b110a54cc9637715dbf542",
+          "isDirectory": false
+        },
+        {
+          "id": 6,
+          "name": "global/again.bin",
+          "bytes": 700,
+          "sha256": "18a5a633ca6e374bb109452186ba3f4cb99363e69d0b2f23f2bbbeae2d694f9d",
+          "isDirectory": false
+        },
+        {
+          "id": 7,
+          "name": "empty",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true
+        }
+      ],
+      "complete": false,
+      "stopReason": "TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件",
+      "stoppedMember": "late.bin",
+      "stoppedOffset": 17408,
+      "availableVolumes": 1,
+      "ignoredVolumes": 0
+    },
+    "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-pax-179\\prefix\\8b3da625-7340-4b4a-9d80-ab67cd8c2ef9\\state-tail.tar.lzo",
+    "fileSize": 704611,
+    "actualFormat": "TAR.LZO",
+    "status": "partial_recovery",
+    "encrypted": false,
+    "splitArchive": false,
+    "volumesFound": 1,
+    "missingVolumes": [],
+    "totalFiles": 7,
+    "totalDirectories": 3,
+    "totalUncompressedSize": 2223,
+    "totalUncompressedSizeKnown": false,
+    "integrityTested": false,
+    "canRepair": false,
+    "recoverability": "lzop_prefix",
+    "issues": [
+      {
+        "code": "lzop_prefix",
+        "severity": "warning",
+        "title": "可选择部分取回 8 个完整条目",
+        "detail": "TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件。仅检查从首卷起的连续前缀，后续清单未知；原件保持不变。"
+      }
+    ],
+    "evidence": [
+      "Archive size: 704611 bytes",
+      "已解码并校验 7 个文件、3 个目录；TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件"
+    ]
+  }
+}

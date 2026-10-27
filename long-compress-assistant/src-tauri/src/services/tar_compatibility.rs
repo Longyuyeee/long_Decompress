@@ -1,6 +1,6 @@
 //! Shared logical view of existing tar::Entry, including GNU PAX sparse files.
 //! Layouts follow GNU tar's public PAX 0.0/0.1/1.0 specification. No external
-//! extraction fallback and no change to the tar crate or archive dependencies.
+//! extraction fallback. Global PAX state is normalised by the shared reader.
 use std::io::{self, Read};
 use std::path::{Component, Path, PathBuf};
 
@@ -179,6 +179,7 @@ pub(crate) struct LogicalEntry<'a, R: Read> {
     blocks: Option<Blocks>,
     block: usize,
     position: u64,
+    modified: Option<std::time::SystemTime>,
 }
 impl<'a, R: Read> LogicalEntry<'a, R> {
     pub(crate) fn new(mut entry: tar::Entry<'a, R>) -> io::Result<Self> {
@@ -196,6 +197,13 @@ impl<'a, R: Read> LogicalEntry<'a, R> {
                 pax.push((e.key_bytes().to_vec(), e.value_bytes().to_vec()));
             }
         }
+        let modified = if let Some(value) = field(&pax, b"mtime") {
+            let bad_time = || io::Error::new(io::ErrorKind::InvalidData, "[archive-inspection:damaged] TAR PAX mtime 无效或超出范围");
+            let seconds = std::str::from_utf8(value).ok().and_then(|v| v.parse::<f64>().ok())
+                .filter(|v| v.is_finite() && v.abs() <= 1e12).ok_or_else(bad_time)?;
+            let duration = std::time::Duration::try_from_secs_f64(seconds.abs()).map_err(|_| bad_time())?;
+            if seconds < 0.0 { std::time::UNIX_EPOCH.checked_sub(duration) } else { std::time::UNIX_EPOCH.checked_add(duration) }
+        } else { entry.header().mtime().ok().and_then(|v| std::time::UNIX_EPOCH.checked_add(std::time::Duration::from_secs(v))) };
         let sparse = pax.iter().any(|(k, _)| k.starts_with(b"GNU.sparse."));
         if field(&pax, b"SCHILY.realsize").is_some()
             || field(&pax, b"SCHILY.filetype") == Some(&b"sparse"[..])
@@ -321,6 +329,7 @@ impl<'a, R: Read> LogicalEntry<'a, R> {
             blocks,
             block: 0,
             position: 0,
+            modified,
         })
     }
     pub(crate) fn path(&self) -> &Path {
@@ -335,6 +344,7 @@ impl<'a, R: Read> LogicalEntry<'a, R> {
     pub(crate) fn header(&self) -> &tar::Header {
         self.entry.header()
     }
+    pub(crate) fn modified(&self) -> Option<std::time::SystemTime> { self.modified }
     pub(crate) fn is_file(&self) -> bool {
         let t = self.header().entry_type();
         t.is_file() || t.is_gnu_sparse() || t.is_contiguous()
@@ -397,10 +407,10 @@ pub(crate) fn plan(
                 self.reader.read(b)
             }
         }
-        let mut archive = tar::Archive::new(Cancellable {
+        let mut archive = tar::Archive::new(super::tar_pax::Reader::new(Cancellable {
             reader,
             check: &check,
-        });
+        }));
         let filter =
             super::extraction_transaction::compile_file_filter(options.file_filter.as_deref());
         let mut stats = Plan {

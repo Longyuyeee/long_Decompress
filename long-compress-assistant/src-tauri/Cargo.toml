@@ -1,6 +1,6 @@
 [package]
 name = "long-compress-assistant"
-version = "1.7.8"
+version = "1.7.9"
 description = "智能压缩解压助手"
 authors = ["Longyuyeee"]
 license = "MIT"
@@ -53,7 +53,7 @@ unrar = "0.5"
 memmap2 = "0.9"
 lazy_static = "1.4"
 flate2 = "1.0"
-tar = "0.4"
+tar = "0.4.46"
 dashmap = "5.5"
 crossbeam = "0.8"
 wildmatch = "2.3"

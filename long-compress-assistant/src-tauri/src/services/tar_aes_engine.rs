@@ -263,7 +263,7 @@ impl TarAesEngine {
     ) -> Result<()> {
         std::fs::create_dir_all(output_dir)
             .with_context(|| format!("创建输出目录失败: {:?}", output_dir))?;
-        let mut archive = tar::Archive::new(reader);
+        let mut archive = tar::Archive::new(super::tar_pax::Reader::new(reader));
         for entry in archive.entries().context("读取 TAR 条目失败")? {
             check_cancellation()?;
             let mut entry = entry.context("读取 TAR 条目失败")?;

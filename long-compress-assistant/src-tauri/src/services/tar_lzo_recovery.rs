@@ -10,7 +10,6 @@ use crate::services::{
 use anyhow::{Context, Result};
 use sha2::{Digest, Sha256};
 use std::{
-    collections::HashSet,
     fs::{self, OpenOptions},
     io::{self, Read, Seek, Write},
     path::Path,
@@ -54,60 +53,14 @@ fn padding(reader: &mut impl Read, size: u64) -> Result<()> {
     anyhow::ensure!(bytes[..count].iter().all(|b| *b == 0), "TAR 条目填充无效");
     Ok(())
 }
-#[derive(Default)]
-struct Pax {
-    path: Option<String>,
-    size: Option<u64>,
-}
-fn pax(bytes: &[u8]) -> Result<Pax> {
-    let mut result = Pax::default();
-    let mut seen = HashSet::new();
-    let mut at = 0;
-    while at < bytes.len() {
-        let space = bytes[at..]
-            .iter()
-            .position(|b| *b == b' ')
-            .context("PAX 记录长度不完整")?
-            + at;
-        let digits = &bytes[at..space];
-        anyhow::ensure!(
-            !digits.is_empty() && digits.iter().all(u8::is_ascii_digit),
-            "PAX 记录长度无效"
-        );
-        let length: usize = std::str::from_utf8(digits)?.parse()?;
-        let end = at.checked_add(length).context("PAX 长度超出范围")?;
-        anyhow::ensure!(
-            end > space + 2 && end <= bytes.len() && bytes[end - 1] == b'\n',
-            "PAX 记录被截断"
-        );
-        let pair = &bytes[space + 1..end - 1];
-        let eq = pair
-            .iter()
-            .position(|b| *b == b'=')
-            .context("PAX 记录无效")?;
-        let key = std::str::from_utf8(&pair[..eq])?;
-        let value = std::str::from_utf8(&pair[eq + 1..]).context("PAX 路径或元数据不是 UTF-8")?;
-        anyhow::ensure!(
-            seen.insert(key.to_owned()) && !value.contains('\0'),
-            "PAX 重复或无效元数据"
-        );
-        match key {
-            "path" => { anyhow::ensure!(!value.is_empty(), "PAX 路径为空"); result.path=Some(value.to_owned()); }
-            "size" => { anyhow::ensure!(!value.is_empty() && value.bytes().all(|b|b.is_ascii_digit()),"PAX 大小无效");result.size=Some(value.parse()?); }
-            "mtime"|"atime"|"ctime"|"uid"|"gid"|"uname"|"gname"|"comment" => {},
-            _ => anyhow::bail!("[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持 PAX 属性 {key}，已停止在此处"),
-        }
-        at = end;
-    }
-    Ok(result)
-}
 fn parse<F: FnMut(u64, u64)>(
     reader: &mut Verified<'_, F>,
     report: &mut Report,
     encoding: Option<ZipPasswordEncoding>,
 ) -> Result<()> {
     let mut names = super::names::Names::default();
-    let mut pending: Option<Pax> = None;
+    let mut pending: Option<crate::services::tar_pax::Fields> = None;
+    let mut global = crate::services::tar_pax::State::default();
     let mut long_name: Option<String> = None;
     let mut records = 0usize;
     loop {
@@ -161,12 +114,12 @@ fn parse<F: FnMut(u64, u64)>(
             .sum::<u32>();
         anyhow::ensure!(header.cksum()? == sum, "TAR 文件头校验失败");
         let kind = header.entry_type();
-        anyhow::ensure!(kind.is_pax_local_extensions() || kind.is_gnu_longname() || kind.is_file() || kind.is_dir(), "[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持此 TAR 条目类型（{}），已停止在此处", kind.as_byte());
+        anyhow::ensure!(kind.is_pax_global_extensions() || kind.is_pax_local_extensions() || kind.is_gnu_longname() || kind.is_file() || kind.is_dir(), "[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持此 TAR 条目类型（{}），已停止在此处", kind.as_byte());
         let size = header.size()?;
         anyhow::ensure!(size <= MAX_EXTRACTED_BYTES, "TAR 条目大小超过本次支持范围");
-        if kind.is_pax_local_extensions() || kind.is_gnu_longname() {
+        if kind.is_pax_global_extensions() || kind.is_pax_local_extensions() || kind.is_gnu_longname() {
             anyhow::ensure!(
-                pending.is_none() && long_name.is_none(),
+                kind.is_pax_global_extensions() || (pending.is_none() && long_name.is_none()),
                 "[archive-inspection:unsupported] TAR 名称元数据重复或 GNU/PAX 混合叠加，已停止在此处"
             );
             anyhow::ensure!(size <= 1024 * 1024, "TAR 名称元数据超过本次支持范围");
@@ -184,7 +137,10 @@ fn parse<F: FnMut(u64, u64)>(
                 long_name = Some(super::names::decode(&bytes[..end], 0, encoding)?
                     .context("[lzop-encoding] GNU 长名称不是 UTF-8，请选择名称编码后重新检查")?);
             } else {
-                pending = Some(pax(&bytes)?);
+                let fields = crate::services::tar_pax::parse(&bytes)?;
+                crate::services::tar_pax::common(&fields)?;
+                if kind.is_pax_global_extensions() { global.update(fields)?; }
+                else { pending = Some(fields); }
             }
             continue;
         }
@@ -196,13 +152,13 @@ fn parse<F: FnMut(u64, u64)>(
                 "[archive-inspection:unsupported] TAR 稀疏条目暂不支持部分取回"
             );
         }
-        let meta = pending.take().unwrap_or_default();
-        let size = meta.size.unwrap_or(size);
+        let meta = global.effective(&pending.take().unwrap_or_default());
+        let size = crate::services::tar_pax::size(&meta)?.unwrap_or(size);
         anyhow::ensure!(
             size <= MAX_EXTRACTED_BYTES && (!kind.is_dir() || size == 0),
             "TAR 条目大小无效"
         );
-        let decoded = if let Some(path) = long_name.take().or(meta.path) {
+        let decoded = if let Some(path) = long_name.take().or_else(|| crate::services::tar_pax::path(&meta).map(str::to_owned)) {
             path
         } else {
             super::names::decode(&header.path_bytes(), 0, encoding)?
