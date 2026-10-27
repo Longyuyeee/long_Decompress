@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "headless": true,
+  "nativeValueReplay": true,
+  "realDesktopIPC": false,
+  "checks": [
+    "folded time details, exact negative fraction, range/precision warnings separate from content success",
+    "wide/narrow result layout and visible footer",
+    "persisted time counts in original history details"
+  ],
+  "layouts": [
+    {
+      "width": 1100,
+      "height": 700,
+      "overflow": 0,
+      "buttonBottom": 640.4375
+    },
+    {
+      "width": 760,
+      "height": 520,
+      "overflow": 0,
+      "buttonBottom": 471.796875
+    }
+  ],
+  "errors": []
+}

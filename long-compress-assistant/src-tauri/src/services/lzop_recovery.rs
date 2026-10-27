@@ -24,6 +24,10 @@ pub struct Entry {
     pub bytes: u64,
     pub sha256: String,
     pub is_directory: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub modified_time: Option<crate::services::tar_recovery_time::ModificationTime>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub time_warning: Option<String>,
     #[serde(skip)]
     pub(super) offset: u64,
 }
@@ -50,6 +54,8 @@ pub struct Outcome {
     pub entries: Vec<Entry>,
     pub stop_reason: String,
     pub partial: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub time_preservation: Option<crate::services::tar_recovery_time::TimePreservation>,
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -59,6 +65,8 @@ pub(crate) struct HistorySelection {
     pub recovered_directories: usize,
     pub stop_reason: String,
     pub revision: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub time_preservation: Option<crate::services::tar_recovery_time::TimePreservation>,
 }
 fn is_zero(n: &usize) -> bool {
     *n == 0
@@ -67,6 +75,7 @@ impl HistorySelection {
     pub fn validate(&self) -> Result<()> {
         anyhow::ensure!(
             self.recovered_files <= 100_000
+                && self.time_preservation.as_ref().map_or(true, |t| t.valid_for(self.recovered_files))
                 && self.recovered_directories <= 100_000
                 && self.stop_reason.len() <= 32768
                 && self.revision.len() == 64
@@ -288,6 +297,8 @@ fn scan_source(
             bytes,
             sha256: format!("{:x}", h.finalize()),
             is_directory: false,
+            modified_time: None,
+            time_warning: None,
             offset,
         });
         input = reader.input;
@@ -364,7 +375,7 @@ pub(crate) fn recover(
             && ids.iter().all(|n| *n < report.entries.len()),
         "请选择已通过检查的完整成员"
     );
-    let wanted: Vec<_> = report
+    let mut wanted: Vec<_> = report
         .entries
         .iter()
         .filter(|e| ids.contains(&e.id))
@@ -375,7 +386,7 @@ pub(crate) fn recover(
     fs::create_dir(&stage.0)?;
     let mut done = 0u64;
     if is_tar(path) {
-        super::tar_recovery::copy_selected(&src, &stage.0, &wanted, cancelled, &mut |bytes| {
+        super::tar_recovery::copy_selected(&src, &stage.0, &mut wanted, cancelled, &mut |bytes| {
             done = bytes;
             progress("recovering", done, total)
         })?;
@@ -447,6 +458,10 @@ pub(crate) fn recover(
         fs::rename(&stage.0, &destination)?;
     }
     Ok(Outcome {
+        time_preservation: is_tar(path).then(|| crate::services::tar_recovery_time::TimePreservation {
+            preserved_files: wanted.iter().filter(|e| !e.is_directory && e.time_warning.is_none()).count(),
+            unpreserved_files: wanted.iter().filter(|e| !e.is_directory && e.time_warning.is_some()).count(),
+        }),
         output_directory: destination.to_string_lossy().into_owned(),
         recovered_files: wanted.iter().filter(|e| !e.is_directory).count(),
         recovered_directories: wanted.iter().filter(|e| e.is_directory).count(),

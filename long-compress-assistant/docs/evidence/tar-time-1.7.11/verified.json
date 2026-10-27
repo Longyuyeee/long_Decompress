@@ -1,0 +1,32 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "case": "gnu",
+      "files": 7,
+      "preservedFiles": 7,
+      "warnings": [],
+      "exactContentAndPreservedTimes": true
+    },
+    {
+      "case": "pax",
+      "files": 7,
+      "preservedFiles": 5,
+      "warnings": [
+        {
+          "name": "precision.txt",
+          "expectedNanoseconds": 1700001712123456789,
+          "actualNanoseconds": 1700001712123456700,
+          "warning": "保存位置的时间精度或范围有限，原修改时间未完整保留，文件内容已取回"
+        },
+        {
+          "name": "outside-windows.txt",
+          "expectedNanoseconds": -12000000000000000000,
+          "actualNanoseconds": 1793084622260219700,
+          "warning": "原修改时间早于 Windows 支持范围，文件内容已取回"
+        }
+      ],
+      "exactContentAndPreservedTimes": true
+    }
+  ]
+}

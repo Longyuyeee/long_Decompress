@@ -198,6 +198,13 @@ fn parse<F: FnMut(u64, u64)>(
         }
         padding(reader, size)?;
         report.entries.push(Entry {
+            modified_time: if kind.is_dir() { None } else {
+                use crate::services::tar_recovery_time::ModificationTime;
+                if let Some((_, value)) = meta.iter().find(|(k, _)| k == "mtime") {
+                    ModificationTime::pax(value)
+                } else { ModificationTime::header(header) }
+            },
+            time_warning: None,
             id: report.entries.len(),
             name,
             bytes: size,
@@ -263,7 +270,7 @@ pub(super) fn scan_source(
 pub(super) fn copy_selected(
     src: &Source,
     stage: &Path,
-    entries: &[Entry],
+    entries: &mut [Entry],
     cancelled: &AtomicBool,
     progress: &mut impl FnMut(u64),
 ) -> Result<()> {
@@ -319,6 +326,11 @@ pub(super) fn copy_selected(
             "TAR 文件在取回期间已变化，请重新检查"
         );
         output.flush()?;
+        check(cancelled)?;
+        entry.time_warning = match &entry.modified_time {
+            Some(time) => time.apply(&output).err().map(str::to_owned),
+            None => Some("原修改时间缺失，或其范围、精度暂不支持；文件内容已取回".into()),
+        };
     }
     Ok(())
 }
