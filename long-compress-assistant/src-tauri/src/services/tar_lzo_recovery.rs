@@ -198,7 +198,7 @@ fn parse<F: FnMut(u64, u64)>(
         }
         padding(reader, size)?;
         report.entries.push(Entry {
-            modified_time: if kind.is_dir() { None } else {
+            modified_time: {
                 use crate::services::tar_recovery_time::ModificationTime;
                 if let Some((_, value)) = meta.iter().find(|(k, _)| k == "mtime") {
                     ModificationTime::pax(value)
@@ -284,7 +284,7 @@ pub(super) fn copy_selected(
     };
     let mut done = 0;
     let mut buf = [0; 65536];
-    for entry in entries {
+    for entry in entries.iter_mut() {
         check(cancelled)?;
         anyhow::ensure!(entry.offset >= reader.position, "TAR 取回位置无效");
         while reader.position < entry.offset {
@@ -331,6 +331,23 @@ pub(super) fn copy_selected(
             Some(time) => time.apply(&output).err().map(str::to_owned),
             None => Some("原修改时间缺失，或其范围、精度暂不支持；文件内容已取回".into()),
         };
+    }
+    // Child creation changes parent mtimes. Apply only explicitly selected
+    // directory entries after all contents exist, deepest directories first.
+    let mut directories: Vec<_> = entries.iter().enumerate().filter(|(_, e)| e.is_directory)
+        .map(|(index, e)| (index, Path::new(&e.name).components().count())).collect();
+    directories.sort_by_key(|(_, depth)| std::cmp::Reverse(*depth));
+    let directory_count = directories.len();
+    for (step, (index, _)) in directories.into_iter().enumerate() {
+        check(cancelled)?;
+        let entry = &mut entries[index];
+        entry.time_warning = match &entry.modified_time {
+            Some(time) => time.apply_directory(&stage.join(&entry.name)).err().map(str::to_owned),
+            None => Some("目录原修改时间缺失，或其范围、精度暂不支持；已取回内容仍保留".into()),
+        };
+        // These updates carry the same completed byte count. Batch them for
+        // large directory sets, while cancellation remains checked per item.
+        if step == 0 || (step + 1) % 64 == 0 || step + 1 == directory_count { progress(done); }
     }
     Ok(())
 }

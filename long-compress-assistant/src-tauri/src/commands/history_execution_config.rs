@@ -2,6 +2,16 @@ use serde_json::{Map, Value};
 
 #[cfg(test)]
 #[test]
+fn directory1712_history_retains_optional_directory_counts_without_inventing_old_time_results(){
+    let old=serde_json::json!({"schemaVersion":1,"kind":"archive-recovery","outputDirectory":"D:/out","recoveredFiles":0,"recoveredDirectories":2,"stopReason":"tail","revision":"a".repeat(64),"timePreservation":{"preservedFiles":0,"unpreservedFiles":0}});
+    let clean=sanitize(old.clone(),"decompression","archive").unwrap();assert!(clean["timePreservation"].get("preservedDirectories").is_none());
+    let mut current=old.clone();current["timePreservation"]["preservedDirectories"]=1.into();current["timePreservation"]["unpreservedDirectories"]=1.into();let clean=sanitize(current.clone(),"decompression","archive").unwrap();assert_eq!(clean["timePreservation"],current["timePreservation"]);
+    for(preserved,unpreserved)in[(3,0),(-1,3),(1,0)]{let mut bad=current.clone();bad["timePreservation"]["preservedDirectories"]=preserved.into();bad["timePreservation"]["unpreservedDirectories"]=unpreserved.into();assert!(sanitize(bad,"decompression","archive").is_none());}
+    current["timePreservation"].as_object_mut().unwrap().remove("unpreservedDirectories");assert!(sanitize(current,"decompression","archive").is_none());
+}
+
+#[cfg(test)]
+#[test]
 fn time1711_history_keeps_optional_time_totals_and_rejects_impossible_counts() {
     let old=serde_json::json!({"schemaVersion":1,"kind":"archive-recovery","outputDirectory":"D:/out","recoveredFiles":2,"stopReason":"tail","revision":"a".repeat(64)});
     assert!(sanitize(old.clone(),"decompression","archive").unwrap().get("timePreservation").is_none());

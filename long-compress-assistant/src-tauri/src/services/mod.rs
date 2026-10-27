@@ -319,3 +319,5 @@ mod tar_mixed_1710_tests;
 pub(crate) mod tar_recovery_time;
 #[cfg(test)]
 mod tar_time_1711_tests;
+#[cfg(test)]
+mod tar_directory_time_1712_tests;

@@ -1,0 +1,34 @@
+{
+  "passed": true,
+  "nativeValueReplay": true,
+  "realDesktopIPC": false,
+  "checks": [
+    "full and directory-only results keep details folded, show separate file/directory counts and save history",
+    "wide/narrow layout, scrollable warnings and visible footer",
+    "original history details include directory-only times"
+  ],
+  "layouts": [
+    {
+      "mode": "full",
+      "width": 1100,
+      "height": 700,
+      "overflow": 0,
+      "footerBottom": 640.4375
+    },
+    {
+      "mode": "full",
+      "width": 760,
+      "height": 520,
+      "overflow": 0,
+      "footerBottom": 471.796875
+    },
+    {
+      "mode": "directory-only",
+      "width": 760,
+      "height": 520,
+      "overflow": 0,
+      "footerBottom": 471.796875
+    }
+  ],
+  "errors": []
+}
