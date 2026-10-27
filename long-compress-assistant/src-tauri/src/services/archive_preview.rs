@@ -162,7 +162,7 @@ fn read_zip_text_entry(path: &Path, entry_path: &str, password: Option<&str>, en
 fn read_tar_entry<R: Read>(reader: R, entry_path: &str,control:&ImageControl) -> Result<Vec<u8>> {
     let scanning=std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true));
     let mut reader = ScanLimitedReader::new(reader, MAX_TAR_PREVIEW_SCAN_BYTES);reader.control=Some((control.clone(),scanning.clone()));
-    let mut archive = tar::Archive::new(reader);
+    let mut archive = tar::Archive::new(super::tar_pax::Reader::new(reader));
     for entry in archive.entries()? {
         let mut entry = super::tar_compatibility::LogicalEntry::new(entry?)?;
         let path = entry.path().to_string_lossy().replace('\\', "/");
@@ -187,7 +187,7 @@ fn read_tar_entry<R: Read>(reader: R, entry_path: &str,control:&ImageControl) ->
 
 fn read_tar_text_entry<R: Read>(reader: R, entry_path: &str) -> Result<TextBytes> {
     let reader = ScanLimitedReader::new(reader, MAX_TAR_PREVIEW_SCAN_BYTES);
-    let mut archive = tar::Archive::new(reader);
+    let mut archive = tar::Archive::new(super::tar_pax::Reader::new(reader));
     for entry in archive.entries()? {
         let mut entry = super::tar_compatibility::LogicalEntry::new(entry?)?;
         let path = entry.path().to_string_lossy().replace('\\', "/");

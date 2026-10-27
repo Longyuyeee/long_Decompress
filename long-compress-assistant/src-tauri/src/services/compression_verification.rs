@@ -160,7 +160,7 @@ fn drain_reader(mut reader: impl Read, is_cancelled: &impl Fn() -> bool) -> Resu
 
 pub(crate) fn verify_tar_reader(reader: impl Read, is_cancelled: &impl Fn() -> bool) -> Result<()> {
     let result=(|| -> Result<()> {
-    let mut archive = tar::Archive::new(reader);
+    let mut archive = tar::Archive::new(super::tar_pax::Reader::new(reader));
     for entry in archive.entries()? {
         check_cancelled(is_cancelled)?;
         drain_reader(super::tar_compatibility::LogicalEntry::new(entry?)?, is_cancelled)?;

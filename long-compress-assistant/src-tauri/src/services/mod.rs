@@ -310,3 +310,7 @@ mod tar_lzo_prefix_175_tests;
 
 #[cfg(test)]
 mod tar_lzo_gnu_178_tests;
+
+pub(crate) mod tar_pax;
+#[cfg(test)]
+mod tar_pax_179_tests;

@@ -187,7 +187,7 @@ fn browse_tar_reader<R: Read>(
     format: &str,
     cancelled: &AtomicBool,
 ) -> Result<ArchiveBrowseResult> {
-    let mut archive = tar::Archive::new(reader);
+    let mut archive = tar::Archive::new(super::tar_pax::Reader::new(reader));
     let mut entries = Vec::new();
     for entry in archive.entries()? {
         ensure_not_cancelled(cancelled)?;
@@ -196,10 +196,7 @@ fn browse_tar_reader<R: Read>(
         let path = entry.path().to_string_lossy().replace('\\', "/");
         let header = entry.header();
         let is_dir = header.entry_type().is_dir();
-        let modified = header.mtime().ok().and_then(|seconds| {
-            chrono::DateTime::<chrono::Utc>::from_timestamp(seconds as i64, 0)
-                .map(|value| value.to_rfc3339())
-        });
+        let modified = entry.modified().map(|time| chrono::DateTime::<chrono::Utc>::from(time).to_rfc3339());
         entries.push(ArchiveEntryInfo { size_known: None,
             name: entry_name(&path),
             path,

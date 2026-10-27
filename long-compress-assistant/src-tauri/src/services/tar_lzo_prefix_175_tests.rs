@@ -249,7 +249,7 @@ fn tarlzo175_unsupported_metadata_stops_without_skipping_and_copy_cancellation_c
     let temp = tempfile::tempdir().unwrap();
     let p = temp.path().join("unsupported.tar.lzo");
     let tar = plain_tar();
-    for kind in [b'1', b'2', b'S', b'g'] {
+    for kind in [b'1', b'2', b'S', b'V'] {
         let mut bytes = tar.clone();
         let h = tar::Header::from_byte_slice(&bytes[1024..1536]).clone();
         let mut h = h;
