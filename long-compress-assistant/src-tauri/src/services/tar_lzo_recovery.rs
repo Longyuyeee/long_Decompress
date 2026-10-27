@@ -108,6 +108,7 @@ fn parse<F: FnMut(u64, u64)>(
 ) -> Result<()> {
     let mut names = super::names::Names::default();
     let mut pending: Option<Pax> = None;
+    let mut long_name: Option<String> = None;
     let mut records = 0usize;
     loop {
         report.stopped_offset = reader.position;
@@ -117,7 +118,7 @@ fn parse<F: FnMut(u64, u64)>(
             .read_exact(&mut block)
             .context("TAR 文件头或结束标记未完整到达")?;
         if block.iter().all(|b| *b == 0) {
-            anyhow::ensure!(pending.is_none(), "TAR 在 PAX 元数据之后缺少对应条目");
+            anyhow::ensure!(pending.is_none() && long_name.is_none(), "TAR 在名称元数据之后缺少对应条目");
             reader
                 .read_exact(&mut block)
                 .context("TAR 第二个结束标记未完整到达")?;
@@ -160,20 +161,31 @@ fn parse<F: FnMut(u64, u64)>(
             .sum::<u32>();
         anyhow::ensure!(header.cksum()? == sum, "TAR 文件头校验失败");
         let kind = header.entry_type();
-        anyhow::ensure!(kind.is_pax_local_extensions() || kind.is_file() || kind.is_dir(), "[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持此 TAR 条目类型（{}），已停止在此处", kind.as_byte());
+        anyhow::ensure!(kind.is_pax_local_extensions() || kind.is_gnu_longname() || kind.is_file() || kind.is_dir(), "[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持此 TAR 条目类型（{}），已停止在此处", kind.as_byte());
         let size = header.size()?;
         anyhow::ensure!(size <= MAX_EXTRACTED_BYTES, "TAR 条目大小超过本次支持范围");
-        if kind.is_pax_local_extensions() {
+        if kind.is_pax_local_extensions() || kind.is_gnu_longname() {
             anyhow::ensure!(
-                pending.is_none() && size <= 1024 * 1024,
-                "PAX 元数据叠加或超过本次支持范围"
+                pending.is_none() && long_name.is_none(),
+                "[archive-inspection:unsupported] TAR 名称元数据重复或 GNU/PAX 混合叠加，已停止在此处"
             );
+            anyhow::ensure!(size <= 1024 * 1024, "TAR 名称元数据超过本次支持范围");
             let mut bytes = vec![0; size as usize];
             reader
                 .read_exact(&mut bytes)
-                .context("PAX 元数据未完整到达")?;
+                .context("TAR 名称元数据未完整到达")?;
             padding(reader, size)?;
-            pending = Some(pax(&bytes)?);
+            // Extension records use their own physical size. Apply their
+            // contents only after the checked payload AND padding arrive.
+            if kind.is_gnu_longname() {
+                let end = bytes.iter().position(|byte| *byte == 0)
+                    .context("GNU 长名称缺少结束标记")?;
+                anyhow::ensure!(end > 0 && bytes[end..].iter().all(|byte| *byte == 0), "GNU 长名称为空或结束后仍有其他内容");
+                long_name = Some(super::names::decode(&bytes[..end], 0, encoding)?
+                    .context("[lzop-encoding] GNU 长名称不是 UTF-8，请选择名称编码后重新检查")?);
+            } else {
+                pending = Some(pax(&bytes)?);
+            }
             continue;
         }
         anyhow::ensure!(kind.is_file() || kind.is_dir(),"[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持此 TAR 条目类型（{}），已停止在此处",kind.as_byte());
@@ -190,7 +202,7 @@ fn parse<F: FnMut(u64, u64)>(
             size <= MAX_EXTRACTED_BYTES && (!kind.is_dir() || size == 0),
             "TAR 条目大小无效"
         );
-        let decoded = if let Some(path) = meta.path {
+        let decoded = if let Some(path) = long_name.take().or(meta.path) {
             path
         } else {
             super::names::decode(&header.path_bytes(), 0, encoding)?

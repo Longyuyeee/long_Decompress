@@ -50,7 +50,7 @@ fn no_stage(p: &Path) {
         .to_string_lossy()
         .starts_with(".long-lzop-recovery")));
 }
-fn wrapped(data: &[u8], chunk: usize, checked: bool) -> Vec<u8> {
+pub(super) fn wrapped(data: &[u8], chunk: usize, checked: bool) -> Vec<u8> {
     let mut head = Vec::new();
     lzop_writer::write_stream(
         &mut Cursor::new(Vec::<u8>::new()),
@@ -249,7 +249,7 @@ fn tarlzo175_unsupported_metadata_stops_without_skipping_and_copy_cancellation_c
     let temp = tempfile::tempdir().unwrap();
     let p = temp.path().join("unsupported.tar.lzo");
     let tar = plain_tar();
-    for kind in [b'1', b'2', b'S', b'g', b'L'] {
+    for kind in [b'1', b'2', b'S', b'g'] {
         let mut bytes = tar.clone();
         let h = tar::Header::from_byte_slice(&bytes[1024..1536]).clone();
         let mut h = h;

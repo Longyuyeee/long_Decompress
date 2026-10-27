@@ -1,0 +1,45 @@
+{
+  "fixtureNativeIPC": true,
+  "nativeReportsReplayed": true,
+  "checks": [
+    "real native GNU prefix values replay through existing diagnosis, long-name filtering, folder selection, result and partial-history UI",
+    "wide and narrow dialogs keep long names contained and footer reachable without a new page"
+  ],
+  "layouts": [
+    {
+      "width": 1100,
+      "height": 700,
+      "overflow": 0,
+      "box": {
+        "top": 42,
+        "bottom": 658,
+        "left": 182,
+        "right": 918
+      },
+      "button": {
+        "top": 602.21875,
+        "bottom": 641,
+        "left": 792.640625,
+        "right": 897
+      }
+    },
+    {
+      "width": 760,
+      "height": 520,
+      "overflow": 0,
+      "box": {
+        "top": 31.203125,
+        "bottom": 488.796875,
+        "left": 24,
+        "right": 736
+      },
+      "button": {
+        "top": 433.015625,
+        "bottom": 471.796875,
+        "left": 610.640625,
+        "right": 715
+      }
+    }
+  ],
+  "errors": []
+}

@@ -50,7 +50,7 @@ fn tarlzo1658_tar_parse_errors_are_structural_without_masking_storage_errors() {
         assert!(!error.to_string().contains("[archive-inspection:damaged]"));
     }
 }
-struct Runtime(super::io_buffer_pool::IOBufferPool);
+pub(super) struct Runtime(pub(super) super::io_buffer_pool::IOBufferPool);
 impl super::native_extraction::ExtractionRuntime for Runtime {
     fn check_cancellation(&self) -> anyhow::Result<()> {
         Ok(())
