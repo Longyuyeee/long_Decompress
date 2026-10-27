@@ -11,4 +11,4 @@
 
 修复在新版本运行后生效，旧版本当前的下载窗口仍由旧代码控制。需要避开旧下载流程时，可以从本 Release 下载安装器直接覆盖安装。
 
-见 [实现与检查](UPDATER_DOWNLOAD_FIX_1.7.6.md)。原 GNU 长名称与全局 PAX 元数据计划顺延到 [v1.7.7](ARCHIVE_ROADMAP_1.7.7.md)，尚未开发。
+见 [实现与检查](UPDATER_DOWNLOAD_FIX_1.7.6.md)。原 GNU 长名称与全局 PAX 元数据计划顺延到 [v1.7.8](ARCHIVE_ROADMAP_1.7.8.md)，尚未开发。

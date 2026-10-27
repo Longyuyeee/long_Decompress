@@ -176,7 +176,7 @@
 <details>
 <summary><strong>保存打开行为后，为什么双击仍由其他软件打开？</strong></summary>
 
-行为设置只决定 Long解压收到文件后怎么处理。还需要在“默认打开压缩包”中选择格式，并在 Windows 默认应用设置里完成确认；返回软件会刷新实际状态。也可通过 Windows 的“打开方式”临时使用本软件。
+行为设置只决定 Long解压收到文件后怎么处理。在“默认打开压缩包”的同一个弹窗中，可全选或取消格式并确认；Windows 要求的默认应用选择仍需在系统设置完成。返回后会刷新“已默认、待确认、待更换”，不会把候选注册当作已生效。也可通过 Windows 的“打开方式”临时使用本软件。
 
 </details>
 
@@ -213,10 +213,10 @@
 
 | 版本 | 主要更新 | 详情 |
 | --- | --- | --- |
+| **v1.7.7** | 默认打开方式支持全选与全部取消，统一弹窗配置，修正 Windows 设置跳转和实际生效状态 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.7.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.7) |
 | **v1.7.6** | 修复多次检查后的重复更新下载、进度超出总大小、重试计数和重复安装 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.6.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.6) |
 | **v1.7.5** | TAR.LZO 完整条目部分取回、目录联选、空目录与 UTF-8 PAX 路径、独立恢复历史 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.5.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.5) |
 | **v1.7.4** | LZOP 完整成员部分取回、所选范围、独立结果与明确的恢复历史 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.4.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.4) |
 | **v1.7.3** | LZOP / TAR.LZO 数字分卷创建、批量大小配置、密码来源转换与整组结果 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.3.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.3) |
-| **v1.7.2** | LZOP 多文件成员创建、重名编号、来源密码转换与逐文件取回 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.2.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.2) |
 
 [查看全部历史版本 →](https://github.com/Longyuyeee/long_Decompress/releases)

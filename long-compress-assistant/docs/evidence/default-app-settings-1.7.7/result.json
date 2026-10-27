@@ -1,0 +1,81 @@
+{
+  "fixtureNativeIPC": true,
+  "checks": [
+    "all 21 types selected in one click; actual seven defaults kept distinct from 14 pending changes",
+    "wide and small windows retain visible footer and contained scroll area",
+    "a current default can be unchecked; Windows confirmation refreshes without losing the desired selection",
+    "empty selection is accepted and cancellation completion reflects the effective Windows state"
+  ],
+  "layouts": [
+    {
+      "width": 1440,
+      "height": 900,
+      "button": {
+        "top": 678.34375,
+        "bottom": 715.53125,
+        "left": 857.890625,
+        "right": 955
+      },
+      "overflow": 0,
+      "grid": {
+        "top": 287.640625,
+        "bottom": 623.953125,
+        "left": 485,
+        "right": 955
+      },
+      "body": {
+        "top": 234.453125,
+        "bottom": 668.34375,
+        "left": 465,
+        "right": 975
+      }
+    },
+    {
+      "width": 1100,
+      "height": 700,
+      "button": {
+        "top": 578.34375,
+        "bottom": 615.53125,
+        "left": 687.890625,
+        "right": 785
+      },
+      "overflow": 0,
+      "grid": {
+        "top": 187.640625,
+        "bottom": 523.953125,
+        "left": 315,
+        "right": 785
+      },
+      "body": {
+        "top": 134.453125,
+        "bottom": 568.34375,
+        "left": 295,
+        "right": 805
+      }
+    },
+    {
+      "width": 760,
+      "height": 520,
+      "button": {
+        "top": 434.609375,
+        "bottom": 471.796875,
+        "left": 491.890625,
+        "right": 589
+      },
+      "overflow": 0,
+      "grid": {
+        "top": 151.390625,
+        "bottom": 487.703125,
+        "left": 171,
+        "right": 589
+      },
+      "body": {
+        "top": 98.203125,
+        "bottom": 424.609375,
+        "left": 151,
+        "right": 609
+      }
+    }
+  ],
+  "errors": []
+}
