@@ -1,0 +1,234 @@
+{
+  "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-mixed-1710\\prefix\\5ae9e3c2-cea0-4e74-b0e0-5b9f7230d502\\alternating-tail.tar.lzo",
+  "report": {
+    "format": "TAR.LZO",
+    "revision": "a51f2f399060950e3d408205c3e77d43f013a4e80997e23aa5f54b90968edeec",
+    "entries": [
+      {
+        "id": 0,
+        "name": "prefix.txt",
+        "bytes": 35,
+        "sha256": "e8f6827e9476d984eae7ebebb892bfb9ea4938eb256589b5cb05117b89da2552",
+        "isDirectory": false
+      },
+      {
+        "id": 1,
+        "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "isDirectory": true
+      },
+      {
+        "id": 2,
+        "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/empty",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "isDirectory": true
+      },
+      {
+        "id": 3,
+        "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/readme.txt",
+        "bytes": 22,
+        "sha256": "76d29294e4c069156a2d3cab4da5878b817abba20a1ac6b2766fe5bc8592b511",
+        "isDirectory": false
+      },
+      {
+        "id": 4,
+        "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/data.bin",
+        "bytes": 200033,
+        "sha256": "50b77cb6afa2eeab707934db13edafb1912051e910893b1bc1660284866f5a51",
+        "isDirectory": false
+      },
+      {
+        "id": 5,
+        "name": "other/readme.txt",
+        "bytes": 33,
+        "sha256": "9a7b3b205ecad81a30b884da53801e92d12fa5d753862de8dc8c832fa0c5fe89",
+        "isDirectory": false
+      },
+      {
+        "id": 6,
+        "name": "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt",
+        "bytes": 25,
+        "sha256": "70c173b4a0be4a649452e09310d05a70ac7a5247cbe1a703cfce7e2cc4107c8b",
+        "isDirectory": false
+      },
+      {
+        "id": 7,
+        "name": "after.txt",
+        "bytes": 43,
+        "sha256": "42eff66e16c363aee79aa1063397ff614934c79927e18ee3269bc46942bbc45c",
+        "isDirectory": false
+      }
+    ],
+    "complete": false,
+    "stopReason": "TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件",
+    "stoppedMember": "late.bin",
+    "stoppedOffset": 218112,
+    "availableVolumes": 1,
+    "ignoredVolumes": 0
+  },
+  "result": {
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-mixed-1710\\prefix\\5ae9e3c2-cea0-4e74-b0e0-5b9f7230d502\\alternating-tail.tar.lzo.部分取回-cdf49f1f",
+    "recoveredFiles": 6,
+    "recoveredDirectories": 2,
+    "recoveredBytes": 200191,
+    "entries": [
+      {
+        "id": 0,
+        "name": "prefix.txt",
+        "bytes": 35,
+        "sha256": "e8f6827e9476d984eae7ebebb892bfb9ea4938eb256589b5cb05117b89da2552",
+        "isDirectory": false
+      },
+      {
+        "id": 1,
+        "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "isDirectory": true
+      },
+      {
+        "id": 2,
+        "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/empty",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "isDirectory": true
+      },
+      {
+        "id": 3,
+        "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/readme.txt",
+        "bytes": 22,
+        "sha256": "76d29294e4c069156a2d3cab4da5878b817abba20a1ac6b2766fe5bc8592b511",
+        "isDirectory": false
+      },
+      {
+        "id": 4,
+        "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/data.bin",
+        "bytes": 200033,
+        "sha256": "50b77cb6afa2eeab707934db13edafb1912051e910893b1bc1660284866f5a51",
+        "isDirectory": false
+      },
+      {
+        "id": 5,
+        "name": "other/readme.txt",
+        "bytes": 33,
+        "sha256": "9a7b3b205ecad81a30b884da53801e92d12fa5d753862de8dc8c832fa0c5fe89",
+        "isDirectory": false
+      },
+      {
+        "id": 6,
+        "name": "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt",
+        "bytes": 25,
+        "sha256": "70c173b4a0be4a649452e09310d05a70ac7a5247cbe1a703cfce7e2cc4107c8b",
+        "isDirectory": false
+      },
+      {
+        "id": 7,
+        "name": "after.txt",
+        "bytes": 43,
+        "sha256": "42eff66e16c363aee79aa1063397ff614934c79927e18ee3269bc46942bbc45c",
+        "isDirectory": false
+      }
+    ],
+    "stopReason": "TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件",
+    "partial": true
+  },
+  "diagnosis": {
+    "lzopPrefix": {
+      "format": "TAR.LZO",
+      "revision": "a51f2f399060950e3d408205c3e77d43f013a4e80997e23aa5f54b90968edeec",
+      "entries": [
+        {
+          "id": 0,
+          "name": "prefix.txt",
+          "bytes": 35,
+          "sha256": "e8f6827e9476d984eae7ebebb892bfb9ea4938eb256589b5cb05117b89da2552",
+          "isDirectory": false
+        },
+        {
+          "id": 1,
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true
+        },
+        {
+          "id": 2,
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/empty",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true
+        },
+        {
+          "id": 3,
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/readme.txt",
+          "bytes": 22,
+          "sha256": "76d29294e4c069156a2d3cab4da5878b817abba20a1ac6b2766fe5bc8592b511",
+          "isDirectory": false
+        },
+        {
+          "id": 4,
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/data.bin",
+          "bytes": 200033,
+          "sha256": "50b77cb6afa2eeab707934db13edafb1912051e910893b1bc1660284866f5a51",
+          "isDirectory": false
+        },
+        {
+          "id": 5,
+          "name": "other/readme.txt",
+          "bytes": 33,
+          "sha256": "9a7b3b205ecad81a30b884da53801e92d12fa5d753862de8dc8c832fa0c5fe89",
+          "isDirectory": false
+        },
+        {
+          "id": 6,
+          "name": "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt",
+          "bytes": 25,
+          "sha256": "70c173b4a0be4a649452e09310d05a70ac7a5247cbe1a703cfce7e2cc4107c8b",
+          "isDirectory": false
+        },
+        {
+          "id": 7,
+          "name": "after.txt",
+          "bytes": 43,
+          "sha256": "42eff66e16c363aee79aa1063397ff614934c79927e18ee3269bc46942bbc45c",
+          "isDirectory": false
+        }
+      ],
+      "complete": false,
+      "stopReason": "TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件",
+      "stoppedMember": "late.bin",
+      "stoppedOffset": 218112,
+      "availableVolumes": 1,
+      "ignoredVolumes": 0
+    },
+    "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-mixed-1710\\prefix\\5ae9e3c2-cea0-4e74-b0e0-5b9f7230d502\\alternating-tail.tar.lzo",
+    "fileSize": 902656,
+    "actualFormat": "TAR.LZO",
+    "status": "partial_recovery",
+    "encrypted": false,
+    "splitArchive": false,
+    "volumesFound": 1,
+    "missingVolumes": [],
+    "totalFiles": 6,
+    "totalDirectories": 4,
+    "totalUncompressedSize": 200191,
+    "totalUncompressedSizeKnown": false,
+    "integrityTested": false,
+    "canRepair": false,
+    "recoverability": "lzop_prefix",
+    "issues": [
+      {
+        "code": "lzop_prefix",
+        "severity": "warning",
+        "title": "可选择部分取回 8 个完整条目",
+        "detail": "TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件。仅检查从首卷起的连续前缀，后续清单未知；原件保持不变。"
+      }
+    ],
+    "evidence": [
+      "Archive size: 902656 bytes",
+      "已解码并校验 6 个文件、4 个目录；TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件"
+    ]
+  }
+}

@@ -1,0 +1,1004 @@
+{
+  "passed": true,
+  "sources": "Self-authored GNU tar original with independently inserted Python tarfile PAX records; a derived interoperability specimen, not a third-party mixed archive. No application writer.",
+  "gnuVersion": "tar (GNU tar) 1.35",
+  "sourceGnuTarSha256": "3d538fc3f69eb2736c9d19366016b51861d02268218cf84740ea23481795b74b",
+  "lzopProducerSha256": "d9b46cf6fa44f4d657e5a3943d361dac24040d0acda37019b19ba285e52e2c53",
+  "lzopPackageSha256": "d4cd71272cd18ef2061ffe2a5a75dd11182ed9015c53a2283eeb41acb9a21370",
+  "cases": [
+    {
+      "name": "lx",
+      "tar": "lx.tar",
+      "archive": "lx.tar.lzo",
+      "tarSha256": "55c3f21248e7e7b995060aad0165ef2b165e8419c222f30edbf74c0463621554",
+      "sha256": "4e18f5c928d665472245d70b096953821d275f128aab198073efc6a49220c4f2",
+      "entries": [
+        {
+          "name": "prefix.txt",
+          "isDirectory": false,
+          "bytes": 35,
+          "sha256": "e8f6827e9476d984eae7ebebb892bfb9ea4938eb256589b5cb05117b89da2552"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/empty",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/readme.txt",
+          "isDirectory": false,
+          "bytes": 22,
+          "sha256": "76d29294e4c069156a2d3cab4da5878b817abba20a1ac6b2766fe5bc8592b511"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/data.bin",
+          "isDirectory": false,
+          "bytes": 200033,
+          "sha256": "50b77cb6afa2eeab707934db13edafb1912051e910893b1bc1660284866f5a51"
+        },
+        {
+          "name": "other/readme.txt",
+          "isDirectory": false,
+          "bytes": 33,
+          "sha256": "9a7b3b205ecad81a30b884da53801e92d12fa5d753862de8dc8c832fa0c5fe89"
+        },
+        {
+          "name": "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt",
+          "isDirectory": false,
+          "bytes": 25,
+          "sha256": "70c173b4a0be4a649452e09310d05a70ac7a5247cbe1a703cfce7e2cc4107c8b"
+        },
+        {
+          "name": "after.txt",
+          "isDirectory": false,
+          "bytes": 43,
+          "sha256": "42eff66e16c363aee79aa1063397ff614934c79927e18ee3269bc46942bbc45c"
+        },
+        {
+          "name": "late.bin",
+          "isDirectory": false,
+          "bytes": 1100178,
+          "sha256": "6f348ceb8d0ab3f960e1082360f53e679cf880b5f4f35c624f8a65b75bf361bc"
+        }
+      ],
+      "records": [
+        {
+          "offset": 0,
+          "type": "0",
+          "logicalIndex": 0,
+          "size": 35
+        },
+        {
+          "offset": 1024,
+          "type": "L",
+          "size": 207
+        },
+        {
+          "offset": 2048,
+          "type": "x",
+          "fields": {
+            "size": "0",
+            "mtime": "1700001710",
+            "path": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/"
+          },
+          "mixedStart": 1024
+        },
+        {
+          "offset": 3072,
+          "type": "5",
+          "logicalIndex": 1,
+          "size": 0
+        },
+        {
+          "offset": 3584,
+          "type": "L",
+          "size": 213
+        },
+        {
+          "offset": 4608,
+          "type": "x",
+          "fields": {
+            "size": "0",
+            "mtime": "1700001710",
+            "path": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/empty/"
+          },
+          "mixedStart": 3584
+        },
+        {
+          "offset": 5632,
+          "type": "5",
+          "logicalIndex": 2,
+          "size": 0
+        },
+        {
+          "offset": 6144,
+          "type": "L",
+          "size": 217
+        },
+        {
+          "offset": 7168,
+          "type": "x",
+          "fields": {
+            "size": "22",
+            "mtime": "1700001710",
+            "path": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/readme.txt"
+          },
+          "mixedStart": 6144
+        },
+        {
+          "offset": 8192,
+          "type": "0",
+          "logicalIndex": 3,
+          "size": 22
+        },
+        {
+          "offset": 9216,
+          "type": "L",
+          "size": 215
+        },
+        {
+          "offset": 10240,
+          "type": "x",
+          "fields": {
+            "size": "200033",
+            "mtime": "1700001710",
+            "path": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/data.bin"
+          },
+          "mixedStart": 9216
+        },
+        {
+          "offset": 11264,
+          "type": "0",
+          "logicalIndex": 4,
+          "size": 200033
+        },
+        {
+          "offset": 211968,
+          "type": "0",
+          "logicalIndex": 5,
+          "size": 33
+        },
+        {
+          "offset": 212992,
+          "type": "L",
+          "size": 119
+        },
+        {
+          "offset": 214016,
+          "type": "x",
+          "fields": {
+            "size": "25",
+            "mtime": "1700001710",
+            "path": "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt"
+          },
+          "mixedStart": 212992
+        },
+        {
+          "offset": 215040,
+          "type": "0",
+          "logicalIndex": 6,
+          "size": 25
+        },
+        {
+          "offset": 216064,
+          "type": "0",
+          "logicalIndex": 7,
+          "size": 43
+        },
+        {
+          "offset": 217088,
+          "type": "0",
+          "logicalIndex": 8,
+          "size": 1100178
+        }
+      ],
+      "mixedPairs": 5,
+      "gnuAndPythonListingContentAgree": true
+    },
+    {
+      "name": "xl",
+      "tar": "xl.tar",
+      "archive": "xl.tar.lzo",
+      "tarSha256": "edbeeb8b5cc7c05dd0c03ee09059a4798d96ef81601882412c75a73eb64fc085",
+      "sha256": "569c873a4c723a010913fea29e20ce5008c304ffa8ab10eeff436d399127663c",
+      "entries": [
+        {
+          "name": "prefix.txt",
+          "isDirectory": false,
+          "bytes": 35,
+          "sha256": "e8f6827e9476d984eae7ebebb892bfb9ea4938eb256589b5cb05117b89da2552"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/empty",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/readme.txt",
+          "isDirectory": false,
+          "bytes": 22,
+          "sha256": "76d29294e4c069156a2d3cab4da5878b817abba20a1ac6b2766fe5bc8592b511"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/data.bin",
+          "isDirectory": false,
+          "bytes": 200033,
+          "sha256": "50b77cb6afa2eeab707934db13edafb1912051e910893b1bc1660284866f5a51"
+        },
+        {
+          "name": "other/readme.txt",
+          "isDirectory": false,
+          "bytes": 33,
+          "sha256": "9a7b3b205ecad81a30b884da53801e92d12fa5d753862de8dc8c832fa0c5fe89"
+        },
+        {
+          "name": "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt",
+          "isDirectory": false,
+          "bytes": 25,
+          "sha256": "70c173b4a0be4a649452e09310d05a70ac7a5247cbe1a703cfce7e2cc4107c8b"
+        },
+        {
+          "name": "after.txt",
+          "isDirectory": false,
+          "bytes": 43,
+          "sha256": "42eff66e16c363aee79aa1063397ff614934c79927e18ee3269bc46942bbc45c"
+        },
+        {
+          "name": "late.bin",
+          "isDirectory": false,
+          "bytes": 1100178,
+          "sha256": "6f348ceb8d0ab3f960e1082360f53e679cf880b5f4f35c624f8a65b75bf361bc"
+        }
+      ],
+      "records": [
+        {
+          "offset": 0,
+          "type": "0",
+          "logicalIndex": 0,
+          "size": 35
+        },
+        {
+          "offset": 1024,
+          "type": "x",
+          "fields": {
+            "size": "0",
+            "mtime": "1700001710",
+            "path": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/"
+          }
+        },
+        {
+          "offset": 2048,
+          "type": "L",
+          "size": 207,
+          "mixedStart": 1024
+        },
+        {
+          "offset": 3072,
+          "type": "5",
+          "logicalIndex": 1,
+          "size": 0
+        },
+        {
+          "offset": 3584,
+          "type": "x",
+          "fields": {
+            "size": "0",
+            "mtime": "1700001710",
+            "path": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/empty/"
+          }
+        },
+        {
+          "offset": 4608,
+          "type": "L",
+          "size": 213,
+          "mixedStart": 3584
+        },
+        {
+          "offset": 5632,
+          "type": "5",
+          "logicalIndex": 2,
+          "size": 0
+        },
+        {
+          "offset": 6144,
+          "type": "x",
+          "fields": {
+            "size": "22",
+            "mtime": "1700001710",
+            "path": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/readme.txt"
+          }
+        },
+        {
+          "offset": 7168,
+          "type": "L",
+          "size": 217,
+          "mixedStart": 6144
+        },
+        {
+          "offset": 8192,
+          "type": "0",
+          "logicalIndex": 3,
+          "size": 22
+        },
+        {
+          "offset": 9216,
+          "type": "x",
+          "fields": {
+            "size": "200033",
+            "mtime": "1700001710",
+            "path": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/data.bin"
+          }
+        },
+        {
+          "offset": 10240,
+          "type": "L",
+          "size": 215,
+          "mixedStart": 9216
+        },
+        {
+          "offset": 11264,
+          "type": "0",
+          "logicalIndex": 4,
+          "size": 200033
+        },
+        {
+          "offset": 211968,
+          "type": "0",
+          "logicalIndex": 5,
+          "size": 33
+        },
+        {
+          "offset": 212992,
+          "type": "x",
+          "fields": {
+            "size": "25",
+            "mtime": "1700001710",
+            "path": "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt"
+          }
+        },
+        {
+          "offset": 214016,
+          "type": "L",
+          "size": 119,
+          "mixedStart": 212992
+        },
+        {
+          "offset": 215040,
+          "type": "0",
+          "logicalIndex": 6,
+          "size": 25
+        },
+        {
+          "offset": 216064,
+          "type": "0",
+          "logicalIndex": 7,
+          "size": 43
+        },
+        {
+          "offset": 217088,
+          "type": "0",
+          "logicalIndex": 8,
+          "size": 1100178
+        }
+      ],
+      "mixedPairs": 5,
+      "gnuAndPythonListingContentAgree": true
+    },
+    {
+      "name": "alternating",
+      "tar": "alternating.tar",
+      "archive": "alternating.tar.lzo",
+      "tarSha256": "fb3dd7c12631cbb10b3145b3500d80608ed7682242123295713f12e3459859c0",
+      "sha256": "bab7c99eb2c09536dac64e0a3dddbbb981eb85579a215db6470255e212400ea9",
+      "entries": [
+        {
+          "name": "prefix.txt",
+          "isDirectory": false,
+          "bytes": 35,
+          "sha256": "e8f6827e9476d984eae7ebebb892bfb9ea4938eb256589b5cb05117b89da2552"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/empty",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/readme.txt",
+          "isDirectory": false,
+          "bytes": 22,
+          "sha256": "76d29294e4c069156a2d3cab4da5878b817abba20a1ac6b2766fe5bc8592b511"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/data.bin",
+          "isDirectory": false,
+          "bytes": 200033,
+          "sha256": "50b77cb6afa2eeab707934db13edafb1912051e910893b1bc1660284866f5a51"
+        },
+        {
+          "name": "other/readme.txt",
+          "isDirectory": false,
+          "bytes": 33,
+          "sha256": "9a7b3b205ecad81a30b884da53801e92d12fa5d753862de8dc8c832fa0c5fe89"
+        },
+        {
+          "name": "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt",
+          "isDirectory": false,
+          "bytes": 25,
+          "sha256": "70c173b4a0be4a649452e09310d05a70ac7a5247cbe1a703cfce7e2cc4107c8b"
+        },
+        {
+          "name": "after.txt",
+          "isDirectory": false,
+          "bytes": 43,
+          "sha256": "42eff66e16c363aee79aa1063397ff614934c79927e18ee3269bc46942bbc45c"
+        },
+        {
+          "name": "late.bin",
+          "isDirectory": false,
+          "bytes": 1100178,
+          "sha256": "6f348ceb8d0ab3f960e1082360f53e679cf880b5f4f35c624f8a65b75bf361bc"
+        }
+      ],
+      "records": [
+        {
+          "offset": 1024,
+          "type": "0",
+          "logicalIndex": 0,
+          "size": 35
+        },
+        {
+          "offset": 2048,
+          "type": "L",
+          "size": 207
+        },
+        {
+          "offset": 3072,
+          "type": "x",
+          "fields": {
+            "size": "0",
+            "mtime": "1700001710",
+            "path": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/"
+          },
+          "mixedStart": 2048
+        },
+        {
+          "offset": 4096,
+          "type": "5",
+          "logicalIndex": 1,
+          "size": 0
+        },
+        {
+          "offset": 4608,
+          "type": "x",
+          "fields": {
+            "size": "0",
+            "mtime": "1700001710"
+          }
+        },
+        {
+          "offset": 5632,
+          "type": "L",
+          "size": 213,
+          "mixedStart": 4608
+        },
+        {
+          "offset": 6656,
+          "type": "5",
+          "logicalIndex": 2,
+          "size": 0
+        },
+        {
+          "offset": 7168,
+          "type": "L",
+          "size": 217
+        },
+        {
+          "offset": 8192,
+          "type": "x",
+          "fields": {
+            "size": "22",
+            "mtime": "1700001710",
+            "path": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/readme.txt"
+          },
+          "mixedStart": 7168
+        },
+        {
+          "offset": 9216,
+          "type": "0",
+          "logicalIndex": 3,
+          "size": 22
+        },
+        {
+          "offset": 10240,
+          "type": "x",
+          "fields": {
+            "size": "200033",
+            "mtime": "1700001710"
+          }
+        },
+        {
+          "offset": 11264,
+          "type": "L",
+          "size": 215,
+          "mixedStart": 10240
+        },
+        {
+          "offset": 12288,
+          "type": "0",
+          "logicalIndex": 4,
+          "size": 200033
+        },
+        {
+          "offset": 212992,
+          "type": "0",
+          "logicalIndex": 5,
+          "size": 33
+        },
+        {
+          "offset": 214016,
+          "type": "L",
+          "size": 119
+        },
+        {
+          "offset": 215040,
+          "type": "x",
+          "fields": {
+            "size": "25",
+            "mtime": "1700001710",
+            "path": "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt"
+          },
+          "mixedStart": 214016
+        },
+        {
+          "offset": 216064,
+          "type": "0",
+          "logicalIndex": 6,
+          "size": 25
+        },
+        {
+          "offset": 217088,
+          "type": "0",
+          "logicalIndex": 7,
+          "size": 43
+        },
+        {
+          "offset": 218112,
+          "type": "0",
+          "logicalIndex": 8,
+          "size": 1100178
+        }
+      ],
+      "mixedPairs": 5,
+      "gnuAndPythonListingContentAgree": true
+    },
+    {
+      "name": "overrides",
+      "tar": "overrides.tar",
+      "archive": "overrides.tar.lzo",
+      "tarSha256": "4a5c935133b7a9a8167dc4159f3a1d985c66064b32e284fbce3e817cc0f2f63a",
+      "sha256": "5510e472f74891988112e6b29efbb2ea967cd186f3954a2e1e5599bec798bc29",
+      "entries": [
+        {
+          "name": "prefix.txt",
+          "isDirectory": false,
+          "bytes": 35,
+          "sha256": "e8f6827e9476d984eae7ebebb892bfb9ea4938eb256589b5cb05117b89da2552"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/empty",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/readme.txt",
+          "isDirectory": false,
+          "bytes": 22,
+          "sha256": "76d29294e4c069156a2d3cab4da5878b817abba20a1ac6b2766fe5bc8592b511"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/data.bin",
+          "isDirectory": false,
+          "bytes": 200033,
+          "sha256": "50b77cb6afa2eeab707934db13edafb1912051e910893b1bc1660284866f5a51"
+        },
+        {
+          "name": "other/readme.txt",
+          "isDirectory": false,
+          "bytes": 33,
+          "sha256": "9a7b3b205ecad81a30b884da53801e92d12fa5d753862de8dc8c832fa0c5fe89"
+        },
+        {
+          "name": "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt",
+          "isDirectory": false,
+          "bytes": 25,
+          "sha256": "70c173b4a0be4a649452e09310d05a70ac7a5247cbe1a703cfce7e2cc4107c8b"
+        },
+        {
+          "name": "after.txt",
+          "isDirectory": false,
+          "bytes": 43,
+          "sha256": "42eff66e16c363aee79aa1063397ff614934c79927e18ee3269bc46942bbc45c"
+        },
+        {
+          "name": "late.bin",
+          "isDirectory": false,
+          "bytes": 1100178,
+          "sha256": "6f348ceb8d0ab3f960e1082360f53e679cf880b5f4f35c624f8a65b75bf361bc"
+        }
+      ],
+      "records": [
+        {
+          "offset": 1024,
+          "type": "0",
+          "logicalIndex": 0,
+          "size": 35,
+          "logicalBytes": 35
+        },
+        {
+          "offset": 2048,
+          "type": "L",
+          "size": 207
+        },
+        {
+          "offset": 3072,
+          "type": "x",
+          "fields": {
+            "size": "0",
+            "mtime": "1700001710",
+            "path": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/"
+          },
+          "mixedStart": 2048
+        },
+        {
+          "offset": 4096,
+          "type": "5",
+          "logicalIndex": 1,
+          "size": 0,
+          "logicalBytes": 0
+        },
+        {
+          "offset": 4608,
+          "type": "x",
+          "fields": {
+            "size": "0",
+            "mtime": "1700001710"
+          }
+        },
+        {
+          "offset": 5632,
+          "type": "L",
+          "size": 213,
+          "mixedStart": 4608
+        },
+        {
+          "offset": 6656,
+          "type": "5",
+          "logicalIndex": 2,
+          "size": 0,
+          "logicalBytes": 0
+        },
+        {
+          "offset": 7168,
+          "type": "L",
+          "size": 217
+        },
+        {
+          "offset": 8192,
+          "type": "x",
+          "fields": {
+            "size": "22",
+            "mtime": "1700001710",
+            "path": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/readme.txt"
+          },
+          "mixedStart": 7168
+        },
+        {
+          "offset": 9216,
+          "type": "0",
+          "logicalIndex": 3,
+          "size": 1,
+          "logicalBytes": 22
+        },
+        {
+          "offset": 10240,
+          "type": "x",
+          "fields": {
+            "size": "200033",
+            "mtime": "1700001710"
+          }
+        },
+        {
+          "offset": 11264,
+          "type": "L",
+          "size": 215,
+          "mixedStart": 10240
+        },
+        {
+          "offset": 12288,
+          "type": "0",
+          "logicalIndex": 4,
+          "size": 1,
+          "logicalBytes": 200033
+        },
+        {
+          "offset": 212992,
+          "type": "0",
+          "logicalIndex": 5,
+          "size": 33,
+          "logicalBytes": 33
+        },
+        {
+          "offset": 214016,
+          "type": "L",
+          "size": 119
+        },
+        {
+          "offset": 215040,
+          "type": "x",
+          "fields": {
+            "size": "25",
+            "mtime": "1700001710",
+            "path": "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt"
+          },
+          "mixedStart": 214016
+        },
+        {
+          "offset": 216064,
+          "type": "0",
+          "logicalIndex": 6,
+          "size": 1,
+          "logicalBytes": 25
+        },
+        {
+          "offset": 217088,
+          "type": "0",
+          "logicalIndex": 7,
+          "size": 43,
+          "logicalBytes": 43
+        },
+        {
+          "offset": 218112,
+          "type": "0",
+          "logicalIndex": 8,
+          "size": 1100178,
+          "logicalBytes": 1100178
+        }
+      ],
+      "mixedPairs": 5,
+      "gnuAndPythonListingContentAgree": true
+    },
+    {
+      "name": "padded",
+      "tar": "padded.tar",
+      "archive": "padded.tar.lzo",
+      "tarSha256": "20c73ab32ba9969f5015e6cc6c3e5510c5490fc501226144f5cf0db6924b49ad",
+      "sha256": "c5e762223b94a16b329e671c57d3149e63547b7a065b4a2c83a70e723bfe88cd",
+      "entries": [
+        {
+          "name": "prefix.txt",
+          "isDirectory": false,
+          "bytes": 35,
+          "sha256": "e8f6827e9476d984eae7ebebb892bfb9ea4938eb256589b5cb05117b89da2552"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/empty",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/readme.txt",
+          "isDirectory": false,
+          "bytes": 22,
+          "sha256": "76d29294e4c069156a2d3cab4da5878b817abba20a1ac6b2766fe5bc8592b511"
+        },
+        {
+          "name": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/data.bin",
+          "isDirectory": false,
+          "bytes": 200033,
+          "sha256": "50b77cb6afa2eeab707934db13edafb1912051e910893b1bc1660284866f5a51"
+        },
+        {
+          "name": "other/readme.txt",
+          "isDirectory": false,
+          "bytes": 33,
+          "sha256": "9a7b3b205ecad81a30b884da53801e92d12fa5d753862de8dc8c832fa0c5fe89"
+        },
+        {
+          "name": "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt",
+          "isDirectory": false,
+          "bytes": 25,
+          "sha256": "70c173b4a0be4a649452e09310d05a70ac7a5247cbe1a703cfce7e2cc4107c8b"
+        },
+        {
+          "name": "after.txt",
+          "isDirectory": false,
+          "bytes": 43,
+          "sha256": "42eff66e16c363aee79aa1063397ff614934c79927e18ee3269bc46942bbc45c"
+        },
+        {
+          "name": "late.bin",
+          "isDirectory": false,
+          "bytes": 1100178,
+          "sha256": "6f348ceb8d0ab3f960e1082360f53e679cf880b5f4f35c624f8a65b75bf361bc"
+        }
+      ],
+      "records": [
+        {
+          "offset": 0,
+          "type": "0",
+          "logicalIndex": 0,
+          "size": 35,
+          "logicalBytes": 35
+        },
+        {
+          "offset": 1024,
+          "type": "L",
+          "size": 1024
+        },
+        {
+          "offset": 2560,
+          "type": "x",
+          "fields": {
+            "size": "0",
+            "mtime": "1700001710",
+            "path": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/"
+          },
+          "mixedStart": 1024
+        },
+        {
+          "offset": 3584,
+          "type": "5",
+          "logicalIndex": 1,
+          "size": 0,
+          "logicalBytes": 0
+        },
+        {
+          "offset": 4096,
+          "type": "L",
+          "size": 1024
+        },
+        {
+          "offset": 5632,
+          "type": "x",
+          "fields": {
+            "size": "0",
+            "mtime": "1700001710",
+            "path": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/empty/"
+          },
+          "mixedStart": 4096
+        },
+        {
+          "offset": 6656,
+          "type": "5",
+          "logicalIndex": 2,
+          "size": 0,
+          "logicalBytes": 0
+        },
+        {
+          "offset": 7168,
+          "type": "L",
+          "size": 1024
+        },
+        {
+          "offset": 8704,
+          "type": "x",
+          "fields": {
+            "size": "22",
+            "mtime": "1700001710",
+            "path": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/readme.txt"
+          },
+          "mixedStart": 7168
+        },
+        {
+          "offset": 9728,
+          "type": "0",
+          "logicalIndex": 3,
+          "size": 22,
+          "logicalBytes": 22
+        },
+        {
+          "offset": 10752,
+          "type": "L",
+          "size": 1024
+        },
+        {
+          "offset": 12288,
+          "type": "x",
+          "fields": {
+            "size": "200033",
+            "mtime": "1700001710",
+            "path": "资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录资料目录/原始文件原始文件原始文件原始文件原始文件原始文件原始文件原始文件/data.bin"
+          },
+          "mixedStart": 10752
+        },
+        {
+          "offset": 13312,
+          "type": "0",
+          "logicalIndex": 4,
+          "size": 200033,
+          "logicalBytes": 200033
+        },
+        {
+          "offset": 214016,
+          "type": "0",
+          "logicalIndex": 5,
+          "size": 33,
+          "logicalBytes": 33
+        },
+        {
+          "offset": 215040,
+          "type": "L",
+          "size": 1024
+        },
+        {
+          "offset": 216576,
+          "type": "x",
+          "fields": {
+            "size": "25",
+            "mtime": "1700001710",
+            "path": "长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名长文件名-notes.txt"
+          },
+          "mixedStart": 215040
+        },
+        {
+          "offset": 217600,
+          "type": "0",
+          "logicalIndex": 6,
+          "size": 25,
+          "logicalBytes": 25
+        },
+        {
+          "offset": 218624,
+          "type": "0",
+          "logicalIndex": 7,
+          "size": 43,
+          "logicalBytes": 43
+        },
+        {
+          "offset": 219648,
+          "type": "0",
+          "logicalIndex": 8,
+          "size": 1100178,
+          "logicalBytes": 1100178
+        }
+      ],
+      "mixedPairs": 5,
+      "gnuAndPythonListingContentAgree": true
+    }
+  ]
+}

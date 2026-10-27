@@ -119,8 +119,10 @@ fn parse<F: FnMut(u64, u64)>(
         anyhow::ensure!(size <= MAX_EXTRACTED_BYTES, "TAR 条目大小超过本次支持范围");
         if kind.is_pax_global_extensions() || kind.is_pax_local_extensions() || kind.is_gnu_longname() {
             anyhow::ensure!(
-                kind.is_pax_global_extensions() || (pending.is_none() && long_name.is_none()),
-                "[archive-inspection:unsupported] TAR 名称元数据重复或 GNU/PAX 混合叠加，已停止在此处"
+                kind.is_pax_global_extensions()
+                    || (kind.is_gnu_longname() && long_name.is_none())
+                    || (kind.is_pax_local_extensions() && pending.is_none()),
+                "[archive-inspection:unsupported] TAR 名称元数据重复，已停止在此处"
             );
             anyhow::ensure!(size <= 1024 * 1024, "TAR 名称元数据超过本次支持范围");
             let mut bytes = vec![0; size as usize];
@@ -152,7 +154,9 @@ fn parse<F: FnMut(u64, u64)>(
                 "[archive-inspection:unsupported] TAR 稀疏条目暂不支持部分取回"
             );
         }
-        let meta = global.effective(&pending.take().unwrap_or_default());
+        let local = pending.take().unwrap_or_default();
+        if let Some(name) = &long_name { crate::services::tar_pax::check_mixed_path(name.as_bytes(), &local)?; }
+        let meta = global.effective(&local);
         let size = crate::services::tar_pax::size(&meta)?.unwrap_or(size);
         anyhow::ensure!(
             size <= MAX_EXTRACTED_BYTES && (!kind.is_dir() || size == 0),

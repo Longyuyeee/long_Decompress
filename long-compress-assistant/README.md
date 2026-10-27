@@ -63,7 +63,7 @@ docs/               产品路线、格式说明和发布记录
 | --- | --- |
 | [开发交接](docs/DEVELOPMENT_HANDOFF.md) / [产品路线](docs/PRODUCT_ENHANCEMENT_ROADMAP.md) | 当前状态、下一步及已有验证 |
 | [v1.7.0 范围](docs/ARCHIVE_ROADMAP_1.7.0.md) / [实现与检查](docs/WINDOWS_OPEN_AND_BROWSER_UI.md) | Windows 打开、双栏统一与历史菜单 |
-| [v1.7.9 全局 PAX 一致性](docs/TAR_GLOBAL_PAX_FREEZE_1.7.9.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.10.md) | 全局属性接通完整读取和部分取回；GNU/PAX 混合名称记录取回仅规划 |
+| [v1.7.10 混合名称记录取回](docs/TAR_MIXED_NAMES_FREEZE_1.7.10.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.11.md) | GNU/PAX 两种顺序、大小覆盖与零填充名称；取回文件修改时间仅规划 |
 | [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md) | 创建、读取、密码、分卷和限制 |
 | [桌面测试说明](docs/DESKTOP_E2E.md) / [测试指南](tests/README.md) | 本地和隔离场景 |
 

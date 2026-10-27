@@ -314,3 +314,5 @@ mod tar_lzo_gnu_178_tests;
 pub(crate) mod tar_pax;
 #[cfg(test)]
 mod tar_pax_179_tests;
+#[cfg(test)]
+mod tar_mixed_1710_tests;

@@ -1,0 +1,190 @@
+{
+  "passed": true,
+  "independentMixedSpecimens": 5,
+  "checks": [
+    {
+      "kind": "recovery",
+      "case": "lx",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-mixed-1710\\prefix\\5ae9e3c2-cea0-4e74-b0e0-5b9f7230d502\\lx-tail.tar.lzo",
+      "files": 6,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "lx",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-mixed-1710\\prefix\\5ae9e3c2-cea0-4e74-b0e0-5b9f7230d502\\lx-checksum.tar.lzo",
+      "files": 6,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "lx",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-mixed-1710\\prefix\\5ae9e3c2-cea0-4e74-b0e0-5b9f7230d502\\lx-end.tar.lzo",
+      "files": 7,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "xl",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-mixed-1710\\prefix\\5ae9e3c2-cea0-4e74-b0e0-5b9f7230d502\\xl-tail.tar.lzo",
+      "files": 6,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "xl",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-mixed-1710\\prefix\\5ae9e3c2-cea0-4e74-b0e0-5b9f7230d502\\xl-checksum.tar.lzo",
+      "files": 6,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "xl",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-mixed-1710\\prefix\\5ae9e3c2-cea0-4e74-b0e0-5b9f7230d502\\xl-end.tar.lzo",
+      "files": 7,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "alternating",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-mixed-1710\\prefix\\5ae9e3c2-cea0-4e74-b0e0-5b9f7230d502\\alternating-tail.tar.lzo",
+      "files": 6,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "alternating",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-mixed-1710\\prefix\\5ae9e3c2-cea0-4e74-b0e0-5b9f7230d502\\alternating-checksum.tar.lzo",
+      "files": 6,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "alternating",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-mixed-1710\\prefix\\5ae9e3c2-cea0-4e74-b0e0-5b9f7230d502\\alternating-end.tar.lzo",
+      "files": 7,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "overrides",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-mixed-1710\\prefix\\5ae9e3c2-cea0-4e74-b0e0-5b9f7230d502\\overrides-tail.tar.lzo",
+      "files": 6,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "overrides",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-mixed-1710\\prefix\\5ae9e3c2-cea0-4e74-b0e0-5b9f7230d502\\overrides-checksum.tar.lzo",
+      "files": 6,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "recovery",
+      "case": "overrides",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-mixed-1710\\prefix\\5ae9e3c2-cea0-4e74-b0e0-5b9f7230d502\\overrides-end.tar.lzo",
+      "files": 7,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "padded",
+      "case": "padded",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-mixed-1710\\padded\\4bc347b3-d162-446f-9b1c-2dc01e45b122\\padded-tail.tar.lzo",
+      "files": 6,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "full",
+      "case": "lx",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-mixed-1710\\lx.tar",
+      "files": 7,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "full",
+      "case": "lx",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-mixed-1710\\lx.tar.lzo",
+      "files": 7,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "full",
+      "case": "xl",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-mixed-1710\\xl.tar",
+      "files": 7,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "full",
+      "case": "xl",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-mixed-1710\\xl.tar.lzo",
+      "files": 7,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "full",
+      "case": "alternating",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-mixed-1710\\alternating.tar",
+      "files": 7,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "full",
+      "case": "alternating",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-mixed-1710\\alternating.tar.lzo",
+      "files": 7,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "full",
+      "case": "overrides",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-mixed-1710\\overrides.tar",
+      "files": 7,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "full",
+      "case": "overrides",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-mixed-1710\\overrides.tar.lzo",
+      "files": 7,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "full",
+      "case": "padded",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-mixed-1710\\padded.tar",
+      "files": 7,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    },
+    {
+      "kind": "full",
+      "case": "padded",
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-mixed-1710\\padded.tar.lzo",
+      "files": 7,
+      "directories": 4,
+      "exactPathsAndHashes": true
+    }
+  ]
+}

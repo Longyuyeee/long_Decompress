@@ -43,6 +43,16 @@ pub(crate) fn size(fields: &Fields) -> io::Result<Option<u64>> {
 pub(crate) fn path(fields: &Fields) -> Option<&str> {
     fields.iter().rev().find(|(k,_)| k == "path").map(|(_,v)| v.as_str())
 }
+/// A mixed GNU/PAX name is supported only when it is unambiguous. Different
+/// readers give conflicting names different precedence; never guess a path.
+pub(crate) fn check_mixed_path(gnu: &[u8], local: &Fields) -> io::Result<()> {
+    if let Some(path) = path(local) {
+        if path.as_bytes() != gnu {
+            return Err(unsupported("GNU 长名称与局部 PAX 路径不一致，已停止在此处；请向提供者索取名称一致的原包"));
+        }
+    }
+    Ok(())
+}
 pub(crate) fn common(fields: &Fields) -> io::Result<()> {
     for (key,value) in fields {
         if value.contains('\n') { return Err(unsupported("含换行的属性值暂不支持")); }
@@ -94,14 +104,16 @@ fn encode(fields: &Fields) -> io::Result<Vec<u8>> {
 
 /// Normalise g/x into one effective x before each real entry. File bytes are
 /// streamed unchanged; control records always retain their own physical size.
-/// GNU long names/links and old sparse extension blocks pass through unchanged.
+/// GNU long names are canonicalised after physical validation; long links and
+/// old sparse extension blocks retain their original layout.
 pub(crate) struct Reader<R> {
     input: R, state: State, local: Option<Fields>, pending: Cursor<Vec<u8>>,
     remaining: u64, sparse_extensions: bool, ended: bool,
+    long_name: Option<Vec<u8>>,
 }
 impl<R: Read> Reader<R> {
     pub(crate) fn new(input: R) -> Self {
-        Self { input, state: State::default(), local: None, pending: Cursor::new(Vec::new()), remaining: 0, sparse_extensions: false, ended: false }
+        Self { input, state: State::default(), local: None, pending: Cursor::new(Vec::new()), remaining: 0, sparse_extensions: false, ended: false, long_name: None }
     }
     fn prepare(&mut self) -> io::Result<bool> {
         let mut controls = 0;
@@ -109,12 +121,12 @@ impl<R: Read> Reader<R> {
             let mut block = [0u8;512];
             let n = self.input.read(&mut block[..1])?;
             if n == 0 {
-                if self.local.is_some() { return Err(invalid("元数据后缺少对应条目")); }
+                if self.local.is_some() || self.long_name.is_some() { return Err(invalid("名称元数据后缺少对应条目")); }
                 return Ok(false);
             }
             self.input.read_exact(&mut block[1..])?;
             if block.iter().all(|b| *b == 0) {
-                if self.local.is_some() { return Err(invalid("元数据后缺少对应条目")); }
+                if self.local.is_some() || self.long_name.is_some() { return Err(invalid("名称元数据后缺少对应条目")); }
                 self.ended = true;
                 self.pending = Cursor::new(block.to_vec());
                 return Ok(true);
@@ -141,12 +153,33 @@ impl<R: Read> Reader<R> {
                 }
                 continue;
             }
-            if kind.is_gnu_longname() || kind.is_gnu_longlink() {
+            if kind.is_gnu_longname() {
+                if self.long_name.is_some() { return Err(invalid("GNU 长名称记录重复")); }
+                if physical > MAX_METADATA as u64 { return Err(unsupported("GNU 长名称超过支持范围")); }
+                let mut bytes = vec![0; padded(physical)? as usize];
+                self.input.read_exact(&mut bytes)?;
+                let payload = &bytes[..physical as usize];
+                let end = payload.iter().position(|b| *b == 0).ok_or_else(|| invalid("GNU 长名称缺少结束标记"))?;
+                if end == 0 || bytes[end..].iter().any(|b| *b != 0) { return Err(invalid("GNU 长名称或填充无效")); }
+                self.long_name = Some(payload[..end].to_vec());
+                // Some producers include zero padding in L's declared payload.
+                // Consume that physical record, then emit one NUL terminator so
+                // tar-rs and prefix recovery expose the same actual filename.
+                header.set_size((end+1) as u64); header.set_cksum();
+                let mut record = header.as_bytes().to_vec();
+                record.extend_from_slice(&payload[..end+1]);
+                record.resize(512+padded((end+1) as u64)? as usize,0);
+                self.pending = Cursor::new(record);
+                return Ok(true);
+            }
+            if kind.is_gnu_longlink() {
                 self.remaining = padded(physical)?;
                 self.pending = Cursor::new(block.to_vec());
                 return Ok(true);
             }
-            let fields = self.state.effective(&self.local.take().unwrap_or_default());
+            let local = self.local.take().unwrap_or_default();
+            if let Some(name) = self.long_name.take() { check_mixed_path(&name, &local)?; }
+            let fields = self.state.effective(&local);
             let stored = size(&fields)?.unwrap_or(physical);
             if stored > super::extraction_transaction::MAX_EXTRACTED_BYTES { return Err(unsupported("条目大小超过支持范围")); }
             let mut prefix = Vec::new();
