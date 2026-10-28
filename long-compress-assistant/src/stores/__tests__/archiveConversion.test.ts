@@ -600,9 +600,10 @@ it.each(['zip','7z'])('convert1722 keeps %s publishing nonterminal and records o
  const store=useArchiveConversionStore();store.addSources(['C:/input.tar.lzo']);const item=store.pending[0]
  store.updateItem(item.id,{format,outputPath:`D:/result.${format}`,password:'Target1722!',splitMiB:1,encryptFilenames:format==='7z',sevenZipMethod:'copy',zipMethod:'store'})
  const pending=store.start();await vi.waitFor(()=>expect(finish).toBeTypeOf('function'))
- const task=useTaskStore().tasks[0];task.progress=100;mocks.listeners.get('archive-conversion-phase')?.({payload:{taskId:task.id,phase:'publishing'}})
+ const task=useTaskStore().tasks[0];const latePhase=mocks.listeners.get('archive-conversion-phase');task.progress=100;latePhase?.({payload:{taskId:task.id,phase:'publishing'}})
  expect(store.phase).toBe('正在保存新包…');expect(task).toMatchObject({status:'running',stage:'Finalizing',progress:99,currentFile:`D:/result.${format}`});expect(task.archiveOutput).toBeUndefined()
  const output={primaryPath:`D:/result.${format}.001`,files:[{path:`D:/result.${format}.001`,bytes:8},{path:`D:/result.${format}.002`,bytes:10}],totalBytes:18,split:true};finish(output);await pending
+ latePhase?.({payload:{taskId:task.id,phase:'publishing'}});expect(task.progress).toBe(100)
  expect(task).toMatchObject({status:'completed',archiveOutput:output,outputBytes:18,outputBytesEstimated:false});const record=createTaskHistoryRecord(task);expect(record.outputPath).toBe(output.primaryPath);expect(record.executionConfig).toMatchObject({format,splitSize:1048576,passwordRequired:true});expect(JSON.stringify(record)).not.toContain('Target1722!');expect(JSON.stringify(record)).not.toContain('.long-convert')
  expect(mocks.invoke).toHaveBeenCalledWith('convert_archive',expect.objectContaining({sourcePath:'C:/input.tar.lzo',options:expect.objectContaining({preserve_paths:true,verify_after:true,delete_after:false,format,split_size:1048576})}))
 })
