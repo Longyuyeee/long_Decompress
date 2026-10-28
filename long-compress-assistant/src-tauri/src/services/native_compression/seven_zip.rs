@@ -118,7 +118,7 @@ pub(crate) fn compress<R: CompressionRuntime>(
     }
 
     let preserve_paths = options.preserve_paths.unwrap_or(true);
-    let entries = compression_entries::collect(sources, preserve_paths, true)?;
+    let entries = compression_entries::collect_rooted(sources, preserve_paths)?;
     let total_bytes = entries
         .iter()
         .filter(|entry| !entry.is_dir)
