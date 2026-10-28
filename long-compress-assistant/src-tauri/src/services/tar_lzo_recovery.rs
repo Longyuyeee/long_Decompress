@@ -156,8 +156,9 @@ fn parse<F: FnMut(u64, u64)>(
             );
         }
         let local = pending.take().unwrap_or_default();
-        let pax_sparse=crate::services::tar_sparse_recovery::validate_local(&local)?;
-        anyhow::ensure!(!pax_sparse||(kind.is_file()&&long_name.is_none()),"[archive-inspection:unsupported] GNU.sparse 1.0 仅支持普通文件且不能叠加 GNU 长名称");
+        let pax_version=crate::services::tar_sparse_recovery::validate_local(&local)?;
+        let pax_sparse=pax_version.is_some();
+        anyhow::ensure!(!pax_sparse||(kind.is_file()&&long_name.is_none()),"[archive-inspection:unsupported] GNU.sparse PAX 仅支持普通文件且不能叠加 GNU 长名称");
         if let Some(name) = &long_name { crate::services::tar_pax::check_mixed_path(name.as_bytes(), &local)?; }
         let meta = global.effective(&local);
         anyhow::ensure!(!pax_sparse||crate::services::tar_pax::size(&meta)?.is_none_or(|physical|physical==size),"GNU.sparse 物理大小与 PAX size 冲突");
@@ -193,7 +194,10 @@ fn parse<F: FnMut(u64, u64)>(
         let sparse = if kind.is_gnu_sparse() {
             anyhow::ensure!(!meta.iter().any(|(key,_)|key=="size"), "[archive-inspection:unsupported] 旧 GNU 稀疏条目暂不支持叠加 PAX size，已停止在此处");
             Some(crate::services::tar_sparse_recovery::Layout::parse(header, reader)?)
-        } else if pax_sparse { Some(crate::services::tar_sparse_recovery::Layout::parse_pax10(&local,size,reader)?) } else { None };
+        } else if let Some(version)=pax_version {
+            use crate::services::tar_sparse_recovery::{Layout,PaxVersion};
+            Some(match version{PaxVersion::Map01=>Layout::parse_pax01(&local,size)?,PaxVersion::Text10=>Layout::parse_pax10(&local,size,reader)?})
+        } else { None };
         let bytes = sparse.as_ref().map_or(size, |layout|layout.logical);
         logical_total = logical_total.checked_add(bytes).context("TAR 完整大小溢出")?;
         anyhow::ensure!(logical_total <= MAX_EXTRACTED_BYTES, "[archive-inspection:unsupported] TAR 完整大小总量超过支持范围");

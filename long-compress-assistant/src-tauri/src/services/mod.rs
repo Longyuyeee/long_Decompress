@@ -327,3 +327,6 @@ mod tar_sparse_1713_tests;
 
 #[cfg(test)]
 mod tar_pax10_1714_tests;
+
+#[cfg(test)]
+mod tar_pax01_1715_tests;

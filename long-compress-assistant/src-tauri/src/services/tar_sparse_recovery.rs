@@ -1,4 +1,4 @@
-//! GNU S and local PAX 1.0 maps inside the checksum-confirmed TAR prefix.
+//! GNU S and local PAX 0.1/1.0 maps inside the checksum-confirmed TAR prefix.
 use anyhow::{Context,Result};
 use serde::Serialize;
 use sha2::{Digest,Sha256};
@@ -13,22 +13,31 @@ fn attribute<'a>(fields:&'a super::tar_pax::Fields,key:&str)->Result<&'a str>{
     fields.iter().find(|(k,_)|k==key).map(|(_,v)|v.as_str()).with_context(||format!("GNU.sparse 缺少 {key}"))
 }
 /// Sparse attributes are local-only. Global PAX retains the stricter common rules.
-pub(crate) fn validate_local(fields:&super::tar_pax::Fields)->Result<bool>{
+#[derive(Clone,Copy)]
+pub(crate) enum PaxVersion { Map01, Text10 }
+pub(crate) fn validate_local(fields:&super::tar_pax::Fields)->Result<Option<PaxVersion>>{
     let sparse=fields.iter().any(|(k,_)|k.starts_with("GNU.sparse."));
+    // 0.1 has no major/minor attributes. Its comma map identifies this layout;
+    // accepting both families together would give contradictory body offsets.
+    let version=if fields.iter().any(|(k,_)|k=="GNU.sparse.map"){PaxVersion::Map01}else{PaxVersion::Text10};
     let mut common=Vec::new();
     for(k,v)in fields{
         if k.starts_with("GNU.sparse."){
-            anyhow::ensure!(matches!(k.as_str(),"GNU.sparse.major"|"GNU.sparse.minor"|"GNU.sparse.name"|"GNU.sparse.realsize"),"[archive-inspection:unsupported] 暂不支持 GNU.sparse 属性 {k}");
+            let supported=match version{PaxVersion::Map01=>matches!(k.as_str(),"GNU.sparse.size"|"GNU.sparse.numblocks"|"GNU.sparse.name"|"GNU.sparse.map"),PaxVersion::Text10=>matches!(k.as_str(),"GNU.sparse.major"|"GNU.sparse.minor"|"GNU.sparse.name"|"GNU.sparse.realsize")};
+            anyhow::ensure!(supported,"[archive-inspection:unsupported] 暂不支持或冲突的 GNU.sparse 属性 {k}");
         }else{common.push((k.clone(),v.clone()));}
     }
     super::tar_pax::common(&common)?;
     if sparse{
-        anyhow::ensure!(decimal(attribute(fields,"GNU.sparse.major")?)?==1&&decimal(attribute(fields,"GNU.sparse.minor")?)?==0,"[archive-inspection:unsupported] GNU.sparse 部分取回目前支持 PAX 1.0");
-        anyhow::ensure!(decimal(attribute(fields,"GNU.sparse.realsize")?)?<=MAX_EXTRACTED_BYTES,"[archive-inspection:unsupported] GNU.sparse 完整大小超过支持范围");
+        let size_key=match version{
+            PaxVersion::Map01=>{anyhow::ensure!(decimal(attribute(fields,"GNU.sparse.numblocks")?)?<=65_536,"[archive-inspection:unsupported] GNU.sparse 段数超过支持范围");"GNU.sparse.size"},
+            PaxVersion::Text10=>{anyhow::ensure!(decimal(attribute(fields,"GNU.sparse.major")?)?==1&&decimal(attribute(fields,"GNU.sparse.minor")?)?==0,"[archive-inspection:unsupported] GNU.sparse 部分取回目前支持 PAX 0.1 / 1.0");"GNU.sparse.realsize"}
+        };
+        anyhow::ensure!(decimal(attribute(fields,size_key)?)?<=MAX_EXTRACTED_BYTES,"[archive-inspection:unsupported] GNU.sparse 完整大小超过支持范围");
         let name=attribute(fields,"GNU.sparse.name")?;
         anyhow::ensure!(!name.is_empty()&&!name.contains(['\0','\n']),"GNU.sparse 文件名无效");
     }
-    Ok(sparse)
+    Ok(sparse.then_some(version))
 }
 struct TextMap<'a,R>{input:&'a mut R,block:[u8;512],cursor:usize,consumed:u64,physical:u64}
 impl<R:Read> TextMap<'_,R>{
@@ -51,6 +60,21 @@ impl<R:Read> TextMap<'_,R>{
 #[derive(Debug,Clone,Serialize)]
 pub(crate) struct Layout { pub logical:u64, pub stored:u64, pub ranges:Vec<(u64,u64)> }
 impl Layout {
+    pub(crate) fn parse_pax01(fields:&super::tar_pax::Fields,physical:u64)->Result<Self>{
+        let logical=decimal(attribute(fields,"GNU.sparse.size")?)?;
+        let count=decimal(attribute(fields,"GNU.sparse.numblocks")?)?;
+        anyhow::ensure!(count<=65_536,"[archive-inspection:unsupported] GNU.sparse 段数超过支持范围");
+        let text=attribute(fields,"GNU.sparse.map")?;let mut values=text.split(',');let mut ranges=Vec::new();
+        if count==0{anyhow::ensure!(text.is_empty(),"GNU.sparse 零段映射含多余内容");}
+        else{
+            for _ in 0..count{
+                let offset=decimal(values.next().context("GNU.sparse 映射缺少偏移")?)?;
+                let length=decimal(values.next().context("GNU.sparse 映射缺少长度")?)?;ranges.push((offset,length));
+            }
+            anyhow::ensure!(values.next().is_none(),"GNU.sparse 映射与声明段数不一致");
+        }
+        Self::checked(logical,physical,ranges)
+    }
     pub(crate) fn parse(header:&tar::Header,input:&mut impl Read)->Result<Self>{
         let gnu=header.as_gnu().context("[archive-inspection:unsupported] 旧 GNU 稀疏条目缺少 GNU 文件头")?;
         let logical=gnu.real_size()?;let stored=header.entry_size()?;
