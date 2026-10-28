@@ -7,7 +7,7 @@ use chrono::TimeZone;
 fn base()->PathBuf{let path=Path::new(env!("CARGO_MANIFEST_DIR")).join("../test-results/zip-directory-time-1725");std::fs::create_dir_all(&path).unwrap();path}
 fn workspace()->PathBuf{let path=base().join(uuid::Uuid::new_v4().to_string());std::fs::create_dir_all(&path).unwrap();path}
 fn sha(path:&Path)->String{format!("{:x}",Sha256::digest(std::fs::read(path).unwrap()))}
-#[derive(Default)]struct Runtime{pool:super::io_buffer_pool::IOBufferPool}
+#[derive(Default)]pub(super) struct Runtime{pool:super::io_buffer_pool::IOBufferPool}
 impl CompressionRuntime for Runtime{
  fn cancellation_flag(&self)->Arc<AtomicBool>{Arc::new(AtomicBool::new(false))}
  fn check_cancellation(&self)->Result<()>{Ok(())}fn copy_buffer_size(&self)->usize{65536}
@@ -22,13 +22,13 @@ impl ExtractionRuntime for Runtime{
  fn emit_progress(&self,_:&tauri::Window,_:&str,_:f32,_:Option<String>,_:u64,_: u64){}
 }
 fn stamp(path:&Path,year:i32){let t=chrono::Local.with_ymd_and_hms(year,6,1,12,34,56).single().unwrap();filetime::set_file_mtime(path,filetime::FileTime::from_unix_time(t.timestamp(),0)).unwrap();}
-fn sources(root:&Path)->Vec<String>{
+pub(super) fn sources(root:&Path)->Vec<String>{
  let mut seed=1725u32;let bytes=(0..180_000).map(|_|{seed^=seed<<13;seed^=seed>>17;seed^=seed<<5;seed as u8}).collect::<Vec<_>>();
  for parent in ["a","b"]{let dir=root.join(parent).join("资料");std::fs::create_dir_all(dir.join("nested/empty")).unwrap();std::fs::write(dir.join("file.bin"),&bytes).unwrap();std::fs::write(dir.join("nested/note.txt"),parent).unwrap();std::fs::write(dir.join("nested/zero.txt"),[]).unwrap();for name in ["file.bin","nested/note.txt","nested/zero.txt"]{stamp(&dir.join(name),2011);}stamp(&dir.join("nested/empty"),2003);stamp(&dir.join("nested"),2002);stamp(&dir,if parent=="a"{2000}else{2001});}
  std::fs::create_dir_all(root.join("empty-root")).unwrap();stamp(&root.join("empty-root"),2004);
  ["a/资料","b/资料","empty-root","a/资料"].iter().map(|p|root.join(p).to_string_lossy().into_owned()).collect()
 }
-fn records(files:&[String],preserve:bool)->Vec<serde_json::Value>{compression_entries::collect_zip(files,preserve).unwrap().into_iter().map(|e|{let t=filetime::FileTime::from_last_modification_time(&e.path.metadata().unwrap());serde_json::json!({"name":e.archive_name,"path":e.path,"directory":e.is_dir,"seconds":t.unix_seconds(),"sha256":if e.is_dir{None}else{Some(sha(&e.path))}})}).collect()}
+pub(super) fn records(files:&[String],preserve:bool)->Vec<serde_json::Value>{compression_entries::collect_zip(files,preserve).unwrap().into_iter().map(|e|{let t=filetime::FileTime::from_last_modification_time(&e.path.metadata().unwrap());serde_json::json!({"name":e.archive_name,"path":e.path,"directory":e.is_dir,"seconds":t.unix_seconds(),"sha256":if e.is_dir{None}else{Some(sha(&e.path))}})}).collect()}
 fn options()->DecompressOptions{DecompressOptions{preserve_paths:true,preserve_timestamps:true,conflict_policy:"rename".into(),..Default::default()}}
 fn stage(input:&Path,output:&Path,opts:&DecompressOptions,password:Option<&str>)->tx::ExtractionStaging{
  let staging=tx::ExtractionStaging::create_for(output).unwrap();super::native_extraction::zip::extract_with_optional_window(&Runtime::default(),None,"directory1725",input.to_str().unwrap(),staging.path().to_str().unwrap(),password,opts).unwrap();tx::prepare_staging_layout(input,staging.path(),opts).unwrap();staging

@@ -172,7 +172,7 @@ async fn lzop173_fresh_numeric_groups_publish_and_open_from_any_volume_with_all_
         let expected_entries = if format == "lzo" {
             lzop_writer::prepare_members(&sources).unwrap()
         } else {
-            compression_entries::collect(&sources, true, true).unwrap()
+            compression_entries::collect_rooted(&sources, true).unwrap()
         };
         let expected: Vec<_> = expected_entries.iter().map(|e|serde_json::json!({"path":e.archive_name.trim_end_matches('/'),"directory":e.is_dir,"bytes":if e.is_dir {0} else {e.path.metadata().unwrap().len()},"sha256":if e.is_dir {String::new()} else {sha(&std::fs::read(&e.path).unwrap())}})).collect();
         for volume in [

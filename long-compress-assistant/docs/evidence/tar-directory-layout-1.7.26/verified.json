@@ -1,0 +1,163 @@
+{
+  "version": "1.7.26",
+  "passed": true,
+  "archives": 14,
+  "encodedEntries": 178,
+  "tools": {
+    "python": "3.12.10",
+    "brotli": "1.2.0",
+    "lz4": "4.4.5",
+    "lzip": "lzip 1.24.1",
+    "lzopSha256": "0de04c88c0820f981869b3a1c7eb1803318638537ad9d8afc5032ef3915e2597",
+    "zstandardReader": "7-Zip 26.04 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-10-05"
+  },
+  "checks": [
+    {
+      "format": "tar",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar",
+      "archiveSha256": "9212af5605dca70bfc8b531bd4359533d2d2ffd92a44801472eb516a62443f2d",
+      "volumeCount": 1,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "exactTreeContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "tar",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\numeric.tar.001",
+      "archiveSha256": "9212af5605dca70bfc8b531bd4359533d2d2ffd92a44801472eb516a62443f2d",
+      "volumeCount": 6,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "exactTreeContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "tar.gz",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.gz",
+      "archiveSha256": "27793125c3bae00686905e40e736927c35202e508f6f386a8dcb123e1d75c356",
+      "volumeCount": 1,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "exactTreeContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "tar.bz2",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.bz2",
+      "archiveSha256": "b5d71851015c4abc5108d6a2a14b6b82a5811596b63bccc28cd4354ac291d589",
+      "volumeCount": 1,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "exactTreeContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "tar.xz",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.xz",
+      "archiveSha256": "001d1d59f99d512bcd4ddf6fc200a9378cee2c112ad3cdfd4032841abe06956f",
+      "volumeCount": 1,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "exactTreeContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "tar.zst",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.zst",
+      "archiveSha256": "171b6a9844ea7777d78426c816642b86fe24767d91bc45ee35add4ec9148bf05",
+      "volumeCount": 1,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "exactTreeContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "tar.lzma",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.lzma",
+      "archiveSha256": "a025f3416d7cbfad5f05449a812759ab6ad638a145f68c27e5a759b6a3c9cd86",
+      "volumeCount": 1,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "exactTreeContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "tar.lz",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.lz",
+      "archiveSha256": "862e64086def6761b4d373802a15365408b376420ace595e21d5d236f4f54326",
+      "volumeCount": 1,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "exactTreeContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "tar.lz4",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.lz4",
+      "archiveSha256": "79b37f1b0fc0a448ff5f30016f67f65958449fce99f75da9c82f91b85376259c",
+      "volumeCount": 1,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "exactTreeContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "tar.br",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.br",
+      "archiveSha256": "d97f9c04d5078a4f723def118aabb2b9ff9184f9dfee0a8a62de96118a101198",
+      "volumeCount": 1,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "exactTreeContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "tar.lzo",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.lzo",
+      "archiveSha256": "4cedfd41f403e89638785afe03019e391bb596943296ed8322341c11e588a861",
+      "volumeCount": 1,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "exactTreeContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "tar.lzo",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\numeric.tar.lzo.001",
+      "archiveSha256": "4cedfd41f403e89638785afe03019e391bb596943296ed8322341c11e588a861",
+      "volumeCount": 6,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "exactTreeContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "tar",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\792f7095-73e4-45e8-9e43-8953afa825a3\\converted.tar",
+      "archiveSha256": "f4b25d883f13e7c6df9fdb519ce12dfb334676a28e52cf582bb4480ded8ad3f8",
+      "volumeCount": 1,
+      "entries": 11,
+      "explicitDirectories": 2,
+      "exactTreeContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "tar.gz",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\792f7095-73e4-45e8-9e43-8953afa825a3\\converted.tar.gz",
+      "archiveSha256": "b38d1eba6ba679375c95596ae34e19d581238a3ae39a5108f8d52f985965dac8",
+      "volumeCount": 1,
+      "entries": 11,
+      "explicitDirectories": 2,
+      "exactTreeContentDates": true,
+      "sourceUnchanged": true
+    }
+  ],
+  "selectionModes": [
+    "directory",
+    "file",
+    "filter",
+    "flat",
+    "off"
+  ]
+}

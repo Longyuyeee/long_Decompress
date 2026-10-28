@@ -46,7 +46,7 @@ impl Plan {
         anyhow::ensure!(!entries.is_empty(),"所选范围没有符合筛选条件的内容，请调整筛选后重试");
         let mut sources=HashSet::new();let mut logical_bytes=0u64;let mut payload_bytes=0u64;
         for e in &entries {logical_bytes=logical_bytes.checked_add(e.bytes).context("所选逻辑大小溢出")?;if !e.is_directory&&sources.insert(e.link_source.unwrap_or(e.id)){payload_bytes=payload_bytes.checked_add(e.stored_bytes.unwrap_or(e.bytes)).context("所选数据大小溢出")?;}}
-        let stats=crate::services::tar_compatibility::Plan{entries:entries.len(),logical_bytes,payload_bytes};
+        let stats=crate::services::tar_compatibility::Plan{entries:entries.len(),logical_bytes,payload_bytes,directory_times:Vec::new()};
         tx::validate_sparse_resource_limits(path,stats.entries,stats.logical_bytes,stats.payload_bytes)?;
         Ok(Some(Self{source,revision,entries,stats}))
     }

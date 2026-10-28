@@ -52,8 +52,10 @@ pub(crate) fn extract_inner<R: ExtractionRuntime>(runtime: &R, window: Option<&W
             if !extraction_transaction::matches_selected_entries(entry.path(), &options.selected_entries) {
                 return Ok(());
             }
+            // Keep archive identities until staging selection/filtering finishes;
+            // flatten once at transactional publication, as with ZIP.
             let relative =
-                match runtime.normalized_archive_path(entry.path(), options.preserve_paths) {
+                match runtime.normalized_archive_path(entry.path(), true) {
                     Some(path) => path,
                     None => return Ok(()),
                 };

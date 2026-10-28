@@ -948,7 +948,7 @@ mod tests {
         let staging = temp.path().join("stage");
         std::fs::create_dir(&staging).unwrap();
         std::fs::write(staging.join("file"), b"1234").unwrap();
-        let plan = super::super::tar_compatibility::Plan { entries: 1, logical_bytes: 3, payload_bytes: 1 };
+        let plan = super::super::tar_compatibility::Plan { entries: 1, logical_bytes: 3, payload_bytes: 1, directory_times:Vec::new() };
         let error = prepare_staging_layout_with_tar_plan(&archive, &staging, &DecompressOptions::default(), Some(&plan)).unwrap_err();
         assert!(error.to_string().contains("validated logical size"));
     }
