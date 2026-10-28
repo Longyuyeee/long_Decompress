@@ -2973,7 +2973,10 @@ impl CompressionService {
         }
         service.check_cancellation()?;
         let mut observed_conflicts = HashMap::new();
-        let directory_times=confirmed_tar_plan.as_ref().map_or_else(Vec::new,|plan|plan.directory_times(&options));
+        let directory_times=if effective_format==ArchiveFormat::Zip{
+            {let times=crate::services::zip_directory_times::for_commit(path,&out_dir,&options,||service.check_cancellation())?;
+                if Self::source_file_changed(path,&source_snapshot,"Extracting")?{return Err(CompressionError::SourceChangedDuringExtraction.into());}times}
+        }else{confirmed_tar_plan.as_ref().map_or_else(Vec::new,|plan|plan.directory_times(&options))};
         let source_times = if effective_format == ArchiveFormat::SevenZip && options.conflict_policy == "ask" {
             Self::seven_zip_source_times(path, final_password.as_deref(), &final_out_dir, options.preserve_paths).unwrap_or_default()
         } else { HashMap::new() };

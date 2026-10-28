@@ -1,0 +1,13 @@
+{
+  "version": "1.7.25",
+  "date": "2026-10-28",
+  "nativeNewPassed": 6,
+  "relatedNativePassed": 2,
+  "independentArchives": 6,
+  "encodedEntries": 74,
+  "uiSourceChanged": false,
+  "desktopControlled": false,
+  "shellExtension": true,
+  "versionIdentity": true,
+  "notes": "Before tests ran, corrected the test staging type name to ExtractionStaging. All six new tests passed on their first execution, then two legacy collector tests passed. Independent verifier adapted the prior source record schema to absent nanos=0; native results not rerun. Product uses the same selection, staging publication, persisted directory-time list and final restore functions exercised by core tests. UI unchanged; no unrelated matrix repeated."
+}

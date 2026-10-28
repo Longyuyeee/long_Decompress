@@ -63,7 +63,7 @@ docs/               产品路线、格式说明和发布记录
 | --- | --- |
 | [开发交接](docs/DEVELOPMENT_HANDOFF.md) / [产品路线](docs/PRODUCT_ENHANCEMENT_ROADMAP.md) | 当前状态、下一步及已有验证 |
 | [v1.7.0 范围](docs/ARCHIVE_ROADMAP_1.7.0.md) / [实现与检查](docs/WINDOWS_OPEN_AND_BROWSER_UI.md) | Windows 打开、双栏统一与历史菜单 |
-| [v1.7.24 ZIP 源修改时间](docs/ZIP_SOURCE_TIME_FREEZE_1.7.24.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.25.md) | ZIP / ZIPX 创建与转换保留源本地日期，密码/分卷衔接；目录时间仅规划 |
+| [v1.7.25 ZIP 目录时间](docs/ZIP_DIRECTORY_TIME_FREEZE_1.7.25.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.26.md) | 顶层目录明确、同名来源互不混放，提交后恢复目录日期；TAR 目录一致性仅规划 |
 | [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md) | 创建、读取、密码、分卷和限制 |
 | [桌面测试说明](docs/DESKTOP_E2E.md) / [测试指南](tests/README.md) | 本地和隔离场景 |
 
