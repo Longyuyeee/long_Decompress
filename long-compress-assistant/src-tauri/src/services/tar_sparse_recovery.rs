@@ -1,9 +1,52 @@
-//! Old GNU S maps, consumed only inside the checksum-confirmed TAR prefix.
+//! GNU S and local PAX 1.0 maps inside the checksum-confirmed TAR prefix.
 use anyhow::{Context,Result};
 use serde::Serialize;
 use sha2::{Digest,Sha256};
 use std::{fs::File,io::{Read,Seek,SeekFrom,Write},sync::atomic::AtomicBool};
 use super::{extraction_transaction::MAX_EXTRACTED_BYTES,lzop::recovery::check};
+
+fn decimal(value:&str)->Result<u64>{
+    anyhow::ensure!(!value.is_empty()&&value.len()<=20&&value.bytes().all(|b|b.is_ascii_digit()),"GNU.sparse 数值无效");
+    value.parse().context("GNU.sparse 数值溢出")
+}
+fn attribute<'a>(fields:&'a super::tar_pax::Fields,key:&str)->Result<&'a str>{
+    fields.iter().find(|(k,_)|k==key).map(|(_,v)|v.as_str()).with_context(||format!("GNU.sparse 缺少 {key}"))
+}
+/// Sparse attributes are local-only. Global PAX retains the stricter common rules.
+pub(crate) fn validate_local(fields:&super::tar_pax::Fields)->Result<bool>{
+    let sparse=fields.iter().any(|(k,_)|k.starts_with("GNU.sparse."));
+    let mut common=Vec::new();
+    for(k,v)in fields{
+        if k.starts_with("GNU.sparse."){
+            anyhow::ensure!(matches!(k.as_str(),"GNU.sparse.major"|"GNU.sparse.minor"|"GNU.sparse.name"|"GNU.sparse.realsize"),"[archive-inspection:unsupported] 暂不支持 GNU.sparse 属性 {k}");
+        }else{common.push((k.clone(),v.clone()));}
+    }
+    super::tar_pax::common(&common)?;
+    if sparse{
+        anyhow::ensure!(decimal(attribute(fields,"GNU.sparse.major")?)?==1&&decimal(attribute(fields,"GNU.sparse.minor")?)?==0,"[archive-inspection:unsupported] GNU.sparse 部分取回目前支持 PAX 1.0");
+        anyhow::ensure!(decimal(attribute(fields,"GNU.sparse.realsize")?)?<=MAX_EXTRACTED_BYTES,"[archive-inspection:unsupported] GNU.sparse 完整大小超过支持范围");
+        let name=attribute(fields,"GNU.sparse.name")?;
+        anyhow::ensure!(!name.is_empty()&&!name.contains(['\0','\n']),"GNU.sparse 文件名无效");
+    }
+    Ok(sparse)
+}
+struct TextMap<'a,R>{input:&'a mut R,block:[u8;512],cursor:usize,consumed:u64,physical:u64}
+impl<R:Read> TextMap<'_,R>{
+    fn number(&mut self)->Result<u64>{
+        let mut digits=Vec::new();
+        loop{
+            if self.cursor==512{
+                anyhow::ensure!(self.consumed+512<=self.physical&&self.consumed+512<=8*1024*1024,"GNU.sparse 文本映射超出条目边界或支持范围");
+                self.input.read_exact(&mut self.block).context("GNU.sparse 文本映射未完整到达")?;
+                self.consumed+=512;self.cursor=0;
+            }
+            let b=self.block[self.cursor];self.cursor+=1;
+            if b==b'\n'{break;}
+            anyhow::ensure!(b.is_ascii_digit()&&digits.len()<20,"GNU.sparse 文本映射数值无效");digits.push(b);
+        }
+        decimal(std::str::from_utf8(&digits)?)
+    }
+}
 
 #[derive(Debug,Clone,Serialize)]
 pub(crate) struct Layout { pub logical:u64, pub stored:u64, pub ranges:Vec<(u64,u64)> }
@@ -33,6 +76,18 @@ impl Layout {
             anyhow::ensure!(ext.padding.iter().all(|b|*b==0),"TAR 稀疏扩展填充无效");
             slots(ext.sparse(),&mut ranges,&mut unused)?;extended=ext.isextended[0];extensions+=1;
         }
+        Self::checked(logical,stored,ranges)
+    }
+    pub(crate) fn parse_pax10(fields:&super::tar_pax::Fields,physical:u64,input:&mut impl Read)->Result<Self>{
+        let logical=decimal(attribute(fields,"GNU.sparse.realsize")?)?;
+        let mut map=TextMap{input,block:[0;512],cursor:512,consumed:0,physical};
+        let count=map.number()?;
+        anyhow::ensure!(count<=65_536,"[archive-inspection:unsupported] GNU.sparse 段数超过支持范围");
+        let mut ranges=Vec::new();for _ in 0..count{ranges.push((map.number()?,map.number()?));}
+        anyhow::ensure!(map.block[map.cursor..].iter().all(|b|*b==0),"GNU.sparse 文本映射填充无效");
+        Self::checked(logical,physical-map.consumed,ranges)
+    }
+    fn checked(logical:u64,stored:u64,ranges:Vec<(u64,u64)>)->Result<Self>{
         let(mut previous,mut total,mut eof)=(0u64,0u64,false);
         for &(offset,length)in &ranges {
             let end=offset.checked_add(length).context("TAR 稀疏范围溢出")?;

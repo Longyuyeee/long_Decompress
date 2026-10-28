@@ -63,7 +63,7 @@ docs/               产品路线、格式说明和发布记录
 | --- | --- |
 | [开发交接](docs/DEVELOPMENT_HANDOFF.md) / [产品路线](docs/PRODUCT_ENHANCEMENT_ROADMAP.md) | 当前状态、下一步及已有验证 |
 | [v1.7.0 范围](docs/ARCHIVE_ROADMAP_1.7.0.md) / [实现与检查](docs/WINDOWS_OPEN_AND_BROWSER_UI.md) | Windows 打开、双栏统一与历史菜单 |
-| [v1.7.13 旧 GNU 稀疏文件取回](docs/TAR_GNU_SPARSE_FREEZE_1.7.13.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.14.md) | 确认完整映射后恢复逻辑内容，保留大空洞与原结果；PAX sparse 1.0 仅规划 |
+| [v1.7.14 PAX 1.0 稀疏文件取回](docs/TAR_PAX10_FREEZE_1.7.14.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.15.md) | 识别真实名称和跨块映射，保留空洞与原结果；PAX sparse 0.1 仅规划 |
 | [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md) | 创建、读取、密码、分卷和限制 |
 | [桌面测试说明](docs/DESKTOP_E2E.md) / [测试指南](tests/README.md) | 本地和隔离场景 |
 
