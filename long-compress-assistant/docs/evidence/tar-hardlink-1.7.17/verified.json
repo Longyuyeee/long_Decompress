@@ -1,0 +1,121 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "mode": "tail",
+      "files": 11,
+      "directories": 2,
+      "exactLogicalHashesAndTimes": true,
+      "allocations": [
+        {
+          "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "长目标副本.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "资料/跨块映射.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 6291456
+        },
+        {
+          "name": "稀疏副本.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 6291456
+        }
+      ]
+    },
+    {
+      "mode": "selected",
+      "files": 5,
+      "directories": 2,
+      "exactLogicalHashesAndTimes": true,
+      "allocations": [
+        {
+          "name": "长目标副本.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "稀疏副本.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 6291456
+        }
+      ]
+    },
+    {
+      "mode": "checksum",
+      "files": 11,
+      "directories": 2,
+      "exactLogicalHashesAndTimes": true,
+      "allocations": [
+        {
+          "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "长目标副本.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "资料/跨块映射.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 6291456
+        },
+        {
+          "name": "稀疏副本.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 6291456
+        }
+      ]
+    },
+    {
+      "mode": "end",
+      "files": 12,
+      "directories": 2,
+      "exactLogicalHashesAndTimes": true,
+      "allocations": [
+        {
+          "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "长目标副本.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "资料/跨块映射.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 6291456
+        },
+        {
+          "name": "稀疏副本.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 6291456
+        }
+      ]
+    }
+  ]
+}

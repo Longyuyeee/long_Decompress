@@ -1,0 +1,1993 @@
+[
+  {
+    "mode": "tail",
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-hardlink-1717\\8f24586a-d914-4b71-ac7a-64c56349b9c7\\tail.tar.lzo",
+    "report": {
+      "format": "TAR.LZO",
+      "revision": "ef926509271b278d230eed7f088ac1f0226bf828868e8d28a07400dcc34a91a7",
+      "entries": [
+        {
+          "id": 0,
+          "name": "prefix.txt",
+          "bytes": 35,
+          "sha256": "e74d0df30d9947d424fa726901105e857bfe7933ad6fdad11efd505708128711",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 1,
+          "name": "资料",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 2,
+          "name": "资料/empty",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 3,
+          "name": "source.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 4,
+          "name": "alias-a.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "linkTarget": "source.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 5,
+          "name": "资料/alias-b.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "linkTarget": "source.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 6,
+          "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "bytes": 8388608,
+          "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+          "isDirectory": false,
+          "storedBytes": 122880,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 7,
+          "name": "长目标副本.bin",
+          "bytes": 8388608,
+          "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+          "isDirectory": false,
+          "storedBytes": 122880,
+          "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 8,
+          "name": "empty.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 9,
+          "name": "empty-copy.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "linkTarget": "empty.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 10,
+          "name": "资料/跨块映射.bin",
+          "bytes": 16777216,
+          "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+          "isDirectory": false,
+          "storedBytes": 393216,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 11,
+          "name": "稀疏副本.bin",
+          "bytes": 16777216,
+          "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+          "isDirectory": false,
+          "storedBytes": 393216,
+          "linkTarget": "资料/跨块映射.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 12,
+          "name": "after.txt",
+          "bytes": 39,
+          "sha256": "4a7ed5e24a2d937743244e2c1189a961839d78d6b337ce64d090e5ab7b2ad479",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        }
+      ],
+      "complete": false,
+      "stopReason": "TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件",
+      "stoppedMember": "late.bin",
+      "stoppedOffset": 733184,
+      "availableVolumes": 1,
+      "ignoredVolumes": 0
+    },
+    "result": {
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-hardlink-1717\\8f24586a-d914-4b71-ac7a-64c56349b9c7\\tail.tar.lzo.部分取回-44d510dd",
+      "recoveredFiles": 11,
+      "recoveredDirectories": 2,
+      "recoveredBytes": 50931731,
+      "entries": [
+        {
+          "id": 0,
+          "name": "prefix.txt",
+          "bytes": 35,
+          "sha256": "e74d0df30d9947d424fa726901105e857bfe7933ad6fdad11efd505708128711",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 1,
+          "name": "资料",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 2,
+          "name": "资料/empty",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 3,
+          "name": "source.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 4,
+          "name": "alias-a.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "linkTarget": "source.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 5,
+          "name": "资料/alias-b.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "linkTarget": "source.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 6,
+          "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "bytes": 8388608,
+          "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+          "isDirectory": false,
+          "storedBytes": 122880,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 7,
+          "name": "长目标副本.bin",
+          "bytes": 8388608,
+          "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+          "isDirectory": false,
+          "storedBytes": 122880,
+          "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 8,
+          "name": "empty.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 9,
+          "name": "empty-copy.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "linkTarget": "empty.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 10,
+          "name": "资料/跨块映射.bin",
+          "bytes": 16777216,
+          "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+          "isDirectory": false,
+          "storedBytes": 393216,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 11,
+          "name": "稀疏副本.bin",
+          "bytes": 16777216,
+          "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+          "isDirectory": false,
+          "storedBytes": 393216,
+          "linkTarget": "资料/跨块映射.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 12,
+          "name": "after.txt",
+          "bytes": 39,
+          "sha256": "4a7ed5e24a2d937743244e2c1189a961839d78d6b337ce64d090e5ab7b2ad479",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        }
+      ],
+      "stopReason": "TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件",
+      "partial": true,
+      "timePreservation": {
+        "preservedFiles": 11,
+        "unpreservedFiles": 0,
+        "preservedDirectories": 2,
+        "unpreservedDirectories": 0
+      }
+    },
+    "entries": [
+      {
+        "name": "prefix.txt",
+        "isDirectory": false,
+        "bytes": 35,
+        "sha256": "e74d0df30d9947d424fa726901105e857bfe7933ad6fdad11efd505708128711",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "资料",
+        "isDirectory": true,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "资料/empty",
+        "isDirectory": true,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "source.bin",
+        "isDirectory": false,
+        "bytes": 200003,
+        "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "alias-a.bin",
+        "isDirectory": false,
+        "bytes": 200003,
+        "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "source.bin",
+        "targetId": 3
+      },
+      {
+        "name": "资料/alias-b.bin",
+        "isDirectory": false,
+        "bytes": 200003,
+        "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "source.bin",
+        "targetId": 3
+      },
+      {
+        "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+        "isDirectory": false,
+        "bytes": 8388608,
+        "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "长目标副本.bin",
+        "isDirectory": false,
+        "bytes": 8388608,
+        "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+        "targetId": 6
+      },
+      {
+        "name": "empty.bin",
+        "isDirectory": false,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "empty-copy.bin",
+        "isDirectory": false,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "empty.bin",
+        "targetId": 8
+      },
+      {
+        "name": "资料/跨块映射.bin",
+        "isDirectory": false,
+        "bytes": 16777216,
+        "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "稀疏副本.bin",
+        "isDirectory": false,
+        "bytes": 16777216,
+        "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "资料/跨块映射.bin",
+        "targetId": 10
+      },
+      {
+        "name": "after.txt",
+        "isDirectory": false,
+        "bytes": 39,
+        "sha256": "4a7ed5e24a2d937743244e2c1189a961839d78d6b337ce64d090e5ab7b2ad479",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      }
+    ],
+    "diagnosis": {
+      "lzopPrefix": {
+        "format": "TAR.LZO",
+        "revision": "ef926509271b278d230eed7f088ac1f0226bf828868e8d28a07400dcc34a91a7",
+        "entries": [
+          {
+            "id": 0,
+            "name": "prefix.txt",
+            "bytes": 35,
+            "sha256": "e74d0df30d9947d424fa726901105e857bfe7933ad6fdad11efd505708128711",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 1,
+            "name": "资料",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": true,
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 2,
+            "name": "资料/empty",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": true,
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 3,
+            "name": "source.bin",
+            "bytes": 200003,
+            "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 4,
+            "name": "alias-a.bin",
+            "bytes": 200003,
+            "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+            "isDirectory": false,
+            "linkTarget": "source.bin",
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 5,
+            "name": "资料/alias-b.bin",
+            "bytes": 200003,
+            "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+            "isDirectory": false,
+            "linkTarget": "source.bin",
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 6,
+            "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+            "bytes": 8388608,
+            "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+            "isDirectory": false,
+            "storedBytes": 122880,
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 7,
+            "name": "长目标副本.bin",
+            "bytes": 8388608,
+            "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+            "isDirectory": false,
+            "storedBytes": 122880,
+            "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 8,
+            "name": "empty.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 9,
+            "name": "empty-copy.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": false,
+            "linkTarget": "empty.bin",
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 10,
+            "name": "资料/跨块映射.bin",
+            "bytes": 16777216,
+            "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+            "isDirectory": false,
+            "storedBytes": 393216,
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 11,
+            "name": "稀疏副本.bin",
+            "bytes": 16777216,
+            "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+            "isDirectory": false,
+            "storedBytes": 393216,
+            "linkTarget": "资料/跨块映射.bin",
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 12,
+            "name": "after.txt",
+            "bytes": 39,
+            "sha256": "4a7ed5e24a2d937743244e2c1189a961839d78d6b337ce64d090e5ab7b2ad479",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          }
+        ],
+        "complete": false,
+        "stopReason": "TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件",
+        "stoppedMember": "late.bin",
+        "stoppedOffset": 733184,
+        "availableVolumes": 1,
+        "ignoredVolumes": 0
+      },
+      "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-hardlink-1717\\8f24586a-d914-4b71-ac7a-64c56349b9c7\\tail.tar.lzo",
+      "fileSize": 1423224,
+      "actualFormat": "TAR.LZO",
+      "status": "partial_recovery",
+      "encrypted": false,
+      "splitArchive": false,
+      "volumesFound": 1,
+      "missingVolumes": [],
+      "totalFiles": 11,
+      "totalDirectories": 2,
+      "totalUncompressedSize": 50931731,
+      "totalUncompressedSizeKnown": false,
+      "integrityTested": false,
+      "canRepair": false,
+      "recoverability": "lzop_prefix",
+      "issues": [
+        {
+          "code": "lzop_prefix",
+          "severity": "warning",
+          "title": "可选择部分取回 13 个完整条目",
+          "detail": "TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件。仅检查从首卷起的连续前缀，后续清单未知；原件保持不变。"
+        }
+      ],
+      "evidence": [
+        "Archive size: 1423224 bytes",
+        "已解码并校验 11 个文件、2 个目录；TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件"
+      ]
+    },
+    "sourceKind": "damaged GNU/lzop producer original"
+  },
+  {
+    "mode": "selected",
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-hardlink-1717\\8f24586a-d914-4b71-ac7a-64c56349b9c7\\tail.tar.lzo",
+    "report": {
+      "format": "TAR.LZO",
+      "revision": "ef926509271b278d230eed7f088ac1f0226bf828868e8d28a07400dcc34a91a7",
+      "entries": [
+        {
+          "id": 0,
+          "name": "prefix.txt",
+          "bytes": 35,
+          "sha256": "e74d0df30d9947d424fa726901105e857bfe7933ad6fdad11efd505708128711",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 1,
+          "name": "资料",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 2,
+          "name": "资料/empty",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 3,
+          "name": "source.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 4,
+          "name": "alias-a.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "linkTarget": "source.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 5,
+          "name": "资料/alias-b.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "linkTarget": "source.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 6,
+          "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "bytes": 8388608,
+          "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+          "isDirectory": false,
+          "storedBytes": 122880,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 7,
+          "name": "长目标副本.bin",
+          "bytes": 8388608,
+          "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+          "isDirectory": false,
+          "storedBytes": 122880,
+          "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 8,
+          "name": "empty.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 9,
+          "name": "empty-copy.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "linkTarget": "empty.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 10,
+          "name": "资料/跨块映射.bin",
+          "bytes": 16777216,
+          "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+          "isDirectory": false,
+          "storedBytes": 393216,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 11,
+          "name": "稀疏副本.bin",
+          "bytes": 16777216,
+          "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+          "isDirectory": false,
+          "storedBytes": 393216,
+          "linkTarget": "资料/跨块映射.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 12,
+          "name": "after.txt",
+          "bytes": 39,
+          "sha256": "4a7ed5e24a2d937743244e2c1189a961839d78d6b337ce64d090e5ab7b2ad479",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        }
+      ],
+      "complete": false,
+      "stopReason": "TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件",
+      "stoppedMember": "late.bin",
+      "stoppedOffset": 733184,
+      "availableVolumes": 1,
+      "ignoredVolumes": 0
+    },
+    "result": {
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-hardlink-1717\\8f24586a-d914-4b71-ac7a-64c56349b9c7\\tail.tar.lzo.部分取回-5c7d12de",
+      "recoveredFiles": 5,
+      "recoveredDirectories": 1,
+      "recoveredBytes": 25565830,
+      "entries": [
+        {
+          "id": 2,
+          "name": "资料/empty",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 4,
+          "name": "alias-a.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "linkTarget": "source.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 5,
+          "name": "资料/alias-b.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "linkTarget": "source.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 7,
+          "name": "长目标副本.bin",
+          "bytes": 8388608,
+          "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+          "isDirectory": false,
+          "storedBytes": 122880,
+          "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 9,
+          "name": "empty-copy.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "linkTarget": "empty.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 11,
+          "name": "稀疏副本.bin",
+          "bytes": 16777216,
+          "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+          "isDirectory": false,
+          "storedBytes": 393216,
+          "linkTarget": "资料/跨块映射.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        }
+      ],
+      "stopReason": "TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件",
+      "partial": true,
+      "timePreservation": {
+        "preservedFiles": 5,
+        "unpreservedFiles": 0,
+        "preservedDirectories": 1,
+        "unpreservedDirectories": 0
+      }
+    },
+    "entries": [
+      {
+        "name": "资料/empty",
+        "isDirectory": true,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "alias-a.bin",
+        "isDirectory": false,
+        "bytes": 200003,
+        "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "source.bin",
+        "targetId": 3
+      },
+      {
+        "name": "资料/alias-b.bin",
+        "isDirectory": false,
+        "bytes": 200003,
+        "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "source.bin",
+        "targetId": 3
+      },
+      {
+        "name": "长目标副本.bin",
+        "isDirectory": false,
+        "bytes": 8388608,
+        "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+        "targetId": 6
+      },
+      {
+        "name": "empty-copy.bin",
+        "isDirectory": false,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "empty.bin",
+        "targetId": 8
+      },
+      {
+        "name": "稀疏副本.bin",
+        "isDirectory": false,
+        "bytes": 16777216,
+        "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "资料/跨块映射.bin",
+        "targetId": 10
+      }
+    ]
+  },
+  {
+    "mode": "checksum",
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-hardlink-1717\\8f24586a-d914-4b71-ac7a-64c56349b9c7\\checksum.tar.lzo",
+    "report": {
+      "format": "TAR.LZO",
+      "revision": "eca5af25fe68a7e149d6bc5d34edefad05819bc50f9c0a8ba0fc43e1daed1596",
+      "entries": [
+        {
+          "id": 0,
+          "name": "prefix.txt",
+          "bytes": 35,
+          "sha256": "e74d0df30d9947d424fa726901105e857bfe7933ad6fdad11efd505708128711",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 1,
+          "name": "资料",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 2,
+          "name": "资料/empty",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 3,
+          "name": "source.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 4,
+          "name": "alias-a.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "linkTarget": "source.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 5,
+          "name": "资料/alias-b.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "linkTarget": "source.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 6,
+          "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "bytes": 8388608,
+          "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+          "isDirectory": false,
+          "storedBytes": 122880,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 7,
+          "name": "长目标副本.bin",
+          "bytes": 8388608,
+          "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+          "isDirectory": false,
+          "storedBytes": 122880,
+          "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 8,
+          "name": "empty.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 9,
+          "name": "empty-copy.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "linkTarget": "empty.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 10,
+          "name": "资料/跨块映射.bin",
+          "bytes": 16777216,
+          "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+          "isDirectory": false,
+          "storedBytes": 393216,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 11,
+          "name": "稀疏副本.bin",
+          "bytes": 16777216,
+          "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+          "isDirectory": false,
+          "storedBytes": 393216,
+          "linkTarget": "资料/跨块映射.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 12,
+          "name": "after.txt",
+          "bytes": 39,
+          "sha256": "4a7ed5e24a2d937743244e2c1189a961839d78d6b337ce64d090e5ab7b2ad479",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        }
+      ],
+      "complete": false,
+      "stopReason": "TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 展开块校验失败，请重新获取完整原文件",
+      "stoppedMember": "late.bin",
+      "stoppedOffset": 733184,
+      "availableVolumes": 1,
+      "ignoredVolumes": 0
+    },
+    "result": {
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-hardlink-1717\\8f24586a-d914-4b71-ac7a-64c56349b9c7\\checksum.tar.lzo.部分取回-fdc841dd",
+      "recoveredFiles": 11,
+      "recoveredDirectories": 2,
+      "recoveredBytes": 50931731,
+      "entries": [
+        {
+          "id": 0,
+          "name": "prefix.txt",
+          "bytes": 35,
+          "sha256": "e74d0df30d9947d424fa726901105e857bfe7933ad6fdad11efd505708128711",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 1,
+          "name": "资料",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 2,
+          "name": "资料/empty",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 3,
+          "name": "source.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 4,
+          "name": "alias-a.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "linkTarget": "source.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 5,
+          "name": "资料/alias-b.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "linkTarget": "source.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 6,
+          "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "bytes": 8388608,
+          "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+          "isDirectory": false,
+          "storedBytes": 122880,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 7,
+          "name": "长目标副本.bin",
+          "bytes": 8388608,
+          "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+          "isDirectory": false,
+          "storedBytes": 122880,
+          "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 8,
+          "name": "empty.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 9,
+          "name": "empty-copy.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "linkTarget": "empty.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 10,
+          "name": "资料/跨块映射.bin",
+          "bytes": 16777216,
+          "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+          "isDirectory": false,
+          "storedBytes": 393216,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 11,
+          "name": "稀疏副本.bin",
+          "bytes": 16777216,
+          "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+          "isDirectory": false,
+          "storedBytes": 393216,
+          "linkTarget": "资料/跨块映射.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 12,
+          "name": "after.txt",
+          "bytes": 39,
+          "sha256": "4a7ed5e24a2d937743244e2c1189a961839d78d6b337ce64d090e5ab7b2ad479",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        }
+      ],
+      "stopReason": "TAR 文件内容未完整到达: [archive-inspection:damaged] LZOP 展开块校验失败，请重新获取完整原文件",
+      "partial": true,
+      "timePreservation": {
+        "preservedFiles": 11,
+        "unpreservedFiles": 0,
+        "preservedDirectories": 2,
+        "unpreservedDirectories": 0
+      }
+    },
+    "entries": [
+      {
+        "name": "prefix.txt",
+        "isDirectory": false,
+        "bytes": 35,
+        "sha256": "e74d0df30d9947d424fa726901105e857bfe7933ad6fdad11efd505708128711",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "资料",
+        "isDirectory": true,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "资料/empty",
+        "isDirectory": true,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "source.bin",
+        "isDirectory": false,
+        "bytes": 200003,
+        "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "alias-a.bin",
+        "isDirectory": false,
+        "bytes": 200003,
+        "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "source.bin",
+        "targetId": 3
+      },
+      {
+        "name": "资料/alias-b.bin",
+        "isDirectory": false,
+        "bytes": 200003,
+        "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "source.bin",
+        "targetId": 3
+      },
+      {
+        "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+        "isDirectory": false,
+        "bytes": 8388608,
+        "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "长目标副本.bin",
+        "isDirectory": false,
+        "bytes": 8388608,
+        "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+        "targetId": 6
+      },
+      {
+        "name": "empty.bin",
+        "isDirectory": false,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "empty-copy.bin",
+        "isDirectory": false,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "empty.bin",
+        "targetId": 8
+      },
+      {
+        "name": "资料/跨块映射.bin",
+        "isDirectory": false,
+        "bytes": 16777216,
+        "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "稀疏副本.bin",
+        "isDirectory": false,
+        "bytes": 16777216,
+        "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "资料/跨块映射.bin",
+        "targetId": 10
+      },
+      {
+        "name": "after.txt",
+        "isDirectory": false,
+        "bytes": 39,
+        "sha256": "4a7ed5e24a2d937743244e2c1189a961839d78d6b337ce64d090e5ab7b2ad479",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      }
+    ],
+    "sourceKind": "CRC construction around GNU TAR"
+  },
+  {
+    "mode": "end",
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-hardlink-1717\\8f24586a-d914-4b71-ac7a-64c56349b9c7\\end.tar.lzo",
+    "report": {
+      "format": "TAR.LZO",
+      "revision": "a5e3930a5b9db62717dc50c52c9ff4c7b898d58c65a54d4b95ec5ca8432808e8",
+      "entries": [
+        {
+          "id": 0,
+          "name": "prefix.txt",
+          "bytes": 35,
+          "sha256": "e74d0df30d9947d424fa726901105e857bfe7933ad6fdad11efd505708128711",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 1,
+          "name": "资料",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 2,
+          "name": "资料/empty",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 3,
+          "name": "source.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 4,
+          "name": "alias-a.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "linkTarget": "source.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 5,
+          "name": "资料/alias-b.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "linkTarget": "source.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 6,
+          "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "bytes": 8388608,
+          "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+          "isDirectory": false,
+          "storedBytes": 122880,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 7,
+          "name": "长目标副本.bin",
+          "bytes": 8388608,
+          "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+          "isDirectory": false,
+          "storedBytes": 122880,
+          "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 8,
+          "name": "empty.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 9,
+          "name": "empty-copy.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "linkTarget": "empty.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 10,
+          "name": "资料/跨块映射.bin",
+          "bytes": 16777216,
+          "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+          "isDirectory": false,
+          "storedBytes": 393216,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 11,
+          "name": "稀疏副本.bin",
+          "bytes": 16777216,
+          "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+          "isDirectory": false,
+          "storedBytes": 393216,
+          "linkTarget": "资料/跨块映射.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 12,
+          "name": "after.txt",
+          "bytes": 39,
+          "sha256": "4a7ed5e24a2d937743244e2c1189a961839d78d6b337ce64d090e5ab7b2ad479",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 13,
+          "name": "late.bin",
+          "bytes": 1100178,
+          "sha256": "b123c372c509a5f6116d4f3beed40eada00ace4c5a8e4d12fae40dca63cf7c7a",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        }
+      ],
+      "complete": false,
+      "stopReason": "[archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件",
+      "stoppedMember": null,
+      "stoppedOffset": 1833984,
+      "availableVolumes": 1,
+      "ignoredVolumes": 0
+    },
+    "result": {
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-hardlink-1717\\8f24586a-d914-4b71-ac7a-64c56349b9c7\\end.tar.lzo.部分取回-36403b10",
+      "recoveredFiles": 12,
+      "recoveredDirectories": 2,
+      "recoveredBytes": 52031909,
+      "entries": [
+        {
+          "id": 0,
+          "name": "prefix.txt",
+          "bytes": 35,
+          "sha256": "e74d0df30d9947d424fa726901105e857bfe7933ad6fdad11efd505708128711",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 1,
+          "name": "资料",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 2,
+          "name": "资料/empty",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": true,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 3,
+          "name": "source.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 4,
+          "name": "alias-a.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "linkTarget": "source.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 5,
+          "name": "资料/alias-b.bin",
+          "bytes": 200003,
+          "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+          "isDirectory": false,
+          "linkTarget": "source.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 6,
+          "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "bytes": 8388608,
+          "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+          "isDirectory": false,
+          "storedBytes": 122880,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 7,
+          "name": "长目标副本.bin",
+          "bytes": 8388608,
+          "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+          "isDirectory": false,
+          "storedBytes": 122880,
+          "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 8,
+          "name": "empty.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 9,
+          "name": "empty-copy.bin",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "isDirectory": false,
+          "linkTarget": "empty.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 10,
+          "name": "资料/跨块映射.bin",
+          "bytes": 16777216,
+          "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+          "isDirectory": false,
+          "storedBytes": 393216,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 11,
+          "name": "稀疏副本.bin",
+          "bytes": 16777216,
+          "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+          "isDirectory": false,
+          "storedBytes": 393216,
+          "linkTarget": "资料/跨块映射.bin",
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 12,
+          "name": "after.txt",
+          "bytes": 39,
+          "sha256": "4a7ed5e24a2d937743244e2c1189a961839d78d6b337ce64d090e5ab7b2ad479",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        },
+        {
+          "id": 13,
+          "name": "late.bin",
+          "bytes": 1100178,
+          "sha256": "b123c372c509a5f6116d4f3beed40eada00ace4c5a8e4d12fae40dca63cf7c7a",
+          "isDirectory": false,
+          "modifiedTime": {
+            "seconds": 1700001717,
+            "nanoseconds": 0
+          }
+        }
+      ],
+      "stopReason": "[archive-inspection:damaged] LZOP 数据不完整，请重新获取完整原文件",
+      "partial": true,
+      "timePreservation": {
+        "preservedFiles": 12,
+        "unpreservedFiles": 0,
+        "preservedDirectories": 2,
+        "unpreservedDirectories": 0
+      }
+    },
+    "entries": [
+      {
+        "name": "prefix.txt",
+        "isDirectory": false,
+        "bytes": 35,
+        "sha256": "e74d0df30d9947d424fa726901105e857bfe7933ad6fdad11efd505708128711",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "资料",
+        "isDirectory": true,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "资料/empty",
+        "isDirectory": true,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "source.bin",
+        "isDirectory": false,
+        "bytes": 200003,
+        "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "alias-a.bin",
+        "isDirectory": false,
+        "bytes": 200003,
+        "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "source.bin",
+        "targetId": 3
+      },
+      {
+        "name": "资料/alias-b.bin",
+        "isDirectory": false,
+        "bytes": 200003,
+        "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "source.bin",
+        "targetId": 3
+      },
+      {
+        "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+        "isDirectory": false,
+        "bytes": 8388608,
+        "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "长目标副本.bin",
+        "isDirectory": false,
+        "bytes": 8388608,
+        "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+        "targetId": 6
+      },
+      {
+        "name": "empty.bin",
+        "isDirectory": false,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "empty-copy.bin",
+        "isDirectory": false,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "empty.bin",
+        "targetId": 8
+      },
+      {
+        "name": "资料/跨块映射.bin",
+        "isDirectory": false,
+        "bytes": 16777216,
+        "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "稀疏副本.bin",
+        "isDirectory": false,
+        "bytes": 16777216,
+        "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "资料/跨块映射.bin",
+        "targetId": 10
+      },
+      {
+        "name": "after.txt",
+        "isDirectory": false,
+        "bytes": 39,
+        "sha256": "4a7ed5e24a2d937743244e2c1189a961839d78d6b337ce64d090e5ab7b2ad479",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "late.bin",
+        "isDirectory": false,
+        "bytes": 1100178,
+        "sha256": "b123c372c509a5f6116d4f3beed40eada00ace4c5a8e4d12fae40dca63cf7c7a",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      }
+    ],
+    "sourceKind": "damaged GNU/lzop producer original"
+  }
+]
