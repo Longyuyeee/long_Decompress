@@ -1,0 +1,935 @@
+{
+  "passed": true,
+  "recipeVersion": 1,
+  "sources": "GNU tar 1.35 producer from project-authored files and real source hardlinks. GNU full extraction verifies link relationships, names and SHA; Python independently reads target contents (not sparse-placeholder link lookup). Official fixed-SHA lzop round trip.",
+  "sourceTarSha256": "1809ede0e5fe0c2fab04cfd13734ba827d6bd1bc3d34e901bf723af6e983e8f7",
+  "lzopProducerSha256": "d9b46cf6fa44f4d657e5a3943d361dac24040d0acda37019b19ba285e52e2c53",
+  "tar": "hardlinks.tar",
+  "tarSha256": "db7b11b958c85a73e5bb756d6d40d97764e623591900ca7f5115df35fce5da3c",
+  "archive": "hardlinks.tar.lzo",
+  "sha256": "eda5088f6dfac337ae12e35cba467cd6b092b9191df06ff8ecf06f7933375bb1",
+  "entries": [
+    {
+      "name": "prefix.txt",
+      "isDirectory": false,
+      "bytes": 35,
+      "sha256": "e74d0df30d9947d424fa726901105e857bfe7933ad6fdad11efd505708128711",
+      "modifiedTime": {
+        "seconds": 1700001717,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "name": "资料",
+      "isDirectory": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "modifiedTime": {
+        "seconds": 1700001717,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "name": "资料/empty",
+      "isDirectory": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "modifiedTime": {
+        "seconds": 1700001717,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "name": "source.bin",
+      "isDirectory": false,
+      "bytes": 200003,
+      "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+      "modifiedTime": {
+        "seconds": 1700001717,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "name": "alias-a.bin",
+      "isDirectory": false,
+      "bytes": 200003,
+      "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+      "modifiedTime": {
+        "seconds": 1700001717,
+        "nanoseconds": 0
+      },
+      "linkTarget": "source.bin",
+      "targetId": 3
+    },
+    {
+      "name": "资料/alias-b.bin",
+      "isDirectory": false,
+      "bytes": 200003,
+      "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+      "modifiedTime": {
+        "seconds": 1700001717,
+        "nanoseconds": 0
+      },
+      "linkTarget": "source.bin",
+      "targetId": 3
+    },
+    {
+      "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+      "isDirectory": false,
+      "bytes": 8388608,
+      "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+      "modifiedTime": {
+        "seconds": 1700001717,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "name": "长目标副本.bin",
+      "isDirectory": false,
+      "bytes": 8388608,
+      "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+      "modifiedTime": {
+        "seconds": 1700001717,
+        "nanoseconds": 0
+      },
+      "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+      "targetId": 6
+    },
+    {
+      "name": "empty.bin",
+      "isDirectory": false,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "modifiedTime": {
+        "seconds": 1700001717,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "name": "empty-copy.bin",
+      "isDirectory": false,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "modifiedTime": {
+        "seconds": 1700001717,
+        "nanoseconds": 0
+      },
+      "linkTarget": "empty.bin",
+      "targetId": 8
+    },
+    {
+      "name": "资料/跨块映射.bin",
+      "isDirectory": false,
+      "bytes": 16777216,
+      "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+      "modifiedTime": {
+        "seconds": 1700001717,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "name": "稀疏副本.bin",
+      "isDirectory": false,
+      "bytes": 16777216,
+      "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+      "modifiedTime": {
+        "seconds": 1700001717,
+        "nanoseconds": 0
+      },
+      "linkTarget": "资料/跨块映射.bin",
+      "targetId": 10
+    },
+    {
+      "name": "after.txt",
+      "isDirectory": false,
+      "bytes": 39,
+      "sha256": "4a7ed5e24a2d937743244e2c1189a961839d78d6b337ce64d090e5ab7b2ad479",
+      "modifiedTime": {
+        "seconds": 1700001717,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "name": "late.bin",
+      "isDirectory": false,
+      "bytes": 1100178,
+      "sha256": "b123c372c509a5f6116d4f3beed40eada00ace4c5a8e4d12fae40dca63cf7c7a",
+      "modifiedTime": {
+        "seconds": 1700001717,
+        "nanoseconds": 0
+      }
+    }
+  ],
+  "records": [
+    {
+      "name": "prefix.txt",
+      "kind": "0",
+      "logicalIndex": 0,
+      "headerOffset": 0,
+      "bodyOffset": 512,
+      "dataOffset": 512,
+      "physicalBytes": 35,
+      "storedBytes": 35,
+      "ranges": [],
+      "pax": {},
+      "control": null
+    },
+    {
+      "name": "资料",
+      "kind": "5",
+      "logicalIndex": 1,
+      "headerOffset": 2048,
+      "bodyOffset": 2560,
+      "dataOffset": 2560,
+      "physicalBytes": 0,
+      "storedBytes": 0,
+      "ranges": [],
+      "pax": {
+        "path": "资料/"
+      },
+      "control": {
+        "offset": 1024,
+        "bytes": 16,
+        "fields": {
+          "path": "资料/"
+        }
+      }
+    },
+    {
+      "name": "资料/empty",
+      "kind": "5",
+      "logicalIndex": 2,
+      "headerOffset": 3584,
+      "bodyOffset": 4096,
+      "dataOffset": 4096,
+      "physicalBytes": 0,
+      "storedBytes": 0,
+      "ranges": [],
+      "pax": {
+        "path": "资料/empty/"
+      },
+      "control": {
+        "offset": 2560,
+        "bytes": 22,
+        "fields": {
+          "path": "资料/empty/"
+        }
+      }
+    },
+    {
+      "name": "source.bin",
+      "kind": "0",
+      "logicalIndex": 3,
+      "headerOffset": 4096,
+      "bodyOffset": 4608,
+      "dataOffset": 4608,
+      "physicalBytes": 200003,
+      "storedBytes": 200003,
+      "ranges": [],
+      "pax": {},
+      "control": null
+    },
+    {
+      "name": "alias-a.bin",
+      "kind": "1",
+      "logicalIndex": 4,
+      "headerOffset": 204800,
+      "bodyOffset": 205312,
+      "dataOffset": 205312,
+      "physicalBytes": 0,
+      "storedBytes": 0,
+      "ranges": [],
+      "pax": {},
+      "control": null
+    },
+    {
+      "name": "资料/alias-b.bin",
+      "kind": "1",
+      "logicalIndex": 5,
+      "headerOffset": 206336,
+      "bodyOffset": 206848,
+      "dataOffset": 206848,
+      "physicalBytes": 0,
+      "storedBytes": 0,
+      "ranges": [],
+      "pax": {
+        "path": "资料/alias-b.bin"
+      },
+      "control": {
+        "offset": 205312,
+        "bytes": 27,
+        "fields": {
+          "path": "资料/alias-b.bin"
+        }
+      }
+    },
+    {
+      "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+      "kind": "0",
+      "logicalIndex": 6,
+      "headerOffset": 207872,
+      "bodyOffset": 208384,
+      "dataOffset": 208896,
+      "physicalBytes": 123392,
+      "storedBytes": 122880,
+      "ranges": [
+        [
+          0,
+          4096
+        ],
+        [
+          131072,
+          4096
+        ],
+        [
+          262144,
+          4096
+        ],
+        [
+          393216,
+          4096
+        ],
+        [
+          524288,
+          4096
+        ],
+        [
+          655360,
+          4096
+        ],
+        [
+          786432,
+          4096
+        ],
+        [
+          917504,
+          4096
+        ],
+        [
+          1048576,
+          4096
+        ],
+        [
+          1179648,
+          4096
+        ],
+        [
+          1310720,
+          4096
+        ],
+        [
+          1441792,
+          4096
+        ],
+        [
+          1572864,
+          4096
+        ],
+        [
+          1703936,
+          4096
+        ],
+        [
+          1835008,
+          4096
+        ],
+        [
+          1966080,
+          4096
+        ],
+        [
+          2097152,
+          4096
+        ],
+        [
+          2228224,
+          4096
+        ],
+        [
+          2359296,
+          4096
+        ],
+        [
+          2490368,
+          4096
+        ],
+        [
+          2621440,
+          4096
+        ],
+        [
+          2752512,
+          4096
+        ],
+        [
+          2883584,
+          4096
+        ],
+        [
+          3014656,
+          4096
+        ],
+        [
+          3145728,
+          4096
+        ],
+        [
+          3276800,
+          4096
+        ],
+        [
+          3407872,
+          4096
+        ],
+        [
+          3538944,
+          4096
+        ],
+        [
+          3670016,
+          4096
+        ],
+        [
+          3801088,
+          4096
+        ],
+        [
+          8388608,
+          0
+        ]
+      ],
+      "pax": {
+        "GNU.sparse.major": "1",
+        "GNU.sparse.minor": "0",
+        "GNU.sparse.name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+        "GNU.sparse.realsize": "8388608",
+        "path": "资料/GNUSparseFile.417/多段多段多段多段多段多段多段多段多段多段多段多段多"
+      },
+      "control": {
+        "offset": 206848,
+        "bytes": 457,
+        "fields": {
+          "GNU.sparse.major": "1",
+          "GNU.sparse.minor": "0",
+          "GNU.sparse.name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "GNU.sparse.realsize": "8388608",
+          "path": "资料/GNUSparseFile.417/多段多段多段多段多段多段多段多段多段多段多段多段多"
+        }
+      }
+    },
+    {
+      "name": "长目标副本.bin",
+      "kind": "1",
+      "logicalIndex": 7,
+      "headerOffset": 332800,
+      "bodyOffset": 333312,
+      "dataOffset": 333312,
+      "physicalBytes": 0,
+      "storedBytes": 0,
+      "ranges": [],
+      "pax": {
+        "linkpath": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+        "path": "长目标副本.bin"
+      },
+      "control": {
+        "offset": 331776,
+        "bytes": 293,
+        "fields": {
+          "linkpath": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "path": "长目标副本.bin"
+        }
+      }
+    },
+    {
+      "name": "empty.bin",
+      "kind": "0",
+      "logicalIndex": 8,
+      "headerOffset": 333312,
+      "bodyOffset": 333824,
+      "dataOffset": 333824,
+      "physicalBytes": 0,
+      "storedBytes": 0,
+      "ranges": [],
+      "pax": {},
+      "control": null
+    },
+    {
+      "name": "empty-copy.bin",
+      "kind": "1",
+      "logicalIndex": 9,
+      "headerOffset": 333824,
+      "bodyOffset": 334336,
+      "dataOffset": 334336,
+      "physicalBytes": 0,
+      "storedBytes": 0,
+      "ranges": [],
+      "pax": {},
+      "control": null
+    },
+    {
+      "name": "资料/跨块映射.bin",
+      "kind": "0",
+      "logicalIndex": 10,
+      "headerOffset": 335360,
+      "bodyOffset": 335872,
+      "dataOffset": 337408,
+      "physicalBytes": 394752,
+      "storedBytes": 393216,
+      "ranges": [
+        [
+          0,
+          4096
+        ],
+        [
+          131072,
+          4096
+        ],
+        [
+          262144,
+          4096
+        ],
+        [
+          393216,
+          4096
+        ],
+        [
+          524288,
+          4096
+        ],
+        [
+          655360,
+          4096
+        ],
+        [
+          786432,
+          4096
+        ],
+        [
+          917504,
+          4096
+        ],
+        [
+          1048576,
+          4096
+        ],
+        [
+          1179648,
+          4096
+        ],
+        [
+          1310720,
+          4096
+        ],
+        [
+          1441792,
+          4096
+        ],
+        [
+          1572864,
+          4096
+        ],
+        [
+          1703936,
+          4096
+        ],
+        [
+          1835008,
+          4096
+        ],
+        [
+          1966080,
+          4096
+        ],
+        [
+          2097152,
+          4096
+        ],
+        [
+          2228224,
+          4096
+        ],
+        [
+          2359296,
+          4096
+        ],
+        [
+          2490368,
+          4096
+        ],
+        [
+          2621440,
+          4096
+        ],
+        [
+          2752512,
+          4096
+        ],
+        [
+          2883584,
+          4096
+        ],
+        [
+          3014656,
+          4096
+        ],
+        [
+          3145728,
+          4096
+        ],
+        [
+          3276800,
+          4096
+        ],
+        [
+          3407872,
+          4096
+        ],
+        [
+          3538944,
+          4096
+        ],
+        [
+          3670016,
+          4096
+        ],
+        [
+          3801088,
+          4096
+        ],
+        [
+          3932160,
+          4096
+        ],
+        [
+          4063232,
+          4096
+        ],
+        [
+          4194304,
+          4096
+        ],
+        [
+          4325376,
+          4096
+        ],
+        [
+          4456448,
+          4096
+        ],
+        [
+          4587520,
+          4096
+        ],
+        [
+          4718592,
+          4096
+        ],
+        [
+          4849664,
+          4096
+        ],
+        [
+          4980736,
+          4096
+        ],
+        [
+          5111808,
+          4096
+        ],
+        [
+          5242880,
+          4096
+        ],
+        [
+          5373952,
+          4096
+        ],
+        [
+          5505024,
+          4096
+        ],
+        [
+          5636096,
+          4096
+        ],
+        [
+          5767168,
+          4096
+        ],
+        [
+          5898240,
+          4096
+        ],
+        [
+          6029312,
+          4096
+        ],
+        [
+          6160384,
+          4096
+        ],
+        [
+          6291456,
+          4096
+        ],
+        [
+          6422528,
+          4096
+        ],
+        [
+          6553600,
+          4096
+        ],
+        [
+          6684672,
+          4096
+        ],
+        [
+          6815744,
+          4096
+        ],
+        [
+          6946816,
+          4096
+        ],
+        [
+          7077888,
+          4096
+        ],
+        [
+          7208960,
+          4096
+        ],
+        [
+          7340032,
+          4096
+        ],
+        [
+          7471104,
+          4096
+        ],
+        [
+          7602176,
+          4096
+        ],
+        [
+          7733248,
+          4096
+        ],
+        [
+          7864320,
+          4096
+        ],
+        [
+          7995392,
+          4096
+        ],
+        [
+          8126464,
+          4096
+        ],
+        [
+          8257536,
+          4096
+        ],
+        [
+          8388608,
+          4096
+        ],
+        [
+          8519680,
+          4096
+        ],
+        [
+          8650752,
+          4096
+        ],
+        [
+          8781824,
+          4096
+        ],
+        [
+          8912896,
+          4096
+        ],
+        [
+          9043968,
+          4096
+        ],
+        [
+          9175040,
+          4096
+        ],
+        [
+          9306112,
+          4096
+        ],
+        [
+          9437184,
+          4096
+        ],
+        [
+          9568256,
+          4096
+        ],
+        [
+          9699328,
+          4096
+        ],
+        [
+          9830400,
+          4096
+        ],
+        [
+          9961472,
+          4096
+        ],
+        [
+          10092544,
+          4096
+        ],
+        [
+          10223616,
+          4096
+        ],
+        [
+          10354688,
+          4096
+        ],
+        [
+          10485760,
+          4096
+        ],
+        [
+          10616832,
+          4096
+        ],
+        [
+          10747904,
+          4096
+        ],
+        [
+          10878976,
+          4096
+        ],
+        [
+          11010048,
+          4096
+        ],
+        [
+          11141120,
+          4096
+        ],
+        [
+          11272192,
+          4096
+        ],
+        [
+          11403264,
+          4096
+        ],
+        [
+          11534336,
+          4096
+        ],
+        [
+          11665408,
+          4096
+        ],
+        [
+          11796480,
+          4096
+        ],
+        [
+          11927552,
+          4096
+        ],
+        [
+          12058624,
+          4096
+        ],
+        [
+          12189696,
+          4096
+        ],
+        [
+          12320768,
+          4096
+        ],
+        [
+          12451840,
+          4096
+        ],
+        [
+          16777216,
+          0
+        ]
+      ],
+      "pax": {
+        "GNU.sparse.major": "1",
+        "GNU.sparse.minor": "0",
+        "GNU.sparse.name": "资料/跨块映射.bin",
+        "GNU.sparse.realsize": "16777216",
+        "path": "资料/GNUSparseFile.417/跨块映射.bin"
+      },
+      "control": {
+        "offset": 334336,
+        "bytes": 169,
+        "fields": {
+          "GNU.sparse.major": "1",
+          "GNU.sparse.minor": "0",
+          "GNU.sparse.name": "资料/跨块映射.bin",
+          "GNU.sparse.realsize": "16777216",
+          "path": "资料/GNUSparseFile.417/跨块映射.bin"
+        }
+      }
+    },
+    {
+      "name": "稀疏副本.bin",
+      "kind": "1",
+      "logicalIndex": 11,
+      "headerOffset": 731648,
+      "bodyOffset": 732160,
+      "dataOffset": 732160,
+      "physicalBytes": 0,
+      "storedBytes": 0,
+      "ranges": [],
+      "pax": {
+        "path": "稀疏副本.bin"
+      },
+      "control": {
+        "offset": 730624,
+        "bytes": 25,
+        "fields": {
+          "path": "稀疏副本.bin"
+        }
+      }
+    },
+    {
+      "name": "after.txt",
+      "kind": "0",
+      "logicalIndex": 12,
+      "headerOffset": 732160,
+      "bodyOffset": 732672,
+      "dataOffset": 732672,
+      "physicalBytes": 39,
+      "storedBytes": 39,
+      "ranges": [],
+      "pax": {},
+      "control": null
+    },
+    {
+      "name": "late.bin",
+      "kind": "0",
+      "logicalIndex": 13,
+      "headerOffset": 733184,
+      "bodyOffset": 733696,
+      "dataOffset": 733696,
+      "physicalBytes": 1100178,
+      "storedBytes": 1100178,
+      "ranges": [],
+      "pax": {},
+      "control": null
+    }
+  ]
+}

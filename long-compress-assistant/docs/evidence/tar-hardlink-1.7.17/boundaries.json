@@ -1,0 +1,37 @@
+[
+  {
+    "cut": 204610,
+    "count": 3,
+    "reason": "TAR 文件内容未完整到达: failed to fill whole buffer"
+  },
+  {
+    "cut": 204611,
+    "count": 3,
+    "reason": "TAR 条目填充未完整到达: failed to fill whole buffer"
+  },
+  {
+    "cut": 204799,
+    "count": 3,
+    "reason": "TAR 条目填充未完整到达: failed to fill whole buffer"
+  },
+  {
+    "cut": 205311,
+    "count": 4,
+    "reason": "TAR 文件头或结束标记未完整到达: failed to fill whole buffer"
+  },
+  {
+    "cut": 332580,
+    "count": 7,
+    "reason": "TAR 名称元数据未完整到达: failed to fill whole buffer"
+  },
+  {
+    "cut": 332799,
+    "count": 7,
+    "reason": "TAR 条目填充未完整到达: failed to fill whole buffer"
+  },
+  {
+    "cut": 333311,
+    "count": 7,
+    "reason": "TAR 文件头或结束标记未完整到达: failed to fill whole buffer"
+  }
+]

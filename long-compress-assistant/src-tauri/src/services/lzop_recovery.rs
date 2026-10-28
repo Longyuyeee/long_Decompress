@@ -26,6 +26,10 @@ pub struct Entry {
     pub is_directory: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stored_bytes: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub link_target: Option<String>,
+    #[serde(skip)]
+    pub(crate) link_source: Option<usize>,
     #[serde(skip)]
     pub(crate) sparse: Option<crate::services::tar_sparse_recovery::Layout>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -302,6 +306,8 @@ fn scan_source(
             sha256: format!("{:x}", h.finalize()),
             is_directory: false,
             stored_bytes: None,
+            link_target: None,
+            link_source: None,
             sparse: None,
             modified_time: None,
             time_warning: None,

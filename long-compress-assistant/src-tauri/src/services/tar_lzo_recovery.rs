@@ -10,9 +10,9 @@ use crate::services::{
 use anyhow::{Context, Result};
 use sha2::{Digest, Sha256};
 use std::{
-    fs::{self, OpenOptions},
+    fs::{self, File, OpenOptions},
     io::{self, Read, Seek, Write},
-    path::Path,
+    path::{Path,PathBuf},
     sync::atomic::AtomicBool,
 };
 
@@ -53,6 +53,18 @@ fn padding(reader: &mut impl Read, size: u64) -> Result<()> {
     anyhow::ensure!(bytes[..count].iter().all(|b| *b == 0), "TAR 条目填充无效");
     Ok(())
 }
+fn local_metadata(fields:&crate::services::tar_pax::Fields)->Result<Option<crate::services::tar_sparse_recovery::PaxVersion>>{
+    let ordinary=fields.iter().filter(|(k,_)|k!="linkpath").cloned().collect();
+    let sparse=crate::services::tar_sparse_recovery::validate_local(&ordinary)?;
+    if let Some((_,target))=fields.iter().find(|(k,_)|k=="linkpath"){
+        anyhow::ensure!(!target.is_empty()&&!target.contains(['\0','\n'])&&sparse.is_none(),"[archive-inspection:unsupported] TAR 链接目标为空、无效或与稀疏元数据冲突");
+    }
+    Ok(sparse)
+}
+fn archive_key(path:&str)->Result<String>{
+    anyhow::ensure!(!path.starts_with(['/','\\'])&&!path.contains([':', '\0'])&&!path.split(['/','\\']).any(|p|p==".."),"TAR 路径无法确认，停止在此处");
+    Ok(path.split('/').filter(|p|!p.is_empty()&&*p!=".").collect::<Vec<_>>().join("/"))
+}
 fn parse<F: FnMut(u64, u64)>(
     reader: &mut Verified<'_, F>,
     report: &mut Report,
@@ -65,6 +77,8 @@ fn parse<F: FnMut(u64, u64)>(
     let mut records = 0usize;
     let mut logical_total = 0u64;
     let mut sparse_segments = 0usize;
+    // Original archive names stay case sensitive and separate from Windows repair.
+    let mut sources=std::collections::HashMap::<String,Option<usize>>::new();
     loop {
         report.stopped_offset = reader.position;
         report.stopped_member = None;
@@ -116,7 +130,7 @@ fn parse<F: FnMut(u64, u64)>(
             .sum::<u32>();
         anyhow::ensure!(header.cksum()? == sum, "TAR 文件头校验失败");
         let kind = header.entry_type();
-        anyhow::ensure!(kind.is_pax_global_extensions() || kind.is_pax_local_extensions() || kind.is_gnu_longname() || kind.is_file() || kind.is_dir() || kind.is_gnu_sparse(), "[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持此 TAR 条目类型（{}），已停止在此处", kind.as_byte());
+        anyhow::ensure!(kind.is_pax_global_extensions() || kind.is_pax_local_extensions() || kind.is_gnu_longname() || kind.is_file() || kind.is_dir() || kind.is_gnu_sparse() || kind.is_hard_link(), "[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持此 TAR 条目类型（{}），已停止在此处", kind.as_byte());
         let size = header.entry_size()?;
         anyhow::ensure!(size <= MAX_EXTRACTED_BYTES, "TAR 条目大小超过本次支持范围");
         if kind.is_pax_global_extensions() || kind.is_pax_local_extensions() || kind.is_gnu_longname() {
@@ -143,11 +157,11 @@ fn parse<F: FnMut(u64, u64)>(
             } else {
                 let fields = crate::services::tar_pax::parse(&bytes)?;
                 if kind.is_pax_global_extensions() { global.update(fields)?; }
-                else { crate::services::tar_sparse_recovery::validate_local(&fields)?; pending = Some(fields); }
+                else { local_metadata(&fields)?; pending = Some(fields); }
             }
             continue;
         }
-        anyhow::ensure!(kind.is_file() || kind.is_dir() || kind.is_gnu_sparse(),"[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持此 TAR 条目类型（{}），已停止在此处",kind.as_byte());
+        anyhow::ensure!(kind.is_file() || kind.is_dir() || kind.is_gnu_sparse() || kind.is_hard_link(),"[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持此 TAR 条目类型（{}），已停止在此处",kind.as_byte());
         // GNU sparse records have a different layout even when their path looks ordinary.
         if let Some(gnu) = header.as_gnu().filter(|_| !kind.is_gnu_sparse()) {
             anyhow::ensure!(
@@ -156,7 +170,8 @@ fn parse<F: FnMut(u64, u64)>(
             );
         }
         let local = pending.take().unwrap_or_default();
-        let pax_version=crate::services::tar_sparse_recovery::validate_local(&local)?;
+        let pax_version=local_metadata(&local)?;
+        anyhow::ensure!(kind.is_hard_link()||!local.iter().any(|(k,_)|k=="linkpath"),"[archive-inspection:unsupported] TAR linkpath 仅支持硬链接条目");
         let pax_sparse=pax_version.is_some();
         anyhow::ensure!(!pax_sparse||(kind.is_file()&&long_name.is_none()),"[archive-inspection:unsupported] GNU.sparse PAX 仅支持普通文件且不能叠加 GNU 长名称");
         if let Some(name) = &long_name { crate::services::tar_pax::check_mixed_path(name.as_bytes(), &local)?; }
@@ -191,20 +206,33 @@ fn parse<F: FnMut(u64, u64)>(
             names.allocate(Some(&decoded), 0x2000, report.entries.len() + 1)
         };
         report.stopped_member = Some(name.clone());
-        let sparse = if kind.is_gnu_sparse() {
+        let key=archive_key(&decoded)?;
+        let link=if kind.is_hard_link(){
+            anyhow::ensure!(header.entry_size()?==0&&size==0,"[archive-inspection:unsupported] TAR 硬链接带有正文或冲突大小，暂不取回");
+            let target=if let Some((_,value))=local.iter().find(|(k,_)|k=="linkpath"){value.clone()}else{
+                super::names::decode(&header.link_name_bytes().context("[archive-inspection:unsupported] TAR 硬链接缺少可确认目标")?,0,encoding)?.context("[lzop-encoding] TAR 链接目标不是 UTF-8，请选择名称编码后重新检查")?
+            };
+            let target_key=archive_key(&target)?;
+            anyhow::ensure!(!target_key.is_empty()&&target_key!=key,"[archive-inspection:unsupported] TAR 硬链接目标为空或指向自身");
+            let id=sources.get(&target_key).copied().flatten().context("[archive-inspection:unsupported] TAR 硬链接目标尚未确认或名称有歧义，停止在此处")?;
+            let entry=&report.entries[id];
+            anyhow::ensure!(!entry.is_directory&&entry.link_source.is_none(),"[archive-inspection:unsupported] TAR 硬链接目标不是前面已确认的普通内容文件，暂不支持链接链条");
+            Some((target,id))
+        }else{None};
+        let sparse = if let Some((_,id))=&link {report.entries[*id].sparse.clone()} else if kind.is_gnu_sparse() {
             anyhow::ensure!(!meta.iter().any(|(key,_)|key=="size"), "[archive-inspection:unsupported] 旧 GNU 稀疏条目暂不支持叠加 PAX size，已停止在此处");
             Some(crate::services::tar_sparse_recovery::Layout::parse(header, reader)?)
         } else if let Some(version)=pax_version {
             use crate::services::tar_sparse_recovery::{Layout,PaxVersion};
             Some(match version{PaxVersion::Pairs00=>Layout::parse_pax00(&local,size)?,PaxVersion::Map01=>Layout::parse_pax01(&local,size)?,PaxVersion::Text10=>Layout::parse_pax10(&local,size,reader)?})
         } else { None };
-        let bytes = sparse.as_ref().map_or(size, |layout|layout.logical);
+        let bytes = link.as_ref().map_or_else(||sparse.as_ref().map_or(size, |layout|layout.logical),|(_,id)|report.entries[*id].bytes);
         logical_total = logical_total.checked_add(bytes).context("TAR 完整大小溢出")?;
         anyhow::ensure!(logical_total <= MAX_EXTRACTED_BYTES, "[archive-inspection:unsupported] TAR 完整大小总量超过支持范围");
         sparse_segments += sparse.as_ref().map_or(0, |layout|layout.ranges.len());
         anyhow::ensure!(sparse_segments <= 1_000_000, "[archive-inspection:unsupported] TAR 稀疏映射总量超过支持范围");
-        let offset = reader.position;
-        let digest = if let Some(layout) = &sparse {
+        let offset = link.as_ref().map_or(reader.position,|(_,id)|report.entries[*id].offset);
+        let digest = if let Some((_,id))=&link {report.entries[*id].sha256.clone()} else if let Some(layout) = &sparse {
             let cancelled = reader.cancelled;
             layout.process(reader, None, cancelled, |_|{})?
         } else {
@@ -219,7 +247,11 @@ fn parse<F: FnMut(u64, u64)>(
             format!("{:x}",hash.finalize())
         };
         padding(reader, size)?;
+        let id=report.entries.len();
+        sources.entry(key).and_modify(|previous|*previous=None).or_insert(Some(id));
         report.entries.push(Entry {
+            link_target: link.as_ref().map(|(target,_)|target.clone()),
+            link_source: link.map(|(_,id)|id),
             stored_bytes: sparse.as_ref().map(|layout|layout.stored),
             sparse,
             modified_time: {
@@ -286,11 +318,46 @@ pub(super) fn scan_source(
     hash.update(serde_json::to_vec(&report)?);
     for e in &report.entries {
         hash.update(e.offset.to_le_bytes());
+        if let Some(id)=e.link_source {hash.update(b"hardlink");hash.update((id as u64).to_le_bytes());}
         if let Some(layout) = &e.sparse { hash.update(serde_json::to_vec(layout)?); }
     }
     report.revision = format!("{:x}", hash.finalize());
     progress(src.length, src.length);
     Ok(report)
+}
+fn destination(stage:&Path,name:&str)->Result<PathBuf>{
+    let relative=Path::new(name);
+    anyhow::ensure!(relative.components().all(|c|matches!(c,std::path::Component::Normal(_))),"TAR 条目路径无法取回");
+    Ok(stage.join(relative))
+}
+/// Present only the stored extents of our newly written, verified logical file.
+/// This lets the same sparse writer copy aliases without filling their holes.
+struct StoredCopy {file:File,ranges:Option<Vec<(u64,u64)>>,next:usize,left:u64}
+impl Read for StoredCopy{
+    fn read(&mut self,buf:&mut[u8])->io::Result<usize>{
+        let Some(ranges)=&self.ranges else{return self.file.read(buf)};
+        while self.left==0{
+            let Some(&(offset,length))=ranges.get(self.next)else{return Ok(0)};
+            self.next+=1;self.file.seek(std::io::SeekFrom::Start(offset))?;self.left=length;
+        }
+        let n=(buf.len()as u64).min(self.left)as usize;let n=self.file.read(&mut buf[..n])?;self.left-=n as u64;Ok(n)
+    }
+}
+fn copy_entry(input:&mut impl Read,stage:&Path,entry:&mut Entry,cancelled:&AtomicBool,done:&mut u64,progress:&mut impl FnMut(u64))->Result<PathBuf>{
+    let target=destination(stage,&entry.name)?;
+    if let Some(parent)=target.parent(){fs::create_dir_all(parent)?;}
+    let mut output=OpenOptions::new().write(true).create_new(true).open(&target)?;
+    let digest=if let Some(layout)=&entry.sparse{
+        let before=*done;let digest=layout.process(input,Some(&mut output),cancelled,|logical|progress(before+logical))?;*done+=entry.bytes;digest
+    }else{
+        let mut remaining=entry.bytes;let mut hash=Sha256::new();let mut buf=[0;65536];
+        while remaining>0{check(cancelled)?;let n=remaining.min(buf.len()as u64)as usize;input.read_exact(&mut buf[..n])?;output.write_all(&buf[..n])?;hash.update(&buf[..n]);remaining-=n as u64;*done+=n as u64;progress(*done);}
+        format!("{:x}",hash.finalize())
+    };
+    anyhow::ensure!(digest==entry.sha256,"TAR 文件在取回期间已变化，请重新检查");
+    output.flush()?;check(cancelled)?;
+    entry.time_warning=match &entry.modified_time{Some(time)=>time.apply(&output).err().map(str::to_owned),None=>Some("原修改时间缺失，或其范围、精度暂不支持；文件内容已取回".into())};
+    Ok(target)
 }
 pub(super) fn copy_selected(
     src: &Source,
@@ -309,57 +376,23 @@ pub(super) fn copy_selected(
     };
     let mut done = 0;
     let mut buf = [0; 65536];
-    for entry in entries.iter_mut() {
-        check(cancelled)?;
-        anyhow::ensure!(entry.offset >= reader.position, "TAR 取回位置无效");
-        while reader.position < entry.offset {
-            let n = (entry.offset - reader.position).min(buf.len() as u64) as usize;
-            reader.read_exact(&mut buf[..n])?;
+    for entry in entries.iter().filter(|e|e.is_directory){check(cancelled)?;fs::create_dir_all(destination(stage,&entry.name)?)?;}
+    // Decode source bytes once, in physical order. A first selected alias can
+    // supply subsequent aliases even when the original target is unselected.
+    let mut order=(0..entries.len()).filter(|i|!entries[*i].is_directory).collect::<Vec<_>>();
+    order.sort_by_key(|i|(entries[*i].offset,entries[*i].link_source.unwrap_or(entries[*i].id)));
+    let mut previous:Option<(u64,usize,PathBuf)>=None;
+    for index in order{
+        check(cancelled)?;let entry=&mut entries[index];let source_id=entry.link_source.unwrap_or(entry.id);
+        if let Some((_,_,path))=previous.as_ref().filter(|(offset,id,_)|*offset==entry.offset&&*id==source_id){
+            let mut stored=StoredCopy{file:File::open(path)?,ranges:entry.sparse.as_ref().map(|layout|layout.ranges.clone()),next:0,left:0};
+            copy_entry(&mut stored,stage,entry,cancelled,&mut done,progress)?;
+        }else{
+            anyhow::ensure!(entry.offset>=reader.position,"TAR 取回位置无效");
+            while reader.position<entry.offset{let n=(entry.offset-reader.position).min(buf.len()as u64)as usize;reader.read_exact(&mut buf[..n])?;}
+            let path=copy_entry(&mut reader,stage,entry,cancelled,&mut done,progress)?;
+            previous=Some((entry.offset,source_id,path));
         }
-        let relative = Path::new(&entry.name);
-        anyhow::ensure!(
-            relative
-                .components()
-                .all(|c| matches!(c, std::path::Component::Normal(_))),
-            "TAR 条目路径无法取回"
-        );
-        let target = stage.join(relative);
-        if entry.is_directory {
-            fs::create_dir_all(target)?;
-            continue;
-        }
-        if let Some(p) = target.parent() {
-            fs::create_dir_all(p)?;
-        }
-        let mut output = OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(target)?;
-        let digest = if let Some(layout) = &entry.sparse {
-            let before = done;
-            let digest = layout.process(&mut reader, Some(&mut output), cancelled, |logical|progress(before+logical))?;
-            done += entry.bytes;
-            digest
-        } else {
-            let mut remaining = entry.bytes;
-            let mut hash = Sha256::new();
-            while remaining > 0 {
-                let n = remaining.min(buf.len() as u64) as usize;
-                reader.read_exact(&mut buf[..n])?; output.write_all(&buf[..n])?;
-                hash.update(&buf[..n]); remaining -= n as u64; done += n as u64; progress(done);
-            }
-            format!("{:x}",hash.finalize())
-        };
-        anyhow::ensure!(
-            digest == entry.sha256,
-            "TAR 文件在取回期间已变化，请重新检查"
-        );
-        output.flush()?;
-        check(cancelled)?;
-        entry.time_warning = match &entry.modified_time {
-            Some(time) => time.apply(&output).err().map(str::to_owned),
-            None => Some("原修改时间缺失，或其范围、精度暂不支持；文件内容已取回".into()),
-        };
     }
     // Child creation changes parent mtimes. Apply only explicitly selected
     // directory entries after all contents exist, deepest directories first.

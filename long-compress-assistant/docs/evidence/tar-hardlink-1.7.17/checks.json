@@ -1,0 +1,48 @@
+{
+  "passed": true,
+  "native": {
+    "new": 7,
+    "initialPassed": 6,
+    "repeatedOnlyFailedCase": "hard1717_tail_checksum",
+    "relatedOld": 3,
+    "commands": [
+      "cargo test --lib hard1717 -- --nocapture",
+      "cargo test --lib hard1717_tail_checksum -- --nocapture",
+      "cargo test --lib pax1716_tail_checksum -- --nocapture",
+      "cargo test --lib directory1712_independent_originals -- --nocapture",
+      "cargo test --lib tarlzo175_unsupported_metadata -- --nocapture"
+    ]
+  },
+  "frontend": {
+    "passed": 4
+  },
+  "ui": {
+    "groups": 3,
+    "nativeValueReplay": true,
+    "realDesktopIPC": false,
+    "screenshotsInspected": 6,
+    "viewports": [
+      [
+        1100,
+        700
+      ],
+      [
+        760,
+        520
+      ]
+    ]
+  },
+  "independentOutput": {
+    "trees": 4,
+    "files": 39,
+    "logicalSha": true,
+    "explicitMtime": true,
+    "windowsSparseAllocation": true,
+    "allFilesNlinkOne": true
+  },
+  "productionBuild": true,
+  "typeCheckAfterNewTests": true,
+  "shellDll": "1.7.17",
+  "releaseIdentitySources": 8,
+  "scope": "No unrelated full matrix or desktop input. Complete extraction link policy unchanged."
+}

@@ -11,6 +11,6 @@ export function validTimePreservation(value:unknown,files:number,directories=0):
  const pair=(preserved:unknown,unpreserved:unknown,total:number)=>Number.isSafeInteger(preserved)&&Number(preserved)>=0&&Number(preserved)<=total&&Number.isSafeInteger(unpreserved)&&unpreserved===total-Number(preserved)
  return pair(v.preservedFiles,v.unpreservedFiles,files)&&((v.preservedDirectories===undefined&&v.unpreservedDirectories===undefined)||pair(v.preservedDirectories,v.unpreservedDirectories,directories))
 }
-export interface LzopRecoveryEntry {id:number;name:string;bytes:number;sha256:string;isDirectory?:boolean;storedBytes?:number;modifiedTime?:{seconds:number;nanoseconds:number};timeWarning?:string}
+export interface LzopRecoveryEntry {id:number;name:string;bytes:number;sha256:string;isDirectory?:boolean;storedBytes?:number;linkTarget?:string;modifiedTime?:{seconds:number;nanoseconds:number};timeWarning?:string}
 export interface LzopRecoveryReport {format?:'LZOP'|'TAR.LZO';revision:string;entries:LzopRecoveryEntry[];complete:boolean;stopReason:string;stoppedMember:string|null;stoppedOffset:number;availableVolumes:number;ignoredVolumes:number}
 export interface LzopRecoveryOutcome {outputDirectory:string;recoveredFiles:number;recoveredDirectories?:number;recoveredBytes:number;entries:LzopRecoveryEntry[];stopReason:string;partial:true;timePreservation?:RecoveryTimePreservation}
