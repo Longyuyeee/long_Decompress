@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-28",
+  "newNativeTests": 5,
+  "firstRoundPassed": 3,
+  "correctedTestCasesRerun": 2,
+  "relatedNativeTests": 3,
+  "frontendTests": 4,
+  "backgroundUiGroups": 3,
+  "screenshots": 6,
+  "convertedArchives": 8,
+  "independentReadbackFiles": 79,
+  "wrongPasswordCases": 3,
+  "typecheckAndVite": true,
+  "shellDll": true,
+  "releaseIdentitySources": 8,
+  "desktopControlled": false,
+  "realDesktopIPC": false,
+  "storageFault112": "controlled injection",
+  "metadataPolicy": "source staging times retained; target metadata follows existing writer capabilities",
+  "lateProgressPublicationGuard": true
+}

@@ -12,6 +12,12 @@ pub(crate) struct Plan {
     pub(crate) stats:crate::services::tar_compatibility::Plan,
 }
 impl Plan {
+    pub(crate) fn check_source(&self,path:&Path,cancelled:&AtomicBool)->Result<()> {
+        recovery::check(cancelled)?;
+        crate::services::image_reader::check_source(path,&self.revision)?;
+        anyhow::ensure!(self.source.stamp==recovery::source(path)?.stamp,"来源已变化，请刷新目录后重新选择");
+        Ok(())
+    }
     pub(crate) fn build(path:&Path,options:&DecompressOptions,cancelled:&Arc<AtomicBool>)->Result<Option<Self>> {
         if options.selected_entries.is_empty(){return Ok(None);}
         Self::for_extraction(path,options,cancelled)

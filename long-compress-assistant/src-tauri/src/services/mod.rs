@@ -349,3 +349,8 @@ mod tar_selected_1720_tests;
 
 #[cfg(test)]
 mod tar_full_links_1721_tests;
+
+pub(crate) mod tar_link_conversion;
+
+#[cfg(test)]
+mod tar_link_convert_1722_tests;

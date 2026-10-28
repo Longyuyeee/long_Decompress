@@ -57,6 +57,8 @@ export interface Task {
   sourceFiles: string[]
   outputPath: string
   archiveOutput?: import('@/types/archiveOutput').PublishedArchiveOutput
+  /** Command owner settles conversion only after final publication. */
+  conversionPublishing?: boolean
   format?: string
   conflicts: ConflictInfo[]
   /** Session-only staged publication choices; not persisted in task history. */
@@ -221,7 +223,7 @@ export const useTaskStore = defineStore('task', () => {
         // progress events queued before completion, failure or cancellation.
         if (['completed', 'failed', 'cancelled'].includes(task.status)) return
         const isPasswordAttempt = stage === 'password-attempt'
-        if (stage === 'Splitting' && task.stage !== 'Splitting') {
+        if (!task.conversionPublishing && stage === 'Splitting' && task.stage !== 'Splitting') {
           if (task.type === 'compression' && !task.compressionSourceProgress) {
             task.compressionSourceProgress = {
               processedBytes: task.processedBytes ?? 0,
@@ -236,13 +238,13 @@ export const useTaskStore = defineStore('task', () => {
         }
         // Candidate count is not decompression progress. Keep this defensive
         // frontend guard even though the backend also emits zero for this stage.
-        task.progress = isPasswordAttempt ? 0 : normalizeProgressPercent(progress)
-        task.stage = stage !== undefined
+        task.progress = task.conversionPublishing ? 99 : isPasswordAttempt ? 0 : normalizeProgressPercent(progress)
+        task.stage = task.conversionPublishing ? 'Finalizing' : stage !== undefined
           ? stage as any
           : task.status === 'extracting'
             ? 'Extracting'
             : task.stage
-        task.currentFile = current_file
+        task.currentFile = task.conversionPublishing ? task.outputPath : current_file
         task.currentPassword = current_password
         task.passwordAttemptCurrent = password_attempt_current
         task.passwordAttemptTotal = password_attempt_total
