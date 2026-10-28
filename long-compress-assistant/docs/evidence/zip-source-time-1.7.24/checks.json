@@ -1,0 +1,15 @@
+{
+  "version": "1.7.24",
+  "date": "2026-10-28",
+  "nativeNewPassed": 5,
+  "relatedNativePassed": 2,
+  "independentArchives": 13,
+  "encodedEntries": 71,
+  "actualParallelWorkersObserved": 2,
+  "shellExtension": true,
+  "versionIdentity": true,
+  "uiSourceChanged": false,
+  "desktopControlled": false,
+  "uiChecksRepeated": false,
+  "notes": "Initial test runtime missed the cancellation flag trait member; fixed before tests ran. First run passed calendar, boundary/layout and conversion cases; shared mutable source fixtures raced in roundtrip and volume enumeration used the primary input rather than output base. Isolated test sources and corrected enumeration; reran only the two failed tests. Independent verifier handles standard-volume ZIP64 end records and checks the ZIPX standard family with byte-identical .zNN/.zip aliases for external 7-Zip. Product date logic unchanged after first implementation."
+}

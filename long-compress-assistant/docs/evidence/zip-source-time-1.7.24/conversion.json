@@ -1,0 +1,406 @@
+[
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\converted.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\converted.zip"
+    ],
+    "encrypted": true,
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-CFvj0L\\after.txt",
+        "name": "after.txt",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "e4e272e4ba6a999633a75c39bc10f241f6f88da8a2ba8d26fe2cb3e99cb80ad1"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-CFvj0L\\docs\\readme.txt",
+        "name": "docs/readme.txt",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "96db4695c45cb9a74a26a60d9d6765b276a984817c047cb6a27b83eb69ed5384"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-CFvj0L\\docs\\链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+        "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-CFvj0L\\docs\\长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-CFvj0L\\empty-copy.txt",
+        "name": "empty-copy.txt",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-CFvj0L\\empty.txt",
+        "name": "empty.txt",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-CFvj0L\\gallery\\cover.png",
+        "name": "gallery/cover.png",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-CFvj0L\\gallery\\封面副本.png",
+        "name": "gallery/封面副本.png",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-CFvj0L\\阅读副本.txt",
+        "name": "阅读副本.txt",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "96db4695c45cb9a74a26a60d9d6765b276a984817c047cb6a27b83eb69ed5384"
+      }
+    ],
+    "entries": [
+      {
+        "name": "after.txt",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Deflated",
+        "bytes": 26
+      },
+      {
+        "name": "docs/readme.txt",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Deflated",
+        "bytes": 1344000
+      },
+      {
+        "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Deflated",
+        "bytes": 47
+      },
+      {
+        "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Deflated",
+        "bytes": 47
+      },
+      {
+        "name": "empty-copy.txt",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Deflated",
+        "bytes": 0
+      },
+      {
+        "name": "empty.txt",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Deflated",
+        "bytes": 0
+      },
+      {
+        "name": "gallery/cover.png",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Deflated",
+        "bytes": 93
+      },
+      {
+        "name": "gallery/封面副本.png",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Deflated",
+        "bytes": 93
+      },
+      {
+        "name": "阅读副本.txt",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Deflated",
+        "bytes": 1344000
+      }
+    ],
+    "sourceTar": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-browse-links-1719\\gnu.tar",
+    "sourceSha256": "fa3fcea8da3a0c9733d0a1b195bd2b6ccc3bbafd09c35381f23e69cd8f8be12d"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\converted.zipx",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\converted.zipx"
+    ],
+    "encrypted": true,
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-NkHXB0\\after.txt",
+        "name": "after.txt",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "e4e272e4ba6a999633a75c39bc10f241f6f88da8a2ba8d26fe2cb3e99cb80ad1"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-NkHXB0\\docs\\readme.txt",
+        "name": "docs/readme.txt",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "96db4695c45cb9a74a26a60d9d6765b276a984817c047cb6a27b83eb69ed5384"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-NkHXB0\\docs\\链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+        "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-NkHXB0\\docs\\长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-NkHXB0\\empty-copy.txt",
+        "name": "empty-copy.txt",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-NkHXB0\\empty.txt",
+        "name": "empty.txt",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-NkHXB0\\gallery\\cover.png",
+        "name": "gallery/cover.png",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-NkHXB0\\gallery\\封面副本.png",
+        "name": "gallery/封面副本.png",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\.long-convert-input-NkHXB0\\阅读副本.txt",
+        "name": "阅读副本.txt",
+        "directory": false,
+        "seconds": 1700001719,
+        "nanos": 0,
+        "sha256": "96db4695c45cb9a74a26a60d9d6765b276a984817c047cb6a27b83eb69ed5384"
+      }
+    ],
+    "entries": [
+      {
+        "name": "after.txt",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Xz",
+        "bytes": 26
+      },
+      {
+        "name": "docs/readme.txt",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Xz",
+        "bytes": 1344000
+      },
+      {
+        "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Xz",
+        "bytes": 47
+      },
+      {
+        "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Xz",
+        "bytes": 47
+      },
+      {
+        "name": "empty-copy.txt",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Stored",
+        "bytes": 0
+      },
+      {
+        "name": "empty.txt",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Stored",
+        "bytes": 0
+      },
+      {
+        "name": "gallery/cover.png",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Xz",
+        "bytes": 93
+      },
+      {
+        "name": "gallery/封面副本.png",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Xz",
+        "bytes": 93
+      },
+      {
+        "name": "阅读副本.txt",
+        "date": [
+          2023,
+          11,
+          15,
+          6,
+          41,
+          58
+        ],
+        "method": "Xz",
+        "bytes": 1344000
+      }
+    ],
+    "sourceTar": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-browse-links-1719\\gnu.tar",
+    "sourceSha256": "fa3fcea8da3a0c9733d0a1b195bd2b6ccc3bbafd09c35381f23e69cd8f8be12d"
+  }
+]

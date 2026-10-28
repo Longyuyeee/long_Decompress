@@ -1,0 +1,33 @@
+{
+  "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\parallel-source.zip",
+  "sources": [
+    {
+      "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\d0c3d801\\a.bin",
+      "name": "a.bin",
+      "directory": false,
+      "seconds": 825568497,
+      "nanos": 123456700,
+      "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+    },
+    {
+      "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\d0c3d801\\b.bin",
+      "name": "b.bin",
+      "directory": false,
+      "seconds": 825568497,
+      "nanos": 123456700,
+      "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+    }
+  ],
+  "outputs": [
+    {
+      "parallel": false,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\sequential-restored-e46c5668-356e-4ae4-b9d4-23664f1b0131",
+      "workerThreadsObserved": 1
+    },
+    {
+      "parallel": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\parallel-restored-8530188c-3bc2-466d-8550-90faf4cbd55a",
+      "workerThreadsObserved": 2
+    }
+  ]
+}

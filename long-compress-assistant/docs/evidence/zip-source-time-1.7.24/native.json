@@ -1,0 +1,1212 @@
+[
+  {
+    "name": "store",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\store.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\store.zip"
+    ],
+    "encrypted": false,
+    "numeric": false,
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\a.bin",
+        "name": "a.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\b.bin",
+        "name": "b.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty-dir",
+        "name": "tree/empty-dir",
+        "directory": true,
+        "seconds": 1546230841,
+        "nanos": 123456700,
+        "sha256": null
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty.dat",
+        "name": "tree/empty.dat",
+        "directory": false,
+        "seconds": 2222138043,
+        "nanos": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\note.txt",
+        "name": "tree/note.txt",
+        "directory": false,
+        "seconds": 1604205299,
+        "nanos": 123456700,
+        "sha256": "dd32bfd0f78db255912b63a8a8a97651e35613a27cbc25368aafcce010412d18"
+      }
+    ],
+    "entries": [
+      {
+        "name": "a.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Stored",
+        "bytes": 340000
+      },
+      {
+        "name": "b.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Stored",
+        "bytes": 340000
+      },
+      {
+        "name": "tree/empty-dir/",
+        "date": [
+          2018,
+          12,
+          31,
+          12,
+          34,
+          0
+        ],
+        "method": "Stored",
+        "bytes": 0
+      },
+      {
+        "name": "tree/empty.dat",
+        "date": [
+          2040,
+          6,
+          1,
+          12,
+          34,
+          2
+        ],
+        "method": "Stored",
+        "bytes": 0
+      },
+      {
+        "name": "tree/note.txt",
+        "date": [
+          2020,
+          11,
+          1,
+          12,
+          34,
+          58
+        ],
+        "method": "Stored",
+        "bytes": 50
+      }
+    ]
+  },
+  {
+    "name": "deflate",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\deflate.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\deflate.zip"
+    ],
+    "encrypted": false,
+    "numeric": false,
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\a.bin",
+        "name": "a.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\b.bin",
+        "name": "b.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty-dir",
+        "name": "tree/empty-dir",
+        "directory": true,
+        "seconds": 1546230841,
+        "nanos": 123456700,
+        "sha256": null
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty.dat",
+        "name": "tree/empty.dat",
+        "directory": false,
+        "seconds": 2222138043,
+        "nanos": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\note.txt",
+        "name": "tree/note.txt",
+        "directory": false,
+        "seconds": 1604205299,
+        "nanos": 123456700,
+        "sha256": "dd32bfd0f78db255912b63a8a8a97651e35613a27cbc25368aafcce010412d18"
+      }
+    ],
+    "entries": [
+      {
+        "name": "a.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Deflated",
+        "bytes": 340000
+      },
+      {
+        "name": "b.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Deflated",
+        "bytes": 340000
+      },
+      {
+        "name": "tree/empty-dir/",
+        "date": [
+          2018,
+          12,
+          31,
+          12,
+          34,
+          0
+        ],
+        "method": "Stored",
+        "bytes": 0
+      },
+      {
+        "name": "tree/empty.dat",
+        "date": [
+          2040,
+          6,
+          1,
+          12,
+          34,
+          2
+        ],
+        "method": "Deflated",
+        "bytes": 0
+      },
+      {
+        "name": "tree/note.txt",
+        "date": [
+          2020,
+          11,
+          1,
+          12,
+          34,
+          58
+        ],
+        "method": "Deflated",
+        "bytes": 50
+      }
+    ]
+  },
+  {
+    "name": "zstd",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zstd.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zstd.zip"
+    ],
+    "encrypted": false,
+    "numeric": false,
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\a.bin",
+        "name": "a.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\b.bin",
+        "name": "b.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty-dir",
+        "name": "tree/empty-dir",
+        "directory": true,
+        "seconds": 1546230841,
+        "nanos": 123456700,
+        "sha256": null
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty.dat",
+        "name": "tree/empty.dat",
+        "directory": false,
+        "seconds": 2222138043,
+        "nanos": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\note.txt",
+        "name": "tree/note.txt",
+        "directory": false,
+        "seconds": 1604205299,
+        "nanos": 123456700,
+        "sha256": "dd32bfd0f78db255912b63a8a8a97651e35613a27cbc25368aafcce010412d18"
+      }
+    ],
+    "entries": [
+      {
+        "name": "a.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Zstd",
+        "bytes": 340000
+      },
+      {
+        "name": "b.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Zstd",
+        "bytes": 340000
+      },
+      {
+        "name": "tree/empty-dir/",
+        "date": [
+          2018,
+          12,
+          31,
+          12,
+          34,
+          0
+        ],
+        "method": "Stored",
+        "bytes": 0
+      },
+      {
+        "name": "tree/empty.dat",
+        "date": [
+          2040,
+          6,
+          1,
+          12,
+          34,
+          2
+        ],
+        "method": "Zstd",
+        "bytes": 0
+      },
+      {
+        "name": "tree/note.txt",
+        "date": [
+          2020,
+          11,
+          1,
+          12,
+          34,
+          58
+        ],
+        "method": "Zstd",
+        "bytes": 50
+      }
+    ]
+  },
+  {
+    "name": "bzip2",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\bzip2.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\bzip2.zip"
+    ],
+    "encrypted": false,
+    "numeric": false,
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\a.bin",
+        "name": "a.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\b.bin",
+        "name": "b.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty-dir",
+        "name": "tree/empty-dir",
+        "directory": true,
+        "seconds": 1546230841,
+        "nanos": 123456700,
+        "sha256": null
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty.dat",
+        "name": "tree/empty.dat",
+        "directory": false,
+        "seconds": 2222138043,
+        "nanos": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\note.txt",
+        "name": "tree/note.txt",
+        "directory": false,
+        "seconds": 1604205299,
+        "nanos": 123456700,
+        "sha256": "dd32bfd0f78db255912b63a8a8a97651e35613a27cbc25368aafcce010412d18"
+      }
+    ],
+    "entries": [
+      {
+        "name": "a.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Bzip2",
+        "bytes": 340000
+      },
+      {
+        "name": "b.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Bzip2",
+        "bytes": 340000
+      },
+      {
+        "name": "tree/empty-dir/",
+        "date": [
+          2018,
+          12,
+          31,
+          12,
+          34,
+          0
+        ],
+        "method": "Stored",
+        "bytes": 0
+      },
+      {
+        "name": "tree/empty.dat",
+        "date": [
+          2040,
+          6,
+          1,
+          12,
+          34,
+          2
+        ],
+        "method": "Bzip2",
+        "bytes": 0
+      },
+      {
+        "name": "tree/note.txt",
+        "date": [
+          2020,
+          11,
+          1,
+          12,
+          34,
+          58
+        ],
+        "method": "Bzip2",
+        "bytes": 50
+      }
+    ]
+  },
+  {
+    "name": "lzma",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\lzma.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\lzma.zip"
+    ],
+    "encrypted": false,
+    "numeric": false,
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\a.bin",
+        "name": "a.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\b.bin",
+        "name": "b.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty-dir",
+        "name": "tree/empty-dir",
+        "directory": true,
+        "seconds": 1546230841,
+        "nanos": 123456700,
+        "sha256": null
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty.dat",
+        "name": "tree/empty.dat",
+        "directory": false,
+        "seconds": 2222138043,
+        "nanos": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\note.txt",
+        "name": "tree/note.txt",
+        "directory": false,
+        "seconds": 1604205299,
+        "nanos": 123456700,
+        "sha256": "dd32bfd0f78db255912b63a8a8a97651e35613a27cbc25368aafcce010412d18"
+      }
+    ],
+    "entries": [
+      {
+        "name": "a.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Lzma",
+        "bytes": 340000
+      },
+      {
+        "name": "b.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Lzma",
+        "bytes": 340000
+      },
+      {
+        "name": "tree/empty-dir/",
+        "date": [
+          2018,
+          12,
+          31,
+          12,
+          34,
+          0
+        ],
+        "method": "Stored",
+        "bytes": 0
+      },
+      {
+        "name": "tree/empty.dat",
+        "date": [
+          2040,
+          6,
+          1,
+          12,
+          34,
+          2
+        ],
+        "method": "Lzma",
+        "bytes": 0
+      },
+      {
+        "name": "tree/note.txt",
+        "date": [
+          2020,
+          11,
+          1,
+          12,
+          34,
+          58
+        ],
+        "method": "Lzma",
+        "bytes": 50
+      }
+    ]
+  },
+  {
+    "name": "ppmd",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\ppmd.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\ppmd.zip"
+    ],
+    "encrypted": false,
+    "numeric": false,
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\a.bin",
+        "name": "a.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\b.bin",
+        "name": "b.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty-dir",
+        "name": "tree/empty-dir",
+        "directory": true,
+        "seconds": 1546230841,
+        "nanos": 123456700,
+        "sha256": null
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty.dat",
+        "name": "tree/empty.dat",
+        "directory": false,
+        "seconds": 2222138043,
+        "nanos": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\note.txt",
+        "name": "tree/note.txt",
+        "directory": false,
+        "seconds": 1604205299,
+        "nanos": 123456700,
+        "sha256": "dd32bfd0f78db255912b63a8a8a97651e35613a27cbc25368aafcce010412d18"
+      }
+    ],
+    "entries": [
+      {
+        "name": "a.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Ppmd",
+        "bytes": 340000
+      },
+      {
+        "name": "b.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Ppmd",
+        "bytes": 340000
+      },
+      {
+        "name": "tree/empty-dir/",
+        "date": [
+          2018,
+          12,
+          31,
+          12,
+          34,
+          0
+        ],
+        "method": "Stored",
+        "bytes": 0
+      },
+      {
+        "name": "tree/empty.dat",
+        "date": [
+          2040,
+          6,
+          1,
+          12,
+          34,
+          2
+        ],
+        "method": "Ppmd",
+        "bytes": 0
+      },
+      {
+        "name": "tree/note.txt",
+        "date": [
+          2020,
+          11,
+          1,
+          12,
+          34,
+          58
+        ],
+        "method": "Ppmd",
+        "bytes": 50
+      }
+    ]
+  },
+  {
+    "name": "xz",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\xz.zipx",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\xz.zipx"
+    ],
+    "encrypted": false,
+    "numeric": false,
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\a.bin",
+        "name": "a.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\b.bin",
+        "name": "b.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty-dir",
+        "name": "tree/empty-dir",
+        "directory": true,
+        "seconds": 1546230841,
+        "nanos": 123456700,
+        "sha256": null
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty.dat",
+        "name": "tree/empty.dat",
+        "directory": false,
+        "seconds": 2222138043,
+        "nanos": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\note.txt",
+        "name": "tree/note.txt",
+        "directory": false,
+        "seconds": 1604205299,
+        "nanos": 123456700,
+        "sha256": "dd32bfd0f78db255912b63a8a8a97651e35613a27cbc25368aafcce010412d18"
+      }
+    ],
+    "entries": [
+      {
+        "name": "a.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Xz",
+        "bytes": 340000
+      },
+      {
+        "name": "b.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Xz",
+        "bytes": 340000
+      },
+      {
+        "name": "tree/empty-dir/",
+        "date": [
+          2018,
+          12,
+          31,
+          12,
+          34,
+          0
+        ],
+        "method": "Stored",
+        "bytes": 0
+      },
+      {
+        "name": "tree/empty.dat",
+        "date": [
+          2040,
+          6,
+          1,
+          12,
+          34,
+          2
+        ],
+        "method": "Stored",
+        "bytes": 0
+      },
+      {
+        "name": "tree/note.txt",
+        "date": [
+          2020,
+          11,
+          1,
+          12,
+          34,
+          58
+        ],
+        "method": "Xz",
+        "bytes": 50
+      }
+    ]
+  },
+  {
+    "name": "aes-standard",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\aes-standard.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\aes-standard.z01",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\aes-standard.z02",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\aes-standard.z03",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\aes-standard.z04",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\aes-standard.z05",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\aes-standard.z06",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\aes-standard.z07",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\aes-standard.z08",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\aes-standard.z09",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\aes-standard.z10",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\aes-standard.zip"
+    ],
+    "encrypted": true,
+    "numeric": false,
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\a.bin",
+        "name": "a.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\b.bin",
+        "name": "b.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty-dir",
+        "name": "tree/empty-dir",
+        "directory": true,
+        "seconds": 1546230841,
+        "nanos": 123456700,
+        "sha256": null
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty.dat",
+        "name": "tree/empty.dat",
+        "directory": false,
+        "seconds": 2222138043,
+        "nanos": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\note.txt",
+        "name": "tree/note.txt",
+        "directory": false,
+        "seconds": 1604205299,
+        "nanos": 123456700,
+        "sha256": "dd32bfd0f78db255912b63a8a8a97651e35613a27cbc25368aafcce010412d18"
+      }
+    ],
+    "entries": [
+      {
+        "name": "a.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Stored",
+        "bytes": 340000
+      },
+      {
+        "name": "b.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Stored",
+        "bytes": 340000
+      },
+      {
+        "name": "tree/empty-dir/",
+        "date": [
+          2018,
+          12,
+          31,
+          12,
+          34,
+          0
+        ],
+        "method": "Stored",
+        "bytes": 0
+      },
+      {
+        "name": "tree/empty.dat",
+        "date": [
+          2040,
+          6,
+          1,
+          12,
+          34,
+          2
+        ],
+        "method": "Stored",
+        "bytes": 0
+      },
+      {
+        "name": "tree/note.txt",
+        "date": [
+          2020,
+          11,
+          1,
+          12,
+          34,
+          58
+        ],
+        "method": "Stored",
+        "bytes": 50
+      }
+    ]
+  },
+  {
+    "name": "zipcrypto-numeric",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipcrypto-numeric.zip.001",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipcrypto-numeric.zip.001",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipcrypto-numeric.zip.002",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipcrypto-numeric.zip.003",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipcrypto-numeric.zip.004",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipcrypto-numeric.zip.005",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipcrypto-numeric.zip.006",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipcrypto-numeric.zip.007",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipcrypto-numeric.zip.008",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipcrypto-numeric.zip.009",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipcrypto-numeric.zip.010",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipcrypto-numeric.zip.011"
+    ],
+    "encrypted": true,
+    "numeric": true,
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\a.bin",
+        "name": "a.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\b.bin",
+        "name": "b.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty-dir",
+        "name": "tree/empty-dir",
+        "directory": true,
+        "seconds": 1546230841,
+        "nanos": 123456700,
+        "sha256": null
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty.dat",
+        "name": "tree/empty.dat",
+        "directory": false,
+        "seconds": 2222138043,
+        "nanos": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\note.txt",
+        "name": "tree/note.txt",
+        "directory": false,
+        "seconds": 1604205299,
+        "nanos": 123456700,
+        "sha256": "dd32bfd0f78db255912b63a8a8a97651e35613a27cbc25368aafcce010412d18"
+      }
+    ],
+    "entries": [
+      {
+        "name": "a.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Deflated",
+        "bytes": 340000
+      },
+      {
+        "name": "b.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Deflated",
+        "bytes": 340000
+      },
+      {
+        "name": "tree/empty-dir/",
+        "date": [
+          2018,
+          12,
+          31,
+          12,
+          34,
+          0
+        ],
+        "method": "Stored",
+        "bytes": 0
+      },
+      {
+        "name": "tree/empty.dat",
+        "date": [
+          2040,
+          6,
+          1,
+          12,
+          34,
+          2
+        ],
+        "method": "Deflated",
+        "bytes": 0
+      },
+      {
+        "name": "tree/note.txt",
+        "date": [
+          2020,
+          11,
+          1,
+          12,
+          34,
+          58
+        ],
+        "method": "Deflated",
+        "bytes": 50
+      }
+    ]
+  },
+  {
+    "name": "zipx-aes-standard",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipx-aes-standard.zipx",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipx-aes-standard.zx01",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipx-aes-standard.zx02",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipx-aes-standard.zx03",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipx-aes-standard.zx04",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipx-aes-standard.zx05",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipx-aes-standard.zx06",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipx-aes-standard.zx07",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipx-aes-standard.zx08",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipx-aes-standard.zx09",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipx-aes-standard.zx10",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zipx-aes-standard.zipx"
+    ],
+    "encrypted": true,
+    "numeric": false,
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\a.bin",
+        "name": "a.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\b.bin",
+        "name": "b.bin",
+        "directory": false,
+        "seconds": 825568497,
+        "nanos": 123456700,
+        "sha256": "61a35e98c5e800f4219ed3e569bca3588949c91cdc4aecae96b7f5239989016d"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty-dir",
+        "name": "tree/empty-dir",
+        "directory": true,
+        "seconds": 1546230841,
+        "nanos": 123456700,
+        "sha256": null
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\empty.dat",
+        "name": "tree/empty.dat",
+        "directory": false,
+        "seconds": 2222138043,
+        "nanos": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\source\\abea87f7\\tree\\note.txt",
+        "name": "tree/note.txt",
+        "directory": false,
+        "seconds": 1604205299,
+        "nanos": 123456700,
+        "sha256": "dd32bfd0f78db255912b63a8a8a97651e35613a27cbc25368aafcce010412d18"
+      }
+    ],
+    "entries": [
+      {
+        "name": "a.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Xz",
+        "bytes": 340000
+      },
+      {
+        "name": "b.bin",
+        "date": [
+          1996,
+          2,
+          29,
+          12,
+          34,
+          56
+        ],
+        "method": "Xz",
+        "bytes": 340000
+      },
+      {
+        "name": "tree/empty-dir/",
+        "date": [
+          2018,
+          12,
+          31,
+          12,
+          34,
+          0
+        ],
+        "method": "Stored",
+        "bytes": 0
+      },
+      {
+        "name": "tree/empty.dat",
+        "date": [
+          2040,
+          6,
+          1,
+          12,
+          34,
+          2
+        ],
+        "method": "Stored",
+        "bytes": 0
+      },
+      {
+        "name": "tree/note.txt",
+        "date": [
+          2020,
+          11,
+          1,
+          12,
+          34,
+          58
+        ],
+        "method": "Xz",
+        "bytes": 50
+      }
+    ]
+  }
+]
