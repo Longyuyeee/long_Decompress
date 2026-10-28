@@ -63,6 +63,8 @@ fn parse<F: FnMut(u64, u64)>(
     let mut global = crate::services::tar_pax::State::default();
     let mut long_name: Option<String> = None;
     let mut records = 0usize;
+    let mut logical_total = 0u64;
+    let mut sparse_segments = 0usize;
     loop {
         report.stopped_offset = reader.position;
         report.stopped_member = None;
@@ -114,8 +116,8 @@ fn parse<F: FnMut(u64, u64)>(
             .sum::<u32>();
         anyhow::ensure!(header.cksum()? == sum, "TAR 文件头校验失败");
         let kind = header.entry_type();
-        anyhow::ensure!(kind.is_pax_global_extensions() || kind.is_pax_local_extensions() || kind.is_gnu_longname() || kind.is_file() || kind.is_dir(), "[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持此 TAR 条目类型（{}），已停止在此处", kind.as_byte());
-        let size = header.size()?;
+        anyhow::ensure!(kind.is_pax_global_extensions() || kind.is_pax_local_extensions() || kind.is_gnu_longname() || kind.is_file() || kind.is_dir() || kind.is_gnu_sparse(), "[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持此 TAR 条目类型（{}），已停止在此处", kind.as_byte());
+        let size = header.entry_size()?;
         anyhow::ensure!(size <= MAX_EXTRACTED_BYTES, "TAR 条目大小超过本次支持范围");
         if kind.is_pax_global_extensions() || kind.is_pax_local_extensions() || kind.is_gnu_longname() {
             anyhow::ensure!(
@@ -146,9 +148,9 @@ fn parse<F: FnMut(u64, u64)>(
             }
             continue;
         }
-        anyhow::ensure!(kind.is_file() || kind.is_dir(),"[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持此 TAR 条目类型（{}），已停止在此处",kind.as_byte());
+        anyhow::ensure!(kind.is_file() || kind.is_dir() || kind.is_gnu_sparse(),"[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持此 TAR 条目类型（{}），已停止在此处",kind.as_byte());
         // GNU sparse records have a different layout even when their path looks ordinary.
-        if let Some(gnu) = header.as_gnu() {
+        if let Some(gnu) = header.as_gnu().filter(|_| !kind.is_gnu_sparse()) {
             anyhow::ensure!(
                 gnu.isextended[0] == 0 && gnu.sparse.iter().all(|s| s.is_empty()),
                 "[archive-inspection:unsupported] TAR 稀疏条目暂不支持部分取回"
@@ -184,20 +186,34 @@ fn parse<F: FnMut(u64, u64)>(
             names.allocate(Some(&decoded), 0x2000, report.entries.len() + 1)
         };
         report.stopped_member = Some(name.clone());
+        let sparse = if kind.is_gnu_sparse() {
+            anyhow::ensure!(!meta.iter().any(|(key,_)|key=="size"), "[archive-inspection:unsupported] 旧 GNU 稀疏条目暂不支持叠加 PAX size，已停止在此处");
+            Some(crate::services::tar_sparse_recovery::Layout::parse(header, reader)?)
+        } else { None };
+        let bytes = sparse.as_ref().map_or(size, |layout|layout.logical);
+        logical_total = logical_total.checked_add(bytes).context("TAR 完整大小溢出")?;
+        anyhow::ensure!(logical_total <= MAX_EXTRACTED_BYTES, "[archive-inspection:unsupported] TAR 完整大小总量超过支持范围");
+        sparse_segments += sparse.as_ref().map_or(0, |layout|layout.ranges.len());
+        anyhow::ensure!(sparse_segments <= 1_000_000, "[archive-inspection:unsupported] TAR 稀疏映射总量超过支持范围");
         let offset = reader.position;
-        let mut remaining = size;
-        let mut hash = Sha256::new();
-        let mut buf = [0; 65536];
-        while remaining > 0 {
-            let count = remaining.min(buf.len() as u64) as usize;
-            reader
-                .read_exact(&mut buf[..count])
-                .context("TAR 文件内容未完整到达")?;
-            hash.update(&buf[..count]);
-            remaining -= count as u64;
-        }
+        let digest = if let Some(layout) = &sparse {
+            let cancelled = reader.cancelled;
+            layout.process(reader, None, cancelled, |_|{})?
+        } else {
+            let mut remaining = size;
+            let mut hash = Sha256::new();
+            let mut buf = [0;65536];
+            while remaining > 0 {
+                let count = remaining.min(buf.len() as u64) as usize;
+                reader.read_exact(&mut buf[..count]).context("TAR 文件内容未完整到达")?;
+                hash.update(&buf[..count]); remaining -= count as u64;
+            }
+            format!("{:x}",hash.finalize())
+        };
         padding(reader, size)?;
         report.entries.push(Entry {
+            stored_bytes: sparse.as_ref().map(|layout|layout.stored),
+            sparse,
             modified_time: {
                 use crate::services::tar_recovery_time::ModificationTime;
                 if let Some((_, value)) = meta.iter().find(|(k, _)| k == "mtime") {
@@ -207,8 +223,8 @@ fn parse<F: FnMut(u64, u64)>(
             time_warning: None,
             id: report.entries.len(),
             name,
-            bytes: size,
-            sha256: format!("{:x}", hash.finalize()),
+            bytes,
+            sha256: digest,
             is_directory: kind.is_dir(),
             offset,
         });
@@ -262,6 +278,7 @@ pub(super) fn scan_source(
     hash.update(serde_json::to_vec(&report)?);
     for e in &report.entries {
         hash.update(e.offset.to_le_bytes());
+        if let Some(layout) = &e.sparse { hash.update(serde_json::to_vec(layout)?); }
     }
     report.revision = format!("{:x}", hash.finalize());
     progress(src.length, src.length);
@@ -310,19 +327,23 @@ pub(super) fn copy_selected(
             .write(true)
             .create_new(true)
             .open(target)?;
-        let mut remaining = entry.bytes;
-        let mut hash = Sha256::new();
-        while remaining > 0 {
-            let n = remaining.min(buf.len() as u64) as usize;
-            reader.read_exact(&mut buf[..n])?;
-            output.write_all(&buf[..n])?;
-            hash.update(&buf[..n]);
-            remaining -= n as u64;
-            done += n as u64;
-            progress(done);
-        }
+        let digest = if let Some(layout) = &entry.sparse {
+            let before = done;
+            let digest = layout.process(&mut reader, Some(&mut output), cancelled, |logical|progress(before+logical))?;
+            done += entry.bytes;
+            digest
+        } else {
+            let mut remaining = entry.bytes;
+            let mut hash = Sha256::new();
+            while remaining > 0 {
+                let n = remaining.min(buf.len() as u64) as usize;
+                reader.read_exact(&mut buf[..n])?; output.write_all(&buf[..n])?;
+                hash.update(&buf[..n]); remaining -= n as u64; done += n as u64; progress(done);
+            }
+            format!("{:x}",hash.finalize())
+        };
         anyhow::ensure!(
-            format!("{:x}", hash.finalize()) == entry.sha256,
+            digest == entry.sha256,
             "TAR 文件在取回期间已变化，请重新检查"
         );
         output.flush()?;

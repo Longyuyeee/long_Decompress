@@ -25,6 +25,10 @@ pub struct Entry {
     pub sha256: String,
     pub is_directory: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub stored_bytes: Option<u64>,
+    #[serde(skip)]
+    pub(crate) sparse: Option<crate::services::tar_sparse_recovery::Layout>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub modified_time: Option<crate::services::tar_recovery_time::ModificationTime>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub time_warning: Option<String>,
@@ -201,7 +205,7 @@ fn source(path: &Path) -> Result<Source> {
         stamp: format!("{:x}", h.finalize()),
     })
 }
-pub(super) fn check(flag: &AtomicBool) -> Result<()> {
+pub(crate) fn check(flag: &AtomicBool) -> Result<()> {
     anyhow::ensure!(!flag.load(Ordering::SeqCst), "LZOP recovery cancelled");
     Ok(())
 }
@@ -297,6 +301,8 @@ fn scan_source(
             bytes,
             sha256: format!("{:x}", h.finalize()),
             is_directory: false,
+            stored_bytes: None,
+            sparse: None,
             modified_time: None,
             time_warning: None,
             offset,
