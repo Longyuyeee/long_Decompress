@@ -69,6 +69,24 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('ArchiveBrowserView', () => {
+  it('nested1723 opens a confirmed archive alias in the same pane and restores directory selection and scroll',async()=>{
+    const entry=(path:string,linkTarget?:string)=>({path,name:path.split('/').pop()!,size:10,isDir:false,linkTarget})
+    mocks.browseArchive.mockResolvedValueOnce({format:'TAR.LZO',revision:'outer-revision',totalFiles:2,totalDirectories:1,totalUncompressedSize:20,entries:[entry('links/copy.zip','payload/original.data'),entry('tail.txt')]}).mockResolvedValueOnce({format:'ZIP',revision:'inner-revision',totalFiles:1,totalDirectories:0,totalUncompressedSize:10,entries:[entry('readme.txt')]})
+    mocks.materializeNestedArchive.mockResolvedValueOnce({entryPath:'links/copy.zip',cachePath:'C:/cache/links/copy.zip',parentSha256:'outer-hash',contentSha256:'inner-hash',depth:2})
+    const wrapper=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1723,path:'C:/outer.tar.lzo'},destination:'D:/peer'},attachTo:document.body});await flushPromises()
+    await wrapper.get('[data-entry-path="links/"]').trigger('dblclick');await wrapper.get('[data-entry-path="links/copy.zip"]').trigger('click');const list=wrapper.get('.file-list').element as HTMLElement;list.scrollTop=137
+    await wrapper.get('[data-entry-path="links/copy.zip"]').trigger('dblclick');await flushPromises();expect(mocks.materializeNestedArchive).toHaveBeenLastCalledWith('C:/outer.tar.lzo','links/copy.zip','',2,[],undefined,undefined,'outer-revision',expect.any(String));expect(wrapper.findAll('[data-testid="file-pane-navigation-left"]')).toHaveLength(1);expect(wrapper.get('[data-entry-path="readme.txt"]').exists()).toBe(true);expect((wrapper.get('.file-list').element as HTMLElement).scrollTop).toBe(0)
+    await wrapper.get('[aria-label="上一级"]').trigger('click');await flushPromises();expect(wrapper.get('[data-entry-path="links/copy.zip"]').classes()).toContain('selected');expect((wrapper.get('.file-list').element as HTMLElement).scrollTop).toBe(137);expect(wrapper.text()).toContain('已选择 1 项');wrapper.unmount()
+  })
+  it('nested1723 cancels pending materialization and ignores its late success without changing the pane',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'TAR.LZO',revision:'outer-revision',totalFiles:1,totalDirectories:0,totalUncompressedSize:10,entries:[{path:'copy.zip',name:'copy.zip',size:10,isDir:false,linkTarget:'original.data'}]})
+    let finish!:(value:any)=>void;mocks.materializeNestedArchive.mockReturnValueOnce(new Promise(resolve=>{finish=resolve}))
+    const wrapper=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1723,path:'C:/outer.tar.lzo'},destination:'D:/peer'}});await flushPromises();await wrapper.get('[data-entry-path="copy.zip"]').trigger('dblclick');await wrapper.get('[data-testid="archive-nested-cancel"]').trigger('click');expect(mocks.cancelArchiveBrowse).toHaveBeenCalledWith(expect.stringMatching(/^archive-nested-/));finish({entryPath:'copy.zip',cachePath:'C:/cache/copy.zip',parentSha256:'outer',contentSha256:'inner',depth:2});await flushPromises();expect(mocks.browseArchive).toHaveBeenCalledTimes(1);expect(wrapper.get('[data-entry-path="copy.zip"]').exists()).toBe(true);expect(wrapper.find('[data-testid="archive-nested-cancel"]').exists()).toBe(false);wrapper.unmount()
+  })
+  it('nested1723 keeps the outer location when the source changes and offers nested open in the context menu',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce({format:'TAR.LZO',revision:'old-revision',totalFiles:1,totalDirectories:0,totalUncompressedSize:10,entries:[{path:'copy.zip',name:'copy.zip',size:10,isDir:false,linkTarget:'original.data'}]});mocks.materializeNestedArchive.mockRejectedValueOnce(new Error('IMAGE_READER_CHANGED|来源已变化，请刷新目录'))
+    const wrapper=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1723,path:'C:/outer.tar.lzo'}}});await flushPromises();await wrapper.get('[data-entry-path="copy.zip"]').trigger('contextmenu');await flushPromises();const button=document.querySelector<HTMLButtonElement>('[data-testid="archive-context-enter-nested"]')!;expect(button.disabled).toBe(false);button.click();await flushPromises();expect(mocks.setError).toHaveBeenCalledWith(expect.stringContaining('来源已变化'));expect(wrapper.get('[data-entry-path="copy.zip"]').exists()).toBe(true);wrapper.unmount()
+  })
   const linkedListing = () => ({format:'TAR.LZO',revision:'9'.repeat(64),totalFiles:2,totalDirectories:0,totalUncompressedSize:1280003,encrypted:false,entries:[
     {path:'copy.txt',name:'copy.txt',size:1280000,isDir:false,compressedSize:null,linkTarget:'docs/readme.txt'},
     {path:'normal.txt',name:'normal.txt',size:3,isDir:false,compressedSize:null},
@@ -244,7 +262,7 @@ describe('ArchiveBrowserView', () => {
     wrapper.findComponent({name:'ZipPasswordEncodingField'}).vm.$emit('update:modelValue','cp932')
     await wrapper.get('input[type="password"]').setValue('outer-password')
     await wrapper.get('[data-entry-path="inner.zip"]').trigger('dblclick'); await flushPromises()
-    expect(mocks.materializeNestedArchive).toHaveBeenLastCalledWith('C:/archives/demo.zip','inner.zip','outer-password',2,[],'cp932')
+    expect(mocks.materializeNestedArchive).toHaveBeenLastCalledWith('C:/archives/demo.zip','inner.zip','outer-password',2,[],'cp932', undefined, undefined, expect.any(String))
     expect(mocks.browseArchive).toHaveBeenLastCalledWith('C:/cache/inner.zip','',expect.any(String))
     expect(wrapper.get('[data-testid="browser-zip-password-encoding"]').text()).toContain('自动兼容')
     wrapper.findComponent({name:'ZipPasswordEncodingField'}).vm.$emit('update:modelValue','cp950')
@@ -982,8 +1000,7 @@ describe('ArchiveBrowserView', () => {
     await flushPromises()
 
     expect(mocks.materializeNestedArchive).toHaveBeenLastCalledWith(
-      'C:/archives/demo.zip', 'middle.7z', '', 2, [],
-    )
+      'C:/archives/demo.zip', 'middle.7z', '', 2, [], undefined, undefined, undefined, expect.any(String))
     expect(wrapper.get('[data-testid="archive-chain"]').text()).toContain('demo.zip')
     expect(wrapper.get('[data-testid="archive-chain"]').text()).toContain('middle.7z')
     expect(wrapper.get('input[type="password"]').element.value).toBe('')
@@ -992,8 +1009,7 @@ describe('ArchiveBrowserView', () => {
     await wrapper.get('[data-entry-path="inner.zip"]').trigger('dblclick')
     await flushPromises()
     expect(mocks.materializeNestedArchive).toHaveBeenLastCalledWith(
-      'C:/cache/middle.7z', 'inner.zip', 'middle-only-password', 3, ['outer-hash', 'middle-hash'],
-    )
+      'C:/cache/middle.7z', 'inner.zip', 'middle-only-password', 3, ['outer-hash', 'middle-hash'], undefined, undefined, undefined, expect.any(String))
     expect(wrapper.get('[data-testid="archive-chain"]').text()).toContain('3 / 3 层')
 
     await wrapper.get('[data-entry-path="fourth.zip"]').trigger('contextmenu', { clientX: 100, clientY: 100 })
@@ -1031,8 +1047,7 @@ describe('ArchiveBrowserView', () => {
     await flushPromises()
 
     expect(mocks.materializeNestedArchive).toHaveBeenCalledWith(
-      'C:/archives/demo.zip', 'locked.7z', 'outer-password', 2, [],
-    )
+      'C:/archives/demo.zip', 'locked.7z', 'outer-password', 2, [], undefined, undefined, undefined, expect.any(String))
     expect(wrapper.get('input[type="password"]').element.value).toBe('')
     expect(wrapper.text()).toContain('内层归档尚未打开')
     expect(mocks.setError).not.toHaveBeenCalled()

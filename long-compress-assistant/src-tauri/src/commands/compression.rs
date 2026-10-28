@@ -1750,107 +1750,26 @@ pub async fn materialize_nested_archive(
     target_depth: usize,
     ancestor_hashes: Vec<String>,
     zpaq_snapshot: Option<crate::models::compression::ZpaqSnapshot>,
+    source_revision: Option<String>,
+    request_id: Option<String>,
 ) -> Result<crate::services::archive_entry_open::NestedArchiveMaterializeResult, String> {
-    use crate::services::archive_entry_open::{
-        normalize_safe_entry_path, validate_extracted_file, validate_nested_archive_identity,
-        NestedArchiveMaterializeResult,
-    };
-
-    let entry_path = normalize_safe_entry_path(&entry_path).map_err(|error| error.to_string())?;
-    let archive = std::path::PathBuf::from(&file_path);
-    let service = CompressionService::new_with_defaults().await;
-    let resolved_password = match password.filter(|value| !value.is_empty()) {
-        Some(password) => Some(password),
-        None => {
-            service
-                .resolve_archive_password_silent(&file_path, &DecompressOptions {
-                    zip_password_encoding, selected_entries: vec![entry_path.clone()], ..Default::default()
-                })
-                .await.map_err(|error| error.to_string())?
-        }
-    };
-    let metadata =
-        crate::services::archive_browser::browse_archive_cancellable_at(&archive, resolved_password.as_deref(), Arc::new(AtomicBool::new(false)), zip_password_encoding, zpaq_snapshot)
-            .await
-            .map_err(|error| error.to_string())?;
-    let selected = metadata
-        .entries
-        .iter()
-        .find(|entry| !entry.is_dir && entry.path.replace('\\', "/") == entry_path)
-        .ok_or_else(|| "所选嵌套归档不存在，或不是普通文件".to_string())?;
-    let expected_bytes = selected.size;
-    let (entry_dir, reservation) = cache
-        .create_entry_dir(expected_bytes)
-        .map_err(|error| error.to_string())?;
-    let options = DecompressOptions {
-        zpaq_retrieval: None,
-        reader_selection: None,
-        library_source_id: None,
-        library_revision: None,
-        zpaq_catalog_id: None,
-        zpaq_snapshot,
-        zip_password_encoding,
-        parallel_zip: false,
-        preserve_paths: true,
-        overwrite_existing: false,
-        delete_after: false,
-        preserve_timestamps: true,
-        skip_corrupted: false,
-        extract_only_newer: false,
-        create_subdirectory: false,
-        preserve_mark_of_web: true,
-        file_filter: None,
-        selected_entries: vec![entry_path.clone()],
-        conflict_policy: "rename".to_string(),
-        enable_bruteforce: false,
-        bruteforce_wordlists: Vec::new(),
-    };
-    let task_id = format!("archive-nested-{}", uuid::Uuid::new_v4());
-    if let Err(error) = service
-        .extract(
-            window,
-            task_id,
-            file_path,
-            Some(entry_dir.to_string_lossy().into_owned()),
-            resolved_password,
-            options,
-        )
-        .await
-    {
-        let _ = std::fs::remove_dir_all(&entry_dir);
-        return Err(error.to_string());
+    let request_id=request_id.unwrap_or_else(||uuid::Uuid::new_v4().to_string());
+    if request_id.is_empty()||request_id.len()>128{return Err("嵌套读取请求无效".into());}
+    let flag=Arc::new(AtomicBool::new(false));
+    match ARCHIVE_BROWSE_FLAGS.entry(request_id.clone()){
+        Entry::Vacant(entry)=>{entry.insert(flag.clone());}
+        Entry::Occupied(entry)=>{if entry.get().load(Ordering::Relaxed){entry.remove();return Err("ARCHIVE_BROWSE_CANCELLED|已取消进入压缩包".into());}return Err("同一个嵌套读取请求已在执行".into());}
     }
-    let extracted =
-        validate_extracted_file(&entry_dir, &entry_path, expected_bytes).map_err(|error| {
-            let _ = std::fs::remove_dir_all(&entry_dir);
-            error.to_string()
-        })?;
-    let (parent_sha256, content_sha256) =
-        validate_nested_archive_identity(&archive, &extracted, target_depth, &ancestor_hashes)
-            .map_err(|error| {
-                let _ = std::fs::remove_dir_all(&entry_dir);
-                error.to_string()
-            })?;
-    cache
-        .register_nested_archive(
-            &archive,
-            &extracted,
-            &parent_sha256,
-            &content_sha256,
-            target_depth,
-        )
-        .map_err(|error| {
-            let _ = std::fs::remove_dir_all(&entry_dir);
-            error.to_string()
-        })?;
-    reservation.commit();
-    Ok(NestedArchiveMaterializeResult {
-        entry_path,
-        cache_path: extracted.to_string_lossy().into_owned(),
-        parent_sha256,
-        content_sha256,
-        depth: target_depth,
-    })
+    let _guard=ArchiveBrowseGuard{browse_id:request_id};
+    if let Some(revision)=source_revision.as_deref(){crate::services::image_reader::check_source(Path::new(&file_path),revision).map_err(|e|format!("{e:#}"))?;}
+    let mut service=CompressionService::new_with_defaults().await;service.cancellation_flag=flag.clone();
+    let resolved_password=match password.filter(|p|!p.is_empty()){
+        Some(password)=>Some(password),None=>service.resolve_archive_password_silent(&file_path,&DecompressOptions{zip_password_encoding,selected_entries:vec![entry_path.clone()],..Default::default()}).await.map_err(|e|format!("{e:#}"))?
+    };
+    let service=Arc::new(service);let extraction=service.clone();let extraction_password=resolved_password.clone();
+    crate::services::nested_archive::materialize(&cache,service,file_path.clone().into(),entry_path,resolved_password,zip_password_encoding,zpaq_snapshot,target_depth,ancestor_hashes,source_revision,flag,move|directory,options|async move{
+        extraction.extract(window,format!("archive-nested-{}",uuid::Uuid::new_v4()),file_path,Some(directory.to_string_lossy().into_owned()),extraction_password,options).await.map(|_|())
+    }).await.map_err(|e|format!("{e:#}"))
 }
 
 /// Extracts one validated archive entry into an isolated session cache and opens it

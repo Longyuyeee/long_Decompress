@@ -928,12 +928,16 @@ export const useTauriCommands = () => {
     ancestorHashes: string[],
     zipPasswordEncoding?: ZipPasswordEncoding,
     zpaqSnapshot?: ZpaqSnapshot,
+    sourceRevision?: string,
+    requestId?: string,
   ) => invoke<NestedArchiveMaterializeResult>('materialize_nested_archive', {
     filePath,
     entryPath,
     password: password || null,
     targetDepth,
     ancestorHashes,
+    ...(sourceRevision ? { sourceRevision } : {}),
+    ...(requestId ? { requestId } : {}),
     ...zipPasswordArguments(zipPasswordEncoding), ...snapshotArguments(zpaqSnapshot),
   })
 

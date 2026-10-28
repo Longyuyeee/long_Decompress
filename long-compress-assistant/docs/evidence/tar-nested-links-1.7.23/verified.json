@@ -1,0 +1,55 @@
+{
+  "passed": true,
+  "archives": 7,
+  "checks": [
+    {
+      "retained": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\tar-nested-links-1723\\gnu-0-copy.zip",
+      "sha256": "9860f1d872ce2a0c5296b705704d6f2c210ef40180eed1c28bb76d635c7f7431",
+      "independentTarRead": true,
+      "external7zipReadback": true,
+      "encrypted": false
+    },
+    {
+      "retained": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\tar-nested-links-1723\\gnu-1-加密副本.7z",
+      "sha256": "1da1ca2cb4ad34fd00ce629cbd2c4c060abb551891f1b97502265a400f074c32",
+      "independentTarRead": true,
+      "external7zipReadback": true,
+      "encrypted": true
+    },
+    {
+      "retained": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\tar-nested-links-1723\\gnu-2-长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本.zip",
+      "sha256": "9860f1d872ce2a0c5296b705704d6f2c210ef40180eed1c28bb76d635c7f7431",
+      "independentTarRead": true,
+      "external7zipReadback": true,
+      "encrypted": false
+    },
+    {
+      "retained": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\tar-nested-links-1723\\pax-3-copy.zip",
+      "sha256": "9860f1d872ce2a0c5296b705704d6f2c210ef40180eed1c28bb76d635c7f7431",
+      "independentTarRead": true,
+      "external7zipReadback": true,
+      "encrypted": false
+    },
+    {
+      "retained": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\tar-nested-links-1723\\pax-4-加密副本.7z",
+      "sha256": "1da1ca2cb4ad34fd00ce629cbd2c4c060abb551891f1b97502265a400f074c32",
+      "independentTarRead": true,
+      "external7zipReadback": true,
+      "encrypted": true
+    },
+    {
+      "retained": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\tar-nested-links-1723\\pax-5-长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本.zip",
+      "sha256": "9860f1d872ce2a0c5296b705704d6f2c210ef40180eed1c28bb76d635c7f7431",
+      "independentTarRead": true,
+      "external7zipReadback": true,
+      "encrypted": false
+    },
+    {
+      "retained": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\tar-nested-links-1723\\numeric-copy.zip",
+      "sha256": "9860f1d872ce2a0c5296b705704d6f2c210ef40180eed1c28bb76d635c7f7431",
+      "independentTarRead": false,
+      "external7zipReadback": true,
+      "encrypted": false
+    }
+  ]
+}
