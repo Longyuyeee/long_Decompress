@@ -1,0 +1,44 @@
+{
+  "passed": true,
+  "native": {
+    "new": 7,
+    "firstRunPassed": true,
+    "relatedOld": 3,
+    "commands": [
+      "cargo test --lib pax1716 -- --nocapture",
+      "cargo test --lib pax1715_complete_original -- --nocapture",
+      "cargo test --lib pax1714_complete_original -- --nocapture",
+      "cargo test --lib pax1715_comma_map_counts -- --nocapture"
+    ]
+  },
+  "frontend": {
+    "passed": 2
+  },
+  "ui": {
+    "groups": 3,
+    "nativeValueReplay": true,
+    "realDesktopIPC": false,
+    "screenshotsInspected": 6,
+    "viewports": [
+      [
+        1100,
+        700
+      ],
+      [
+        760,
+        520
+      ]
+    ]
+  },
+  "independentOutput": {
+    "trees": 4,
+    "files": 25,
+    "logicalSha": true,
+    "explicitMtime": true,
+    "windowsSparseAllocation": true
+  },
+  "productionBuild": true,
+  "shellDll": "1.7.16",
+  "releaseIdentitySources": 8,
+  "scope": "No unrelated full matrix or desktop input."
+}

@@ -1,0 +1,145 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "mode": "tail",
+      "files": 7,
+      "directories": 2,
+      "exactLogicalHashesAndTimes": true,
+      "allocations": [
+        {
+          "name": "资料/少段.bin",
+          "logicalBytes": 524288,
+          "storedBytes": 8192,
+          "allocatedBytes": 131072
+        },
+        {
+          "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "全零.bin",
+          "logicalBytes": 1048576,
+          "storedBytes": 0,
+          "allocatedBytes": 0
+        },
+        {
+          "name": "大空洞.bin",
+          "logicalBytes": 67108864,
+          "storedBytes": 512,
+          "allocatedBytes": 65536
+        },
+        {
+          "name": "资料/跨块映射.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 6291456
+        }
+      ]
+    },
+    {
+      "mode": "selected",
+      "files": 3,
+      "directories": 2,
+      "exactLogicalHashesAndTimes": true,
+      "allocations": [
+        {
+          "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "大空洞.bin",
+          "logicalBytes": 67108864,
+          "storedBytes": 512,
+          "allocatedBytes": 65536
+        },
+        {
+          "name": "资料/跨块映射.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 6291456
+        }
+      ]
+    },
+    {
+      "mode": "checksum",
+      "files": 7,
+      "directories": 2,
+      "exactLogicalHashesAndTimes": true,
+      "allocations": [
+        {
+          "name": "资料/少段.bin",
+          "logicalBytes": 524288,
+          "storedBytes": 8192,
+          "allocatedBytes": 131072
+        },
+        {
+          "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "全零.bin",
+          "logicalBytes": 1048576,
+          "storedBytes": 0,
+          "allocatedBytes": 0
+        },
+        {
+          "name": "大空洞.bin",
+          "logicalBytes": 67108864,
+          "storedBytes": 512,
+          "allocatedBytes": 65536
+        },
+        {
+          "name": "资料/跨块映射.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 6291456
+        }
+      ]
+    },
+    {
+      "mode": "end",
+      "files": 8,
+      "directories": 2,
+      "exactLogicalHashesAndTimes": true,
+      "allocations": [
+        {
+          "name": "资料/少段.bin",
+          "logicalBytes": 524288,
+          "storedBytes": 8192,
+          "allocatedBytes": 0
+        },
+        {
+          "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 0
+        },
+        {
+          "name": "全零.bin",
+          "logicalBytes": 1048576,
+          "storedBytes": 0,
+          "allocatedBytes": 0
+        },
+        {
+          "name": "大空洞.bin",
+          "logicalBytes": 67108864,
+          "storedBytes": 512,
+          "allocatedBytes": 0
+        },
+        {
+          "name": "资料/跨块映射.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 0
+        }
+      ]
+    }
+  ]
+}
