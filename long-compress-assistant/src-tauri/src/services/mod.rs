@@ -336,3 +336,6 @@ mod tar_pax00_1716_tests;
 
 #[cfg(test)]
 mod tar_hardlink_1717_tests;
+
+#[cfg(test)]
+mod tar_gnu_longlink_1718_tests;

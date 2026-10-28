@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "newNative": 7,
+  "relatedNative": 3,
+  "frontend": 2,
+  "backgroundUiGroups": 3,
+  "actualTrees": 4,
+  "actualFiles": 43,
+  "typeAndVite": true,
+  "shellExtension": true,
+  "releaseIdentity": "1.7.18",
+  "desktopControlled": false
+}

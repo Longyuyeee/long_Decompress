@@ -1,0 +1,145 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "mode": "tail",
+      "files": 12,
+      "directories": 2,
+      "exactLogicalHashesAndTimes": true,
+      "allocations": [
+        {
+          "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "资料/长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "资料/跨块映射.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 6291456
+        },
+        {
+          "name": "稀疏副本.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 6291456
+        },
+        {
+          "name": "long-target-only.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        }
+      ]
+    },
+    {
+      "mode": "selected",
+      "files": 6,
+      "directories": 2,
+      "exactLogicalHashesAndTimes": true,
+      "allocations": [
+        {
+          "name": "资料/长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "稀疏副本.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 6291456
+        },
+        {
+          "name": "long-target-only.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        }
+      ]
+    },
+    {
+      "mode": "checksum",
+      "files": 12,
+      "directories": 2,
+      "exactLogicalHashesAndTimes": true,
+      "allocations": [
+        {
+          "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "资料/长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "资料/跨块映射.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 6291456
+        },
+        {
+          "name": "稀疏副本.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 6291456
+        },
+        {
+          "name": "long-target-only.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        }
+      ]
+    },
+    {
+      "mode": "end",
+      "files": 13,
+      "directories": 2,
+      "exactLogicalHashesAndTimes": true,
+      "allocations": [
+        {
+          "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "资料/长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "资料/跨块映射.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 6291456
+        },
+        {
+          "name": "稀疏副本.bin",
+          "logicalBytes": 16777216,
+          "storedBytes": 393216,
+          "allocatedBytes": 6291456
+        },
+        {
+          "name": "long-target-only.bin",
+          "logicalBytes": 8388608,
+          "storedBytes": 122880,
+          "allocatedBytes": 1966080
+        }
+      ]
+    }
+  ]
+}

@@ -63,7 +63,7 @@ docs/               产品路线、格式说明和发布记录
 | --- | --- |
 | [开发交接](docs/DEVELOPMENT_HANDOFF.md) / [产品路线](docs/PRODUCT_ENHANCEMENT_ROADMAP.md) | 当前状态、下一步及已有验证 |
 | [v1.7.0 范围](docs/ARCHIVE_ROADMAP_1.7.0.md) / [实现与检查](docs/WINDOWS_OPEN_AND_BROWSER_UI.md) | Windows 打开、双栏统一与历史菜单 |
-| [v1.7.17 已确认硬链接内容取回](docs/TAR_HARDLINK_FREEZE_1.7.17.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.18.md) | 目标无需一并选中，保存独立内容文件；GNU 长链接目标仅规划 |
+| [v1.7.18 GNU 长链接目标取回](docs/TAR_GNU_LONGLINK_FREEZE_1.7.18.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.19.md) | GNU 长自身名称与长目标组合，独立取回；完整包目录与预览仅规划 |
 | [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md) | 创建、读取、密码、分卷和限制 |
 | [桌面测试说明](docs/DESKTOP_E2E.md) / [测试指南](tests/README.md) | 本地和隔离场景 |
 
