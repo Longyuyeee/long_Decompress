@@ -9,6 +9,36 @@ pub(crate) struct CompressionEntry {
     pub(crate) is_dir: bool,
 }
 
+/// ZIP can encode the selected root itself. Keep the legacy TAR/7Z and flat
+/// layouts unchanged; reserve each ZIP root once before remapping its children.
+pub(crate) fn collect_zip(sources:&[String],preserve_paths:bool)->Result<Vec<CompressionEntry>>{
+    use anyhow::Context;
+    if !preserve_paths{return collect(sources,false,true);}
+    let mut roots=HashSet::new();let mut seen=HashSet::new();let mut result=Vec::new();
+    for source in sources{
+        let path=Path::new(source);let identity=path.canonicalize().with_context(||format!("无法读取压缩来源：{source}"))?;
+        if !seen.insert(identity){continue;}
+        let is_dir=path.is_dir();let original=path.file_name().and_then(|n|n.to_str()).or(if is_dir{Some("folder")}else{None}).ok_or_else(||anyhow::anyhow!("压缩来源没有有效名称：{source}"))?;
+        let mut name=original.to_owned();let mut suffix=1;
+        while !roots.insert(name.to_lowercase()){
+            anyhow::ensure!(suffix<10_000,"同名压缩来源过多：{source}");
+            name=if is_dir{format!("{original} ({suffix})")}else{
+                let stem=Path::new(original).file_stem().and_then(|n|n.to_str()).unwrap_or(original);
+                match Path::new(original).extension().and_then(|n|n.to_str()).filter(|v|!v.is_empty()){
+                    Some(extension)=>format!("{stem} ({suffix}).{extension}"),None=>format!("{stem} ({suffix})")
+                }
+            };suffix+=1;
+        }
+        if is_dir{result.push(CompressionEntry{path:path.into(),archive_name:name.clone(),is_dir:true});}
+        for mut entry in collect(std::slice::from_ref(source),true,true)?{
+            if entry.path==path&&is_dir{continue;} // Empty root was already added.
+            entry.archive_name=if let Some(relative)=entry.archive_name.strip_prefix(&format!("{original}/")){format!("{name}/{relative}")}else{name.clone()};
+            result.push(entry);
+        }
+    }
+    Ok(result)
+}
+
 fn unique_archive_name(used_archive_names: &mut HashSet<String>, raw_name: String) -> String {
     let normalized = raw_name.replace('\\', "/");
     if used_archive_names.insert(normalized.clone()) {

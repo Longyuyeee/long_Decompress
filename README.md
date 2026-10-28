@@ -213,10 +213,10 @@
 
 | 版本 | 主要更新 | 详情 |
 | --- | --- | --- |
+| **v1.7.25** | ZIP / ZIPX 显式顶层目录、同名来源互不混放，解压提交后恢复目录时间，冲突确认可接续 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.25.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.25) |
 | **v1.7.24** | ZIP / ZIPX 创建及转换保留源修改时间，覆盖密码和分卷，越界日期提示回退 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.24.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.24) |
 | **v1.7.23** | TAR.LZO 压缩包副本直接嵌套浏览，同栏进入与返回，保留选择和滚动位置，接通取消与内层密码 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.23.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.23) |
 | **v1.7.22** | TAR.LZO 链接内容接通归档转换，衔接密码与分卷，校验和来源重查后再保存最终结果 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.22.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.22) |
 | **v1.7.21** | TAR.LZO 已确认链接内容接通整包解压，保留独立文件与时间，修正完整检查的链接回退判断 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.21.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.21) |
-| **v1.7.20** | 完整 TAR.LZO 所选硬链接内容提取，独立文件、稀疏与时间保留，历史及草稿保持选取范围 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.20.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.20) |
 
 [查看全部历史版本 →](https://github.com/Longyuyeee/long_Decompress/releases)

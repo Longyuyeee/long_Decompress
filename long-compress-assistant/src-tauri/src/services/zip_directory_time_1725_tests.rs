@@ -1,0 +1,72 @@
+use super::{compression_entries,native_compression::{self,CompressionRuntime},native_extraction::ExtractionRuntime,extraction_transaction as tx,zip_directory_times as dates,zip_password::ZipEncryption,standard_zip_writer::ZipSplitMode};
+use crate::models::compression::{CompressionOptions,DecompressOptions,TaskLogSeverity};
+use std::{path::{Path,PathBuf},sync::{Arc,atomic::{AtomicBool,AtomicUsize,Ordering}}};
+use anyhow::Result;
+use sha2::{Digest,Sha256};
+use chrono::TimeZone;
+fn base()->PathBuf{let path=Path::new(env!("CARGO_MANIFEST_DIR")).join("../test-results/zip-directory-time-1725");std::fs::create_dir_all(&path).unwrap();path}
+fn workspace()->PathBuf{let path=base().join(uuid::Uuid::new_v4().to_string());std::fs::create_dir_all(&path).unwrap();path}
+fn sha(path:&Path)->String{format!("{:x}",Sha256::digest(std::fs::read(path).unwrap()))}
+#[derive(Default)]struct Runtime{pool:super::io_buffer_pool::IOBufferPool}
+impl CompressionRuntime for Runtime{
+ fn cancellation_flag(&self)->Arc<AtomicBool>{Arc::new(AtomicBool::new(false))}
+ fn check_cancellation(&self)->Result<()>{Ok(())}fn copy_buffer_size(&self)->usize{65536}
+ fn emit_log(&self,_:&tauri::Window,_:&str,_:&str,_:TaskLogSeverity){}
+ fn emit_progress(&self,_:&tauri::Window,_:&str,_:f32,_:Option<String>,_:u64,_:u64){}
+}
+impl ExtractionRuntime for Runtime{
+ fn check_cancellation(&self)->Result<()>{Ok(())}fn copy_buffer_size(&self)->usize{65536}
+ fn buffer_pool(&self)->&super::io_buffer_pool::IOBufferPool{&self.pool}
+ fn normalized_archive_path(&self,path:&Path,preserve:bool)->Option<PathBuf>{if preserve{Some(path.into())}else{path.file_name().map(PathBuf::from)}}
+ fn emit_log(&self,_:&tauri::Window,_:&str,_:&str,_:TaskLogSeverity){}
+ fn emit_progress(&self,_:&tauri::Window,_:&str,_:f32,_:Option<String>,_:u64,_: u64){}
+}
+fn stamp(path:&Path,year:i32){let t=chrono::Local.with_ymd_and_hms(year,6,1,12,34,56).single().unwrap();filetime::set_file_mtime(path,filetime::FileTime::from_unix_time(t.timestamp(),0)).unwrap();}
+fn sources(root:&Path)->Vec<String>{
+ let mut seed=1725u32;let bytes=(0..180_000).map(|_|{seed^=seed<<13;seed^=seed>>17;seed^=seed<<5;seed as u8}).collect::<Vec<_>>();
+ for parent in ["a","b"]{let dir=root.join(parent).join("资料");std::fs::create_dir_all(dir.join("nested/empty")).unwrap();std::fs::write(dir.join("file.bin"),&bytes).unwrap();std::fs::write(dir.join("nested/note.txt"),parent).unwrap();std::fs::write(dir.join("nested/zero.txt"),[]).unwrap();for name in ["file.bin","nested/note.txt","nested/zero.txt"]{stamp(&dir.join(name),2011);}stamp(&dir.join("nested/empty"),2003);stamp(&dir.join("nested"),2002);stamp(&dir,if parent=="a"{2000}else{2001});}
+ std::fs::create_dir_all(root.join("empty-root")).unwrap();stamp(&root.join("empty-root"),2004);
+ ["a/资料","b/资料","empty-root","a/资料"].iter().map(|p|root.join(p).to_string_lossy().into_owned()).collect()
+}
+fn records(files:&[String],preserve:bool)->Vec<serde_json::Value>{compression_entries::collect_zip(files,preserve).unwrap().into_iter().map(|e|{let t=filetime::FileTime::from_last_modification_time(&e.path.metadata().unwrap());serde_json::json!({"name":e.archive_name,"path":e.path,"directory":e.is_dir,"seconds":t.unix_seconds(),"sha256":if e.is_dir{None}else{Some(sha(&e.path))}})}).collect()}
+fn options()->DecompressOptions{DecompressOptions{preserve_paths:true,preserve_timestamps:true,conflict_policy:"rename".into(),..Default::default()}}
+fn stage(input:&Path,output:&Path,opts:&DecompressOptions,password:Option<&str>)->tx::ExtractionStaging{
+ let staging=tx::ExtractionStaging::create_for(output).unwrap();super::native_extraction::zip::extract_with_optional_window(&Runtime::default(),None,"directory1725",input.to_str().unwrap(),staging.path().to_str().unwrap(),password,opts).unwrap();tx::prepare_staging_layout(input,staging.path(),opts).unwrap();staging
+}
+fn commit(input:&Path,output:&Path,opts:&DecompressOptions,password:Option<&str>)->(u64,super::lzop::selected::DirectoryTimes){
+ let mut staging=stage(input,output,opts,password);let times=dates::for_commit(input,staging.path(),opts,||Ok(())).unwrap();let bytes=tx::commit_staged_extraction(input.to_str().unwrap(),staging.path(),output,opts,|_|{}).unwrap();staging.cleanup().unwrap();assert!(super::lzop::selected::apply_directory_times(output,&times).is_empty());(bytes,times)
+}
+fn exact(output:&Path,expected:&[serde_json::Value]){for e in expected{let path=output.join(e["name"].as_str().unwrap());assert_eq!(path.is_dir(),e["directory"].as_bool().unwrap(),"{}",path.display());let t=filetime::FileTime::from_last_modification_time(&path.metadata().unwrap());assert_eq!(t.unix_seconds(),e["seconds"].as_i64().unwrap(),"{}",path.display());if !path.is_dir(){assert_eq!(sha(&path),e["sha256"]);}}assert_eq!(walkdir::WalkDir::new(output).into_iter().count()-1,expected.len());}
+
+#[test]fn zipdir1725_zip_roots_keep_trees_separate_deduplicate_sources_and_leave_other_layouts_unchanged(){
+ let root=workspace();let files=sources(&root);let result=compression_entries::collect_zip(&files,true).unwrap();assert_eq!(result.len(),13);assert!(result.iter().any(|e|e.archive_name=="资料"&&e.is_dir));assert!(result.iter().any(|e|e.archive_name=="资料 (1)/nested/note.txt"&&e.path==root.join("b/资料/nested/note.txt")));assert_eq!(result.iter().filter(|e|e.archive_name=="资料").count(),1);
+ let legacy=compression_entries::collect(&files,true,true).unwrap();assert!(!legacy.iter().any(|e|e.archive_name=="资料"));let names=|e:Vec<compression_entries::CompressionEntry>|e.into_iter().map(|e|e.archive_name).collect::<Vec<_>>();assert_eq!(names(compression_entries::collect_zip(&files,false).unwrap()),names(compression_entries::collect(&files,false,true).unwrap()));
+ let file=root.join("资料");std::fs::write(&file,b"root file").unwrap();let mixed=[file.to_string_lossy().into_owned(),files[0].clone()];let mixed=compression_entries::collect_zip(&mixed,true).unwrap();assert!(mixed.iter().any(|e|e.archive_name=="资料 (1)/file.bin"));
+}
+
+#[test]fn zipdir1725_zip_zipx_password_volume_creation_and_final_directory_dates_round_trip(){
+ let root=workspace();let files=sources(&root);let original=records(&files,true);let mut evidence=Vec::new();
+ for(name,format,password,split)in[("plain","zip",None,None),("aes-standard","zip",Some(ZipEncryption::Aes256),Some(ZipSplitMode::Standard)),("legacy-numeric","zip",Some(ZipEncryption::Zipcrypto),Some(ZipSplitMode::Numeric)),("xz-aes","zipx",Some(ZipEncryption::Aes256),None)]{
+  let output=root.join(format!("{name}.{format}"));let compression=CompressionOptions{format:Some(format.into()),level:1,password:password.map(|_|"ZipDir1725!".into()),zip_encryption:password.unwrap_or_default(),split_size:split.map(|_|65536),zip_split_mode:split.unwrap_or_default(),preserve_paths:Some(true),..Default::default()};native_compression::zip::compress(&Runtime::default(),None,"directory1725",&files,output.to_str().unwrap(),compression).unwrap();let input=if split==Some(ZipSplitMode::Numeric){output.with_file_name(format!("{name}.{format}.001"))}else{output.clone()};assert!(super::compression_verification::verify_native_with_zip_encoding(super::compression_format::CompressionRoute::Zip,&input,password.map(|_|"ZipDir1725!"),None,||false).unwrap());let target=root.join(format!("restored-{name}"));let(bytes,times)=commit(&input,&target,&options(),password.map(|_|"ZipDir1725!"));assert_eq!(times.len(),7);assert!(bytes>0);exact(&target,&original);assert_eq!(records(&files,true),original);let parts=if split.is_some(){super::archive_volumes::complete_volume_paths(&output).unwrap()}else{vec![output]};evidence.push(serde_json::json!({"name":name,"input":input,"parts":parts,"numeric":split==Some(ZipSplitMode::Numeric),"encrypted":password.is_some(),"sources":original,"restored":target,"directoryTimes":times,"publishedBytes":bytes}));
+ }std::fs::write(base().join("native.json"),serde_json::to_vec_pretty(&evidence).unwrap()).unwrap();
+}
+
+#[test]fn zipdir1725_selected_directories_file_only_filters_and_flattening_restore_only_retained_explicit_dates(){
+ let root=workspace();let files=sources(&root);let original=records(&files,true);let archive=root.join("source.zip");native_compression::zip::compress(&Runtime::default(),None,"select",&files,archive.to_str().unwrap(),CompressionOptions{format:Some("zip".into()),preserve_paths:Some(true),..Default::default()}).unwrap();let mut evidence=Vec::new();
+ for(mode,opts)in[("directory",DecompressOptions{selected_entries:vec!["资料/nested".into()],..options()}),("file",DecompressOptions{selected_entries:vec!["资料/nested/note.txt".into()],..options()}),("filter",DecompressOptions{selected_entries:vec!["资料".into()],file_filter:Some("*.txt".into()),..options()}),("flat",DecompressOptions{selected_entries:vec!["资料/nested".into()],preserve_paths:false,..options()}),("dates-off",DecompressOptions{selected_entries:vec!["empty-root".into()],preserve_timestamps:false,..options()})]{
+  let target=root.join(mode);let(_,times)=commit(&archive,&target,&opts,None);match mode{"directory"=>{assert_eq!(times.len(),2);assert!(target.join("资料/nested/empty").is_dir());assert!(!target.join("资料/file.bin").exists());},"filter"=>{assert_eq!(times.len(),2);assert!(!target.join("资料/file.bin").exists());},_=>assert!(times.is_empty())};for(name,time)in &times{assert_eq!(filetime::FileTime::from_last_modification_time(&target.join(name).metadata().unwrap()).unix_seconds(),time.seconds);}evidence.push(serde_json::json!({"mode":mode,"restored":target,"times":times}));
+ }assert_eq!(records(&files,true),original);std::fs::write(base().join("selection.json"),serde_json::to_vec_pretty(&evidence).unwrap()).unwrap();
+}
+
+#[test]fn zipdir1725_pending_conflict_reuses_dates_after_commit_and_preserves_unrelated_files(){
+ let root=workspace();let files=sources(&root);let archive=root.join("source.zip");native_compression::zip::compress(&Runtime::default(),None,"conflict",&files,archive.to_str().unwrap(),CompressionOptions{format:Some("zip".into()),preserve_paths:Some(true),..Default::default()}).unwrap();let opts=DecompressOptions{conflict_policy:"ask".into(),overwrite_existing:false,..options()};let target=root.join("final");std::fs::create_dir_all(target.join("资料/nested")).unwrap();std::fs::write(target.join("资料/nested/note.txt"),b"existing").unwrap();std::fs::write(target.join("unrelated.txt"),b"keep").unwrap();let mut staging=stage(&archive,&target,&opts,None);let times=dates::for_commit(&archive,staging.path(),&opts,||Ok(())).unwrap();let mut conflicts=Vec::new();assert!(tx::commit_staged_extraction(archive.to_str().unwrap(),staging.path(),&target,&opts,|c|conflicts.push(c)).is_err());assert_eq!(conflicts.len(),1);assert_eq!(std::fs::read(target.join("资料/nested/note.txt")).unwrap(),b"existing");
+ tx::commit_staged_extraction_with_resolutions(archive.to_str().unwrap(),staging.path(),&target,&opts,&std::collections::HashMap::new(),Some("rename"),|_|{}).unwrap();staging.cleanup().unwrap();assert!(super::lzop::selected::apply_directory_times(&target,&times).is_empty());assert_eq!(std::fs::read(target.join("资料/nested/note.txt")).unwrap(),b"existing");assert_eq!(std::fs::read(target.join("资料/nested/note (1).txt")).unwrap(),b"a");assert_eq!(std::fs::read(target.join("unrelated.txt")).unwrap(),b"keep");for(name,t)in &times{assert_eq!(filetime::FileTime::from_last_modification_time(&target.join(name).metadata().unwrap()).unix_seconds(),t.seconds);}
+}
+
+#[test]fn zipdir1725_implicit_or_ambiguous_directory_dates_are_not_invented_and_collection_can_cancel(){
+ use std::io::Write;let root=workspace();let archive=root.join("legacy.zip");let mut writer=zip_aes::ZipWriter::new(std::fs::File::create(&archive).unwrap());let o=zip_aes::write::SimpleFileOptions::default().last_modified_time(zip_aes::DateTime::from_date_and_time(2000,1,1,0,0,0).unwrap());writer.add_directory("known/",o).unwrap();writer.add_directory("KNOWN/",o).unwrap();writer.start_file("known/file.txt",o).unwrap();writer.write_all(b"known").unwrap();writer.start_file("implicit/file.txt",o).unwrap();writer.write_all(b"implicit").unwrap();writer.finish().unwrap();let staging=root.join("stage");std::fs::create_dir_all(staging.join("known")).unwrap();std::fs::create_dir_all(staging.join("implicit")).unwrap();assert!(dates::for_commit(&archive,&staging,&options(),||Ok(())).unwrap().is_empty());let calls=AtomicUsize::new(0);let error=dates::for_commit(&archive,&staging,&options(),||{anyhow::ensure!(calls.fetch_add(1,Ordering::Relaxed)<2,"cancelled-directory-read");Ok(())}).unwrap_err();assert!(error.to_string().contains("cancelled-directory-read"));assert!(dates::for_commit(&root.join("missing.zip"),&staging,&DecompressOptions{preserve_timestamps:false,..options()},||Ok(())).unwrap().is_empty());
+}
+
+#[test]fn zipdir1725_tar_link_conversion_keeps_explicit_top_directory_dates_in_verified_zip_and_zipx(){
+ let source=Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/tar-browse-links-1719/gnu.tar.lzo");let before=sha(&source);let root=workspace();let mut evidence=Vec::new();for format in ["zip","zipx"]{let output=root.join(format!("converted.{format}"));let prepared=super::tar_link_conversion::Prepared::open(&source,&output,options(),Arc::new(AtomicBool::new(false))).unwrap().unwrap();let files=prepared.read(&Runtime::default(),None,"convert-directory").unwrap();let mut expected=records(&files,true);for e in &mut expected{e["seconds"]=serde_json::json!(e["seconds"].as_i64().unwrap()-1);}native_compression::zip::compress(&Runtime::default(),None,"convert-directory",&files,prepared.rebuilt().to_str().unwrap(),CompressionOptions{format:Some(format.into()),level:1,password:Some("ZipDir1725!".into()),preserve_paths:Some(true),..Default::default()}).unwrap();assert!(super::compression_verification::verify_native_with_zip_encoding(super::compression_format::CompressionRoute::Zip,prepared.rebuilt(),Some("ZipDir1725!"),None,||false).unwrap());prepared.publish_verified(false).unwrap();drop(prepared);let target=root.join(format!("from-{format}"));let(_,times)=commit(&output,&target,&options(),Some("ZipDir1725!"));assert!(times.iter().any(|(n,_)|n=="docs"));assert!(times.iter().any(|(n,_)|n=="gallery"));exact(&target,&expected);assert_eq!(sha(&source),before);evidence.push(serde_json::json!({"input":output,"parts":[output],"encrypted":true,"sources":expected,"sourceTar":source.with_file_name("gnu.tar"),"sourceSha256":before,"restored":target,"directoryTimes":times}));}std::fs::write(base().join("conversion.json"),serde_json::to_vec_pretty(&evidence).unwrap()).unwrap();
+}

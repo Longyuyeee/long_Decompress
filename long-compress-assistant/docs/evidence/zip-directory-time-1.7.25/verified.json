@@ -1,0 +1,1002 @@
+{
+  "passed": true,
+  "archives": 6,
+  "encodedEntries": 74,
+  "checks": [
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-directory-time-1725\\26528e21-beee-46af-bf11-cd6a746952dd\\plain.zip",
+      "entries": [
+        {
+          "name": "资料/",
+          "date": [
+            2000,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 959834096
+        },
+        {
+          "name": "资料/file.bin",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料/nested/",
+          "date": [
+            2002,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1022906096
+        },
+        {
+          "name": "资料/nested/empty/",
+          "date": [
+            2003,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1054442096
+        },
+        {
+          "name": "资料/nested/note.txt",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料/nested/zero.txt",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料 (1)/",
+          "date": [
+            2001,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 991370096
+        },
+        {
+          "name": "资料 (1)/file.bin",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料 (1)/nested/",
+          "date": [
+            2002,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1022906096
+        },
+        {
+          "name": "资料 (1)/nested/empty/",
+          "date": [
+            2003,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1054442096
+        },
+        {
+          "name": "资料 (1)/nested/note.txt",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料 (1)/nested/zero.txt",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "empty-root/",
+          "date": [
+            2004,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1086064496
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": false
+    },
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-directory-time-1725\\26528e21-beee-46af-bf11-cd6a746952dd\\aes-standard.zip",
+      "entries": [
+        {
+          "name": "资料/",
+          "date": [
+            2000,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 959834096
+        },
+        {
+          "name": "资料/file.bin",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料/nested/",
+          "date": [
+            2002,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1022906096
+        },
+        {
+          "name": "资料/nested/empty/",
+          "date": [
+            2003,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1054442096
+        },
+        {
+          "name": "资料/nested/note.txt",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料/nested/zero.txt",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料 (1)/",
+          "date": [
+            2001,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 991370096
+        },
+        {
+          "name": "资料 (1)/file.bin",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料 (1)/nested/",
+          "date": [
+            2002,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1022906096
+        },
+        {
+          "name": "资料 (1)/nested/empty/",
+          "date": [
+            2003,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1054442096
+        },
+        {
+          "name": "资料 (1)/nested/note.txt",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料 (1)/nested/zero.txt",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "empty-root/",
+          "date": [
+            2004,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1086064496
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": true
+    },
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-directory-time-1725\\joined-2.zip",
+      "entries": [
+        {
+          "name": "资料/",
+          "date": [
+            2000,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 959834096
+        },
+        {
+          "name": "资料/file.bin",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料/nested/",
+          "date": [
+            2002,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1022906096
+        },
+        {
+          "name": "资料/nested/empty/",
+          "date": [
+            2003,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1054442096
+        },
+        {
+          "name": "资料/nested/note.txt",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料/nested/zero.txt",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料 (1)/",
+          "date": [
+            2001,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 991370096
+        },
+        {
+          "name": "资料 (1)/file.bin",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料 (1)/nested/",
+          "date": [
+            2002,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1022906096
+        },
+        {
+          "name": "资料 (1)/nested/empty/",
+          "date": [
+            2003,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1054442096
+        },
+        {
+          "name": "资料 (1)/nested/note.txt",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料 (1)/nested/zero.txt",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "empty-root/",
+          "date": [
+            2004,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1086064496
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": true
+    },
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-directory-time-1725\\26528e21-beee-46af-bf11-cd6a746952dd\\xz-aes.zipx",
+      "entries": [
+        {
+          "name": "资料/",
+          "date": [
+            2000,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 959834096
+        },
+        {
+          "name": "资料/file.bin",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料/nested/",
+          "date": [
+            2002,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1022906096
+        },
+        {
+          "name": "资料/nested/empty/",
+          "date": [
+            2003,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1054442096
+        },
+        {
+          "name": "资料/nested/note.txt",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料/nested/zero.txt",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料 (1)/",
+          "date": [
+            2001,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 991370096
+        },
+        {
+          "name": "资料 (1)/file.bin",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料 (1)/nested/",
+          "date": [
+            2002,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1022906096
+        },
+        {
+          "name": "资料 (1)/nested/empty/",
+          "date": [
+            2003,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1054442096
+        },
+        {
+          "name": "资料 (1)/nested/note.txt",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "资料 (1)/nested/zero.txt",
+          "date": [
+            2011,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1306902896
+        },
+        {
+          "name": "empty-root/",
+          "date": [
+            2004,
+            6,
+            1,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 1086064496
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": true
+    },
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-directory-time-1725\\86b1d307-e80d-4cfd-ac35-8c8492833a96\\converted.zip",
+      "entries": [
+        {
+          "name": "after.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "docs/",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "docs/readme.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "empty-copy.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "empty.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "gallery/",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "gallery/cover.png",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "gallery/封面副本.png",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "阅读副本.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": true
+    },
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-directory-time-1725\\86b1d307-e80d-4cfd-ac35-8c8492833a96\\converted.zipx",
+      "entries": [
+        {
+          "name": "after.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "docs/",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "docs/readme.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "empty-copy.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "empty.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "gallery/",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "gallery/cover.png",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "gallery/封面副本.png",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        },
+        {
+          "name": "阅读副本.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001718
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": true
+    }
+  ],
+  "nativeFinalTreesAndDates": true,
+  "selection": [
+    {
+      "mode": "directory",
+      "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-directory-time-1725\\72e2390b-bdec-4a5d-8632-1a8d9814cb16\\directory",
+      "times": [
+        [
+          "资料/nested",
+          {
+            "seconds": 1022906096,
+            "nanoseconds": 0
+          }
+        ],
+        [
+          "资料/nested/empty",
+          {
+            "seconds": 1054442096,
+            "nanoseconds": 0
+          }
+        ]
+      ]
+    },
+    {
+      "mode": "file",
+      "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-directory-time-1725\\72e2390b-bdec-4a5d-8632-1a8d9814cb16\\file",
+      "times": []
+    },
+    {
+      "mode": "filter",
+      "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-directory-time-1725\\72e2390b-bdec-4a5d-8632-1a8d9814cb16\\filter",
+      "times": [
+        [
+          "资料",
+          {
+            "seconds": 959834096,
+            "nanoseconds": 0
+          }
+        ],
+        [
+          "资料/nested",
+          {
+            "seconds": 1022906096,
+            "nanoseconds": 0
+          }
+        ]
+      ]
+    },
+    {
+      "mode": "flat",
+      "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-directory-time-1725\\72e2390b-bdec-4a5d-8632-1a8d9814cb16\\flat",
+      "times": []
+    },
+    {
+      "mode": "dates-off",
+      "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-directory-time-1725\\72e2390b-bdec-4a5d-8632-1a8d9814cb16\\dates-off",
+      "times": []
+    }
+  ],
+  "timePolicy": "Explicit ZIP directory headers only; local two-second DOS calendar. No fabricated implicit parent dates."
+}

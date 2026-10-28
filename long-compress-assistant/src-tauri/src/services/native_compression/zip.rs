@@ -73,7 +73,7 @@ fn create_zip<R: CompressionRuntime>(
             }
         }
     } else { options };
-    let entries = compression_entries::collect(sources, preserve_paths, true)?;
+    let entries = compression_entries::collect_zip(sources, preserve_paths)?;
     let total_bytes = source_total_bytes(&entries)?;
     let mut progress = ByteProgress::new(total_bytes);
     let mut progress_gate = ProgressGate::new();
