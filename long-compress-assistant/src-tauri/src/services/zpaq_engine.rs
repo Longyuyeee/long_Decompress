@@ -188,7 +188,7 @@ fn parse_directory(bytes: &[u8], encrypted: bool) -> Result<ArchiveBrowseResult>
     for item in directory.entries {
         let path = super::archive_entry_open::normalize_safe_entry_path(item.path.trim_end_matches('/'))?;
         let is_dir = item.directory;
-        entries.push(ArchiveEntryInfo {
+        entries.push(ArchiveEntryInfo { link_target: None,
             name: path.rsplit('/').next().unwrap_or(&path).to_string(), path,
             size: item.size.max(0) as u64, size_known: Some(is_dir || item.size >= 0),
             compressed_size: None, modified: modified_date(item.date), crc: None, encrypted, is_dir,

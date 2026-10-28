@@ -1,0 +1,329 @@
+[
+  {
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-hardlink-1717\\hardlinks.tar.lzo",
+    "report": {
+      "format": "TAR.LZO",
+      "entries": [
+        {
+          "path": "prefix.txt",
+          "name": "prefix.txt",
+          "size": 35,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "资料",
+          "name": "资料",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "资料/empty",
+          "name": "empty",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "source.bin",
+          "name": "source.bin",
+          "size": 200003,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "source.bin",
+          "path": "alias-a.bin",
+          "name": "alias-a.bin",
+          "size": 200003,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "source.bin",
+          "path": "资料/alias-b.bin",
+          "name": "alias-b.bin",
+          "size": 200003,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "name": "多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "size": 8388608,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "path": "长目标副本.bin",
+          "name": "长目标副本.bin",
+          "size": 8388608,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "empty.bin",
+          "name": "empty.bin",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "empty.bin",
+          "path": "empty-copy.bin",
+          "name": "empty-copy.bin",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "资料/跨块映射.bin",
+          "name": "跨块映射.bin",
+          "size": 16777216,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "资料/跨块映射.bin",
+          "path": "稀疏副本.bin",
+          "name": "稀疏副本.bin",
+          "size": 16777216,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "after.txt",
+          "name": "after.txt",
+          "size": 39,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "late.bin",
+          "name": "late.bin",
+          "size": 1100178,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        }
+      ],
+      "totalFiles": 12,
+      "totalDirectories": 2,
+      "totalUncompressedSize": 52031909,
+      "totalCompressedSize": 0,
+      "encrypted": false
+    }
+  },
+  {
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-gnu-longlink-1718\\gnu-links.tar.lzo",
+    "report": {
+      "format": "TAR.LZO",
+      "entries": [
+        {
+          "path": "prefix.txt",
+          "name": "prefix.txt",
+          "size": 35,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "资料",
+          "name": "资料",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "资料/empty",
+          "name": "empty",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "source.bin",
+          "name": "source.bin",
+          "size": 200003,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "source.bin",
+          "path": "alias-a.bin",
+          "name": "alias-a.bin",
+          "size": 200003,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "source.bin",
+          "path": "资料/alias-b.bin",
+          "name": "alias-b.bin",
+          "size": 200003,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "name": "多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "size": 8388608,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "path": "资料/长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本.bin",
+          "name": "长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本.bin",
+          "size": 8388608,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "empty.bin",
+          "name": "empty.bin",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "empty.bin",
+          "path": "empty-copy.bin",
+          "name": "empty-copy.bin",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "资料/跨块映射.bin",
+          "name": "跨块映射.bin",
+          "size": 16777216,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "资料/跨块映射.bin",
+          "path": "稀疏副本.bin",
+          "name": "稀疏副本.bin",
+          "size": 16777216,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "path": "long-target-only.bin",
+          "name": "long-target-only.bin",
+          "size": 8388608,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "after.txt",
+          "name": "after.txt",
+          "size": 39,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "late.bin",
+          "name": "late.bin",
+          "size": 1100178,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        }
+      ],
+      "totalFiles": 13,
+      "totalDirectories": 2,
+      "totalUncompressedSize": 60420517,
+      "totalCompressedSize": 0,
+      "encrypted": false
+    }
+  }
+]

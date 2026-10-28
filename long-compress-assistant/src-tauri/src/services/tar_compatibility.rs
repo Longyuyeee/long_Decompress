@@ -174,6 +174,7 @@ fn line_number(reader: &mut impl Read, consumed: &mut u64) -> io::Result<u64> {
 pub(crate) struct LogicalEntry<'a, R: Read> {
     entry: tar::Entry<'a, R>,
     path: PathBuf,
+    original_path: Vec<u8>,
     size: u64,
     payload_size: u64,
     blocks: Option<Blocks>,
@@ -183,6 +184,7 @@ pub(crate) struct LogicalEntry<'a, R: Read> {
 }
 impl<'a, R: Read> LogicalEntry<'a, R> {
     pub(crate) fn new(mut entry: tar::Entry<'a, R>) -> io::Result<Self> {
+        let mut original_path = entry.path_bytes().into_owned();
         let mut path = entry.path()?.into_owned();
         let mut size = entry.size();
         let mut payload_size = if entry.header().entry_type().is_gnu_sparse() {
@@ -221,6 +223,7 @@ impl<'a, R: Read> LogicalEntry<'a, R> {
                 if name.is_empty() || name.contains('\0') {
                     return Err(damaged("稀疏文件名无效"));
                 }
+                original_path = name.as_bytes().to_vec();
                 path = PathBuf::from(name);
             }
             let mut consumed = 0u64;
@@ -324,6 +327,7 @@ impl<'a, R: Read> LogicalEntry<'a, R> {
         Ok(Self {
             entry,
             path,
+            original_path,
             size,
             payload_size,
             blocks,
@@ -331,6 +335,14 @@ impl<'a, R: Read> LogicalEntry<'a, R> {
             position: 0,
             modified,
         })
+    }
+    pub(crate) fn original_path(&self) -> &[u8] { &self.original_path }
+    pub(crate) fn link_name(&self) -> Option<std::borrow::Cow<'_, [u8]>> { self.entry.link_name_bytes() }
+    pub(crate) fn view_identity(&self) -> String {
+        let mut hash=blake3::Hasher::new();hash.update(&self.original_path);hash.update(self.header().as_bytes());
+        hash.update(&self.size.to_le_bytes());hash.update(&self.payload_size.to_le_bytes());
+        if let Some(blocks)=&self.blocks {for (offset,size) in blocks {hash.update(&offset.to_le_bytes());hash.update(&size.to_le_bytes());}}
+        hash.finalize().to_hex().to_string()
     }
     pub(crate) fn path(&self) -> &Path {
         &self.path

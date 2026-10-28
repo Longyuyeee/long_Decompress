@@ -1,0 +1,335 @@
+{
+  "producer": "tar (GNU tar) 1.35",
+  "recipeVersion": 1,
+  "variants": [
+    {
+      "format": "gnu",
+      "tar": "gnu.tar",
+      "tarSha256": "cb30955e2966fbd38da166c36b926890491497ef9b4e273878e48a54f1ac4a0b",
+      "archive": "gnu.tar.lzo",
+      "sha256": "fa3fcea8da3a0c9733d0a1b195bd2b6ccc3bbafd09c35381f23e69cd8f8be12d",
+      "entries": [
+        {
+          "name": "docs",
+          "bytes": 0,
+          "isDirectory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "linkTarget": null,
+          "headerOffset": 0,
+          "dataOffset": 512
+        },
+        {
+          "name": "gallery",
+          "bytes": 0,
+          "isDirectory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "linkTarget": null,
+          "headerOffset": 512,
+          "dataOffset": 1024
+        },
+        {
+          "name": "empty.txt",
+          "bytes": 0,
+          "isDirectory": false,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "linkTarget": null,
+          "headerOffset": 1024,
+          "dataOffset": 1536
+        },
+        {
+          "name": "docs/readme.txt",
+          "bytes": 1344000,
+          "isDirectory": false,
+          "sha256": "96db4695c45cb9a74a26a60d9d6765b276a984817c047cb6a27b83eb69ed5384",
+          "prefixSha256": "e547a46b5afcb74ddcc46644f8d276eae7f28034e4c3b30b798fe0c19f5ec030",
+          "linkTarget": null,
+          "headerOffset": 1536,
+          "dataOffset": 2048
+        },
+        {
+          "name": "gallery/cover.png",
+          "bytes": 93,
+          "isDirectory": false,
+          "sha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+          "prefixSha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+          "linkTarget": null,
+          "headerOffset": 1346048,
+          "dataOffset": 1346560
+        },
+        {
+          "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "bytes": 47,
+          "isDirectory": false,
+          "sha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+          "prefixSha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+          "linkTarget": null,
+          "headerOffset": 1347072,
+          "dataOffset": 1348608
+        },
+        {
+          "name": "阅读副本.txt",
+          "bytes": 1344000,
+          "isDirectory": false,
+          "sha256": "96db4695c45cb9a74a26a60d9d6765b276a984817c047cb6a27b83eb69ed5384",
+          "prefixSha256": "e547a46b5afcb74ddcc46644f8d276eae7f28034e4c3b30b798fe0c19f5ec030",
+          "linkTarget": "docs/readme.txt",
+          "headerOffset": 1349120,
+          "dataOffset": 1349632
+        },
+        {
+          "name": "gallery/封面副本.png",
+          "bytes": 93,
+          "isDirectory": false,
+          "sha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+          "prefixSha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+          "linkTarget": "gallery/cover.png",
+          "headerOffset": 1349632,
+          "dataOffset": 1350144
+        },
+        {
+          "name": "empty-copy.txt",
+          "bytes": 0,
+          "isDirectory": false,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "linkTarget": "empty.txt",
+          "headerOffset": 1350144,
+          "dataOffset": 1350656
+        },
+        {
+          "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "bytes": 47,
+          "isDirectory": false,
+          "sha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+          "prefixSha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+          "linkTarget": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "headerOffset": 1350656,
+          "dataOffset": 1353216
+        },
+        {
+          "name": "after.txt",
+          "bytes": 26,
+          "isDirectory": false,
+          "sha256": "e4e272e4ba6a999633a75c39bc10f241f6f88da8a2ba8d26fe2cb3e99cb80ad1",
+          "prefixSha256": "e4e272e4ba6a999633a75c39bc10f241f6f88da8a2ba8d26fe2cb3e99cb80ad1",
+          "linkTarget": null,
+          "headerOffset": 1353216,
+          "dataOffset": 1353728
+        }
+      ]
+    },
+    {
+      "format": "pax",
+      "tar": "pax.tar",
+      "tarSha256": "ce0bb98697e6bf1d25a6f8efdc91422786596a69fa5a7cc5a4b8c958790aede7",
+      "archive": "pax.tar.lzo",
+      "sha256": "6b74c1dd3971fd7125c7c7582e71bf5b62e949ca35a7c498168fa276aed78d7a",
+      "entries": [
+        {
+          "name": "docs",
+          "bytes": 0,
+          "isDirectory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "linkTarget": null,
+          "headerOffset": 0,
+          "dataOffset": 512
+        },
+        {
+          "name": "gallery",
+          "bytes": 0,
+          "isDirectory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "linkTarget": null,
+          "headerOffset": 512,
+          "dataOffset": 1024
+        },
+        {
+          "name": "empty.txt",
+          "bytes": 0,
+          "isDirectory": false,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "linkTarget": null,
+          "headerOffset": 1024,
+          "dataOffset": 1536
+        },
+        {
+          "name": "docs/readme.txt",
+          "bytes": 1344000,
+          "isDirectory": false,
+          "sha256": "96db4695c45cb9a74a26a60d9d6765b276a984817c047cb6a27b83eb69ed5384",
+          "prefixSha256": "e547a46b5afcb74ddcc46644f8d276eae7f28034e4c3b30b798fe0c19f5ec030",
+          "linkTarget": null,
+          "headerOffset": 1536,
+          "dataOffset": 2048
+        },
+        {
+          "name": "gallery/cover.png",
+          "bytes": 93,
+          "isDirectory": false,
+          "sha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+          "prefixSha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+          "linkTarget": null,
+          "headerOffset": 1346048,
+          "dataOffset": 1346560
+        },
+        {
+          "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "bytes": 47,
+          "isDirectory": false,
+          "sha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+          "prefixSha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+          "linkTarget": null,
+          "headerOffset": 1347072,
+          "dataOffset": 1348608
+        },
+        {
+          "name": "阅读副本.txt",
+          "bytes": 1344000,
+          "isDirectory": false,
+          "sha256": "96db4695c45cb9a74a26a60d9d6765b276a984817c047cb6a27b83eb69ed5384",
+          "prefixSha256": "e547a46b5afcb74ddcc46644f8d276eae7f28034e4c3b30b798fe0c19f5ec030",
+          "linkTarget": "docs/readme.txt",
+          "headerOffset": 1349120,
+          "dataOffset": 1350656
+        },
+        {
+          "name": "gallery/封面副本.png",
+          "bytes": 93,
+          "isDirectory": false,
+          "sha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+          "prefixSha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+          "linkTarget": "gallery/cover.png",
+          "headerOffset": 1350656,
+          "dataOffset": 1352192
+        },
+        {
+          "name": "empty-copy.txt",
+          "bytes": 0,
+          "isDirectory": false,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "linkTarget": "empty.txt",
+          "headerOffset": 1352192,
+          "dataOffset": 1352704
+        },
+        {
+          "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "bytes": 47,
+          "isDirectory": false,
+          "sha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+          "prefixSha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+          "linkTarget": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "headerOffset": 1352704,
+          "dataOffset": 1354240
+        },
+        {
+          "name": "after.txt",
+          "bytes": 26,
+          "isDirectory": false,
+          "sha256": "e4e272e4ba6a999633a75c39bc10f241f6f88da8a2ba8d26fe2cb3e99cb80ad1",
+          "prefixSha256": "e4e272e4ba6a999633a75c39bc10f241f6f88da8a2ba8d26fe2cb3e99cb80ad1",
+          "linkTarget": null,
+          "headerOffset": 1354240,
+          "dataOffset": 1354752
+        }
+      ]
+    }
+  ],
+  "priorSparseLinkOracles": [
+    {
+      "folder": "tar-hardlink-1717",
+      "archive": "hardlinks.tar.lzo",
+      "name": "alias-a.bin",
+      "size": 200003,
+      "linkTarget": "source.bin",
+      "prefixSha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0"
+    },
+    {
+      "folder": "tar-hardlink-1717",
+      "archive": "hardlinks.tar.lzo",
+      "name": "资料/alias-b.bin",
+      "size": 200003,
+      "linkTarget": "source.bin",
+      "prefixSha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0"
+    },
+    {
+      "folder": "tar-hardlink-1717",
+      "archive": "hardlinks.tar.lzo",
+      "name": "长目标副本.bin",
+      "size": 8388608,
+      "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+      "prefixSha256": "a3c0554efde83371ac2d2086d4dcc3cdf190bdba46c188552c6c9ee9d2525174"
+    },
+    {
+      "folder": "tar-hardlink-1717",
+      "archive": "hardlinks.tar.lzo",
+      "name": "empty-copy.bin",
+      "size": 0,
+      "linkTarget": "empty.bin",
+      "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "folder": "tar-hardlink-1717",
+      "archive": "hardlinks.tar.lzo",
+      "name": "稀疏副本.bin",
+      "size": 16777216,
+      "linkTarget": "资料/跨块映射.bin",
+      "prefixSha256": "a035e64dcd2fb2f5f70a828b63804b56eb856f163109f0df49b23ddad903d910"
+    },
+    {
+      "folder": "tar-gnu-longlink-1718",
+      "archive": "gnu-links.tar.lzo",
+      "name": "alias-a.bin",
+      "size": 200003,
+      "linkTarget": "source.bin",
+      "prefixSha256": "86f91d8d33b4628226301695234d543550f037d293b56ad57adbcceb8d218453"
+    },
+    {
+      "folder": "tar-gnu-longlink-1718",
+      "archive": "gnu-links.tar.lzo",
+      "name": "资料/alias-b.bin",
+      "size": 200003,
+      "linkTarget": "source.bin",
+      "prefixSha256": "86f91d8d33b4628226301695234d543550f037d293b56ad57adbcceb8d218453"
+    },
+    {
+      "folder": "tar-gnu-longlink-1718",
+      "archive": "gnu-links.tar.lzo",
+      "name": "资料/长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本.bin",
+      "size": 8388608,
+      "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+      "prefixSha256": "a3c0554efde83371ac2d2086d4dcc3cdf190bdba46c188552c6c9ee9d2525174"
+    },
+    {
+      "folder": "tar-gnu-longlink-1718",
+      "archive": "gnu-links.tar.lzo",
+      "name": "empty-copy.bin",
+      "size": 0,
+      "linkTarget": "empty.bin",
+      "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "folder": "tar-gnu-longlink-1718",
+      "archive": "gnu-links.tar.lzo",
+      "name": "稀疏副本.bin",
+      "size": 16777216,
+      "linkTarget": "资料/跨块映射.bin",
+      "prefixSha256": "a035e64dcd2fb2f5f70a828b63804b56eb856f163109f0df49b23ddad903d910"
+    },
+    {
+      "folder": "tar-gnu-longlink-1718",
+      "archive": "gnu-links.tar.lzo",
+      "name": "long-target-only.bin",
+      "size": 8388608,
+      "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+      "prefixSha256": "a3c0554efde83371ac2d2086d4dcc3cdf190bdba46c188552c6c9ee9d2525174"
+    }
+  ],
+  "sources": "Project-authored text/PNG with real Linux hardlinks; GNU full extraction inode and SHA checks, independent Python TAR reads, fixed-SHA official lzop round trip."
+}

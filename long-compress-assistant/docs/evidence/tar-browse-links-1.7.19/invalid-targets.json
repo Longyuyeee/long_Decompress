@@ -1,0 +1,13 @@
+[
+  "[archive-inspection:unsupported] TAR.LZO 链接目标不是前面已确认的唯一内容文件，前向、歧义、目录或链条暂不支持",
+  "[archive-inspection:unsupported] TAR.LZO 链接目标不是前面已确认的唯一内容文件，前向、歧义、目录或链条暂不支持",
+  "[archive-inspection:unsupported] TAR.LZO 硬链接目标为空或指向自身",
+  "[archive-inspection:unsupported] TAR.LZO 链接目标不是前面已确认的唯一内容文件，前向、歧义、目录或链条暂不支持",
+  "[archive-inspection:unsupported] TAR.LZO 链接目标不是前面已确认的唯一内容文件，前向、歧义、目录或链条暂不支持",
+  "[archive-inspection:unsupported] TAR.LZO 路径无法确认",
+  "[archive-inspection:unsupported] TAR.LZO 此链接或非普通条目暂不支持浏览和预览",
+  "[archive-inspection:unsupported] TAR.LZO 此链接或非普通条目暂不支持浏览和预览",
+  "[archive-inspection:unsupported] TAR.LZO 硬链接带正文或冲突大小",
+  "[archive-inspection:unsupported] TAR.LZO 链接目标不是前面已确认的唯一内容文件，前向、歧义、目录或链条暂不支持",
+  "[archive-inspection:unsupported] TAR.LZO 存在重复可见路径，无法唯一选择内容，请向提供者索取名称明确的原包"
+]

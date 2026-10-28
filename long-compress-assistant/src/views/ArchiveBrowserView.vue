@@ -190,6 +190,7 @@ const detailFiles = computed(() => detailEntries.value.flatMap(entry => entry.is
 const detailTotalSize = computed(() => detailFiles.value.reduce((sum, entry) => sum + entry.size, 0))
 const detailCompressedSize = computed(() => detailFiles.value.reduce((sum, entry) => sum + (entry.compressedSize ?? 0), 0))
 const detailTitle = computed(() => detailEntries.value.length === 1 ? detailEntries.value[0].name : `${detailEntries.value.length} 个条目`)
+const contextHasLink = computed(() => !!contextMenu.value?.entries.some(entry=>entry.linkTarget))
 const contextDisplayEntries = computed(() => {
   if (!contextMenu.value) return []
   if (contextMenu.value.entry?.isDir) return [contextMenu.value.entry]
@@ -372,7 +373,7 @@ const openPreview = async (entry: ArchiveEntryInfo) => {
   previewLoading.value = true
   try {
     if (librarySourceId.value) await invoke('library_check', { sourceId: librarySourceId.value, entryPath: entry.path })
-    const context = ['ALZ','EGG','7Z'].includes(result.value?.format.toUpperCase() || '')
+    const context = ['ALZ','EGG','7Z','TAR.LZO'].includes(result.value?.format.toUpperCase() || '')
       ? { previewId: result.value?.format.toLowerCase()+'-'+previewKind(entry)+'-'+crypto.randomUUID(), sourceRevision: result.value?.revision } : undefined
     entryPreviewRequestId = context?.previewId
     if (previewKind(entry) === 'image') {
@@ -439,6 +440,7 @@ const refreshDirectory = async () => {
 }
 
 const openWithDefaultApplication = async (entry: ArchiveEntryInfo, allowDangerous = false) => {
+  if(entry.linkTarget){appStore.setError("链接内容当前支持只读预览，完整打开将在后续版本接通");return}
   if (entry.isDir || openingEntryPath.value) return
   closeContextMenu()
   openingEntryPath.value = entry.path
@@ -517,6 +519,7 @@ const restoreFrame = (index: number) => {
 }
 
 const enterNestedArchive = async (entry: ArchiveEntryInfo) => {
+  if(entry.linkTarget){appStore.setError("链接内容当前支持只读预览，嵌套打开将在后续版本接通");return}
   if (!isNestedArchiveEntry(entry) || openingEntryPath.value || !result.value) return
   if (archiveDepth.value >= 3) {
     appStore.setError('嵌套归档最多允许 3 层，请返回上层后再打开其他归档')
@@ -558,6 +561,7 @@ const enterNestedArchive = async (entry: ArchiveEntryInfo) => {
 }
 
 const activateEntry = (entry: ArchiveEntryInfo) => {
+  if(entry.linkTarget){if(canPreviewEntry(entry)&&entryPreviewSupported(entry))void openPreview(entry);else appStore.setError('链接内容当前支持文本和图片预览，提取将在后续版本接通');return}
   focusedEntryPath.value = entry.path
   if (entry.isDir) navigateToDirectory(entry.path.replace(/\/+$/, ''))
   else if (isNestedArchiveEntry(entry)) void enterNestedArchive(entry)
@@ -629,6 +633,7 @@ async function addToLibrary(){
 }
 const extractPaths = async (paths: string[], destination: string, readerSelection?:ReaderSelection) => {
   if (!archivePath.value || !destination || paths.length === 0 || extracting.value) return
+  if(result.value?.entries.some(entry=>entry.linkTarget&&paths.some(path=>entry.path===path||entry.path.startsWith(path.replace(/\/+$/,'')+'/')))){appStore.setError('链接内容当前支持只读预览，提取将在后续版本接通');return}
   if(result.value?.zpaqHistory?.interruptedTail){recoveryVisible.value=true;return}
   extracting.value = true
   closeContextMenu()
@@ -1135,11 +1140,11 @@ defineExpose({extractToDestination})
         >
           <header class="archive-context-header">
             <i :class="contextMenu.entry?.isDir ? 'pi pi-folder' : contextDisplayEntries.length > 1 ? 'pi pi-clone' : 'pi pi-file'"></i>
-            <span class="min-w-0"><strong class="block truncate">{{ contextMenu.entry?.isDir ? contextMenu.entry.name : contextDisplayEntries.length > 1 ? `${contextDisplayEntries.length} 个已选文件` : contextMenu.entry?.name || '当前文件区' }}</strong><small>{{ contextMenu.entry?.isDir ? `${contextMenu.entries.length} 个文件` : contextDisplayEntries.length > 1 ? '批量操作' : contextMenu.entry && canPreviewEntry(contextMenu.entry) && entryPreviewSupported(contextMenu.entry) ? '可内部只读预览，也可用默认应用打开' : '可安全提取后用默认应用打开' }}</small></span>
+            <span class="min-w-0"><strong class="block truncate">{{ contextMenu.entry?.isDir ? contextMenu.entry.name : contextDisplayEntries.length > 1 ? `${contextDisplayEntries.length} 个已选文件` : contextMenu.entry?.name || '当前文件区' }}</strong><small>{{ contextMenu.entry?.isDir ? `${contextMenu.entries.length} 个文件` : contextDisplayEntries.length > 1 ? '批量操作' : contextMenu.entry?.linkTarget ? '链接内容 · 当前支持只读预览' : contextMenu.entry && canPreviewEntry(contextMenu.entry) && entryPreviewSupported(contextMenu.entry) ? '可内部只读预览，也可用默认应用打开' : '可安全提取后用默认应用打开' }}</small></span>
           </header>
 
           <button v-if="contextMenu.entry?.isDir" type="button" role="menuitem" data-testid="archive-context-open" @click="openContextEntry(contextMenu.entry)"><i class="pi pi-folder-open"></i><span>打开文件夹</span><kbd>Enter</kbd></button>
-          <button v-if="contextMenu.entry && !contextMenu.entry.isDir" type="button" role="menuitem" data-testid="archive-context-default-open" :disabled="Boolean(openingEntryPath)" @click="defaultOpenContextEntry(contextMenu.entry)"><i :class="openingEntryPath === contextMenu.entry.path ? 'pi pi-spin pi-spinner' : 'pi pi-external-link'"></i><span>使用默认应用打开</span><kbd>Enter</kbd></button>
+          <button v-if="contextMenu.entry && !contextMenu.entry.isDir" type="button" role="menuitem" data-testid="archive-context-default-open" :disabled="Boolean(openingEntryPath)||!!contextMenu.entry.linkTarget" :title="contextMenu.entry.linkTarget?'当前支持只读预览':''" @click="defaultOpenContextEntry(contextMenu.entry)"><i :class="openingEntryPath === contextMenu.entry.path ? 'pi pi-spin pi-spinner' : 'pi pi-external-link'"></i><span>使用默认应用打开</span><kbd>Enter</kbd></button>
           <button v-if="contextMenu.entry && isNestedArchiveEntry(contextMenu.entry)" type="button" role="menuitem" data-testid="archive-context-enter-nested" :disabled="archiveDepth >= 3 || Boolean(openingEntryPath)" :title="archiveDepth >= 3 ? '已达到最多 3 层嵌套限制' : '在只读子工作区中打开'" @click="enterNestedArchive(contextMenu.entry)"><i class="pi pi-sitemap"></i><span>{{ archiveDepth >= 3 ? '已达到 3 层上限' : '进入压缩包' }}</span><kbd>Enter</kbd></button>
           <button v-if="contextMenu.entry && !contextMenu.entry.isDir && canPreviewEntry(contextMenu.entry) && entryPreviewSupported(contextMenu.entry)" type="button" role="menuitem" data-testid="archive-context-preview" @click="previewContextEntry(contextMenu.entry)"><i class="pi pi-eye"></i><span>内部查看器打开</span><kbd>Ctrl+Enter</kbd></button>
 
@@ -1148,8 +1153,8 @@ defineExpose({extractToDestination})
           <button v-if="canEditZip && contextMenu.entry" type="button" role="menuitem" data-testid="archive-context-edit-delete" :disabled="inputBusy" @click="zipEditor?.organize(contextDisplayEntries.map(entry=>entry.path),'delete'); closeContextMenu()"><i class="pi pi-trash"></i><span>从新 ZIP 删除…</span></button>
           <button v-if="canEditZip && !contextMenu.entry" type="button" role="menuitem" data-testid="archive-context-edit-add" :disabled="inputBusy" @click="zipEditor?.addFiles(); closeContextMenu()"><i class="pi pi-plus"></i><span>添加文件到当前目录…</span></button>
           <div v-if="contextMenu.entries.length > 0" class="archive-context-separator"></div>
-          <button v-if="contextMenu.entries.length > 0" type="button" role="menuitem" data-testid="archive-context-extract-current" :disabled="extracting || !outputPath" @click="extractContextEntries(false)"><i class="pi pi-download"></i><span>{{ usesPeerOutput ? '解压到另一栏' : '解压到当前输出目录' }}</span><kbd>Alt+E</kbd></button>
-          <button v-if="contextMenu.entries.length > 0" type="button" role="menuitem" data-testid="archive-context-extract-choose" :disabled="extracting" @click="extractContextEntries(true)"><i class="pi pi-folder-open"></i><span>解压到指定目录…</span><kbd>Alt+Shift+E</kbd></button>
+          <button v-if="contextMenu.entries.length > 0" type="button" role="menuitem" data-testid="archive-context-extract-current" :disabled="extracting || !outputPath || contextHasLink" :title="contextHasLink?'链接内容当前支持只读预览':''" @click="extractContextEntries(false)"><i class="pi pi-download"></i><span>{{ usesPeerOutput ? '解压到另一栏' : '解压到当前输出目录' }}</span><kbd>Alt+E</kbd></button>
+          <button v-if="contextMenu.entries.length > 0" type="button" role="menuitem" data-testid="archive-context-extract-choose" :disabled="extracting || contextHasLink" :title="contextHasLink?'链接内容当前支持只读预览':''" @click="extractContextEntries(true)"><i class="pi pi-folder-open"></i><span>解压到指定目录…</span><kbd>Alt+Shift+E</kbd></button>
 
           <div v-if="contextDisplayEntries.length > 0" class="archive-context-separator"></div>
           <button v-if="contextDisplayEntries.length > 0" type="button" role="menuitem" data-testid="archive-context-copy-name" @click="copyContextText('name', contextDisplayEntries)"><i class="pi pi-copy"></i><span>复制名称</span><kbd>Ctrl+Alt+C</kbd></button>
@@ -1178,6 +1183,7 @@ defineExpose({extractToDestination})
             <div><dt>加密标记</dt><dd>{{ detailEntries[0].encrypted ? '已加密' : '未单独标记' }}</dd></div>
             <div><dt>修改时间</dt><dd>{{ detailEntries[0].modified || '归档未提供' }}</dd></div>
             <div><dt>CRC</dt><dd class="font-mono">{{ detailEntries[0].crc || '归档未提供' }}</dd></div>
+            <div v-if="detailEntries[0].linkTarget" class="archive-link-source"><dt>内容来源</dt><dd :title="detailEntries[0].linkTarget">{{detailEntries[0].linkTarget}}</dd></div>
           </dl>
           <section class="archive-details-paths">
             <h3>归档内路径</h3>
@@ -1318,6 +1324,8 @@ defineExpose({extractToDestination})
 .archive-details-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem 1rem; padding: 1rem 1.25rem 0; }
 .archive-details-grid > div { min-width: 0; padding: .65rem .8rem; border-bottom: 1px solid var(--border-subtle); }
 .archive-details-grid dd { margin-top: .25rem; overflow: hidden; color: var(--text-content); font-size: .7rem; font-weight: 800; text-overflow: ellipsis; white-space: nowrap; }
+.archive-details-grid .archive-link-source { grid-column:1 / -1; }
+.archive-details-grid .archive-link-source dd { white-space:normal; overflow:visible; overflow-wrap:anywhere; line-height:1.7; }
 .archive-details-paths { padding: 1rem 1.25rem 1.25rem; }
 .archive-details-paths h3 { color: var(--text-muted); font-size: .65rem; font-weight: 900; letter-spacing: .12em; }
 .archive-details-paths ul { max-height: 12rem; margin-top: .55rem; overflow-y: auto; overflow-x: hidden; border: 1px solid var(--border-subtle); border-radius: .85rem; background: var(--bg-input); }

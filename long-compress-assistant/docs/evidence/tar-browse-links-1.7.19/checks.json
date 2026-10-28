@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "newNative": 7,
+  "relatedNative": 3,
+  "frontend": 6,
+  "newFrontend": 4,
+  "backgroundUiGroups": 3,
+  "focusedDetails": 1,
+  "typeAndVite": true,
+  "shellExtension": true,
+  "version": "1.7.19",
+  "desktopControlled": false
+}
