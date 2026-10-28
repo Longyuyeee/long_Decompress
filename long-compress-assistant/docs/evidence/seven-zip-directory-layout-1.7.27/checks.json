@@ -1,0 +1,17 @@
+{
+  "version": "1.7.27",
+  "date": "2026-10-28",
+  "native": {"filter": "sevenzdir1727", "passed": 6, "failed": 0},
+  "relatedRegression": [
+    {"filter": "start_header_extent_rejects_truncation_corruption_and_overflow", "passed": 1, "failed": 0},
+    {"filter": "entry_timestamp_is_restored_for_preserve_and_newer_modes", "passed": 1, "failed": 0}
+  ],
+  "independent": {"passed": true, "archives": 9, "encodedEntries": 116},
+  "finalPolish": "Count successful directory creation as a matched entry; retain passed content matrix",
+  "shellExtensionBuild": {"passed": true, "file": "long_compress_shell_extension_1_7_27.dll"},
+  "releaseIdentity": {"passed": true, "versionValues": 8},
+  "uiChanged": false,
+  "desktopControlled": false,
+  "unaffectedMatricesRepeated": false,
+  "formalBuild": "Corresponding PR CI and tagged Release"
+}

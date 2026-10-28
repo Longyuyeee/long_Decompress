@@ -1,0 +1,115 @@
+{
+  "version": "1.7.27",
+  "passed": true,
+  "archives": 9,
+  "encodedEntries": 116,
+  "externalReader": "7-Zip 26.04 (x64) : Copyright (c) 1999-2026 Igor Pavlov : 2026-10-05",
+  "checks": [
+    {
+      "name": "plain",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\plain.7z",
+      "archiveSha256": "39fa7aec6a83361640283c4f13f6b2d217bb24e5bc2f0513346b1f9c09c0c089",
+      "volumes": 1,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "encodedDates": true,
+      "externalAndNativeExactTreesContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "name": "solid",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\solid.7z",
+      "archiveSha256": "f3f3f084df4d9e1b314f36aedb31c9b7cc6b6edb72ce0c568103bcb8e843915b",
+      "volumes": 1,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "encodedDates": true,
+      "externalAndNativeExactTreesContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "name": "password",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\password.7z",
+      "archiveSha256": "3328bc2ae8b01446a2526192116fbd9c645bb5c327b8fac952da98df8395ac41",
+      "volumes": 1,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "encodedDates": true,
+      "externalAndNativeExactTreesContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "name": "hidden",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\hidden.7z",
+      "archiveSha256": "fb71f36f4671db72f3baff3ba6e538abcff75ae494c6672a521275c25ba1969b",
+      "volumes": 1,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "encodedDates": true,
+      "externalAndNativeExactTreesContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "name": "numeric",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\numeric.7z.001",
+      "archiveSha256": "b5b1a87370cd96178910273c71cac112f8290e387a410026cebe63aa9f3c6c70",
+      "volumes": 2,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "encodedDates": true,
+      "externalAndNativeExactTreesContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "name": "forum-names",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\forum\\资料.haozip01.7z",
+      "archiveSha256": "b5b1a87370cd96178910273c71cac112f8290e387a410026cebe63aa9f3c6c70",
+      "volumes": 2,
+      "entries": 13,
+      "explicitDirectories": 7,
+      "encodedDates": true,
+      "externalAndNativeExactTreesContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "name": "flat-create",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\flat-create.7z",
+      "archiveSha256": "53ce1720cbd57d4efe6215f8b048dcea74545b472620f249d61b185eb5462873",
+      "volumes": 1,
+      "entries": 16,
+      "explicitDirectories": 7,
+      "encodedDates": true,
+      "externalAndNativeExactTreesContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "name": "hidden",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\17fd3fb2-ee43-4e11-98be-5a9fda15f6b6\\hidden.7z",
+      "archiveSha256": "0be9382cdda1cf022ed794c5528f7112103485deb803c5bddf15115b981f1c29",
+      "volumes": 1,
+      "entries": 11,
+      "explicitDirectories": 2,
+      "encodedDates": true,
+      "externalAndNativeExactTreesContentDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "name": "numeric",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\17fd3fb2-ee43-4e11-98be-5a9fda15f6b6\\numeric.7z.001",
+      "archiveSha256": "16cb4b881bab29f32f275c80d70013c45ab130af88d2a0b75e7b90216f2d681c",
+      "volumes": 5,
+      "entries": 11,
+      "explicitDirectories": 2,
+      "encodedDates": true,
+      "externalAndNativeExactTreesContentDates": true,
+      "sourceUnchanged": true
+    }
+  ],
+  "selectionModes": [
+    "directory",
+    "file",
+    "filter",
+    "flat",
+    "off"
+  ]
+}

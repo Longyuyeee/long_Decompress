@@ -1,0 +1,1190 @@
+[
+  {
+    "name": "plain",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\plain.7z",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\plain.7z"
+    ],
+    "password": null,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "nanoseconds": 123456700,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\restored-plain",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 123456700
+        }
+      ]
+    ]
+  },
+  {
+    "name": "solid",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\solid.7z",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\solid.7z"
+    ],
+    "password": null,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "nanoseconds": 123456700,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\restored-solid",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 123456700
+        }
+      ]
+    ]
+  },
+  {
+    "name": "password",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\password.7z",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\password.7z"
+    ],
+    "password": "SevenDir1727!",
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "nanoseconds": 123456700,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\restored-password",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 123456700
+        }
+      ]
+    ]
+  },
+  {
+    "name": "hidden",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\hidden.7z",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\hidden.7z"
+    ],
+    "password": "SevenDir1727!",
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "nanoseconds": 123456700,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\restored-hidden",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 123456700
+        }
+      ]
+    ]
+  },
+  {
+    "name": "numeric",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\numeric.7z.001",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\numeric.7z.001",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\numeric.7z.002"
+    ],
+    "password": "SevenDir1727!",
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "nanoseconds": 123456700,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\restored-numeric",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 123456700
+        }
+      ]
+    ]
+  },
+  {
+    "name": "forum-names",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\forum\\资料.haozip01.7z",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\forum\\资料.haozip01.7z",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\forum\\资料.haozip02.7z"
+    ],
+    "password": "SevenDir1727!",
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "nanoseconds": 123456700,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\restored-forum",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 123456700
+        }
+      ]
+    ]
+  },
+  {
+    "name": "flat-create",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\flat-create.7z",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\flat-create.7z"
+    ],
+    "password": null,
+    "sources": [
+      {
+        "name": "file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "file (1).bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "nested (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "empty (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "note (1).txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "zero (1).txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "file (2).bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "nested (2)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "empty (2)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "nanoseconds": 123456700,
+        "sha256": null
+      },
+      {
+        "name": "note (2).txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "zero (2).txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\source\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "nanoseconds": 123456700,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/seven-zip-directory-layout-1727\\1e3f8483-d218-4d9c-a838-b2edf7599f35\\restored-flat-create",
+    "directoryTimes": [
+      [
+        "nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "nested (1)",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "empty (1)",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "nested (2)",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 123456700
+        }
+      ],
+      [
+        "empty (2)",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 123456700
+        }
+      ]
+    ]
+  }
+]

@@ -9,7 +9,7 @@ pub(crate) struct CompressionEntry {
     pub(crate) is_dir: bool,
 }
 
-/// Explicit roots for ZIP/TAR. Preserve the legacy 7Z and flat layouts, and
+/// Explicit roots for ZIP/TAR/7Z. Preserve the legacy flat layout, and
 /// reserve each root once before remapping its children.
 pub(crate) fn collect_zip(sources:&[String],preserve_paths:bool)->Result<Vec<CompressionEntry>>{collect_rooted(sources,preserve_paths)}
 

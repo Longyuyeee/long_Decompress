@@ -251,6 +251,20 @@ pub(crate) fn extract<R: ExtractionRuntime>(
     password: Option<&str>,
     options: &DecompressOptions,
 ) -> Result<()> {
+    extract_with_directory_times(runtime, window, task_id, file, output, password, options).map(|_| ())
+}
+
+/// Capture dates from the same decoded entry callbacks; publication restores
+/// retained directories after writing children and removing staging.
+pub(crate) fn extract_with_directory_times<R: ExtractionRuntime>(
+    runtime: &R,
+    window: Option<&Window>,
+    task_id: &str,
+    file: &str,
+    output: &str,
+    password: Option<&str>,
+    options: &DecompressOptions,
+) -> Result<crate::services::lzop::selected::DirectoryTimes> {
     let archive_encrypted = requires_password(Path::new(file))?;
     let output_root = PathBuf::from(output);
     let opts = options.clone();
@@ -282,6 +296,7 @@ pub(crate) fn extract<R: ExtractionRuntime>(
     };
     let mut processed_bytes = 0u64;
     let mut last_emitted_bytes = 0u64;
+    let mut directory_times = crate::services::seven_zip_directory_times::Collector::default();
 
     let mut extract_entry = |entry: &sevenz_rust::SevenZArchiveEntry,
                              reader: &mut dyn Read,
@@ -292,7 +307,7 @@ pub(crate) fn extract<R: ExtractionRuntime>(
             .map_err(|error| sevenz_rust::Error::other(error.to_string()))?;
 
         let relative =
-            match runtime.normalized_archive_path(Path::new(entry.name()), opts.preserve_paths) {
+            match runtime.normalized_archive_path(Path::new(entry.name()), true) {
                 Some(path) => path,
                 None => {
                     copy_with_progress(
@@ -325,7 +340,11 @@ pub(crate) fn extract<R: ExtractionRuntime>(
                 }
             };
 
-        if !extraction_transaction::matches_compiled_file_filter(&relative, &file_filter) {
+        directory_times.observe(entry, &relative, &opts);
+        // Select against the original archive identity. Flatten only during
+        // staging normalization, otherwise nested selected files disappear.
+        if !extraction_transaction::matches_selected_entries(Path::new(entry.name()), &opts.selected_entries)
+            || !extraction_transaction::matches_compiled_file_filter(&relative, &file_filter) {
             let current_file = relative.to_string_lossy().to_string();
             copy_with_progress(
                 runtime,
@@ -360,6 +379,7 @@ pub(crate) fn extract<R: ExtractionRuntime>(
             let target = output_root.join(&relative);
             if entry.is_directory() {
                 std::fs::create_dir_all(&target)?;
+                processed += 1;
                 return Ok(());
             }
 
@@ -471,7 +491,7 @@ pub(crate) fn extract<R: ExtractionRuntime>(
         }
     }
 
-    Ok(())
+    Ok(directory_times.finish())
 }
 
 #[cfg(test)]

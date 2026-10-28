@@ -359,6 +359,9 @@ pub(crate) mod nested_archive;
 pub(crate) mod zip_creation_time;
 pub(crate) mod zip_directory_times;
 pub(crate) mod tar_directory_times;
+pub(crate) mod seven_zip_directory_times;
+#[cfg(test)]
+mod seven_zip_directory_layout_1727_tests;
 #[cfg(test)]
 mod tar_directory_layout_1726_tests;
 #[cfg(test)]

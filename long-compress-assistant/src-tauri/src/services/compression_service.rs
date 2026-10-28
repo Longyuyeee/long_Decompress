@@ -2644,6 +2644,7 @@ impl CompressionService {
 
         executing.store(true, Ordering::Relaxed);
         let mut retrieval_receipt=None;
+        let mut seven_zip_directory_times=Vec::new();
         let result = match effective_format {
             ArchiveFormat::Egg => crate::services::egg_engine::extract(
                 path, &out_dir, final_password.as_deref(), &options, service.cancellation_flag.clone()).await,
@@ -2708,9 +2709,12 @@ impl CompressionService {
                 let t_id = task_id.clone();
                 let w = window.clone();
                 let o_dir_str = o_dir.to_string_lossy().to_string();
-                tokio::task::spawn_blocking(move || {
-                    srv.do_extract_7z(&w, &t_id, &f_path, &o_dir_str, pwd.as_deref(), &opts)
-                }).await?
+                match tokio::task::spawn_blocking(move || {
+                    native_extraction::seven_zip::extract_with_directory_times(&srv, Some(&w), &t_id, &f_path, &o_dir_str, pwd.as_deref(), &opts)
+                }).await? {
+                    Ok(times)=>{seven_zip_directory_times=times;Ok(())},
+                    Err(error)=>Err(error),
+                }
             },
             ArchiveFormat::AesEncrypted => {
                 let srv = service.clone();
@@ -2976,6 +2980,8 @@ impl CompressionService {
         let directory_times=if effective_format==ArchiveFormat::Zip{
             {let times=crate::services::zip_directory_times::for_commit(path,&out_dir,&options,||service.check_cancellation())?;
                 if Self::source_file_changed(path,&source_snapshot,"Extracting")?{return Err(CompressionError::SourceChangedDuringExtraction.into());}times}
+        }else if effective_format==ArchiveFormat::SevenZip{
+            crate::services::seven_zip_directory_times::retained(&seven_zip_directory_times,&out_dir,&options)
         }else if let Some(plan)=&confirmed_tar_plan{plan.directory_times(&options)}
         else{tar_plan.as_ref().map_or_else(Vec::new,|plan|crate::services::tar_directory_times::retained(&plan.directory_times,&out_dir,&options))};
         let source_times = if effective_format == ArchiveFormat::SevenZip && options.conflict_policy == "ask" {
