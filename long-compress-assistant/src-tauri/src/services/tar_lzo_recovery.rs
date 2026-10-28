@@ -167,8 +167,8 @@ fn parse<F: FnMut(u64, u64)>(
             size <= MAX_EXTRACTED_BYTES && (!kind.is_dir() || size == 0),
             "TAR 条目大小无效"
         );
-        // GNU sparse.name replaces the producer's GNUSparseFile placeholder.
-        let sparse_name=pax_sparse.then(||local.iter().find(|(k,_)|k=="GNU.sparse.name").unwrap().1.clone());
+        // 0.1/1.0 replace a placeholder via sparse.name; 0.0 uses the ordinary path.
+        let sparse_name=local.iter().find(|(k,_)|k=="GNU.sparse.name").map(|(_,value)|value.clone());
         let decoded = if let Some(path) = sparse_name.or_else(||long_name.take()).or_else(|| crate::services::tar_pax::path(&meta).map(str::to_owned)) {
             path
         } else {
@@ -196,7 +196,7 @@ fn parse<F: FnMut(u64, u64)>(
             Some(crate::services::tar_sparse_recovery::Layout::parse(header, reader)?)
         } else if let Some(version)=pax_version {
             use crate::services::tar_sparse_recovery::{Layout,PaxVersion};
-            Some(match version{PaxVersion::Map01=>Layout::parse_pax01(&local,size)?,PaxVersion::Text10=>Layout::parse_pax10(&local,size,reader)?})
+            Some(match version{PaxVersion::Pairs00=>Layout::parse_pax00(&local,size)?,PaxVersion::Map01=>Layout::parse_pax01(&local,size)?,PaxVersion::Text10=>Layout::parse_pax10(&local,size,reader)?})
         } else { None };
         let bytes = sparse.as_ref().map_or(size, |layout|layout.logical);
         logical_total = logical_total.checked_add(bytes).context("TAR 完整大小溢出")?;

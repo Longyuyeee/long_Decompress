@@ -330,3 +330,6 @@ mod tar_pax10_1714_tests;
 
 #[cfg(test)]
 mod tar_pax01_1715_tests;
+
+#[cfg(test)]
+mod tar_pax00_1716_tests;
