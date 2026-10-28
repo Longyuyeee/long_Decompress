@@ -60,6 +60,15 @@ pub(crate) fn integrity_route(
     )
     .then_some(route)
 }
+
+/// Ordinary TAR.LZO extraction uses the same preflight metadata as other TAR
+/// wrappers. Keep its separate browse/integrity route (including filename
+/// encoding and confirmed-link handling) intact.
+pub(crate) fn extraction_route(path: &Path, format: &super::archive_format::ArchiveFormat)
+    -> Option<super::compression_format::CompressionRoute> {
+    integrity_route(path, format).or_else(|| is_tar_lzo(path, format)
+        .then_some(super::compression_format::CompressionRoute::TarLzop))
+}
 pub(crate) fn inspection_error(error: anyhow::Error) -> anyhow::Error {
     if error.to_string().contains("[archive-inspection:damaged] 压缩流") {
         return error.context("[archive-inspection:damaged] TAR 压缩流数据或尾部无效，请重新获取完整原包，不必反复尝试密码");
@@ -387,6 +396,7 @@ pub(crate) struct Plan {
     pub entries: usize,
     pub logical_bytes: u64,
     pub payload_bytes: u64,
+    pub directory_times: super::lzop::selected::DirectoryTimes,
 }
 
 pub(crate) fn plan(
@@ -407,6 +417,7 @@ pub(crate) fn plan(
             Route::TarBrotli => super::codec_stream::decoder(path, "br")?,
             Route::TarLzip => super::codec_stream::decoder(path, "lz")?,
             Route::TarLzma => super::codec_stream::decoder(path, "lzma")?,
+            Route::TarLzop => super::codec_stream::decoder(path, "lzo")?,
             _ => anyhow::bail!("Not a native TAR route"),
         };
         struct Cancellable<'a> {
@@ -429,10 +440,13 @@ pub(crate) fn plan(
             entries: 0,
             logical_bytes: 0,
             payload_bytes: 0,
+            directory_times: Vec::new(),
         };
+        let mut directory_times=super::tar_directory_times::Collector::default();
         for entry in archive.entries()? {
             check()?;
             let entry = LogicalEntry::new(entry?)?;
+            directory_times.observe(&entry,options);
             if entry.path().as_os_str().is_empty()
                 || !super::extraction_transaction::matches_selected_entries(
                     entry.path(),
@@ -461,6 +475,7 @@ pub(crate) fn plan(
             }
         }
         finish_stream(archive.into_inner(), &check)?;
+        stats.directory_times=directory_times.finish();
         Ok(stats)
     })();
     check()?;

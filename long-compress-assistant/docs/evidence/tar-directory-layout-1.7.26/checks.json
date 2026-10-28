@@ -1,0 +1,17 @@
+{
+  "version": "1.7.26",
+  "date": "2026-10-28",
+  "native": {"filter": "tardir1726", "passed": 6, "failed": 0},
+  "affectedRouteFollowup": {"filter": "tardir1726_all_tar_writers_numeric_volumes_and_final_directory_dates_round_trip", "passed": 1, "failed": 0},
+  "relatedRegression": [
+    {"filter": "tar_suffix_must_not_override_a_known_non_tar_signature", "passed": 1, "failed": 0},
+    {"filter": "tarlzo1658_tar_parse_errors_are_structural_without_masking_storage_errors", "passed": 1, "failed": 0}
+  ],
+  "independent": {"passed": true, "archives": 14, "encodedEntries": 178},
+  "shellExtensionBuild": {"passed": true, "file": "long_compress_shell_extension_1_7_26.dll"},
+  "releaseIdentity": {"passed": true, "versionValues": 8},
+  "uiChanged": false,
+  "desktopControlled": false,
+  "unaffectedMatricesRepeated": false,
+  "formalBuild": "Corresponding PR CI and tagged Release"
+}

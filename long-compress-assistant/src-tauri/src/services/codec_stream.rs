@@ -102,7 +102,7 @@ pub(crate) fn compress<R: CompressionRuntime + Sync>(
     if matches!(format, "tar.lz4" | "tar.br" | "tar.lzma" | "tar.lzo") {
         // Collect before creating the output; the producer uses the same TAR
         // entry policy as every other TAR route, without a full TAR disk copy.
-        let entries = crate::services::compression_entries::collect(sources, options.preserve_paths.unwrap_or(true), true)?;
+        let entries = crate::services::compression_entries::collect_rooted(sources, options.preserve_paths.unwrap_or(true))?;
         runtime.check_cancellation()?;
         let destination = File::create(path)?;
         let destination = tar_stream::with_reader(runtime, window, task_id, entries, format == "tar.lzo", |input| {

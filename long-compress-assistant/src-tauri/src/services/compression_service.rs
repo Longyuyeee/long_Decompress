@@ -2976,7 +2976,8 @@ impl CompressionService {
         let directory_times=if effective_format==ArchiveFormat::Zip{
             {let times=crate::services::zip_directory_times::for_commit(path,&out_dir,&options,||service.check_cancellation())?;
                 if Self::source_file_changed(path,&source_snapshot,"Extracting")?{return Err(CompressionError::SourceChangedDuringExtraction.into());}times}
-        }else{confirmed_tar_plan.as_ref().map_or_else(Vec::new,|plan|plan.directory_times(&options))};
+        }else if let Some(plan)=&confirmed_tar_plan{plan.directory_times(&options)}
+        else{tar_plan.as_ref().map_or_else(Vec::new,|plan|crate::services::tar_directory_times::retained(&plan.directory_times,&out_dir,&options))};
         let source_times = if effective_format == ArchiveFormat::SevenZip && options.conflict_policy == "ask" {
             Self::seven_zip_source_times(path, final_password.as_deref(), &final_out_dir, options.preserve_paths).unwrap_or_default()
         } else { HashMap::new() };
@@ -3115,7 +3116,7 @@ impl CompressionService {
         output: &Path,
         options: &DecompressOptions,
     ) -> Result<Option<crate::services::tar_compatibility::Plan>> {
-        let Some(route) = crate::services::tar_compatibility::integrity_route(archive_path, format) else { return Ok(None); };
+        let Some(route) = crate::services::tar_compatibility::extraction_route(archive_path, format) else { return Ok(None); };
         let service = self.clone();
         let path = archive_path.to_path_buf();
         let options = options.clone();

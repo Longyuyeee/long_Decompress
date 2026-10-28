@@ -9,9 +9,11 @@ pub(crate) struct CompressionEntry {
     pub(crate) is_dir: bool,
 }
 
-/// ZIP can encode the selected root itself. Keep the legacy TAR/7Z and flat
-/// layouts unchanged; reserve each ZIP root once before remapping its children.
-pub(crate) fn collect_zip(sources:&[String],preserve_paths:bool)->Result<Vec<CompressionEntry>>{
+/// Explicit roots for ZIP/TAR. Preserve the legacy 7Z and flat layouts, and
+/// reserve each root once before remapping its children.
+pub(crate) fn collect_zip(sources:&[String],preserve_paths:bool)->Result<Vec<CompressionEntry>>{collect_rooted(sources,preserve_paths)}
+
+pub(crate) fn collect_rooted(sources:&[String],preserve_paths:bool)->Result<Vec<CompressionEntry>>{
     use anyhow::Context;
     if !preserve_paths{return collect(sources,false,true);}
     let mut roots=HashSet::new();let mut seen=HashSet::new();let mut result=Vec::new();

@@ -82,7 +82,7 @@ pub(crate) fn write_entries<R: CompressionRuntime, W: Write>(
     builder: &mut tar::Builder<W>,
 ) -> Result<()> {
     let entries =
-        compression_entries::collect(sources, options.preserve_paths.unwrap_or(true), true)?;
+        compression_entries::collect_rooted(sources, options.preserve_paths.unwrap_or(true))?;
     write_collected_entries(runtime, window, task_id, &entries, builder)
 }
 

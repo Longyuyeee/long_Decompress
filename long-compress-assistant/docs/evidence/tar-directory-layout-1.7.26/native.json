@@ -1,0 +1,1848 @@
+[
+  {
+    "format": "tar",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar"
+    ],
+    "numeric": false,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\restored-tar-false",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 0
+        }
+      ]
+    ]
+  },
+  {
+    "format": "tar",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\numeric.tar.001",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\numeric.tar.001",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\numeric.tar.002",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\numeric.tar.003",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\numeric.tar.004",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\numeric.tar.005",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\numeric.tar.006"
+    ],
+    "numeric": true,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\restored-tar-true",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 0
+        }
+      ]
+    ]
+  },
+  {
+    "format": "tar.gz",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.gz",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.gz"
+    ],
+    "numeric": false,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\restored-tar-gz-false",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 0
+        }
+      ]
+    ]
+  },
+  {
+    "format": "tar.bz2",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.bz2",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.bz2"
+    ],
+    "numeric": false,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\restored-tar-bz2-false",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 0
+        }
+      ]
+    ]
+  },
+  {
+    "format": "tar.xz",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.xz",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.xz"
+    ],
+    "numeric": false,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\restored-tar-xz-false",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 0
+        }
+      ]
+    ]
+  },
+  {
+    "format": "tar.zst",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.zst",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.zst"
+    ],
+    "numeric": false,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\restored-tar-zst-false",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 0
+        }
+      ]
+    ]
+  },
+  {
+    "format": "tar.lzma",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.lzma",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.lzma"
+    ],
+    "numeric": false,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\restored-tar-lzma-false",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 0
+        }
+      ]
+    ]
+  },
+  {
+    "format": "tar.lz",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.lz",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.lz"
+    ],
+    "numeric": false,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\restored-tar-lz-false",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 0
+        }
+      ]
+    ]
+  },
+  {
+    "format": "tar.lz4",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.lz4",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.lz4"
+    ],
+    "numeric": false,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\restored-tar-lz4-false",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 0
+        }
+      ]
+    ]
+  },
+  {
+    "format": "tar.br",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.br",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.br"
+    ],
+    "numeric": false,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\restored-tar-br-false",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 0
+        }
+      ]
+    ]
+  },
+  {
+    "format": "tar.lzo",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.lzo",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\created.tar.lzo"
+    ],
+    "numeric": false,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\restored-tar-lzo-false",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 0
+        }
+      ]
+    ]
+  },
+  {
+    "format": "tar.lzo",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\numeric.tar.lzo.001",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\numeric.tar.lzo.001",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\numeric.tar.lzo.002",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\numeric.tar.lzo.003",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\numeric.tar.lzo.004",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\numeric.tar.lzo.005",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\numeric.tar.lzo.006"
+    ],
+    "numeric": true,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料",
+        "directory": true,
+        "seconds": 959834096,
+        "sha256": null
+      },
+      {
+        "name": "资料/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+      },
+      {
+        "name": "资料/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\a/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料 (1)",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料",
+        "directory": true,
+        "seconds": 991370096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/file.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\file.bin",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "2a28e4c7877faff370b597b2928d1dd2b74729de3634e2d24646adba691d4484"
+      },
+      {
+        "name": "资料 (1)/nested",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested",
+        "directory": true,
+        "seconds": 1022906096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/empty",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\empty",
+        "directory": true,
+        "seconds": 1054442096,
+        "sha256": null
+      },
+      {
+        "name": "资料 (1)/nested/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\note.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "3e23e8160039594a33894f6564e1b1348bbd7a0088d42c4acb73eeaed59c009d"
+      },
+      {
+        "name": "资料 (1)/nested/zero.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\b/资料\\nested\\zero.txt",
+        "directory": false,
+        "seconds": 1306902896,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\empty-root",
+        "directory": true,
+        "seconds": 1086064496,
+        "sha256": null
+      }
+    ],
+    "restored": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-directory-layout-1726\\d2a883e6-b2bf-4c62-bead-e7b788899783\\restored-tar-lzo-true",
+    "directoryTimes": [
+      [
+        "资料",
+        {
+          "seconds": 959834096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)",
+        {
+          "seconds": 991370096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested",
+        {
+          "seconds": 1022906096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "资料 (1)/nested/empty",
+        {
+          "seconds": 1054442096,
+          "nanoseconds": 0
+        }
+      ],
+      [
+        "empty-root",
+        {
+          "seconds": 1086064496,
+          "nanoseconds": 0
+        }
+      ]
+    ]
+  }
+]

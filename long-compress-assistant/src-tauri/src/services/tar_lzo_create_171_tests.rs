@@ -41,7 +41,7 @@ async fn tarlzo171_new_outputs_preserve_every_file_directory_and_preview() {
         let sources: Vec<String> = paths.iter().map(|path| path.to_string_lossy().into_owned()).collect();
         let archive = root.join(format!("{name}.tar.lzo"));
         assert_eq!(compression_format::validate_compression_request(&sources, &archive.to_string_lossy(), &options()).unwrap(), "tar.lzo");
-        let entries = compression_entries::collect(&sources, true, true).unwrap();
+        let entries = compression_entries::collect_rooted(&sources, true).unwrap();
         let expected: Vec<_> = entries.iter().map(|entry| serde_json::json!({"path": entry.archive_name.trim_end_matches('/'), "directory": entry.is_dir,
             "sha256": if entry.is_dir { String::new() } else { sha(&std::fs::read(&entry.path).unwrap()) }})).collect();
         codec_stream::compress(&runtime(usize::MAX), None, "171", &sources, &archive.to_string_lossy(), options(), "tar.lzo").unwrap();
