@@ -1,0 +1,976 @@
+{
+  "passed": true,
+  "archives": 13,
+  "encodedEntries": 71,
+  "checks": [
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\store.zip",
+      "entries": [
+        {
+          "name": "a.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "b.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "tree/empty-dir/",
+          "date": [
+            2018,
+            12,
+            31,
+            12,
+            34,
+            0
+          ],
+          "sourceSeconds": 1546230841
+        },
+        {
+          "name": "tree/empty.dat",
+          "date": [
+            2040,
+            6,
+            1,
+            12,
+            34,
+            2
+          ],
+          "sourceSeconds": 2222138043
+        },
+        {
+          "name": "tree/note.txt",
+          "date": [
+            2020,
+            11,
+            1,
+            12,
+            34,
+            58
+          ],
+          "sourceSeconds": 1604205299
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": false
+    },
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\deflate.zip",
+      "entries": [
+        {
+          "name": "a.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "b.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "tree/empty-dir/",
+          "date": [
+            2018,
+            12,
+            31,
+            12,
+            34,
+            0
+          ],
+          "sourceSeconds": 1546230841
+        },
+        {
+          "name": "tree/empty.dat",
+          "date": [
+            2040,
+            6,
+            1,
+            12,
+            34,
+            2
+          ],
+          "sourceSeconds": 2222138043
+        },
+        {
+          "name": "tree/note.txt",
+          "date": [
+            2020,
+            11,
+            1,
+            12,
+            34,
+            58
+          ],
+          "sourceSeconds": 1604205299
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": false
+    },
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\zstd.zip",
+      "entries": [
+        {
+          "name": "a.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "b.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "tree/empty-dir/",
+          "date": [
+            2018,
+            12,
+            31,
+            12,
+            34,
+            0
+          ],
+          "sourceSeconds": 1546230841
+        },
+        {
+          "name": "tree/empty.dat",
+          "date": [
+            2040,
+            6,
+            1,
+            12,
+            34,
+            2
+          ],
+          "sourceSeconds": 2222138043
+        },
+        {
+          "name": "tree/note.txt",
+          "date": [
+            2020,
+            11,
+            1,
+            12,
+            34,
+            58
+          ],
+          "sourceSeconds": 1604205299
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": false
+    },
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\bzip2.zip",
+      "entries": [
+        {
+          "name": "a.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "b.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "tree/empty-dir/",
+          "date": [
+            2018,
+            12,
+            31,
+            12,
+            34,
+            0
+          ],
+          "sourceSeconds": 1546230841
+        },
+        {
+          "name": "tree/empty.dat",
+          "date": [
+            2040,
+            6,
+            1,
+            12,
+            34,
+            2
+          ],
+          "sourceSeconds": 2222138043
+        },
+        {
+          "name": "tree/note.txt",
+          "date": [
+            2020,
+            11,
+            1,
+            12,
+            34,
+            58
+          ],
+          "sourceSeconds": 1604205299
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": false
+    },
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\lzma.zip",
+      "entries": [
+        {
+          "name": "a.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "b.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "tree/empty-dir/",
+          "date": [
+            2018,
+            12,
+            31,
+            12,
+            34,
+            0
+          ],
+          "sourceSeconds": 1546230841
+        },
+        {
+          "name": "tree/empty.dat",
+          "date": [
+            2040,
+            6,
+            1,
+            12,
+            34,
+            2
+          ],
+          "sourceSeconds": 2222138043
+        },
+        {
+          "name": "tree/note.txt",
+          "date": [
+            2020,
+            11,
+            1,
+            12,
+            34,
+            58
+          ],
+          "sourceSeconds": 1604205299
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": false
+    },
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\ppmd.zip",
+      "entries": [
+        {
+          "name": "a.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "b.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "tree/empty-dir/",
+          "date": [
+            2018,
+            12,
+            31,
+            12,
+            34,
+            0
+          ],
+          "sourceSeconds": 1546230841
+        },
+        {
+          "name": "tree/empty.dat",
+          "date": [
+            2040,
+            6,
+            1,
+            12,
+            34,
+            2
+          ],
+          "sourceSeconds": 2222138043
+        },
+        {
+          "name": "tree/note.txt",
+          "date": [
+            2020,
+            11,
+            1,
+            12,
+            34,
+            58
+          ],
+          "sourceSeconds": 1604205299
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": false
+    },
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\xz.zipx",
+      "entries": [
+        {
+          "name": "a.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "b.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "tree/empty-dir/",
+          "date": [
+            2018,
+            12,
+            31,
+            12,
+            34,
+            0
+          ],
+          "sourceSeconds": 1546230841
+        },
+        {
+          "name": "tree/empty.dat",
+          "date": [
+            2040,
+            6,
+            1,
+            12,
+            34,
+            2
+          ],
+          "sourceSeconds": 2222138043
+        },
+        {
+          "name": "tree/note.txt",
+          "date": [
+            2020,
+            11,
+            1,
+            12,
+            34,
+            58
+          ],
+          "sourceSeconds": 1604205299
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": false
+    },
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-source-time-1724\\matrix-2d26ec3c-4aa9-466a-b687-ee8a69d526e5\\aes-standard.zip",
+      "entries": [
+        {
+          "name": "a.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "b.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "tree/empty-dir/",
+          "date": [
+            2018,
+            12,
+            31,
+            12,
+            34,
+            0
+          ],
+          "sourceSeconds": 1546230841
+        },
+        {
+          "name": "tree/empty.dat",
+          "date": [
+            2040,
+            6,
+            1,
+            12,
+            34,
+            2
+          ],
+          "sourceSeconds": 2222138043
+        },
+        {
+          "name": "tree/note.txt",
+          "date": [
+            2020,
+            11,
+            1,
+            12,
+            34,
+            58
+          ],
+          "sourceSeconds": 1604205299
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": true
+    },
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-source-time-1724\\joined-8.zip",
+      "entries": [
+        {
+          "name": "a.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "b.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "tree/empty-dir/",
+          "date": [
+            2018,
+            12,
+            31,
+            12,
+            34,
+            0
+          ],
+          "sourceSeconds": 1546230841
+        },
+        {
+          "name": "tree/empty.dat",
+          "date": [
+            2040,
+            6,
+            1,
+            12,
+            34,
+            2
+          ],
+          "sourceSeconds": 2222138043
+        },
+        {
+          "name": "tree/note.txt",
+          "date": [
+            2020,
+            11,
+            1,
+            12,
+            34,
+            58
+          ],
+          "sourceSeconds": 1604205299
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": true
+    },
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-source-time-1724\\zipx-family-9\\same.zip",
+      "entries": [
+        {
+          "name": "a.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "b.bin",
+          "date": [
+            1996,
+            2,
+            29,
+            12,
+            34,
+            56
+          ],
+          "sourceSeconds": 825568497
+        },
+        {
+          "name": "tree/empty-dir/",
+          "date": [
+            2018,
+            12,
+            31,
+            12,
+            34,
+            0
+          ],
+          "sourceSeconds": 1546230841
+        },
+        {
+          "name": "tree/empty.dat",
+          "date": [
+            2040,
+            6,
+            1,
+            12,
+            34,
+            2
+          ],
+          "sourceSeconds": 2222138043
+        },
+        {
+          "name": "tree/note.txt",
+          "date": [
+            2020,
+            11,
+            1,
+            12,
+            34,
+            58
+          ],
+          "sourceSeconds": 1604205299
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": true
+    },
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-source-time-1724\\boundaries\\flattened.zip",
+      "entries": [
+        {
+          "name": "same.txt",
+          "date": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "sourceSeconds": 13062841
+        },
+        {
+          "name": "same (1).txt",
+          "date": [
+            2107,
+            12,
+            31,
+            23,
+            59,
+            58
+          ],
+          "sourceSeconds": 4431040441
+        },
+        {
+          "name": "empty-root/",
+          "date": [
+            2004,
+            2,
+            29,
+            12,
+            34,
+            36
+          ],
+          "sourceSeconds": 1078029277
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": false
+    },
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-source-time-1724\\converted.zip",
+      "entries": [
+        {
+          "name": "after.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        },
+        {
+          "name": "docs/readme.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        },
+        {
+          "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        },
+        {
+          "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        },
+        {
+          "name": "empty-copy.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        },
+        {
+          "name": "empty.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        },
+        {
+          "name": "gallery/cover.png",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        },
+        {
+          "name": "gallery/封面副本.png",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        },
+        {
+          "name": "阅读副本.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": true
+    },
+    {
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-source-time-1724\\converted.zipx",
+      "entries": [
+        {
+          "name": "after.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        },
+        {
+          "name": "docs/readme.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        },
+        {
+          "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        },
+        {
+          "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        },
+        {
+          "name": "empty-copy.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        },
+        {
+          "name": "empty.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        },
+        {
+          "name": "gallery/cover.png",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        },
+        {
+          "name": "gallery/封面副本.png",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        },
+        {
+          "name": "阅读副本.txt",
+          "date": [
+            2023,
+            11,
+            15,
+            6,
+            41,
+            58
+          ],
+          "sourceSeconds": 1700001719
+        }
+      ],
+      "localAndCentralDatesMatch": true,
+      "external7zipReadback": true,
+      "encrypted": true
+    }
+  ],
+  "nativeSequentialAndParallel": [
+    {
+      "parallel": false,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\sequential-restored-e46c5668-356e-4ae4-b9d4-23664f1b0131",
+      "workerThreadsObserved": 1
+    },
+    {
+      "parallel": true,
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-source-time-1724\\parallel-restored-8530188c-3bc2-466d-8550-90faf4cbd55a",
+      "workerThreadsObserved": 2
+    }
+  ],
+  "timePolicy": "ZIP local DOS dates, seconds rounded down to two-second precision; out-of-range dates clamp to 1980-01-01 or 2107-12-31 23:59:58. No extended UTC/subsecond field added."
+}

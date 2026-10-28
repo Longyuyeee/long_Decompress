@@ -356,5 +356,8 @@ pub(crate) mod tar_link_conversion;
 mod tar_link_convert_1722_tests;
 
 pub(crate) mod nested_archive;
+pub(crate) mod zip_creation_time;
+#[cfg(test)]
+mod zip_creation_time_1724_tests;
 #[cfg(test)]
 mod tar_nested_links_1723_tests;

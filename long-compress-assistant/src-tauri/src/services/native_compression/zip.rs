@@ -5,7 +5,7 @@ use crate::services::compression_entries;
 use crate::services::compression_service::CompressionError;
 use crate::services::progress_gate::ProgressGate;
 use crate::services::split_compression::SplitCompressionService;
-use anyhow::Result;
+use anyhow::{Context,Result};
 use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
@@ -82,15 +82,25 @@ fn create_zip<R: CompressionRuntime>(
         runtime.copy_buffer_size().min(64 * 1024)
     } else { runtime.copy_buffer_size() };
     let mut copy_buffer = vec![0u8; buffer_size];
+    let mut clamped_dates=0usize;
 
     for entry in entries {
         runtime.check_cancellation()?;
         let archive_name = entry.archive_name.replace('\\', "/");
         if entry.is_dir {
-            writer.add_directory(archive_name, options)?;
+            let modified=std::fs::metadata(&entry.path).and_then(|metadata|metadata.modified())
+                .with_context(||format!("无法读取源目录修改时间：{}",entry.path.display()))?;
+            let time=crate::services::zip_creation_time::from_system_time(modified);
+            clamped_dates+=usize::from(time.clamped);
+            writer.add_directory(archive_name, options.last_modified_time(time.date))?;
         } else {
-            let mut source = File::open(entry.path)?;
-            let size = source.metadata()?.len();
+            let mut source = File::open(&entry.path)?;
+            let metadata=source.metadata()?;
+            let size = metadata.len();
+            let modified=metadata.modified().with_context(||format!("无法读取源文件修改时间：{}",entry.path.display()))?;
+            let time=crate::services::zip_creation_time::from_system_time(modified);
+            clamped_dates+=usize::from(time.clamped);
+            let options=options.last_modified_time(time.date);
             // The current XZ encoder emits an invalid index for an untouched empty
             // stream. Empty ZIP members need no compression; retain encryption.
             let entry_options = if zipx && size == 0 {
@@ -138,6 +148,9 @@ fn create_zip<R: CompressionRuntime>(
         }
     }
     writer.finish()?;
+    if clamped_dates>0{if let Some((window,task_id))=progress_context{
+        runtime.emit_log(window,task_id,&format!("ZIP 日期范围为 1980–2107 年，{clamped_dates} 个条目已按边界日期写入；原文件未修改。"),TaskLogSeverity::Warning);
+    }}
     Ok(total_bytes)
 }
 
