@@ -1,0 +1,582 @@
+[
+  {
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-hardlink-1717\\hardlinks.tar.lzo",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-full-links-1721\\9e0b2fae-ee43-4da4-a771-96e1df89d213\\tar-hardlink-1717-hardlinks.tar.lzo",
+    "entries": [
+      {
+        "name": "prefix.txt",
+        "isDirectory": false,
+        "bytes": 35,
+        "sha256": "e74d0df30d9947d424fa726901105e857bfe7933ad6fdad11efd505708128711",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "资料",
+        "isDirectory": true,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "资料/empty",
+        "isDirectory": true,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "source.bin",
+        "isDirectory": false,
+        "bytes": 200003,
+        "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "alias-a.bin",
+        "isDirectory": false,
+        "bytes": 200003,
+        "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "source.bin",
+        "targetId": 3
+      },
+      {
+        "name": "资料/alias-b.bin",
+        "isDirectory": false,
+        "bytes": 200003,
+        "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "source.bin",
+        "targetId": 3
+      },
+      {
+        "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+        "isDirectory": false,
+        "bytes": 8388608,
+        "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "长目标副本.bin",
+        "isDirectory": false,
+        "bytes": 8388608,
+        "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+        "targetId": 6
+      },
+      {
+        "name": "empty.bin",
+        "isDirectory": false,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "empty-copy.bin",
+        "isDirectory": false,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "empty.bin",
+        "targetId": 8
+      },
+      {
+        "name": "资料/跨块映射.bin",
+        "isDirectory": false,
+        "bytes": 16777216,
+        "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "稀疏副本.bin",
+        "isDirectory": false,
+        "bytes": 16777216,
+        "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        },
+        "linkTarget": "资料/跨块映射.bin",
+        "targetId": 10
+      },
+      {
+        "name": "after.txt",
+        "isDirectory": false,
+        "bytes": 39,
+        "sha256": "4a7ed5e24a2d937743244e2c1189a961839d78d6b337ce64d090e5ab7b2ad479",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "late.bin",
+        "isDirectory": false,
+        "bytes": 1100178,
+        "sha256": "b123c372c509a5f6116d4f3beed40eada00ace4c5a8e4d12fae40dca63cf7c7a",
+        "modifiedTime": {
+          "seconds": 1700001717,
+          "nanoseconds": 0
+        }
+      }
+    ],
+    "publishedBytes": 52031909,
+    "stats": {
+      "entries": 14,
+      "logicalBytes": 52031909,
+      "payloadBytes": 1816351
+    }
+  },
+  {
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-gnu-longlink-1718\\gnu-links.tar.lzo",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-full-links-1721\\9e0b2fae-ee43-4da4-a771-96e1df89d213\\tar-gnu-longlink-1718-gnu-links.tar.lzo",
+    "entries": [
+      {
+        "name": "prefix.txt",
+        "isDirectory": false,
+        "bytes": 35,
+        "sha256": "e74d0df30d9947d424fa726901105e857bfe7933ad6fdad11efd505708128711",
+        "modifiedTime": {
+          "seconds": 1700001718,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "资料",
+        "isDirectory": true,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001718,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "资料/empty",
+        "isDirectory": true,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001718,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "source.bin",
+        "isDirectory": false,
+        "bytes": 200003,
+        "sha256": "86f91d8d33b4628226301695234d543550f037d293b56ad57adbcceb8d218453",
+        "modifiedTime": {
+          "seconds": 1700001718,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "alias-a.bin",
+        "isDirectory": false,
+        "bytes": 200003,
+        "sha256": "86f91d8d33b4628226301695234d543550f037d293b56ad57adbcceb8d218453",
+        "modifiedTime": {
+          "seconds": 1700001718,
+          "nanoseconds": 0
+        },
+        "linkTarget": "source.bin",
+        "targetId": 3
+      },
+      {
+        "name": "资料/alias-b.bin",
+        "isDirectory": false,
+        "bytes": 200003,
+        "sha256": "86f91d8d33b4628226301695234d543550f037d293b56ad57adbcceb8d218453",
+        "modifiedTime": {
+          "seconds": 1700001718,
+          "nanoseconds": 0
+        },
+        "linkTarget": "source.bin",
+        "targetId": 3
+      },
+      {
+        "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+        "isDirectory": false,
+        "bytes": 8388608,
+        "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+        "modifiedTime": {
+          "seconds": 1700001718,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "资料/长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本.bin",
+        "isDirectory": false,
+        "bytes": 8388608,
+        "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+        "modifiedTime": {
+          "seconds": 1700001718,
+          "nanoseconds": 0
+        },
+        "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+        "targetId": 6
+      },
+      {
+        "name": "empty.bin",
+        "isDirectory": false,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001718,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "empty-copy.bin",
+        "isDirectory": false,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "modifiedTime": {
+          "seconds": 1700001718,
+          "nanoseconds": 0
+        },
+        "linkTarget": "empty.bin",
+        "targetId": 8
+      },
+      {
+        "name": "资料/跨块映射.bin",
+        "isDirectory": false,
+        "bytes": 16777216,
+        "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+        "modifiedTime": {
+          "seconds": 1700001718,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "稀疏副本.bin",
+        "isDirectory": false,
+        "bytes": 16777216,
+        "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+        "modifiedTime": {
+          "seconds": 1700001718,
+          "nanoseconds": 0
+        },
+        "linkTarget": "资料/跨块映射.bin",
+        "targetId": 10
+      },
+      {
+        "name": "long-target-only.bin",
+        "isDirectory": false,
+        "bytes": 8388608,
+        "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+        "modifiedTime": {
+          "seconds": 1700001718,
+          "nanoseconds": 0
+        },
+        "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+        "targetId": 6
+      },
+      {
+        "name": "after.txt",
+        "isDirectory": false,
+        "bytes": 39,
+        "sha256": "4a7ed5e24a2d937743244e2c1189a961839d78d6b337ce64d090e5ab7b2ad479",
+        "modifiedTime": {
+          "seconds": 1700001718,
+          "nanoseconds": 0
+        }
+      },
+      {
+        "name": "late.bin",
+        "isDirectory": false,
+        "bytes": 1100178,
+        "sha256": "b123c372c509a5f6116d4f3beed40eada00ace4c5a8e4d12fae40dca63cf7c7a",
+        "modifiedTime": {
+          "seconds": 1700001718,
+          "nanoseconds": 0
+        }
+      }
+    ],
+    "publishedBytes": 60420517,
+    "stats": {
+      "entries": 15,
+      "logicalBytes": 60420517,
+      "payloadBytes": 1816351
+    }
+  },
+  {
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-browse-links-1719\\gnu.tar.lzo",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-full-links-1721\\9e0b2fae-ee43-4da4-a771-96e1df89d213\\tar-browse-links-1719-gnu.tar.lzo",
+    "entries": [
+      {
+        "name": "docs",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "headerOffset": 0,
+        "dataOffset": 512
+      },
+      {
+        "name": "gallery",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "headerOffset": 512,
+        "dataOffset": 1024
+      },
+      {
+        "name": "empty.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "headerOffset": 1024,
+        "dataOffset": 1536
+      },
+      {
+        "name": "docs/readme.txt",
+        "bytes": 1344000,
+        "isDirectory": false,
+        "sha256": "96db4695c45cb9a74a26a60d9d6765b276a984817c047cb6a27b83eb69ed5384",
+        "prefixSha256": "e547a46b5afcb74ddcc46644f8d276eae7f28034e4c3b30b798fe0c19f5ec030",
+        "linkTarget": null,
+        "headerOffset": 1536,
+        "dataOffset": 2048
+      },
+      {
+        "name": "gallery/cover.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+        "prefixSha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+        "linkTarget": null,
+        "headerOffset": 1346048,
+        "dataOffset": 1346560
+      },
+      {
+        "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "bytes": 47,
+        "isDirectory": false,
+        "sha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+        "prefixSha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+        "linkTarget": null,
+        "headerOffset": 1347072,
+        "dataOffset": 1348608
+      },
+      {
+        "name": "阅读副本.txt",
+        "bytes": 1344000,
+        "isDirectory": false,
+        "sha256": "96db4695c45cb9a74a26a60d9d6765b276a984817c047cb6a27b83eb69ed5384",
+        "prefixSha256": "e547a46b5afcb74ddcc46644f8d276eae7f28034e4c3b30b798fe0c19f5ec030",
+        "linkTarget": "docs/readme.txt",
+        "headerOffset": 1349120,
+        "dataOffset": 1349632
+      },
+      {
+        "name": "gallery/封面副本.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+        "prefixSha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+        "linkTarget": "gallery/cover.png",
+        "headerOffset": 1349632,
+        "dataOffset": 1350144
+      },
+      {
+        "name": "empty-copy.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": "empty.txt",
+        "headerOffset": 1350144,
+        "dataOffset": 1350656
+      },
+      {
+        "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+        "bytes": 47,
+        "isDirectory": false,
+        "sha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+        "prefixSha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+        "linkTarget": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "headerOffset": 1350656,
+        "dataOffset": 1353216
+      },
+      {
+        "name": "after.txt",
+        "bytes": 26,
+        "isDirectory": false,
+        "sha256": "e4e272e4ba6a999633a75c39bc10f241f6f88da8a2ba8d26fe2cb3e99cb80ad1",
+        "prefixSha256": "e4e272e4ba6a999633a75c39bc10f241f6f88da8a2ba8d26fe2cb3e99cb80ad1",
+        "linkTarget": null,
+        "headerOffset": 1353216,
+        "dataOffset": 1353728
+      }
+    ],
+    "publishedBytes": 2688306,
+    "stats": {
+      "entries": 11,
+      "logicalBytes": 2688306,
+      "payloadBytes": 1344166
+    }
+  },
+  {
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-browse-links-1719\\pax.tar.lzo",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-full-links-1721\\9e0b2fae-ee43-4da4-a771-96e1df89d213\\tar-browse-links-1719-pax.tar.lzo",
+    "entries": [
+      {
+        "name": "docs",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "headerOffset": 0,
+        "dataOffset": 512
+      },
+      {
+        "name": "gallery",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "headerOffset": 512,
+        "dataOffset": 1024
+      },
+      {
+        "name": "empty.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "headerOffset": 1024,
+        "dataOffset": 1536
+      },
+      {
+        "name": "docs/readme.txt",
+        "bytes": 1344000,
+        "isDirectory": false,
+        "sha256": "96db4695c45cb9a74a26a60d9d6765b276a984817c047cb6a27b83eb69ed5384",
+        "prefixSha256": "e547a46b5afcb74ddcc46644f8d276eae7f28034e4c3b30b798fe0c19f5ec030",
+        "linkTarget": null,
+        "headerOffset": 1536,
+        "dataOffset": 2048
+      },
+      {
+        "name": "gallery/cover.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+        "prefixSha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+        "linkTarget": null,
+        "headerOffset": 1346048,
+        "dataOffset": 1346560
+      },
+      {
+        "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "bytes": 47,
+        "isDirectory": false,
+        "sha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+        "prefixSha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+        "linkTarget": null,
+        "headerOffset": 1347072,
+        "dataOffset": 1348608
+      },
+      {
+        "name": "阅读副本.txt",
+        "bytes": 1344000,
+        "isDirectory": false,
+        "sha256": "96db4695c45cb9a74a26a60d9d6765b276a984817c047cb6a27b83eb69ed5384",
+        "prefixSha256": "e547a46b5afcb74ddcc46644f8d276eae7f28034e4c3b30b798fe0c19f5ec030",
+        "linkTarget": "docs/readme.txt",
+        "headerOffset": 1349120,
+        "dataOffset": 1350656
+      },
+      {
+        "name": "gallery/封面副本.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+        "prefixSha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+        "linkTarget": "gallery/cover.png",
+        "headerOffset": 1350656,
+        "dataOffset": 1352192
+      },
+      {
+        "name": "empty-copy.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": "empty.txt",
+        "headerOffset": 1352192,
+        "dataOffset": 1352704
+      },
+      {
+        "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+        "bytes": 47,
+        "isDirectory": false,
+        "sha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+        "prefixSha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+        "linkTarget": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "headerOffset": 1352704,
+        "dataOffset": 1354240
+      },
+      {
+        "name": "after.txt",
+        "bytes": 26,
+        "isDirectory": false,
+        "sha256": "e4e272e4ba6a999633a75c39bc10f241f6f88da8a2ba8d26fe2cb3e99cb80ad1",
+        "prefixSha256": "e4e272e4ba6a999633a75c39bc10f241f6f88da8a2ba8d26fe2cb3e99cb80ad1",
+        "linkTarget": null,
+        "headerOffset": 1354240,
+        "dataOffset": 1354752
+      }
+    ],
+    "publishedBytes": 2688306,
+    "stats": {
+      "entries": 11,
+      "logicalBytes": 2688306,
+      "payloadBytes": 1344166
+    }
+  }
+]

@@ -1,0 +1,123 @@
+{
+  "passed": true,
+  "nativeValueReplay": true,
+  "realDesktopIPC": false,
+  "resourceProbeReplay": "live filesystem values, IPC stub",
+  "checks": [
+    {
+      "name": "whole-task-1200x760",
+      "width": 1200,
+      "height": 760,
+      "overflow": 0,
+      "bodyOverflow": 0
+    },
+    {
+      "name": "whole-complete-900x600",
+      "width": 900,
+      "height": 600,
+      "overflow": 0,
+      "bodyOverflow": 0
+    },
+    {
+      "name": "whole-diagnosis-900x600",
+      "width": 900,
+      "height": 600,
+      "overflow": 0,
+      "bodyOverflow": 0
+    },
+    {
+      "name": "whole-diagnosis-1200x760",
+      "width": 1200,
+      "height": 760,
+      "overflow": 0,
+      "bodyOverflow": 0
+    },
+    {
+      "name": "whole-browser-1200x760",
+      "width": 1200,
+      "height": 760,
+      "overflow": 0,
+      "bodyOverflow": 0
+    },
+    {
+      "name": "whole-browser-900x600",
+      "width": 900,
+      "height": 600,
+      "overflow": 0,
+      "bodyOverflow": 0
+    }
+  ],
+  "taskPanes": [
+    {
+      "width": 287.5,
+      "overflow": 0
+    },
+    {
+      "width": 287.5,
+      "overflow": 0
+    }
+  ],
+  "commands": [
+    {
+      "cmd": "extract_file",
+      "callback": 271791723,
+      "error": 680831544,
+      "taskId": "full1721-ui",
+      "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-browse-links-1719\\gnu.tar.lzo",
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-full-links-1721\\9e0b2fae-ee43-4da4-a771-96e1df89d213\\tar-browse-links-1719-gnu.tar.lzo",
+      "password": null,
+      "options": {
+        "preserve_paths": true,
+        "parallel_zip": false,
+        "overwrite_existing": false,
+        "delete_after": false,
+        "preserve_timestamps": true,
+        "skip_corrupted": false,
+        "extract_only_newer": false,
+        "create_subdirectory": false,
+        "preserve_mark_of_web": true,
+        "file_filter": null,
+        "selected_entries": [],
+        "conflict_policy": "ask",
+        "enable_bruteforce": false,
+        "bruteforce_wordlists": []
+      }
+    }
+  ],
+  "history": {
+    "archiveOutput": null,
+    "id": "full1721-ui",
+    "retryOfTaskId": null,
+    "executionConfig": {
+      "schemaVersion": 1,
+      "kind": "archive-extraction",
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-full-links-1721\\9e0b2fae-ee43-4da4-a771-96e1df89d213\\tar-browse-links-1719-gnu.tar.lzo",
+      "extractToSubfolder": false
+    },
+    "name": "gnu.tar.lzo",
+    "taskType": "decompression",
+    "workloadKind": "archive",
+    "metrics": null,
+    "status": "completed",
+    "sourcePaths": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-browse-links-1719\\gnu.tar.lzo"
+    ],
+    "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-full-links-1721\\9e0b2fae-ee43-4da4-a771-96e1df89d213\\tar-browse-links-1719-gnu.tar.lzo",
+    "format": "TAR.LZO",
+    "startedAt": "2026-10-28T08:04:32.871Z",
+    "completedAt": "2026-10-28T08:04:32.937Z",
+    "durationMs": 66,
+    "processedBytes": 0,
+    "totalBytes": 0,
+    "errorMessage": null,
+    "failure": null,
+    "logs": [
+      {
+        "timestamp": "2026-10-28T08:04:32.888Z",
+        "message": "资源预检：可开始（local，可用 561.9 GiB，预计输出 2.56 MiB）",
+        "severity": "info"
+      }
+    ]
+  },
+  "errors": []
+}

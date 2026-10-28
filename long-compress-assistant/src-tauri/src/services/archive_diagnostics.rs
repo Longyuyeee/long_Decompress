@@ -412,7 +412,7 @@ pub async fn diagnose_archive_at(
                 if prefix.format=="TAR.LZO" && !prefix.complete && prefix.stop_reason.contains("[archive-inspection:unsupported]") && report.missing_volumes.is_empty() {
                     if let Ok(metadata)=archive_browser::browse_archive_cancellable_at(source,password,cancelled.clone(),zip_password_encoding,None).await {
                         let full_path=source.to_path_buf();let full_cancel=cancelled.clone();
-                        let full=tauri::async_runtime::spawn_blocking(move||super::compression_verification::verify_tar_reader(super::codec_stream::decoder(&full_path,"lzo")?, &||full_cancel.load(Ordering::SeqCst))).await.context("TAR.LZO complete verification worker failed")?;
+                        let full=tauri::async_runtime::spawn_blocking(move||super::compression_verification::verify_tar_lzo_reader(super::codec_stream::decoder(&full_path,"lzo")?, &||full_cancel.load(Ordering::SeqCst))).await.context("TAR.LZO complete verification worker failed")?;
                         check_cancelled(&cancelled)?;
                         if full.is_ok() {
                             report.total_files=metadata.total_files;report.total_directories=metadata.total_directories;report.total_uncompressed_size=metadata.total_uncompressed_size;report.total_uncompressed_size_known=true;report.integrity_tested=true;report.status="healthy".into();report.recoverability="not_needed".into();report.evidence.push("完整 TAR 扩展及外层 LZOP 已沿原读取流程校验".into());return Ok(report);
@@ -674,7 +674,7 @@ pub async fn diagnose_archive_at(
             let tar_lzo=actual_format=="TAR.LZO";
             tauri::async_runtime::spawn_blocking(move || {
                 let cancelled=||verify_cancelled.load(Ordering::SeqCst);
-                if tar_lzo {super::compression_verification::verify_tar_reader(super::codec_stream::decoder(&verify_path,"lzo")?, &cancelled)}
+                if tar_lzo {super::compression_verification::verify_tar_lzo_reader(super::codec_stream::decoder(&verify_path,"lzo")?, &cancelled)}
                 else {super::lzop::verify_with_encoding(&verify_path,zip_password_encoding,cancelled)}
             }).await.context("LZOP verification worker failed")?
         }

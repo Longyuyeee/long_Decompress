@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-28",
+  "nativeTests": 7,
+  "firstRoundPassed": 4,
+  "failedCasesFixedAndRerun": 3,
+  "relatedNativeTests": 3,
+  "frontendTests": 3,
+  "backgroundUiGroups": 3,
+  "viewedScreenshots": 6,
+  "realPublishedTrees": 5,
+  "realPublishedFiles": 52,
+  "typecheckAndVite": true,
+  "shellDll": true,
+  "releaseIdentitySources": 8,
+  "desktopControlled": false,
+  "realDesktopIPC": false,
+  "storageFault112": "controlled injection"
+}

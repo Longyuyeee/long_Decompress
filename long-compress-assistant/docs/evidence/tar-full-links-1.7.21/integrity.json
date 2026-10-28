@@ -1,0 +1,1312 @@
+[
+  {
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-hardlink-1717\\hardlinks.tar.lzo",
+    "integrity": "Archive integrity verified",
+    "browse": {
+      "format": "TAR.LZO",
+      "entries": [
+        {
+          "path": "prefix.txt",
+          "name": "prefix.txt",
+          "size": 35,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "资料",
+          "name": "资料",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "资料/empty",
+          "name": "empty",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "source.bin",
+          "name": "source.bin",
+          "size": 200003,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "source.bin",
+          "path": "alias-a.bin",
+          "name": "alias-a.bin",
+          "size": 200003,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "source.bin",
+          "path": "资料/alias-b.bin",
+          "name": "alias-b.bin",
+          "size": 200003,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "name": "多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "size": 8388608,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "path": "长目标副本.bin",
+          "name": "长目标副本.bin",
+          "size": 8388608,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "empty.bin",
+          "name": "empty.bin",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "empty.bin",
+          "path": "empty-copy.bin",
+          "name": "empty-copy.bin",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "资料/跨块映射.bin",
+          "name": "跨块映射.bin",
+          "size": 16777216,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "资料/跨块映射.bin",
+          "path": "稀疏副本.bin",
+          "name": "稀疏副本.bin",
+          "size": 16777216,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "after.txt",
+          "name": "after.txt",
+          "size": 39,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "late.bin",
+          "name": "late.bin",
+          "size": 1100178,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:57+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        }
+      ],
+      "totalFiles": 12,
+      "totalDirectories": 2,
+      "totalUncompressedSize": 52031909,
+      "totalCompressedSize": 0,
+      "encrypted": false
+    },
+    "diagnosis": {
+      "lzopPrefix": {
+        "format": "TAR.LZO",
+        "revision": "ba62d58638448e5d4a62e17428eb8ba5001ea9f279b8303f4f610317e30cdd72",
+        "entries": [
+          {
+            "id": 0,
+            "name": "prefix.txt",
+            "bytes": 35,
+            "sha256": "e74d0df30d9947d424fa726901105e857bfe7933ad6fdad11efd505708128711",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 1,
+            "name": "资料",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": true,
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 2,
+            "name": "资料/empty",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": true,
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 3,
+            "name": "source.bin",
+            "bytes": 200003,
+            "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 4,
+            "name": "alias-a.bin",
+            "bytes": 200003,
+            "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+            "isDirectory": false,
+            "linkTarget": "source.bin",
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 5,
+            "name": "资料/alias-b.bin",
+            "bytes": 200003,
+            "sha256": "84ab21d57218a1699f5dd2860fabc70bce967b81065d8ac4b31ba0fac7d0d1a0",
+            "isDirectory": false,
+            "linkTarget": "source.bin",
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 6,
+            "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+            "bytes": 8388608,
+            "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+            "isDirectory": false,
+            "storedBytes": 122880,
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 7,
+            "name": "长目标副本.bin",
+            "bytes": 8388608,
+            "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+            "isDirectory": false,
+            "storedBytes": 122880,
+            "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 8,
+            "name": "empty.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 9,
+            "name": "empty-copy.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": false,
+            "linkTarget": "empty.bin",
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 10,
+            "name": "资料/跨块映射.bin",
+            "bytes": 16777216,
+            "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+            "isDirectory": false,
+            "storedBytes": 393216,
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 11,
+            "name": "稀疏副本.bin",
+            "bytes": 16777216,
+            "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+            "isDirectory": false,
+            "storedBytes": 393216,
+            "linkTarget": "资料/跨块映射.bin",
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 12,
+            "name": "after.txt",
+            "bytes": 39,
+            "sha256": "4a7ed5e24a2d937743244e2c1189a961839d78d6b337ce64d090e5ab7b2ad479",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 13,
+            "name": "late.bin",
+            "bytes": 1100178,
+            "sha256": "b123c372c509a5f6116d4f3beed40eada00ace4c5a8e4d12fae40dca63cf7c7a",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001717,
+              "nanoseconds": 0
+            }
+          }
+        ],
+        "complete": true,
+        "stopReason": "TAR 条目及外层 LZOP 已完整结束",
+        "stoppedMember": null,
+        "stoppedOffset": 1843200,
+        "availableVolumes": 1,
+        "ignoredVolumes": 0
+      },
+      "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-hardlink-1717\\hardlinks.tar.lzo",
+      "fileSize": 1823224,
+      "actualFormat": "TAR.LZO",
+      "status": "healthy",
+      "encrypted": false,
+      "splitArchive": false,
+      "volumesFound": 1,
+      "missingVolumes": [],
+      "totalFiles": 12,
+      "totalDirectories": 2,
+      "totalUncompressedSize": 52031909,
+      "totalUncompressedSizeKnown": true,
+      "integrityTested": true,
+      "canRepair": false,
+      "recoverability": "not_needed",
+      "issues": [],
+      "evidence": [
+        "Archive size: 1823224 bytes",
+        "已解码并校验 12 个文件、2 个目录；TAR 条目及外层 LZOP 已完整结束"
+      ]
+    }
+  },
+  {
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-gnu-longlink-1718\\gnu-links.tar.lzo",
+    "integrity": "Archive integrity verified",
+    "browse": {
+      "format": "TAR.LZO",
+      "entries": [
+        {
+          "path": "prefix.txt",
+          "name": "prefix.txt",
+          "size": 35,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "资料",
+          "name": "资料",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "资料/empty",
+          "name": "empty",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "source.bin",
+          "name": "source.bin",
+          "size": 200003,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "source.bin",
+          "path": "alias-a.bin",
+          "name": "alias-a.bin",
+          "size": 200003,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "source.bin",
+          "path": "资料/alias-b.bin",
+          "name": "alias-b.bin",
+          "size": 200003,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "name": "多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "size": 8388608,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "path": "资料/长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本.bin",
+          "name": "长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本.bin",
+          "size": 8388608,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "empty.bin",
+          "name": "empty.bin",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "empty.bin",
+          "path": "empty-copy.bin",
+          "name": "empty-copy.bin",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "资料/跨块映射.bin",
+          "name": "跨块映射.bin",
+          "size": 16777216,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "资料/跨块映射.bin",
+          "path": "稀疏副本.bin",
+          "name": "稀疏副本.bin",
+          "size": 16777216,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+          "path": "long-target-only.bin",
+          "name": "long-target-only.bin",
+          "size": 8388608,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "after.txt",
+          "name": "after.txt",
+          "size": 39,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "late.bin",
+          "name": "late.bin",
+          "size": 1100178,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:58+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        }
+      ],
+      "totalFiles": 13,
+      "totalDirectories": 2,
+      "totalUncompressedSize": 60420517,
+      "totalCompressedSize": 0,
+      "encrypted": false
+    },
+    "diagnosis": {
+      "lzopPrefix": {
+        "format": "TAR.LZO",
+        "revision": "8e3415b0bc36bbe580b558bb32d806db97de64c47ce177d434a920228f936cea",
+        "entries": [
+          {
+            "id": 0,
+            "name": "prefix.txt",
+            "bytes": 35,
+            "sha256": "e74d0df30d9947d424fa726901105e857bfe7933ad6fdad11efd505708128711",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001718,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 1,
+            "name": "资料",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": true,
+            "modifiedTime": {
+              "seconds": 1700001718,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 2,
+            "name": "资料/empty",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": true,
+            "modifiedTime": {
+              "seconds": 1700001718,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 3,
+            "name": "source.bin",
+            "bytes": 200003,
+            "sha256": "86f91d8d33b4628226301695234d543550f037d293b56ad57adbcceb8d218453",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001718,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 4,
+            "name": "alias-a.bin",
+            "bytes": 200003,
+            "sha256": "86f91d8d33b4628226301695234d543550f037d293b56ad57adbcceb8d218453",
+            "isDirectory": false,
+            "linkTarget": "source.bin",
+            "modifiedTime": {
+              "seconds": 1700001718,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 5,
+            "name": "资料/alias-b.bin",
+            "bytes": 200003,
+            "sha256": "86f91d8d33b4628226301695234d543550f037d293b56ad57adbcceb8d218453",
+            "isDirectory": false,
+            "linkTarget": "source.bin",
+            "modifiedTime": {
+              "seconds": 1700001718,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 6,
+            "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+            "bytes": 8388608,
+            "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+            "isDirectory": false,
+            "storedBytes": 122880,
+            "modifiedTime": {
+              "seconds": 1700001718,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 7,
+            "name": "资料/长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本.bin",
+            "bytes": 8388608,
+            "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+            "isDirectory": false,
+            "storedBytes": 122880,
+            "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+            "modifiedTime": {
+              "seconds": 1700001718,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 8,
+            "name": "empty.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001718,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 9,
+            "name": "empty-copy.bin",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": false,
+            "linkTarget": "empty.bin",
+            "modifiedTime": {
+              "seconds": 1700001718,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 10,
+            "name": "资料/跨块映射.bin",
+            "bytes": 16777216,
+            "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+            "isDirectory": false,
+            "storedBytes": 393216,
+            "modifiedTime": {
+              "seconds": 1700001718,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 11,
+            "name": "稀疏副本.bin",
+            "bytes": 16777216,
+            "sha256": "488191d64ab02195c41b90bc34efadfd613f2f89b2566b90f3e601c7443bd6e8",
+            "isDirectory": false,
+            "storedBytes": 393216,
+            "linkTarget": "资料/跨块映射.bin",
+            "modifiedTime": {
+              "seconds": 1700001718,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 12,
+            "name": "long-target-only.bin",
+            "bytes": 8388608,
+            "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+            "isDirectory": false,
+            "storedBytes": 122880,
+            "linkTarget": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+            "modifiedTime": {
+              "seconds": 1700001718,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 13,
+            "name": "after.txt",
+            "bytes": 39,
+            "sha256": "4a7ed5e24a2d937743244e2c1189a961839d78d6b337ce64d090e5ab7b2ad479",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001718,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 14,
+            "name": "late.bin",
+            "bytes": 1100178,
+            "sha256": "b123c372c509a5f6116d4f3beed40eada00ace4c5a8e4d12fae40dca63cf7c7a",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001718,
+              "nanoseconds": 0
+            }
+          }
+        ],
+        "complete": true,
+        "stopReason": "TAR 条目及外层 LZOP 已完整结束",
+        "stoppedMember": null,
+        "stoppedOffset": 1843200,
+        "availableVolumes": 1,
+        "ignoredVolumes": 0
+      },
+      "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-gnu-longlink-1718\\gnu-links.tar.lzo",
+      "fileSize": 1822565,
+      "actualFormat": "TAR.LZO",
+      "status": "healthy",
+      "encrypted": false,
+      "splitArchive": false,
+      "volumesFound": 1,
+      "missingVolumes": [],
+      "totalFiles": 13,
+      "totalDirectories": 2,
+      "totalUncompressedSize": 60420517,
+      "totalUncompressedSizeKnown": true,
+      "integrityTested": true,
+      "canRepair": false,
+      "recoverability": "not_needed",
+      "issues": [],
+      "evidence": [
+        "Archive size: 1822565 bytes",
+        "已解码并校验 13 个文件、2 个目录；TAR 条目及外层 LZOP 已完整结束"
+      ]
+    }
+  },
+  {
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-browse-links-1719\\gnu.tar.lzo",
+    "integrity": "Archive integrity verified",
+    "browse": {
+      "format": "TAR.LZO",
+      "entries": [
+        {
+          "path": "docs",
+          "name": "docs",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "gallery",
+          "name": "gallery",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "empty.txt",
+          "name": "empty.txt",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "docs/readme.txt",
+          "name": "readme.txt",
+          "size": 1344000,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "gallery/cover.png",
+          "name": "cover.png",
+          "size": 93,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "name": "长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "size": 47,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "docs/readme.txt",
+          "path": "阅读副本.txt",
+          "name": "阅读副本.txt",
+          "size": 1344000,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "gallery/cover.png",
+          "path": "gallery/封面副本.png",
+          "name": "封面副本.png",
+          "size": 93,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "empty.txt",
+          "path": "empty-copy.txt",
+          "name": "empty-copy.txt",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "path": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "name": "链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "size": 47,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "after.txt",
+          "name": "after.txt",
+          "size": 26,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        }
+      ],
+      "totalFiles": 9,
+      "totalDirectories": 2,
+      "totalUncompressedSize": 2688306,
+      "totalCompressedSize": 0,
+      "encrypted": false
+    },
+    "diagnosis": {
+      "lzopPrefix": {
+        "format": "TAR.LZO",
+        "revision": "4555afac1e662e1d0fe51e29b7cc85e26c1120e5380be58c58bd1508b8c1fe94",
+        "entries": [
+          {
+            "id": 0,
+            "name": "docs",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": true,
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 1,
+            "name": "gallery",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": true,
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 2,
+            "name": "empty.txt",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 3,
+            "name": "docs/readme.txt",
+            "bytes": 1344000,
+            "sha256": "96db4695c45cb9a74a26a60d9d6765b276a984817c047cb6a27b83eb69ed5384",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 4,
+            "name": "gallery/cover.png",
+            "bytes": 93,
+            "sha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 5,
+            "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+            "bytes": 47,
+            "sha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 6,
+            "name": "阅读副本.txt",
+            "bytes": 1344000,
+            "sha256": "96db4695c45cb9a74a26a60d9d6765b276a984817c047cb6a27b83eb69ed5384",
+            "isDirectory": false,
+            "linkTarget": "docs/readme.txt",
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 7,
+            "name": "gallery/封面副本.png",
+            "bytes": 93,
+            "sha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+            "isDirectory": false,
+            "linkTarget": "gallery/cover.png",
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 8,
+            "name": "empty-copy.txt",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": false,
+            "linkTarget": "empty.txt",
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 9,
+            "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+            "bytes": 47,
+            "sha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+            "isDirectory": false,
+            "linkTarget": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 10,
+            "name": "after.txt",
+            "bytes": 26,
+            "sha256": "e4e272e4ba6a999633a75c39bc10f241f6f88da8a2ba8d26fe2cb3e99cb80ad1",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          }
+        ],
+        "complete": true,
+        "stopReason": "TAR 条目及外层 LZOP 已完整结束",
+        "stoppedMember": null,
+        "stoppedOffset": 1361920,
+        "availableVolumes": 1,
+        "ignoredVolumes": 0
+      },
+      "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-browse-links-1719\\gnu.tar.lzo",
+      "fileSize": 6675,
+      "actualFormat": "TAR.LZO",
+      "status": "healthy",
+      "encrypted": false,
+      "splitArchive": false,
+      "volumesFound": 1,
+      "missingVolumes": [],
+      "totalFiles": 9,
+      "totalDirectories": 2,
+      "totalUncompressedSize": 2688306,
+      "totalUncompressedSizeKnown": true,
+      "integrityTested": true,
+      "canRepair": false,
+      "recoverability": "not_needed",
+      "issues": [],
+      "evidence": [
+        "Archive size: 6675 bytes",
+        "已解码并校验 9 个文件、2 个目录；TAR 条目及外层 LZOP 已完整结束"
+      ]
+    }
+  },
+  {
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-browse-links-1719\\pax.tar.lzo",
+    "integrity": "Archive integrity verified",
+    "browse": {
+      "format": "TAR.LZO",
+      "entries": [
+        {
+          "path": "docs",
+          "name": "docs",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "gallery",
+          "name": "gallery",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "empty.txt",
+          "name": "empty.txt",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "docs/readme.txt",
+          "name": "readme.txt",
+          "size": 1344000,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "gallery/cover.png",
+          "name": "cover.png",
+          "size": 93,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "name": "长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "size": 47,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "docs/readme.txt",
+          "path": "阅读副本.txt",
+          "name": "阅读副本.txt",
+          "size": 1344000,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "gallery/cover.png",
+          "path": "gallery/封面副本.png",
+          "name": "封面副本.png",
+          "size": 93,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "empty.txt",
+          "path": "empty-copy.txt",
+          "name": "empty-copy.txt",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "path": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "name": "链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "size": 47,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "after.txt",
+          "name": "after.txt",
+          "size": 26,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:41:59+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        }
+      ],
+      "totalFiles": 9,
+      "totalDirectories": 2,
+      "totalUncompressedSize": 2688306,
+      "totalCompressedSize": 0,
+      "encrypted": false
+    },
+    "diagnosis": {
+      "lzopPrefix": {
+        "format": "TAR.LZO",
+        "revision": "b54bd4eba4ee33abd100e8d848d4671074ec833f96bc55a31b1a9632a18cb887",
+        "entries": [
+          {
+            "id": 0,
+            "name": "docs",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": true,
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 1,
+            "name": "gallery",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": true,
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 2,
+            "name": "empty.txt",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 3,
+            "name": "docs/readme.txt",
+            "bytes": 1344000,
+            "sha256": "96db4695c45cb9a74a26a60d9d6765b276a984817c047cb6a27b83eb69ed5384",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 4,
+            "name": "gallery/cover.png",
+            "bytes": 93,
+            "sha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 5,
+            "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+            "bytes": 47,
+            "sha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 6,
+            "name": "阅读副本.txt",
+            "bytes": 1344000,
+            "sha256": "96db4695c45cb9a74a26a60d9d6765b276a984817c047cb6a27b83eb69ed5384",
+            "isDirectory": false,
+            "linkTarget": "docs/readme.txt",
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 7,
+            "name": "gallery/封面副本.png",
+            "bytes": 93,
+            "sha256": "2a2581f7959d4a467f8a488bb59ef1b7f44faedd20a165f3c9b04f759f73016f",
+            "isDirectory": false,
+            "linkTarget": "gallery/cover.png",
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 8,
+            "name": "empty-copy.txt",
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "isDirectory": false,
+            "linkTarget": "empty.txt",
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 9,
+            "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+            "bytes": 47,
+            "sha256": "d4b511788c895528f4c2794c9fb6367cd354faa500a3092cffd2e2534a379158",
+            "isDirectory": false,
+            "linkTarget": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          },
+          {
+            "id": 10,
+            "name": "after.txt",
+            "bytes": 26,
+            "sha256": "e4e272e4ba6a999633a75c39bc10f241f6f88da8a2ba8d26fe2cb3e99cb80ad1",
+            "isDirectory": false,
+            "modifiedTime": {
+              "seconds": 1700001719,
+              "nanoseconds": 0
+            }
+          }
+        ],
+        "complete": true,
+        "stopReason": "TAR 条目及外层 LZOP 已完整结束",
+        "stoppedMember": null,
+        "stoppedOffset": 1361920,
+        "availableVolumes": 1,
+        "ignoredVolumes": 0
+      },
+      "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-browse-links-1719\\pax.tar.lzo",
+      "fileSize": 6750,
+      "actualFormat": "TAR.LZO",
+      "status": "healthy",
+      "encrypted": false,
+      "splitArchive": false,
+      "volumesFound": 1,
+      "missingVolumes": [],
+      "totalFiles": 9,
+      "totalDirectories": 2,
+      "totalUncompressedSize": 2688306,
+      "totalUncompressedSizeKnown": true,
+      "integrityTested": true,
+      "canRepair": false,
+      "recoverability": "not_needed",
+      "issues": [],
+      "evidence": [
+        "Archive size: 6750 bytes",
+        "已解码并校验 9 个文件、2 个目录；TAR 条目及外层 LZOP 已完整结束"
+      ]
+    }
+  }
+]

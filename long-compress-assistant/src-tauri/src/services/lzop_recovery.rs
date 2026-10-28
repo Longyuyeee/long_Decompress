@@ -44,6 +44,8 @@ pub struct Entry {
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Report {
+    #[serde(skip)]
+    pub(crate) hard_links_seen: bool,
     pub format: &'static str,
     pub revision: String,
     pub entries: Vec<Entry>,
@@ -228,6 +230,7 @@ pub(super) fn scan_source(
     let mut input = src.open()?;
     let mut names = super::names::Names::default();
     let mut report = Report {
+        hard_links_seen: false,
         format: "LZOP",
         revision: String::new(),
         entries: Vec::new(),

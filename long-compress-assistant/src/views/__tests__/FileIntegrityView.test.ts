@@ -40,6 +40,17 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('FileIntegrityView', () => {
+  it('full1721 shows a confirmed TAR.LZO link archive as complete without offering partial rescue', async () => {
+    const pinia=createPinia();setActivePinia(pinia)
+    mocks.diagnoseArchive.mockResolvedValue({filePath:'C:/complete.tar.lzo',actualFormat:'TAR.LZO',status:'healthy',encrypted:false,splitArchive:false,volumesFound:1,missingVolumes:[],totalFiles:9,totalDirectories:2,totalUncompressedSize:2688306,totalUncompressedSizeKnown:true,integrityTested:true,canRepair:false,recoverability:'not_needed',issues:[],evidence:['TAR 条目及外层 LZOP 已完整结束']})
+    useAppStore().openArchiveForDiagnosis({path:'C:/complete.tar.lzo'})
+    const wrapper=mount(FileIntegrityView,{global:{plugins:[pinia]}});await flushPromises()
+    expect(wrapper.get('[data-testid="diagnostic-report"]').text()).toContain('完整性正常')
+    expect(wrapper.get('[data-testid="diagnostic-report"]').text()).toContain('TAR.LZO')
+    expect(wrapper.find('[data-testid="open-lzop-recovery"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="start-archive-repair"]').exists()).toBe(false)
+    wrapper.unmount()
+  })
   it('zpaq163 preserves a requested old snapshot through page initialization and repeated diagnosis', async () => {
     const pinia=createPinia();setActivePinia(pinia)
     const snapshot={version:1,date:20261020100000}
