@@ -1,0 +1,68 @@
+[
+  {
+    "cut": 11876,
+    "confirmed": 4,
+    "reason": "TAR 文件头或结束标记未完整到达: failed to fill whole buffer"
+  },
+  {
+    "cut": 12388,
+    "confirmed": 4,
+    "reason": "TAR 稀疏扩展块未完整到达: failed to fill whole buffer"
+  },
+  {
+    "cut": 13311,
+    "confirmed": 4,
+    "reason": "TAR 稀疏扩展块未完整到达: failed to fill whole buffer"
+  },
+  {
+    "cut": 74752,
+    "confirmed": 4,
+    "reason": "TAR 稀疏文件数据未完整到达: failed to fill whole buffer"
+  },
+  {
+    "cut": 136191,
+    "confirmed": 4,
+    "reason": "TAR 稀疏文件数据未完整到达: failed to fill whole buffer"
+  },
+  {
+    "cut": 136191,
+    "confirmed": 4,
+    "reason": "TAR 稀疏文件数据未完整到达: failed to fill whole buffer"
+  },
+  {
+    "confirmed": 4,
+    "reason": "TAR 稀疏扩展标记无效"
+  },
+  {
+    "confirmed": 4,
+    "reason": "TAR 稀疏映射包含不完整或乱序槽位"
+  },
+  {
+    "confirmed": 4,
+    "reason": "TAR 稀疏范围重叠、乱序或超出完整大小"
+  },
+  {
+    "confirmed": 4,
+    "reason": "TAR 稀疏范围重叠、乱序或超出完整大小"
+  },
+  {
+    "confirmed": 4,
+    "reason": "TAR 稀疏映射与包内数据大小不一致"
+  },
+  {
+    "confirmed": 4,
+    "reason": "[archive-inspection:unsupported] 稀疏文件完整大小超过支持范围"
+  },
+  {
+    "confirmed": 4,
+    "reason": "TAR 稀疏扩展标记无效"
+  },
+  {
+    "confirmed": 4,
+    "reason": "TAR 稀疏扩展填充无效"
+  },
+  {
+    "confirmed": 4,
+    "reason": "[archive-inspection:unsupported] 旧 GNU 稀疏条目暂不支持叠加 PAX size，已停止在此处"
+  }
+]

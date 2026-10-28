@@ -1,0 +1,359 @@
+{
+  "passed": true,
+  "recipeVersion": 1,
+  "sources": "Self-authored Linux sparse source files; real GNU tar --format=gnu --sparse --hole-detection=raw producer. GNU/Python/source hashes agree on logical bytes. Official fixed-SHA lzop full round trip. No application archive writer.",
+  "formatReference": "https://www.gnu.org/software/tar/manual/html_node/Old-GNU-Format.html",
+  "gnuVersion": "tar (GNU tar) 1.35",
+  "lzopProducerSha256": "d9b46cf6fa44f4d657e5a3943d361dac24040d0acda37019b19ba285e52e2c53",
+  "tar": "gnu.tar",
+  "tarSha256": "39b7b6f93900217fe172bcbe42d9c12f273c7720bdca1e73b039b49e81080e35",
+  "archive": "gnu.tar.lzo",
+  "sha256": "8ae145bd297d69b141a1b1cb8ee895f0968b4003c26e6bd030d2ba00a2899c2a",
+  "entries": [
+    {
+      "name": "prefix.txt",
+      "isDirectory": false,
+      "bytes": 35,
+      "sha256": "e74d0df30d9947d424fa726901105e857bfe7933ad6fdad11efd505708128711",
+      "modifiedTime": {
+        "seconds": 1700001713,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "name": "资料",
+      "isDirectory": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "modifiedTime": {
+        "seconds": 1700001713,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "name": "资料/empty",
+      "isDirectory": true,
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "modifiedTime": {
+        "seconds": 1700001713,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "name": "资料/少段.bin",
+      "isDirectory": false,
+      "bytes": 524288,
+      "sha256": "23945304148bd68e185d60fe3e9d3e1e7779856796474d7268b02ac9ed2866c3",
+      "modifiedTime": {
+        "seconds": 1700001713,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin",
+      "isDirectory": false,
+      "bytes": 8388608,
+      "sha256": "35f48169690f261a4d47295ac3f3637248ebbead3a2b99629c9aec0eefb583c8",
+      "modifiedTime": {
+        "seconds": 1700001713,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "name": "全零.bin",
+      "isDirectory": false,
+      "bytes": 1048576,
+      "sha256": "30e14955ebf1352266dc2ff8067e68104607e750abb9d3b36582b8af909fcb58",
+      "modifiedTime": {
+        "seconds": 1700001713,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "name": "大空洞.bin",
+      "isDirectory": false,
+      "bytes": 67108864,
+      "sha256": "b2d946ba6eef61663f65706aff31c37221ede762bf10c8befca8e857472dd869",
+      "modifiedTime": {
+        "seconds": 1700001713,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "name": "after.txt",
+      "isDirectory": false,
+      "bytes": 39,
+      "sha256": "4a7ed5e24a2d937743244e2c1189a961839d78d6b337ce64d090e5ab7b2ad479",
+      "modifiedTime": {
+        "seconds": 1700001713,
+        "nanoseconds": 0
+      }
+    },
+    {
+      "name": "late.bin",
+      "isDirectory": false,
+      "bytes": 1100178,
+      "sha256": "b123c372c509a5f6116d4f3beed40eada00ace4c5a8e4d12fae40dca63cf7c7a",
+      "modifiedTime": {
+        "seconds": 1700001713,
+        "nanoseconds": 0
+      }
+    }
+  ],
+  "records": [
+    {
+      "headerOffset": 0,
+      "dataOffset": 512,
+      "type": "0",
+      "storedBytes": 35,
+      "ranges": [],
+      "extensionOffsets": [],
+      "logicalIndex": 0,
+      "name": "prefix.txt"
+    },
+    {
+      "headerOffset": 1024,
+      "dataOffset": 1536,
+      "type": "5",
+      "storedBytes": 0,
+      "ranges": [],
+      "extensionOffsets": [],
+      "logicalIndex": 1,
+      "name": "资料"
+    },
+    {
+      "headerOffset": 1536,
+      "dataOffset": 2048,
+      "type": "5",
+      "storedBytes": 0,
+      "ranges": [],
+      "extensionOffsets": [],
+      "logicalIndex": 2,
+      "name": "资料/empty"
+    },
+    {
+      "headerOffset": 2048,
+      "dataOffset": 2560,
+      "type": "S",
+      "storedBytes": 8192,
+      "ranges": [
+        [
+          0,
+          4096
+        ],
+        [
+          196608,
+          4096
+        ],
+        [
+          524288,
+          0
+        ]
+      ],
+      "extensionOffsets": [],
+      "logicalIndex": 3,
+      "name": "资料/少段.bin"
+    },
+    {
+      "headerOffset": 10752,
+      "dataOffset": 11264,
+      "type": "L",
+      "storedBytes": 252,
+      "ranges": [],
+      "extensionOffsets": []
+    },
+    {
+      "headerOffset": 11776,
+      "dataOffset": 13312,
+      "type": "S",
+      "storedBytes": 122880,
+      "ranges": [
+        [
+          0,
+          4096
+        ],
+        [
+          131072,
+          4096
+        ],
+        [
+          262144,
+          4096
+        ],
+        [
+          393216,
+          4096
+        ],
+        [
+          524288,
+          4096
+        ],
+        [
+          655360,
+          4096
+        ],
+        [
+          786432,
+          4096
+        ],
+        [
+          917504,
+          4096
+        ],
+        [
+          1048576,
+          4096
+        ],
+        [
+          1179648,
+          4096
+        ],
+        [
+          1310720,
+          4096
+        ],
+        [
+          1441792,
+          4096
+        ],
+        [
+          1572864,
+          4096
+        ],
+        [
+          1703936,
+          4096
+        ],
+        [
+          1835008,
+          4096
+        ],
+        [
+          1966080,
+          4096
+        ],
+        [
+          2097152,
+          4096
+        ],
+        [
+          2228224,
+          4096
+        ],
+        [
+          2359296,
+          4096
+        ],
+        [
+          2490368,
+          4096
+        ],
+        [
+          2621440,
+          4096
+        ],
+        [
+          2752512,
+          4096
+        ],
+        [
+          2883584,
+          4096
+        ],
+        [
+          3014656,
+          4096
+        ],
+        [
+          3145728,
+          4096
+        ],
+        [
+          3276800,
+          4096
+        ],
+        [
+          3407872,
+          4096
+        ],
+        [
+          3538944,
+          4096
+        ],
+        [
+          3670016,
+          4096
+        ],
+        [
+          3801088,
+          4096
+        ],
+        [
+          8388608,
+          0
+        ]
+      ],
+      "extensionOffsets": [
+        12288,
+        12800
+      ],
+      "logicalIndex": 4,
+      "name": "资料/多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段多段.bin"
+    },
+    {
+      "headerOffset": 136192,
+      "dataOffset": 136704,
+      "type": "S",
+      "storedBytes": 0,
+      "ranges": [
+        [
+          1048576,
+          0
+        ]
+      ],
+      "extensionOffsets": [],
+      "logicalIndex": 5,
+      "name": "全零.bin"
+    },
+    {
+      "headerOffset": 136704,
+      "dataOffset": 137216,
+      "type": "S",
+      "storedBytes": 512,
+      "ranges": [
+        [
+          17825792,
+          512
+        ],
+        [
+          67108864,
+          0
+        ]
+      ],
+      "extensionOffsets": [],
+      "logicalIndex": 6,
+      "name": "大空洞.bin"
+    },
+    {
+      "headerOffset": 137728,
+      "dataOffset": 138240,
+      "type": "0",
+      "storedBytes": 39,
+      "ranges": [],
+      "extensionOffsets": [],
+      "logicalIndex": 7,
+      "name": "after.txt"
+    },
+    {
+      "headerOffset": 138752,
+      "dataOffset": 139264,
+      "type": "0",
+      "storedBytes": 1100178,
+      "ranges": [],
+      "extensionOffsets": [],
+      "logicalIndex": 8,
+      "name": "late.bin"
+    }
+  ]
+}

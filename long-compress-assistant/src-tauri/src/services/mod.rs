@@ -321,3 +321,6 @@ pub(crate) mod tar_recovery_time;
 mod tar_time_1711_tests;
 #[cfg(test)]
 mod tar_directory_time_1712_tests;
+pub(crate) mod tar_sparse_recovery;
+#[cfg(test)]
+mod tar_sparse_1713_tests;

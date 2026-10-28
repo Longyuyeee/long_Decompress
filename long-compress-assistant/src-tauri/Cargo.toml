@@ -1,6 +1,6 @@
 [package]
 name = "long-compress-assistant"
-version = "1.7.12"
+version = "1.7.13"
 description = "智能压缩解压助手"
 authors = ["Longyuyeee"]
 license = "MIT"
@@ -103,6 +103,8 @@ windows-sys = { version = "0.59", features = [
     "Win32_Security_Cryptography",
     "Win32_Storage_FileSystem",
     "Win32_System_JobObjects",
+    "Win32_System_IO",
+    "Win32_System_Ioctl",
     "Win32_System_LibraryLoader",
     "Win32_System_Threading",
     "Win32_UI_Input_KeyboardAndMouse",

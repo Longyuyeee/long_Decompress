@@ -1,0 +1,34 @@
+{
+  "passed": true,
+  "nativeValueReplay": true,
+  "realDesktopIPC": false,
+  "checks": [
+    "zero stored bytes, filtering and sparse metadata in original list",
+    "folded result, logical/stored sizes and wide/narrow layout",
+    "selected sparse files plus folder, logical byte history and original partial tag"
+  ],
+  "layouts": [
+    {
+      "mode": "tail",
+      "width": 1100,
+      "height": 700,
+      "overflow": 0,
+      "footerBottom": 640.4375
+    },
+    {
+      "mode": "tail",
+      "width": 760,
+      "height": 520,
+      "overflow": 0,
+      "footerBottom": 471.796875
+    },
+    {
+      "mode": "selected",
+      "width": 760,
+      "height": 520,
+      "overflow": 0,
+      "footerBottom": 471.796875
+    }
+  ],
+  "errors": []
+}
