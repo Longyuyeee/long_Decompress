@@ -63,6 +63,7 @@ async function createDraft() {
   const confirmedEncoding = zipPasswordEncoding.value
   const recordId = props.record.id
   if (!path || !outputPath) { error.value = '请确认来源文件并选择本次输出目录'; return }
+  if (restoredConfig.value?.tarSelection && path !== props.record.sourcePaths[0]) { error.value = '请返回双栏浏览器重新选择来源和文件'; return }
   if(restoredConfig.value?.comparisonSelection){
     const selection={...restoredConfig.value.comparisonSelection,...(confirmedEncoding?{zipPasswordEncoding:confirmedEncoding}:{})}
     if(path!==selection.source.path){error.value='对比来源位置不可在这里替换，请返回资料对比重新读取';return}
@@ -105,7 +106,7 @@ async function createDraft() {
     const id = store.addTask({
       id: generateId(), name: restoredConfig.value?.zpaqRetrieval?props.record.name:file.name, type: 'decompression', workloadKind: 'archive',
       zpaqRetrieval:restoredConfig.value?.zpaqRetrieval,
-      retryOfTaskId: recordId, zpaqSnapshot: restoredConfig.value?.zpaqSnapshot, zpaqCatalogId: restoredConfig.value?.zpaqCatalogId, selectedEntries: restoredConfig.value?.zpaqRetrieval?.paths || restoredConfig.value?.readerSelection?.paths || restoredConfig.value?.selectedEntries,
+      retryOfTaskId: recordId, zpaqSnapshot: restoredConfig.value?.zpaqSnapshot, zpaqCatalogId: restoredConfig.value?.zpaqCatalogId, selectedEntries: restoredConfig.value?.tarSelection?.paths || restoredConfig.value?.zpaqRetrieval?.paths || restoredConfig.value?.readerSelection?.paths || restoredConfig.value?.selectedEntries,
       readerSelection:restoredConfig.value?.readerSelection,
       librarySourceId:restoredConfig.value?.librarySourceId,libraryRevision:restoredConfig.value?.libraryRevision,libraryKeepStructure:restoredConfig.value?.libraryKeepStructure,libraryConflictPolicy:restoredConfig.value?.libraryConflictPolicy,
       executionConfig: restoredConfig.value ? {...restoredConfig.value,outputDirectory:outputPath,extractToSubfolder:confirmedSubfolder}:undefined,
@@ -113,11 +114,11 @@ async function createDraft() {
       extractToSubfolder: confirmedSubfolder, recycleSourceAfterExtract: false,
       password: confirmedPassword || undefined,
       zipPasswordEncoding: zipPasswordEncodingForSource(path, confirmedEncoding, split?.archive_format),
-      format: split?.archive_format || undefined,
+      format: split?.archive_format || (restoredConfig.value?.tarSelection ? 'TAR.LZO' : undefined),
     })
     store.tasks.find(task => task.id === id)!.logs.push({
       task_id: id, severity: 'info', timestamp: new Date().toISOString(),
-      message: `从历史任务 ${recordId} 创建${restoredConfig.value?.zpaqRetrieval?"部分取回所选文件":restoredConfig.value?.readerSelection ? "阅读所选图片" : restoredConfig.value?.librarySourceId ? "资料库所选文件" : restoredConfig.value?.zpaqCatalogId ? "所选变化" : "完整解压"}草稿；输出目录和子目录使用本次确认的设置。`,
+      message: `从历史任务 ${recordId} 创建${restoredConfig.value?.tarSelection?"TAR.LZO 所选文件":restoredConfig.value?.zpaqRetrieval?"部分取回所选文件":restoredConfig.value?.readerSelection ? "阅读所选图片" : restoredConfig.value?.librarySourceId ? "资料库所选文件" : restoredConfig.value?.zpaqCatalogId ? "所选变化" : "完整解压"}草稿；输出目录和子目录使用本次确认的设置。`,
     })
     created.value = true
     password.value = ''
@@ -133,19 +134,20 @@ async function createDraft() {
     <p class="text-xs text-muted my-3">确认下方设置，再添加到队列。新任务不会自动开始。</p>
     <p v-if="restoredConfig" data-testid="history-config-restored" class="text-xs text-primary mb-3">已带入上次的解压设置，可直接使用或修改。</p>
     <p v-else data-testid="history-config-missing" class="text-xs text-muted mb-3">这条历史没有可恢复的设置，请选择输出目录，并确认是否创建同名子目录。</p>
+    <p v-if="restoredConfig?.tarSelection" class="text-xs text-primary mb-3" data-testid="history-tar-selection">保留上次所选 {{ restoredConfig.tarSelection.paths.length }} 项、目录方式和同名策略。</p>
     <p v-if="restoredConfig?.zpaqRetrieval" class="text-xs text-primary mb-3" data-testid="history-zpaq-retrieval">保留快照 {{restoredConfig.zpaqRetrieval.snapshot.version}} 的 {{restoredConfig.zpaqRetrieval.paths.length}} 个所选文件，另存独立结果。来源变化时请返回归档诊断重新选择。</p>
     <p v-if="restoredConfig?.readerSelection" class="text-xs text-primary mb-3" data-testid="history-reader-selection">保留阅读时所选 {{ restoredConfig.readerSelection.paths.length }} 张图片、结构与同名策略；来源变化后请返回浏览中心重新选择，不扩大为整包提取。</p>
     <p v-if="restoredConfig?.comparisonSelection" class="text-xs text-primary mb-3" data-testid="history-comparison-selection">保留资料对比所选 {{ restoredConfig.comparisonSelection.paths.length }} 项、结构与同名策略。来源变化后请<a href="#/compare" class="underline">返回资料对比重新读取</a>。</p>
     <p v-if="restoredConfig?.librarySourceId" class="text-xs text-primary mb-3" data-testid="history-library-selection">保留资料库所选 {{ restoredConfig.selectedEntries?.length }} 个文件、目录方式和同名策略；来源变化时请返回资料库重新选择。<a href="#/library" class="underline">返回资料库</a></p>
     <p v-if="restoredConfig?.zpaqCatalogId" class="text-xs text-primary">保留所选 {{ restoredConfig.selectedEntries?.length }} 项与来源目录标识，不扩大为整包提取。来源变化后请重新比较。</p>
     <p v-if="restoredConfig?.zpaqSnapshot" class="text-xs text-primary mb-3" data-testid="history-zpaq-snapshot">沿用快照 {{ restoredConfig.zpaqSnapshot.version }}，不会改为最新内容；如需其他版本，请从归档浏览重新选择。</p>
-    <p v-if="!restoredConfig?.zpaqRetrieval && !restoredConfig?.readerSelection && !restoredConfig?.comparisonSelection && !restoredConfig?.zpaqCatalogId && !restoredConfig?.librarySourceId" class="text-xs text-muted mb-3">本次解压整个归档并保留源文件，不恢复局部选择。密码可重新填写；留空时按当前密码设置尝试，同名文件按当前冲突设置处理。</p>
+    <p v-if="!restoredConfig?.tarSelection && !restoredConfig?.zpaqRetrieval && !restoredConfig?.readerSelection && !restoredConfig?.comparisonSelection && !restoredConfig?.zpaqCatalogId && !restoredConfig?.librarySourceId" class="text-xs text-muted mb-3">本次解压整个归档并保留源文件，不恢复局部选择。密码可重新填写；留空时按当前密码设置尝试，同名文件按当前冲突设置处理。</p>
     <p v-if="record.sourcePaths.length > 1" class="text-xs text-amber-500 mb-2">原记录包含多个来源，请确认此处为归档或首个分卷；本次只创建一个任务。</p>
     <fieldset :disabled="busy || created" class="space-y-2 min-w-0">
       <label class="block text-sm">来源文件
-        <input v-model="source" :readonly="!!restoredConfig?.comparisonSelection" data-testid="history-draft-source" class="history-control w-full mt-1" />
+        <input v-model="source" :readonly="!!(restoredConfig?.comparisonSelection || restoredConfig?.tarSelection)" data-testid="history-draft-source" class="history-control w-full mt-1" />
       </label>
-      <button v-if="!restoredConfig?.comparisonSelection" class="history-control" @click="selectPath(false)">重新选择文件</button>
+      <button v-if="!restoredConfig?.comparisonSelection && !restoredConfig?.tarSelection" class="history-control" @click="selectPath(false)">重新选择文件</button>
       <label class="block text-sm">本次输出目录
         <input v-model="destination" data-testid="history-draft-output" class="history-control w-full mt-1" placeholder="选择或输入输出目录" />
       </label>

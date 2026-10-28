@@ -10,6 +10,7 @@ import type { PdfOptimizationMode } from '@/types/pdf'
 import { isZipPasswordEncoding, type ZipPasswordEncoding } from './zipPassword'
 
 export interface ExtractionConfigV1 {
+  tarSelection?: { paths: string[]; keepStructure: boolean; conflictPolicy: 'ask' | 'rename' | 'skip' | 'overwrite' }
   readerSelection?: import('@/types/archiveReading').ReaderSelection
   comparisonSelection?: ComparisonSelection
   librarySourceId?: string
@@ -91,6 +92,13 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
         || (config.archivePrefix !== undefined && (typeof config.archivePrefix !== 'string' || config.archivePrefix.length > 32768))) return null
   }
   if(config.kind==='archive-extraction'&&config.readerSelection!==undefined&&!copyReaderSelection(config.readerSelection))return null
+  if (config.kind === 'archive-extraction' && config.tarSelection !== undefined) {
+    const s = config.tarSelection
+    if (!s || !Array.isArray(s.paths) || !s.paths.length || s.paths.length > 2000
+      || JSON.stringify(s.paths).length > 60000 || !s.paths.every(path => typeof path === 'string' && path.length > 0 && path.length <= 32768)
+      || typeof s.keepStructure !== 'boolean' || !['ask','rename','skip','overwrite'].includes(s.conflictPolicy)
+      || config.readerSelection || config.comparisonSelection || config.zpaqRetrieval || config.librarySourceId || config.zpaqCatalogId) return null
+  }
   if(config.kind==='archive-extraction'&&config.comparisonSelection!==undefined&&!copyComparisonSelection(config.comparisonSelection))return null
   if (config.kind === 'archive-extraction' && config.zpaqCatalogId !== undefined
       && (!config.zpaqSnapshot || !/^[a-f0-9]{64}$/.test(config.zpaqCatalogId) || !Array.isArray(config.selectedEntries)
@@ -141,6 +149,7 @@ export function copyExecutionConfig(config?: ExecutionConfigV1 | null): Executio
       rarRecoveryVolumes: config.rarRecoveryVolumes ?? 0,
       splitSize: config.splitSize, encryptFilenames: config.encryptFilenames, passwordRequired: config.passwordRequired }
     case 'archive-extraction': return { schemaVersion: 1, kind: config.kind,
+      ...(config.tarSelection ? {tarSelection:{paths:[...config.tarSelection.paths],keepStructure:config.tarSelection.keepStructure,conflictPolicy:config.tarSelection.conflictPolicy}} : {}),
       ...(config.zpaqRetrieval?{zpaqRetrieval:copyZpaqRetrieval(config.zpaqRetrieval)!}:{}),
       ...(config.readerSelection?{readerSelection:copyReaderSelection(config.readerSelection)!}:{}),
       ...(config.comparisonSelection?{comparisonSelection:copyComparisonSelection(config.comparisonSelection)!}:{}),

@@ -149,6 +149,7 @@ static DEFAULT_PASSWORD_VAULT: OnceCell<Arc<EncryptedPasswordService>> = OnceCel
 static PENDING_EXTRACTIONS: Lazy<DashMap<String, PendingExtraction>> = Lazy::new(DashMap::new);
 
 struct PendingExtraction {
+    directory_times: crate::services::lzop::selected::DirectoryTimes,
     source_times: HashMap<PathBuf, u64>,
     staging: ExtractionStaging,
     source_archive: PathBuf,
@@ -390,7 +391,11 @@ impl CompressionService {
         options: &DecompressOptions,
         expected_expanded_bytes: Option<u64>,
         published_bytes: u64,
+        directory_times: &crate::services::lzop::selected::DirectoryTimes,
     ) -> Result<String> {
+        for warning in crate::services::lzop::selected::apply_directory_times(final_output,directory_times) {
+            self.emit_log(window,task_id,&warning,TaskLogSeverity::Warning);
+        }
         if options.delete_after {
             let source_path = source_archive.to_path_buf();
             let recycle_result = tokio::task::spawn_blocking(move || {
@@ -529,7 +534,7 @@ impl CompressionService {
         self.finish_committed_extraction(
             window, task_id, &pending.source_archive, &pending.final_output,
             &pending.options, pending.expected_expanded_bytes,
-            published_bytes,
+            published_bytes, &pending.directory_times,
         ).await
     }
 
@@ -2494,7 +2499,14 @@ impl CompressionService {
             password_verified = true;
         }
 
-        let tar_plan = service.preflight_tar_extraction(path, &format, &final_out_dir, &options).await?;
+        let selected_tar_plan = if crate::services::tar_compatibility::is_tar_lzo(path,&format) && !options.selected_entries.is_empty() {
+            let selected_path=path.to_path_buf();let selected_options=options.clone();let selected_cancelled=service.cancellation_flag.clone();
+            tokio::task::spawn_blocking(move || crate::services::lzop::selected::Plan::build(&selected_path,&selected_options,&selected_cancelled)).await??.map(Arc::new)
+        } else {None};
+        let tar_plan = if let Some(plan)=&selected_tar_plan {
+            extraction_transaction::validate_disk_capacity(final_out_dir.parent().unwrap_or(&final_out_dir),plan.stats.logical_bytes)?;
+            Some(plan.stats.clone())
+        }else{service.preflight_tar_extraction(path, &format, &final_out_dir, &options).await?};
         let preflight_stats = if let Some(plan) = &tar_plan {
             Some((plan.entries, plan.logical_bytes))
         } else {
@@ -2730,10 +2742,15 @@ impl CompressionService {
                 let opts = options.clone();
                 let t_id = task_id.clone();
                 let w = window.clone();
+                let selected_tar_plan=selected_tar_plan.clone();
                 let codec = match codec_format { ArchiveFormat::Lz4 => "lz4", ArchiveFormat::Lzip => "lz", ArchiveFormat::Lzma => "lzma", ArchiveFormat::Lzop => "lzo", _ => "br" };
                 tokio::task::spawn_blocking(move || {
                     if codec=="lzo" && !compression_format::is_tar_wrapped_archive(Path::new(&f_path), "tar.lzo")
                         && crate::services::lzop::extract_members(&srv,Some(&w),&t_id,Path::new(&f_path),&o_dir,&opts)? {return Ok(());}
+                    if let Some(plan)=selected_tar_plan {
+                        return plan.extract(&srv,Some(&w),&t_id,Path::new(&f_path),&o_dir,&opts,&srv.cancellation_flag)
+                            .map_err(crate::services::tar_compatibility::inspection_error);
+                    }
                     let decoder = crate::services::codec_stream::decoder(Path::new(&f_path), codec)?;
                     if compression_format::is_tar_wrapped_archive(Path::new(&f_path), &format!("tar.{codec}")) {
                         let result=srv.do_extract_tar(&w, &t_id, &f_path, &o_dir, Some(decoder), &opts);
@@ -2905,7 +2922,8 @@ impl CompressionService {
         if let Some(password) = final_password.as_deref() {
             service.mark_matching_vault_password_used(password).await;
         }
-        if let Err(error) = extraction_transaction::prepare_staging_layout_with_tar_plan(path, &out_dir, &options, tar_plan.as_ref()) {
+        let prepare_result=if let Some(plan)=&selected_tar_plan {plan.prepare_stage(path,&out_dir,&options)}else{extraction_transaction::prepare_staging_layout_with_tar_plan(path, &out_dir, &options, tar_plan.as_ref())};
+        if let Err(error) = prepare_result {
             let _ = staging.cleanup();
             return Err(error);
         }
@@ -2949,6 +2967,7 @@ impl CompressionService {
         }
         service.check_cancellation()?;
         let mut observed_conflicts = HashMap::new();
+        let directory_times=selected_tar_plan.as_ref().map_or_else(Vec::new,|plan|plan.directory_times(&options));
         let source_times = if effective_format == ArchiveFormat::SevenZip && options.conflict_policy == "ask" {
             Self::seven_zip_source_times(path, final_password.as_deref(), &final_out_dir, options.preserve_paths).unwrap_or_default()
         } else { HashMap::new() };
@@ -2973,6 +2992,7 @@ impl CompressionService {
                 PENDING_EXTRACTIONS.insert(
                     task_id.clone(),
                     PendingExtraction {
+                        directory_times,
                         source_times,
                         staging,
                         source_archive: path.to_path_buf(),
@@ -3000,6 +3020,7 @@ impl CompressionService {
         }
         service.finish_committed_extraction(
             &window, &task_id, path, &final_out_dir, &options, expected_expanded_bytes, published_bytes,
+            &directory_times,
         ).await
     }
 
@@ -4127,7 +4148,7 @@ mod tests {
         let staging_path = staging.path().to_path_buf();
         std::fs::write(staging_path.join("payload.txt"), b"payload").expect("payload");
         let task_id = format!("pending-{}", uuid::Uuid::new_v4());
-        PENDING_EXTRACTIONS.insert(task_id.clone(), PendingExtraction {
+        PENDING_EXTRACTIONS.insert(task_id.clone(), PendingExtraction { directory_times:Vec::new(),
             source_times: HashMap::new(),
             staging,
             source_archive: temp.path().join("archive.zip"),
@@ -4848,7 +4869,7 @@ mod tests {
             let stage = staging.path().to_path_buf();
             std::fs::write(stage.join("not-published.bin"), b"decoded new output").unwrap();
             let id = uuid::Uuid::new_v4().to_string();
-            let pending = PendingExtraction { source_times: HashMap::new(), staging, source_archive: temp.path().join("source.zip"),
+            let pending = PendingExtraction { directory_times:Vec::new(), source_times: HashMap::new(), staging, source_archive: temp.path().join("source.zip"),
                 final_output: output.clone(), options: DecompressOptions::default(), expected_expanded_bytes: None, observed_conflicts: HashMap::new() };
             let error = anyhow::Error::new(std::io::Error::new(kind, "actual commit route"));
             assert!(CompressionService::retain_pending_after_commit_error(&id, pending, &error).is_none());
@@ -4866,7 +4887,7 @@ mod tests {
         let path = staging.path().to_path_buf();
         std::fs::write(path.join("backup"), b"original data").unwrap();
         let id = uuid::Uuid::new_v4().to_string();
-        let pending = PendingExtraction { source_times: HashMap::new(), staging, source_archive: temp.path().join("source.zip"), final_output: output,
+        let pending = PendingExtraction { directory_times:Vec::new(), source_times: HashMap::new(), staging, source_archive: temp.path().join("source.zip"), final_output: output,
             options: DecompressOptions::default(), expected_expanded_bytes: None, observed_conflicts: HashMap::new() };
         let error = CompressionError::RollbackIncomplete(format!("恢复目录：{}", path.display())).into();
         let _ = CompressionService::retain_pending_after_commit_error(&id, pending, &error);
@@ -4875,7 +4896,7 @@ mod tests {
         assert_eq!(std::fs::read(path.join("backup")).unwrap(), b"original data");
         let ordinary_staging = ExtractionStaging::create_for(&temp.path().join("other-output")).unwrap();
         let ordinary_path = ordinary_staging.path().to_path_buf();
-        let pending = PendingExtraction { source_times: HashMap::new(), staging: ordinary_staging, source_archive: temp.path().join("source.zip"),
+        let pending = PendingExtraction { directory_times:Vec::new(), source_times: HashMap::new(), staging: ordinary_staging, source_archive: temp.path().join("source.zip"),
             final_output: temp.path().join("other-output"), options: DecompressOptions::default(), expected_expanded_bytes: None, observed_conflicts: HashMap::new() };
         let _ = CompressionService::retain_pending_after_commit_error(&id, pending, &anyhow::anyhow!("ordinary commit failure"));
         assert!(PENDING_EXTRACTIONS.contains_key(&id));

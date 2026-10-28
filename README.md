@@ -213,10 +213,10 @@
 
 | 版本 | 主要更新 | 详情 |
 | --- | --- | --- |
+| **v1.7.20** | 完整 TAR.LZO 所选硬链接内容提取，独立文件、稀疏与时间保留，历史及草稿保持选取范围 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.20.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.20) |
 | **v1.7.19** | 完整 TAR.LZO 硬链接目录与图文预览，显示逻辑大小，来源收进原详情，保持等宽双栏 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.19.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.19) |
 | **v1.7.18** | TAR.LZO GNU 长链接目标内容取回，兼容自身长名称与稀疏目标，保留独立文件和原结果入口 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.18.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.18) |
 | **v1.7.17** | TAR.LZO 已确认硬链接内容取回，目标无需一并选中，独立文件、稀疏写入与原历史衔接 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.17.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.17) |
 | **v1.7.16** | TAR.LZO PAX 0.0 稀疏文件部分取回，按顺序保留重复属性的数据段，衔接原结果与历史 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.16.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.16) |
-| **v1.7.15** | TAR.LZO PAX 0.1 稀疏文件部分取回，核对元数据映射和段数，保留空洞与修改时间 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.15.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.15) |
 
 [查看全部历史版本 →](https://github.com/Longyuyeee/long_Decompress/releases)

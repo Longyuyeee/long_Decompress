@@ -146,7 +146,10 @@ impl Layout {
     }
     /// Hash the reconstructed logical bytes. At output, seek over holes instead
     /// of writing zero buffers; source bytes remain a sequential stored stream.
-    pub(crate) fn process(&self,input:&mut impl Read,mut output:Option<&mut File>,cancelled:&AtomicBool,mut progress:impl FnMut(u64))->Result<String>{
+    pub(crate) fn process(&self,input:&mut impl Read,output:Option<&mut File>,cancelled:&AtomicBool,mut progress:impl FnMut(u64))->Result<String>{
+        self.process_checked(input,output,cancelled,|bytes|{progress(bytes);Ok(())})
+    }
+    pub(crate) fn process_checked(&self,input:&mut impl Read,mut output:Option<&mut File>,cancelled:&AtomicBool,mut progress:impl FnMut(u64)->Result<()>)->Result<String>{
         if let Some(file)=output.as_deref_mut(){
             if self.logical>self.stored {mark_sparse(file)?;}
             file.set_len(self.logical)?;
@@ -156,7 +159,7 @@ impl Layout {
         for &(offset,length) in self.ranges.iter().chain(std::iter::once(&tail)) {
             while position<offset{
                 check(cancelled)?;let n=(offset-position).min(zeros.len()as u64)as usize;hash.update(&zeros[..n]);position+=n as u64;
-                if position-reported>=16*1024*1024{progress(position);reported=position;}
+                if position-reported>=16*1024*1024{progress(position)?;reported=position;}
             }
             if let Some(file)=output.as_deref_mut(){file.seek(SeekFrom::Start(offset))?;}
             let mut remaining=length;
@@ -164,10 +167,10 @@ impl Layout {
                 check(cancelled)?;let n=remaining.min(buffer.len()as u64)as usize;input.read_exact(&mut buffer[..n]).context("TAR 稀疏文件数据未完整到达")?;
                 if let Some(file)=output.as_deref_mut(){file.write_all(&buffer[..n])?;}
                 hash.update(&buffer[..n]);remaining-=n as u64;position+=n as u64;
-                if position-reported>=16*1024*1024{progress(position);reported=position;}
+                if position-reported>=16*1024*1024{progress(position)?;reported=position;}
             }
         }
-        check(cancelled)?;progress(self.logical);Ok(format!("{:x}",hash.finalize()))
+        check(cancelled)?;progress(self.logical)?;Ok(format!("{:x}",hash.finalize()))
     }
 }
 #[cfg(windows)]

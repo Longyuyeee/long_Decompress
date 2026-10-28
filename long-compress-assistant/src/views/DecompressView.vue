@@ -500,7 +500,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
       zpaqRetrieval:task.zpaqRetrieval,
       readerSelection:task.readerSelection,
       comparisonSelection:task.comparisonSelection?{...task.comparisonSelection,zipPasswordEncoding:task.zipPasswordEncoding??task.comparisonSelection.zipPasswordEncoding}:undefined,
-      keepStructure: task.readerSelection?.keepStructure ?? task.libraryKeepStructure ?? true,
+      keepStructure: task.readerSelection?.keepStructure ?? task.libraryKeepStructure ?? (task.executionConfig?.kind === 'archive-extraction' ? task.executionConfig.tarSelection?.keepStructure : undefined) ?? true,
       overwrite: false,
       deleteAfter: task.zpaqRetrieval?false:task.recycleSourceAfterExtract ?? false,
       createSubdirectory: task.zpaqRetrieval?false:task.extractToSubfolder ?? false,
@@ -509,7 +509,7 @@ const startDecompression = async (onlyTaskIds?: string[]) => {
       zpaqSnapshot: task.zpaqSnapshot, zpaqCatalogId: task.zpaqCatalogId, selectedEntries: task.selectedEntries,
       librarySourceId:task.librarySourceId,libraryRevision:task.libraryRevision,libraryKeepStructure:task.libraryKeepStructure,libraryConflictPolicy:task.libraryConflictPolicy,
       fileFilter: task.zpaqRetrieval?null:task.fileFilter || null
-      ,conflictPolicy: task.readerSelection?.conflictPolicy || task.libraryConflictPolicy || appStore.settings.conflictPolicy
+      ,conflictPolicy: task.readerSelection?.conflictPolicy || task.libraryConflictPolicy || (task.executionConfig?.kind === 'archive-extraction' ? task.executionConfig.tarSelection?.conflictPolicy : undefined) || appStore.settings.conflictPolicy
     }
 
     try {

@@ -23,6 +23,19 @@ const setup = async () => {
   return { wrapper, store: useTaskStore() }
 }
 describe('history extraction draft', () => {
+  it('selected1720 restores a scoped TAR.LZO draft without expanding to the whole archive', async () => {
+    const pinia=createPinia();setActivePinia(pinia)
+    const tarSelection={paths:['阅读副本.txt'],keepStructure:false,conflictPolicy:'skip' as const}
+    const saved:TaskHistoryRecord={...record,sourcePaths:['C:/source.tar.lzo'],executionConfig:{schemaVersion:1,kind:'archive-extraction',outputDirectory:'D:/out',extractToSubfolder:false,tarSelection}}
+    mocks.invoke.mockImplementation(async(cmd,args)=>cmd==='detect_split_archive'?{is_split:false,archive_format:'TAR.LZO'}:cmd==='get_file_info'?{name:'source.tar.lzo',is_dir:args.path==='D:/out',size:100}:null)
+    const view=mount(HistoryExtractionDraft,{props:{record:saved},global:{plugins:[pinia],stubs:{ExtractionOutputPreview:true}}})
+    expect(view.get('[data-testid="history-tar-selection"]').text()).toContain('1 项')
+    expect(view.get('[data-testid="history-draft-source"]').attributes('readonly')).toBeDefined()
+    expect(view.text()).not.toContain('本次解压整个归档')
+    await view.get('[data-testid="history-draft-create"]').trigger('click');await flushPromises()
+    expect(useTaskStore().tasks[0]).toMatchObject({status:'pending',selectedEntries:tarSelection.paths,executionConfig:{tarSelection},format:'TAR.LZO'})
+    expect(mocks.invoke.mock.calls.some(([cmd])=>cmd==='extract_file')).toBe(false);view.unmount()
+  })
   it('zpaq164 history retains the selected files and diagnosis identity without whole-archive fallback',async()=>{
     const selection={snapshot:{version:3,date:20261020150000},revision:'a'.repeat(64),paths:['docs/good.txt']}
     const pinia=createPinia();setActivePinia(pinia)

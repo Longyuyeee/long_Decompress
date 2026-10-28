@@ -1,4 +1,5 @@
 import {copyZpaqRetrieval} from '@/types/zpaqRetrieval'
+import {copyExecutionConfig, type ExtractionConfigV1} from '@/types/executionConfig'
 import {copyReaderSelection} from '@/types/archiveReading'
 import { snapshotKey } from '@/types/zpaqSnapshot'
 import { defineStore } from 'pinia'
@@ -14,6 +15,7 @@ import type { ZipPasswordEncoding } from '@/types/zipPassword'
 
 export const PENDING_DRAFTS_KEY = 'long-pending-archive-drafts-v1'
 interface ExtractionDraft {
+  tarSelection?: ExtractionConfigV1['tarSelection']
   format?:string
   readerSelection?: import('@/types/archiveReading').ReaderSelection
   comparisonSelection?: import('@/types/sourceComparison').ComparisonSelection
@@ -54,6 +56,7 @@ function parseSnapshot(raw: string | null): DraftSnapshot | null {
       || !value.conversion.items.every(item => typeof item.sourcePath === 'string')) return null
     if(value.extraction.items.some(item=>item.zpaqRetrieval&&!copyZpaqRetrieval(item.zpaqRetrieval)))return null
     if(value.extraction.items.some(item=>item.readerSelection&&!copyReaderSelection(item.readerSelection)))return null
+    if(value.extraction.items.some(item=>item.tarSelection!==undefined&&!copyExecutionConfig({schemaVersion:1,kind:'archive-extraction',outputDirectory:item.outputPath,extractToSubfolder:item.extractToSubfolder??false,tarSelection:item.tarSelection})))return null
     return value
   } catch { return null }
 }
@@ -86,6 +89,7 @@ export const usePendingDraftStore = defineStore('pendingDrafts', () => {
         extractToSubfolder: extraction.extractToSubfolder, recycleSource: extraction.recycleSource },
         items: tasks.tasks.filter(task => task.type === 'decompression' && (!task.workloadKind || task.workloadKind === 'archive') && task.status === 'pending')
           .map(task => ({ id: task.id, name: task.name, sourceFiles: [...task.sourceFiles], outputPath: task.outputPath,
+            tarSelection:task.executionConfig?.kind==='archive-extraction' && task.executionConfig.tarSelection ? {paths:[...task.executionConfig.tarSelection.paths],keepStructure:task.executionConfig.tarSelection.keepStructure,conflictPolicy:task.executionConfig.tarSelection.conflictPolicy}:undefined,
             extractToSubfolder: task.extractToSubfolder, recycleSourceAfterExtract: task.recycleSourceAfterExtract,
             configurationMode: task.configurationMode, fileFilter: task.fileFilter, selectedEntries: task.selectedEntries,format:task.format,comparisonSelection:task.comparisonSelection,readerSelection:task.readerSelection,
             librarySourceId:task.librarySourceId,libraryRevision:task.libraryRevision,libraryKeepStructure:task.libraryKeepStructure,libraryConflictPolicy:task.libraryConflictPolicy,
@@ -189,6 +193,7 @@ export const usePendingDraftStore = defineStore('pendingDrafts', () => {
         const sourceKey = item.sourceFiles.map(key).join('|') + ':' + snapshotKey(item.zpaqSnapshot) + ':' + (item.zpaqCatalogId || '') + ':' + JSON.stringify([...(item.selectedEntries || [])].sort())+':'+JSON.stringify(item.comparisonSelection||null)+':'+JSON.stringify(item.readerSelection||null)+':'+JSON.stringify(item.zpaqRetrieval||null)
         if (extractSources.has(sourceKey)) continue
         tasks.addTask({ ...item, id: 'recovered-' + crypto.randomUUID(), type: 'decompression',
+          ...(item.tarSelection?{selectedEntries:[...item.tarSelection.paths],executionConfig:copyExecutionConfig({schemaVersion:1,kind:'archive-extraction',outputDirectory:item.outputPath,extractToSubfolder:item.extractToSubfolder??false,tarSelection:item.tarSelection})!}:{}),
           configurationMode: hadExtraction ? 'individual' : item.configurationMode,
           sourceIssue: item.sourceFiles.some(path => missing.has(path)) ? '来源不存在或无法访问，请重新选择。' : undefined })
         extractSources.add(sourceKey); restored++

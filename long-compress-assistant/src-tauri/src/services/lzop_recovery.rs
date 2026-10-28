@@ -19,6 +19,8 @@ use std::{
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Entry {
+    #[serde(skip)]
+    pub(crate) archive_name: Option<String>,
     pub id: usize,
     pub name: String,
     pub bytes: u64,
@@ -93,6 +95,7 @@ impl HistorySelection {
         Ok(())
     }
 }
+#[derive(Clone)]
 pub(super) struct Source {
     pub(super) paths: Vec<PathBuf>,
     pub(super) length: u64,
@@ -144,7 +147,7 @@ pub(crate) fn is_tar(path: &Path) -> bool {
             n.len() >= 3 && n.bytes().all(|b| b.is_ascii_digit()) && base.ends_with(".tar.lzo")
         })
 }
-fn source(path: &Path) -> Result<Source> {
+pub(super) fn source(path: &Path) -> Result<Source> {
     anyhow::ensure!(is_candidate(path), "本入口只支持 LZOP / TAR.LZO 部分取回");
     let mut ignored = 0;
     let mut boundary = None;
@@ -213,7 +216,7 @@ pub(crate) fn check(flag: &AtomicBool) -> Result<()> {
     anyhow::ensure!(!flag.load(Ordering::SeqCst), "LZOP recovery cancelled");
     Ok(())
 }
-fn scan_source(
+pub(super) fn scan_source(
     src: &Source,
     encoding: Option<ZipPasswordEncoding>,
     cancelled: &AtomicBool,
@@ -299,7 +302,7 @@ fn scan_source(
             "LZOP 成员超过 100000 个，请使用原始工具处理"
         );
         total += bytes;
-        report.entries.push(Entry {
+        report.entries.push(Entry { archive_name:None,
             id: report.entries.len(),
             name,
             bytes,

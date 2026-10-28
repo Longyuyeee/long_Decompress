@@ -28,6 +28,14 @@ const decompressionOptions = {
 } as const
 
 describe('useTauriCommands', () => {
+  it('selected1720 retains exact TAR.LZO selection and publication options for history retry', async () => {
+    mocks.invoke.mockImplementation(async cmd => cmd === 'extract_file' ? 'D:/out' : undefined)
+    await useTauriCommands().decompressFile('C:/source.tar.lzo.001', {...decompressionOptions,keepStructure:false,conflictPolicy:'skip',selectedEntries:['alias.txt'],password:'private1720'})
+    const task = useTaskStore().tasks[0]
+    expect(task.executionConfig).toMatchObject({tarSelection:{paths:['alias.txt'],keepStructure:false,conflictPolicy:'skip'}})
+    expect(JSON.stringify(task.executionConfig)).not.toContain('private1720')
+    expect(mocks.invoke).toHaveBeenCalledWith('extract_file',expect.objectContaining({options:expect.objectContaining({selected_entries:['alias.txt'],preserve_paths:false,conflict_policy:'skip'})}))
+  })
   it('zpaq164 sends subset intent through extraction and retains it in the final execution record',async()=>{
     const selection={snapshot:{version:3,date:20261020150000},revision:'a'.repeat(64),paths:['docs/good.txt']}
     mocks.invoke.mockImplementation(async cmd=>cmd==='extract_file'?'D:/out/ZPAQ-partial':undefined)

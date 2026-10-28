@@ -5,6 +5,14 @@ import { createDefaultVideoSettings } from '@/utils/videoCompressionWorkspace'
 import { ZIP_PASSWORD_ENCODINGS, isZipPasswordEncoding } from '../zipPassword'
 
 describe('actual execution snapshots', () => {
+  it('selected1720 copies the bounded TAR selection without mutating history or accepting empty scope', () => {
+    const config = {schemaVersion:1 as const,kind:'archive-extraction' as const,outputDirectory:'D:/out',extractToSubfolder:false,tarSelection:{paths:['alias.txt'],keepStructure:false,conflictPolicy:'skip' as const}}
+    const copy = copyExecutionConfig(config)
+    expect(copy).toEqual(config)
+    config.tarSelection.paths.push('later.txt')
+    expect(copy).toMatchObject({tarSelection:{paths:['alias.txt']}})
+    expect(copyExecutionConfig({...config,tarSelection:{...config.tarSelection,paths:[]}})).toBeNull()
+  })
   it.each(ZIP_PASSWORD_ENCODINGS)('keeps %s input separately from output encoding and without secrets', encoding => {
     const input: ExecutionConfigV1 = { schemaVersion: 1, kind: 'archive-extraction',
       outputDirectory: 'D:/out', extractToSubfolder: true, zipPasswordEncoding: encoding }
