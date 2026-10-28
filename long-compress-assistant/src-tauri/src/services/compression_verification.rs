@@ -159,11 +159,19 @@ fn drain_reader(mut reader: impl Read, is_cancelled: &impl Fn() -> bool) -> Resu
 }
 
 pub(crate) fn verify_tar_reader(reader: impl Read, is_cancelled: &impl Fn() -> bool) -> Result<()> {
+    verify_tar_reader_policy(reader,is_cancelled,false)
+}
+pub(crate) fn verify_tar_lzo_reader(reader: impl Read, is_cancelled: &impl Fn() -> bool) -> Result<()> {
+    verify_tar_reader_policy(reader,is_cancelled,true)
+}
+fn verify_tar_reader_policy(reader: impl Read, is_cancelled: &impl Fn() -> bool, require_confirmed_contents:bool) -> Result<()> {
     let result=(|| -> Result<()> {
     let mut archive = tar::Archive::new(super::tar_pax::Reader::new(reader));
     for entry in archive.entries()? {
         check_cancelled(is_cancelled)?;
-        drain_reader(super::tar_compatibility::LogicalEntry::new(entry?)?, is_cancelled)?;
+        let entry=super::tar_compatibility::LogicalEntry::new(entry?)?;
+        if require_confirmed_contents {entry.require_file_or_dir()?;}
+        drain_reader(entry, is_cancelled)?;
     }
     super::tar_compatibility::finish_stream(archive.into_inner(), || check_cancelled(is_cancelled))?;
     Ok(())
@@ -249,7 +257,8 @@ pub(crate) fn verify_native_with_zip_encoding(
     check_cancelled(&is_cancelled)?;
     match route {
         CompressionRoute::TarLzop => {
-            verify_tar_reader(super::codec_stream::decoder(path, "lzo")?, &is_cancelled)?;
+            if super::lzop::selected::verify_complete(path,encoding,&is_cancelled)? {return Ok(true);}
+            verify_tar_lzo_reader(super::codec_stream::decoder(path, "lzo")?, &is_cancelled)?;
             Ok(true)
         }
         CompressionRoute::TarLzma => {

@@ -131,6 +131,7 @@ fn parse<F: FnMut(u64, u64)>(
             .sum::<u32>();
         anyhow::ensure!(header.cksum()? == sum, "TAR 文件头校验失败");
         let kind = header.entry_type();
+        report.hard_links_seen |= kind.is_hard_link();
         anyhow::ensure!(kind.is_pax_global_extensions() || kind.is_pax_local_extensions() || kind.is_gnu_longname() || kind.is_gnu_longlink() || kind.is_file() || kind.is_dir() || kind.is_gnu_sparse() || kind.is_hard_link(), "[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持此 TAR 条目类型（{}），已停止在此处", kind.as_byte());
         let size = header.entry_size()?;
         anyhow::ensure!(size <= MAX_EXTRACTED_BYTES, "TAR 条目大小超过本次支持范围");
@@ -285,6 +286,7 @@ pub(super) fn scan_source(
     progress: &mut impl FnMut(u64, u64),
 ) -> Result<Report> {
     let mut report = Report {
+        hard_links_seen: false,
         format: "TAR.LZO",
         revision: String::new(),
         entries: Vec::new(),

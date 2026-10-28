@@ -2499,11 +2499,17 @@ impl CompressionService {
             password_verified = true;
         }
 
-        let selected_tar_plan = if crate::services::tar_compatibility::is_tar_lzo(path,&format) && !options.selected_entries.is_empty() {
-            let selected_path=path.to_path_buf();let selected_options=options.clone();let selected_cancelled=service.cancellation_flag.clone();
-            tokio::task::spawn_blocking(move || crate::services::lzop::selected::Plan::build(&selected_path,&selected_options,&selected_cancelled)).await??.map(Arc::new)
+        let confirmed_tar_plan = if crate::services::tar_compatibility::is_tar_lzo(path,&format) {
+            let tar_path=path.to_path_buf();let tar_options=options.clone();let tar_cancelled=service.cancellation_flag.clone();
+            tokio::task::spawn_blocking(move || {
+                if tar_options.selected_entries.is_empty() {
+                    crate::services::lzop::selected::Plan::for_extraction(&tar_path,&tar_options,&tar_cancelled)
+                } else {
+                    crate::services::lzop::selected::Plan::build(&tar_path,&tar_options,&tar_cancelled)
+                }
+            }).await??.map(Arc::new)
         } else {None};
-        let tar_plan = if let Some(plan)=&selected_tar_plan {
+        let tar_plan = if let Some(plan)=&confirmed_tar_plan {
             extraction_transaction::validate_disk_capacity(final_out_dir.parent().unwrap_or(&final_out_dir),plan.stats.logical_bytes)?;
             Some(plan.stats.clone())
         }else{service.preflight_tar_extraction(path, &format, &final_out_dir, &options).await?};
@@ -2742,12 +2748,12 @@ impl CompressionService {
                 let opts = options.clone();
                 let t_id = task_id.clone();
                 let w = window.clone();
-                let selected_tar_plan=selected_tar_plan.clone();
+                let confirmed_tar_plan=confirmed_tar_plan.clone();
                 let codec = match codec_format { ArchiveFormat::Lz4 => "lz4", ArchiveFormat::Lzip => "lz", ArchiveFormat::Lzma => "lzma", ArchiveFormat::Lzop => "lzo", _ => "br" };
                 tokio::task::spawn_blocking(move || {
                     if codec=="lzo" && !compression_format::is_tar_wrapped_archive(Path::new(&f_path), "tar.lzo")
                         && crate::services::lzop::extract_members(&srv,Some(&w),&t_id,Path::new(&f_path),&o_dir,&opts)? {return Ok(());}
-                    if let Some(plan)=selected_tar_plan {
+                    if let Some(plan)=confirmed_tar_plan {
                         return plan.extract(&srv,Some(&w),&t_id,Path::new(&f_path),&o_dir,&opts,&srv.cancellation_flag)
                             .map_err(crate::services::tar_compatibility::inspection_error);
                     }
@@ -2922,7 +2928,7 @@ impl CompressionService {
         if let Some(password) = final_password.as_deref() {
             service.mark_matching_vault_password_used(password).await;
         }
-        let prepare_result=if let Some(plan)=&selected_tar_plan {plan.prepare_stage(path,&out_dir,&options)}else{extraction_transaction::prepare_staging_layout_with_tar_plan(path, &out_dir, &options, tar_plan.as_ref())};
+        let prepare_result=if let Some(plan)=&confirmed_tar_plan {plan.prepare_stage(path,&out_dir,&options)}else{extraction_transaction::prepare_staging_layout_with_tar_plan(path, &out_dir, &options, tar_plan.as_ref())};
         if let Err(error) = prepare_result {
             let _ = staging.cleanup();
             return Err(error);
@@ -2967,7 +2973,7 @@ impl CompressionService {
         }
         service.check_cancellation()?;
         let mut observed_conflicts = HashMap::new();
-        let directory_times=selected_tar_plan.as_ref().map_or_else(Vec::new,|plan|plan.directory_times(&options));
+        let directory_times=confirmed_tar_plan.as_ref().map_or_else(Vec::new,|plan|plan.directory_times(&options));
         let source_times = if effective_format == ArchiveFormat::SevenZip && options.conflict_policy == "ask" {
             Self::seven_zip_source_times(path, final_password.as_deref(), &final_out_dir, options.preserve_paths).unwrap_or_default()
         } else { HashMap::new() };

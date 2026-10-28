@@ -28,6 +28,14 @@ const decompressionOptions = {
 } as const
 
 describe('useTauriCommands', () => {
+  it.each(['C:/complete.tar.lzo','C:/complete.tar.lzo.001'])('full1721 keeps whole-archive extraction and history distinct from a subset: %s', async path => {
+    mocks.invoke.mockImplementation(async cmd => cmd === 'extract_file' ? 'D:/whole' : undefined)
+    await useTauriCommands().decompressFile(path,{...decompressionOptions,outputPath:'D:/whole',sourceFormat:'TAR.LZO'})
+    expect(mocks.invoke).toHaveBeenCalledWith('extract_file',expect.objectContaining({filePath:path,options:expect.objectContaining({selected_entries:[],preserve_paths:true})}))
+    const task=useTaskStore().tasks[0]
+    expect(task).toMatchObject({status:'completed',format:'TAR.LZO',outputPath:'D:/whole'})
+    expect(task.executionConfig).not.toHaveProperty('tarSelection')
+  })
   it('selected1720 retains exact TAR.LZO selection and publication options for history retry', async () => {
     mocks.invoke.mockImplementation(async cmd => cmd === 'extract_file' ? 'D:/out' : undefined)
     await useTauriCommands().decompressFile('C:/source.tar.lzo.001', {...decompressionOptions,keepStructure:false,conflictPolicy:'skip',selectedEntries:['alias.txt'],password:'private1720'})

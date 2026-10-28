@@ -1,8 +1,8 @@
-//! Complete TAR.LZO selected contents, using the confirmed-prefix copier.
+//! Complete TAR.LZO contents, using one confirmed plan for selection or full extraction.
 use super::recovery::{self,Entry,Source};
 use crate::{models::compression::{DecompressOptions,TaskLogSeverity},services::{extraction_transaction as tx,native_extraction::ExtractionRuntime,tar_recovery_time::ModificationTime}};
 use anyhow::{Context,Result};
-use std::{collections::HashSet,path::Path,sync::{Arc,atomic::AtomicBool}};
+use std::{collections::HashSet,path::Path,sync::{Arc,atomic::{AtomicBool,Ordering}}};
 use tauri::Window;
 
 pub(crate) type DirectoryTimes=Vec<(String,ModificationTime)>;
@@ -13,19 +13,22 @@ pub(crate) struct Plan {
 }
 impl Plan {
     pub(crate) fn build(path:&Path,options:&DecompressOptions,cancelled:&Arc<AtomicBool>)->Result<Option<Self>> {
-        if options.selected_entries.is_empty()||!recovery::is_tar(path){return Ok(None);}
+        if options.selected_entries.is_empty(){return Ok(None);}
+        Self::for_extraction(path,options,cancelled)
+    }
+    pub(crate) fn for_extraction(path:&Path,options:&DecompressOptions,cancelled:&Arc<AtomicBool>)->Result<Option<Self>> {
+        if !recovery::is_tar(path){return Ok(None);}
         crate::services::task_control::wait_if_paused(cancelled);recovery::check(cancelled)?;
-        let source=recovery::source(path)?;let revision=crate::services::image_reader::revision(path)?;
-        let report=recovery::scan_source(&source,options.zip_password_encoding,cancelled,&mut|_,_|crate::services::task_control::wait_if_paused(cancelled))?;
+        let (source,revision,report)=confirmed_report(path,options.zip_password_encoding,cancelled,&mut|_,_|crate::services::task_control::wait_if_paused(cancelled))?;
         let selected=|entry:&Entry|tx::matches_selected_entries(Path::new(entry.archive_name.as_deref().unwrap_or(&entry.name)),&options.selected_entries);
         if !report.complete {
             // Keep ordinary selected extraction's previous routing. A selected
             // link never falls back to zero bytes or unchecked target contents.
-            if !report.entries.iter().any(|e|e.link_target.is_some()&&selected(e)){return Ok(None);}
-            anyhow::bail!("TAR.LZO 所选链接需要完整且可确认的原包，请补卷或使用部分取回：{}",report.stop_reason);
+            if !(options.selected_entries.is_empty()&&report.hard_links_seen) && !report.entries.iter().any(|e|e.link_target.is_some()&&selected(e)){return Ok(None);}
+            return Err(incomplete(&report));
         }
-        anyhow::ensure!(source.stamp==recovery::source(path)?.stamp,"来源在准备期间已变化，请重新读取目录");
-        crate::services::image_reader::check_source(path,&revision)?;
+        // Ordinary full extraction retains its existing, broader TAR route.
+        if options.selected_entries.is_empty()&&!report.hard_links_seen{return Ok(None);}
         for path in &options.selected_entries {
             anyhow::ensure!(report.entries.iter().any(|e|tx::matches_selected_entries(Path::new(e.archive_name.as_deref().unwrap_or(&e.name)),std::slice::from_ref(path))),"所选条目「{path}」已不存在，请刷新目录；未扩大选取范围");
         }
@@ -72,6 +75,33 @@ impl Plan {
         if options.preserve_timestamps {if let Some(window)=window{for e in entries.iter().filter(|e|e.time_warning.is_some()){runtime.emit_log(window,task,&format!("{}：{}",e.name,e.time_warning.as_deref().unwrap()),TaskLogSeverity::Warning);}}}
         Ok(())
     }
+}
+fn confirmed_report(path:&Path,encoding:Option<crate::services::zip_password::ZipPasswordEncoding>,cancelled:&AtomicBool,progress:&mut impl FnMut(u64,u64))->Result<(Source,String,recovery::Report)> {
+    recovery::check(cancelled)?;
+    let source=recovery::source(path)?;let revision=crate::services::image_reader::revision(path)?;
+    let report=recovery::scan_source(&source,encoding,cancelled,progress)?;
+    recovery::check(cancelled)?;
+    crate::services::image_reader::check_source(path,&revision)?;
+    anyhow::ensure!(source.stamp==recovery::source(path)?.stamp,"来源在准备期间已变化，请重新读取目录");
+    Ok((source,revision,report))
+}
+fn incomplete(report:&recovery::Report)->anyhow::Error {
+    if report.stop_reason.contains("[archive-inspection:unsupported]")||report.stop_reason.contains("[lzop-encoding]") {
+        anyhow::anyhow!("{}",report.stop_reason)
+    }else{
+        std::io::Error::new(std::io::ErrorKind::InvalidData,format!("[archive-inspection:damaged] TAR.LZO 未完整确认，请补齐原包或使用部分取回：{}",report.stop_reason)).into()
+    }
+}
+/// True means one complete, checksum-confirmed TAR and all link identities were read.
+/// False retains the old ordinary TAR route for metadata outside this parser.
+pub(crate) fn verify_complete(path:&Path,encoding:Option<crate::services::zip_password::ZipPasswordEncoding>,is_cancelled:impl Fn()->bool)->Result<bool> {
+    if !recovery::is_tar(path){return Ok(false);}
+    let cancelled=AtomicBool::new(is_cancelled());
+    let (_,_,report)=confirmed_report(path,encoding,&cancelled,&mut|_,_|{if is_cancelled(){cancelled.store(true,Ordering::SeqCst);}})?;
+    if is_cancelled(){cancelled.store(true,Ordering::SeqCst);}recovery::check(&cancelled)?;
+    if report.complete{return Ok(true);}
+    if report.hard_links_seen{return Err(incomplete(&report));}
+    Ok(false)
 }
 pub(crate) fn apply_directory_times(output:&Path,times:&DirectoryTimes)->Vec<String>{
     let mut order=times.iter().collect::<Vec<_>>();order.sort_by_key(|(name,_)|std::cmp::Reverse(Path::new(name).components().count()));

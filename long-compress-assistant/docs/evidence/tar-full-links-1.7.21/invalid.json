@@ -1,0 +1,9 @@
+[
+  "[archive-inspection:unsupported] TAR 硬链接目标尚未确认或名称有歧义，停止在此处",
+  "[archive-inspection:unsupported] TAR 硬链接目标不是前面已确认的普通内容文件，暂不支持链接链条",
+  "[archive-inspection:unsupported] TAR 硬链接目标尚未确认或名称有歧义，停止在此处",
+  "[archive-inspection:unsupported] TAR 硬链接目标不是前面已确认的普通内容文件，暂不支持链接链条",
+  "[archive-inspection:unsupported] TAR 硬链接带有正文或冲突大小，暂不取回",
+  "[archive-inspection:unsupported] TAR 条目「sym」属于符号链接，本次不提取；可在归档浏览器中仅选择普通文件；请向提供者索取普通 TAR/ZIP，不必反复尝试密码",
+  "[archive-inspection:unsupported] TAR 硬链接目标尚未确认或名称有歧义，停止在此处"
+]

@@ -346,3 +346,6 @@ mod tar_browse_links_1719_tests;
 
 #[cfg(test)]
 mod tar_selected_1720_tests;
+
+#[cfg(test)]
+mod tar_full_links_1721_tests;

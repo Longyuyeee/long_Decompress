@@ -63,7 +63,7 @@ docs/               产品路线、格式说明和发布记录
 | --- | --- |
 | [开发交接](docs/DEVELOPMENT_HANDOFF.md) / [产品路线](docs/PRODUCT_ENHANCEMENT_ROADMAP.md) | 当前状态、下一步及已有验证 |
 | [v1.7.0 范围](docs/ARCHIVE_ROADMAP_1.7.0.md) / [实现与检查](docs/WINDOWS_OPEN_AND_BROWSER_UI.md) | Windows 打开、双栏统一与历史菜单 |
-| [v1.7.20 所选链接提取](docs/TAR_SELECTED_FREEZE_1.7.20.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.21.md) | 独立文件、稀疏与时间保留，历史及草稿保持范围；整包链接流程仅规划 |
+| [v1.7.21 整包链接提取](docs/TAR_FULL_LINKS_FREEZE_1.7.21.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.22.md) | 整包输出独立文件、保留稀疏与时间，完整检查确认链接目标；链接内容转换仅规划 |
 | [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md) | 创建、读取、密码、分卷和限制 |
 | [桌面测试说明](docs/DESKTOP_E2E.md) / [测试指南](tests/README.md) | 本地和隔离场景 |
 
