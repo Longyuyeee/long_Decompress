@@ -47,7 +47,7 @@ onUnmounted(()=>{disposed=true;unlisten?.();if(operation.value)void cancel()})
 <template>
  <Modal :visible="true" :title="`${family} 部分取回`" icon="pi pi-folder-open" size="lg" :show-close-button="!busy" :close-on-backdrop="!busy" :close-on-escape="!busy" @close="emit('close')">
   <div class="lzop-recovery" data-testid="lzop-recovery-dialog">
-   <div class="source-line"><i class="pi pi-box"/><strong :title="path">{{filename}}</strong><HelpHint :label="`${family} 部分取回范围`"><template v-if="family==='TAR.LZO'">只取回落在外层已校验数据块内、文件头、内容及填充均完整的 TAR 条目。支持旧 GNU 稀疏条目；完整大小包含空洞，包内数据是实际存储内容。取回稀疏文件时，保存位置须支持稀疏文件。首个缺卷、损坏或暂不支持的条目处停止，不跳过缺口。勾选目录同时选择其下已确认的条目，空目录也能取回。结果另存，原件保留。</template><template v-else>只取回从首卷起连续存在、完整结束且通过内容校验的成员。第一个损坏、截断或无校验成员处停止，后续清单未知；格式没有总成员数或总卷数。结果单独保存，原件保留。</template></HelpHint></div>
+   <div class="source-line"><i class="pi pi-box"/><strong :title="path">{{filename}}</strong><HelpHint :label="`${family} 部分取回范围`"><template v-if="family==='TAR.LZO'">只取回落在外层已校验数据块内、文件头、内容及填充均完整的 TAR 条目。支持旧 GNU 和 PAX 1.0 稀疏条目；完整大小包含空洞，包内数据是实际存储内容。取回稀疏文件时，保存位置须支持稀疏文件。首个缺卷、损坏或暂不支持的条目处停止，不跳过缺口。勾选目录同时选择其下已确认的条目，空目录也能取回。结果另存，原件保留。</template><template v-else>只取回从首卷起连续存在、完整结束且通过内容校验的成员。第一个损坏、截断或无校验成员处停止，后续清单未知；格式没有总成员数或总卷数。结果单独保存，原件保留。</template></HelpHint></div>
    <template v-if="result">
     <div class="partial-result" data-testid="lzop-recovery-result"><strong>已部分取回 {{result.recoveredFiles}} 个文件<template v-if="result.recoveredDirectories">、{{result.recoveredDirectories}} 个目录</template></strong><span>后续内容未确认</span></div>
     <ResultActions :path="result.outputDirectory" directory show-path />

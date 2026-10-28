@@ -1,0 +1,43 @@
+{
+  "passed": true,
+  "native": {
+    "new": 8,
+    "relatedOld": 2,
+    "commands": [
+      "cargo test pax1714 -- --nocapture",
+      "cargo test --lib sparse1713_complete_original -- --nocapture",
+      "cargo test --lib tarlzo175_unsupported_metadata -- --nocapture"
+    ]
+  },
+  "frontend": {
+    "passed": 4,
+    "note": "Only the failed selection test was repeated after changing the test action to clear all then select; product behavior unchanged."
+  },
+  "ui": {
+    "groups": 3,
+    "nativeValueReplay": true,
+    "realDesktopIPC": false,
+    "screenshotsInspected": 6,
+    "viewports": [
+      [
+        1100,
+        700
+      ],
+      [
+        760,
+        520
+      ]
+    ]
+  },
+  "independentOutput": {
+    "trees": 4,
+    "files": 25,
+    "logicalSha": true,
+    "explicitMtime": true,
+    "windowsSparseAllocation": true
+  },
+  "productionBuild": true,
+  "shellDll": "1.7.14",
+  "releaseIdentitySources": 8,
+  "scope": "No unrelated full matrix or desktop input."
+}
