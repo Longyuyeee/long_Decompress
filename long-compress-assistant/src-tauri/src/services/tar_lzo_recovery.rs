@@ -74,6 +74,7 @@ fn parse<F: FnMut(u64, u64)>(
     let mut pending: Option<crate::services::tar_pax::Fields> = None;
     let mut global = crate::services::tar_pax::State::default();
     let mut long_name: Option<String> = None;
+    let mut long_link: Option<String> = None;
     let mut records = 0usize;
     let mut logical_total = 0u64;
     let mut sparse_segments = 0usize;
@@ -87,7 +88,7 @@ fn parse<F: FnMut(u64, u64)>(
             .read_exact(&mut block)
             .context("TAR 文件头或结束标记未完整到达")?;
         if block.iter().all(|b| *b == 0) {
-            anyhow::ensure!(pending.is_none() && long_name.is_none(), "TAR 在名称元数据之后缺少对应条目");
+            anyhow::ensure!(pending.is_none() && long_name.is_none() && long_link.is_none(), "TAR 在名称或链接目标元数据之后缺少对应条目");
             reader
                 .read_exact(&mut block)
                 .context("TAR 第二个结束标记未完整到达")?;
@@ -130,13 +131,14 @@ fn parse<F: FnMut(u64, u64)>(
             .sum::<u32>();
         anyhow::ensure!(header.cksum()? == sum, "TAR 文件头校验失败");
         let kind = header.entry_type();
-        anyhow::ensure!(kind.is_pax_global_extensions() || kind.is_pax_local_extensions() || kind.is_gnu_longname() || kind.is_file() || kind.is_dir() || kind.is_gnu_sparse() || kind.is_hard_link(), "[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持此 TAR 条目类型（{}），已停止在此处", kind.as_byte());
+        anyhow::ensure!(kind.is_pax_global_extensions() || kind.is_pax_local_extensions() || kind.is_gnu_longname() || kind.is_gnu_longlink() || kind.is_file() || kind.is_dir() || kind.is_gnu_sparse() || kind.is_hard_link(), "[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持此 TAR 条目类型（{}），已停止在此处", kind.as_byte());
         let size = header.entry_size()?;
         anyhow::ensure!(size <= MAX_EXTRACTED_BYTES, "TAR 条目大小超过本次支持范围");
-        if kind.is_pax_global_extensions() || kind.is_pax_local_extensions() || kind.is_gnu_longname() {
+        if kind.is_pax_global_extensions() || kind.is_pax_local_extensions() || kind.is_gnu_longname() || kind.is_gnu_longlink() {
             anyhow::ensure!(
                 kind.is_pax_global_extensions()
                     || (kind.is_gnu_longname() && long_name.is_none())
+                    || (kind.is_gnu_longlink() && long_link.is_none())
                     || (kind.is_pax_local_extensions() && pending.is_none()),
                 "[archive-inspection:unsupported] TAR 名称元数据重复，已停止在此处"
             );
@@ -148,12 +150,14 @@ fn parse<F: FnMut(u64, u64)>(
             padding(reader, size)?;
             // Extension records use their own physical size. Apply their
             // contents only after the checked payload AND padding arrive.
-            if kind.is_gnu_longname() {
+            if kind.is_gnu_longname() || kind.is_gnu_longlink() {
+                let label=if kind.is_gnu_longlink(){"GNU 长链接目标"}else{"GNU 长名称"};
                 let end = bytes.iter().position(|byte| *byte == 0)
-                    .context("GNU 长名称缺少结束标记")?;
-                anyhow::ensure!(end > 0 && bytes[end..].iter().all(|byte| *byte == 0), "GNU 长名称为空或结束后仍有其他内容");
-                long_name = Some(super::names::decode(&bytes[..end], 0, encoding)?
-                    .context("[lzop-encoding] GNU 长名称不是 UTF-8，请选择名称编码后重新检查")?);
+                    .with_context(||format!("{label}缺少结束标记"))?;
+                anyhow::ensure!(end > 0 && bytes[end..].iter().all(|byte| *byte == 0), "{label}为空或结束后仍有其他内容");
+                let decoded=super::names::decode(&bytes[..end],0,encoding)?
+                    .with_context(||format!("[lzop-encoding] {label}不是 UTF-8，请选择名称编码后重新检查"))?;
+                if kind.is_gnu_longlink(){long_link=Some(decoded);}else{long_name=Some(decoded);}
             } else {
                 let fields = crate::services::tar_pax::parse(&bytes)?;
                 if kind.is_pax_global_extensions() { global.update(fields)?; }
@@ -170,6 +174,10 @@ fn parse<F: FnMut(u64, u64)>(
             );
         }
         let local = pending.take().unwrap_or_default();
+        anyhow::ensure!(kind.is_hard_link()||long_link.is_none(),"[archive-inspection:unsupported] GNU 长链接目标缺少对应硬链接条目");
+        if let (Some(gnu),Some((_,pax)))=(&long_link,local.iter().find(|(k,_)|k=="linkpath")){
+            anyhow::ensure!(gnu==pax,"[archive-inspection:unsupported] GNU 长链接目标与局部 PAX linkpath 不一致，停止在此处");
+        }
         let pax_version=local_metadata(&local)?;
         anyhow::ensure!(kind.is_hard_link()||!local.iter().any(|(k,_)|k=="linkpath"),"[archive-inspection:unsupported] TAR linkpath 仅支持硬链接条目");
         let pax_sparse=pax_version.is_some();
@@ -209,7 +217,7 @@ fn parse<F: FnMut(u64, u64)>(
         let key=archive_key(&decoded)?;
         let link=if kind.is_hard_link(){
             anyhow::ensure!(header.entry_size()?==0&&size==0,"[archive-inspection:unsupported] TAR 硬链接带有正文或冲突大小，暂不取回");
-            let target=if let Some((_,value))=local.iter().find(|(k,_)|k=="linkpath"){value.clone()}else{
+            let target=if let Some(value)=long_link.take().or_else(||local.iter().find(|(k,_)|k=="linkpath").map(|(_,v)|v.clone())){value}else{
                 super::names::decode(&header.link_name_bytes().context("[archive-inspection:unsupported] TAR 硬链接缺少可确认目标")?,0,encoding)?.context("[lzop-encoding] TAR 链接目标不是 UTF-8，请选择名称编码后重新检查")?
             };
             let target_key=archive_key(&target)?;

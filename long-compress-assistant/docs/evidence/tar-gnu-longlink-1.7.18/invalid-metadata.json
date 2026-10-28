@@ -1,0 +1,19 @@
+[
+  "GNU 长链接目标为空或结束后仍有其他内容",
+  "GNU 长链接目标缺少结束标记",
+  "GNU 长链接目标为空或结束后仍有其他内容",
+  "[archive-inspection:unsupported] TAR 硬链接目标尚未确认或名称有歧义，停止在此处",
+  "TAR 路径无法确认，停止在此处",
+  "[archive-inspection:unsupported] TAR 硬链接目标不是前面已确认的普通内容文件，暂不支持链接链条",
+  "[archive-inspection:unsupported] TAR 硬链接目标尚未确认或名称有歧义，停止在此处",
+  "[lzop-encoding] GNU 长链接目标不是 UTF-8，请选择名称编码后重新检查",
+  "[archive-inspection:unsupported] TAR 名称元数据重复，已停止在此处",
+  "TAR 条目填充无效",
+  "TAR 在名称或链接目标元数据之后缺少对应条目",
+  "[archive-inspection:unsupported] GNU 长链接目标缺少对应硬链接条目",
+  "[archive-inspection:unsupported] GNU 长链接目标缺少对应硬链接条目",
+  "[archive-inspection:unsupported] TAR.LZO 部分取回暂不支持此 TAR 条目类型（50），已停止在此处",
+  "[archive-inspection:unsupported] GNU 长链接目标缺少对应硬链接条目",
+  "[archive-inspection:unsupported] GNU 长链接目标与局部 PAX linkpath 不一致，停止在此处",
+  "[archive-inspection:unsupported] GNU 长链接目标与局部 PAX linkpath 不一致，停止在此处"
+]
