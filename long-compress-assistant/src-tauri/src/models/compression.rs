@@ -275,6 +275,8 @@ impl Default for DecompressOptions {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct ArchiveEntryInfo {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub link_target: Option<String>,
     pub path: String,
     pub name: String,
     pub size: u64,

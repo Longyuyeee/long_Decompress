@@ -69,6 +69,23 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('ArchiveBrowserView', () => {
+  const linkedListing = () => ({format:'TAR.LZO',revision:'9'.repeat(64),totalFiles:2,totalDirectories:0,totalUncompressedSize:1280003,encrypted:false,entries:[
+    {path:'copy.txt',name:'copy.txt',size:1280000,isDir:false,compressedSize:null,linkTarget:'docs/readme.txt'},
+    {path:'normal.txt',name:'normal.txt',size:3,isDir:false,compressedSize:null},
+  ]})
+  it('browse1719 link rows keep the shared columns and source in hover with logical size',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce(linkedListing());const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1719,path:'C:/linked.tar.lzo'},destination:'D:/out'},global:{stubs:{Teleport:true}}});await flushPromises()
+    const row=w.get('[data-entry-path="copy.txt"]');expect(row.text()).toContain('TXT · 链接内容');expect(row.text()).toContain('1.2 MiB');expect(row.get('.file-label').attributes('title')).toContain('内容来源：docs/readme.txt');expect(w.get('.file-head').text()).toContain('修改时间');expect(w.find('[data-testid="archive-entry-details"]').exists()).toBe(false);w.unmount()
+  })
+  it('browse1719 double click previews the exact alias with its source revision',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce(linkedListing());mocks.previewArchiveText.mockResolvedValueOnce({entryPath:'copy.txt',content:'INFO linked prefix',encoding:'UTF-8',byteSize:1048576,totalSize:1280000,truncated:true,lineCount:1});const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1719,path:'C:/linked.tar.lzo'}},global:{stubs:{Teleport:true}}});await flushPromises();await w.get('[data-entry-path="copy.txt"]').trigger('dblclick');await flushPromises();expect(mocks.previewArchiveText.mock.calls.at(-1)![1]).toBe('copy.txt');expect(mocks.previewArchiveText.mock.calls.at(-1)![5]).toEqual({previewId:expect.stringMatching(/^tar.lzo-text-/),sourceRevision:'9'.repeat(64)});expect(w.get('[data-testid="archive-text-preview"]').text()).toContain('INFO linked prefix');expect(mocks.openArchiveEntry).not.toHaveBeenCalled();w.unmount()
+  })
+  it('browse1719 read-only link menu disables unsupported actions and keeps source in details',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce(linkedListing());const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1719,path:'C:/linked.tar.lzo'},destination:'D:/out'},global:{stubs:{Teleport:true}}});await flushPromises();await w.get('[data-entry-path="copy.txt"]').trigger('contextmenu',{clientX:100,clientY:100});await flushPromises();expect(w.get('[data-testid="archive-context-default-open"]').attributes('disabled')).toBeDefined();expect(w.get('[data-testid="archive-context-extract-choose"]').attributes('disabled')).toBeDefined();await w.get('[data-testid="archive-context-details"]').trigger('click');expect(w.get('[data-testid="archive-entry-details"]').text()).toContain('内容来源docs/readme.txt');w.unmount()
+  })
+  it('browse1719 selected links stop before native extraction while ordinary files still work',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce(linkedListing());const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1719,path:'C:/linked.tar.lzo'},destination:'D:/out'},global:{stubs:{Teleport:true}}});await flushPromises();await w.get('[data-entry-path="copy.txt"]').trigger('click');await w.vm.extractToDestination('D:/out');await flushPromises();expect(mocks.decompressFile).not.toHaveBeenCalled();expect(mocks.setError).toHaveBeenCalledWith(expect.stringContaining('只读预览'));await w.get('[data-entry-path="normal.txt"]').trigger('click');await w.vm.extractToDestination('D:/out');await flushPromises();expect(mocks.decompressFile).toHaveBeenCalledWith('C:/linked.tar.lzo',expect.objectContaining({selectedEntries:['normal.txt']}));w.unmount()
+  })
   it('selects an embedded folder like a disk row and extracts only its files and empty subfolders',async()=>{
     mocks.browseArchive.mockResolvedValueOnce({format:'ZIP',totalFiles:2,totalUncompressedSize:8,encrypted:false,entries:[
       {path:'docs/one.txt',name:'one.txt',size:4,isDir:false,compressedSize:4},

@@ -1,0 +1,50 @@
+{
+  "passed": true,
+  "nativeValueReplay": true,
+  "realDesktopIPC": false,
+  "checks": [
+    {
+      "name": "links-1200x760",
+      "width": 1200,
+      "height": 760,
+      "overflow": 0,
+      "panes": [
+        {
+          "width": 472.796875,
+          "overflow": 0
+        },
+        {
+          "width": 472.8125,
+          "overflow": 0
+        }
+      ]
+    },
+    {
+      "name": "links-900x600",
+      "width": 900,
+      "height": 600,
+      "overflow": 0,
+      "panes": [
+        {
+          "width": 324.40625,
+          "overflow": 0
+        },
+        {
+          "width": 324.40625,
+          "overflow": 0
+        }
+      ]
+    }
+  ],
+  "previews": [
+    {
+      "kind": "text",
+      "path": "阅读副本.txt"
+    },
+    {
+      "kind": "image",
+      "path": "gallery/封面副本.png"
+    }
+  ],
+  "errors": []
+}

@@ -145,6 +145,7 @@ export interface CompressionAnalysisResult {
 }
 
 export interface ArchiveEntryInfo {
+  linkTarget?: string
   path: string
   name: string
   size: number

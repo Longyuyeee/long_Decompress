@@ -232,7 +232,7 @@ fn read_tar_family(path: &Path, format: &str, entry_path: &str,control:&ImageCon
         "TAR.LZ4" => read_tar_entry(super::codec_stream::decoder(path, "lz4")?, entry_path,control),
         "TAR.BR" => read_tar_entry(super::codec_stream::decoder(path, "br")?, entry_path,control),
         "TAR.LZIP" => read_tar_entry(super::codec_stream::decoder(path, "lz")?, entry_path,control),
-        "TAR.LZO" => read_tar_entry(super::codec_stream::decoder(path, "lzo")?, entry_path,control),
+        "TAR.LZO" => super::tar_browse_links::preview(path,entry_path,MAX_PREVIEW_BYTES,false,control).map(|v|v.0),
         "TAR.LZMA" => read_tar_entry(super::codec_stream::decoder(path, "lzma")?, entry_path,control),
         "TAR" => read_tar_entry(super::numeric_volume_reader::ZipInputReader::open(path)?, entry_path,control),
         "TAR.GZ" => read_tar_entry(crate::services::codec_stream::decoder(path, "gz")?, entry_path,control),
@@ -253,7 +253,7 @@ fn read_tar_family_text(path: &Path, format: &str, entry_path: &str) -> Result<T
         "TAR.LZ4" => read_tar_text_entry(super::codec_stream::decoder(path, "lz4")?, entry_path),
         "TAR.BR" => read_tar_text_entry(super::codec_stream::decoder(path, "br")?, entry_path),
         "TAR.LZIP" => read_tar_text_entry(super::codec_stream::decoder(path, "lz")?, entry_path),
-        "TAR.LZO" => read_tar_text_entry(super::codec_stream::decoder(path, "lzo")?, entry_path),
+        "TAR.LZO" => unreachable!("TAR.LZO text previews use the controlled link reader"),
         "TAR.LZMA" => read_tar_text_entry(super::codec_stream::decoder(path, "lzma")?, entry_path),
         "TAR" => read_tar_text_entry(super::numeric_volume_reader::ZipInputReader::open(path)?, entry_path),
         "TAR.GZ" => {
@@ -497,7 +497,7 @@ pub async fn preview_archive_image_bound_at(archive_path:&Path,entry_path:&str,p
         control.check()?;
         if let Some(revision) = expected_revision.as_deref() { super::image_reader::check_source(&archive_path, revision)?; }
         let source = super::split_archive_detector::SplitArchiveDetector::complete_source(&archive_path)?;
-        let revision = if matches!(super::archive_browser::detect_format(&source)?,ArchiveFormat::Alz|ArchiveFormat::Egg|ArchiveFormat::SevenZip) {
+        let revision = if matches!(super::archive_browser::detect_format(&source)?,ArchiveFormat::Alz|ArchiveFormat::Egg|ArchiveFormat::SevenZip|ArchiveFormat::Lzop) {
             Some(match expected_revision { Some(value) => value, None => super::image_reader::revision(&source)? })
         } else { None };
         control.update("opening",0,0);control.check()?;
@@ -654,6 +654,11 @@ fn preview_archive_text_sync(
             let (bytes, total_size) = tauri::async_runtime::block_on(super::zpaq_engine::preview_entry_at(archive_path, &entry_path, password, MAX_TAR_PREVIEW_SCAN_BYTES, MAX_TEXT_PREVIEW_BYTES, snapshot.as_ref()))?;
             TextBytes { bytes, total_size }
         }
+        "TAR.LZO" => {
+            let control=ImageControl{flag:cancelled.clone(),..Default::default()};
+            let (bytes,total_size)=super::tar_browse_links::preview(archive_path,&entry_path,MAX_TEXT_PREVIEW_BYTES,true,&control)?;
+            TextBytes{bytes,total_size}
+        }
         format if format.starts_with("TAR") => {
             read_tar_family_text(archive_path, format, &entry_path)?
         }
@@ -728,7 +733,7 @@ pub async fn preview_archive_text_controlled_at(
         anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Acquire), "文本预览已取消");
         if let Some(revision) = expected_revision.as_deref() { super::image_reader::check_source(&archive_path, revision)?; }
         let source = super::split_archive_detector::SplitArchiveDetector::complete_source(&archive_path)?;
-        let revision = if matches!(super::archive_browser::detect_format(&source)?,ArchiveFormat::Alz|ArchiveFormat::Egg|ArchiveFormat::SevenZip) {
+        let revision = if matches!(super::archive_browser::detect_format(&source)?,ArchiveFormat::Alz|ArchiveFormat::Egg|ArchiveFormat::SevenZip|ArchiveFormat::Lzop) {
             let revision = match expected_revision { Some(value) => value, None => super::image_reader::revision(&source)? };
             super::image_reader::check_source(&source, &revision)?;
             Some(revision)

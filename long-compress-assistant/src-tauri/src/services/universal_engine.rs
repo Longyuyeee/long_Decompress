@@ -478,7 +478,7 @@ impl UniversalCliEngine {
             let is_dir = current.get("Folder").is_some_and(|value| value == "+")
                 || attributes.contains('D') || path.ends_with('/');
             let name = path.trim_end_matches('/').rsplit('/').next().unwrap_or(&path).to_string();
-            entries.push(ArchiveEntryInfo {
+            entries.push(ArchiveEntryInfo { link_target: None,
                 name,
                 path,
                 size: current.get("Size").and_then(|value| value.parse().ok()).unwrap_or(0),
@@ -562,7 +562,7 @@ impl UniversalCliEngine {
         if is_z && result.entries.is_empty() {
             let name = file_path.file_stem().unwrap_or_default().to_string_lossy().to_string();
             let packed = file_path.metadata()?.len();
-            result.entries.push(ArchiveEntryInfo { name: name.clone(), path: name, size: 0,
+            result.entries.push(ArchiveEntryInfo { link_target: None, name: name.clone(), path: name, size: 0,
                 size_known: Some(false), compressed_size: Some(packed), modified: None,
                 crc: None, encrypted: false, is_dir: false });
             result.total_files = 1;

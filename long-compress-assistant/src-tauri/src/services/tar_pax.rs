@@ -110,23 +110,25 @@ pub(crate) struct Reader<R> {
     input: R, state: State, local: Option<Fields>, pending: Cursor<Vec<u8>>,
     remaining: u64, sparse_extensions: bool, ended: bool,
     long_name: Option<Vec<u8>>,
+    long_link: Option<Vec<u8>>, allow_links: bool,
 }
 impl<R: Read> Reader<R> {
     pub(crate) fn new(input: R) -> Self {
-        Self { input, state: State::default(), local: None, pending: Cursor::new(Vec::new()), remaining: 0, sparse_extensions: false, ended: false, long_name: None }
+        Self { input, state: State::default(), local: None, pending: Cursor::new(Vec::new()), remaining: 0, sparse_extensions: false, ended: false, long_name: None, long_link: None, allow_links: false }
     }
+    pub(crate) fn with_links(input:R)->Self {let mut reader=Self::new(input);reader.allow_links=true;reader}
     fn prepare(&mut self) -> io::Result<bool> {
         let mut controls = 0;
         loop {
             let mut block = [0u8;512];
             let n = self.input.read(&mut block[..1])?;
             if n == 0 {
-                if self.local.is_some() || self.long_name.is_some() { return Err(invalid("名称元数据后缺少对应条目")); }
+                if self.local.is_some() || self.long_name.is_some() || self.long_link.is_some() { return Err(invalid("名称元数据后缺少对应条目")); }
                 return Ok(false);
             }
             self.input.read_exact(&mut block[1..])?;
             if block.iter().all(|b| *b == 0) {
-                if self.local.is_some() || self.long_name.is_some() { return Err(invalid("名称元数据后缺少对应条目")); }
+                if self.local.is_some() || self.long_name.is_some() || self.long_link.is_some() { return Err(invalid("名称元数据后缺少对应条目")); }
                 self.ended = true;
                 self.pending = Cursor::new(block.to_vec());
                 return Ok(true);
@@ -153,15 +155,16 @@ impl<R: Read> Reader<R> {
                 }
                 continue;
             }
-            if kind.is_gnu_longname() {
-                if self.long_name.is_some() { return Err(invalid("GNU 长名称记录重复")); }
+            if kind.is_gnu_longname() || (self.allow_links && kind.is_gnu_longlink()) {
+                let target=kind.is_gnu_longlink();
+                if (target&&self.long_link.is_some())||(!target&&self.long_name.is_some()) { return Err(invalid("GNU 长名称记录重复")); }
                 if physical > MAX_METADATA as u64 { return Err(unsupported("GNU 长名称超过支持范围")); }
                 let mut bytes = vec![0; padded(physical)? as usize];
                 self.input.read_exact(&mut bytes)?;
                 let payload = &bytes[..physical as usize];
                 let end = payload.iter().position(|b| *b == 0).ok_or_else(|| invalid("GNU 长名称缺少结束标记"))?;
                 if end == 0 || bytes[end..].iter().any(|b| *b != 0) { return Err(invalid("GNU 长名称或填充无效")); }
-                self.long_name = Some(payload[..end].to_vec());
+                if target {self.long_link=Some(payload[..end].to_vec());} else {self.long_name = Some(payload[..end].to_vec());}
                 // Some producers include zero padding in L's declared payload.
                 // Consume that physical record, then emit one NUL terminator so
                 // tar-rs and prefix recovery expose the same actual filename.
@@ -179,6 +182,15 @@ impl<R: Read> Reader<R> {
             }
             let local = self.local.take().unwrap_or_default();
             if let Some(name) = self.long_name.take() { check_mixed_path(&name, &local)?; }
+            if self.allow_links {
+                let pax=local.iter().find(|(k,_)|k=="linkpath").map(|(_,v)|v.as_bytes());
+                if self.long_link.is_some()||pax.is_some() {
+                    if !kind.is_hard_link() {return Err(unsupported("链接目标只支持对应硬链接条目"));}
+                    if let Some(value)=pax {if value.is_empty()||value.contains(&b'\n')||local.iter().any(|(k,_)|k.starts_with("GNU.sparse.")){return Err(invalid("链接目标为空或与稀疏元数据冲突"));}}
+                    if let (Some(gnu),Some(pax))=(&self.long_link,pax) {if gnu!=pax {return Err(unsupported("GNU 长链接目标与 PAX linkpath 不一致"));}}
+                }
+                self.long_link=None;
+            }
             let fields = self.state.effective(&local);
             let stored = size(&fields)?.unwrap_or(physical);
             if stored > super::extraction_transaction::MAX_EXTRACTED_BYTES { return Err(unsupported("条目大小超过支持范围")); }

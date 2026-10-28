@@ -93,7 +93,7 @@ fn browse_zip(path: &Path, cancelled: &AtomicBool) -> Result<ArchiveBrowseResult
             )
         });
         let entry_path = entry.name().replace('\\', "/");
-        entries.push(ArchiveEntryInfo { size_known: None,
+        entries.push(ArchiveEntryInfo { link_target: None, size_known: None,
             name: entry_name(&entry_path),
             path: entry_path,
             size: entry.size(),
@@ -130,7 +130,7 @@ fn browse_7z(
                 let value: std::time::SystemTime = entry.last_modified_date.into();
                 chrono::DateTime::<chrono::Utc>::from(value).to_rfc3339()
             });
-            Ok(ArchiveEntryInfo { size_known: None,
+            Ok(ArchiveEntryInfo { link_target: None, size_known: None,
                 name: entry_name(&path),
                 path,
                 size: entry.size,
@@ -167,7 +167,7 @@ fn browse_rar(
             })?;
             password_proven.set(password_proven.get() || encrypted_headers);
             let path = entry.filename.to_string_lossy().replace('\\', "/");
-            Ok(ArchiveEntryInfo { size_known: None,
+            Ok(ArchiveEntryInfo { link_target: None, size_known: None,
                 name: entry_name(&path),
                 path,
                 size: entry.unpacked_size,
@@ -187,20 +187,23 @@ fn browse_tar_reader<R: Read>(
     format: &str,
     cancelled: &AtomicBool,
 ) -> Result<ArchiveBrowseResult> {
-    let mut archive = tar::Archive::new(super::tar_pax::Reader::new(reader));
+    let reader=if format=="TAR.LZO"{super::tar_pax::Reader::with_links(reader)}else{super::tar_pax::Reader::new(reader)};
+    let mut archive = tar::Archive::new(reader);
+    let mut links=super::tar_browse_links::Resolver::default();
     let mut entries = Vec::new();
-    for entry in archive.entries()? {
+    for (index,entry) in archive.entries()?.enumerate() {
         ensure_not_cancelled(cancelled)?;
         let entry = super::tar_compatibility::LogicalEntry::new(entry?)?;
         if entry.path().as_os_str().is_empty() && entry.header().entry_type().is_dir() { continue; }
+        let link_view=if format=="TAR.LZO"{Some(links.observe(&entry,index)?)}else{None};
         let path = entry.path().to_string_lossy().replace('\\', "/");
         let header = entry.header();
         let is_dir = header.entry_type().is_dir();
         let modified = entry.modified().map(|time| chrono::DateTime::<chrono::Utc>::from(time).to_rfc3339());
-        entries.push(ArchiveEntryInfo { size_known: None,
+        entries.push(ArchiveEntryInfo { link_target: link_view.as_ref().and_then(|v|v.link_target.clone()), size_known: None,
             name: entry_name(&path),
             path,
-            size: if is_dir { 0 } else { entry.size() },
+            size: if is_dir { 0 } else { link_view.map_or(entry.size(),|v|v.size) },
             compressed_size: None,
             modified,
             crc: None,
@@ -358,9 +361,9 @@ pub async fn browse_archive_cancellable_at(
                             let parts: Vec<_> = m.name.split('/').collect();
                             for part in parts.iter().take(parts.len().saturating_sub(1)) {
                                 parent.push_str(part); parent.push('/');
-                                if dirs.insert(parent.clone()) { entries.push(ArchiveEntryInfo {size_known:Some(true),name:part.to_string(),path:parent.clone(),size:0,compressed_size:None,modified:None,crc:None,encrypted:false,is_dir:true}); }
+                                if dirs.insert(parent.clone()) { entries.push(ArchiveEntryInfo { link_target: None,size_known:Some(true),name:part.to_string(),path:parent.clone(),size:0,compressed_size:None,modified:None,crc:None,encrypted:false,is_dir:true}); }
                             }
-                            entries.push(ArchiveEntryInfo {size_known:Some(true),name:parts.last().unwrap_or(&"").to_string(),path:m.name.clone(),size:m.size,compressed_size:Some(m.compressed_size),modified:None,crc:None,encrypted:false,is_dir:false});
+                            entries.push(ArchiveEntryInfo { link_target: None,size_known:Some(true),name:parts.last().unwrap_or(&"").to_string(),path:m.name.clone(),size:m.size,compressed_size:Some(m.compressed_size),modified:None,crc:None,encrypted:false,is_dir:false});
                         }
                         return Ok(summarize("LZOP",entries));
                     }
@@ -381,7 +384,7 @@ pub async fn browse_archive_cancellable_at(
                     let name = super::native_extraction::single_stream::output_name(&path, suffixes);
                     let compressed_size = super::split_archive_detector::SplitArchiveDetector::detect_split_archive(&path)?
                         .map(|group| group.total_size).unwrap_or(std::fs::metadata(&path)?.len());
-                    return Ok(summarize(label, vec![ArchiveEntryInfo { size_known: Some(size_known), name: name.clone(), path: name,
+                    return Ok(summarize(label, vec![ArchiveEntryInfo { link_target: None, size_known: Some(size_known), name: name.clone(), path: name,
                         size, compressed_size: Some(compressed_size), modified: None, crc: None, encrypted: false, is_dir: false }]));
                 }
                 match format {
@@ -411,7 +414,7 @@ pub async fn browse_archive_cancellable_at(
                         }
                         let name = super::native_extraction::single_stream::output_name(&path, &[&format!(".{codec}")]);
                         let label = if codec == "lz" { "LZIP".to_string() } else { codec.to_uppercase() };
-                        Ok(summarize(&label, vec![ArchiveEntryInfo { size_known: None, name: name.clone(), path: name, size, compressed_size: None, modified: None, crc: None, encrypted: false, is_dir: false }]))
+                        Ok(summarize(&label, vec![ArchiveEntryInfo { link_target: None, size_known: None, name: name.clone(), path: name, size, compressed_size: None, modified: None, crc: None, encrypted: false, is_dir: false }]))
                     }
                     _ => anyhow::bail!("Unsupported native archive route"),
                 }
