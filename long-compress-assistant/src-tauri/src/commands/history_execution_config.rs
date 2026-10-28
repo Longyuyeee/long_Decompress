@@ -33,7 +33,7 @@ fn zpaq1537_final_history_preserves_guarded_selection_and_rejects_missing_identi
 // Persist only the supported snapshot schema. A bad/unknown snapshot must not
 // prevent saving the task's final error and logs.
 pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<Value> {
-    if value.get("schemaVersion")?.as_u64()? != 1 || value.to_string().len() > if value.get("operation").and_then(Value::as_str)==Some("zpaq-update") || value.get("zpaqCatalogId").is_some() || value.get("librarySourceId").is_some() || value.get("comparisonSelection").is_some() || value.get("readerSelection").is_some() || value.get("zpaqRetrieval").is_some() {262_144} else {16_384} { return None; }
+    if value.get("schemaVersion")?.as_u64()? != 1 || value.to_string().len() > if value.get("operation").and_then(Value::as_str)==Some("zpaq-update") || value.get("zpaqCatalogId").is_some() || value.get("librarySourceId").is_some() || value.get("comparisonSelection").is_some() || value.get("readerSelection").is_some() || value.get("zpaqRetrieval").is_some() || value.get("tarSelection").is_some() {262_144} else {16_384} { return None; }
     let kind = value.get("kind")?.as_str()?;
     let expected = match kind {
         "archive-extraction" | "archive-recovery" => ("decompression", "archive"),
@@ -59,6 +59,16 @@ pub(super) fn sanitize(value: Value, task_type: &str, workload: &str) -> Option<
         _ => &[],
     };
     output.extend(project(&value, fields)?);
+    if kind == "archive-extraction" { if let Some(selection) = value.get("tarSelection") {
+        if ["readerSelection","comparisonSelection","zpaqRetrieval","librarySourceId","zpaqCatalogId"].iter().any(|key| value.get(key).is_some()) { return None; }
+        let paths = selection.get("paths")?.as_array()?;
+        if paths.is_empty() || paths.len()>2000 || serde_json::to_string(paths).ok()?.len()>60000
+            || !paths.iter().all(|p|p.as_str().is_some_and(|s|!s.is_empty()&&s.len()<=32768)) { return None; }
+        let mut selected = project(selection,&[("keepStructure",'b'),("conflictPolicy",'s')])?;
+        if !matches!(selection.get("conflictPolicy")?.as_str(),Some("ask"|"rename"|"skip"|"overwrite")) { return None; }
+        selected.insert("paths".into(),Value::Array(paths.clone()));
+        output.insert("tarSelection".into(),Value::Object(selected));
+    }}
     let input_encoding_key = match kind {
         "archive-extraction" => Some("zipPasswordEncoding"),
         "archive-conversion" => Some("sourceZipPasswordEncoding"),
@@ -593,4 +603,18 @@ mod lzop_recovery_history_174 {
   let value=serde_json::json!({"schemaVersion":1,"kind":"archive-recovery","outputDirectory":"D:/result","recoveredFiles":2,"stopReason":"后续截断","revision":"a".repeat(64),"password":"discard"});
   let clean=super::sanitize(value.clone(),"decompression","archive").unwrap();assert_eq!(clean["kind"],"archive-recovery");assert_eq!(clean["recoveredFiles"],2);assert!(clean.get("password").is_none());let mut invalid=value;invalid["recoveredFiles"]=(-1).into();assert!(super::sanitize(invalid,"decompression","archive").is_none());
  }
+}
+
+#[cfg(test)]
+#[test]
+fn selected1720_history_persists_only_exact_tar_scope_and_publication_options(){
+    let paths=(0..500).map(|i|format!("docs/{}_alias_{}.txt","x".repeat(30),i)).collect::<Vec<_>>();
+    let value=serde_json::json!({"schemaVersion":1,"kind":"archive-extraction","outputDirectory":"D:/out","extractToSubfolder":false,"tarSelection":{"paths":paths,"keepStructure":false,"conflictPolicy":"skip","password":"private1720"},"password":"private1720"});
+    assert!(value.to_string().len()>16384);
+    let clean=sanitize(value.clone(),"decompression","archive").unwrap();
+    assert_eq!(clean["tarSelection"]["paths"],value["tarSelection"]["paths"]);
+    assert_eq!(clean["tarSelection"]["keepStructure"],false);assert_eq!(clean["tarSelection"]["conflictPolicy"],"skip");
+    assert!(!clean.to_string().contains("private1720"));
+    let mut invalid=value.clone();invalid["tarSelection"]["paths"]=serde_json::json!([]);assert!(sanitize(invalid,"decompression","archive").is_none());
+    let mut invalid=value;invalid["tarSelection"]["conflictPolicy"]="other".into();assert!(sanitize(invalid,"decompression","archive").is_none());
 }

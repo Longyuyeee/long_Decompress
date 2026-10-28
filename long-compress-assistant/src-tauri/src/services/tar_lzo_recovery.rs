@@ -257,7 +257,7 @@ fn parse<F: FnMut(u64, u64)>(
         padding(reader, size)?;
         let id=report.entries.len();
         sources.entry(key).and_modify(|previous|*previous=None).or_insert(Some(id));
-        report.entries.push(Entry {
+        report.entries.push(Entry { archive_name:Some(decoded.clone()),
             link_target: link.as_ref().map(|(target,_)|target.clone()),
             link_source: link.map(|(_,id)|id),
             stored_bytes: sparse.as_ref().map(|layout|layout.stored),
@@ -351,15 +351,15 @@ impl Read for StoredCopy{
         let n=(buf.len()as u64).min(self.left)as usize;let n=self.file.read(&mut buf[..n])?;self.left-=n as u64;Ok(n)
     }
 }
-fn copy_entry(input:&mut impl Read,stage:&Path,entry:&mut Entry,cancelled:&AtomicBool,done:&mut u64,progress:&mut impl FnMut(u64))->Result<PathBuf>{
+fn copy_entry(input:&mut impl Read,stage:&Path,entry:&mut Entry,cancelled:&AtomicBool,done:&mut u64,progress:&mut impl FnMut(u64)->Result<()>)->Result<PathBuf>{
     let target=destination(stage,&entry.name)?;
     if let Some(parent)=target.parent(){fs::create_dir_all(parent)?;}
     let mut output=OpenOptions::new().write(true).create_new(true).open(&target)?;
     let digest=if let Some(layout)=&entry.sparse{
-        let before=*done;let digest=layout.process(input,Some(&mut output),cancelled,|logical|progress(before+logical))?;*done+=entry.bytes;digest
+        let before=*done;let digest=layout.process_checked(input,Some(&mut output),cancelled,|logical|progress(before+logical))?;*done+=entry.bytes;digest
     }else{
         let mut remaining=entry.bytes;let mut hash=Sha256::new();let mut buf=[0;65536];
-        while remaining>0{check(cancelled)?;let n=remaining.min(buf.len()as u64)as usize;input.read_exact(&mut buf[..n])?;output.write_all(&buf[..n])?;hash.update(&buf[..n]);remaining-=n as u64;*done+=n as u64;progress(*done);}
+        while remaining>0{check(cancelled)?;let n=remaining.min(buf.len()as u64)as usize;input.read_exact(&mut buf[..n])?;output.write_all(&buf[..n])?;hash.update(&buf[..n]);remaining-=n as u64;*done+=n as u64;progress(*done)?;}
         format!("{:x}",hash.finalize())
     };
     anyhow::ensure!(digest==entry.sha256,"TAR 文件在取回期间已变化，请重新检查");
@@ -367,12 +367,15 @@ fn copy_entry(input:&mut impl Read,stage:&Path,entry:&mut Entry,cancelled:&Atomi
     entry.time_warning=match &entry.modified_time{Some(time)=>time.apply(&output).err().map(str::to_owned),None=>Some("原修改时间缺失，或其范围、精度暂不支持；文件内容已取回".into())};
     Ok(target)
 }
-pub(super) fn copy_selected(
+pub(super) fn copy_selected(src:&Source,stage:&Path,entries:&mut[Entry],cancelled:&AtomicBool,progress:&mut impl FnMut(u64))->Result<()> {
+    copy_selected_controlled(src,stage,entries,cancelled,&mut|bytes|{progress(bytes);Ok(())})
+}
+pub(super) fn copy_selected_controlled(
     src: &Source,
     stage: &Path,
     entries: &mut [Entry],
     cancelled: &AtomicBool,
-    progress: &mut impl FnMut(u64),
+    progress: &mut impl FnMut(u64)->Result<()>,
 ) -> Result<()> {
     let reader = LzopReader::with_mode(src.open()?, true)?;
     let mut reader = Verified {
@@ -417,7 +420,7 @@ pub(super) fn copy_selected(
         };
         // These updates carry the same completed byte count. Batch them for
         // large directory sets, while cancellation remains checked per item.
-        if step == 0 || (step + 1) % 64 == 0 || step + 1 == directory_count { progress(done); }
+        if step == 0 || (step + 1) % 64 == 0 || step + 1 == directory_count { progress(done)?; }
     }
     Ok(())
 }

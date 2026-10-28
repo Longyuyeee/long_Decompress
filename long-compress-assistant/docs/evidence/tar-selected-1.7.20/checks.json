@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-28",
+  "newNativeTests": 10,
+  "relatedNativeTests": 3,
+  "frontendTests": 10,
+  "backgroundUiGroups": 3,
+  "viewedScreenshots": 6,
+  "realPublishedTrees": 5,
+  "realPublishedFiles": 20,
+  "typecheckAndVite": true,
+  "shellDll": true,
+  "releaseIdentitySources": 8,
+  "desktopControlled": false,
+  "realDesktopIPC": false,
+  "note": "Native tests perform actual selected extraction and transaction commit. Headless UI replays exact native values; storage fault 112 is controlled injection, not a real disk-full test."
+}

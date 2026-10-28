@@ -1,0 +1,22 @@
+{
+  "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-browse-links-1719/gnu.tar.lzo",
+  "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-selected-1720\\single-39bad7ee-1664-4f19-a558-90f70b91583e",
+  "publishedBytes": 1344000,
+  "stats": {
+    "entries": 1,
+    "logicalBytes": 1344000,
+    "payloadBytes": 1344000
+  },
+  "entries": [
+    {
+      "name": "阅读副本.txt",
+      "bytes": 1344000,
+      "isDirectory": false,
+      "sha256": "96db4695c45cb9a74a26a60d9d6765b276a984817c047cb6a27b83eb69ed5384",
+      "prefixSha256": "e547a46b5afcb74ddcc46644f8d276eae7f28034e4c3b30b798fe0c19f5ec030",
+      "linkTarget": "docs/readme.txt",
+      "headerOffset": 1349120,
+      "dataOffset": 1349632
+    }
+  ]
+}

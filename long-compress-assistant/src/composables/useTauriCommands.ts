@@ -357,6 +357,9 @@ export const useTauriCommands = () => {
       // Older unguarded selections keep the existing whole-archive history policy.
       trackedTask.executionConfig = {
         schemaVersion: 1, kind: 'archive-extraction', outputDirectory: options.outputPath,
+        ...(/\.tar\.lzo(?:\.\d+)?$/i.test(filePath) && options.selectedEntries?.length
+          && !options.readerSelection && !options.comparisonSelection && !options.librarySourceId && !options.zpaqCatalogId && !options.zpaqRetrieval
+          ? {tarSelection:{paths:[...options.selectedEntries],keepStructure:options.keepStructure,conflictPolicy:options.conflictPolicy || 'rename'}} : {}),
         ...(options.zpaqRetrieval?{zpaqRetrieval:options.zpaqRetrieval}:{}),
         ...(options.readerSelection?{readerSelection:options.readerSelection}:{}),
         ...(options.comparisonSelection?{comparisonSelection:options.comparisonSelection}:{}),

@@ -1,7 +1,7 @@
 # 文档导航与维护规则
 
-- **当前版本 v1.6.62**：[中文说明](RELEASE_NOTES_1.6.62.md)、[本版路线](ARCHIVE_ROADMAP_1.6.62.md)、[封板记录](LZOP_CREATE_FREEZE_1.6.62.md)。正式身份在本版 PR 接续。
-- **下一版仅规划**：[v1.6.63 TAR.LZO 目录创建](ARCHIVE_ROADMAP_1.6.63.md)，见[开发交接](DEVELOPMENT_HANDOFF.md)。
+- **当前版本 v1.7.20**：[说明](RELEASE_NOTES_1.7.20.md)、[范围](ARCHIVE_ROADMAP_1.7.20.md)、[封板记录](TAR_SELECTED_FREEZE_1.7.20.md)。正式身份由本版 PR/Release 接续。
+- **下一版仅规划**：[v1.7.21 整包提取与链接内容检查](ARCHIVE_ROADMAP_1.7.21.md)，准确状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
 
 - **历史版本 v1.6.61**：[发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.61)、[中文说明](RELEASE_NOTES_1.6.61.md)、[LZOP 路径与名称记录](LZOP_PATHS_NAMES_FREEZE_1.6.61.md)。已完成功能封板，正式发布身份在本版 PR 接续。
 - **历史接续**：[本版路线](ARCHIVE_ROADMAP_1.6.61.md) → [v1.6.62 单文件创建](ARCHIVE_ROADMAP_1.6.62.md)仅规划，见[交接](DEVELOPMENT_HANDOFF.md)。

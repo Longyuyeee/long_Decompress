@@ -1,0 +1,227 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\tar-hardlink-1717\\hardlinks.tar.lzo",
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-hardlink-1717-hardlinks.tar.lzo",
+      "files": 5,
+      "directories": 2,
+      "exactLogicalHashesAndOwnTimes": true,
+      "allOutputsIndependent": true,
+      "allocations": [
+        {
+          "name": "长目标副本.bin",
+          "logicalBytes": 8388608,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "稀疏副本.bin",
+          "logicalBytes": 16777216,
+          "allocatedBytes": 6291456
+        }
+      ],
+      "actualFiles": [
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-hardlink-1717-hardlinks.tar.lzo\\alias-a.bin",
+          "name": "alias-a.bin",
+          "is_dir": false,
+          "size": 200003,
+          "modified_time": 1700001717
+        },
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-hardlink-1717-hardlinks.tar.lzo\\资料\\alias-b.bin",
+          "name": "资料/alias-b.bin",
+          "is_dir": false,
+          "size": 200003,
+          "modified_time": 1700001717
+        },
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-hardlink-1717-hardlinks.tar.lzo\\长目标副本.bin",
+          "name": "长目标副本.bin",
+          "is_dir": false,
+          "size": 8388608,
+          "modified_time": 1700001717
+        },
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-hardlink-1717-hardlinks.tar.lzo\\empty-copy.bin",
+          "name": "empty-copy.bin",
+          "is_dir": false,
+          "size": 0,
+          "modified_time": 1700001717
+        },
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-hardlink-1717-hardlinks.tar.lzo\\稀疏副本.bin",
+          "name": "稀疏副本.bin",
+          "is_dir": false,
+          "size": 16777216,
+          "modified_time": 1700001717
+        }
+      ]
+    },
+    {
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\tar-gnu-longlink-1718\\gnu-links.tar.lzo",
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-gnu-longlink-1718-gnu-links.tar.lzo",
+      "files": 6,
+      "directories": 2,
+      "exactLogicalHashesAndOwnTimes": true,
+      "allOutputsIndependent": true,
+      "allocations": [
+        {
+          "name": "资料/长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本.bin",
+          "logicalBytes": 8388608,
+          "allocatedBytes": 1966080
+        },
+        {
+          "name": "稀疏副本.bin",
+          "logicalBytes": 16777216,
+          "allocatedBytes": 6291456
+        },
+        {
+          "name": "long-target-only.bin",
+          "logicalBytes": 8388608,
+          "allocatedBytes": 1966080
+        }
+      ],
+      "actualFiles": [
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-gnu-longlink-1718-gnu-links.tar.lzo\\alias-a.bin",
+          "name": "alias-a.bin",
+          "is_dir": false,
+          "size": 200003,
+          "modified_time": 1700001718
+        },
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-gnu-longlink-1718-gnu-links.tar.lzo\\资料\\alias-b.bin",
+          "name": "资料/alias-b.bin",
+          "is_dir": false,
+          "size": 200003,
+          "modified_time": 1700001718
+        },
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-gnu-longlink-1718-gnu-links.tar.lzo\\资料\\长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本.bin",
+          "name": "资料/长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本长链接副本.bin",
+          "is_dir": false,
+          "size": 8388608,
+          "modified_time": 1700001718
+        },
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-gnu-longlink-1718-gnu-links.tar.lzo\\empty-copy.bin",
+          "name": "empty-copy.bin",
+          "is_dir": false,
+          "size": 0,
+          "modified_time": 1700001718
+        },
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-gnu-longlink-1718-gnu-links.tar.lzo\\稀疏副本.bin",
+          "name": "稀疏副本.bin",
+          "is_dir": false,
+          "size": 16777216,
+          "modified_time": 1700001718
+        },
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-gnu-longlink-1718-gnu-links.tar.lzo\\long-target-only.bin",
+          "name": "long-target-only.bin",
+          "is_dir": false,
+          "size": 8388608,
+          "modified_time": 1700001718
+        }
+      ]
+    },
+    {
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\tar-browse-links-1719\\gnu.tar.lzo",
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-browse-links-1719-gnu.tar.lzo",
+      "files": 4,
+      "directories": 2,
+      "exactLogicalHashesAndOwnTimes": true,
+      "allOutputsIndependent": true,
+      "allocations": [],
+      "actualFiles": [
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-browse-links-1719-gnu.tar.lzo\\阅读副本.txt",
+          "name": "阅读副本.txt",
+          "is_dir": false,
+          "size": 1344000,
+          "modified_time": 1700001719
+        },
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-browse-links-1719-gnu.tar.lzo\\gallery\\封面副本.png",
+          "name": "gallery/封面副本.png",
+          "is_dir": false,
+          "size": 93,
+          "modified_time": 1700001719
+        },
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-browse-links-1719-gnu.tar.lzo\\empty-copy.txt",
+          "name": "empty-copy.txt",
+          "is_dir": false,
+          "size": 0,
+          "modified_time": 1700001719
+        },
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-browse-links-1719-gnu.tar.lzo\\docs\\链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "is_dir": false,
+          "size": 47,
+          "modified_time": 1700001719
+        }
+      ]
+    },
+    {
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\tar-browse-links-1719\\pax.tar.lzo",
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-browse-links-1719-pax.tar.lzo",
+      "files": 4,
+      "directories": 2,
+      "exactLogicalHashesAndOwnTimes": true,
+      "allOutputsIndependent": true,
+      "allocations": [],
+      "actualFiles": [
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-browse-links-1719-pax.tar.lzo\\阅读副本.txt",
+          "name": "阅读副本.txt",
+          "is_dir": false,
+          "size": 1344000,
+          "modified_time": 1700001719
+        },
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-browse-links-1719-pax.tar.lzo\\gallery\\封面副本.png",
+          "name": "gallery/封面副本.png",
+          "is_dir": false,
+          "size": 93,
+          "modified_time": 1700001719
+        },
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-browse-links-1719-pax.tar.lzo\\empty-copy.txt",
+          "name": "empty-copy.txt",
+          "is_dir": false,
+          "size": 0,
+          "modified_time": 1700001719
+        },
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\1683718d-3c8c-48de-9757-92363990376a\\tar-browse-links-1719-pax.tar.lzo\\docs\\链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "is_dir": false,
+          "size": 47,
+          "modified_time": 1700001719
+        }
+      ]
+    },
+    {
+      "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\tar-browse-links-1719\\gnu.tar.lzo",
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\single-39bad7ee-1664-4f19-a558-90f70b91583e",
+      "files": 1,
+      "directories": 0,
+      "exactLogicalHashesAndOwnTimes": true,
+      "allOutputsIndependent": true,
+      "allocations": [],
+      "actualFiles": [
+        {
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\tar-selected-1720\\single-39bad7ee-1664-4f19-a558-90f70b91583e\\阅读副本.txt",
+          "name": "阅读副本.txt",
+          "is_dir": false,
+          "size": 1344000,
+          "modified_time": 1700001719
+        }
+      ]
+    }
+  ]
+}

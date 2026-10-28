@@ -382,7 +382,7 @@ impl<'a, R: Read> LogicalEntry<'a, R> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub(crate) struct Plan {
     pub entries: usize,
     pub logical_bytes: u64,

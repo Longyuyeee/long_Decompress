@@ -14,6 +14,14 @@ afterEach(() => { session?.dispose(); session = undefined })
 function file(path: string) { return { path, name: path.split('/').pop()!, size: 20, type: 'file', isDirectory: false } }
 function reopen() { session?.dispose(); setActivePinia(createPinia()); session = usePendingDraftStore(); session.initialize(); return session }
 describe('pending archive draft recovery', () => {
+  it('selected1720 keeps exact TAR paths and output policy across draft restart without starting', async () => {
+    session=usePendingDraftStore();session.initialize()
+    const tarSelection={paths:['alias.txt'],keepStructure:false,conflictPolicy:'skip' as const}
+    useTaskStore().addTask({id:'tar',name:'source.tar.lzo',type:'decompression',sourceFiles:['C:/source.tar.lzo'],outputPath:'D:/out',configurationMode:'individual',selectedEntries:tarSelection.paths,executionConfig:{schemaVersion:1,kind:'archive-extraction',outputDirectory:'D:/out',extractToSubfolder:false,tarSelection}})
+    session.flush();await reopen().restore()
+    expect(useTaskStore().tasks[0]).toMatchObject({status:'pending',selectedEntries:tarSelection.paths,executionConfig:{tarSelection}})
+    expect(mocks.invoke.mock.calls.some(([cmd])=>cmd==='extract_file')).toBe(false)
+  })
   it('zpaq164 restores partial retrieval identity and requires the session password without auto-start',async()=>{
     session=usePendingDraftStore();session.initialize();const selection={snapshot:{version:3,date:20261020150000},revision:'a'.repeat(64),paths:['docs/good.txt']}
     useTaskStore().addTask({id:'partial',name:'部分取回',type:'decompression',sourceFiles:['C:/backup.zpaq'],outputPath:'D:/out',configurationMode:'individual',zpaqRetrieval:selection,zpaqSnapshot:selection.snapshot,selectedEntries:selection.paths,password:'private-164'})
