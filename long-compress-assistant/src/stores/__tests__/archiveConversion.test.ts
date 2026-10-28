@@ -3,11 +3,11 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useArchiveConversionStore, conversionFormats } from '../archiveConversion'
 import { useTaskStore } from '../task'
 import { createTaskHistoryRecord } from '@/types/taskHistory'
-const mocks = vi.hoisted(() => ({ invoke: vi.fn(), ask: vi.fn() }))
+const mocks = vi.hoisted(() => ({ invoke: vi.fn(), ask: vi.fn(), listeners:new Map<string,(event:any)=>void>() }))
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
-vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn(async () => vi.fn()) }))
+vi.mock('@tauri-apps/api/event', () => ({ listen: vi.fn(async (name:string,listener:(event:any)=>void) => {mocks.listeners.set(name,listener);return()=>mocks.listeners.delete(name)}) }))
 vi.mock('@tauri-apps/api/dialog', () => ({ ask: mocks.ask }))
-beforeEach(() => { setActivePinia(createPinia()); mocks.invoke.mockReset(); mocks.ask.mockReset(); mocks.ask.mockResolvedValue(true) })
+beforeEach(() => { setActivePinia(createPinia()); mocks.invoke.mockReset(); mocks.ask.mockReset(); mocks.ask.mockResolvedValue(true);mocks.listeners.clear() })
 it('zpaq1536 keeps update and conversion separate, inherits common defaults and only batches effective update fields',async()=>{
   mocks.invoke.mockImplementation(async cmd=>cmd==='detect_split_archive'?{is_split:false,archive_format:'zpaq'}:undefined)
   const store=useArchiveConversionStore();store.defaults.level=3;store.showUpdate(['C:/old.zpaq']);const update=store.pending[0]
@@ -592,4 +592,24 @@ it('wim1539 ESD conversion forces solid and keeps source credentials, volume and
  const store=useArchiveConversionStore();store.addSources(['C:/input.zip']);store.updateItem(store.pending[0].id,{format:'esd',wimMethod:'store',sourcePassword:'source-secret',splitMiB:1});expect(store.effectiveSettings(store.pending[0])).toMatchObject({format:'esd',wimMethod:'solid',password:''});await store.start()
  expect(mocks.invoke).toHaveBeenCalledWith('convert_archive',expect.objectContaining({sourcePassword:'source-secret',outputPath:expect.stringMatching(/\.esd$/),options:expect.objectContaining({format:'esd',wim_method:'solid',split_size:1048576})}))
  const record=createTaskHistoryRecord(useTaskStore().tasks[0]);expect(record.executionConfig).toMatchObject({format:'esd',wimMethod:'solid'});store.restore(record);expect(store.effectiveSettings(store.pending.at(-1)!)).toMatchObject({format:'esd',wimMethod:'solid',sourcePassword:'',splitMiB:1})
+})
+
+it.each(['zip','7z'])('convert1722 keeps %s publishing nonterminal and records only final password/volume results',async format=>{
+ let finish!:(value:unknown)=>void
+ mocks.invoke.mockImplementation(async cmd=>cmd==='detect_split_archive'?{is_split:false,archive_format:'TAR.LZO'}:cmd==='get_file_info'?{size:100}:cmd==='convert_archive'?new Promise(resolve=>{finish=resolve}):undefined)
+ const store=useArchiveConversionStore();store.addSources(['C:/input.tar.lzo']);const item=store.pending[0]
+ store.updateItem(item.id,{format,outputPath:`D:/result.${format}`,password:'Target1722!',splitMiB:1,encryptFilenames:format==='7z',sevenZipMethod:'copy',zipMethod:'store'})
+ const pending=store.start();await vi.waitFor(()=>expect(finish).toBeTypeOf('function'))
+ const task=useTaskStore().tasks[0];task.progress=100;mocks.listeners.get('archive-conversion-phase')?.({payload:{taskId:task.id,phase:'publishing'}})
+ expect(store.phase).toBe('正在保存新包…');expect(task).toMatchObject({status:'running',stage:'Finalizing',progress:99,currentFile:`D:/result.${format}`});expect(task.archiveOutput).toBeUndefined()
+ const output={primaryPath:`D:/result.${format}.001`,files:[{path:`D:/result.${format}.001`,bytes:8},{path:`D:/result.${format}.002`,bytes:10}],totalBytes:18,split:true};finish(output);await pending
+ expect(task).toMatchObject({status:'completed',archiveOutput:output,outputBytes:18,outputBytesEstimated:false});const record=createTaskHistoryRecord(task);expect(record.outputPath).toBe(output.primaryPath);expect(record.executionConfig).toMatchObject({format,splitSize:1048576,passwordRequired:true});expect(JSON.stringify(record)).not.toContain('Target1722!');expect(JSON.stringify(record)).not.toContain('.long-convert')
+ expect(mocks.invoke).toHaveBeenCalledWith('convert_archive',expect.objectContaining({sourcePath:'C:/input.tar.lzo',options:expect.objectContaining({preserve_paths:true,verify_after:true,delete_after:false,format,split_size:1048576})}))
+})
+it('convert1722 reports a source change during publication as failed without exposing an intermediate result',async()=>{
+ let reject!:(cause:unknown)=>void
+ mocks.invoke.mockImplementation(async cmd=>cmd==='detect_split_archive'?{is_split:false,archive_format:'TAR.LZO'}:cmd==='get_file_info'?{size:100}:cmd==='convert_archive'?new Promise((_,fail)=>{reject=fail}):undefined)
+ const store=useArchiveConversionStore();store.addSources(['C:/input.tar.lzo']);store.updateItem(store.pending[0].id,{format:'zip',outputPath:'D:/result.zip'});const pending=store.start();await vi.waitFor(()=>expect(reject).toBeTypeOf('function'))
+ const task=useTaskStore().tasks[0];mocks.listeners.get('archive-conversion-phase')?.({payload:{taskId:task.id,phase:'publishing'}});reject('[archive-source:Publishing:source-changed] 原包已变化，请重新读取');await pending
+ expect(task.status).toBe('failed');expect(task.error).toContain('source-changed');expect(task.archiveOutput).toBeUndefined();expect(store.items[0].error).toContain('原包已变化');expect(createTaskHistoryRecord(task).archiveOutput).toBeNull()
 })

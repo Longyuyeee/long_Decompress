@@ -1094,7 +1094,7 @@ impl CompressionService {
         result
     }
 
-    fn publication_error(error: PublishError) -> anyhow::Error {
+    pub(crate) fn publication_error(error: PublishError) -> anyhow::Error {
         match error {
             PublishError::Cancelled => CompressionError::Cancelled.into(),
             PublishError::Io(error) => CompressionError::PublicationFailed {

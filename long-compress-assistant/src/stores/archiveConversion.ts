@@ -376,7 +376,11 @@ export const useArchiveConversionStore = defineStore('archiveConversion', () => 
       phase.value = '步骤 1/2：读取原包'
       unlisten = await listen<{ taskId: string; phase: string; processedBytes?: number; totalBytes?: number }>('archive-conversion-phase', ({ payload }) => {
         if (payload.taskId !== id) return
-        if (!updating) { phase.value = payload.phase === 'writing' ? '步骤 2/2：生成新包' : '步骤 1/2：读取原包'; return }
+        if (!updating) {
+          phase.value = payload.phase === 'publishing' ? '正在保存新包…' : payload.phase === 'writing' ? '步骤 2/2：生成新包' : '步骤 1/2：读取原包'
+          if (payload.phase === 'publishing') { const current=tasks.tasks.find(task=>task.id===id);if(current){current.conversionPublishing=true;current.stage='Finalizing';current.progress=99;current.currentFile=outputPath} }
+          return
+        }
         phase.value = ({ reading:'读取原备份', copying:'复制原备份', updating:'比较内容并生成增量', verifying:'检查完整更新包', splitting:'生成新分卷', publishing:'提交新备份', completed:'更新完成' } as Record<string,string>)[payload.phase] || payload.phase
         const current = tasks.tasks.find(task => task.id === id)
         if (current) {

@@ -383,12 +383,30 @@ pub async fn convert_archive(
     let service = service_for_task(&task_id).await?;
     let _task_guard = TaskCancellationGuard::new(&task_id);
     let parent = Path::new(&output_path).parent().ok_or("请选择输出目录")?;
-    let staging = tempfile::Builder::new().prefix(".long-convert-").tempdir_in(parent)
-        .map_err(|error| format!("无法创建转换暂存目录：{}", crate::services::archive_io::message(&error.into())))?;
     service.emit_log(&window, &task_id, "转换归档：先解压至临时目录，再校验并发布新包；保留原包。", TaskLogSeverity::Info);
     let mut extraction = conversion_extraction_options(source_zip_password_encoding);
     extraction.zpaq_snapshot = zpaq_snapshot;
     let _ = window.emit("archive-conversion-phase", serde_json::json!({"taskId": task_id, "phase": "reading"}));
+    let (read_source,final_output,read_options,read_cancelled)=(PathBuf::from(&source_path),PathBuf::from(&output_path),extraction.clone(),service.cancellation_flag.clone());
+    let prepared=tokio::task::spawn_blocking(move||crate::services::tar_link_conversion::Prepared::open(&read_source,&final_output,read_options,read_cancelled))
+        .await.map_err(|e|e.to_string())?.map_err(|e|format!("转换读取原包失败：{}",crate::services::archive_io::message(&e)))?;
+    if let Some(prepared)=prepared {
+        let (reader,read_window,read_id)=(service.clone(),window.clone(),task_id.clone());
+        let (prepared,files)=tokio::task::spawn_blocking(move||prepared.read(&reader,Some(&read_window),&read_id).map(|files|(prepared,files)))
+            .await.map_err(|e|e.to_string())?.map_err(|e|format!("转换读取原包失败：{}",crate::services::archive_io::message(&e)))?;
+        prepared.check_source().map_err(|e|format!("{e:#}"))?;
+        crate::services::extraction_transaction::validate_staging_disk_reserve(parent).map_err(|e|crate::services::archive_io::message(&e))?;
+        let _=window.emit("archive-conversion-phase",serde_json::json!({"taskId":task_id,"phase":"writing"}));
+        let split=options.split_size.is_some_and(|size|size>0);
+        service.compress(window.clone(),task_id.clone(),files,prepared.rebuilt().to_string_lossy().into_owned(),options)
+            .await.map_err(|e|format!("转换写入新包失败：{}",compression_command_error(&e)))?;
+        let _=window.emit("archive-conversion-phase",serde_json::json!({"taskId":task_id,"phase":"publishing"}));
+        tokio::task::spawn_blocking(move||prepared.publish_verified(split)).await.map_err(|e|e.to_string())?
+            .map_err(|e|format!("转换保存新包失败：{}",crate::services::archive_io::message(&e)))?;
+        return published_archive_output(Path::new(&output_path),split).map_err(|e|format!("新包已保存，但读取结果清单失败：{e}"));
+    }
+    let staging = tempfile::Builder::new().prefix(".long-convert-").tempdir_in(parent)
+        .map_err(|error| format!("无法创建转换暂存目录：{}", crate::services::archive_io::message(&error.into())))?;
     service.extract(window.clone(), task_id.clone(), source_path,
         Some(staging.path().to_string_lossy().into_owned()), source_password, extraction)
         .await.map_err(|error| format!("转换读取原包失败：{}", crate::services::archive_io::message(&error)))?;
@@ -527,7 +545,7 @@ pub struct PublishedArchiveFile {
     bytes: u64,
 }
 
-fn published_archive_output(output: &Path, split: bool) -> anyhow::Result<PublishedArchiveOutput> {
+pub(crate) fn published_archive_output(output: &Path, split: bool) -> anyhow::Result<PublishedArchiveOutput> {
     let mut paths = if split {
         crate::services::archive_volumes::complete_volume_paths(output)?
     } else { vec![output.to_path_buf()] };

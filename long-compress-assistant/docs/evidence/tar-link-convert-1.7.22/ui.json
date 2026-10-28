@@ -1,0 +1,449 @@
+{
+  "passed": true,
+  "nativeValueReplay": true,
+  "realDesktopIPC": false,
+  "checks": [
+    {
+      "name": "conversion-config-1200x760",
+      "width": 1200,
+      "height": 760,
+      "x": 0,
+      "y": 0,
+      "right": 1200,
+      "bottom": 760,
+      "overflow": 0,
+      "bodyOverflow": 0
+    },
+    {
+      "name": "conversion-config-900x600",
+      "width": 900,
+      "height": 600,
+      "x": 0,
+      "y": 0,
+      "right": 900,
+      "bottom": 600,
+      "overflow": 0,
+      "bodyOverflow": 0
+    },
+    {
+      "name": "conversion-batch-900x600",
+      "width": 900,
+      "height": 600,
+      "x": 0,
+      "y": 0,
+      "right": 900,
+      "bottom": 600,
+      "overflow": 0,
+      "bodyOverflow": 0
+    },
+    {
+      "name": "conversion-publishing-900x600",
+      "width": 900,
+      "height": 600,
+      "x": 0,
+      "y": 0,
+      "right": 900,
+      "bottom": 600,
+      "overflow": 0,
+      "bodyOverflow": 0
+    },
+    {
+      "name": "conversion-result-900x600",
+      "width": 900,
+      "height": 600,
+      "x": 0,
+      "y": 0,
+      "right": 900,
+      "bottom": 600,
+      "overflow": 0,
+      "bodyOverflow": 0
+    },
+    {
+      "name": "conversion-result-1200x760",
+      "width": 1200,
+      "height": 760,
+      "x": 0,
+      "y": 0,
+      "right": 1200,
+      "bottom": 760,
+      "overflow": 0,
+      "bodyOverflow": 0
+    }
+  ],
+  "publishing": {
+    "status": "running",
+    "progress": 99,
+    "stage": "Finalizing"
+  },
+  "commands": [
+    {
+      "cmd": "convert_archive",
+      "callback": 1451822155,
+      "error": 2507649477,
+      "taskId": "conversion-89ae4877-70eb-4c95-adb6-7900ffeab08d",
+      "sourcePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-browse-links-1719\\gnu.tar.lzo",
+      "sourcePassword": null,
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-2\\converted.zip",
+      "options": {
+        "format": "zip",
+        "level": 1,
+        "password": null,
+        "seven_zip_filter": "none",
+        "seven_zip_delta_distance": 1,
+        "seven_zip_method": "lzma2",
+        "zip_method": "deflate",
+        "zip_encryption": "aes256",
+        "zip_password_encoding": "utf8",
+        "zip_split_mode": "numeric",
+        "rar_recovery_percent": 0,
+        "rar_recovery_volumes": 0,
+        "split_size": null,
+        "encrypt_filenames": false,
+        "preserve_paths": true,
+        "delete_after": false,
+        "verify_after": true,
+        "allow_insecure_password_cli": false
+      }
+    },
+    {
+      "cmd": "convert_archive",
+      "callback": 1885972991,
+      "error": 2037458851,
+      "taskId": "conversion-52273f20-af9a-4a62-a37a-b3eba56587ab",
+      "sourcePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\input.tar.lzo.001",
+      "sourcePassword": null,
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z",
+      "options": {
+        "format": "7z",
+        "level": 1,
+        "password": "TarLink1722!",
+        "seven_zip_filter": "none",
+        "seven_zip_delta_distance": 1,
+        "seven_zip_method": "copy",
+        "zip_method": "deflate",
+        "zip_encryption": "aes256",
+        "zip_password_encoding": "utf8",
+        "zip_split_mode": "numeric",
+        "rar_recovery_percent": 0,
+        "rar_recovery_volumes": 0,
+        "split_size": 65536,
+        "encrypt_filenames": true,
+        "preserve_paths": true,
+        "delete_after": false,
+        "verify_after": true,
+        "allow_insecure_password_cli": false
+      }
+    }
+  ],
+  "records": [
+    {
+      "archiveOutput": {
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-2\\converted.zip",
+        "files": [
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-2\\converted.zip",
+            "bytes": 19516
+          }
+        ],
+        "totalBytes": 19516,
+        "split": false
+      },
+      "id": "conversion-89ae4877-70eb-4c95-adb6-7900ffeab08d",
+      "retryOfTaskId": null,
+      "executionConfig": {
+        "schemaVersion": 1,
+        "kind": "archive-conversion",
+        "sourcePasswordRequired": false,
+        "sevenZipFilter": "none",
+        "sevenZipDeltaDistance": 1,
+        "sevenZipMethod": "lzma2",
+        "zipMethod": "deflate",
+        "zipEncryption": "aes256",
+        "zipPasswordEncoding": "utf8",
+        "zipSplitMode": "numeric",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-2\\converted.zip",
+        "format": "zip",
+        "level": 1,
+        "rarRecoveryPercent": 0,
+        "rarRecoveryVolumes": 0,
+        "splitSize": 0,
+        "encryptFilenames": false,
+        "passwordRequired": false
+      },
+      "name": "归档转换 · gnu.tar.lzo",
+      "taskType": "compression",
+      "workloadKind": "archive",
+      "metrics": {
+        "schemaVersion": 1,
+        "inputBytes": 0,
+        "outputBytes": 19516,
+        "savingsRatio": 0
+      },
+      "status": "completed",
+      "sourcePaths": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives\\tar-browse-links-1719\\gnu.tar.lzo"
+      ],
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-2\\converted.zip",
+      "format": "zip",
+      "startedAt": "2026-10-28T09:57:33.174Z",
+      "completedAt": "2026-10-28T09:57:33.257Z",
+      "durationMs": 83,
+      "processedBytes": 0,
+      "totalBytes": 0,
+      "errorMessage": null,
+      "failure": null,
+      "logs": []
+    },
+    {
+      "archiveOutput": {
+        "primaryPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.001",
+        "files": [
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.001",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.002",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.003",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.004",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.005",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.006",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.007",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.008",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.009",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.010",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.011",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.012",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.013",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.014",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.015",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.016",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.017",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.018",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.019",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.020",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.021",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.022",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.023",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.024",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.025",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.026",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.027",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.028",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.029",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.030",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.031",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.032",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.033",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.034",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.035",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.036",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.037",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.038",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.039",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.040",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.041",
+            "bytes": 65536
+          },
+          {
+            "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.042",
+            "bytes": 1822
+          }
+        ],
+        "totalBytes": 2688798,
+        "split": true
+      },
+      "id": "conversion-52273f20-af9a-4a62-a37a-b3eba56587ab",
+      "retryOfTaskId": null,
+      "executionConfig": {
+        "schemaVersion": 1,
+        "kind": "archive-conversion",
+        "sourcePasswordRequired": false,
+        "sevenZipFilter": "none",
+        "sevenZipDeltaDistance": 1,
+        "sevenZipMethod": "copy",
+        "zipMethod": "deflate",
+        "zipEncryption": "aes256",
+        "zipPasswordEncoding": "utf8",
+        "zipSplitMode": "numeric",
+        "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z",
+        "format": "7z",
+        "level": 1,
+        "rarRecoveryPercent": 0,
+        "rarRecoveryVolumes": 0,
+        "splitSize": 65536,
+        "encryptFilenames": true,
+        "passwordRequired": true
+      },
+      "name": "归档转换 · input.tar.lzo.001",
+      "taskType": "compression",
+      "workloadKind": "archive",
+      "metrics": {
+        "schemaVersion": 1,
+        "inputBytes": 0,
+        "outputBytes": 2688798,
+        "savingsRatio": 0
+      },
+      "status": "completed",
+      "sourcePaths": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\input.tar.lzo.001",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\input.tar.lzo.002",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\input.tar.lzo.003"
+      ],
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6\\converted.7z.001",
+      "format": "7z",
+      "startedAt": "2026-10-28T09:57:33.264Z",
+      "completedAt": "2026-10-28T09:57:33.272Z",
+      "durationMs": 8,
+      "processedBytes": 0,
+      "totalBytes": 0,
+      "errorMessage": null,
+      "failure": null,
+      "logs": []
+    }
+  ],
+  "retry": {
+    "passwords": {
+      "source": false,
+      "target": true
+    },
+    "settings": {
+      "format": "7z",
+      "level": 1,
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6",
+      "outputPath": "",
+      "sourcePassword": "",
+      "password": "",
+      "splitMiB": 0.0625,
+      "encryptFilenames": true,
+      "sevenZipFilter": "none",
+      "sevenZipDeltaDistance": 1,
+      "sevenZipMethod": "copy",
+      "zipMethod": "deflate",
+      "zipEncryption": "aes256",
+      "zipPasswordEncoding": "utf8",
+      "zipSplitMode": "numeric",
+      "rarRecoveryPercent": 0,
+      "rarRecoveryVolumes": 0
+    },
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-link-convert-1722\\383704c0-5fe8-471d-b704-7c9167ccfd27\\case-6/input_转换.7z"
+  },
+  "errors": []
+}

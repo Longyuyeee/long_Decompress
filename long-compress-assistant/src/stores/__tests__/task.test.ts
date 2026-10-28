@@ -17,6 +17,16 @@ vi.mock('@tauri-apps/api/event', () => ({
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 
 describe('task progress state machine', () => {
+  it('convert1722 late progress cannot replace the final publication state or expose a temporary output', async () => {
+    const store=useTaskStore();await store.initListeners()
+    store.addTask({id:'publishing1722',name:'converted.zip',type:'compression',sourceFiles:['C:/input.tar.lzo'],outputPath:'D:/converted.zip',conversionPublishing:true})
+    store.updateTaskStatus('publishing1722','running')
+    for(const stage of ['Compressing','Splitting','Completed'])mocks.listeners.get('task-progress')?.({payload:{task_id:'publishing1722',stage,progress:1,current_file:'D:/.long-convert-private.zip',processed_bytes:100,total_bytes:100}})
+    expect(store.tasks[0]).toMatchObject({status:'running',stage:'Finalizing',progress:99,currentFile:'D:/converted.zip'})
+    store.updateTaskStatus('publishing1722','completed')
+    mocks.listeners.get('task-progress')?.({payload:{task_id:'publishing1722',stage:'Splitting',progress:.2}})
+    expect(store.tasks[0]).toMatchObject({status:'completed',progress:100})
+  })
   it('cannot resurrect a task that settles while a pause request is in flight', async () => {
     const store = useTaskStore()
     store.addTask({ id: 'settling', name: 'small.rar', type: 'decompression', sourceFiles: [], outputPath: '' })
