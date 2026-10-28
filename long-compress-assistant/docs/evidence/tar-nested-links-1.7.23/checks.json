@@ -1,0 +1,20 @@
+{
+  "version": "1.7.23",
+  "date": "2026-10-28",
+  "native": {
+    "newPassed": 4,
+    "relatedPassed": 2
+  },
+  "frontend": {
+    "newPassed": 4,
+    "relatedPassed": 4
+  },
+  "independentArchives": 7,
+  "headlessUiGroups": 4,
+  "realDesktopIPC": false,
+  "desktopControlled": false,
+  "productionBuild": true,
+  "shellExtension": true,
+  "versionIdentity": true,
+  "notes": "Initial frontend assertions exposed a wrong navigation selector and loss of source-change detail. Corrected selector/error display and reran only two failed cases. Independent verifier uses universal newline comparison for producer Windows text; logical TAR bytes always compare exactly. Headless peer comparison uses path/entries/selection across responsive column hiding. Breadcrumb visibility then improved and affected visual checks rerun. Existing unrelated matrices reused."
+}

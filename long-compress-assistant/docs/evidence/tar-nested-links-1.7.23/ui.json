@@ -1,0 +1,146 @@
+{
+  "passed": true,
+  "nativeValueReplay": true,
+  "realDesktopIPC": false,
+  "checks": [
+    {
+      "name": "outer-alias-1200x760",
+      "width": 1200,
+      "height": 760,
+      "overflow": 0,
+      "panes": [
+        {
+          "width": 472.796875,
+          "overflow": 0
+        },
+        {
+          "width": 472.8125,
+          "overflow": 0
+        }
+      ]
+    },
+    {
+      "name": "nested-1200x760",
+      "width": 1200,
+      "height": 760,
+      "overflow": 0,
+      "panes": [
+        {
+          "width": 472.796875,
+          "overflow": 0
+        },
+        {
+          "width": 472.8125,
+          "overflow": 0
+        }
+      ]
+    },
+    {
+      "name": "nested-900x600",
+      "width": 900,
+      "height": 600,
+      "overflow": 0,
+      "panes": [
+        {
+          "width": 324.40625,
+          "overflow": 0
+        },
+        {
+          "width": 324.40625,
+          "overflow": 0
+        }
+      ]
+    },
+    {
+      "name": "return-900x600",
+      "width": 900,
+      "height": 600,
+      "overflow": 0,
+      "panes": [
+        {
+          "width": 324.40625,
+          "overflow": 0
+        },
+        {
+          "width": 324.40625,
+          "overflow": 0
+        }
+      ]
+    },
+    {
+      "name": "opening-900x600",
+      "width": 900,
+      "height": 600,
+      "overflow": 0,
+      "panes": [
+        {
+          "width": 324.40625,
+          "overflow": 0
+        },
+        {
+          "width": 324.40625,
+          "overflow": 0
+        }
+      ]
+    },
+    {
+      "name": "encrypted-inner-900x600",
+      "width": 900,
+      "height": 600,
+      "overflow": 0,
+      "panes": [
+        {
+          "width": 324.40625,
+          "overflow": 0
+        },
+        {
+          "width": 324.40625,
+          "overflow": 0
+        }
+      ]
+    }
+  ],
+  "requests": [
+    {
+      "cmd": "materialize_nested_archive",
+      "callback": 2039214309,
+      "error": 3800155282,
+      "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-nested-links-1723\\gnu.tar.lzo",
+      "entryPath": "links/copy.zip",
+      "password": null,
+      "targetDepth": 2,
+      "ancestorHashes": [],
+      "sourceRevision": "66dc66bfbee186294733b7aaaa0de8759dc824f1d24753710cbd30a9ecf74712",
+      "requestId": "archive-nested-fb2889c9-e6b9-4ef0-88b3-10601e7265a1"
+    },
+    {
+      "cmd": "materialize_nested_archive",
+      "callback": 1856126833,
+      "error": 2503421673,
+      "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-nested-links-1723\\gnu.tar.lzo",
+      "entryPath": "links/copy.zip",
+      "password": null,
+      "targetDepth": 2,
+      "ancestorHashes": [
+        "55e7b7d7a52e042776cfc4f1910e0bb247435cdb4735bd753fc4f407729dc4b2"
+      ],
+      "sourceRevision": "66dc66bfbee186294733b7aaaa0de8759dc824f1d24753710cbd30a9ecf74712",
+      "requestId": "archive-nested-e6131d56-8174-4a7d-830d-560d650fcaf0"
+    },
+    {
+      "cmd": "materialize_nested_archive",
+      "callback": 195313652,
+      "error": 4024823183,
+      "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-nested-links-1723\\gnu.tar.lzo",
+      "entryPath": "links/加密副本.7z",
+      "password": null,
+      "targetDepth": 2,
+      "ancestorHashes": [
+        "55e7b7d7a52e042776cfc4f1910e0bb247435cdb4735bd753fc4f407729dc4b2"
+      ],
+      "sourceRevision": "66dc66bfbee186294733b7aaaa0de8759dc824f1d24753710cbd30a9ecf74712",
+      "requestId": "archive-nested-7c795d59-c320-4dd7-8d02-9530c412cab6"
+    }
+  ],
+  "errors": []
+}

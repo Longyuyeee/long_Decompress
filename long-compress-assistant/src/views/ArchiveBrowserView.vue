@@ -66,6 +66,7 @@ interface ArchiveWorkspaceFrame {
   navigationForward: string[]
   expandedDirectories: string[]
   contentSha256: string
+  scrollTop: number
 }
 
 const appStore = useAppStore()
@@ -112,6 +113,9 @@ const checkingSnapshot = ref(false)
 const diffVisible = ref(false)
 const recoveryVisible = ref(false)
 const openingEntryPath = ref('')
+const nestedRequestId = ref('')
+let nestedSequence = 0
+const cancelNestedOpen = () => { const id=nestedRequestId.value; nestedRequestId.value=''; nestedSequence++; openingEntryPath.value=''; if(id)void commands.cancelArchiveBrowse(id).catch(()=>{}) }
 const inputBusy = computed(() => zipEditBusy.value || loading.value || extracting.value || checkingSnapshot.value || !!openingEntryPath.value)
 const dangerousOpenEntry = ref<ArchiveEntryInfo | null>(null)
 const reading=useArchiveReadingStore()
@@ -484,12 +488,14 @@ const captureCurrentFrame = (contentSha256: string): ArchiveWorkspaceFrame | nul
     navigationForward: [...navigationForward.value],
     expandedDirectories: [...expandedDirectories.value],
     contentSha256,
+    scrollTop: browserRoot.value?.querySelector<HTMLElement>('.file-list, .browser-entry-scroll')?.scrollTop || 0,
   }
 }
 
 const restoreFrame = (index: number) => {
   const frame = parentFrames.value[index]
   if (!frame) return
+  cancelNestedOpen()
   browseRequest.cancel(false)
   archiveLoadSequence++
   parentFrames.value = parentFrames.value.slice(0, index)
@@ -515,10 +521,10 @@ const restoreFrame = (index: number) => {
   browseRequest.clearNotice()
   closeContextMenu()
   closePreview()
+  void nextTick(()=>{const list=browserRoot.value?.querySelector<HTMLElement>('.file-list, .browser-entry-scroll');if(list)list.scrollTop=frame.scrollTop})
 }
 
 const enterNestedArchive = async (entry: ArchiveEntryInfo) => {
-  if(entry.linkTarget){appStore.setError("请先将此链接提取为独立压缩包，再从目标目录打开");return}
   if (!isNestedArchiveEntry(entry) || openingEntryPath.value || !result.value) return
   if (archiveDepth.value >= 3) {
     appStore.setError('嵌套归档最多允许 3 层，请返回上层后再打开其他归档')
@@ -526,6 +532,8 @@ const enterNestedArchive = async (entry: ArchiveEntryInfo) => {
   }
   closeContextMenu()
   openingEntryPath.value = entry.path
+  const sequence=++nestedSequence
+  nestedRequestId.value=`archive-nested-${crypto.randomUUID()}`
   try {
     const ancestorHashes = [
       ...parentFrames.value.map(frame => frame.contentSha256),
@@ -537,8 +545,9 @@ const enterNestedArchive = async (entry: ArchiveEntryInfo) => {
       password.value,
       archiveDepth.value + 1,
       ancestorHashes,
-      ...snapshotReadArguments.value,
+      inputEncoding.value, selectedSnapshot.value, result.value.revision, nestedRequestId.value,
     )
+    if(disposed||sequence!==nestedSequence)return
     const frame = captureCurrentFrame(currentContentSha256.value || materialized.parentSha256)
     if (!frame) throw new Error('外层归档状态不可用')
     parentFrames.value = [...parentFrames.value, frame]
@@ -552,15 +561,17 @@ const enterNestedArchive = async (entry: ArchiveEntryInfo) => {
     nestedLoadError.value = ''
     nestedLoadRevision.value = 0
     await loadArchive()
+    if(sequence===nestedSequence){await nextTick();const list=browserRoot.value?.querySelector<HTMLElement>('.file-list, .browser-entry-scroll');if(list)list.scrollTop=0}
   } catch (error) {
-    appStore.setError(`无法进入嵌套归档：${String(error)}`)
+    if(!disposed&&sequence===nestedSequence)appStore.setError(`无法进入嵌套归档：${String(error).replace(/^Error:\s*/,'').split('|').slice(-1)[0]}`)
   } finally {
-    openingEntryPath.value = ''
+    if(sequence===nestedSequence){openingEntryPath.value='';nestedRequestId.value=''}
   }
 }
 
 const activateEntry = (entry: ArchiveEntryInfo) => {
-  if(entry.linkTarget){if(canPreviewEntry(entry)&&entryPreviewSupported(entry))void openPreview(entry);else appStore.setError('此链接可提取为独立文件，再用默认应用打开');return}
+  if(openingEntryPath.value)return
+  if(entry.linkTarget&&!isNestedArchiveEntry(entry)){if(canPreviewEntry(entry)&&entryPreviewSupported(entry))void openPreview(entry);else appStore.setError('此链接可提取为独立文件，再用默认应用打开');return}
   focusedEntryPath.value = entry.path
   if (entry.isDir) navigateToDirectory(entry.path.replace(/\/+$/, ''))
   else if (isNestedArchiveEntry(entry)) void enterNestedArchive(entry)
@@ -714,7 +725,8 @@ const handleWorkspaceKeydown = (event: KeyboardEvent) => {
   if (event.defaultPrevented || readerOpen.value || props.embedded && !props.active) return
   if (document.querySelector('[role="dialog"], [role="alertdialog"]') && !previewEntry.value && !dangerousOpenEntry.value && !detailEntries.value.length) return
   if (event.key === 'Escape') {
-    if (previewEntry.value) closePreview()
+    if (nestedRequestId.value) {event.preventDefault();cancelNestedOpen()}
+    else if (previewEntry.value) closePreview()
     else if (dangerousOpenEntry.value) dangerousOpenEntry.value = null
     else if (contextMenu.value) closeContextMenu()
     else if (detailEntries.value.length > 0) closeDetails()
@@ -820,6 +832,7 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('pointerdown', dismissPaneTools)
   cancelEntryPreview()
+  cancelNestedOpen()
   disposed = true; sourceSequence++; archiveLoadSequence++
   readerOpen.value=false
   previewSequence++
@@ -1046,7 +1059,7 @@ defineExpose({extractToDestination})
             <button type="button" class="browser-checkbox" :class="{ checked: visibleSelected }" @click="toggleVisible"><i v-if="visibleSelected" class="pi pi-check"></i></button>
             <span>名称与路径</span><span class="hidden md:block">大小</span><span class="hidden lg:block">修改时间</span><span class="hidden xl:block">CRC</span>
           </div>
-          <div class="flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar" @contextmenu.self="openContextMenu(null, $event)">
+          <div class="browser-entry-scroll flex-1 min-h-0 overflow-y-auto overflow-x-hidden custom-scrollbar" @contextmenu.self="openContextMenu(null, $event)">
             <div
               v-for="entry in filteredEntries"
               :key="entry.path"
@@ -1086,14 +1099,14 @@ defineExpose({extractToDestination})
 
       <footer v-if="!embedded" class="shrink-0 flex flex-wrap items-center justify-between gap-3">
         <div class="footer-status min-w-0">
-          <span class="text-sm font-bold text-muted">已选择 <strong class="text-primary">{{ selected.size }}</strong> / {{ result.totalFiles }} 个文件</span>
+          <button v-if="nestedRequestId" class="text-primary text-sm font-bold" data-testid="archive-nested-cancel" @click="cancelNestedOpen">正在打开… · 取消</button><span v-else class="text-sm font-bold text-muted">已选择 <strong class="text-primary">{{ selected.size }}</strong> / {{ result.totalFiles }} 个文件</span>
           <button class="output-target" type="button" :title="outputPath" @click="chooseOutput"><i class="pi pi-folder"></i><span class="truncate">解压到：{{ outputPath || '选择输出目录' }}</span><i class="pi pi-pencil"></i></button>
         </div>
         <button class="browser-primary" type="button" :disabled="selected.size === 0 || !outputPath || extracting" @click="extractSelected">
           <i :class="extracting ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i><span>{{ extracting ? '正在解压' : usesPeerOutput ? '解压到另一栏' : '解压所选文件' }}</span>
         </button>
       </footer>
-      <footer v-if="embedded" class="pane-folder-footer"><span>{{paneSelection.size?`已选择 ${paneSelection.size} 项`:paneSelectionMode?'多选模式 · 单击切换选择 · Esc 退出':'单击选择 · Ctrl 多选 · 双击打开 · 右键操作'}}</span><button v-if="paneSelectionMode" type="button" @click="paneSelectionMode=false;setPaneSelection(new Set())">退出多选</button></footer>
+      <footer v-if="embedded" class="pane-folder-footer"><button v-if="nestedRequestId" data-testid="archive-nested-cancel" type="button" @click="cancelNestedOpen"><i class="pi pi-spin pi-spinner"/> 正在打开… · 取消</button><span v-else>{{paneSelection.size?`已选择 ${paneSelection.size} 项`:paneSelectionMode?'多选模式 · 单击切换选择 · Esc 退出':'单击选择 · Ctrl 多选 · 双击打开 · 右键操作'}}</span><button v-if="paneSelectionMode" type="button" @click="paneSelectionMode=false;setPaneSelection(new Set())">退出多选</button></footer>
     </template>
 
     <div v-if="isDraggingArchive" class="browser-drop-overlay" aria-live="polite">

@@ -335,13 +335,14 @@ pub fn validate_extracted_file(
     Ok(expected)
 }
 
-fn sha256_file(path: &Path) -> Result<String> {
+fn sha256_file_controlled(path: &Path, check: &impl Fn()->Result<()>) -> Result<String> {
     use sha2::{Digest, Sha256};
 
     let mut reader = BufReader::new(fs::File::open(path)?);
     let mut hasher = Sha256::new();
     let mut buffer = [0u8; 64 * 1024];
     loop {
+        check()?;
         let read = reader.read(&mut buffer)?;
         if read == 0 {
             break;
@@ -357,6 +358,11 @@ pub fn validate_nested_archive_identity(
     target_depth: usize,
     ancestor_hashes: &[String],
 ) -> Result<(String, String)> {
+    validate_nested_archive_identity_controlled(parent_archive,nested_archive,target_depth,ancestor_hashes,||Ok(()))
+}
+
+pub(crate) fn validate_nested_archive_identity_controlled(parent_archive:&Path,nested_archive:&Path,target_depth:usize,ancestor_hashes:&[String],check:impl Fn()->Result<()>)->Result<(String,String)>{
+    check()?;
     use crate::services::archive_format::ArchiveFormat;
 
     if !(2..=MAX_NESTED_ARCHIVE_DEPTH).contains(&target_depth) {
@@ -378,8 +384,8 @@ pub fn validate_nested_archive_identity(
         anyhow::bail!("所选条目不是受支持的归档格式");
     }
 
-    let parent_sha256 = sha256_file(parent_archive)?;
-    let content_sha256 = sha256_file(nested_archive)?;
+    let parent_sha256 = sha256_file_controlled(parent_archive,&check)?;
+    let content_sha256 = sha256_file_controlled(nested_archive,&check)?;
     if content_sha256 == parent_sha256
         || ancestor_hashes
             .iter()

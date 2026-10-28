@@ -28,6 +28,10 @@ const decompressionOptions = {
 } as const
 
 describe('useTauriCommands', () => {
+  it('nested1723 binds materialization to the browsed source and cancellable request',async()=>{
+    await useTauriCommands().materializeNestedArchive('C:/outer.tar.lzo.001','links/copy.zip','',2,[],undefined,undefined,'source-revision','nested-request')
+    expect(mocks.invoke).toHaveBeenCalledWith('materialize_nested_archive',{filePath:'C:/outer.tar.lzo.001',entryPath:'links/copy.zip',password:null,targetDepth:2,ancestorHashes:[],sourceRevision:'source-revision',requestId:'nested-request'})
+  })
   it.each(['C:/complete.tar.lzo','C:/complete.tar.lzo.001'])('full1721 keeps whole-archive extraction and history distinct from a subset: %s', async path => {
     mocks.invoke.mockImplementation(async cmd => cmd === 'extract_file' ? 'D:/whole' : undefined)
     await useTauriCommands().decompressFile(path,{...decompressionOptions,outputPath:'D:/whole',sourceFormat:'TAR.LZO'})

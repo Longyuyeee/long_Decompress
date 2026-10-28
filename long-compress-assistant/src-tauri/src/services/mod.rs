@@ -354,3 +354,7 @@ pub(crate) mod tar_link_conversion;
 
 #[cfg(test)]
 mod tar_link_convert_1722_tests;
+
+pub(crate) mod nested_archive;
+#[cfg(test)]
+mod tar_nested_links_1723_tests;

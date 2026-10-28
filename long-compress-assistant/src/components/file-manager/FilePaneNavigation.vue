@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from 'vue'
+import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useSavedLocations } from '@/composables/useSavedLocations'
 const props = withDefaults(defineProps<{
   paneId: string; path: string; crumbs: Array<{name:string;path:string}>; folders: number; files: number;
@@ -10,11 +10,15 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ back: []; forward: []; up: []; refresh: []; create: []; selection: []; tools: [event:MouseEvent]; navigate: [path:string]; breadcrumb: [index:number] }>()
 const root = ref<HTMLElement>(), draft = ref(props.path), locationsOpen = ref(false)
 const saved = props.saved || useSavedLocations()
+const crumbStrip=ref<HTMLElement>()
+let crumbResize:ResizeObserver|undefined
+const revealCurrent=()=>{if(crumbStrip.value)crumbStrip.value.scrollLeft=crumbStrip.value.scrollWidth}
+watch(()=>props.path,()=>void nextTick(revealCurrent),{flush:'post'})
 watch(() => props.path, path => { draft.value = path; locationsOpen.value = false })
 function submit(path = draft.value) { locationsOpen.value = false; emit('navigate', path.trim().replace(/^['"]|['"]$/g, '')) }
 function dismiss(event: Event) { if (!root.value?.contains(event.target as Node)) locationsOpen.value = false }
-onMounted(() => document.addEventListener('pointerdown', dismiss))
-onUnmounted(() => document.removeEventListener('pointerdown', dismiss))
+onMounted(() => {document.addEventListener('pointerdown', dismiss);revealCurrent();if(typeof ResizeObserver!=='undefined'&&crumbStrip.value){crumbResize=new ResizeObserver(revealCurrent);crumbResize.observe(crumbStrip.value)}})
+onUnmounted(() => {document.removeEventListener('pointerdown', dismiss);crumbResize?.disconnect()})
 </script>
 <template>
   <div ref="root" class="pane-chrome" :data-testid="`file-pane-navigation-${paneId}`">
@@ -38,7 +42,7 @@ onUnmounted(() => document.removeEventListener('pointerdown', dismiss))
       <button type="button" class="selection-mode-button" :class="{active:selectionMode}" :title="selectionMode?'退出多选模式（Esc）':'进入多选模式'" :aria-pressed="!!selectionMode" :data-testid="`file-manager-selection-mode-${paneId}`" @click="emit('selection')"><i :class="selectionMode?'pi pi-times':'pi pi-check-square'"/></button>
       <button type="button" :title="filterActive?'筛选已启用，点击调整':archive?'搜索、密码与压缩包选项':'文件夹操作'" :aria-label="filterActive?'压缩包选项，筛选已启用':archive?'压缩包选项':'文件夹操作'" :data-testid="archive?'archive-pane-tools':`file-pane-tools-${paneId}`" :aria-expanded="!!toolsOpen" :class="{active:toolsOpen||filterActive}" @click="locationsOpen=false;emit('tools',$event)"><i class="pi pi-sliders-h"/><span v-if="filterActive" class="filter-dot" aria-hidden="true"/></button>
     </nav>
-    <div class="path-strip" :title="path"><i :class="archive?'pi pi-box':'pi pi-folder-open'"/><nav class="path-breadcrumbs" :aria-label="`${paneId==='left'?'左':'右'}栏路径`" :data-testid="`file-manager-breadcrumbs-${paneId}`"><template v-for="(crumb,index) in crumbs" :key="`${index}-${crumb.path}`"><i v-if="index" class="pi pi-angle-right"/><button type="button" :class="{current:index===crumbs.length-1}" :title="crumb.path" @click="emit('breadcrumb',index)">{{ crumb.name }}</button></template></nav><span>{{ folders }} 文件夹 · {{ files }} 文件</span></div>
+    <div class="path-strip" :title="path"><i :class="archive?'pi pi-box':'pi pi-folder-open'"/><nav ref="crumbStrip" class="path-breadcrumbs" :aria-label="`${paneId==='left'?'左':'右'}栏路径`" :data-testid="`file-manager-breadcrumbs-${paneId}`"><template v-for="(crumb,index) in crumbs" :key="`${index}-${crumb.path}`"><i v-if="index" class="pi pi-angle-right"/><button type="button" :class="{current:index===crumbs.length-1}" :title="crumb.path" @click="emit('breadcrumb',index)">{{ crumb.name }}</button></template></nav><span>{{ folders }} 文件夹 · {{ files }} 文件</span></div>
   </div>
 </template>
 <style scoped>
