@@ -8,6 +8,16 @@ use std::{
 };
 
 pub(crate) fn utc_modified(extra: Option<&[u8]>) -> Option<SystemTime> {
+    parse_utc_modified(extra, false)
+}
+
+/// Local UT stores the timestamps promised by all low flag bits, whereas a
+/// central UT stores only mtime. Used only when rebuilding a lost directory.
+pub(crate) fn local_utc_modified(extra: &[u8]) -> Option<SystemTime> {
+    parse_utc_modified(Some(extra), true)
+}
+
+fn parse_utc_modified(extra: Option<&[u8]>, local: bool) -> Option<SystemTime> {
     let mut extra = extra?;
     let mut timestamp = None;
     let mut seen = false;
@@ -27,7 +37,13 @@ pub(crate) fn utc_modified(extra: Option<&[u8]>) -> Option<SystemTime> {
         seen = true;
         // Central UT contains mtime only; the other low bits describe the
         // local field, so flags 3/7 with a five-byte central value are valid.
-        if value.len() != 5 || value[0] & 1 == 0 || value[0] & !7 != 0 {
+        let flags = *value.first()?;
+        let expected = if local {
+            1 + 4 * (flags & 7).count_ones() as usize
+        } else {
+            5
+        };
+        if value.len() != expected || flags & 1 == 0 || flags & !7 != 0 {
             return None;
         }
         let seconds = u32::from_le_bytes(value[1..5].try_into().ok()?);

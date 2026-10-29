@@ -1,0 +1,1583 @@
+[
+  {
+    "name": "controls-full",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d6f1f462-a1a3-4ff1-bcd3-9ad4c9d97e14\\source\\source.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d6f1f462-a1a3-4ff1-bcd3-9ad4c9d97e14\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d6f1f462-a1a3-4ff1-bcd3-9ad4c9d97e14\\source\\source.zip",
+        "sha256": "4380822bbe7d651610585304f38fdd36a1ac65b834f6c75231ecc62cff4fb443"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料",
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 1700001635
+      },
+      {
+        "name": "资料/空目录",
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 1700001645
+      },
+      {
+        "name": "资料/valid.txt",
+        "directory": false,
+        "sha256": "2bc4c0f0aa2a00998b94d045c8c2a78c317c6bbbac408680121f6212ad75cd83",
+        "bytes": 13,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 1700001735
+      },
+      {
+        "name": "资料/flags7.txt",
+        "directory": false,
+        "sha256": "c2da4f38bd53dbf93edc9bac41caeb79ee83d3834b4d42a6c8cda456cc14c822",
+        "bytes": 14,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 1700001735
+      },
+      {
+        "name": "资料/flags5.txt",
+        "directory": false,
+        "sha256": "29db8b7a70ec7911d548bc24d54b0a7fa1bc7a2f738550efaa19e28bfcb032cd",
+        "bytes": 14,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 1700001735
+      },
+      {
+        "name": "资料/central-only.txt",
+        "directory": false,
+        "sha256": "daa8b603faac2428895ee1a2a50990cab09c741cf84e921ebd88460ad5f8bc03",
+        "bytes": 20,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 1700001735
+      },
+      {
+        "name": "资料/local-only.txt",
+        "directory": false,
+        "sha256": "6752a5d85106224f94197ab5688178580f2912f08d7cb59b8c76e34881ebb4d6",
+        "bytes": 18,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/central-wins.txt",
+        "directory": false,
+        "sha256": "e515996645f68d20d18efeaa0fc2d853f3d8c47a3a998d7a5ba2caa1d725dec5",
+        "bytes": 20,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 1700001735
+      },
+      {
+        "name": "资料/short-local.txt",
+        "directory": false,
+        "sha256": "d866ed37d68ae826c21418d78ddc7f531271cf5bf9b02ae5497e1e3d0672e250",
+        "bytes": 19,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 1700001735
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "sha256": "8d8b538fa33ad9b697c76dd1da783ab8c1690df529294e19ff8fea5abe2570a5",
+        "bytes": 13,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/malformed.txt",
+        "directory": false,
+        "sha256": "353543c8f8ca3776f6e7ec39375bb8f1c999c0c2e0317b6107d2a75e7a4b009b",
+        "bytes": 17,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/missing-mtime.txt",
+        "directory": false,
+        "sha256": "9027f0101d746579295dc7aac69ef172af20a295fb495d9580cbf70381536f99",
+        "bytes": 21,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/access-only.txt",
+        "directory": false,
+        "sha256": "6b61129f737268d727407a110a959fea093ae86c9914dfdf5445c256a48fbf01",
+        "bytes": 19,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/reserved.txt",
+        "directory": false,
+        "sha256": "1cd3502f701f1275aa14bd80c68c213ebc24c8f4df57f7a6e1792fce5f1af7d9",
+        "bytes": 16,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/duplicate.txt",
+        "directory": false,
+        "sha256": "26e470ec6d215cabdce706d46eb7236117c323eec48338663b75178f74f9fc92",
+        "bytes": 17,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/conflict.txt",
+        "directory": false,
+        "sha256": "9b084677e0ad5ffdb6dce50afc9b778dfcd794b59703b28d5d95cca549e22478",
+        "bytes": 16,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/high-bit.txt",
+        "directory": false,
+        "sha256": "e6611a5a8b78bae1c7d5e28b55fc7ea09b09b6f59c4b6364369f5462e6ff7a88",
+        "bytes": 16,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/zero.txt",
+        "directory": false,
+        "sha256": "a7a1fe8c5bee1bd53f56f4783ad7126cd98723244abf46f1d996e33fda07ffd1",
+        "bytes": 12,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 0
+      },
+      {
+        "name": "资料/signed-max.txt",
+        "directory": false,
+        "sha256": "f5b5c9cda9fa89bd0b5cf6e058a2cd4daf5b2286a70d83903cbb1eb2d17a5874",
+        "bytes": 18,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 2147483647
+      },
+      {
+        "name": "资料/unknown-before.txt",
+        "directory": false,
+        "sha256": "d3c996b3f04a8c647cf8cb31eb3b6298b080d60fb5cbf9d9f1ad6b80e4ae8799",
+        "bytes": 22,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 1700001735
+      },
+      {
+        "name": "资料/dos-only.txt",
+        "directory": false,
+        "sha256": "179f0013b1d2c8bf5b39ef972013370b72774f8bce2c73b94f40424eac2eabaa",
+        "bytes": 16,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/invalid-dos.txt",
+        "directory": false,
+        "sha256": "1b19b2ed0a922896a3287d552f04d65dcabd8a1e9fa4a6127695e69df9cf4873",
+        "bytes": 19,
+        "dos": [
+          1980,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/invalid-dos-utc.txt",
+        "directory": false,
+        "sha256": "232b4567995d30f0ab8879e74b3d6eb92e5f8059ae9ac373d100c960844273ef",
+        "bytes": 23,
+        "dos": [
+          1980,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        "utc": 1700001735
+      }
+    ],
+    "headers": [
+      {
+        "name": "资料/",
+        "utc": 1700001635,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/空目录/",
+        "utc": 1700001645,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/valid.txt",
+        "utc": 1700001735,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/flags7.txt",
+        "utc": 1700001735,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/flags5.txt",
+        "utc": 1700001735,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/central-only.txt",
+        "utc": 1700001735,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/local-only.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/central-wins.txt",
+        "utc": 1700001735,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/short-local.txt",
+        "utc": 1700001735,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/empty.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/malformed.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/missing-mtime.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/access-only.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/reserved.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/duplicate.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/conflict.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/high-bit.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/zero.txt",
+        "utc": 0,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/signed-max.txt",
+        "utc": 2147483647,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/unknown-before.txt",
+        "utc": 1700001735,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/dos-only.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/invalid-dos.txt",
+        "utc": null,
+        "dos": [
+          1980,
+          1,
+          1,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "资料/invalid-dos-utc.txt",
+        "utc": 1700001735,
+        "dos": [
+          1980,
+          1,
+          1,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "restored": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d6f1f462-a1a3-4ff1-bcd3-9ad4c9d97e14\\native-restored"
+    ],
+    "workers": 0,
+    "password": null,
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d6f1f462-a1a3-4ff1-bcd3-9ad4c9d97e14\\recovered.zip",
+      "recoveredFiles": 21,
+      "recoveredEntries": [
+        "资料/valid.txt",
+        "资料/flags7.txt",
+        "资料/flags5.txt",
+        "资料/central-only.txt",
+        "资料/local-only.txt",
+        "资料/central-wins.txt",
+        "资料/short-local.txt",
+        "资料/empty.txt",
+        "资料/malformed.txt",
+        "资料/missing-mtime.txt",
+        "资料/access-only.txt",
+        "资料/reserved.txt",
+        "资料/duplicate.txt",
+        "资料/conflict.txt",
+        "资料/high-bit.txt",
+        "资料/zero.txt",
+        "资料/signed-max.txt",
+        "资料/unknown-before.txt",
+        "资料/dos-only.txt",
+        "资料/invalid-dos.txt",
+        "资料/invalid-dos-utc.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/valid.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/flags7.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/flags5.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/central-only.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/local-only.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/central-wins.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/short-local.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/malformed.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/missing-mtime.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/access-only.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/reserved.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/duplicate.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/conflict.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/high-bit.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/zero.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/signed-max.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/unknown-before.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/dos-only.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/invalid-dos.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/invalid-dos-utc.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/bad-content.txt",
+          "status": "checksum_failed",
+          "reason": "内容校验失败"
+        }
+      ],
+      "recoveredDirectories": 2,
+      "skippedEntries": [
+        "资料/bad-content.txt: 内容校验失败，未恢复此条目"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": false,
+      "outputEncrypted": false
+    }
+  },
+  {
+    "name": "controls-lost",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\c634569c-ff11-44cb-a5c1-ae589079f6f1\\source\\source.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\c634569c-ff11-44cb-a5c1-ae589079f6f1\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\c634569c-ff11-44cb-a5c1-ae589079f6f1\\source\\source.zip",
+        "sha256": "f81fe4b2b2d1ab15525ba036bc713e836234caebb99c57f7871cc9252bc4ed47"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料",
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 1700001635
+      },
+      {
+        "name": "资料/空目录",
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 1700001645
+      },
+      {
+        "name": "资料/valid.txt",
+        "directory": false,
+        "sha256": "2bc4c0f0aa2a00998b94d045c8c2a78c317c6bbbac408680121f6212ad75cd83",
+        "bytes": 13,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 1700001735
+      },
+      {
+        "name": "资料/flags7.txt",
+        "directory": false,
+        "sha256": "c2da4f38bd53dbf93edc9bac41caeb79ee83d3834b4d42a6c8cda456cc14c822",
+        "bytes": 14,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 1700001735
+      },
+      {
+        "name": "资料/flags5.txt",
+        "directory": false,
+        "sha256": "29db8b7a70ec7911d548bc24d54b0a7fa1bc7a2f738550efaa19e28bfcb032cd",
+        "bytes": 14,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 1700001735
+      },
+      {
+        "name": "资料/central-only.txt",
+        "directory": false,
+        "sha256": "daa8b603faac2428895ee1a2a50990cab09c741cf84e921ebd88460ad5f8bc03",
+        "bytes": 20,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/local-only.txt",
+        "directory": false,
+        "sha256": "6752a5d85106224f94197ab5688178580f2912f08d7cb59b8c76e34881ebb4d6",
+        "bytes": 18,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 1700001735
+      },
+      {
+        "name": "资料/central-wins.txt",
+        "directory": false,
+        "sha256": "e515996645f68d20d18efeaa0fc2d853f3d8c47a3a998d7a5ba2caa1d725dec5",
+        "bytes": 20,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 1700001705
+      },
+      {
+        "name": "资料/short-local.txt",
+        "directory": false,
+        "sha256": "d866ed37d68ae826c21418d78ddc7f531271cf5bf9b02ae5497e1e3d0672e250",
+        "bytes": 19,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "sha256": "8d8b538fa33ad9b697c76dd1da783ab8c1690df529294e19ff8fea5abe2570a5",
+        "bytes": 13,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/malformed.txt",
+        "directory": false,
+        "sha256": "353543c8f8ca3776f6e7ec39375bb8f1c999c0c2e0317b6107d2a75e7a4b009b",
+        "bytes": 17,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/missing-mtime.txt",
+        "directory": false,
+        "sha256": "9027f0101d746579295dc7aac69ef172af20a295fb495d9580cbf70381536f99",
+        "bytes": 21,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/access-only.txt",
+        "directory": false,
+        "sha256": "6b61129f737268d727407a110a959fea093ae86c9914dfdf5445c256a48fbf01",
+        "bytes": 19,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/reserved.txt",
+        "directory": false,
+        "sha256": "1cd3502f701f1275aa14bd80c68c213ebc24c8f4df57f7a6e1792fce5f1af7d9",
+        "bytes": 16,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/duplicate.txt",
+        "directory": false,
+        "sha256": "26e470ec6d215cabdce706d46eb7236117c323eec48338663b75178f74f9fc92",
+        "bytes": 17,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/conflict.txt",
+        "directory": false,
+        "sha256": "9b084677e0ad5ffdb6dce50afc9b778dfcd794b59703b28d5d95cca549e22478",
+        "bytes": 16,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/high-bit.txt",
+        "directory": false,
+        "sha256": "e6611a5a8b78bae1c7d5e28b55fc7ea09b09b6f59c4b6364369f5462e6ff7a88",
+        "bytes": 16,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/zero.txt",
+        "directory": false,
+        "sha256": "a7a1fe8c5bee1bd53f56f4783ad7126cd98723244abf46f1d996e33fda07ffd1",
+        "bytes": 12,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 0
+      },
+      {
+        "name": "资料/signed-max.txt",
+        "directory": false,
+        "sha256": "f5b5c9cda9fa89bd0b5cf6e058a2cd4daf5b2286a70d83903cbb1eb2d17a5874",
+        "bytes": 18,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 2147483647
+      },
+      {
+        "name": "资料/unknown-before.txt",
+        "directory": false,
+        "sha256": "d3c996b3f04a8c647cf8cb31eb3b6298b080d60fb5cbf9d9f1ad6b80e4ae8799",
+        "bytes": 22,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": 1700001735
+      },
+      {
+        "name": "资料/dos-only.txt",
+        "directory": false,
+        "sha256": "179f0013b1d2c8bf5b39ef972013370b72774f8bce2c73b94f40424eac2eabaa",
+        "bytes": 16,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/invalid-dos.txt",
+        "directory": false,
+        "sha256": "1b19b2ed0a922896a3287d552f04d65dcabd8a1e9fa4a6127695e69df9cf4873",
+        "bytes": 19,
+        "dos": [
+          1980,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/invalid-dos-utc.txt",
+        "directory": false,
+        "sha256": "232b4567995d30f0ab8879e74b3d6eb92e5f8059ae9ac373d100c960844273ef",
+        "bytes": 23,
+        "dos": [
+          1980,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        "utc": 1700001735
+      }
+    ],
+    "headers": [
+      {
+        "name": "资料/",
+        "utc": 1700001635,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/空目录/",
+        "utc": 1700001645,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/valid.txt",
+        "utc": 1700001735,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/flags7.txt",
+        "utc": 1700001735,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/flags5.txt",
+        "utc": 1700001735,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/central-only.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/local-only.txt",
+        "utc": 1700001735,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/central-wins.txt",
+        "utc": 1700001705,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/short-local.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/empty.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/malformed.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/missing-mtime.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/access-only.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/reserved.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/duplicate.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/conflict.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/high-bit.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/zero.txt",
+        "utc": 0,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/signed-max.txt",
+        "utc": 2147483647,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/unknown-before.txt",
+        "utc": 1700001735,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/dos-only.txt",
+        "utc": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ]
+      },
+      {
+        "name": "资料/invalid-dos.txt",
+        "utc": null,
+        "dos": [
+          1980,
+          1,
+          1,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "name": "资料/invalid-dos-utc.txt",
+        "utc": 1700001735,
+        "dos": [
+          1980,
+          1,
+          1,
+          0,
+          0,
+          0
+        ]
+      }
+    ],
+    "restored": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\c634569c-ff11-44cb-a5c1-ae589079f6f1\\native-restored"
+    ],
+    "workers": 0,
+    "password": null,
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\c634569c-ff11-44cb-a5c1-ae589079f6f1\\recovered.zip",
+      "recoveredFiles": 21,
+      "recoveredEntries": [
+        "资料/valid.txt",
+        "资料/flags7.txt",
+        "资料/flags5.txt",
+        "资料/central-only.txt",
+        "资料/local-only.txt",
+        "资料/central-wins.txt",
+        "资料/short-local.txt",
+        "资料/empty.txt",
+        "资料/malformed.txt",
+        "资料/missing-mtime.txt",
+        "资料/access-only.txt",
+        "资料/reserved.txt",
+        "资料/duplicate.txt",
+        "资料/conflict.txt",
+        "资料/high-bit.txt",
+        "资料/zero.txt",
+        "资料/signed-max.txt",
+        "资料/unknown-before.txt",
+        "资料/dos-only.txt",
+        "资料/invalid-dos.txt",
+        "资料/invalid-dos-utc.txt"
+      ],
+      "entryResults": [
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/valid.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/flags7.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/flags5.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/central-only.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/local-only.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/central-wins.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/short-local.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/malformed.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/missing-mtime.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/access-only.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/reserved.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/duplicate.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/conflict.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/high-bit.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/zero.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/signed-max.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/unknown-before.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/dos-only.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/invalid-dos.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/invalid-dos-utc.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/bad-content.txt",
+          "status": "checksum_failed",
+          "reason": "内容校验失败"
+        }
+      ],
+      "recoveredDirectories": 2,
+      "skippedEntries": [
+        "资料/bad-content.txt: 内容校验失败，未恢复此条目"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    }
+  }
+]

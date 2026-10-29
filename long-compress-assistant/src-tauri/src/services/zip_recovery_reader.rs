@@ -266,8 +266,15 @@ fn central_extra(extra: &[u8], expanded: u64, compressed: u64, offset: u64) -> R
         ensure!(at + 4 <= extra.len(), "ZIP 本地扩展字段被截断");
         let end = at + 4 + word(extra, at + 2) as usize;
         ensure!(end <= extra.len(), "ZIP 本地扩展字段被截断");
-        if word(extra, at) != 1 { result.extend_from_slice(&extra[at..end]); }
+        // Local UT may include access/creation timestamps. Its layout cannot
+        // be copied as a central UT; normalize a single confirmed mtime below.
+        if !matches!(word(extra, at), 1 | 0x5455) { result.extend_from_slice(&extra[at..end]); }
         at = end;
+    }
+    if let Some(time) = super::zip_read_time::local_utc_modified(extra) {
+        let seconds = time.duration_since(std::time::UNIX_EPOCH)?.as_secs() as u32;
+        result.extend_from_slice(&[0x55, 0x54, 5, 0, 1]);
+        result.extend_from_slice(&seconds.to_le_bytes());
     }
     let mut zip64 = Vec::new();
     for value in [expanded, compressed, offset] {

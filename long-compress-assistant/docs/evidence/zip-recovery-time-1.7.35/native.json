@@ -1,0 +1,1381 @@
+[
+  {
+    "name": "plain-lost",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\4c7e46bc-7bec-4364-aaad-7c2b5cb2f9ad\\source\\source.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\4c7e46bc-7bec-4364-aaad-7c2b5cb2f9ad\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\4c7e46bc-7bec-4364-aaad-7c2b5cb2f9ad\\source\\source.zip",
+        "sha256": "f42df51254be5c5eca915d04c92f187bb05feec1288281faa3a3536ec607aa25"
+      }
+    ],
+    "expected": [
+      {
+        "name": "docs",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001551,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          10
+        ],
+        "utc": 1700001551
+      },
+      {
+        "name": "docs/empty",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001537,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          38,
+          56
+        ],
+        "utc": 1700001537
+      },
+      {
+        "name": "docs/nested",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001549,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          8
+        ],
+        "utc": 1700001549
+      },
+      {
+        "name": "docs/note.txt",
+        "bytes": 38,
+        "directory": false,
+        "sha256": "d28f534aa250cf195beb175fe5bb5702f948cf7b51fda117c8ec0fad32d58911",
+        "seconds": 1700001731,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          42,
+          10
+        ],
+        "utc": 1700001731
+      },
+      {
+        "name": "docs/zero.txt",
+        "bytes": 0,
+        "directory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001935,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          45,
+          34
+        ],
+        "utc": 1700001935
+      },
+      {
+        "name": "docs/nested/large-a.bin",
+        "bytes": 310000,
+        "directory": false,
+        "sha256": "5affd9561e6e7b2e6ee23ae772cb1eb6d999147efc90fbe4f3354366b713c127",
+        "seconds": 1700001833,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          43,
+          52
+        ],
+        "utc": 1700001833
+      },
+      {
+        "name": "docs/nested/large-b.bin",
+        "bytes": 310000,
+        "directory": false,
+        "sha256": "d488acfc5c852315f99625a1abaed1b05f605ebfec99a99db12dd59e045fba7e",
+        "seconds": 1710054133,
+        "dos": [
+          2024,
+          3,
+          10,
+          15,
+          2,
+          12
+        ],
+        "utc": 1710054133
+      }
+    ],
+    "headers": [
+      {
+        "name": "docs/",
+        "utc": 1700001551,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          10
+        ]
+      },
+      {
+        "name": "docs/empty/",
+        "utc": 1700001537,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          38,
+          56
+        ]
+      },
+      {
+        "name": "docs/nested/",
+        "utc": 1700001549,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          8
+        ]
+      },
+      {
+        "name": "docs/note.txt",
+        "utc": 1700001731,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          42,
+          10
+        ]
+      },
+      {
+        "name": "docs/zero.txt",
+        "utc": 1700001935,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          45,
+          34
+        ]
+      },
+      {
+        "name": "docs/nested/large-a.bin",
+        "utc": 1700001833,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          43,
+          52
+        ]
+      },
+      {
+        "name": "docs/nested/large-b.bin",
+        "utc": 1710054133,
+        "dos": [
+          2024,
+          3,
+          10,
+          15,
+          2,
+          12
+        ]
+      }
+    ],
+    "restored": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\4c7e46bc-7bec-4364-aaad-7c2b5cb2f9ad\\native-restored"
+    ],
+    "workers": 0,
+    "password": null,
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\4c7e46bc-7bec-4364-aaad-7c2b5cb2f9ad\\recovered.zip",
+      "recoveredFiles": 4,
+      "recoveredEntries": [
+        "docs/note.txt",
+        "docs/zero.txt",
+        "docs/nested/large-a.bin",
+        "docs/nested/large-b.bin"
+      ],
+      "entryResults": [
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "docs/note.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "docs/zero.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "docs/nested/large-a.bin",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "docs/nested/large-b.bin",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 3,
+      "skippedEntries": [],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    }
+  },
+  {
+    "name": "parallel-flat",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\6a67d410-0357-49e8-8a22-eee40ccf9b88\\source\\source.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\6a67d410-0357-49e8-8a22-eee40ccf9b88\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\6a67d410-0357-49e8-8a22-eee40ccf9b88\\source\\source.zip",
+        "sha256": "ac16c44c176ea24de32e851a182367a2277c8ea0e53b4814f6ec2ff403a456eb"
+      }
+    ],
+    "expected": [
+      {
+        "name": "a.bin",
+        "bytes": 310000,
+        "directory": false,
+        "sha256": "5affd9561e6e7b2e6ee23ae772cb1eb6d999147efc90fbe4f3354366b713c127",
+        "seconds": 1700001731,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          42,
+          10
+        ],
+        "utc": 1700001731
+      },
+      {
+        "name": "b.bin",
+        "bytes": 310000,
+        "directory": false,
+        "sha256": "d488acfc5c852315f99625a1abaed1b05f605ebfec99a99db12dd59e045fba7e",
+        "seconds": 1710054133,
+        "dos": [
+          2024,
+          3,
+          10,
+          15,
+          2,
+          12
+        ],
+        "utc": 1710054133
+      }
+    ],
+    "headers": [
+      {
+        "name": "a.bin",
+        "utc": 1700001731,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          42,
+          10
+        ]
+      },
+      {
+        "name": "b.bin",
+        "utc": 1710054133,
+        "dos": [
+          2024,
+          3,
+          10,
+          15,
+          2,
+          12
+        ]
+      }
+    ],
+    "restored": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\6a67d410-0357-49e8-8a22-eee40ccf9b88\\native-restored",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\6a67d410-0357-49e8-8a22-eee40ccf9b88\\native-parallel"
+    ],
+    "workers": 2,
+    "password": null,
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\6a67d410-0357-49e8-8a22-eee40ccf9b88\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "a.bin",
+        "b.bin"
+      ],
+      "entryResults": [
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "a.bin",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "b.bin",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 0,
+      "skippedEntries": [],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    }
+  },
+  {
+    "name": "aes-damaged",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\990b659d-1c8c-431c-9d63-5b51b6d5d470\\source\\source.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\990b659d-1c8c-431c-9d63-5b51b6d5d470\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\990b659d-1c8c-431c-9d63-5b51b6d5d470\\source\\source.zip",
+        "sha256": "8c689fedf74adcf72df016e140a2235b4aed627600a1eb55f74ef3bc357d4d74"
+      }
+    ],
+    "expected": [
+      {
+        "name": "docs",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001551,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          10
+        ],
+        "utc": 1700001551
+      },
+      {
+        "name": "docs/empty",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001537,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          38,
+          56
+        ],
+        "utc": 1700001537
+      },
+      {
+        "name": "docs/nested",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001549,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          8
+        ],
+        "utc": 1700001549
+      },
+      {
+        "name": "docs/note.txt",
+        "bytes": 38,
+        "directory": false,
+        "sha256": "d28f534aa250cf195beb175fe5bb5702f948cf7b51fda117c8ec0fad32d58911",
+        "seconds": 1700001731,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          42,
+          10
+        ],
+        "utc": 1700001731
+      },
+      {
+        "name": "docs/zero.txt",
+        "bytes": 0,
+        "directory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001935,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          45,
+          34
+        ],
+        "utc": 1700001935
+      },
+      {
+        "name": "docs/nested/large-a.bin",
+        "bytes": 310000,
+        "directory": false,
+        "sha256": "5affd9561e6e7b2e6ee23ae772cb1eb6d999147efc90fbe4f3354366b713c127",
+        "seconds": 1700001833,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          43,
+          52
+        ],
+        "utc": 1700001833
+      }
+    ],
+    "headers": [
+      {
+        "name": "docs/",
+        "utc": 1700001551,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          10
+        ]
+      },
+      {
+        "name": "docs/empty/",
+        "utc": 1700001537,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          38,
+          56
+        ]
+      },
+      {
+        "name": "docs/nested/",
+        "utc": 1700001549,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          8
+        ]
+      },
+      {
+        "name": "docs/note.txt",
+        "utc": 1700001731,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          42,
+          10
+        ]
+      },
+      {
+        "name": "docs/zero.txt",
+        "utc": 1700001935,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          45,
+          34
+        ]
+      },
+      {
+        "name": "docs/nested/large-a.bin",
+        "utc": 1700001833,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          43,
+          52
+        ]
+      }
+    ],
+    "restored": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\990b659d-1c8c-431c-9d63-5b51b6d5d470\\native-restored"
+    ],
+    "workers": 0,
+    "password": "UtcRead1731!",
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\990b659d-1c8c-431c-9d63-5b51b6d5d470\\recovered.zip",
+      "recoveredFiles": 3,
+      "recoveredEntries": [
+        "docs/note.txt",
+        "docs/zero.txt",
+        "docs/nested/large-a.bin"
+      ],
+      "entryResults": [
+        {
+          "name": "docs/note.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "docs/zero.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "docs/nested/large-a.bin",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "docs/nested/large-b.bin",
+          "status": "checksum_failed",
+          "reason": "加密内容校验失败"
+        }
+      ],
+      "recoveredDirectories": 3,
+      "skippedEntries": [
+        "docs/nested/large-b.bin: 加密内容校验失败，未恢复此条目"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": false,
+      "outputEncrypted": true
+    }
+  },
+  {
+    "name": "aes-bad-ut-damaged",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\1d0ffc85-8a86-4766-ac1a-bc0b685d52e2\\source\\source.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\1d0ffc85-8a86-4766-ac1a-bc0b685d52e2\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\1d0ffc85-8a86-4766-ac1a-bc0b685d52e2\\source\\source.zip",
+        "sha256": "321f0a86b45f5a4a017d6afc52660979863d42ec7fd5d87c085a28dd86be5606"
+      }
+    ],
+    "expected": [
+      {
+        "name": "docs",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001551,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          10
+        ],
+        "utc": null
+      },
+      {
+        "name": "docs/empty",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001537,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          38,
+          56
+        ],
+        "utc": null
+      },
+      {
+        "name": "docs/nested",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001549,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          8
+        ],
+        "utc": null
+      },
+      {
+        "name": "docs/note.txt",
+        "bytes": 38,
+        "directory": false,
+        "sha256": "d28f534aa250cf195beb175fe5bb5702f948cf7b51fda117c8ec0fad32d58911",
+        "seconds": 1700001731,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          42,
+          10
+        ],
+        "utc": null
+      },
+      {
+        "name": "docs/zero.txt",
+        "bytes": 0,
+        "directory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001935,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          45,
+          34
+        ],
+        "utc": null
+      },
+      {
+        "name": "docs/nested/large-a.bin",
+        "bytes": 310000,
+        "directory": false,
+        "sha256": "5affd9561e6e7b2e6ee23ae772cb1eb6d999147efc90fbe4f3354366b713c127",
+        "seconds": 1700001833,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          43,
+          52
+        ],
+        "utc": null
+      }
+    ],
+    "headers": [
+      {
+        "name": "docs/",
+        "utc": null,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          10
+        ]
+      },
+      {
+        "name": "docs/empty/",
+        "utc": null,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          38,
+          56
+        ]
+      },
+      {
+        "name": "docs/nested/",
+        "utc": null,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          8
+        ]
+      },
+      {
+        "name": "docs/note.txt",
+        "utc": null,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          42,
+          10
+        ]
+      },
+      {
+        "name": "docs/zero.txt",
+        "utc": null,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          45,
+          34
+        ]
+      },
+      {
+        "name": "docs/nested/large-a.bin",
+        "utc": null,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          43,
+          52
+        ]
+      }
+    ],
+    "restored": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\1d0ffc85-8a86-4766-ac1a-bc0b685d52e2\\native-restored"
+    ],
+    "workers": 0,
+    "password": "UtcRead1731!",
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\1d0ffc85-8a86-4766-ac1a-bc0b685d52e2\\recovered.zip",
+      "recoveredFiles": 3,
+      "recoveredEntries": [
+        "docs/note.txt",
+        "docs/zero.txt",
+        "docs/nested/large-a.bin"
+      ],
+      "entryResults": [
+        {
+          "name": "docs/note.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "docs/zero.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "docs/nested/large-a.bin",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "docs/nested/large-b.bin",
+          "status": "checksum_failed",
+          "reason": "加密内容校验失败"
+        }
+      ],
+      "recoveredDirectories": 3,
+      "skippedEntries": [
+        "docs/nested/large-b.bin: 加密内容校验失败，未恢复此条目"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": false,
+      "outputEncrypted": true
+    }
+  },
+  {
+    "name": "standard-crc",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d40037f7-d873-434b-9bb0-7b47de3c98f7\\source\\standard.z02",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d40037f7-d873-434b-9bb0-7b47de3c98f7\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d40037f7-d873-434b-9bb0-7b47de3c98f7\\source\\standard.z01",
+        "sha256": "f6fe8128da051bbbfe142226ae47d4d6f1d296a8f6213978ef7fd158ce796966"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d40037f7-d873-434b-9bb0-7b47de3c98f7\\source\\standard.z02",
+        "sha256": "4a651d5a4a6ba9cdc95acd429d49a19dab12cf8a34b459f39b7fd3854cf31665"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d40037f7-d873-434b-9bb0-7b47de3c98f7\\source\\standard.z03",
+        "sha256": "386276fe5889b107ff8a09daaca0a5f420a0d8c61cd490a3bfcf7a8b60a0f5b5"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d40037f7-d873-434b-9bb0-7b47de3c98f7\\source\\standard.z04",
+        "sha256": "07b4b050733a7f89c1924c9c70a364148624b34ce82d22da383015fcf53b7a0a"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d40037f7-d873-434b-9bb0-7b47de3c98f7\\source\\standard.z05",
+        "sha256": "d693c02a76147ab61cea523695540d0f0b7cc1695552758e44340ea88710716e"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d40037f7-d873-434b-9bb0-7b47de3c98f7\\source\\standard.z06",
+        "sha256": "9bba98df4276952975b46c039c7c8e74a09283a9cbf27effa09e3cac8d991f80"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d40037f7-d873-434b-9bb0-7b47de3c98f7\\source\\standard.z07",
+        "sha256": "d3ec28cbab445f023eb145be794e1b2631542fd0cc6597e01ad6bab6eb74f36c"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d40037f7-d873-434b-9bb0-7b47de3c98f7\\source\\standard.z08",
+        "sha256": "02dbcaae165327f04b4df946046fbaba29b3d0db288e97937e2ed67e25beb266"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d40037f7-d873-434b-9bb0-7b47de3c98f7\\source\\standard.z09",
+        "sha256": "55cf598c9ae041ed109ad72247c0534aaf937fd04a7981eabebbf921278c4fd0"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d40037f7-d873-434b-9bb0-7b47de3c98f7\\source\\standard.zip",
+        "sha256": "769f64068c100f534f76f23f21f6f774d0ebfe3ee619ce681178c8f35c5e311a"
+      }
+    ],
+    "expected": [
+      {
+        "name": "docs",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001551,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          10
+        ],
+        "utc": 1700001551
+      },
+      {
+        "name": "docs/empty",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001537,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          38,
+          56
+        ],
+        "utc": 1700001537
+      },
+      {
+        "name": "docs/nested",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001549,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          8
+        ],
+        "utc": 1700001549
+      },
+      {
+        "name": "docs/note.txt",
+        "bytes": 38,
+        "directory": false,
+        "sha256": "d28f534aa250cf195beb175fe5bb5702f948cf7b51fda117c8ec0fad32d58911",
+        "seconds": 1700001731,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          42,
+          10
+        ],
+        "utc": 1700001731
+      },
+      {
+        "name": "docs/zero.txt",
+        "bytes": 0,
+        "directory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001935,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          45,
+          34
+        ],
+        "utc": 1700001935
+      },
+      {
+        "name": "docs/nested/large-a.bin",
+        "bytes": 310000,
+        "directory": false,
+        "sha256": "5affd9561e6e7b2e6ee23ae772cb1eb6d999147efc90fbe4f3354366b713c127",
+        "seconds": 1700001833,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          43,
+          52
+        ],
+        "utc": 1700001833
+      }
+    ],
+    "headers": [
+      {
+        "name": "docs/",
+        "utc": 1700001551,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          10
+        ]
+      },
+      {
+        "name": "docs/empty/",
+        "utc": 1700001537,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          38,
+          56
+        ]
+      },
+      {
+        "name": "docs/nested/",
+        "utc": 1700001549,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          8
+        ]
+      },
+      {
+        "name": "docs/note.txt",
+        "utc": 1700001731,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          42,
+          10
+        ]
+      },
+      {
+        "name": "docs/zero.txt",
+        "utc": 1700001935,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          45,
+          34
+        ]
+      },
+      {
+        "name": "docs/nested/large-a.bin",
+        "utc": 1700001833,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          43,
+          52
+        ]
+      }
+    ],
+    "restored": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d40037f7-d873-434b-9bb0-7b47de3c98f7\\native-restored"
+    ],
+    "workers": 0,
+    "password": null,
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\d40037f7-d873-434b-9bb0-7b47de3c98f7\\recovered.zip",
+      "recoveredFiles": 3,
+      "recoveredEntries": [
+        "docs/note.txt",
+        "docs/zero.txt",
+        "docs/nested/large-a.bin"
+      ],
+      "entryResults": [
+        {
+          "name": "docs/note.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "docs/zero.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "docs/nested/large-a.bin",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "docs/nested/large-b.bin",
+          "status": "checksum_failed",
+          "reason": "内容校验失败"
+        }
+      ],
+      "recoveredDirectories": 3,
+      "skippedEntries": [
+        "docs/nested/large-b.bin: 内容校验失败，未恢复此条目"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": false,
+      "outputEncrypted": false
+    }
+  },
+  {
+    "name": "numeric-lost",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\85c38543-6618-406e-852b-b7db6f3420e6\\source\\volumes.zip.002",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\85c38543-6618-406e-852b-b7db6f3420e6\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\85c38543-6618-406e-852b-b7db6f3420e6\\source\\volumes.zip.001",
+        "sha256": "20bbc3d66d38f81b56c383b5bed37b295741d631359dc3e5d6b4b64d05ccdea9"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\85c38543-6618-406e-852b-b7db6f3420e6\\source\\volumes.zip.002",
+        "sha256": "59e4a5adfec1cf9924b8056c04ac9e7401afbbaf00000d5b44f56c876e539071"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\85c38543-6618-406e-852b-b7db6f3420e6\\source\\volumes.zip.003",
+        "sha256": "ead871e9d6ecf69aaafdd5916e163e0e4aa1ff8e2eae6f6f596d9f45157c93fa"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\85c38543-6618-406e-852b-b7db6f3420e6\\source\\volumes.zip.004",
+        "sha256": "93946ecac2058a0261b76f788a577dfd8d92c3bcf009e4e0755eef1f9e64894f"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\85c38543-6618-406e-852b-b7db6f3420e6\\source\\volumes.zip.005",
+        "sha256": "46748491e721e6edfcbf5eb9fadb523c97f622f077e7ace32c63974ac7c1d972"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\85c38543-6618-406e-852b-b7db6f3420e6\\source\\volumes.zip.006",
+        "sha256": "bab2e647e7ba06ce003e81dade26fd0471460ac25810437c914762523cb1a256"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\85c38543-6618-406e-852b-b7db6f3420e6\\source\\volumes.zip.007",
+        "sha256": "5623e7702b3f70149b1eff8caa85e5190cf61f00ec5cccad7e57e5df35a87cda"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\85c38543-6618-406e-852b-b7db6f3420e6\\source\\volumes.zip.008",
+        "sha256": "4cec1691228ad256f3a56ab7a8ead8fb265895d9027456b7ef3716ba94c887ce"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\85c38543-6618-406e-852b-b7db6f3420e6\\source\\volumes.zip.009",
+        "sha256": "0e673f9a8a3162750963734ef635c0205f1b59969102023b908e4a1a4298bcdc"
+      },
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\85c38543-6618-406e-852b-b7db6f3420e6\\source\\volumes.zip.010",
+        "sha256": "21496eb578e29b78074f412c4b607d2ba49b1c465569019f42cd673e435e7cc7"
+      }
+    ],
+    "expected": [
+      {
+        "name": "docs",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001551,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          10
+        ],
+        "utc": 1700001551
+      },
+      {
+        "name": "docs/empty",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001537,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          38,
+          56
+        ],
+        "utc": 1700001537
+      },
+      {
+        "name": "docs/nested",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001549,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          8
+        ],
+        "utc": 1700001549
+      },
+      {
+        "name": "docs/note.txt",
+        "bytes": 38,
+        "directory": false,
+        "sha256": "d28f534aa250cf195beb175fe5bb5702f948cf7b51fda117c8ec0fad32d58911",
+        "seconds": 1700001731,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          42,
+          10
+        ],
+        "utc": 1700001731
+      },
+      {
+        "name": "docs/zero.txt",
+        "bytes": 0,
+        "directory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001935,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          45,
+          34
+        ],
+        "utc": 1700001935
+      },
+      {
+        "name": "docs/nested/large-a.bin",
+        "bytes": 310000,
+        "directory": false,
+        "sha256": "5affd9561e6e7b2e6ee23ae772cb1eb6d999147efc90fbe4f3354366b713c127",
+        "seconds": 1700001833,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          43,
+          52
+        ],
+        "utc": 1700001833
+      },
+      {
+        "name": "docs/nested/large-b.bin",
+        "bytes": 310000,
+        "directory": false,
+        "sha256": "d488acfc5c852315f99625a1abaed1b05f605ebfec99a99db12dd59e045fba7e",
+        "seconds": 1710054133,
+        "dos": [
+          2024,
+          3,
+          10,
+          15,
+          2,
+          12
+        ],
+        "utc": 1710054133
+      }
+    ],
+    "headers": [
+      {
+        "name": "docs/",
+        "utc": 1700001551,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          10
+        ]
+      },
+      {
+        "name": "docs/empty/",
+        "utc": 1700001537,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          38,
+          56
+        ]
+      },
+      {
+        "name": "docs/nested/",
+        "utc": 1700001549,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          8
+        ]
+      },
+      {
+        "name": "docs/note.txt",
+        "utc": 1700001731,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          42,
+          10
+        ]
+      },
+      {
+        "name": "docs/zero.txt",
+        "utc": 1700001935,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          45,
+          34
+        ]
+      },
+      {
+        "name": "docs/nested/large-a.bin",
+        "utc": 1700001833,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          43,
+          52
+        ]
+      },
+      {
+        "name": "docs/nested/large-b.bin",
+        "utc": 1710054133,
+        "dos": [
+          2024,
+          3,
+          10,
+          15,
+          2,
+          12
+        ]
+      }
+    ],
+    "restored": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\85c38543-6618-406e-852b-b7db6f3420e6\\native-restored"
+    ],
+    "workers": 0,
+    "password": null,
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\85c38543-6618-406e-852b-b7db6f3420e6\\recovered.zip",
+      "recoveredFiles": 4,
+      "recoveredEntries": [
+        "docs/note.txt",
+        "docs/zero.txt",
+        "docs/nested/large-a.bin",
+        "docs/nested/large-b.bin"
+      ],
+      "entryResults": [
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "docs/note.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "docs/zero.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "docs/nested/large-a.bin",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "docs/nested/large-b.bin",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 3,
+      "skippedEntries": [],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    }
+  }
+]

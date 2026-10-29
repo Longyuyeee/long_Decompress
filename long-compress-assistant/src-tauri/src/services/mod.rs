@@ -389,3 +389,5 @@ mod zip_bzip2_rescue_1733_tests;
 
 #[cfg(test)]
 mod zip_lzma_rescue_1734_tests;
+#[cfg(test)]
+mod zip_recovery_time_1735_tests;
