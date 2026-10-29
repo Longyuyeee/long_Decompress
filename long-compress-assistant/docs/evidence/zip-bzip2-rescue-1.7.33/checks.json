@@ -1,0 +1,41 @@
+{
+  "version": "1.7.33",
+  "date": "2026-10-29",
+  "passed": true,
+  "nativeTests": 5,
+  "relatedRegressions": 2,
+  "frontendRecoveryTests": 15,
+  "independentOriginals": 2,
+  "recoveredArchives": 25,
+  "recoveredEntries": 96,
+  "independentReadbacks": 27,
+  "controlledStops": 18,
+  "noPublicationCases": 5,
+  "shellExtensionBuilt": true,
+  "releaseIdentityPassed": true,
+  "initialRun": {
+    "passed": 5,
+    "failed": 0
+  },
+  "targetedRechecks": [
+    {
+      "passed": 5,
+      "reason": "buffer-draining implementation review; final independent originals also include Deflate and BZip2 directories"
+    },
+    {
+      "passed": 2,
+      "reason": "no complete file disables repair; positive diagnosis and source-restored retry checked",
+      "updatedOutputsIndependentlyRead": 5
+    }
+  ],
+  "commands": [
+    "cargo test --manifest-path src-tauri/Cargo.toml --lib bziprescue1733 -- --nocapture --test-threads=1",
+    "python scripts/verify-zip-bzip2-rescue-1733.py",
+    "compiled unit executable: streamed_deflate_descriptors_recover_without_searching_for_payload_signatures",
+    "compiled unit executable: lost_directory_recovery_preserves_complete_entries_and_excludes_bad_payloads",
+    "npx vitest run src/components/compression/__tests__/ArchiveRecoveryBatch.test.ts src/components/compression/__tests__/ArchiveRecoveryDetails.test.ts",
+    "npm run build:shell-extension",
+    "npm run test:release-identity"
+  ],
+  "scope": "Unencrypted streaming method 12 with confirmed end, size and CRC; no gap scanning, no new password or format capability; existing UI retained."
+}

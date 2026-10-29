@@ -1,0 +1,203 @@
+{
+  "producer": "CPython 3.12.10 zipfile + stdlib bz2; non-seekable output",
+  "originals": [
+    {
+      "name": "stream32.zip",
+      "zip64": false,
+      "sha256": "b57f250f5a4a949dc8d9c861241617259c7cebc88525502a7dbe795902ab9e3c",
+      "central": 202406,
+      "entries": [
+        {
+          "name": "资料/",
+          "directory": true,
+          "method": 8,
+          "size": 0,
+          "compressed": 2,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "local": 0,
+          "data": 37,
+          "descriptor": 39,
+          "end": 55
+        },
+        {
+          "name": "资料/说明.txt",
+          "directory": false,
+          "method": 12,
+          "size": 3500000,
+          "compressed": 683,
+          "crc": 1191402647,
+          "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+          "local": 55,
+          "data": 102,
+          "descriptor": 785,
+          "end": 801
+        },
+        {
+          "name": "资料/empty.txt",
+          "directory": false,
+          "method": 12,
+          "size": 0,
+          "compressed": 14,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "local": 801,
+          "data": 847,
+          "descriptor": 861,
+          "end": 877
+        },
+        {
+          "name": "资料/blob.bin",
+          "directory": false,
+          "method": 12,
+          "size": 200000,
+          "compressed": 201271,
+          "crc": 3537665441,
+          "sha256": "440459d22a154465e0d3fa91aaca808ee35eab1916c85c96bc6c33b31a2faa84",
+          "local": 877,
+          "data": 922,
+          "descriptor": 202193,
+          "end": 202209
+        },
+        {
+          "name": "空目录/",
+          "directory": true,
+          "method": 12,
+          "size": 0,
+          "compressed": 14,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "local": 202209,
+          "data": 202249,
+          "descriptor": 202263,
+          "end": 202279
+        },
+        {
+          "name": "tail.txt",
+          "directory": false,
+          "method": 8,
+          "size": 8700,
+          "compressed": 73,
+          "crc": 3566359646,
+          "sha256": "ec9c245778f4c90a56c248f9bd416294912b7fcb59df94ac1393df2eba493e6b",
+          "local": 202279,
+          "data": 202317,
+          "descriptor": 202390,
+          "end": 202406
+        }
+      ]
+    },
+    {
+      "name": "stream64.zip",
+      "zip64": true,
+      "sha256": "f7fec66c66ce84a1b255ff80302382d6afcc4c2156e23d80c70bc9838632d737",
+      "central": 202574,
+      "entries": [
+        {
+          "name": "资料/",
+          "directory": true,
+          "method": 8,
+          "size": 0,
+          "compressed": 2,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "local": 0,
+          "data": 57,
+          "descriptor": 59,
+          "end": 83
+        },
+        {
+          "name": "资料/说明.txt",
+          "directory": false,
+          "method": 12,
+          "size": 3500000,
+          "compressed": 683,
+          "crc": 1191402647,
+          "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+          "local": 83,
+          "data": 150,
+          "descriptor": 833,
+          "end": 857
+        },
+        {
+          "name": "资料/empty.txt",
+          "directory": false,
+          "method": 12,
+          "size": 0,
+          "compressed": 14,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "local": 857,
+          "data": 923,
+          "descriptor": 937,
+          "end": 961
+        },
+        {
+          "name": "资料/blob.bin",
+          "directory": false,
+          "method": 12,
+          "size": 200000,
+          "compressed": 201271,
+          "crc": 3537665441,
+          "sha256": "440459d22a154465e0d3fa91aaca808ee35eab1916c85c96bc6c33b31a2faa84",
+          "local": 961,
+          "data": 1026,
+          "descriptor": 202297,
+          "end": 202321
+        },
+        {
+          "name": "空目录/",
+          "directory": true,
+          "method": 12,
+          "size": 0,
+          "compressed": 14,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "local": 202321,
+          "data": 202381,
+          "descriptor": 202395,
+          "end": 202419
+        },
+        {
+          "name": "tail.txt",
+          "directory": false,
+          "method": 8,
+          "size": 8700,
+          "compressed": 73,
+          "crc": 3566359646,
+          "sha256": "ec9c245778f4c90a56c248f9bd416294912b7fcb59df94ac1393df2eba493e6b",
+          "local": 202419,
+          "data": 202477,
+          "descriptor": 202550,
+          "end": 202574
+        }
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "name": "lost32.zip",
+      "original": "stream32.zip",
+      "sha256": "e43ec1e07619ed09317093ec3a804136ba6db833a4a964e98750713228569f44",
+      "description": "central directory removed; signed descriptors unchanged"
+    },
+    {
+      "name": "unsigned32.zip",
+      "original": "stream32.zip",
+      "sha256": "36fc9e3592126cd7f5bef410b66f45c2a27298739ece64f23689d0f8cdc47d14",
+      "description": "central directory and optional descriptor signatures removed"
+    },
+    {
+      "name": "lost64.zip",
+      "original": "stream64.zip",
+      "sha256": "82e6c092d541cf6ac1e177de95bb01a5b9c5f89b2a59dab456ecb1a15aaf7819",
+      "description": "central directory removed; signed descriptors unchanged"
+    },
+    {
+      "name": "unsigned64.zip",
+      "original": "stream64.zip",
+      "sha256": "ff5b2c230a56c6b86bf149d6063036f84bd912bb3a5c0743f27d10f043076a61",
+      "description": "central directory and optional descriptor signatures removed"
+    }
+  ]
+}

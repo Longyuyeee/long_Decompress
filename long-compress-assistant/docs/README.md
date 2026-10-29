@@ -1,7 +1,7 @@
 # 文档导航与维护规则
 
-- **当前版本 v1.7.32**：[说明](RELEASE_NOTES_1.7.32.md)、[范围](ARCHIVE_ROADMAP_1.7.32.md)、[封板记录](ZIP_UTC_WRITE_FREEZE_1.7.32.md)。正式身份由本版 PR/Release 接续。
-- **下一版仅规划**：[v1.7.33 流式 BZip2 ZIP 丢目录部分取回](ARCHIVE_ROADMAP_1.7.33.md)，准确状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
+- **当前版本 v1.7.33**：[说明](RELEASE_NOTES_1.7.33.md)、[范围](ARCHIVE_ROADMAP_1.7.33.md)、[封板记录](ZIP_BZIP2_RESCUE_FREEZE_1.7.33.md)。正式身份由本版 PR/Release 接续。
+- **下一版仅规划**：[v1.7.34 带结束标记的流式 LZMA ZIP 部分取回](ARCHIVE_ROADMAP_1.7.34.md)，准确状态见[开发交接](DEVELOPMENT_HANDOFF.md)。
 
 - **历史版本 v1.6.61**：[发布下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.6.61)、[中文说明](RELEASE_NOTES_1.6.61.md)、[LZOP 路径与名称记录](LZOP_PATHS_NAMES_FREEZE_1.6.61.md)。已完成功能封板，正式发布身份在本版 PR 接续。
 - **历史接续**：[本版路线](ARCHIVE_ROADMAP_1.6.61.md) → [v1.6.62 单文件创建](ARCHIVE_ROADMAP_1.6.62.md)仅规划，见[交接](DEVELOPMENT_HANDOFF.md)。

@@ -1,0 +1,33 @@
+{
+  "passed": true,
+  "checks": [
+    {
+      "variant": "lost-32",
+      "entries": 6,
+      "sourceUnchanged": true,
+      "pythonReadback": true,
+      "external7zipReadback": true
+    },
+    {
+      "variant": "unsigned-32",
+      "entries": 6,
+      "sourceUnchanged": true,
+      "pythonReadback": true,
+      "external7zipReadback": true
+    },
+    {
+      "variant": "lost-64",
+      "entries": 6,
+      "sourceUnchanged": true,
+      "pythonReadback": true,
+      "external7zipReadback": true
+    },
+    {
+      "variant": "unsigned-64",
+      "entries": 6,
+      "sourceUnchanged": true,
+      "pythonReadback": true,
+      "external7zipReadback": true
+    }
+  ]
+}

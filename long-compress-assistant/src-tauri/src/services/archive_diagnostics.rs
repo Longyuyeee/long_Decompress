@@ -571,9 +571,9 @@ pub async fn diagnose_archive_at(
                     report.total_uncompressed_size_known = false;
                     report.status = "directory_lost".to_string();
                     report.recoverability = "local_entries".to_string();
-                    report.can_repair = !local.encrypted || password.is_some();
+                    report.can_repair = report.total_files > 0 && (!local.encrypted || password.is_some());
                     report.issues.push(DiagnosticIssue { code: "directory_lost".to_string(), severity: "warning".to_string(),
-                        title: "目录信息已丢失，可尝试救回完整文件".to_string(),
+                        title: if report.total_files > 0 { "目录信息已丢失，可尝试救回完整文件" } else { "目录信息已丢失，尚未找到可取回的完整文件" }.to_string(),
                         detail: format!("已找到 {} 个具有明确边界的文件条目，原包总条目数无法确认。只恢复完整读取并通过校验的文件，原包保留。", report.total_files) });
                     if local.encrypted {
                         if let Some(password) = password {

@@ -1,0 +1,8 @@
+{
+  "passed": true,
+  "variant": "retry-after-source-restored",
+  "entries": 6,
+  "sourceUnchanged": true,
+  "pythonReadback": true,
+  "external7zipReadback": true
+}
