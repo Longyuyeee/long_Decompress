@@ -213,10 +213,10 @@
 
 | 版本 | 主要更新 | 详情 |
 | --- | --- | --- |
+| **v1.7.36** | 单帧 Zstandard ZIP 丢目录后部分取回完整文件，接通 ZIP64、完整数字切片及来源日期 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.36.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.36) |
 | **v1.7.35** | ZIP 恢复新包保留已确认文件与目录修改时间，接通密码、分卷和流式取回结果 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.35.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.35) |
 | **v1.7.34** | 带结束标记的未加密流式 LZMA ZIP 丢目录部分取回，接通 ZIP64、目录与完整数字切片 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.34.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.34) |
 | **v1.7.33** | 流式 BZip2 ZIP 丢目录后可部分取回完整文件，接通 ZIP64、目录及完整数字切片 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.33.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.33) |
 | **v1.7.32** | ZIP／ZIPX 创建及转换记录 UTC 修改时间，文件、空目录、密码和分卷沿原流程保留奇数秒 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.32.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.32) |
-| **v1.7.31** | ZIP／ZIPX 已编码 UTC 日期用于浏览、解压和目录恢复，保留可确认奇数秒，统一较新判断与冲突时间 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.31.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.31) |
 
 [查看全部历史版本 →](https://github.com/Longyuyeee/long_Decompress/releases)

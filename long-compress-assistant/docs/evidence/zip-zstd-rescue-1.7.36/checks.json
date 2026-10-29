@@ -1,0 +1,398 @@
+{
+  "version": "1.7.36",
+  "newNativeGroups": 5,
+  "initial": {
+    "passed": 2,
+    "interruptedHarnessRuntimeNesting": 3
+  },
+  "followup": {
+    "onlyAffectedGroups": 3,
+    "passed": 3,
+    "productLogicChangedForHarness": false
+  },
+  "relatedNativeGroups": 3,
+  "independent": {
+    "version": "1.7.36",
+    "passed": true,
+    "independentOriginals": 2,
+    "structuralControls": 6,
+    "recoveredArchives": 36,
+    "recoveredEntries": 132,
+    "externalReadbacks": 38,
+    "controlledStops": 28,
+    "noPublicationCases": 5,
+    "checks": [
+      {
+        "variant": "lost-32",
+        "entries": 6,
+        "files": 4,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "unsigned-32",
+        "entries": 6,
+        "files": 4,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "lost-64",
+        "entries": 6,
+        "files": 4,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "unsigned-64",
+        "entries": 6,
+        "files": 4,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "mixed-zstd-bzip2",
+        "entries": 6,
+        "files": 4,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "numeric-32",
+        "entries": 6,
+        "files": 4,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "numeric-64",
+        "entries": 6,
+        "files": 4,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "truncated-stream-32",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "bad-stream-32",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "bad-crc-32",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "compressed-size-32",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "expanded-size-32",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "truncated-descriptor-32",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "gap-32",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "unknown-method-32",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "local-size-32",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "dictionary-32",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "skippable-32",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "concatenated-32",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "window-32",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "legacy-method-32",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "truncated-stream-64",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "bad-stream-64",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "bad-crc-64",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "compressed-size-64",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "expanded-size-64",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "truncated-descriptor-64",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "gap-64",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "unknown-method-64",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "local-size-64",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "dictionary-64",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "skippable-64",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "concatenated-64",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "window-64",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "legacy-method-64",
+        "entries": 3,
+        "files": 2,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      },
+      {
+        "variant": "retry-after-source-restored",
+        "entries": 6,
+        "files": 4,
+        "partial": true,
+        "unknownTotalRetained": true,
+        "originalUnchanged": true,
+        "externalReadback": true,
+        "nativeDatesAndContent": true
+      }
+    ]
+  },
+  "shellExtension": true,
+  "releaseIdentity": true,
+  "uiChanged": false,
+  "desktopControlUsed": false,
+  "unrelatedMatrixRepeated": false,
+  "publication": "Exact PR head CI and merge/tag Release identities are recorded by GitHub; local publication receipt is not a second post-release commit.",
+  "documentation": {
+    "relativeLinks": 1955,
+    "latestFiveVersions": true,
+    "diffWhitespace": true
+  }
+}

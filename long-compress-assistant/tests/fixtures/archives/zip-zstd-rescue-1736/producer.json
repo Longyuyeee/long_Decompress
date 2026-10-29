@@ -1,0 +1,485 @@
+{
+  "producer": "bsdtar 3.8.9 - libarchive 3.8.9 zlib/1.2.13.1-motley liblzma/5.8.3 bz2lib/1.0.8 libzstd/1.5.7 cng/2.0 libb2/bundled",
+  "command": [
+    "tar",
+    "--format",
+    "zip",
+    "--options",
+    "zip:compression=zstd",
+    "--no-recursion",
+    "-cf",
+    "-",
+    "-C",
+    "<fixed input>",
+    "<explicit ordered entries>"
+  ],
+  "originals": [
+    {
+      "name": "stream32.zip",
+      "sha256": "de75d645db16e48129a7a311a0072d6ac6643177b73df5b9fcb5baeba8dce3b2",
+      "central": 200955,
+      "entries": [
+        {
+          "name": "docs/",
+          "directory": true,
+          "method": 0,
+          "size": 0,
+          "compressed": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "local": 0,
+          "data": 67,
+          "descriptor": 67,
+          "end": 67,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            13,
+            20
+          ],
+          "utc": 1700000001
+        },
+        {
+          "name": "docs/note.txt",
+          "directory": false,
+          "method": 93,
+          "size": 3700000,
+          "compressed": 391,
+          "crc": 3486856503,
+          "sha256": "3b0ef06b31f003022335d961365fefff0ffd4cfac265293393cfda7b9ff95588",
+          "local": 67,
+          "data": 142,
+          "descriptor": 533,
+          "end": 549,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            14,
+            30
+          ],
+          "utc": 1700000071
+        },
+        {
+          "name": "docs/empty.txt",
+          "directory": false,
+          "method": 93,
+          "size": 0,
+          "compressed": 9,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "local": 549,
+          "data": 625,
+          "descriptor": 634,
+          "end": 650,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            15,
+            40
+          ],
+          "utc": 1700000141
+        },
+        {
+          "name": "docs/blob.bin",
+          "directory": false,
+          "method": 93,
+          "size": 200000,
+          "compressed": 200012,
+          "crc": 3123628532,
+          "sha256": "e8e71074cce4d12063d5faa4f79a491fd6dd93c54d1bfaeedf76735322a0e4bf",
+          "local": 650,
+          "data": 725,
+          "descriptor": 200737,
+          "end": 200753,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            16,
+            50
+          ],
+          "utc": 1700000211
+        },
+        {
+          "name": "empty-dir/",
+          "directory": true,
+          "method": 0,
+          "size": 0,
+          "compressed": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "local": 200753,
+          "data": 200825,
+          "descriptor": 200825,
+          "end": 200825,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            18,
+            0
+          ],
+          "utc": 1700000281
+        },
+        {
+          "name": "tail.txt",
+          "directory": false,
+          "method": 93,
+          "size": 8100,
+          "compressed": 44,
+          "crc": 805272861,
+          "sha256": "fa851b5f5bdb863d6ef00f11e65486e2d126b389ce9f93246959214f1103b58b",
+          "local": 200825,
+          "data": 200895,
+          "descriptor": 200939,
+          "end": 200955,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            19,
+            10
+          ],
+          "utc": 1700000351
+        }
+      ]
+    },
+    {
+      "name": "bzip2-tail.zip",
+      "sha256": "d1f942f466e3fbb215dbdf4ecc995db12c8c4a21ba2179ded643ed68fa812aa2",
+      "producer": "CPython zipfile + stdlib bz2; non-seekable"
+    }
+  ],
+  "variants": [
+    {
+      "name": "stream32.zip",
+      "zip64": false,
+      "sha256": "de75d645db16e48129a7a311a0072d6ac6643177b73df5b9fcb5baeba8dce3b2",
+      "central": 200955,
+      "entries": [
+        {
+          "name": "docs/",
+          "directory": true,
+          "method": 0,
+          "size": 0,
+          "compressed": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "local": 0,
+          "data": 67,
+          "descriptor": 67,
+          "end": 67,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            13,
+            20
+          ],
+          "utc": 1700000001
+        },
+        {
+          "name": "docs/note.txt",
+          "directory": false,
+          "method": 93,
+          "size": 3700000,
+          "compressed": 391,
+          "crc": 3486856503,
+          "sha256": "3b0ef06b31f003022335d961365fefff0ffd4cfac265293393cfda7b9ff95588",
+          "local": 67,
+          "data": 142,
+          "descriptor": 533,
+          "end": 549,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            14,
+            30
+          ],
+          "utc": 1700000071
+        },
+        {
+          "name": "docs/empty.txt",
+          "directory": false,
+          "method": 93,
+          "size": 0,
+          "compressed": 9,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "local": 549,
+          "data": 625,
+          "descriptor": 634,
+          "end": 650,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            15,
+            40
+          ],
+          "utc": 1700000141
+        },
+        {
+          "name": "docs/blob.bin",
+          "directory": false,
+          "method": 93,
+          "size": 200000,
+          "compressed": 200012,
+          "crc": 3123628532,
+          "sha256": "e8e71074cce4d12063d5faa4f79a491fd6dd93c54d1bfaeedf76735322a0e4bf",
+          "local": 650,
+          "data": 725,
+          "descriptor": 200737,
+          "end": 200753,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            16,
+            50
+          ],
+          "utc": 1700000211
+        },
+        {
+          "name": "empty-dir/",
+          "directory": true,
+          "method": 0,
+          "size": 0,
+          "compressed": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "local": 200753,
+          "data": 200825,
+          "descriptor": 200825,
+          "end": 200825,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            18,
+            0
+          ],
+          "utc": 1700000281
+        },
+        {
+          "name": "tail.txt",
+          "directory": false,
+          "method": 93,
+          "size": 8100,
+          "compressed": 44,
+          "crc": 805272861,
+          "sha256": "fa851b5f5bdb863d6ef00f11e65486e2d126b389ce9f93246959214f1103b58b",
+          "local": 200825,
+          "data": 200895,
+          "descriptor": 200939,
+          "end": 200955,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            19,
+            10
+          ],
+          "utc": 1700000351
+        }
+      ]
+    },
+    {
+      "name": "stream64-control.zip",
+      "zip64": true,
+      "sha256": "d747b20a467576a5089a25ffc8d6d5ae11567c04d7cbd945085eeb5145886d87",
+      "central": 201067,
+      "entries": [
+        {
+          "name": "docs/",
+          "directory": true,
+          "method": 0,
+          "size": 0,
+          "compressed": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "local": 0,
+          "data": 67,
+          "descriptor": 67,
+          "end": 67,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            13,
+            20
+          ],
+          "utc": 1700000001
+        },
+        {
+          "name": "docs/note.txt",
+          "directory": false,
+          "method": 93,
+          "size": 3700000,
+          "compressed": 391,
+          "crc": 3486856503,
+          "sha256": "3b0ef06b31f003022335d961365fefff0ffd4cfac265293393cfda7b9ff95588",
+          "local": 67,
+          "data": 162,
+          "descriptor": 553,
+          "end": 577,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            14,
+            30
+          ],
+          "utc": 1700000071
+        },
+        {
+          "name": "docs/empty.txt",
+          "directory": false,
+          "method": 93,
+          "size": 0,
+          "compressed": 9,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "local": 577,
+          "data": 673,
+          "descriptor": 682,
+          "end": 706,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            15,
+            40
+          ],
+          "utc": 1700000141
+        },
+        {
+          "name": "docs/blob.bin",
+          "directory": false,
+          "method": 93,
+          "size": 200000,
+          "compressed": 200012,
+          "crc": 3123628532,
+          "sha256": "e8e71074cce4d12063d5faa4f79a491fd6dd93c54d1bfaeedf76735322a0e4bf",
+          "local": 706,
+          "data": 801,
+          "descriptor": 200813,
+          "end": 200837,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            16,
+            50
+          ],
+          "utc": 1700000211
+        },
+        {
+          "name": "empty-dir/",
+          "directory": true,
+          "method": 0,
+          "size": 0,
+          "compressed": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "local": 200837,
+          "data": 200909,
+          "descriptor": 200909,
+          "end": 200909,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            18,
+            0
+          ],
+          "utc": 1700000281
+        },
+        {
+          "name": "tail.txt",
+          "directory": false,
+          "method": 93,
+          "size": 8100,
+          "compressed": 44,
+          "crc": 805272861,
+          "sha256": "fa851b5f5bdb863d6ef00f11e65486e2d126b389ce9f93246959214f1103b58b",
+          "local": 200909,
+          "data": 200999,
+          "descriptor": 201043,
+          "end": 201067,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            19,
+            10
+          ],
+          "utc": 1700000351
+        }
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "name": "stream64-control.zip",
+      "original": "stream32.zip",
+      "sha256": "d747b20a467576a5089a25ffc8d6d5ae11567c04d7cbd945085eeb5145886d87",
+      "description": "real payloads; local unknown-size ZIP64 placeholders and wide descriptors; patched central offsets"
+    },
+    {
+      "name": "lost32.zip",
+      "original": "stream32.zip",
+      "sha256": "6c88537741dc960832c153753a5b7750a416b584f5137e06009d6fc610bb3cce",
+      "description": "remove central directory"
+    },
+    {
+      "name": "unsigned32.zip",
+      "original": "stream32.zip",
+      "sha256": "0ec54165d650b6c2ccc52b69e415d382c6fdf4eec69de168cff7e48e34d9890d",
+      "description": "remove central directory and optional data descriptor signatures"
+    },
+    {
+      "name": "lost64.zip",
+      "original": "stream64-control.zip",
+      "sha256": "539c79b6b151559a6908932c6f8609fb1f944e263df0d1efa785cf4fc805804f",
+      "description": "remove central directory"
+    },
+    {
+      "name": "unsigned64.zip",
+      "original": "stream64-control.zip",
+      "sha256": "ecb9c661fe7880460044fcf3ace31acf98a1ba9d3928bc521e057be9c4e41b10",
+      "description": "remove central directory and optional data descriptor signatures"
+    },
+    {
+      "name": "mixed.zip",
+      "original": [
+        "stream32.zip",
+        "bzip2-tail.zip"
+      ],
+      "sha256": "ed25216d614adaebae7b67e6935b554514573b02517e83096c06ed6466ad9a38",
+      "description": "last local member replaced by actual BZip2 local record; no central directory"
+    }
+  ]
+}
