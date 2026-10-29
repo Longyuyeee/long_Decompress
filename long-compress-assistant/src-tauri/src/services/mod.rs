@@ -377,3 +377,7 @@ mod zip_creation_time_1724_tests;
 mod tar_nested_links_1723_tests;
 #[cfg(test)]
 mod tar_forward_nested_1730_tests;
+
+pub(crate) mod zip_read_time;
+#[cfg(test)]
+mod zip_utc_read_1731_tests;

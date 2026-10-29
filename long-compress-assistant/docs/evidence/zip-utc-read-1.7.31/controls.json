@@ -1,0 +1,623 @@
+[
+  {
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/zip-utc-read-1731\\controls.zip",
+    "sourceSha256": "79c7937a400eb30aa2e69dbb852fbd40229460b6e854bcd55dee03902038fedc",
+    "entries": [
+      {
+        "name": "valid.txt",
+        "sha256": "009d962905920ad0e3ff46c6987fad36418982deb81796fd1f58e326d167c268",
+        "seconds": 1700001731,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 6
+      },
+      {
+        "name": "central-flags7.txt",
+        "sha256": "708a4df84b6e683a02c28d97c8ddd28c56884c485345d51387becff90f8cd32b",
+        "seconds": 1700001731,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 15
+      },
+      {
+        "name": "central-only.txt",
+        "sha256": "1097589e0351f84751c20b2506099ee943d2d78febe719966bbfd9fa2b09b7eb",
+        "seconds": 1700001731,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 13
+      },
+      {
+        "name": "local-only.txt",
+        "sha256": "661c5ac75d019e356462bcbf09373514e0310d9362d9eeac0c89f900190bd3e7",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 11
+      },
+      {
+        "name": "central-wins.txt",
+        "sha256": "7e3af9980a3a7d2a85738f2e2d83c37348212be9701d3fb37fc2d3471333d3c2",
+        "seconds": 1700001731,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 13
+      },
+      {
+        "name": "malformed.txt",
+        "sha256": "72317e4329e39b772846ef7358eefee8d8569baa89b1f06da6627683e621653d",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 10
+      },
+      {
+        "name": "empty.txt",
+        "sha256": "45fd2f9df187bc411dc80df5c4c4844ac00f4dd69bc69453f1893a5d143433d6",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 6
+      },
+      {
+        "name": "missing-mtime.txt",
+        "sha256": "2b93db3ae70a76012395772c850eee5741d04ea5b3d02a75685b8b69cc8c5027",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 14
+      },
+      {
+        "name": "access-only.txt",
+        "sha256": "4c2ab161f122ba3e9ce5bddff020e953aeddd4899b7ed37a3016a87027d2bf95",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 12
+      },
+      {
+        "name": "reserved-bits.txt",
+        "sha256": "9b0d8914be9e39a11d2f49014aac505ed41ecd8570e2dc5dc9717082f5a1dac5",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 14
+      },
+      {
+        "name": "duplicate.txt",
+        "sha256": "3f84cce967052e85c3cf2d671c2433dc4899226bb99a67d6bfe4aeb9e938b7cc",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 10
+      },
+      {
+        "name": "conflicting.txt",
+        "sha256": "74a50c6a1821199911d08ba2348290f87c0e04c85477928e9afe8297d2bebb40",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 12
+      },
+      {
+        "name": "high-bit.txt",
+        "sha256": "741139679715666b3b25ce86126b071a922f65a7af2b8fed91aa0fbcccc31fb8",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 9
+      },
+      {
+        "name": "zero.txt",
+        "sha256": "ff9fb51036a15c5c92c8b80d3dac03262bfb9d081b1490f719ab4127e6069fce",
+        "seconds": 0,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 5
+      },
+      {
+        "name": "signed-max.txt",
+        "sha256": "9da3b96e25bc40e34924bcee31805b1b87fa87fd8e396f6c85c1464c8edf8873",
+        "seconds": 2147483647,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 11
+      },
+      {
+        "name": "时间.txt",
+        "sha256": "466f2e945489c9f65eafc0fddb849e9eda63700d2563605599262f30476a6e20",
+        "seconds": 1700001731,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 7
+      },
+      {
+        "name": "unknown-before.txt",
+        "sha256": "ef243d9f75347fc186de1eb9e67cfae9eb07e13650bd0933e4022504b2c53068",
+        "seconds": 1700001731,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 15
+      }
+    ],
+    "listing": {
+      "format": "ZIP",
+      "entries": [
+        {
+          "path": "valid.txt",
+          "name": "valid.txt",
+          "size": 6,
+          "compressedSize": 6,
+          "modified": "2023-11-14T22:42:11+00:00",
+          "crc": "1F59EE2B",
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "central-flags7.txt",
+          "name": "central-flags7.txt",
+          "size": 15,
+          "compressedSize": 15,
+          "modified": "2023-11-14T22:42:11+00:00",
+          "crc": "AC6E988D",
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "central-only.txt",
+          "name": "central-only.txt",
+          "size": 13,
+          "compressedSize": 13,
+          "modified": "2023-11-14T22:42:11+00:00",
+          "crc": "5BF27190",
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "local-only.txt",
+          "name": "local-only.txt",
+          "size": 11,
+          "compressedSize": 11,
+          "modified": "2001-02-03 04:05:06",
+          "crc": "0050BE9A",
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "central-wins.txt",
+          "name": "central-wins.txt",
+          "size": 13,
+          "compressedSize": 13,
+          "modified": "2023-11-14T22:42:11+00:00",
+          "crc": "6FDEA98E",
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "malformed.txt",
+          "name": "malformed.txt",
+          "size": 10,
+          "compressedSize": 10,
+          "modified": "2001-02-03 04:05:06",
+          "crc": "FF0DD1F2",
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "empty.txt",
+          "name": "empty.txt",
+          "size": 6,
+          "compressedSize": 6,
+          "modified": "2001-02-03 04:05:06",
+          "crc": "AEB6C707",
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "missing-mtime.txt",
+          "name": "missing-mtime.txt",
+          "size": 14,
+          "compressedSize": 14,
+          "modified": "2001-02-03 04:05:06",
+          "crc": "DCBF790A",
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "access-only.txt",
+          "name": "access-only.txt",
+          "size": 12,
+          "compressedSize": 12,
+          "modified": "2001-02-03 04:05:06",
+          "crc": "F6235ECD",
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "reserved-bits.txt",
+          "name": "reserved-bits.txt",
+          "size": 14,
+          "compressedSize": 14,
+          "modified": "2001-02-03 04:05:06",
+          "crc": "8417AE24",
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "duplicate.txt",
+          "name": "duplicate.txt",
+          "size": 10,
+          "compressedSize": 10,
+          "modified": "2001-02-03 04:05:06",
+          "crc": "B8A088FE",
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "conflicting.txt",
+          "name": "conflicting.txt",
+          "size": 12,
+          "compressedSize": 12,
+          "modified": "2001-02-03 04:05:06",
+          "crc": "D2341B60",
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "high-bit.txt",
+          "name": "high-bit.txt",
+          "size": 9,
+          "compressedSize": 9,
+          "modified": "2001-02-03 04:05:06",
+          "crc": "205E02A0",
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "zero.txt",
+          "name": "zero.txt",
+          "size": 5,
+          "compressedSize": 5,
+          "modified": "1970-01-01T00:00:00+00:00",
+          "crc": "2C7D2A0A",
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "signed-max.txt",
+          "name": "signed-max.txt",
+          "size": 11,
+          "compressedSize": 11,
+          "modified": "2038-01-19T03:14:07+00:00",
+          "crc": "2806A5D2",
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "时间.txt",
+          "name": "时间.txt",
+          "size": 7,
+          "compressedSize": 7,
+          "modified": "2023-11-14T22:42:11+00:00",
+          "crc": "51AFB579",
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "unknown-before.txt",
+          "name": "unknown-before.txt",
+          "size": 15,
+          "compressedSize": 15,
+          "modified": "2023-11-14T22:42:11+00:00",
+          "crc": "3271DA73",
+          "encrypted": false,
+          "isDir": false
+        }
+      ],
+      "totalFiles": 17,
+      "totalDirectories": 0,
+      "totalUncompressedSize": 183,
+      "totalCompressedSize": 183,
+      "encrypted": false
+    },
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-read-1731\\346958a7-3ac9-48fd-bca1-ebea38b6fd90\\controls.zip",
+    "fallbackAll": false,
+    "encrypted": false
+  },
+  {
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/zip-utc-read-1731\\aes-malformed-ut.zip",
+    "sourceSha256": "b3526414e74c883100d86c5fc468dbd2eaf745c15c5ca194016ab7a03c30d2fd",
+    "entries": [
+      {
+        "name": "docs",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001551,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          10
+        ]
+      },
+      {
+        "name": "docs/empty",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001537,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          38,
+          56
+        ]
+      },
+      {
+        "name": "docs/nested",
+        "bytes": 0,
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001549,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          8
+        ]
+      },
+      {
+        "name": "docs/note.txt",
+        "bytes": 38,
+        "directory": false,
+        "sha256": "d28f534aa250cf195beb175fe5bb5702f948cf7b51fda117c8ec0fad32d58911",
+        "seconds": 1700001731,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          42,
+          10
+        ]
+      },
+      {
+        "name": "docs/zero.txt",
+        "bytes": 0,
+        "directory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "seconds": 1700001935,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          45,
+          34
+        ]
+      },
+      {
+        "name": "docs/nested/large-a.bin",
+        "bytes": 310000,
+        "directory": false,
+        "sha256": "5affd9561e6e7b2e6ee23ae772cb1eb6d999147efc90fbe4f3354366b713c127",
+        "seconds": 1700001833,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          43,
+          52
+        ]
+      },
+      {
+        "name": "docs/nested/large-b.bin",
+        "bytes": 310000,
+        "directory": false,
+        "sha256": "d488acfc5c852315f99625a1abaed1b05f605ebfec99a99db12dd59e045fba7e",
+        "seconds": 1710054133,
+        "dos": [
+          2024,
+          3,
+          10,
+          15,
+          2,
+          12
+        ]
+      }
+    ],
+    "listing": {
+      "format": "ZIP",
+      "entries": [
+        {
+          "path": "docs/",
+          "name": "docs",
+          "size": 0,
+          "compressedSize": 0,
+          "modified": "2023-11-15 06:39:10",
+          "crc": "00000000",
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "docs/empty/",
+          "name": "empty",
+          "size": 0,
+          "compressedSize": 0,
+          "modified": "2023-11-15 06:38:56",
+          "crc": "00000000",
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "docs/nested/",
+          "name": "nested",
+          "size": 0,
+          "compressedSize": 0,
+          "modified": "2023-11-15 06:39:08",
+          "crc": "00000000",
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "docs/note.txt",
+          "name": "note.txt",
+          "size": 38,
+          "compressedSize": 71,
+          "modified": "2023-11-15 06:42:10",
+          "crc": "29F80FFA",
+          "encrypted": true,
+          "isDir": false
+        },
+        {
+          "path": "docs/zero.txt",
+          "name": "zero.txt",
+          "size": 0,
+          "compressedSize": 2,
+          "modified": "2023-11-15 06:45:34",
+          "crc": "00000000",
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "docs/nested/large-a.bin",
+          "name": "large-a.bin",
+          "size": 310000,
+          "compressedSize": 310123,
+          "modified": "2023-11-15 06:43:52",
+          "crc": "A4D82CBF",
+          "encrypted": true,
+          "isDir": false
+        },
+        {
+          "path": "docs/nested/large-b.bin",
+          "name": "large-b.bin",
+          "size": 310000,
+          "compressedSize": 310123,
+          "modified": "2024-03-10 15:02:12",
+          "crc": "372E6FCD",
+          "encrypted": true,
+          "isDir": false
+        }
+      ],
+      "totalFiles": 4,
+      "totalDirectories": 3,
+      "totalUncompressedSize": 620038,
+      "totalCompressedSize": 620319,
+      "encrypted": true
+    },
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-read-1731\\346958a7-3ac9-48fd-bca1-ebea38b6fd90\\aes-malformed-ut.zip",
+    "fallbackAll": true,
+    "encrypted": true
+  }
+]

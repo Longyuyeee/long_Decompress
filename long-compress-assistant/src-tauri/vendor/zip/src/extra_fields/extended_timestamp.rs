@@ -170,17 +170,23 @@ mod tests {
 
     use std::io::Cursor;
 
-    /// Ensure we don't panic or read garbage data if the field body is empty
+    /// An empty optional timestamp is ignored by the container. Its strict
+    /// field parser still rejects it; ordinary file bytes remain accessible.
     #[test]
-    pub fn test_bad_extended_timestamp() {
-        use crate::ZipArchive;
-
-        assert!(
-            ZipArchive::new(Cursor::new(include_bytes!(
-                "../../tests/data/extended_timestamp_bad.zip"
-            )))
-            .is_err()
-        );
+    pub fn test_empty_optional_timestamp_preserves_file_content() {
+        use std::io::{Read, Write};
+        let mut writer = crate::ZipWriter::new(Cursor::new(Vec::new()));
+        let mut options = crate::write::FullFileOptions::default()
+            .compression_method(crate::CompressionMethod::Stored);
+        options.add_extra_data(0x5455, [], false).unwrap();
+        writer.start_file("file.txt", options).unwrap();
+        writer.write_all(b"content").unwrap();
+        let mut archive = crate::ZipArchive::new(writer.finish().unwrap()).unwrap();
+        let mut file = archive.by_index(0).unwrap();
+        let mut content = String::new();
+        file.read_to_string(&mut content).unwrap();
+        assert_eq!(content, "content");
+        assert!(file.extra_data_fields().next().is_none());
     }
 
     /// Ensure that a truncated extended timestamp (len too short for flags)

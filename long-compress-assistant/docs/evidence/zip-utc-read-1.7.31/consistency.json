@@ -1,0 +1,171 @@
+{
+  "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/zip-utc-read-1731\\aes.zip",
+  "sourceSha256": "9e7d2419c9682276b37373f55d658b9c897f288084b647133ee531f9b44ec876",
+  "passwordFallbackOutput": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-read-1731\\ffc92669-b35c-4102-a062-7bc19b286bb8\\password-fallback",
+  "entries": [
+    {
+      "name": "docs",
+      "bytes": 0,
+      "directory": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 1700001551,
+      "dos": [
+        2023,
+        11,
+        15,
+        6,
+        39,
+        10
+      ]
+    },
+    {
+      "name": "docs/empty",
+      "bytes": 0,
+      "directory": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 1700001537,
+      "dos": [
+        2023,
+        11,
+        15,
+        6,
+        38,
+        56
+      ]
+    },
+    {
+      "name": "docs/nested",
+      "bytes": 0,
+      "directory": true,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 1700001549,
+      "dos": [
+        2023,
+        11,
+        15,
+        6,
+        39,
+        8
+      ]
+    },
+    {
+      "name": "docs/note.txt",
+      "bytes": 38,
+      "directory": false,
+      "sha256": "d28f534aa250cf195beb175fe5bb5702f948cf7b51fda117c8ec0fad32d58911",
+      "seconds": 1700001731,
+      "dos": [
+        2023,
+        11,
+        15,
+        6,
+        42,
+        10
+      ]
+    },
+    {
+      "name": "docs/zero.txt",
+      "bytes": 0,
+      "directory": false,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "seconds": 1700001935,
+      "dos": [
+        2023,
+        11,
+        15,
+        6,
+        45,
+        34
+      ]
+    },
+    {
+      "name": "docs/nested/large-a.bin",
+      "bytes": 310000,
+      "directory": false,
+      "sha256": "5affd9561e6e7b2e6ee23ae772cb1eb6d999147efc90fbe4f3354366b713c127",
+      "seconds": 1700001833,
+      "dos": [
+        2023,
+        11,
+        15,
+        6,
+        43,
+        52
+      ]
+    },
+    {
+      "name": "docs/nested/large-b.bin",
+      "bytes": 310000,
+      "directory": false,
+      "sha256": "d488acfc5c852315f99625a1abaed1b05f605ebfec99a99db12dd59e045fba7e",
+      "seconds": 1710054133,
+      "dos": [
+        2024,
+        3,
+        10,
+        15,
+        2,
+        12
+      ]
+    }
+  ],
+  "comparison": {
+    "source": {
+      "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\tests\\fixtures\\archives\\zip-utc-read-1731\\plain.zip",
+      "kind": "zip",
+      "revision": "b13a427be754b76cef008ac52273e4cf2c98b4821985632b99f8db546aef9c01"
+    },
+    "name": "plain.zip",
+    "entries": [
+      {
+        "path": "docs",
+        "directory": true,
+        "size": 0,
+        "modified": "2023-11-15 06:39:11",
+        "selectable": false
+      },
+      {
+        "path": "docs/empty",
+        "directory": true,
+        "size": 0,
+        "modified": "2023-11-15 06:38:57",
+        "selectable": true
+      },
+      {
+        "path": "docs/nested",
+        "directory": true,
+        "size": 0,
+        "modified": "2023-11-15 06:39:09",
+        "selectable": false
+      },
+      {
+        "path": "docs/nested/large-a.bin",
+        "directory": false,
+        "size": 310000,
+        "modified": "2023-11-15 06:43:53",
+        "selectable": true
+      },
+      {
+        "path": "docs/nested/large-b.bin",
+        "directory": false,
+        "size": 310000,
+        "modified": "2024-03-10 15:02:13",
+        "selectable": true
+      },
+      {
+        "path": "docs/note.txt",
+        "directory": false,
+        "size": 38,
+        "modified": "2023-11-15 06:42:11",
+        "selectable": true
+      },
+      {
+        "path": "docs/zero.txt",
+        "directory": false,
+        "size": 0,
+        "modified": "2023-11-15 06:45:35",
+        "selectable": true
+      }
+    ]
+  }
+}

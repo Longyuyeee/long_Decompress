@@ -262,16 +262,7 @@ impl UniversalCliEngine {
             if entry.is_dir() {
                 std::fs::create_dir_all(&target)?;
             } else {
-                let modified = entry.last_modified().and_then(|value| {
-                    crate::services::native_extraction::zip::system_time(
-                        value.year(),
-                        value.month(),
-                        value.day(),
-                        value.hour(),
-                        value.minute(),
-                        value.second(),
-                    )
-                });
+                let modified = crate::services::zip_read_time::modified(&entry);
                 let target = Self::available_output_path(&target, overwrite_existing)?;
                 if let Some(parent) = target.parent() {
                     std::fs::create_dir_all(parent)?;

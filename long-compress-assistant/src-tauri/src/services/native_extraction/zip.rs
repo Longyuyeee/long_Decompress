@@ -141,16 +141,7 @@ pub(crate) fn extract_with_optional_window<R: ExtractionRuntime + Sync>(
                 } else {
                     extraction_transaction::resolve_extract_path(&target, options)?
                 };
-                let source_modified = entry.last_modified().and_then(|modified| {
-                    system_time(
-                        modified.year(),
-                        modified.month(),
-                        modified.day(),
-                        modified.hour(),
-                        modified.minute(),
-                        modified.second(),
-                    )
-                });
+                let source_modified = crate::services::zip_read_time::modified(&entry);
                 (file_name, outpath, is_dir, entry.size(), source_modified)
             };
 

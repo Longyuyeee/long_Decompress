@@ -110,16 +110,7 @@ fn plan<R: Read + Seek>(
         if entry.size() >= 256 * 1024 {
             large_files += 1;
         }
-        let modified = entry.last_modified().and_then(|t| {
-            super::zip::system_time(
-                t.year(),
-                t.month(),
-                t.day(),
-                t.hour(),
-                t.minute(),
-                t.second(),
-            )
-        });
+        let modified = crate::services::zip_read_time::modified(&entry);
         entries.push(Entry {
             index,
             name: entry.name().into(),

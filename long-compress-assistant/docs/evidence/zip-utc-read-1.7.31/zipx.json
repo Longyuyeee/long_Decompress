@@ -1,0 +1,27 @@
+{
+  "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-read-1731\\9ceb39af-8b2c-4ed4-9363-27953dcae2ef\\utc.zipx",
+  "sourceSha256": "e9fb94c2ee776bedcd6799c279e8feb6d3f490e54652424021b3965991d6539a",
+  "producer": "test-only vendored ZIP writer, XZ/AES with declared UT metadata; not an external original",
+  "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-read-1731\\9ceb39af-8b2c-4ed4-9363-27953dcae2ef\\restored",
+  "seconds": 1700001731,
+  "listing": {
+    "format": "ZIP",
+    "entries": [
+      {
+        "path": "note.txt",
+        "name": "note.txt",
+        "size": 24,
+        "compressedSize": 108,
+        "modified": "2023-11-14T22:42:11+00:00",
+        "crc": "64C1CD79",
+        "encrypted": true,
+        "isDir": false
+      }
+    ],
+    "totalFiles": 1,
+    "totalDirectories": 0,
+    "totalUncompressedSize": 24,
+    "totalCompressedSize": 108,
+    "encrypted": true
+  }
+}

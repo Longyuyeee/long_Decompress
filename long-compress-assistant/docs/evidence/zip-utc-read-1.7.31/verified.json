@@ -1,0 +1,81 @@
+{
+  "version": "1.7.31",
+  "passed": true,
+  "producer": "bsdtar 3.8.9 - libarchive 3.8.9 zlib/1.2.13.1-motley liblzma/5.8.3 bz2lib/1.0.8 libzstd/1.5.7 cng/2.0 libb2/bundled ",
+  "realOriginals": 3,
+  "readbackOutputs": 17,
+  "checks": [
+    {
+      "kind": "real-bsdtar",
+      "numeric": false,
+      "standard": false,
+      "encrypted": false,
+      "entries": 7,
+      "exactTreeContentAndUtc": true
+    },
+    {
+      "kind": "real-bsdtar",
+      "numeric": false,
+      "standard": false,
+      "encrypted": true,
+      "entries": 7,
+      "exactTreeContentAndUtc": true
+    },
+    {
+      "kind": "real-bsdtar",
+      "numeric": true,
+      "standard": false,
+      "encrypted": false,
+      "entries": 7,
+      "exactTreeContentAndUtc": true
+    },
+    {
+      "kind": "real-bsdtar",
+      "numeric": false,
+      "standard": true,
+      "encrypted": true,
+      "entries": 7,
+      "exactTreeContentAndUtc": true
+    },
+    {
+      "kind": "metadata-controls",
+      "entries": 17,
+      "declaredUtcOrDosPolicy": true,
+      "independentContent": true
+    },
+    {
+      "kind": "metadata-controls",
+      "entries": 7,
+      "declaredUtcOrDosPolicy": true,
+      "independentContent": true
+    },
+    {
+      "kind": "parallel-and-choices",
+      "actualWorkers": 2,
+      "choices": 6
+    },
+    {
+      "kind": "controlled-zipx-xz-aes",
+      "contentAndUtc": true
+    },
+    {
+      "kind": "conversion",
+      "format": "tar.gz",
+      "entries": 7,
+      "contentAndUtc": true
+    },
+    {
+      "kind": "conversion",
+      "format": "7z",
+      "entries": 7,
+      "contentAndUtc": true
+    },
+    {
+      "kind": "password-fallback-and-comparison",
+      "contentAndUtc": true,
+      "localComparisonCalendar": true
+    }
+  ],
+  "externalReader": "7-Zip 26.04",
+  "externalReaderSha256": "95fff19b73eff77c87c0d7bd32822e43fb90dd2932459f962eb532d8dfb6ba53"
+}

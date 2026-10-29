@@ -688,9 +688,15 @@ pub(crate) fn parse_single_extra_field<R: Read>(
             file.aes_extra_data_start = bytes_already_read;
         }
         Ok(UsedExtraField::ExtendedTimestamp) => {
-            file.extra_fields.push(ExtraField::ExtendedTimestamp(
-                ExtendedTimestamp::try_from_reader(reader, len)?,
-            ));
+            // Timestamp metadata is optional. Read its declared, bounded
+            // payload first so a malformed value cannot consume another field
+            // (especially AES/ZIP64) or prevent otherwise valid file access.
+            // Structural truncation still propagates from read_exact.
+            let mut payload = vec![0u8; usize::from(len)];
+            reader.read_exact(&mut payload)?;
+            if let Ok(time) = ExtendedTimestamp::try_from_reader(&mut &payload[..], len) {
+                file.extra_fields.push(ExtraField::ExtendedTimestamp(time));
+            }
         }
         Ok(UsedExtraField::UnicodeComment) => {
             // Info-ZIP Unicode Comment Extra Field
