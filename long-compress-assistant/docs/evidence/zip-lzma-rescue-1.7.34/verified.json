@@ -1,0 +1,345 @@
+{
+  "version": "1.7.34",
+  "passed": true,
+  "independentOriginals": 2,
+  "recoveredArchives": 37,
+  "recoveredEntries": 134,
+  "externalReadbacks": 39,
+  "controlledStops": 30,
+  "noPublicationCases": 5,
+  "checks": [
+    {
+      "variant": "lost-32",
+      "entries": 6,
+      "files": 4,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "unsigned-32",
+      "entries": 6,
+      "files": 4,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "lost-64",
+      "entries": 6,
+      "files": 4,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "unsigned-64",
+      "entries": 6,
+      "files": 4,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "numeric-32",
+      "entries": 6,
+      "files": 4,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "numeric-64",
+      "entries": 6,
+      "files": 4,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "truncated-stream-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "bad-stream-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "bad-crc-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "compressed-size-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "expanded-size-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "truncated-descriptor-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "gap-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "unknown-method-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "local-size-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "no-eos-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "props-length-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "props-byte-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "dictionary-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "missing-eos-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "directory-no-eos-32",
+      "entries": 4,
+      "files": 3,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "truncated-stream-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "bad-stream-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "bad-crc-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "compressed-size-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "expanded-size-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "truncated-descriptor-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "gap-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "unknown-method-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "local-size-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "no-eos-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "props-length-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "props-byte-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "dictionary-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "missing-eos-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "directory-no-eos-64",
+      "entries": 4,
+      "files": 3,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    },
+    {
+      "variant": "retry-after-source-restored",
+      "entries": 6,
+      "files": 4,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true
+    }
+  ]
+}

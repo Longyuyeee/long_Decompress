@@ -1,0 +1,2740 @@
+[
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\3b55f5af-cb38-4887-88ef-1928ea026e0b\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\3b55f5af-cb38-4887-88ef-1928ea026e0b\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\3b55f5af-cb38-4887-88ef-1928ea026e0b\\damaged.zip",
+        "sha256": "504763560d34403f960d2a2541a5859ec047470492077e934a4fa52bec7594ea"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 37,
+        "descriptor": 39,
+        "end": 55
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 55,
+        "data": 102,
+        "descriptor": 719,
+        "end": 735
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 735,
+        "data": 781,
+        "descriptor": 800,
+        "end": 816
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\3b55f5af-cb38-4887-88ef-1928ea026e0b\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: LZMA 数据无效、结束标记缺失或内容被截断；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: LZMA 数据无效、结束标记缺失或内容被截断；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "truncated-stream-32"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\94eae78a-b213-43e0-be6f-f047bb400297\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\94eae78a-b213-43e0-be6f-f047bb400297\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\94eae78a-b213-43e0-be6f-f047bb400297\\damaged.zip",
+        "sha256": "30582392abebbad248e855d3f14c7e68b5906d7b5275a83214c5bba36018419a"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 37,
+        "descriptor": 39,
+        "end": 55
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 55,
+        "data": 102,
+        "descriptor": 719,
+        "end": 735
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 735,
+        "data": 781,
+        "descriptor": 800,
+        "end": 816
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\94eae78a-b213-43e0-be6f-f047bb400297\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: range decoder first byte is not zero；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: range decoder first byte is not zero；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "bad-stream-32"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\242845c7-1ba4-4c2d-9561-7e62e188fbe1\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\242845c7-1ba4-4c2d-9561-7e62e188fbe1\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\242845c7-1ba4-4c2d-9561-7e62e188fbe1\\damaged.zip",
+        "sha256": "09841285d5afad14ac0b27668337f906a341ed248f72dcd6eb564ca77fb89327"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 37,
+        "descriptor": 39,
+        "end": 55
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 55,
+        "data": 102,
+        "descriptor": 719,
+        "end": 735
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 735,
+        "data": 781,
+        "descriptor": 800,
+        "end": 816
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\242845c7-1ba4-4c2d-9561-7e62e188fbe1\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: 数据描述符与文件内容或声明体积不一致，未恢复此条目；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: 数据描述符与文件内容或声明体积不一致，未恢复此条目；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "bad-crc-32"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\a1a8206e-47f2-48da-8678-d84c5ddc5f01\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\a1a8206e-47f2-48da-8678-d84c5ddc5f01\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\a1a8206e-47f2-48da-8678-d84c5ddc5f01\\damaged.zip",
+        "sha256": "024f442ada11d946a7353a659b4eda57dbba90914f95d8fc5641912772ae4665"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 37,
+        "descriptor": 39,
+        "end": 55
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 55,
+        "data": 102,
+        "descriptor": 719,
+        "end": 735
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 735,
+        "data": 781,
+        "descriptor": 800,
+        "end": 816
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\a1a8206e-47f2-48da-8678-d84c5ddc5f01\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: 数据描述符与文件内容或声明体积不一致，未恢复此条目；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: 数据描述符与文件内容或声明体积不一致，未恢复此条目；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "compressed-size-32"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\60edf94f-790b-498e-80d1-6958e084a5cd\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\60edf94f-790b-498e-80d1-6958e084a5cd\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\60edf94f-790b-498e-80d1-6958e084a5cd\\damaged.zip",
+        "sha256": "eb5b5ad1f000bbd2033daa4ae62249b94425b542b4ae0823ea2e19872337554f"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 37,
+        "descriptor": 39,
+        "end": 55
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 55,
+        "data": 102,
+        "descriptor": 719,
+        "end": 735
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 735,
+        "data": 781,
+        "descriptor": 800,
+        "end": 816
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\60edf94f-790b-498e-80d1-6958e084a5cd\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: 数据描述符与文件内容或声明体积不一致，未恢复此条目；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: 数据描述符与文件内容或声明体积不一致，未恢复此条目；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "expanded-size-32"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\6a3b6f1f-a3ef-4029-8f95-f04a3b363cfe\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\6a3b6f1f-a3ef-4029-8f95-f04a3b363cfe\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\6a3b6f1f-a3ef-4029-8f95-f04a3b363cfe\\damaged.zip",
+        "sha256": "edacbb2aa97ff4bd077667760077a4c1d206191cb4afe51c0384e0c726a43556"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 37,
+        "descriptor": 39,
+        "end": 55
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 55,
+        "data": 102,
+        "descriptor": 719,
+        "end": 735
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 735,
+        "data": 781,
+        "descriptor": 800,
+        "end": 816
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\6a3b6f1f-a3ef-4029-8f95-f04a3b363cfe\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: 数据描述符与文件内容或声明体积不一致，未恢复此条目；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: 数据描述符与文件内容或声明体积不一致，未恢复此条目；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "truncated-descriptor-32"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\0a958e5b-75ce-4c26-9470-1cbcb56389c3\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\0a958e5b-75ce-4c26-9470-1cbcb56389c3\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\0a958e5b-75ce-4c26-9470-1cbcb56389c3\\damaged.zip",
+        "sha256": "1c4f2fb2a7a04861977775af3aa646bee374181be0569fb9f045a3d49726d09b"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 37,
+        "descriptor": 39,
+        "end": 55
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 55,
+        "data": 102,
+        "descriptor": 719,
+        "end": 735
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 735,
+        "data": 781,
+        "descriptor": 800,
+        "end": 816
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\0a958e5b-75ce-4c26-9470-1cbcb56389c3\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "偏移 816 不是可信本地文件头，未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "偏移 816 不是可信本地文件头，未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "gap-32"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\8a988534-2418-4496-a6ae-61e93aef02a9\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\8a988534-2418-4496-a6ae-61e93aef02a9\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\8a988534-2418-4496-a6ae-61e93aef02a9\\damaged.zip",
+        "sha256": "b065aa33e309f939f5f9bb2168b8e9f1fe15bb7b5a8b0905fa6069f18c16ddd8"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 37,
+        "descriptor": 39,
+        "end": 55
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 55,
+        "data": 102,
+        "descriptor": 719,
+        "end": 735
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 735,
+        "data": 781,
+        "descriptor": 800,
+        "end": 816
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\8a988534-2418-4496-a6ae-61e93aef02a9\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: 数据描述符缺少可确定的文件边界，未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: 数据描述符缺少可确定的文件边界，未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "unknown-method-32"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\77614702-5adb-4ba1-9387-f389a73d59d2\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\77614702-5adb-4ba1-9387-f389a73d59d2\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\77614702-5adb-4ba1-9387-f389a73d59d2\\damaged.zip",
+        "sha256": "2b3819dc242787a4ba61b7125b68aca31073e975351b1a306c7376b3175d4460"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 37,
+        "descriptor": 39,
+        "end": 55
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 55,
+        "data": 102,
+        "descriptor": 719,
+        "end": 735
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 735,
+        "data": 781,
+        "descriptor": 800,
+        "end": 816
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\77614702-5adb-4ba1-9387-f389a73d59d2\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: 本地声明体积与内容不一致，未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: 本地声明体积与内容不一致，未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "local-size-32"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\4b4ca33a-82e2-488b-9b1f-e36b273df316\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\4b4ca33a-82e2-488b-9b1f-e36b273df316\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\4b4ca33a-82e2-488b-9b1f-e36b273df316\\damaged.zip",
+        "sha256": "485f72e6e101897eeb2e2041e85fc86b7802b4fb0cd09d766b685866ae6609cf"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 37,
+        "descriptor": 39,
+        "end": 55
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 55,
+        "data": 102,
+        "descriptor": 719,
+        "end": 735
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 735,
+        "data": 781,
+        "descriptor": 800,
+        "end": 816
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\4b4ca33a-82e2-488b-9b1f-e36b273df316\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: LZMA 未声明结束标记，无法确认未知尺寸文件的边界；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: LZMA 未声明结束标记，无法确认未知尺寸文件的边界；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "no-eos-32"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\839c88ef-2e6c-421f-820e-66cbf3337be4\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\839c88ef-2e6c-421f-820e-66cbf3337be4\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\839c88ef-2e6c-421f-820e-66cbf3337be4\\damaged.zip",
+        "sha256": "50b8da61b7f35245201c780ba176c02eb476354849b170e1b690525deb61ab31"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 37,
+        "descriptor": 39,
+        "end": 55
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 55,
+        "data": 102,
+        "descriptor": 719,
+        "end": 735
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 735,
+        "data": 781,
+        "descriptor": 800,
+        "end": 816
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\839c88ef-2e6c-421f-820e-66cbf3337be4\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: ZIP LZMA 属性长度无效；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: ZIP LZMA 属性长度无效；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "props-length-32"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\2dc2aad0-ca66-4ae0-b1d0-83f07785e529\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\2dc2aad0-ca66-4ae0-b1d0-83f07785e529\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\2dc2aad0-ca66-4ae0-b1d0-83f07785e529\\damaged.zip",
+        "sha256": "75824c3738b266d03f07dc0d6201afe6873a8508b462620c7b45aedb6aa7a65b"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 37,
+        "descriptor": 39,
+        "end": 55
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 55,
+        "data": 102,
+        "descriptor": 719,
+        "end": 735
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 735,
+        "data": 781,
+        "descriptor": 800,
+        "end": 816
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\2dc2aad0-ca66-4ae0-b1d0-83f07785e529\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: ZIP LZMA 属性无效；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: ZIP LZMA 属性无效；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "props-byte-32"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\c43f2205-e26e-4b4d-8fe4-aef2ae83c584\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\c43f2205-e26e-4b4d-8fe4-aef2ae83c584\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\c43f2205-e26e-4b4d-8fe4-aef2ae83c584\\damaged.zip",
+        "sha256": "552b4ce4e3882c9c084265f3921b8958a99e7b12a6fa5f1474b7fa7692064f26"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 37,
+        "descriptor": 39,
+        "end": 55
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 55,
+        "data": 102,
+        "descriptor": 719,
+        "end": 735
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 735,
+        "data": 781,
+        "descriptor": 800,
+        "end": 816
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\c43f2205-e26e-4b4d-8fe4-aef2ae83c584\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: LZMA 未知尺寸恢复所需内存超过 256 MiB，未读取此条目；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: LZMA 未知尺寸恢复所需内存超过 256 MiB，未读取此条目；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "dictionary-32"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\36d7d9a1-5dd2-4b37-9d4f-06e78ad0c140\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\36d7d9a1-5dd2-4b37-9d4f-06e78ad0c140\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\36d7d9a1-5dd2-4b37-9d4f-06e78ad0c140\\damaged.zip",
+        "sha256": "65ca8b6b789c669509737ae7c8f39a319fa3a004f33efee3b38b3663c00196fa"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 37,
+        "descriptor": 39,
+        "end": 55
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 55,
+        "data": 102,
+        "descriptor": 719,
+        "end": 735
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 735,
+        "data": 781,
+        "descriptor": 800,
+        "end": 816
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\36d7d9a1-5dd2-4b37-9d4f-06e78ad0c140\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: LZMA 数据无效、结束标记缺失或内容被截断；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: LZMA 数据无效、结束标记缺失或内容被截断；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "missing-eos-32"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\17c0f126-fa21-4c9e-8aaa-fe04de07db93\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\17c0f126-fa21-4c9e-8aaa-fe04de07db93\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\17c0f126-fa21-4c9e-8aaa-fe04de07db93\\damaged.zip",
+        "sha256": "8e83fe94345ae276903516ab0a45111369ec26a1dae4259a32552a4a5c8bdfce"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 37,
+        "descriptor": 39,
+        "end": 55
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 55,
+        "data": 102,
+        "descriptor": 719,
+        "end": 735
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 735,
+        "data": 781,
+        "descriptor": 800,
+        "end": 816
+      },
+      {
+        "name": "资料/blob.bin",
+        "directory": false,
+        "method": 14,
+        "size": 200000,
+        "compressed": 202784,
+        "crc": 1433185581,
+        "sha256": "775d8086c3912beb3d643976307dc59070dff59e0105ef8b4a1c1e7bf39922d1",
+        "local": 816,
+        "data": 861,
+        "descriptor": 203645,
+        "end": 203661
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\17c0f126-fa21-4c9e-8aaa-fe04de07db93\\recovered.zip",
+      "recoveredFiles": 3,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt",
+        "资料/blob.bin"
+      ],
+      "entryResults": [
+        {
+          "name": "空目录/",
+          "status": "unknown",
+          "reason": "空目录/: LZMA 未声明结束标记，无法确认未知尺寸文件的边界；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/blob.bin",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "空目录/: LZMA 未声明结束标记，无法确认未知尺寸文件的边界；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "directory-no-eos-32"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\d80dfc31-4c34-4452-98a2-ec1ea0977999\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\d80dfc31-4c34-4452-98a2-ec1ea0977999\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\d80dfc31-4c34-4452-98a2-ec1ea0977999\\damaged.zip",
+        "sha256": "f0f1b63978130fc770e4aca6c5b580a266f89c2d154335eaa590a3541d289e4f"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 57,
+        "descriptor": 59,
+        "end": 83
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 83,
+        "data": 150,
+        "descriptor": 767,
+        "end": 791
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 791,
+        "data": 857,
+        "descriptor": 876,
+        "end": 900
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\d80dfc31-4c34-4452-98a2-ec1ea0977999\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: LZMA 数据无效、结束标记缺失或内容被截断；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: LZMA 数据无效、结束标记缺失或内容被截断；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "truncated-stream-64"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\e9359102-4abd-4bdf-a186-b30dfd22cb90\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\e9359102-4abd-4bdf-a186-b30dfd22cb90\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\e9359102-4abd-4bdf-a186-b30dfd22cb90\\damaged.zip",
+        "sha256": "8601893f87eadfd243969402f9f7deec23838a8e75f497c38220ae67df86bad7"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 57,
+        "descriptor": 59,
+        "end": 83
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 83,
+        "data": 150,
+        "descriptor": 767,
+        "end": 791
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 791,
+        "data": 857,
+        "descriptor": 876,
+        "end": 900
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\e9359102-4abd-4bdf-a186-b30dfd22cb90\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: range decoder first byte is not zero；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: range decoder first byte is not zero；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "bad-stream-64"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\0b5b7761-6e58-4bc4-8823-26ce3a72b86d\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\0b5b7761-6e58-4bc4-8823-26ce3a72b86d\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\0b5b7761-6e58-4bc4-8823-26ce3a72b86d\\damaged.zip",
+        "sha256": "2bba3112e18f983f93f61c8e7bae1079fe1c00d0067446597f51c20ccf9ae081"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 57,
+        "descriptor": 59,
+        "end": 83
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 83,
+        "data": 150,
+        "descriptor": 767,
+        "end": 791
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 791,
+        "data": 857,
+        "descriptor": 876,
+        "end": 900
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\0b5b7761-6e58-4bc4-8823-26ce3a72b86d\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: 数据描述符与文件内容或声明体积不一致，未恢复此条目；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: 数据描述符与文件内容或声明体积不一致，未恢复此条目；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "bad-crc-64"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\67958cd8-e5de-4837-8058-76c29b517d3d\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\67958cd8-e5de-4837-8058-76c29b517d3d\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\67958cd8-e5de-4837-8058-76c29b517d3d\\damaged.zip",
+        "sha256": "c26e8285b349d9028b75ad81ee94457822cd5682860f21a11495e6be708f4c42"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 57,
+        "descriptor": 59,
+        "end": 83
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 83,
+        "data": 150,
+        "descriptor": 767,
+        "end": 791
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 791,
+        "data": 857,
+        "descriptor": 876,
+        "end": 900
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\67958cd8-e5de-4837-8058-76c29b517d3d\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: 数据描述符与文件内容或声明体积不一致，未恢复此条目；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: 数据描述符与文件内容或声明体积不一致，未恢复此条目；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "compressed-size-64"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\cf963f85-b4c2-41f7-8794-37514a085239\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\cf963f85-b4c2-41f7-8794-37514a085239\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\cf963f85-b4c2-41f7-8794-37514a085239\\damaged.zip",
+        "sha256": "5c897ab759fa6aad6977ebf826b0d8619db6be412533ba19327e95fcf453c4e7"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 57,
+        "descriptor": 59,
+        "end": 83
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 83,
+        "data": 150,
+        "descriptor": 767,
+        "end": 791
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 791,
+        "data": 857,
+        "descriptor": 876,
+        "end": 900
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\cf963f85-b4c2-41f7-8794-37514a085239\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: 数据描述符与文件内容或声明体积不一致，未恢复此条目；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: 数据描述符与文件内容或声明体积不一致，未恢复此条目；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "expanded-size-64"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\e77d1f7a-5a4c-4b05-b310-56c1f1ce07e0\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\e77d1f7a-5a4c-4b05-b310-56c1f1ce07e0\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\e77d1f7a-5a4c-4b05-b310-56c1f1ce07e0\\damaged.zip",
+        "sha256": "802fbf960a79f7a9459c2f12886f49c03b54c834ce535f4c3aa93c77595393d2"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 57,
+        "descriptor": 59,
+        "end": 83
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 83,
+        "data": 150,
+        "descriptor": 767,
+        "end": 791
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 791,
+        "data": 857,
+        "descriptor": 876,
+        "end": 900
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\e77d1f7a-5a4c-4b05-b310-56c1f1ce07e0\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: 数据描述符与文件内容或声明体积不一致，未恢复此条目；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: 数据描述符与文件内容或声明体积不一致，未恢复此条目；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "truncated-descriptor-64"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\c8f635ed-e0ec-40ec-84d1-825ad3e87826\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\c8f635ed-e0ec-40ec-84d1-825ad3e87826\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\c8f635ed-e0ec-40ec-84d1-825ad3e87826\\damaged.zip",
+        "sha256": "c3a7333262b5748330e7be3686bb32fed0e83483102d66dfcc7f7c6a7fac8e38"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 57,
+        "descriptor": 59,
+        "end": 83
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 83,
+        "data": 150,
+        "descriptor": 767,
+        "end": 791
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 791,
+        "data": 857,
+        "descriptor": 876,
+        "end": 900
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\c8f635ed-e0ec-40ec-84d1-825ad3e87826\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "偏移 900 不是可信本地文件头，未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "偏移 900 不是可信本地文件头，未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "gap-64"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\a2c19b94-438b-4b28-b975-4845bc6acfce\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\a2c19b94-438b-4b28-b975-4845bc6acfce\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\a2c19b94-438b-4b28-b975-4845bc6acfce\\damaged.zip",
+        "sha256": "2a17d6233da7468870d2ce11ed84f64c62f2378b29d0d837a23bbcab0162365b"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 57,
+        "descriptor": 59,
+        "end": 83
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 83,
+        "data": 150,
+        "descriptor": 767,
+        "end": 791
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 791,
+        "data": 857,
+        "descriptor": 876,
+        "end": 900
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\a2c19b94-438b-4b28-b975-4845bc6acfce\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: 数据描述符缺少可确定的文件边界，未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: 数据描述符缺少可确定的文件边界，未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "unknown-method-64"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\a88d4e4c-92ba-405a-b713-c28c1b134cc4\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\a88d4e4c-92ba-405a-b713-c28c1b134cc4\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\a88d4e4c-92ba-405a-b713-c28c1b134cc4\\damaged.zip",
+        "sha256": "6ba652b892b5f87f02d4be48aa67aa12302beda27df6fe124e7550d8f8972aaf"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 57,
+        "descriptor": 59,
+        "end": 83
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 83,
+        "data": 150,
+        "descriptor": 767,
+        "end": 791
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 791,
+        "data": 857,
+        "descriptor": 876,
+        "end": 900
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\a88d4e4c-92ba-405a-b713-c28c1b134cc4\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: 本地声明体积与内容不一致，未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: 本地声明体积与内容不一致，未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "local-size-64"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\5d46454d-2d63-4ced-9ec4-5e3e356ef548\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\5d46454d-2d63-4ced-9ec4-5e3e356ef548\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\5d46454d-2d63-4ced-9ec4-5e3e356ef548\\damaged.zip",
+        "sha256": "5519d82f43355526edc328c5f62377b524f1e00ec195abd35fc4d99e4122d70c"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 57,
+        "descriptor": 59,
+        "end": 83
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 83,
+        "data": 150,
+        "descriptor": 767,
+        "end": 791
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 791,
+        "data": 857,
+        "descriptor": 876,
+        "end": 900
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\5d46454d-2d63-4ced-9ec4-5e3e356ef548\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: LZMA 未声明结束标记，无法确认未知尺寸文件的边界；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: LZMA 未声明结束标记，无法确认未知尺寸文件的边界；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "no-eos-64"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\7213631f-8650-4035-a26c-2fe561d496a2\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\7213631f-8650-4035-a26c-2fe561d496a2\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\7213631f-8650-4035-a26c-2fe561d496a2\\damaged.zip",
+        "sha256": "1ea481d7e49ccf82ef9a2b855679b62e78ddb067ef8c742b5002c19e9c331544"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 57,
+        "descriptor": 59,
+        "end": 83
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 83,
+        "data": 150,
+        "descriptor": 767,
+        "end": 791
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 791,
+        "data": 857,
+        "descriptor": 876,
+        "end": 900
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\7213631f-8650-4035-a26c-2fe561d496a2\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: ZIP LZMA 属性长度无效；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: ZIP LZMA 属性长度无效；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "props-length-64"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\b50710c4-5868-4b17-b975-d00c5c85d194\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\b50710c4-5868-4b17-b975-d00c5c85d194\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\b50710c4-5868-4b17-b975-d00c5c85d194\\damaged.zip",
+        "sha256": "f0da6b5202589a27c1a3103438ed716bedb51444fa86e18fe76586db21ed3a32"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 57,
+        "descriptor": 59,
+        "end": 83
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 83,
+        "data": 150,
+        "descriptor": 767,
+        "end": 791
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 791,
+        "data": 857,
+        "descriptor": 876,
+        "end": 900
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\b50710c4-5868-4b17-b975-d00c5c85d194\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: ZIP LZMA 属性无效；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: ZIP LZMA 属性无效；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "props-byte-64"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\7f0a7be4-67ee-4c59-b4b5-276eab9ecd7c\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\7f0a7be4-67ee-4c59-b4b5-276eab9ecd7c\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\7f0a7be4-67ee-4c59-b4b5-276eab9ecd7c\\damaged.zip",
+        "sha256": "e0fbdb466ac04d705dcbc0af88821da1ffb2001de116d5af2cac55af1ab70eca"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 57,
+        "descriptor": 59,
+        "end": 83
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 83,
+        "data": 150,
+        "descriptor": 767,
+        "end": 791
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 791,
+        "data": 857,
+        "descriptor": 876,
+        "end": 900
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\7f0a7be4-67ee-4c59-b4b5-276eab9ecd7c\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: LZMA 未知尺寸恢复所需内存超过 256 MiB，未读取此条目；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: LZMA 未知尺寸恢复所需内存超过 256 MiB，未读取此条目；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "dictionary-64"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\eac91882-1f30-4fba-ad02-8eb9b26f45fe\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\eac91882-1f30-4fba-ad02-8eb9b26f45fe\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\eac91882-1f30-4fba-ad02-8eb9b26f45fe\\damaged.zip",
+        "sha256": "348003040334aa9b3d725a64ce60f16f6be01991d55a41b7a165c400f19f94ca"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 57,
+        "descriptor": 59,
+        "end": 83
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 83,
+        "data": 150,
+        "descriptor": 767,
+        "end": 791
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 791,
+        "data": 857,
+        "descriptor": 876,
+        "end": 900
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\eac91882-1f30-4fba-ad02-8eb9b26f45fe\\recovered.zip",
+      "recoveredFiles": 2,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt"
+      ],
+      "entryResults": [
+        {
+          "name": "资料/blob.bin",
+          "status": "unknown",
+          "reason": "资料/blob.bin: LZMA 数据无效、结束标记缺失或内容被截断；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "资料/blob.bin: LZMA 数据无效、结束标记缺失或内容被截断；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "missing-eos-64"
+  },
+  {
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\525d08fc-8cc6-4dce-b0d6-0aebcd747dd1\\damaged.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\525d08fc-8cc6-4dce-b0d6-0aebcd747dd1\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\525d08fc-8cc6-4dce-b0d6-0aebcd747dd1\\damaged.zip",
+        "sha256": "d6e727b94a8ad429c9c8de910a576984e4dc86ea06f0d897e929c75b1a7023fe"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料/",
+        "directory": true,
+        "method": 8,
+        "size": 0,
+        "compressed": 2,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 0,
+        "data": 57,
+        "descriptor": 59,
+        "end": 83
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "method": 14,
+        "size": 3500000,
+        "compressed": 617,
+        "crc": 1191402647,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "local": 83,
+        "data": 150,
+        "descriptor": 767,
+        "end": 791
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "method": 14,
+        "size": 0,
+        "compressed": 19,
+        "crc": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "local": 791,
+        "data": 857,
+        "descriptor": 876,
+        "end": 900
+      },
+      {
+        "name": "资料/blob.bin",
+        "directory": false,
+        "method": 14,
+        "size": 200000,
+        "compressed": 202784,
+        "crc": 1433185581,
+        "sha256": "775d8086c3912beb3d643976307dc59070dff59e0105ef8b4a1c1e7bf39922d1",
+        "local": 900,
+        "data": 965,
+        "descriptor": 203749,
+        "end": 203773
+      }
+    ],
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-lzma-rescue-1734\\525d08fc-8cc6-4dce-b0d6-0aebcd747dd1\\recovered.zip",
+      "recoveredFiles": 3,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt",
+        "资料/blob.bin"
+      ],
+      "entryResults": [
+        {
+          "name": "空目录/",
+          "status": "unknown",
+          "reason": "空目录/: LZMA 未声明结束标记，无法确认未知尺寸文件的边界；未扫描后续内容"
+        },
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/blob.bin",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 1,
+      "skippedEntries": [
+        "空目录/: LZMA 未声明结束标记，无法确认未知尺寸文件的边界；未扫描后续内容"
+      ],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    },
+    "variant": "directory-no-eos-64"
+  }
+]

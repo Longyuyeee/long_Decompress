@@ -1,0 +1,32 @@
+[
+  {
+    "variant": "first-stream",
+    "noNewOutput": true,
+    "originalUnchanged": true,
+    "stagingCleaned": true
+  },
+  {
+    "variant": "first-descriptor",
+    "noNewOutput": true,
+    "originalUnchanged": true,
+    "stagingCleaned": true
+  },
+  {
+    "variant": "cancel",
+    "noNewOutput": true,
+    "originalUnchanged": true,
+    "stagingCleaned": true
+  },
+  {
+    "variant": "existing",
+    "noNewOutput": true,
+    "originalUnchanged": true,
+    "stagingCleaned": true
+  },
+  {
+    "variant": "encrypted",
+    "noNewOutput": true,
+    "originalUnchanged": true,
+    "stagingCleaned": true
+  }
+]
