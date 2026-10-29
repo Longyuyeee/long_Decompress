@@ -394,3 +394,6 @@ mod zip_recovery_time_1735_tests;
 
 #[cfg(test)]
 mod zip_zstd_rescue_1736_tests;
+
+#[cfg(test)]
+mod zip_zstd_multiframe_1737_tests;

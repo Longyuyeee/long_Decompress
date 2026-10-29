@@ -1,0 +1,37 @@
+{
+  "version": "1.7.37",
+  "newNativeGroups": 5,
+  "firstRunPassed": true,
+  "relatedNativeGroups": 2,
+  "independent": {
+    "version": "1.7.37",
+    "passed": true,
+    "frozenSources": 3,
+    "structuralControls": 5,
+    "recoveredArchives": 33,
+    "recoveredEntries": 115,
+    "externalReadbacks": 38,
+    "controlledStops": 26,
+    "noPublicationCases": 2
+  },
+  "ordinaryFrameLimit": 4096,
+  "windowLimitMiB": 256,
+  "descriptorCheckedBeforeNextFrame": true,
+  "shellExtension": true,
+  "releaseIdentity": true,
+  "uiChanged": false,
+  "desktopControlUsed": false,
+  "unrelatedMatrixRepeated": false,
+  "publication": "Exact PR head CI and merge/tag Release identities are retained by GitHub; the local receipt is not a second post-release commit.",
+  "documentation": {
+    "relativeLinks": 1970,
+    "latestFiveVersions": true,
+    "diffWhitespace": true
+  },
+  "finalReview": {
+    "ioErrorsRetainOriginalCause": true,
+    "affectedGroupsOnly": 2,
+    "passed": 2,
+    "updatedArtifactsIndependentlyVerified": true
+  }
+}
