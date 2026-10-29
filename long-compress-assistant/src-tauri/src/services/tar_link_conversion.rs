@@ -18,8 +18,9 @@ impl Prepared {
         if !super::lzop::recovery::is_tar(source)||archive_browser::detect_format(source)?!=ArchiveFormat::Lzop{return Ok(None);}
         anyhow::ensure!(options.zpaq_snapshot.is_none(),"TAR.LZO 不适用所选 ZPAQ 快照，请重新确认来源");
         anyhow::ensure!(options.selected_entries.is_empty()&&options.preserve_paths&&options.preserve_timestamps&&!options.delete_after&&!options.skip_corrupted&&options.file_filter.is_none(),"转换必须读取完整原包并保留结构和时间");
+        // The complete plan resolves direct content targets in either direction.
+        // Conversion materializes independent files, so it needs no link-specific writer.
         let Some(plan)=Plan::for_extraction(source,&options,&cancelled)? else{return Ok(None)};
-        anyhow::ensure!(!plan.has_forward_links(),"[archive-inspection:unsupported] TAR.LZO 前向链接内容转换尚未接通，请先正常提取，再压缩为新包；原包保留");
         let parent=output.parent().context("请选择输出目录")?;
         let contents=tempfile::Builder::new().prefix(".long-convert-input-").tempdir_in(parent)?;
         let rebuilt=publish::staged_output_path(output,"long-convert")?;

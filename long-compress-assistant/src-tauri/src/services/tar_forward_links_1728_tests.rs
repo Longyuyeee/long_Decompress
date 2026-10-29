@@ -577,20 +577,9 @@ async fn forward1728_missing_ambiguous_chained_cyclic_directory_and_body_targets
 }
 
 #[tokio::test]
-async fn forward1728_unfinished_conversion_and_nested_actions_explain_extract_first_without_outputs(
-) {
+async fn forward1728_nested_actions_explain_extract_first_without_outputs() {
     let work = workspace();
     let source = root().join("gnu.tar.lzo");
-    let error = super::tar_link_conversion::Prepared::open(
-        &source,
-        &work.join("converted.zip"),
-        options(vec![]),
-        flag(),
-    )
-    .err()
-    .unwrap();
-    assert!(format!("{error:#}").contains("先正常提取"));
-    assert!(!work.join("converted.zip").exists());
     let cache = super::archive_entry_open::ArchiveEntryOpenCache::new(work.join("cache"));
     let error = super::nested_archive::materialize(
         &cache,

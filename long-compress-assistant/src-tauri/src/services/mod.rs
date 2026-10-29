@@ -345,6 +345,8 @@ pub(crate) mod tar_link_targets;
 #[cfg(test)]
 mod tar_forward_links_1728_tests;
 #[cfg(test)]
+mod tar_forward_convert_1729_tests;
+#[cfg(test)]
 mod tar_browse_links_1719_tests;
 
 #[cfg(test)]
