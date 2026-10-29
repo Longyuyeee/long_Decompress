@@ -83,6 +83,8 @@ fn create_zip<R: CompressionRuntime>(
     } else { runtime.copy_buffer_size() };
     let mut copy_buffer = vec![0u8; buffer_size];
     let mut clamped_dates=0usize;
+    let mut utc_fallback_dates=0usize;
+    let mut utc_with_clamped_dos=0usize;
 
     for entry in entries {
         runtime.check_cancellation()?;
@@ -91,16 +93,20 @@ fn create_zip<R: CompressionRuntime>(
             let modified=std::fs::metadata(&entry.path).and_then(|metadata|metadata.modified())
                 .with_context(||format!("无法读取源目录修改时间：{}",entry.path.display()))?;
             let time=crate::services::zip_creation_time::from_system_time(modified);
-            clamped_dates+=usize::from(time.clamped);
-            writer.add_directory(archive_name, options.last_modified_time(time.date))?;
+            utc_fallback_dates+=usize::from(time.utc_seconds.is_none());
+            clamped_dates+=usize::from(time.clamped&&time.utc_seconds.is_none());
+            utc_with_clamped_dos+=usize::from(time.clamped&&time.utc_seconds.is_some());
+            writer.add_directory(archive_name, time.file_options(options)?)?;
         } else {
             let mut source = File::open(&entry.path)?;
             let metadata=source.metadata()?;
             let size = metadata.len();
             let modified=metadata.modified().with_context(||format!("无法读取源文件修改时间：{}",entry.path.display()))?;
             let time=crate::services::zip_creation_time::from_system_time(modified);
-            clamped_dates+=usize::from(time.clamped);
-            let options=options.last_modified_time(time.date);
+            utc_fallback_dates+=usize::from(time.utc_seconds.is_none());
+            clamped_dates+=usize::from(time.clamped&&time.utc_seconds.is_none());
+            utc_with_clamped_dos+=usize::from(time.clamped&&time.utc_seconds.is_some());
+            let options=time.file_options(options)?;
             // The current XZ encoder emits an invalid index for an untouched empty
             // stream. Empty ZIP members need no compression; retain encryption.
             let entry_options = if zipx && size == 0 {
@@ -148,9 +154,11 @@ fn create_zip<R: CompressionRuntime>(
         }
     }
     writer.finish()?;
-    if clamped_dates>0{if let Some((window,task_id))=progress_context{
-        runtime.emit_log(window,task_id,&format!("ZIP 日期范围为 1980–2107 年，{clamped_dates} 个条目已按边界日期写入；原文件未修改。"),TaskLogSeverity::Warning);
-    }}
+    if let Some((window,task_id))=progress_context {
+        if utc_fallback_dates>0{runtime.emit_log(window,task_id,&format!("{utc_fallback_dates} 个条目超出本版 UTC 秒值记录范围，已沿用 DOS 本地日期（两秒精度）；原文件未修改。"),TaskLogSeverity::Warning);}
+        if clamped_dates>0{runtime.emit_log(window,task_id,&format!("其中 {clamped_dates} 个条目的 DOS 日期超出 1980–2107 年，已按边界日期写入。"),TaskLogSeverity::Warning);}
+        if utc_with_clamped_dos>0{runtime.emit_log(window,task_id,&format!("{utc_with_clamped_dos} 个条目已保留原 UTC 时间；供旧工具使用的 DOS 兼容日期按 1980–2107 年边界写入。"),TaskLogSeverity::Info);}
+    }
     Ok(total_bytes)
 }
 

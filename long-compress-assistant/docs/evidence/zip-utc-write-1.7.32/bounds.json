@@ -1,0 +1,171 @@
+{
+  "name": "bounds",
+  "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\c10bcc99-180c-49b0-aad0-8518a2592269\\bounds.zip",
+  "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\c10bcc99-180c-49b0-aad0-8518a2592269\\bounds.zip",
+  "parts": [
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\c10bcc99-180c-49b0-aad0-8518a2592269\\bounds.zip"
+  ],
+  "numeric": false,
+  "encrypted": false,
+  "sources": [
+    {
+      "name": "before.txt",
+      "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\c10bcc99-180c-49b0-aad0-8518a2592269\\source\\before.txt",
+      "directory": false,
+      "seconds": -1,
+      "nanos": 0,
+      "utcExpected": false,
+      "sha256": "6db7d803e74f1ffa7d8f5adc0bf95b3e15bf4c8373fffadf546227cc6c6742cb"
+    },
+    {
+      "name": "epoch.txt",
+      "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\c10bcc99-180c-49b0-aad0-8518a2592269\\source\\epoch.txt",
+      "directory": false,
+      "seconds": 0,
+      "nanos": 0,
+      "utcExpected": true,
+      "sha256": "afc9b31d9f3f3645ae563606e1ddbe4b0e72b247e3bc9dff6251f5ee8961ae48"
+    },
+    {
+      "name": "odd.txt",
+      "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\c10bcc99-180c-49b0-aad0-8518a2592269\\source\\odd.txt",
+      "directory": false,
+      "seconds": 1700001733,
+      "nanos": 123456700,
+      "utcExpected": true,
+      "sha256": "990cb8ebd0afb7150da453a213036a92f2c05e091df0d803e62d257ea7796c27"
+    },
+    {
+      "name": "fractional.txt",
+      "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\c10bcc99-180c-49b0-aad0-8518a2592269\\source\\fractional.txt",
+      "directory": false,
+      "seconds": 1,
+      "nanos": 999999900,
+      "utcExpected": true,
+      "sha256": "a623bb574c4212567bfa30189c67baa96b00784b40f5b489b3e54f21b2a6e635"
+    },
+    {
+      "name": "max.txt",
+      "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\c10bcc99-180c-49b0-aad0-8518a2592269\\source\\max.txt",
+      "directory": false,
+      "seconds": 2147483647,
+      "nanos": 999999900,
+      "utcExpected": true,
+      "sha256": "9baf3a40312f39849f46dad1040f2f039f1cffa1238c41e9db675315cfad39b6"
+    },
+    {
+      "name": "after.txt",
+      "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\c10bcc99-180c-49b0-aad0-8518a2592269\\source\\after.txt",
+      "directory": false,
+      "seconds": 2147483648,
+      "nanos": 0,
+      "utcExpected": false,
+      "sha256": "f39592393ef0859cb196a52693d2cea00fb2df784b3c04ae54aa7cadb8e562f8"
+    },
+    {
+      "name": "clamped.txt",
+      "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\c10bcc99-180c-49b0-aad0-8518a2592269\\source\\clamped.txt",
+      "directory": false,
+      "seconds": 4417632001,
+      "nanos": 0,
+      "utcExpected": false,
+      "sha256": "0098c4f99905b5063a76dcf7d038ee0ea081bdf639b1a5b5d721b423c2ca09cf"
+    }
+  ],
+  "headers": [
+    {
+      "name": "before.txt",
+      "utcSeconds": null,
+      "dos": [
+        1980,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "method": "Stored"
+    },
+    {
+      "name": "epoch.txt",
+      "utcSeconds": 0,
+      "dos": [
+        1980,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "method": "Stored"
+    },
+    {
+      "name": "odd.txt",
+      "utcSeconds": 1700001733,
+      "dos": [
+        2023,
+        11,
+        15,
+        6,
+        42,
+        12
+      ],
+      "method": "Stored"
+    },
+    {
+      "name": "fractional.txt",
+      "utcSeconds": 1,
+      "dos": [
+        1980,
+        1,
+        1,
+        0,
+        0,
+        0
+      ],
+      "method": "Stored"
+    },
+    {
+      "name": "max.txt",
+      "utcSeconds": 2147483647,
+      "dos": [
+        2038,
+        1,
+        19,
+        11,
+        14,
+        6
+      ],
+      "method": "Stored"
+    },
+    {
+      "name": "after.txt",
+      "utcSeconds": null,
+      "dos": [
+        2038,
+        1,
+        19,
+        11,
+        14,
+        8
+      ],
+      "method": "Stored"
+    },
+    {
+      "name": "clamped.txt",
+      "utcSeconds": null,
+      "dos": [
+        2107,
+        12,
+        31,
+        23,
+        59,
+        58
+      ],
+      "method": "Stored"
+    }
+  ],
+  "restored": [
+    "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\c10bcc99-180c-49b0-aad0-8518a2592269\\restored"
+  ]
+}

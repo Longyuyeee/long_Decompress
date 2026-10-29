@@ -1,0 +1,28 @@
+{
+  "version": "1.7.32",
+  "date": "2026-10-29",
+  "passed": true,
+  "nativeTests": 4,
+  "relatedRegressions": 2,
+  "createdArchives": 9,
+  "encodedEntries": 53,
+  "nativeReadbackOutputs": 10,
+  "external7zipReadbacks": 9,
+  "shellExtensionBuilt": true,
+  "releaseIdentityPassed": true,
+  "scope": "UTC modification seconds 0..2147483647 plus legacy DOS; no UI or algorithm changes",
+  "commands": [
+    "cargo test --manifest-path src-tauri/Cargo.toml --lib utcwrite1732 -- --nocapture --test-threads=1",
+    "python scripts/verify-zip-utc-write-1732.py",
+    "compiled unit executable: ziptime1724_created_zip_round_trips_in_both_sequential_and_actual_parallel_extraction",
+    "compiled unit executable: zipdir1725_tar_link_conversion_keeps_explicit_top_directory_dates_in_verified_zip_and_zipx",
+    "npm run build:shell-extension",
+    "npm run test:release-identity"
+  ],
+  "notes": [
+    "Four new native tests passed on first execution.",
+    "Two affected older expectations changed from DOS even seconds to exact UTC whole seconds.",
+    "Unused test imports removed during compilation; no product semantics changed.",
+    "No unrelated UI/algorithm matrix rerun or desktop control; formal CI and Release follow this commit."
+  ]
+}
