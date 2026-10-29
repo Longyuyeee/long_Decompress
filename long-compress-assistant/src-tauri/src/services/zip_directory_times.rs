@@ -20,7 +20,7 @@ fn collect<R:Read+Seek>(archive:&mut zip_aes::ZipArchive<R>,staging:&Path,option
         let name=relative.to_string_lossy().replace('\\',"/").trim_end_matches('/').to_owned();
         // A duplicate directory identity cannot have one trustworthy source date.
         if !names.insert(name.to_lowercase()){times.retain(|(n,_):&(String,ModificationTime)|n.to_lowercase()!=name.to_lowercase());continue;}
-        if let Some(time)=entry.last_modified().and_then(|t|super::native_extraction::zip::system_time(t.year(),t.month(),t.day(),t.hour(),t.minute(),t.second())){
+        if let Some(time)=super::zip_read_time::modified(&entry){
             let time=filetime::FileTime::from_system_time(time);
             times.push((name,ModificationTime{seconds:time.unix_seconds(),nanoseconds:time.nanoseconds()}));
         }

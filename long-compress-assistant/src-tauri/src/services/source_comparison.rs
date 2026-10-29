@@ -339,17 +339,7 @@ fn read_zip(
         let name = raw.replace('\\', "/").trim_end_matches('/').to_string();
         relative(&name)?;
         ensure!(explicit.insert(name.clone()), "ZIP 存在重复条目：{name}");
-        let modified = entry.last_modified().map(|t| {
-            format!(
-                "{:04}-{:02}-{:02} {:02}:{:02}:{:02}",
-                t.year(),
-                t.month(),
-                t.day(),
-                t.hour(),
-                t.minute(),
-                t.second()
-            )
-        });
+        let modified = super::zip_read_time::local_display(&entry);
         let fingerprint = if entry.is_dir() {
             "directory".into()
         } else {

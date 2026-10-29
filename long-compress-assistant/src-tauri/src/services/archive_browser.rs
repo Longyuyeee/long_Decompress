@@ -81,17 +81,7 @@ fn browse_zip(path: &Path, cancelled: &AtomicBool) -> Result<ArchiveBrowseResult
     for index in 0..archive.len() {
         ensure_not_cancelled(cancelled)?;
         let entry = archive.by_index_raw(index)?;
-        let modified = entry.last_modified().map(|date| {
-            format!(
-                "{:04}-{:02}-{:02} {:02}:{:02}:{:02}",
-                date.year(),
-                date.month(),
-                date.day(),
-                date.hour(),
-                date.minute(),
-                date.second()
-            )
-        });
+        let modified = super::zip_read_time::display(&entry);
         let entry_path = entry.name().replace('\\', "/");
         entries.push(ArchiveEntryInfo { link_target: None, size_known: None,
             name: entry_name(&entry_path),

@@ -645,9 +645,15 @@ pub(crate) fn staged_file_is_not_newer(source: &Path, destination: &Path) -> boo
 
 fn zip_source_times(source_archive: &str, preserve_paths: bool) -> HashMap<PathBuf, u64> {
     let mut result = HashMap::new();
-    if !source_archive.to_ascii_lowercase().ends_with(".zip") { return result; }
-    let Ok(file) = std::fs::File::open(source_archive) else { return result };
-    let Ok(mut archive) = zip_aes::ZipArchive::new(file) else { return result };
+    let path = Path::new(source_archive);
+    let numeric = path.extension().and_then(|s| s.to_str()).is_some_and(|s| s.len() >= 3 && s.bytes().all(|b| b.is_ascii_digit()));
+    let logical = if numeric { Path::new(path.file_stem().unwrap_or_default()) } else { path };
+    let zip_name = logical.extension().is_some_and(|s| s.eq_ignore_ascii_case("zip") || s.eq_ignore_ascii_case("zipx"));
+    let zip_disk = path.file_name().and_then(|s| s.to_str()).and_then(super::split_archive_detector::SplitArchiveDetector::zip_disk_family).is_some();
+    if !zip_name && !zip_disk { return result; }
+    let Ok(source) = super::split_archive_detector::SplitArchiveDetector::complete_source(path) else { return result; };
+    let Ok(reader) = super::numeric_volume_reader::ZipInputReader::open(&source) else { return result; };
+    let Ok(mut archive) = zip_aes::ZipArchive::new(reader) else { return result; };
     for index in 0..archive.len() {
         let Ok(entry) = archive.by_index_raw(index) else { continue };
         if entry.is_dir() { continue; }
@@ -656,9 +662,8 @@ fn zip_source_times(source_archive: &str, preserve_paths: bool) -> HashMap<PathB
             let Some(name) = relative.file_name() else { continue };
             PathBuf::from(name)
         };
-        let modified = entry.last_modified().and_then(|time| super::native_extraction::zip::system_time(
-            time.year(), time.month(), time.day(), time.hour(), time.minute(), time.second(),
-        )).and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok()).map(|time| time.as_millis() as u64);
+        let modified = super::zip_read_time::modified(&entry)
+            .and_then(|time| time.duration_since(std::time::UNIX_EPOCH).ok()).map(|time| time.as_millis() as u64);
         if let Some(modified) = modified { result.insert(relative, modified); }
     }
     result

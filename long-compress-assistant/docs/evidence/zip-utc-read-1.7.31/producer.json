@@ -1,0 +1,522 @@
+{
+  "passed": true,
+  "producer": "bsdtar 3.8.9 - libarchive 3.8.9 zlib/1.2.13.1-motley liblzma/5.8.3 bz2lib/1.0.8 libzstd/1.5.7 cng/2.0 libb2/bundled ",
+  "originals": [
+    {
+      "name": "plain",
+      "archive": "plain.zip",
+      "sha256": "f2d0e9527fab15302152332bdb4e9854382cddb70e0cebb9112763f6b3700834",
+      "encrypted": false,
+      "entries": [
+        {
+          "name": "docs",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001551,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            10
+          ]
+        },
+        {
+          "name": "docs/empty",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001537,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            38,
+            56
+          ]
+        },
+        {
+          "name": "docs/nested",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001549,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            8
+          ]
+        },
+        {
+          "name": "docs/note.txt",
+          "bytes": 38,
+          "directory": false,
+          "sha256": "d28f534aa250cf195beb175fe5bb5702f948cf7b51fda117c8ec0fad32d58911",
+          "seconds": 1700001731,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            10
+          ]
+        },
+        {
+          "name": "docs/zero.txt",
+          "bytes": 0,
+          "directory": false,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001935,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            45,
+            34
+          ]
+        },
+        {
+          "name": "docs/nested/large-a.bin",
+          "bytes": 310000,
+          "directory": false,
+          "sha256": "5affd9561e6e7b2e6ee23ae772cb1eb6d999147efc90fbe4f3354366b713c127",
+          "seconds": 1700001833,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            43,
+            52
+          ]
+        },
+        {
+          "name": "docs/nested/large-b.bin",
+          "bytes": 310000,
+          "directory": false,
+          "sha256": "d488acfc5c852315f99625a1abaed1b05f605ebfec99a99db12dd59e045fba7e",
+          "seconds": 1710054133,
+          "dos": [
+            2024,
+            3,
+            10,
+            15,
+            2,
+            12
+          ]
+        }
+      ]
+    },
+    {
+      "name": "aes",
+      "archive": "aes.zip",
+      "sha256": "9e7d2419c9682276b37373f55d658b9c897f288084b647133ee531f9b44ec876",
+      "encrypted": true,
+      "entries": [
+        {
+          "name": "docs",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001551,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            10
+          ]
+        },
+        {
+          "name": "docs/empty",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001537,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            38,
+            56
+          ]
+        },
+        {
+          "name": "docs/nested",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001549,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            8
+          ]
+        },
+        {
+          "name": "docs/note.txt",
+          "bytes": 38,
+          "directory": false,
+          "sha256": "d28f534aa250cf195beb175fe5bb5702f948cf7b51fda117c8ec0fad32d58911",
+          "seconds": 1700001731,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            10
+          ]
+        },
+        {
+          "name": "docs/zero.txt",
+          "bytes": 0,
+          "directory": false,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001935,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            45,
+            34
+          ]
+        },
+        {
+          "name": "docs/nested/large-a.bin",
+          "bytes": 310000,
+          "directory": false,
+          "sha256": "5affd9561e6e7b2e6ee23ae772cb1eb6d999147efc90fbe4f3354366b713c127",
+          "seconds": 1700001833,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            43,
+            52
+          ]
+        },
+        {
+          "name": "docs/nested/large-b.bin",
+          "bytes": 310000,
+          "directory": false,
+          "sha256": "d488acfc5c852315f99625a1abaed1b05f605ebfec99a99db12dd59e045fba7e",
+          "seconds": 1710054133,
+          "dos": [
+            2024,
+            3,
+            10,
+            15,
+            2,
+            12
+          ]
+        }
+      ]
+    },
+    {
+      "name": "parallel",
+      "archive": "parallel.zip",
+      "sha256": "b2f220b87d816a925fa5716aa469e7ca0004a28c9e4507ef47bacb475c118880",
+      "encrypted": false,
+      "entries": [
+        {
+          "name": "a.bin",
+          "bytes": 310000,
+          "directory": false,
+          "sha256": "5affd9561e6e7b2e6ee23ae772cb1eb6d999147efc90fbe4f3354366b713c127",
+          "seconds": 1700001731,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            10
+          ]
+        },
+        {
+          "name": "b.bin",
+          "bytes": 310000,
+          "directory": false,
+          "sha256": "d488acfc5c852315f99625a1abaed1b05f605ebfec99a99db12dd59e045fba7e",
+          "seconds": 1710054133,
+          "dos": [
+            2024,
+            3,
+            10,
+            15,
+            2,
+            12
+          ]
+        }
+      ]
+    }
+  ],
+  "controls": {
+    "archive": "controls.zip",
+    "sha256": "79c7937a400eb30aa2e69dbb852fbd40229460b6e854bcd55dee03902038fedc",
+    "entries": [
+      {
+        "name": "valid.txt",
+        "sha256": "009d962905920ad0e3ff46c6987fad36418982deb81796fd1f58e326d167c268",
+        "seconds": 1700001731,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 6
+      },
+      {
+        "name": "central-flags7.txt",
+        "sha256": "708a4df84b6e683a02c28d97c8ddd28c56884c485345d51387becff90f8cd32b",
+        "seconds": 1700001731,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 15
+      },
+      {
+        "name": "central-only.txt",
+        "sha256": "1097589e0351f84751c20b2506099ee943d2d78febe719966bbfd9fa2b09b7eb",
+        "seconds": 1700001731,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 13
+      },
+      {
+        "name": "local-only.txt",
+        "sha256": "661c5ac75d019e356462bcbf09373514e0310d9362d9eeac0c89f900190bd3e7",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 11
+      },
+      {
+        "name": "central-wins.txt",
+        "sha256": "7e3af9980a3a7d2a85738f2e2d83c37348212be9701d3fb37fc2d3471333d3c2",
+        "seconds": 1700001731,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 13
+      },
+      {
+        "name": "malformed.txt",
+        "sha256": "72317e4329e39b772846ef7358eefee8d8569baa89b1f06da6627683e621653d",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 10
+      },
+      {
+        "name": "empty.txt",
+        "sha256": "45fd2f9df187bc411dc80df5c4c4844ac00f4dd69bc69453f1893a5d143433d6",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 6
+      },
+      {
+        "name": "missing-mtime.txt",
+        "sha256": "2b93db3ae70a76012395772c850eee5741d04ea5b3d02a75685b8b69cc8c5027",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 14
+      },
+      {
+        "name": "access-only.txt",
+        "sha256": "4c2ab161f122ba3e9ce5bddff020e953aeddd4899b7ed37a3016a87027d2bf95",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 12
+      },
+      {
+        "name": "reserved-bits.txt",
+        "sha256": "9b0d8914be9e39a11d2f49014aac505ed41ecd8570e2dc5dc9717082f5a1dac5",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 14
+      },
+      {
+        "name": "duplicate.txt",
+        "sha256": "3f84cce967052e85c3cf2d671c2433dc4899226bb99a67d6bfe4aeb9e938b7cc",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 10
+      },
+      {
+        "name": "conflicting.txt",
+        "sha256": "74a50c6a1821199911d08ba2348290f87c0e04c85477928e9afe8297d2bebb40",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 12
+      },
+      {
+        "name": "high-bit.txt",
+        "sha256": "741139679715666b3b25ce86126b071a922f65a7af2b8fed91aa0fbcccc31fb8",
+        "seconds": null,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 9
+      },
+      {
+        "name": "zero.txt",
+        "sha256": "ff9fb51036a15c5c92c8b80d3dac03262bfb9d081b1490f719ab4127e6069fce",
+        "seconds": 0,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 5
+      },
+      {
+        "name": "signed-max.txt",
+        "sha256": "9da3b96e25bc40e34924bcee31805b1b87fa87fd8e396f6c85c1464c8edf8873",
+        "seconds": 2147483647,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 11
+      },
+      {
+        "name": "时间.txt",
+        "sha256": "466f2e945489c9f65eafc0fddb849e9eda63700d2563605599262f30476a6e20",
+        "seconds": 1700001731,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 7
+      },
+      {
+        "name": "unknown-before.txt",
+        "sha256": "ef243d9f75347fc186de1eb9e67cfae9eb07e13650bd0933e4022504b2c53068",
+        "seconds": 1700001731,
+        "dos": [
+          2001,
+          2,
+          3,
+          4,
+          5,
+          6
+        ],
+        "bytes": 15
+      }
+    ]
+  },
+  "derived": {
+    "archive": "aes-malformed-ut.zip",
+    "sha256": "b3526414e74c883100d86c5fc468dbd2eaf745c15c5ca194016ab7a03c30d2fd",
+    "source": "aes.zip",
+    "recipe": "Only central optional UT replaced with bounded invalid UT before retained AES/other fields; encrypted payloads and local headers unchanged."
+  },
+  "credential": "UtcRead1731!",
+  "utcPolicy": "Single central UT mtime, flags low bits only, 0..2147483647 seconds; otherwise existing DOS local fallback. No local-only inference."
+}
