@@ -32,9 +32,9 @@ async fn browse1719_gnu_pax_text_image_empty_and_long_name_previews_use_selected
 }
 
 #[tokio::test]
-async fn browse1719_missing_ambiguous_forward_chain_and_nonfile_targets_are_not_shown_as_empty_files(){
+async fn browse1719_missing_ambiguous_chain_and_nonfile_targets_are_not_shown_as_empty_files(){
  let m=manifest("tar-gnu-longlink-1718");let original=std::fs::read(root().join("tar-gnu-longlink-1718/gnu-links.tar")).unwrap();let at=m["records"][4]["headerOffset"].as_u64().unwrap()as usize;let mut cases=Vec::new();
- for name in ["missing.bin","after.txt","alias-a.bin","资料","SOURCE.BIN","../source.bin"]{let mut bad=original.clone();rewrite(&mut bad,at,|h|h.set_link_name(name).unwrap());cases.push(bad);}
+ for name in ["missing.bin","alias-a.bin","资料","SOURCE.BIN","../source.bin"]{let mut bad=original.clone();rewrite(&mut bad,at,|h|h.set_link_name(name).unwrap());cases.push(bad);}
  for kind in [tar::EntryType::Symlink,tar::EntryType::Fifo]{let mut bad=original.clone();rewrite(&mut bad,at,|h|h.set_entry_type(kind));cases.push(bad);}
  let mut bad=original.clone();rewrite(&mut bad,at,|h|h.set_size(1));cases.push(bad);let mut bad=original.clone();rewrite(&mut bad,m["records"][5]["headerOffset"].as_u64().unwrap()as usize,|h|h.set_link_name("alias-a.bin").unwrap());cases.push(bad);
  let mut bad=original.clone();rewrite(&mut bad,m["records"][3]["headerOffset"].as_u64().unwrap()as usize,|h|h.set_path("prefix.txt").unwrap());cases.push(bad);

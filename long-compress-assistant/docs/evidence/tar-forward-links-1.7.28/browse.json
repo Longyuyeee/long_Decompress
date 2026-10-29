@@ -1,0 +1,720 @@
+[
+  {
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\ustar.tar.lzo",
+    "listing": {
+      "format": "TAR.LZO",
+      "entries": [
+        {
+          "path": "docs",
+          "name": "docs",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "docs/empty",
+          "name": "empty",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "gallery",
+          "name": "gallery",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "ordinary.txt",
+          "name": "ordinary.txt",
+          "size": 31,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "ordinary.txt",
+          "path": "ordinary-copy.txt",
+          "name": "ordinary-copy.txt",
+          "size": 31,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "docs/readme.txt",
+          "path": "阅读副本.txt",
+          "name": "阅读副本.txt",
+          "size": 1190000,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "gallery/cover.png",
+          "path": "gallery/封面副本.png",
+          "name": "封面副本.png",
+          "size": 93,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "empty.txt",
+          "path": "empty-copy.txt",
+          "name": "empty-copy.txt",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "after.txt",
+          "name": "after.txt",
+          "size": 25,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "empty.txt",
+          "name": "empty.txt",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:43:48+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "docs/readme.txt",
+          "name": "readme.txt",
+          "size": 1190000,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:43:48+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "gallery/cover.png",
+          "name": "cover.png",
+          "size": 93,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:43:48+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        }
+      ],
+      "totalFiles": 9,
+      "totalDirectories": 3,
+      "totalUncompressedSize": 2380273,
+      "totalCompressedSize": 0,
+      "encrypted": false
+    },
+    "texts": [
+      {
+        "entryPath": "ordinary-copy.txt",
+        "encoding": "UTF-8",
+        "byteSize": 31,
+        "totalSize": 31,
+        "truncated": false,
+        "lineCount": 1,
+        "contentSha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "prefixBytes": 31
+      },
+      {
+        "entryPath": "阅读副本.txt",
+        "encoding": "UTF-8",
+        "byteSize": 1048576,
+        "totalSize": 1190000,
+        "truncated": true,
+        "lineCount": 29960,
+        "contentSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "prefixBytes": 1048576
+      },
+      {
+        "entryPath": "empty-copy.txt",
+        "encoding": "UTF-8",
+        "byteSize": 0,
+        "totalSize": 0,
+        "truncated": false,
+        "lineCount": 0,
+        "contentSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixBytes": 0
+      }
+    ],
+    "image": {
+      "entryPath": "gallery/封面副本.png",
+      "mimeType": "image/png",
+      "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAYCAIAAAAUMWhjAAAAJElEQVR4nGOImnaJpohh1IJRC0YtGLVg1IJRC0YtGLVgaFgAAFC+RkyXixD6AAAAAElFTkSuQmCC",
+      "byteSize": 93,
+      "width": 32,
+      "height": 24
+    },
+    "diagnosis": {
+      "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\ustar.tar.lzo",
+      "fileSize": 5783,
+      "actualFormat": "TAR.LZO",
+      "status": "healthy",
+      "encrypted": false,
+      "splitArchive": false,
+      "volumesFound": 1,
+      "missingVolumes": [],
+      "totalFiles": 9,
+      "totalDirectories": 3,
+      "totalUncompressedSize": 2380273,
+      "totalUncompressedSizeKnown": true,
+      "integrityTested": true,
+      "canRepair": false,
+      "recoverability": "not_needed",
+      "issues": [],
+      "evidence": [
+        "Archive size: 5783 bytes",
+        "完整 TAR.LZO 内容、链接目标身份及外层校验已确认"
+      ]
+    },
+    "numericParts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\6a131ae1-0644-4d29-94c5-ef8943413a3e\\ustar\\source.tar.lzo.001",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\6a131ae1-0644-4d29-94c5-ef8943413a3e\\ustar\\source.tar.lzo.002",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\6a131ae1-0644-4d29-94c5-ef8943413a3e\\ustar\\source.tar.lzo.003"
+    ]
+  },
+  {
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\gnu.tar.lzo",
+    "listing": {
+      "format": "TAR.LZO",
+      "entries": [
+        {
+          "path": "docs",
+          "name": "docs",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "docs/empty",
+          "name": "empty",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "gallery",
+          "name": "gallery",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "ordinary.txt",
+          "name": "ordinary.txt",
+          "size": 31,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "ordinary.txt",
+          "path": "ordinary-copy.txt",
+          "name": "ordinary-copy.txt",
+          "size": 31,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "docs/readme.txt",
+          "path": "阅读副本.txt",
+          "name": "阅读副本.txt",
+          "size": 1190000,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "gallery/cover.png",
+          "path": "gallery/封面副本.png",
+          "name": "封面副本.png",
+          "size": 93,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "empty.txt",
+          "path": "empty-copy.txt",
+          "name": "empty-copy.txt",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "path": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "name": "链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "size": 29,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "sparse.bin",
+          "path": "sparse-copy.bin",
+          "name": "sparse-copy.bin",
+          "size": 3145738,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "after.txt",
+          "name": "after.txt",
+          "size": 25,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "empty.txt",
+          "name": "empty.txt",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:43:48+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "docs/readme.txt",
+          "name": "readme.txt",
+          "size": 1190000,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:43:48+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "gallery/cover.png",
+          "name": "cover.png",
+          "size": 93,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:43:48+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "name": "长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "size": 29,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:43:48+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "sparse.bin",
+          "name": "sparse.bin",
+          "size": 3145738,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:43:48+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        }
+      ],
+      "totalFiles": 13,
+      "totalDirectories": 3,
+      "totalUncompressedSize": 8671807,
+      "totalCompressedSize": 0,
+      "encrypted": false
+    },
+    "texts": [
+      {
+        "entryPath": "ordinary-copy.txt",
+        "encoding": "UTF-8",
+        "byteSize": 31,
+        "totalSize": 31,
+        "truncated": false,
+        "lineCount": 1,
+        "contentSha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "prefixBytes": 31
+      },
+      {
+        "entryPath": "阅读副本.txt",
+        "encoding": "UTF-8",
+        "byteSize": 1048576,
+        "totalSize": 1190000,
+        "truncated": true,
+        "lineCount": 29960,
+        "contentSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "prefixBytes": 1048576
+      },
+      {
+        "entryPath": "empty-copy.txt",
+        "encoding": "UTF-8",
+        "byteSize": 0,
+        "totalSize": 0,
+        "truncated": false,
+        "lineCount": 0,
+        "contentSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixBytes": 0
+      },
+      {
+        "entryPath": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+        "encoding": "UTF-8",
+        "byteSize": 29,
+        "totalSize": 29,
+        "truncated": false,
+        "lineCount": 1,
+        "contentSha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "prefixBytes": 29
+      }
+    ],
+    "image": {
+      "entryPath": "gallery/封面副本.png",
+      "mimeType": "image/png",
+      "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAYCAIAAAAUMWhjAAAAJElEQVR4nGOImnaJpohh1IJRC0YtGLVg1IJRC0YtGLVgaFgAAFC+RkyXixD6AAAAAElFTkSuQmCC",
+      "byteSize": 93,
+      "width": 32,
+      "height": 24
+    },
+    "diagnosis": {
+      "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\gnu.tar.lzo",
+      "fileSize": 6360,
+      "actualFormat": "TAR.LZO",
+      "status": "healthy",
+      "encrypted": false,
+      "splitArchive": false,
+      "volumesFound": 1,
+      "missingVolumes": [],
+      "totalFiles": 13,
+      "totalDirectories": 3,
+      "totalUncompressedSize": 8671807,
+      "totalUncompressedSizeKnown": true,
+      "integrityTested": true,
+      "canRepair": false,
+      "recoverability": "not_needed",
+      "issues": [],
+      "evidence": [
+        "Archive size: 6360 bytes",
+        "完整 TAR.LZO 内容、链接目标身份及外层校验已确认"
+      ]
+    },
+    "numericParts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\6a131ae1-0644-4d29-94c5-ef8943413a3e\\gnu\\source.tar.lzo.001",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\6a131ae1-0644-4d29-94c5-ef8943413a3e\\gnu\\source.tar.lzo.002",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\6a131ae1-0644-4d29-94c5-ef8943413a3e\\gnu\\source.tar.lzo.003",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\6a131ae1-0644-4d29-94c5-ef8943413a3e\\gnu\\source.tar.lzo.004"
+    ]
+  },
+  {
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\pax.tar.lzo",
+    "listing": {
+      "format": "TAR.LZO",
+      "entries": [
+        {
+          "path": "docs",
+          "name": "docs",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "docs/empty",
+          "name": "empty",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "gallery",
+          "name": "gallery",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": true
+        },
+        {
+          "path": "ordinary.txt",
+          "name": "ordinary.txt",
+          "size": 31,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "ordinary.txt",
+          "path": "ordinary-copy.txt",
+          "name": "ordinary-copy.txt",
+          "size": 31,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "docs/readme.txt",
+          "path": "阅读副本.txt",
+          "name": "阅读副本.txt",
+          "size": 1190000,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "gallery/cover.png",
+          "path": "gallery/封面副本.png",
+          "name": "封面副本.png",
+          "size": 93,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "empty.txt",
+          "path": "empty-copy.txt",
+          "name": "empty-copy.txt",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "path": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "name": "链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+          "size": 29,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "linkTarget": "sparse.bin",
+          "path": "sparse-copy.bin",
+          "name": "sparse-copy.bin",
+          "size": 3145738,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "after.txt",
+          "name": "after.txt",
+          "size": 25,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:42:08+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "empty.txt",
+          "name": "empty.txt",
+          "size": 0,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:43:48+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "docs/readme.txt",
+          "name": "readme.txt",
+          "size": 1190000,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:43:48+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "gallery/cover.png",
+          "name": "cover.png",
+          "size": 93,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:43:48+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "name": "长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+          "size": 29,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:43:48+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        },
+        {
+          "path": "sparse.bin",
+          "name": "sparse.bin",
+          "size": 3145738,
+          "compressedSize": null,
+          "modified": "2023-11-14T22:43:48+00:00",
+          "crc": null,
+          "encrypted": false,
+          "isDir": false
+        }
+      ],
+      "totalFiles": 13,
+      "totalDirectories": 3,
+      "totalUncompressedSize": 8671807,
+      "totalCompressedSize": 0,
+      "encrypted": false
+    },
+    "texts": [
+      {
+        "entryPath": "ordinary-copy.txt",
+        "encoding": "UTF-8",
+        "byteSize": 31,
+        "totalSize": 31,
+        "truncated": false,
+        "lineCount": 1,
+        "contentSha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "prefixBytes": 31
+      },
+      {
+        "entryPath": "阅读副本.txt",
+        "encoding": "UTF-8",
+        "byteSize": 1048576,
+        "totalSize": 1190000,
+        "truncated": true,
+        "lineCount": 29960,
+        "contentSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "prefixBytes": 1048576
+      },
+      {
+        "entryPath": "empty-copy.txt",
+        "encoding": "UTF-8",
+        "byteSize": 0,
+        "totalSize": 0,
+        "truncated": false,
+        "lineCount": 0,
+        "contentSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixBytes": 0
+      },
+      {
+        "entryPath": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+        "encoding": "UTF-8",
+        "byteSize": 29,
+        "totalSize": 29,
+        "truncated": false,
+        "lineCount": 1,
+        "contentSha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "prefixBytes": 29
+      }
+    ],
+    "image": {
+      "entryPath": "gallery/封面副本.png",
+      "mimeType": "image/png",
+      "dataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAYCAIAAAAUMWhjAAAAJElEQVR4nGOImnaJpohh1IJRC0YtGLVg1IJRC0YtGLVgaFgAAFC+RkyXixD6AAAAAElFTkSuQmCC",
+      "byteSize": 93,
+      "width": 32,
+      "height": 24
+    },
+    "diagnosis": {
+      "filePath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\pax.tar.lzo",
+      "fileSize": 6563,
+      "actualFormat": "TAR.LZO",
+      "status": "healthy",
+      "encrypted": false,
+      "splitArchive": false,
+      "volumesFound": 1,
+      "missingVolumes": [],
+      "totalFiles": 13,
+      "totalDirectories": 3,
+      "totalUncompressedSize": 8671807,
+      "totalUncompressedSizeKnown": true,
+      "integrityTested": true,
+      "canRepair": false,
+      "recoverability": "not_needed",
+      "issues": [],
+      "evidence": [
+        "Archive size: 6563 bytes",
+        "完整 TAR.LZO 内容、链接目标身份及外层校验已确认"
+      ]
+    },
+    "numericParts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\6a131ae1-0644-4d29-94c5-ef8943413a3e\\pax\\source.tar.lzo.001",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\6a131ae1-0644-4d29-94c5-ef8943413a3e\\pax\\source.tar.lzo.002",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\6a131ae1-0644-4d29-94c5-ef8943413a3e\\pax\\source.tar.lzo.003",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\6a131ae1-0644-4d29-94c5-ef8943413a3e\\pax\\source.tar.lzo.004"
+    ]
+  }
+]

@@ -213,6 +213,11 @@ fn browse_tar_reader<R: Read>(
     }
     // TAR stops at zero blocks; read the enclosing stream's trailer as well.
     super::tar_compatibility::finish_stream(archive.into_inner(), || ensure_not_cancelled(cancelled))?;
+    if format=="TAR.LZO" {
+        let views=links.finish(||ensure_not_cancelled(cancelled))?;
+        anyhow::ensure!(views.len()==entries.len(),"TAR.LZO 目录身份无法对应，请刷新目录");
+        for(entry,view)in entries.iter_mut().zip(views){entry.size=view.size;}
+    }
     Ok(summarize(format, entries))
 }
 

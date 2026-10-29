@@ -218,6 +218,19 @@ pub(crate) fn check(flag: &AtomicBool) -> Result<()> {
     anyhow::ensure!(!flag.load(Ordering::SeqCst), "LZOP recovery cancelled");
     Ok(())
 }
+pub(super) fn scan_complete_source(
+    src: &Source,
+    encoding: Option<ZipPasswordEncoding>,
+    cancelled: &AtomicBool,
+    progress: &mut impl FnMut(u64, u64),
+) -> Result<Report> {
+    if src.paths.first().is_some_and(|p| is_tar(p)) {
+        super::tar_recovery::scan_complete_source(src, encoding, cancelled, progress)
+    } else {
+        scan_source(src, encoding, cancelled, progress)
+    }
+}
+
 pub(super) fn scan_source(
     src: &Source,
     encoding: Option<ZipPasswordEncoding>,

@@ -63,7 +63,7 @@ docs/               产品路线、格式说明和发布记录
 | --- | --- |
 | [开发交接](docs/DEVELOPMENT_HANDOFF.md) / [产品路线](docs/PRODUCT_ENHANCEMENT_ROADMAP.md) | 当前状态、下一步及已有验证 |
 | [v1.7.0 范围](docs/ARCHIVE_ROADMAP_1.7.0.md) / [实现与检查](docs/WINDOWS_OPEN_AND_BROWSER_UI.md) | Windows 打开、双栏统一与历史菜单 |
-| [v1.7.27 7Z 目录一致性](docs/SEVEN_ZIP_DIRECTORY_LAYOUT_FREEZE_1.7.27.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.28.md) | 7Z 根目录独立、提交后恢复目录日期、所选平铺解压修复；前向硬链接兼容仅规划 |
+| [v1.7.28 前向链接取回](docs/TAR_FORWARD_LINKS_FREEZE_1.7.28.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.29.md) | TAR.LZO 前向内容接通浏览/预览/正常与所选解压，前向链接转换仅规划 |
 | [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md) | 创建、读取、密码、分卷和限制 |
 | [桌面测试说明](docs/DESKTOP_E2E.md) / [测试指南](tests/README.md) | 本地和隔离场景 |
 

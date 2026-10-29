@@ -1,0 +1,1499 @@
+[
+  {
+    "mode": "full",
+    "format": "ustar",
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\ustar.tar.lzo",
+    "sourceSha256": "461b7b07ec1f7b31b0406196f063c91e7b4e90765570485b4e365879c9a65ddd",
+    "readSource": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\ustar.tar.lzo",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\ustar-full",
+    "entries": [
+      {
+        "name": "docs",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 0,
+        "dataOffset": 512
+      },
+      {
+        "name": "docs/empty",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 512,
+        "dataOffset": 1024
+      },
+      {
+        "name": "gallery",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 1024,
+        "dataOffset": 1536
+      },
+      {
+        "name": "ordinary.txt",
+        "bytes": 31,
+        "isDirectory": false,
+        "sha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "prefixSha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 1536,
+        "dataOffset": 2048
+      },
+      {
+        "name": "ordinary-copy.txt",
+        "bytes": 31,
+        "isDirectory": false,
+        "sha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "prefixSha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "linkTarget": "ordinary.txt",
+        "targetId": 3,
+        "seconds": 1700001728,
+        "headerOffset": 2560,
+        "dataOffset": 3072
+      },
+      {
+        "name": "阅读副本.txt",
+        "bytes": 1190000,
+        "isDirectory": false,
+        "sha256": "1f84ba0558a828a8b6dae89732bd232dfb5f3f7565e0e171a1f5bb59423b811d",
+        "prefixSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "linkTarget": "docs/readme.txt",
+        "targetId": 10,
+        "seconds": 1700001728,
+        "headerOffset": 3072,
+        "dataOffset": 3584
+      },
+      {
+        "name": "gallery/封面副本.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "prefixSha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "linkTarget": "gallery/cover.png",
+        "targetId": 11,
+        "seconds": 1700001728,
+        "headerOffset": 3584,
+        "dataOffset": 4096
+      },
+      {
+        "name": "empty-copy.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": "empty.txt",
+        "targetId": 9,
+        "seconds": 1700001728,
+        "headerOffset": 4096,
+        "dataOffset": 4608
+      },
+      {
+        "name": "after.txt",
+        "bytes": 25,
+        "isDirectory": false,
+        "sha256": "e55fccc22ee7dd8065cfb33b28e8ef4b3fc477ba8eabb308b811196ee4794623",
+        "prefixSha256": "e55fccc22ee7dd8065cfb33b28e8ef4b3fc477ba8eabb308b811196ee4794623",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 4608,
+        "dataOffset": 5120
+      },
+      {
+        "name": "empty.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 5632,
+        "dataOffset": 6144
+      },
+      {
+        "name": "docs/readme.txt",
+        "bytes": 1190000,
+        "isDirectory": false,
+        "sha256": "1f84ba0558a828a8b6dae89732bd232dfb5f3f7565e0e171a1f5bb59423b811d",
+        "prefixSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 6144,
+        "dataOffset": 6656
+      },
+      {
+        "name": "gallery/cover.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "prefixSha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 1197056,
+        "dataOffset": 1197568
+      }
+    ],
+    "stats": {
+      "entries": 12,
+      "logicalBytes": 2380273,
+      "payloadBytes": 1190149,
+      "publishedBytes": 2380273,
+      "directoryTimes": [
+        [
+          "docs",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ],
+        [
+          "docs/empty",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ],
+        [
+          "gallery",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ]
+      ]
+    }
+  },
+  {
+    "mode": "numeric",
+    "format": "ustar",
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\ustar.tar.lzo",
+    "sourceSha256": "461b7b07ec1f7b31b0406196f063c91e7b4e90765570485b4e365879c9a65ddd",
+    "readSource": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\ustar-volumes\\source.tar.lzo.003",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\ustar-numeric",
+    "entries": [
+      {
+        "name": "docs",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 0,
+        "dataOffset": 512
+      },
+      {
+        "name": "docs/empty",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 512,
+        "dataOffset": 1024
+      },
+      {
+        "name": "gallery",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 1024,
+        "dataOffset": 1536
+      },
+      {
+        "name": "ordinary.txt",
+        "bytes": 31,
+        "isDirectory": false,
+        "sha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "prefixSha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 1536,
+        "dataOffset": 2048
+      },
+      {
+        "name": "ordinary-copy.txt",
+        "bytes": 31,
+        "isDirectory": false,
+        "sha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "prefixSha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "linkTarget": "ordinary.txt",
+        "targetId": 3,
+        "seconds": 1700001728,
+        "headerOffset": 2560,
+        "dataOffset": 3072
+      },
+      {
+        "name": "阅读副本.txt",
+        "bytes": 1190000,
+        "isDirectory": false,
+        "sha256": "1f84ba0558a828a8b6dae89732bd232dfb5f3f7565e0e171a1f5bb59423b811d",
+        "prefixSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "linkTarget": "docs/readme.txt",
+        "targetId": 10,
+        "seconds": 1700001728,
+        "headerOffset": 3072,
+        "dataOffset": 3584
+      },
+      {
+        "name": "gallery/封面副本.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "prefixSha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "linkTarget": "gallery/cover.png",
+        "targetId": 11,
+        "seconds": 1700001728,
+        "headerOffset": 3584,
+        "dataOffset": 4096
+      },
+      {
+        "name": "empty-copy.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": "empty.txt",
+        "targetId": 9,
+        "seconds": 1700001728,
+        "headerOffset": 4096,
+        "dataOffset": 4608
+      },
+      {
+        "name": "after.txt",
+        "bytes": 25,
+        "isDirectory": false,
+        "sha256": "e55fccc22ee7dd8065cfb33b28e8ef4b3fc477ba8eabb308b811196ee4794623",
+        "prefixSha256": "e55fccc22ee7dd8065cfb33b28e8ef4b3fc477ba8eabb308b811196ee4794623",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 4608,
+        "dataOffset": 5120
+      },
+      {
+        "name": "empty.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 5632,
+        "dataOffset": 6144
+      },
+      {
+        "name": "docs/readme.txt",
+        "bytes": 1190000,
+        "isDirectory": false,
+        "sha256": "1f84ba0558a828a8b6dae89732bd232dfb5f3f7565e0e171a1f5bb59423b811d",
+        "prefixSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 6144,
+        "dataOffset": 6656
+      },
+      {
+        "name": "gallery/cover.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "prefixSha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 1197056,
+        "dataOffset": 1197568
+      }
+    ],
+    "stats": {
+      "entries": 12,
+      "logicalBytes": 2380273,
+      "payloadBytes": 1190149,
+      "publishedBytes": 2380273,
+      "directoryTimes": [
+        [
+          "docs",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ],
+        [
+          "docs/empty",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ],
+        [
+          "gallery",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ]
+      ]
+    }
+  },
+  {
+    "mode": "selected",
+    "format": "ustar",
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\ustar.tar.lzo",
+    "sourceSha256": "461b7b07ec1f7b31b0406196f063c91e7b4e90765570485b4e365879c9a65ddd",
+    "readSource": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\ustar-volumes\\source.tar.lzo.003",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\ustar-selected",
+    "entries": [
+      {
+        "name": "阅读副本.txt",
+        "bytes": 1190000,
+        "isDirectory": false,
+        "sha256": "1f84ba0558a828a8b6dae89732bd232dfb5f3f7565e0e171a1f5bb59423b811d",
+        "prefixSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "linkTarget": "docs/readme.txt",
+        "targetId": 10,
+        "seconds": 1700001728,
+        "headerOffset": 3072,
+        "dataOffset": 3584
+      },
+      {
+        "name": "gallery/封面副本.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "prefixSha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "linkTarget": "gallery/cover.png",
+        "targetId": 11,
+        "seconds": 1700001728,
+        "headerOffset": 3584,
+        "dataOffset": 4096
+      },
+      {
+        "name": "empty-copy.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": "empty.txt",
+        "targetId": 9,
+        "seconds": 1700001728,
+        "headerOffset": 4096,
+        "dataOffset": 4608
+      }
+    ],
+    "stats": {
+      "entries": 3,
+      "logicalBytes": 1190093,
+      "payloadBytes": 1190093,
+      "publishedBytes": 1190093,
+      "directoryTimes": []
+    }
+  },
+  {
+    "mode": "full",
+    "format": "gnu",
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\gnu.tar.lzo",
+    "sourceSha256": "fa7122049b50db586b85ca116a3d15c3ae9e3f8f220ed7a429b48ed163bf951f",
+    "readSource": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\gnu.tar.lzo",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\gnu-full",
+    "entries": [
+      {
+        "name": "docs",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 0,
+        "dataOffset": 512
+      },
+      {
+        "name": "docs/empty",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 512,
+        "dataOffset": 1024
+      },
+      {
+        "name": "gallery",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 1024,
+        "dataOffset": 1536
+      },
+      {
+        "name": "ordinary.txt",
+        "bytes": 31,
+        "isDirectory": false,
+        "sha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "prefixSha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 1536,
+        "dataOffset": 2048
+      },
+      {
+        "name": "ordinary-copy.txt",
+        "bytes": 31,
+        "isDirectory": false,
+        "sha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "prefixSha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "linkTarget": "ordinary.txt",
+        "targetId": 3,
+        "seconds": 1700001728,
+        "headerOffset": 2560,
+        "dataOffset": 3072
+      },
+      {
+        "name": "阅读副本.txt",
+        "bytes": 1190000,
+        "isDirectory": false,
+        "sha256": "1f84ba0558a828a8b6dae89732bd232dfb5f3f7565e0e171a1f5bb59423b811d",
+        "prefixSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "linkTarget": "docs/readme.txt",
+        "targetId": 12,
+        "seconds": 1700001728,
+        "headerOffset": 3072,
+        "dataOffset": 3584
+      },
+      {
+        "name": "gallery/封面副本.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "prefixSha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "linkTarget": "gallery/cover.png",
+        "targetId": 13,
+        "seconds": 1700001728,
+        "headerOffset": 3584,
+        "dataOffset": 4096
+      },
+      {
+        "name": "empty-copy.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": "empty.txt",
+        "targetId": 11,
+        "seconds": 1700001728,
+        "headerOffset": 4096,
+        "dataOffset": 4608
+      },
+      {
+        "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+        "bytes": 29,
+        "isDirectory": false,
+        "sha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "prefixSha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "linkTarget": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "targetId": 14,
+        "seconds": 1700001728,
+        "headerOffset": 4608,
+        "dataOffset": 7168
+      },
+      {
+        "name": "sparse-copy.bin",
+        "bytes": 3145738,
+        "isDirectory": false,
+        "sha256": "3f1db23c7624ec6b1fad539b727d4bed9f898a7f18a74190d3e510f24703cbae",
+        "prefixSha256": "f34f100fc8307877da606bef93935e221ec0b3abe4d255be015612e0a759c1f8",
+        "linkTarget": "sparse.bin",
+        "targetId": 15,
+        "seconds": 1700001728,
+        "headerOffset": 7168,
+        "dataOffset": 7680
+      },
+      {
+        "name": "after.txt",
+        "bytes": 25,
+        "isDirectory": false,
+        "sha256": "e55fccc22ee7dd8065cfb33b28e8ef4b3fc477ba8eabb308b811196ee4794623",
+        "prefixSha256": "e55fccc22ee7dd8065cfb33b28e8ef4b3fc477ba8eabb308b811196ee4794623",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 7680,
+        "dataOffset": 8192
+      },
+      {
+        "name": "empty.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 8704,
+        "dataOffset": 9216
+      },
+      {
+        "name": "docs/readme.txt",
+        "bytes": 1190000,
+        "isDirectory": false,
+        "sha256": "1f84ba0558a828a8b6dae89732bd232dfb5f3f7565e0e171a1f5bb59423b811d",
+        "prefixSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 9216,
+        "dataOffset": 9728
+      },
+      {
+        "name": "gallery/cover.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "prefixSha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 1200128,
+        "dataOffset": 1200640
+      },
+      {
+        "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "bytes": 29,
+        "isDirectory": false,
+        "sha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "prefixSha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 1201152,
+        "dataOffset": 1202688
+      },
+      {
+        "name": "sparse.bin",
+        "bytes": 3145738,
+        "isDirectory": false,
+        "sha256": "3f1db23c7624ec6b1fad539b727d4bed9f898a7f18a74190d3e510f24703cbae",
+        "prefixSha256": "f34f100fc8307877da606bef93935e221ec0b3abe4d255be015612e0a759c1f8",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 1203200,
+        "dataOffset": 1203712
+      }
+    ],
+    "stats": {
+      "entries": 16,
+      "logicalBytes": 8671807,
+      "payloadBytes": 1194284,
+      "publishedBytes": 8671807,
+      "directoryTimes": [
+        [
+          "docs",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ],
+        [
+          "docs/empty",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ],
+        [
+          "gallery",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ]
+      ]
+    }
+  },
+  {
+    "mode": "numeric",
+    "format": "gnu",
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\gnu.tar.lzo",
+    "sourceSha256": "fa7122049b50db586b85ca116a3d15c3ae9e3f8f220ed7a429b48ed163bf951f",
+    "readSource": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\gnu-volumes\\source.tar.lzo.004",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\gnu-numeric",
+    "entries": [
+      {
+        "name": "docs",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 0,
+        "dataOffset": 512
+      },
+      {
+        "name": "docs/empty",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 512,
+        "dataOffset": 1024
+      },
+      {
+        "name": "gallery",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 1024,
+        "dataOffset": 1536
+      },
+      {
+        "name": "ordinary.txt",
+        "bytes": 31,
+        "isDirectory": false,
+        "sha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "prefixSha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 1536,
+        "dataOffset": 2048
+      },
+      {
+        "name": "ordinary-copy.txt",
+        "bytes": 31,
+        "isDirectory": false,
+        "sha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "prefixSha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "linkTarget": "ordinary.txt",
+        "targetId": 3,
+        "seconds": 1700001728,
+        "headerOffset": 2560,
+        "dataOffset": 3072
+      },
+      {
+        "name": "阅读副本.txt",
+        "bytes": 1190000,
+        "isDirectory": false,
+        "sha256": "1f84ba0558a828a8b6dae89732bd232dfb5f3f7565e0e171a1f5bb59423b811d",
+        "prefixSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "linkTarget": "docs/readme.txt",
+        "targetId": 12,
+        "seconds": 1700001728,
+        "headerOffset": 3072,
+        "dataOffset": 3584
+      },
+      {
+        "name": "gallery/封面副本.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "prefixSha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "linkTarget": "gallery/cover.png",
+        "targetId": 13,
+        "seconds": 1700001728,
+        "headerOffset": 3584,
+        "dataOffset": 4096
+      },
+      {
+        "name": "empty-copy.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": "empty.txt",
+        "targetId": 11,
+        "seconds": 1700001728,
+        "headerOffset": 4096,
+        "dataOffset": 4608
+      },
+      {
+        "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+        "bytes": 29,
+        "isDirectory": false,
+        "sha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "prefixSha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "linkTarget": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "targetId": 14,
+        "seconds": 1700001728,
+        "headerOffset": 4608,
+        "dataOffset": 7168
+      },
+      {
+        "name": "sparse-copy.bin",
+        "bytes": 3145738,
+        "isDirectory": false,
+        "sha256": "3f1db23c7624ec6b1fad539b727d4bed9f898a7f18a74190d3e510f24703cbae",
+        "prefixSha256": "f34f100fc8307877da606bef93935e221ec0b3abe4d255be015612e0a759c1f8",
+        "linkTarget": "sparse.bin",
+        "targetId": 15,
+        "seconds": 1700001728,
+        "headerOffset": 7168,
+        "dataOffset": 7680
+      },
+      {
+        "name": "after.txt",
+        "bytes": 25,
+        "isDirectory": false,
+        "sha256": "e55fccc22ee7dd8065cfb33b28e8ef4b3fc477ba8eabb308b811196ee4794623",
+        "prefixSha256": "e55fccc22ee7dd8065cfb33b28e8ef4b3fc477ba8eabb308b811196ee4794623",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 7680,
+        "dataOffset": 8192
+      },
+      {
+        "name": "empty.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 8704,
+        "dataOffset": 9216
+      },
+      {
+        "name": "docs/readme.txt",
+        "bytes": 1190000,
+        "isDirectory": false,
+        "sha256": "1f84ba0558a828a8b6dae89732bd232dfb5f3f7565e0e171a1f5bb59423b811d",
+        "prefixSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 9216,
+        "dataOffset": 9728
+      },
+      {
+        "name": "gallery/cover.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "prefixSha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 1200128,
+        "dataOffset": 1200640
+      },
+      {
+        "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "bytes": 29,
+        "isDirectory": false,
+        "sha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "prefixSha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 1201152,
+        "dataOffset": 1202688
+      },
+      {
+        "name": "sparse.bin",
+        "bytes": 3145738,
+        "isDirectory": false,
+        "sha256": "3f1db23c7624ec6b1fad539b727d4bed9f898a7f18a74190d3e510f24703cbae",
+        "prefixSha256": "f34f100fc8307877da606bef93935e221ec0b3abe4d255be015612e0a759c1f8",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 1203200,
+        "dataOffset": 1203712
+      }
+    ],
+    "stats": {
+      "entries": 16,
+      "logicalBytes": 8671807,
+      "payloadBytes": 1194284,
+      "publishedBytes": 8671807,
+      "directoryTimes": [
+        [
+          "docs",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ],
+        [
+          "docs/empty",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ],
+        [
+          "gallery",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ]
+      ]
+    }
+  },
+  {
+    "mode": "selected",
+    "format": "gnu",
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\gnu.tar.lzo",
+    "sourceSha256": "fa7122049b50db586b85ca116a3d15c3ae9e3f8f220ed7a429b48ed163bf951f",
+    "readSource": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\gnu-volumes\\source.tar.lzo.004",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\gnu-selected",
+    "entries": [
+      {
+        "name": "阅读副本.txt",
+        "bytes": 1190000,
+        "isDirectory": false,
+        "sha256": "1f84ba0558a828a8b6dae89732bd232dfb5f3f7565e0e171a1f5bb59423b811d",
+        "prefixSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "linkTarget": "docs/readme.txt",
+        "targetId": 12,
+        "seconds": 1700001728,
+        "headerOffset": 3072,
+        "dataOffset": 3584
+      },
+      {
+        "name": "gallery/封面副本.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "prefixSha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "linkTarget": "gallery/cover.png",
+        "targetId": 13,
+        "seconds": 1700001728,
+        "headerOffset": 3584,
+        "dataOffset": 4096
+      },
+      {
+        "name": "empty-copy.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": "empty.txt",
+        "targetId": 11,
+        "seconds": 1700001728,
+        "headerOffset": 4096,
+        "dataOffset": 4608
+      },
+      {
+        "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+        "bytes": 29,
+        "isDirectory": false,
+        "sha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "prefixSha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "linkTarget": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "targetId": 14,
+        "seconds": 1700001728,
+        "headerOffset": 4608,
+        "dataOffset": 7168
+      },
+      {
+        "name": "sparse-copy.bin",
+        "bytes": 3145738,
+        "isDirectory": false,
+        "sha256": "3f1db23c7624ec6b1fad539b727d4bed9f898a7f18a74190d3e510f24703cbae",
+        "prefixSha256": "f34f100fc8307877da606bef93935e221ec0b3abe4d255be015612e0a759c1f8",
+        "linkTarget": "sparse.bin",
+        "targetId": 15,
+        "seconds": 1700001728,
+        "headerOffset": 7168,
+        "dataOffset": 7680
+      }
+    ],
+    "stats": {
+      "entries": 5,
+      "logicalBytes": 4335860,
+      "payloadBytes": 1194228,
+      "publishedBytes": 4335860,
+      "directoryTimes": []
+    }
+  },
+  {
+    "mode": "full",
+    "format": "pax",
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\pax.tar.lzo",
+    "sourceSha256": "226f32fe1f0c97cb857696ae4f3fe10fc5c351714b9a607712134b6542d09f48",
+    "readSource": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\pax.tar.lzo",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\pax-full",
+    "entries": [
+      {
+        "name": "docs",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 0,
+        "dataOffset": 512
+      },
+      {
+        "name": "docs/empty",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 512,
+        "dataOffset": 1024
+      },
+      {
+        "name": "gallery",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 1024,
+        "dataOffset": 1536
+      },
+      {
+        "name": "ordinary.txt",
+        "bytes": 31,
+        "isDirectory": false,
+        "sha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "prefixSha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 1536,
+        "dataOffset": 2048
+      },
+      {
+        "name": "ordinary-copy.txt",
+        "bytes": 31,
+        "isDirectory": false,
+        "sha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "prefixSha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "linkTarget": "ordinary.txt",
+        "targetId": 3,
+        "seconds": 1700001728,
+        "headerOffset": 2560,
+        "dataOffset": 3072
+      },
+      {
+        "name": "阅读副本.txt",
+        "bytes": 1190000,
+        "isDirectory": false,
+        "sha256": "1f84ba0558a828a8b6dae89732bd232dfb5f3f7565e0e171a1f5bb59423b811d",
+        "prefixSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "linkTarget": "docs/readme.txt",
+        "targetId": 12,
+        "seconds": 1700001728,
+        "headerOffset": 3072,
+        "dataOffset": 4608
+      },
+      {
+        "name": "gallery/封面副本.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "prefixSha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "linkTarget": "gallery/cover.png",
+        "targetId": 13,
+        "seconds": 1700001728,
+        "headerOffset": 4608,
+        "dataOffset": 6144
+      },
+      {
+        "name": "empty-copy.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": "empty.txt",
+        "targetId": 11,
+        "seconds": 1700001728,
+        "headerOffset": 6144,
+        "dataOffset": 6656
+      },
+      {
+        "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+        "bytes": 29,
+        "isDirectory": false,
+        "sha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "prefixSha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "linkTarget": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "targetId": 14,
+        "seconds": 1700001728,
+        "headerOffset": 6656,
+        "dataOffset": 8192
+      },
+      {
+        "name": "sparse-copy.bin",
+        "bytes": 3145738,
+        "isDirectory": false,
+        "sha256": "3f1db23c7624ec6b1fad539b727d4bed9f898a7f18a74190d3e510f24703cbae",
+        "prefixSha256": "f34f100fc8307877da606bef93935e221ec0b3abe4d255be015612e0a759c1f8",
+        "linkTarget": "sparse.bin",
+        "targetId": 15,
+        "seconds": 1700001728,
+        "headerOffset": 8192,
+        "dataOffset": 8704
+      },
+      {
+        "name": "after.txt",
+        "bytes": 25,
+        "isDirectory": false,
+        "sha256": "e55fccc22ee7dd8065cfb33b28e8ef4b3fc477ba8eabb308b811196ee4794623",
+        "prefixSha256": "e55fccc22ee7dd8065cfb33b28e8ef4b3fc477ba8eabb308b811196ee4794623",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 8704,
+        "dataOffset": 9216
+      },
+      {
+        "name": "empty.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 9728,
+        "dataOffset": 10240
+      },
+      {
+        "name": "docs/readme.txt",
+        "bytes": 1190000,
+        "isDirectory": false,
+        "sha256": "1f84ba0558a828a8b6dae89732bd232dfb5f3f7565e0e171a1f5bb59423b811d",
+        "prefixSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 10240,
+        "dataOffset": 10752
+      },
+      {
+        "name": "gallery/cover.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "prefixSha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 1201152,
+        "dataOffset": 1201664
+      },
+      {
+        "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "bytes": 29,
+        "isDirectory": false,
+        "sha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "prefixSha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 1202176,
+        "dataOffset": 1203712
+      },
+      {
+        "name": "sparse.bin",
+        "bytes": 3145738,
+        "isDirectory": false,
+        "sha256": "3f1db23c7624ec6b1fad539b727d4bed9f898a7f18a74190d3e510f24703cbae",
+        "prefixSha256": "f34f100fc8307877da606bef93935e221ec0b3abe4d255be015612e0a759c1f8",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 1204224,
+        "dataOffset": 1206272
+      }
+    ],
+    "stats": {
+      "entries": 16,
+      "logicalBytes": 8671807,
+      "payloadBytes": 1194284,
+      "publishedBytes": 8671807,
+      "directoryTimes": [
+        [
+          "docs",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ],
+        [
+          "docs/empty",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ],
+        [
+          "gallery",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ]
+      ]
+    }
+  },
+  {
+    "mode": "numeric",
+    "format": "pax",
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\pax.tar.lzo",
+    "sourceSha256": "226f32fe1f0c97cb857696ae4f3fe10fc5c351714b9a607712134b6542d09f48",
+    "readSource": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\pax-volumes\\source.tar.lzo.004",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\pax-numeric",
+    "entries": [
+      {
+        "name": "docs",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 0,
+        "dataOffset": 512
+      },
+      {
+        "name": "docs/empty",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 512,
+        "dataOffset": 1024
+      },
+      {
+        "name": "gallery",
+        "bytes": 0,
+        "isDirectory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 1024,
+        "dataOffset": 1536
+      },
+      {
+        "name": "ordinary.txt",
+        "bytes": 31,
+        "isDirectory": false,
+        "sha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "prefixSha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 1536,
+        "dataOffset": 2048
+      },
+      {
+        "name": "ordinary-copy.txt",
+        "bytes": 31,
+        "isDirectory": false,
+        "sha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "prefixSha256": "43cb2deda84e0cfba008923e7f76d0a85fa1dc7f9d22b5de24d6d7f07ee19205",
+        "linkTarget": "ordinary.txt",
+        "targetId": 3,
+        "seconds": 1700001728,
+        "headerOffset": 2560,
+        "dataOffset": 3072
+      },
+      {
+        "name": "阅读副本.txt",
+        "bytes": 1190000,
+        "isDirectory": false,
+        "sha256": "1f84ba0558a828a8b6dae89732bd232dfb5f3f7565e0e171a1f5bb59423b811d",
+        "prefixSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "linkTarget": "docs/readme.txt",
+        "targetId": 12,
+        "seconds": 1700001728,
+        "headerOffset": 3072,
+        "dataOffset": 4608
+      },
+      {
+        "name": "gallery/封面副本.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "prefixSha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "linkTarget": "gallery/cover.png",
+        "targetId": 13,
+        "seconds": 1700001728,
+        "headerOffset": 4608,
+        "dataOffset": 6144
+      },
+      {
+        "name": "empty-copy.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": "empty.txt",
+        "targetId": 11,
+        "seconds": 1700001728,
+        "headerOffset": 6144,
+        "dataOffset": 6656
+      },
+      {
+        "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+        "bytes": 29,
+        "isDirectory": false,
+        "sha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "prefixSha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "linkTarget": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "targetId": 14,
+        "seconds": 1700001728,
+        "headerOffset": 6656,
+        "dataOffset": 8192
+      },
+      {
+        "name": "sparse-copy.bin",
+        "bytes": 3145738,
+        "isDirectory": false,
+        "sha256": "3f1db23c7624ec6b1fad539b727d4bed9f898a7f18a74190d3e510f24703cbae",
+        "prefixSha256": "f34f100fc8307877da606bef93935e221ec0b3abe4d255be015612e0a759c1f8",
+        "linkTarget": "sparse.bin",
+        "targetId": 15,
+        "seconds": 1700001728,
+        "headerOffset": 8192,
+        "dataOffset": 8704
+      },
+      {
+        "name": "after.txt",
+        "bytes": 25,
+        "isDirectory": false,
+        "sha256": "e55fccc22ee7dd8065cfb33b28e8ef4b3fc477ba8eabb308b811196ee4794623",
+        "prefixSha256": "e55fccc22ee7dd8065cfb33b28e8ef4b3fc477ba8eabb308b811196ee4794623",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001728,
+        "headerOffset": 8704,
+        "dataOffset": 9216
+      },
+      {
+        "name": "empty.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 9728,
+        "dataOffset": 10240
+      },
+      {
+        "name": "docs/readme.txt",
+        "bytes": 1190000,
+        "isDirectory": false,
+        "sha256": "1f84ba0558a828a8b6dae89732bd232dfb5f3f7565e0e171a1f5bb59423b811d",
+        "prefixSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 10240,
+        "dataOffset": 10752
+      },
+      {
+        "name": "gallery/cover.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "prefixSha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 1201152,
+        "dataOffset": 1201664
+      },
+      {
+        "name": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "bytes": 29,
+        "isDirectory": false,
+        "sha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "prefixSha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 1202176,
+        "dataOffset": 1203712
+      },
+      {
+        "name": "sparse.bin",
+        "bytes": 3145738,
+        "isDirectory": false,
+        "sha256": "3f1db23c7624ec6b1fad539b727d4bed9f898a7f18a74190d3e510f24703cbae",
+        "prefixSha256": "f34f100fc8307877da606bef93935e221ec0b3abe4d255be015612e0a759c1f8",
+        "linkTarget": null,
+        "targetId": null,
+        "seconds": 1700001828,
+        "headerOffset": 1204224,
+        "dataOffset": 1206272
+      }
+    ],
+    "stats": {
+      "entries": 16,
+      "logicalBytes": 8671807,
+      "payloadBytes": 1194284,
+      "publishedBytes": 8671807,
+      "directoryTimes": [
+        [
+          "docs",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ],
+        [
+          "docs/empty",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ],
+        [
+          "gallery",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ]
+      ]
+    }
+  },
+  {
+    "mode": "selected",
+    "format": "pax",
+    "source": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../tests/fixtures/archives/tar-forward-links-1728\\pax.tar.lzo",
+    "sourceSha256": "226f32fe1f0c97cb857696ae4f3fe10fc5c351714b9a607712134b6542d09f48",
+    "readSource": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\pax-volumes\\source.tar.lzo.004",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\pax-selected",
+    "entries": [
+      {
+        "name": "阅读副本.txt",
+        "bytes": 1190000,
+        "isDirectory": false,
+        "sha256": "1f84ba0558a828a8b6dae89732bd232dfb5f3f7565e0e171a1f5bb59423b811d",
+        "prefixSha256": "f404d30f415c7eaa97dab8201adcb500b8c24a51883d0421a8730972a2b13911",
+        "linkTarget": "docs/readme.txt",
+        "targetId": 12,
+        "seconds": 1700001728,
+        "headerOffset": 3072,
+        "dataOffset": 4608
+      },
+      {
+        "name": "gallery/封面副本.png",
+        "bytes": 93,
+        "isDirectory": false,
+        "sha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "prefixSha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+        "linkTarget": "gallery/cover.png",
+        "targetId": 13,
+        "seconds": 1700001728,
+        "headerOffset": 4608,
+        "dataOffset": 6144
+      },
+      {
+        "name": "empty-copy.txt",
+        "bytes": 0,
+        "isDirectory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "prefixSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "linkTarget": "empty.txt",
+        "targetId": 11,
+        "seconds": 1700001728,
+        "headerOffset": 6144,
+        "dataOffset": 6656
+      },
+      {
+        "name": "docs/链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本链接副本.txt",
+        "bytes": 29,
+        "isDirectory": false,
+        "sha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "prefixSha256": "53a71f5e0e249debb46ea910394ba390acdaf7687e8e1ce2e973574ff3d9200d",
+        "linkTarget": "docs/长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档长文档.txt",
+        "targetId": 14,
+        "seconds": 1700001728,
+        "headerOffset": 6656,
+        "dataOffset": 8192
+      },
+      {
+        "name": "sparse-copy.bin",
+        "bytes": 3145738,
+        "isDirectory": false,
+        "sha256": "3f1db23c7624ec6b1fad539b727d4bed9f898a7f18a74190d3e510f24703cbae",
+        "prefixSha256": "f34f100fc8307877da606bef93935e221ec0b3abe4d255be015612e0a759c1f8",
+        "linkTarget": "sparse.bin",
+        "targetId": 15,
+        "seconds": 1700001728,
+        "headerOffset": 8192,
+        "dataOffset": 8704
+      }
+    ],
+    "stats": {
+      "entries": 5,
+      "logicalBytes": 4335860,
+      "payloadBytes": 1194228,
+      "publishedBytes": 4335860,
+      "directoryTimes": []
+    }
+  }
+]

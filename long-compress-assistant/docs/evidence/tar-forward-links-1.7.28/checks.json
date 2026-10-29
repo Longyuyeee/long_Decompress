@@ -1,0 +1,19 @@
+{
+  "version": "1.7.28",
+  "date": "2026-10-29",
+  "native": {"filter": "forward1728", "passed": 6, "failedAtCompletion": 0},
+  "initialFollowup": "Corrected a test assertion: one selected ordinary content copy can have payloadBytes equal to logicalBytes; reran only the affected complete/selected/numeric check.",
+  "relatedRegression": [
+    {"filter": "browse1719_missing_ambiguous_chain_and_nonfile_targets_are_not_shown_as_empty_files", "passed": 1},
+    {"filter": "full1721_unconfirmed_ambiguous_chain_directory_and_body_links_are_not_healthy", "passed": 1},
+    {"filter": "browse1719_replay_shares_scan_budget_and_large_images_are_rejected_before_materializing", "passed": 1},
+    {"filter": "hard1717_unconfirmed_ambiguous_chain_external_and_conflicting_targets_stop_at_their_headers", "passed": 1}
+  ],
+  "independent": {"passed": true, "originals": 3, "encodedEntries": 44, "outputs": 9, "outputEntries": 101, "outputFiles": 83},
+  "shellExtensionBuild": {"passed": true, "file": "long_compress_shell_extension_1_7_28.dll"},
+  "releaseIdentity": {"passed": true, "versionValues": 8},
+  "uiChanged": false,
+  "desktopControlled": false,
+  "unaffectedMatricesRepeated": false,
+  "formalBuild": "Corresponding PR CI and tagged Release"
+}

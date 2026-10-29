@@ -69,6 +69,7 @@ fn parse<F: FnMut(u64, u64)>(
     reader: &mut Verified<'_, F>,
     report: &mut Report,
     encoding: Option<ZipPasswordEncoding>,
+    complete_links: bool,
 ) -> Result<()> {
     let mut names = super::names::Names::default();
     let mut pending: Option<crate::services::tar_pax::Fields> = None;
@@ -108,6 +109,7 @@ fn parse<F: FnMut(u64, u64)>(
                 reader.reader.input.stream_position()? == reader.total,
                 "外层 LZOP 成员结束后仍有数据，后续内容未确认"
             );
+            if complete_links { resolve_complete_links(report, || check(reader.cancelled))?; }
             report.complete = true;
             report.stopped_offset = reader.position;
             return Ok(());
@@ -223,25 +225,29 @@ fn parse<F: FnMut(u64, u64)>(
             };
             let target_key=archive_key(&target)?;
             anyhow::ensure!(!target_key.is_empty()&&target_key!=key,"[archive-inspection:unsupported] TAR 硬链接目标为空或指向自身");
-            let id=sources.get(&target_key).copied().flatten().context("[archive-inspection:unsupported] TAR 硬链接目标尚未确认或名称有歧义，停止在此处")?;
-            let entry=&report.entries[id];
-            anyhow::ensure!(!entry.is_directory&&entry.link_source.is_none(),"[archive-inspection:unsupported] TAR 硬链接目标不是前面已确认的普通内容文件，暂不支持链接链条");
+            let id=if complete_links {None} else {
+                let id=sources.get(&target_key).copied().flatten().context("[archive-inspection:unsupported] TAR 硬链接目标尚未确认或名称有歧义，停止在此处")?;
+                let entry=&report.entries[id];
+                anyhow::ensure!(!entry.is_directory&&entry.link_source.is_none(),"[archive-inspection:unsupported] TAR 硬链接目标不是前面已确认的普通内容文件，暂不支持链接链条");
+                Some(id)
+            };
             Some((target,id))
         }else{None};
-        let sparse = if let Some((_,id))=&link {report.entries[*id].sparse.clone()} else if kind.is_gnu_sparse() {
+        let link_id=link.as_ref().and_then(|(_,id)|*id);
+        let sparse = if let Some(id)=link_id {report.entries[id].sparse.clone()} else if kind.is_gnu_sparse() {
             anyhow::ensure!(!meta.iter().any(|(key,_)|key=="size"), "[archive-inspection:unsupported] 旧 GNU 稀疏条目暂不支持叠加 PAX size，已停止在此处");
             Some(crate::services::tar_sparse_recovery::Layout::parse(header, reader)?)
         } else if let Some(version)=pax_version {
             use crate::services::tar_sparse_recovery::{Layout,PaxVersion};
             Some(match version{PaxVersion::Pairs00=>Layout::parse_pax00(&local,size)?,PaxVersion::Map01=>Layout::parse_pax01(&local,size)?,PaxVersion::Text10=>Layout::parse_pax10(&local,size,reader)?})
         } else { None };
-        let bytes = link.as_ref().map_or_else(||sparse.as_ref().map_or(size, |layout|layout.logical),|(_,id)|report.entries[*id].bytes);
+        let bytes = link_id.map_or_else(||sparse.as_ref().map_or(size, |layout|layout.logical),|id|report.entries[id].bytes);
         logical_total = logical_total.checked_add(bytes).context("TAR 完整大小溢出")?;
         anyhow::ensure!(logical_total <= MAX_EXTRACTED_BYTES, "[archive-inspection:unsupported] TAR 完整大小总量超过支持范围");
         sparse_segments += sparse.as_ref().map_or(0, |layout|layout.ranges.len());
         anyhow::ensure!(sparse_segments <= 1_000_000, "[archive-inspection:unsupported] TAR 稀疏映射总量超过支持范围");
-        let offset = link.as_ref().map_or(reader.position,|(_,id)|report.entries[*id].offset);
-        let digest = if let Some((_,id))=&link {report.entries[*id].sha256.clone()} else if let Some(layout) = &sparse {
+        let offset = link_id.map_or(reader.position,|id|report.entries[id].offset);
+        let digest = if let Some(id)=link_id {report.entries[id].sha256.clone()} else if let Some(layout) = &sparse {
             let cancelled = reader.cancelled;
             layout.process(reader, None, cancelled, |_|{})?
         } else {
@@ -260,7 +266,7 @@ fn parse<F: FnMut(u64, u64)>(
         sources.entry(key).and_modify(|previous|*previous=None).or_insert(Some(id));
         report.entries.push(Entry { archive_name:Some(decoded.clone()),
             link_target: link.as_ref().map(|(target,_)|target.clone()),
-            link_source: link.map(|(_,id)|id),
+            link_source: link.and_then(|(_,id)|id),
             stored_bytes: sparse.as_ref().map(|layout|layout.stored),
             sparse,
             modified_time: {
@@ -285,6 +291,54 @@ pub(super) fn scan_source(
     cancelled: &AtomicBool,
     progress: &mut impl FnMut(u64, u64),
 ) -> Result<Report> {
+    scan_source_with_links(src, encoding, cancelled, progress, false)
+}
+
+/// Only complete readers may resolve a reference to later content. Prefix
+/// recovery retains its original stop-at-the-first-unconfirmed-entry policy.
+pub(super) fn scan_complete_source(
+    src: &Source, encoding: Option<ZipPasswordEncoding>, cancelled: &AtomicBool,
+    progress: &mut impl FnMut(u64, u64),
+) -> Result<Report> {
+    scan_source_with_links(src, encoding, cancelled, progress, true)
+}
+
+fn resolve_complete_links(report: &mut Report, mut check: impl FnMut() -> Result<()>) -> Result<()> {
+    use crate::services::tar_link_targets::{Record, resolve};
+    let records = report.entries.iter().map(|e| Ok(Record {
+        key: archive_key(e.archive_name.as_deref().unwrap_or(&e.name))?,
+        content: !e.is_directory && e.link_target.is_none(),
+        target: e.link_target.as_deref().map(archive_key).transpose()?,
+    })).collect::<Result<Vec<_>>>()?;
+    let targets = resolve(&records, &mut check)?;
+    for (index, target) in targets.into_iter().enumerate() {
+        check()?;
+        if let Some(target) = target {
+            let source = report.entries[target].clone();
+            let entry = &mut report.entries[index];
+            entry.link_source = Some(target);
+            entry.bytes = source.bytes;
+            entry.sha256 = source.sha256;
+            entry.offset = source.offset;
+            entry.sparse = source.sparse;
+            entry.stored_bytes = source.stored_bytes;
+        }
+    }
+    let mut total = 0u64; let mut segments = 0usize;
+    for entry in &report.entries {
+        check()?;
+        total = total.checked_add(entry.bytes).context("TAR 完整大小溢出")?;
+        segments += entry.sparse.as_ref().map_or(0, |s| s.ranges.len());
+        anyhow::ensure!(total <= MAX_EXTRACTED_BYTES && segments <= 1_000_000,
+            "[archive-inspection:unsupported] TAR.LZO 链接逻辑总量或稀疏映射超过支持范围");
+    }
+    Ok(())
+}
+
+fn scan_source_with_links(
+    src: &Source, encoding: Option<ZipPasswordEncoding>, cancelled: &AtomicBool,
+    progress: &mut impl FnMut(u64, u64), complete_links: bool,
+) -> Result<Report> {
     let mut report = Report {
         hard_links_seen: false,
         format: "TAR.LZO",
@@ -306,7 +360,7 @@ pub(super) fn scan_source(
             total: src.length,
             position: 0,
         };
-        parse(&mut reader, &mut report, encoding)
+        parse(&mut reader, &mut report, encoding, complete_links)
     })();
     if let Err(e) = checked {
         check(cancelled)?;

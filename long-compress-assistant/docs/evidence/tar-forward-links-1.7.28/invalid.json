@@ -1,0 +1,8 @@
+[
+  "[archive-inspection:unsupported] TAR.LZO 链接目标缺失或名称有歧义，未确认内容",
+  "[archive-inspection:unsupported] TAR.LZO 链接目标缺失或名称有歧义，未确认内容",
+  "[archive-inspection:unsupported] TAR.LZO 链接目标不是唯一普通内容文件，目录、符号链接和链接链条暂不支持",
+  "[archive-inspection:unsupported] TAR.LZO 链接目标不是唯一普通内容文件，目录、符号链接和链接链条暂不支持",
+  "[archive-inspection:unsupported] TAR.LZO 链接目标不是唯一普通内容文件，目录、符号链接和链接链条暂不支持",
+  "[archive-inspection:unsupported] TAR 硬链接带有正文或冲突大小，暂不取回"
+]

@@ -341,6 +341,9 @@ mod tar_hardlink_1717_tests;
 mod tar_gnu_longlink_1718_tests;
 
 pub(crate) mod tar_browse_links;
+pub(crate) mod tar_link_targets;
+#[cfg(test)]
+mod tar_forward_links_1728_tests;
 #[cfg(test)]
 mod tar_browse_links_1719_tests;
 

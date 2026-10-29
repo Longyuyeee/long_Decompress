@@ -1,0 +1,61 @@
+[
+  {
+    "mode": "directory",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\22a22268-c734-42d3-be60-a2d6c48930a3\\directory",
+    "stats": {
+      "entries": 5,
+      "logicalBytes": 1190058,
+      "payloadBytes": 1190029,
+      "publishedBytes": 1190058,
+      "directoryTimes": [
+        [
+          "docs",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ],
+        [
+          "docs/empty",
+          {
+            "seconds": 1700001728,
+            "nanoseconds": 0
+          }
+        ]
+      ]
+    }
+  },
+  {
+    "mode": "filter",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\22a22268-c734-42d3-be60-a2d6c48930a3\\filter",
+    "stats": {
+      "entries": 1,
+      "logicalBytes": 1190000,
+      "payloadBytes": 1190000,
+      "publishedBytes": 1190000,
+      "directoryTimes": []
+    }
+  },
+  {
+    "mode": "flat",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\22a22268-c734-42d3-be60-a2d6c48930a3\\flat",
+    "stats": {
+      "entries": 1,
+      "logicalBytes": 93,
+      "payloadBytes": 93,
+      "publishedBytes": 93,
+      "directoryTimes": []
+    }
+  },
+  {
+    "mode": "off",
+    "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/tar-forward-links-1728\\22a22268-c734-42d3-be60-a2d6c48930a3\\off",
+    "stats": {
+      "entries": 1,
+      "logicalBytes": 0,
+      "payloadBytes": 0,
+      "publishedBytes": 0,
+      "directoryTimes": []
+    }
+  }
+]
