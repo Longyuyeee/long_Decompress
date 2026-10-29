@@ -12,6 +12,12 @@ pub(crate) struct Plan {
     pub(crate) stats:crate::services::tar_compatibility::Plan,
 }
 impl Plan {
+    pub(crate) fn has_forward_links(&self)->bool {
+        self.entries.iter().any(|entry|entry.link_source.is_some_and(|source|source>entry.id))
+    }
+    pub(crate) fn content_counts(&self)->(usize,usize,u64) {
+        (self.entries.iter().filter(|e|!e.is_directory).count(),self.entries.iter().filter(|e|e.is_directory).count(),self.stats.logical_bytes)
+    }
     pub(crate) fn check_source(&self,path:&Path,cancelled:&AtomicBool)->Result<()> {
         recovery::check(cancelled)?;
         crate::services::image_reader::check_source(path,&self.revision)?;
@@ -85,7 +91,7 @@ impl Plan {
 fn confirmed_report(path:&Path,encoding:Option<crate::services::zip_password::ZipPasswordEncoding>,cancelled:&AtomicBool,progress:&mut impl FnMut(u64,u64))->Result<(Source,String,recovery::Report)> {
     recovery::check(cancelled)?;
     let source=recovery::source(path)?;let revision=crate::services::image_reader::revision(path)?;
-    let report=recovery::scan_source(&source,encoding,cancelled,progress)?;
+    let report=recovery::scan_complete_source(&source,encoding,cancelled,progress)?;
     recovery::check(cancelled)?;
     crate::services::image_reader::check_source(path,&revision)?;
     anyhow::ensure!(source.stamp==recovery::source(path)?.stamp,"来源在准备期间已变化，请重新读取目录");

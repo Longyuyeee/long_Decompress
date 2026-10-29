@@ -410,6 +410,17 @@ pub async fn diagnose_archive_at(
                 // The partial reader intentionally supports fewer TAR extensions than the
                 // complete reader. Do not downgrade an intact GNU/PAX archive to damaged.
                 if prefix.format=="TAR.LZO" && !prefix.complete && prefix.stop_reason.contains("[archive-inspection:unsupported]") && report.missing_volumes.is_empty() {
+                    if prefix.hard_links_seen {
+                        let full_path=source.to_path_buf();let full_cancel=cancelled.clone();
+                        let confirmed=tauri::async_runtime::spawn_blocking(move|| {
+                            let options=crate::models::compression::DecompressOptions{preserve_paths:true,preserve_timestamps:true,zip_password_encoding,..Default::default()};
+                            super::lzop::selected::Plan::for_extraction(&full_path,&options,&full_cancel).map(|plan|plan.map(|plan|plan.content_counts()))
+                        }).await.context("TAR.LZO link verification worker failed")?;
+                        check_cancelled(&cancelled)?;
+                        if let Ok(Some((files,directories,bytes)))=confirmed {
+                            report.total_files=files;report.total_directories=directories;report.total_uncompressed_size=bytes;report.total_uncompressed_size_known=true;report.integrity_tested=true;report.status="healthy".into();report.recoverability="not_needed".into();report.evidence.push("完整 TAR.LZO 内容、链接目标身份及外层校验已确认".into());return Ok(report);
+                        }
+                    }
                     if let Ok(metadata)=archive_browser::browse_archive_cancellable_at(source,password,cancelled.clone(),zip_password_encoding,None).await {
                         let full_path=source.to_path_buf();let full_cancel=cancelled.clone();
                         let full=tauri::async_runtime::spawn_blocking(move||super::compression_verification::verify_tar_lzo_reader(super::codec_stream::decoder(&full_path,"lzo")?, &||full_cancel.load(Ordering::SeqCst))).await.context("TAR.LZO complete verification worker failed")?;

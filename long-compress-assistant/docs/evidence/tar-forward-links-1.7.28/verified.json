@@ -1,0 +1,95 @@
+{
+  "version": "1.7.28",
+  "passed": true,
+  "originals": 3,
+  "encodedEntries": 44,
+  "outputs": 9,
+  "outputEntries": 101,
+  "outputFiles": 83,
+  "officialLzopSha256": "0de04c88c0820f981869b3a1c7eb1803318638537ad9d8afc5032ef3915e2597",
+  "producer": "tar (GNU tar) 1.35",
+  "oracle": "Two ordered GNU extraction passes (contents, then remaining entries) with inode/content checks and independent Python TAR reads; ordinary GNU single-pass extraction rejects forward references. Links use their own encoded mtime, targets have a different encoded mtime.",
+  "checks": [
+    {
+      "format": "ustar",
+      "mode": "full",
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\ustar-full",
+      "entries": 12,
+      "exactTree": true,
+      "contentAndOwnDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "ustar",
+      "mode": "numeric",
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\ustar-numeric",
+      "entries": 12,
+      "exactTree": true,
+      "contentAndOwnDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "ustar",
+      "mode": "selected",
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\ustar-selected",
+      "entries": 3,
+      "exactTree": true,
+      "contentAndOwnDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "gnu",
+      "mode": "full",
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\gnu-full",
+      "entries": 16,
+      "exactTree": true,
+      "contentAndOwnDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "gnu",
+      "mode": "numeric",
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\gnu-numeric",
+      "entries": 16,
+      "exactTree": true,
+      "contentAndOwnDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "gnu",
+      "mode": "selected",
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\gnu-selected",
+      "entries": 5,
+      "exactTree": true,
+      "contentAndOwnDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "pax",
+      "mode": "full",
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\pax-full",
+      "entries": 16,
+      "exactTree": true,
+      "contentAndOwnDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "pax",
+      "mode": "numeric",
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\pax-numeric",
+      "entries": 16,
+      "exactTree": true,
+      "contentAndOwnDates": true,
+      "sourceUnchanged": true
+    },
+    {
+      "format": "pax",
+      "mode": "selected",
+      "outputDirectory": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\tar-forward-links-1728\\2bb14ef1-c2b3-412e-aa2f-a88122d7c8bc\\pax-selected",
+      "entries": 5,
+      "exactTree": true,
+      "contentAndOwnDates": true,
+      "sourceUnchanged": true
+    }
+  ]
+}

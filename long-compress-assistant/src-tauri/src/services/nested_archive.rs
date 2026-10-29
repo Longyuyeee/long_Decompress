@@ -28,6 +28,7 @@ where R:ExtractionRuntime+Send+Sync+'static,F:FnOnce(PathBuf,DecompressOptions)-
         tokio::task::spawn_blocking(move||->Result<()>{
             check(&path,&expected,&cancelled)?;
             let plan=super::lzop::selected::Plan::build(&path,&options,&cancelled)?.context("此链接尚不支持嵌套浏览，请先提取为独立文件")?;
+            anyhow::ensure!(!plan.has_forward_links(),"[archive-inspection:unsupported] TAR.LZO 前向链接的嵌套浏览尚未接通，请先提取该文件后打开");
             plan.extract(runtime.as_ref(),None,"archive-nested-link",&path,&out,&options,&cancelled)?;
             plan.prepare_stage(&path,&out,&options)?;
             plan.check_source(&path,&cancelled)
