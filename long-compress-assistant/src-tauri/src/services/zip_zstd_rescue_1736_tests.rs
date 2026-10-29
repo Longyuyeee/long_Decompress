@@ -155,7 +155,7 @@ fn producer(zip64: bool) -> Value {
         .unwrap()
         .clone()
 }
-fn clean(parent: &Path) {
+pub(super) fn clean(parent: &Path) {
     assert!(!fs::read_dir(parent).unwrap().any(|e| e
         .unwrap()
         .file_name()
@@ -174,7 +174,7 @@ fn verify(output: &Path, entries: &[Value]) {
         assert_eq!(sha(&content), e["sha256"].as_str().unwrap());
     }
 }
-fn recovered(source: &Path, parent: &Path, entries: &[Value], sources: &[PathBuf]) -> Value {
+pub(super) fn recovered(source: &Path, parent: &Path, entries: &[Value], sources: &[PathBuf]) -> Value {
     let originals = sources
         .iter()
         .map(|p| json!({"path": p, "sha256": sha(&fs::read(p).unwrap())}))

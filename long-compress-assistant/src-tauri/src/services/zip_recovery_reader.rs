@@ -71,16 +71,43 @@ mod streamed_tests {
     }
 
     #[test]
+    fn zstdmulti1737_frame_budget_cumulative_output_limit_and_cancel() {
+        let dir = tempfile::tempdir().unwrap();
+        let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/zip-zstd-rescue-1736");
+        let m: serde_json::Value = serde_json::from_slice(&std::fs::read(fixtures.join("producer.json")).unwrap()).unwrap();
+        let raw = std::fs::read(fixtures.join("stream32.zip")).unwrap();
+        let e = &m["variants"][0]["entries"][2];
+        let frame = &raw[e["data"].as_u64().unwrap() as usize..e["descriptor"].as_u64().unwrap() as usize];
+        for count in [MAX_ZSTD_RECOVERY_FRAMES, MAX_ZSTD_RECOVERY_FRAMES + 1] {
+            let mut bytes = frame.repeat(count);
+            let compressed = bytes.len() as u32;
+            bytes.extend_from_slice(b"PK\x07\x08"); bytes.extend_from_slice(&0u32.to_le_bytes());
+            bytes.extend_from_slice(&compressed.to_le_bytes()); bytes.extend_from_slice(&0u32.to_le_bytes());
+            let path = dir.path().join("empty-frames.zip"); std::fs::write(&path, &bytes).unwrap();
+            let mut reader = ZipInputReader::open(&path).unwrap();
+            let result = zstd_boundary(&mut reader, 0, &AtomicBool::new(false), 0, false);
+            if count == MAX_ZSTD_RECOVERY_FRAMES { assert_eq!(result.unwrap(), (compressed as u64, 0, 0, bytes.len() as u64)); }
+            else { assert!(result.unwrap_err().to_string().contains("帧数超过")); }
+        }
+        let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/zip-zstd-multiframe-1737");
+        let m: serde_json::Value = serde_json::from_slice(&std::fs::read(fixtures.join("manifest.json")).unwrap()).unwrap();
+        let start = m["cases"][0]["entries"][3]["data"].as_u64().unwrap();
+        let mut reader = ZipInputReader::open(&fixtures.join("multi32-signed.zip")).unwrap();
+        assert!(zstd_boundary(&mut reader, start, &AtomicBool::new(false), 200001, false).unwrap_err().to_string().contains("读取上限"));
+        assert!(zstd_boundary(&mut reader, start, &AtomicBool::new(true), u64::MAX, false).unwrap_err().to_string().contains("cancelled"));
+    }
+
+    #[test]
     fn zstdrescue1736_decoder_obeys_output_limit_cancellation_and_exact_frame_end() {
         let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/zip-zstd-rescue-1736");
         let records: serde_json::Value = serde_json::from_slice(&std::fs::read(base.join("producer.json")).unwrap()).unwrap();
         let e = &records["variants"][0]["entries"][1];
         let start = e["data"].as_u64().unwrap();
         let mut reader = ZipInputReader::open(&base.join("stream32.zip")).unwrap();
-        assert!(zstd_boundary(&mut reader, start, &AtomicBool::new(false), 1024).unwrap_err().to_string().contains("读取上限"));
-        assert!(zstd_boundary(&mut reader, start, &AtomicBool::new(true), u64::MAX).unwrap_err().to_string().contains("cancelled"));
-        assert_eq!(zstd_boundary(&mut reader, start, &AtomicBool::new(false), u64::MAX).unwrap(),
-            (e["compressed"].as_u64().unwrap(), e["size"].as_u64().unwrap(), e["crc"].as_u64().unwrap() as u32));
+        assert!(zstd_boundary(&mut reader, start, &AtomicBool::new(false), 1024, false).unwrap_err().to_string().contains("读取上限"));
+        assert!(zstd_boundary(&mut reader, start, &AtomicBool::new(true), u64::MAX, false).unwrap_err().to_string().contains("cancelled"));
+        assert_eq!(zstd_boundary(&mut reader, start, &AtomicBool::new(false), u64::MAX, false).unwrap(),
+            (e["compressed"].as_u64().unwrap(), e["size"].as_u64().unwrap(), e["crc"].as_u64().unwrap() as u32, e["end"].as_u64().unwrap()));
     }
 
     #[test]
@@ -210,43 +237,70 @@ fn bzip2_boundary(reader: &mut ZipInputReader, start: u64, cancelled: &AtomicBoo
     }
 }
 
-fn zstd_boundary(reader: &mut ZipInputReader, start: u64, cancelled: &AtomicBool, limit: u64) -> Result<(u64, u64, u32)> {
+const MAX_ZSTD_RECOVERY_FRAMES: usize = 4096;
+
+// Return the validated descriptor end as well, so the caller does not match it
+// again. A frame is not a complete member until cumulative CRC/sizes agree.
+fn zstd_boundary(reader: &mut ZipInputReader, start: u64, cancelled: &AtomicBool, limit: u64, zip64: bool) -> Result<(u64, u64, u32, u64)> {
     use zstd::stream::raw::{Decoder, DParameter, Operation};
     ensure!(!cancelled.load(Ordering::SeqCst), "ZIP recovery cancelled");
-    reader.seek(SeekFrom::Start(start))?;
     let mut input = [0u8; 65536];
     let mut output = [0u8; 65536];
-    let mut length = 0;
-    while length < 18 {
-        let read = reader.read(&mut input[length..])?;
-        if read == 0 { break; }
-        length += read;
-    }
-    // This recovery scope accepts one ordinary frame. Skippable frames and
-    // concatenations must not be mistaken for a complete member boundary.
-    ensure!(length >= 4 && input[..4] == [0x28, 0xb5, 0x2f, 0xfd], "Zstandard 帧头无效或不在单帧恢复范围内");
-    ensure!(zstd::zstd_safe::get_dict_id_from_frame(&input[..length]).is_none(), "Zstandard 需要外部字典，未读取此条目");
     let mut decoder = Decoder::new()?;
     decoder.set_parameter(DParameter::WindowLogMax(28))?;
-    let (mut at, mut compressed, mut expanded) = (0usize, 0u64, 0u64);
+    let (mut compressed, mut expanded) = (0u64, 0u64);
     let mut crc = crc32fast::Hasher::new();
-    loop {
+    for _ in 0..MAX_ZSTD_RECOVERY_FRAMES {
         ensure!(!cancelled.load(Ordering::SeqCst), "ZIP recovery cancelled");
-        if at == length {
-            reader.seek(SeekFrom::Start(start.checked_add(compressed).context("ZIP offset overflow")?))?;
-            length = reader.read(&mut input)?;
-            at = 0;
+        reader.seek(SeekFrom::Start(start.checked_add(compressed).context("ZIP offset overflow")?))?;
+        let mut length = 0;
+        while length < 18 {
+            let read = reader.read(&mut input[length..])?;
+            if read == 0 { break; }
+            length += read;
         }
-        let status = decoder.run_on_buffers(&input[at..length], &mut output)
-            .context("Zstandard 内容无效、校验失败或需要外部字典")?;
-        compressed = compressed.checked_add(status.bytes_read as u64).context("ZIP 压缩体积溢出")?;
-        expanded = expanded.checked_add(status.bytes_written as u64).context("ZIP 展开体积溢出")?;
-        ensure!(expanded <= limit, "ZIP 条目展开体积超过读取上限");
-        crc.update(&output[..status.bytes_written]);
-        at += status.bytes_read;
-        if status.remaining == 0 { return Ok((compressed, expanded, crc.finalize())); }
-        ensure!(status.bytes_read > 0 || status.bytes_written > 0, "Zstandard 数据无效或被截断");
+        ensure!(length >= 4 && input[..4] == [0x28, 0xb5, 0x2f, 0xfd], "Zstandard 帧头无效或不是普通帧");
+        ensure!(zstd::zstd_safe::get_dict_id_from_frame(&input[..length]).is_none(), "Zstandard 需要外部字典，未读取此条目");
+        decoder.reinit()?; // Session-only reset retains the window limit.
+        let mut at = 0;
+        loop {
+            ensure!(!cancelled.load(Ordering::SeqCst), "ZIP recovery cancelled");
+            if at == length {
+                reader.seek(SeekFrom::Start(start.checked_add(compressed).context("ZIP offset overflow")?))?;
+                length = reader.read(&mut input)?;
+                at = 0;
+            }
+            let status = decoder.run_on_buffers(&input[at..length], &mut output)
+                .context("Zstandard 内容无效、校验失败或需要外部字典")?;
+            compressed = compressed.checked_add(status.bytes_read as u64).context("ZIP 压缩体积溢出")?;
+            expanded = expanded.checked_add(status.bytes_written as u64).context("ZIP 展开体积溢出")?;
+            ensure!(expanded <= limit, "ZIP 条目展开体积超过读取上限");
+            crc.update(&output[..status.bytes_written]);
+            at += status.bytes_read;
+            if status.remaining == 0 { break; }
+            ensure!(status.bytes_read > 0 || status.bytes_written > 0, "Zstandard 数据无效或被截断");
+        }
+        let end = start.checked_add(compressed).context("ZIP offset overflow")?;
+        let checksum = crc.clone().finalize();
+        // Descriptor first: an unsigned descriptor's CRC may itself equal the
+        // Zstandard magic. Only continue at this exact end if it is not valid.
+        match descriptor(reader, end, compressed, Some(expanded), Some(checksum), zip64) {
+            Ok((next, _, _)) => return Ok((compressed, expanded, checksum, next)),
+            Err(error) => {
+                if error.downcast_ref::<io::Error>().is_some() { return Err(error); }
+                reader.seek(SeekFrom::Start(end))?;
+                let mut magic = [0u8; 4];
+                match reader.read_exact(&mut magic) {
+                    Ok(()) if magic == [0x28, 0xb5, 0x2f, 0xfd] => {}
+                    Err(read_error) if read_error.kind() != io::ErrorKind::UnexpectedEof => return Err(read_error.into()),
+                    _ => {
+                        return Err(error.context("Zstandard 成员描述符不吻合，后续也不是可继续的普通帧"));
+                    }
+                }
+            }
+        }
     }
+    anyhow::bail!("Zstandard 成员帧数超过 4096，未读取此条目")
 }
 
 fn lzma_boundary(reader: &mut ZipInputReader, start: u64, flags: u16, cancelled: &AtomicBool, limit: u64) -> Result<(u64, u64, u32)> {
@@ -510,11 +564,14 @@ impl RecoveryReader {
                 Err(error) => { unknown!(Some(label.to_string()), format!("{label}: {error}；未扫描后续内容")); break; }
             };
             let mut decoded_crc = None;
+            let mut confirmed_descriptor_end = None;
             if flags & 8 != 0 && compressed == 0 {
                 let method = word(&header, 8);
                 if flags & 1 == 0 && matches!(method, 8 | 12 | 14 | 93) {
                     let boundary = match method {
-                        93 => zstd_boundary(&mut reader, header_end, cancelled, extraction_transaction::MAX_EXTRACTED_BYTES),
+                        93 => zstd_boundary(&mut reader, header_end, cancelled, extraction_transaction::MAX_EXTRACTED_BYTES,
+                            dword(&header, 18) == u32::MAX || dword(&header, 22) == u32::MAX)
+                            .map(|(input, output, crc, end)| { confirmed_descriptor_end = Some(end); (input, output, crc) }),
                         14 => lzma_boundary(&mut reader, header_end, flags, cancelled, extraction_transaction::MAX_EXTRACTED_BYTES),
                         12 => bzip2_boundary(&mut reader, header_end, cancelled, extraction_transaction::MAX_EXTRACTED_BYTES),
                         _ => deflate_boundary(&mut reader, header_end, cancelled),
@@ -535,7 +592,10 @@ impl RecoveryReader {
             }
             let Some(mut end) = header_end.checked_add(compressed) else { unknown!(Some(label.to_string()), format!("{label}: 本地条目范围溢出，未扫描后续内容")); break; };
             if end > length { unknown!(Some(label.to_string()), format!("{label}: 内容被截断，未恢复此条目和后续内容")); break; }
-            if flags & 8 != 0 {
+            if let Some(next) = confirmed_descriptor_end {
+                end = next;
+                put_dword(&mut header, 14, decoded_crc.unwrap());
+            } else if flags & 8 != 0 {
                 let known_crc = decoded_crc.or_else(|| (dword(&header, 14) != 0).then(|| dword(&header, 14)));
                 let zip64 = dword(&header, 18) == u32::MAX || dword(&header, 22) == u32::MAX;
                 let expected_expanded = (expanded != 0 || decoded_crc.is_some() || name.ends_with(b"/")).then_some(expanded);

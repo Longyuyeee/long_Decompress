@@ -1,0 +1,32 @@
+{
+  "probeOnly": true,
+  "producer": "7-Zip 26.04",
+  "exitCode": 0,
+  "method": 95,
+  "flags": 8,
+  "localSizes": [
+    0,
+    0
+  ],
+  "compressed": 160,
+  "expanded": 32000,
+  "sha256": "c154dbbbba4f2b5eff2bc28e39e3ba7909880975817364047cd19580c31ffca1",
+  "contentSha256": "d38d79076f89bbc2eb4a9f069e9d49c978c167220c76981410721cc489fa5309",
+  "crc": 2793000523,
+  "descriptorSigned": true,
+  "independentPythonLzmaEof": true,
+  "exactConsumed": 160,
+  "originalUntouched": true,
+  "command": [
+    "7z.exe",
+    "a",
+    "-tzip",
+    "-so",
+    "-mm=XZ",
+    "-bso2",
+    "-bsp0",
+    "unused.zipx",
+    "note.txt"
+  ],
+  "inputRecipe": "b'next ZIPX XZ streaming recovery\\n' * 1000"
+}
