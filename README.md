@@ -213,10 +213,10 @@
 
 | 版本 | 主要更新 | 详情 |
 | --- | --- | --- |
+| **v1.7.38** | 流式 ZIPX（XZ）丢目录后部分取回完整成员，接通 ZIP64、目录及完整数字切片 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.38.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.38) |
 | **v1.7.37** | 多帧 Zstandard ZIP 按整个成员确认后部分取回，接通空帧、ZIP64 和完整数字切片 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.37.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.37) |
 | **v1.7.36** | 单帧 Zstandard ZIP 丢目录后部分取回完整文件，接通 ZIP64、完整数字切片及来源日期 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.36.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.36) |
 | **v1.7.35** | ZIP 恢复新包保留已确认文件与目录修改时间，接通密码、分卷和流式取回结果 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.35.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.35) |
 | **v1.7.34** | 带结束标记的未加密流式 LZMA ZIP 丢目录部分取回，接通 ZIP64、目录与完整数字切片 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.34.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.34) |
-| **v1.7.33** | 流式 BZip2 ZIP 丢目录后可部分取回完整文件，接通 ZIP64、目录及完整数字切片 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.33.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.33) |
 
 [查看全部历史版本 →](https://github.com/Longyuyeee/long_Decompress/releases)

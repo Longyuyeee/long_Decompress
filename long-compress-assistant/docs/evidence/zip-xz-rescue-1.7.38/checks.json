@@ -1,0 +1,53 @@
+{
+  "version": "1.7.38",
+  "newNativeGroups": 5,
+  "initialPassed": 4,
+  "initialHarnessGapAssertionFailed": 1,
+  "onlyAffectedFollowup": 1,
+  "finalPassed": true,
+  "relatedGroups": 2,
+  "independent": {
+    "version": "1.7.38",
+    "passed": true,
+    "frozenSources": 3,
+    "structuralControls": 4,
+    "recoveredArchives": 34,
+    "recoveredEntries": 120,
+    "externalReadbacks": 34,
+    "knownSourceWarnings": [
+      {
+        "name": "xz32-signed.zipx",
+        "expectedZeroByteXzWarning": true,
+        "exitCode": 2
+      },
+      {
+        "name": "xz32-unsigned.zipx",
+        "expectedZeroByteXzWarning": true,
+        "exitCode": 2
+      },
+      {
+        "name": "xz64-signed.zipx",
+        "expectedZeroByteXzWarning": true,
+        "exitCode": 2
+      },
+      {
+        "name": "xz64-unsigned.zipx",
+        "expectedZeroByteXzWarning": true,
+        "exitCode": 2
+      }
+    ],
+    "controlledStops": 28,
+    "noPublicationCases": 2
+  },
+  "memoryLimitMiB": 256,
+  "shellExtension": true,
+  "releaseIdentity": true,
+  "uiChanged": false,
+  "desktopControlUsed": false,
+  "unrelatedMatrixRepeated": false,
+  "documentation": {
+    "relativeLinks": 1985,
+    "latestFiveVersions": true,
+    "diffWhitespace": true
+  }
+}
