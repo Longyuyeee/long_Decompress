@@ -1,0 +1,375 @@
+{
+  "version": "1.7.38",
+  "passed": true,
+  "frozenSources": 3,
+  "structuralControls": 4,
+  "recoveredArchives": 34,
+  "recoveredEntries": 120,
+  "externalReadbacks": 34,
+  "knownSourceWarnings": [
+    {
+      "name": "xz32-signed.zipx",
+      "expectedZeroByteXzWarning": true,
+      "exitCode": 2
+    },
+    {
+      "name": "xz32-unsigned.zipx",
+      "expectedZeroByteXzWarning": true,
+      "exitCode": 2
+    },
+    {
+      "name": "xz64-signed.zipx",
+      "expectedZeroByteXzWarning": true,
+      "exitCode": 2
+    },
+    {
+      "name": "xz64-unsigned.zipx",
+      "expectedZeroByteXzWarning": true,
+      "exitCode": 2
+    }
+  ],
+  "controlledStops": 28,
+  "noPublicationCases": 2,
+  "checks": [
+    {
+      "variant": "xz32-signed.zipx",
+      "entries": 6,
+      "files": 4,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "xz32-unsigned.zipx",
+      "entries": 6,
+      "files": 4,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "xz64-signed.zipx",
+      "entries": 6,
+      "files": 4,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "xz64-unsigned.zipx",
+      "entries": 6,
+      "files": 4,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "numeric-frame-and-descriptor-cuts",
+      "entries": 6,
+      "files": 4,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "header-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "truncated-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "block-check-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "index-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "footer-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "bad-crc-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "compressed-size-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "expanded-size-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "descriptor-truncated-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "gap-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "local-size-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "concatenated-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "padding-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "memory-32",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "header-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "truncated-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "block-check-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "index-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "footer-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "bad-crc-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "compressed-size-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "expanded-size-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "descriptor-truncated-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "gap-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "local-size-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "concatenated-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "padding-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "memory-64",
+      "entries": 3,
+      "files": 2,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    },
+    {
+      "variant": "retry-after-whole-member-restored",
+      "entries": 6,
+      "files": 4,
+      "partial": true,
+      "unknownTotalRetained": true,
+      "originalUnchanged": true,
+      "externalReadback": true,
+      "nativeDatesAndContent": true
+    }
+  ]
+}

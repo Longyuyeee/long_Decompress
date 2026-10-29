@@ -1,0 +1,618 @@
+{
+  "sources": [
+    {
+      "path": "stream-xz.zipx",
+      "sha256": "d404b815455769aa7250a0f10a5686328206bdd2101b8e1d4cde6a2a927da162",
+      "producer": "7-Zip 26.04; stdout non-seekable; actual method 95 with zero local sizes"
+    },
+    {
+      "path": "empty.xz",
+      "sha256": "0040f94d11d0039505328a90b2ff48968db873e9e7967307631bf40ef5679275",
+      "producer": "CPython stdlib liblzma FORMAT_XZ/CHECK_CRC64 actual empty stream"
+    },
+    {
+      "path": "bzip-tail.zip",
+      "sha256": "492cf5b69be8567b4a26b85afc1f45c1eb109a9904f84077e31299458920d98c",
+      "producer": "CPython zipfile/bz2 non-seekable"
+    }
+  ],
+  "recipe": "Preserve actual compressed streams; reorder records; replace empty Store payload with real empty XZ stream; recalculate descriptors/central offsets; widen ZIP64 local placeholders or omit descriptor signatures.",
+  "cases": [
+    {
+      "name": "xz32-signed.zipx",
+      "zip64": false,
+      "signed": true,
+      "sha256": "05fe6492dd3b2e9df7d6647a39ba418939b67b72a70b002e67c408064beea961",
+      "lostSha256": "1888ac6fe96ea1f1c15837882edcd819da18482a5189fe4e3590826a22957c06",
+      "central": 201181,
+      "entries": [
+        {
+          "name": "docs/",
+          "directory": true,
+          "method": 0,
+          "size": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            13,
+            22
+          ],
+          "utc": null,
+          "compressed": 0,
+          "local": 0,
+          "data": 35,
+          "descriptor": 35,
+          "end": 35,
+          "frames": []
+        },
+        {
+          "name": "docs/01-note.txt",
+          "directory": false,
+          "method": 95,
+          "size": 3400000,
+          "crc": 1519840269,
+          "sha256": "acb4134f646829e07f4b8290609ccc287ade479be681f432e9af65feac768640",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            14,
+            32
+          ],
+          "utc": null,
+          "compressed": 656,
+          "local": 35,
+          "data": 81,
+          "descriptor": 737,
+          "end": 753,
+          "frames": []
+        },
+        {
+          "name": "docs/02-empty.txt",
+          "directory": false,
+          "method": 95,
+          "size": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            15,
+            42
+          ],
+          "utc": null,
+          "compressed": 32,
+          "local": 753,
+          "data": 800,
+          "descriptor": 832,
+          "end": 848,
+          "frames": []
+        },
+        {
+          "name": "docs/03-blob.bin",
+          "directory": false,
+          "method": 95,
+          "size": 200000,
+          "crc": 1438013397,
+          "sha256": "4c79573122e7fa56ddfed6cde170781814490f7da326ae7f79d7263c3550b49a",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            16,
+            52
+          ],
+          "utc": null,
+          "compressed": 200068,
+          "local": 848,
+          "data": 894,
+          "descriptor": 200962,
+          "end": 200978,
+          "frames": []
+        },
+        {
+          "name": "empty-dir/",
+          "directory": true,
+          "method": 0,
+          "size": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            18,
+            2
+          ],
+          "utc": null,
+          "compressed": 0,
+          "local": 200978,
+          "data": 201018,
+          "descriptor": 201018,
+          "end": 201018,
+          "frames": []
+        },
+        {
+          "name": "tail.txt",
+          "directory": false,
+          "method": 12,
+          "size": 7200,
+          "crc": 4062406315,
+          "sha256": "ad2a15851a558014767688475bcab2d6de8fb687622632a99cba6fa3ba7c5d56",
+          "dos": [
+            2024,
+            5,
+            6,
+            7,
+            8,
+            10
+          ],
+          "utc": null,
+          "compressed": 109,
+          "local": 201018,
+          "data": 201056,
+          "descriptor": 201165,
+          "end": 201181,
+          "frames": []
+        }
+      ],
+      "classification": "metadata-derived control; actual encoded XZ streams preserved"
+    },
+    {
+      "name": "xz32-unsigned.zipx",
+      "zip64": false,
+      "signed": false,
+      "sha256": "bffbd0203758fe1869155eddd1a0997d0050ee097f09e98a000df2966446c74b",
+      "lostSha256": "ad1994c5161b7d1f095adc5066758504a2b3ca161473605a30d3f740512c541c",
+      "central": 201165,
+      "entries": [
+        {
+          "name": "docs/",
+          "directory": true,
+          "method": 0,
+          "size": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            13,
+            22
+          ],
+          "utc": null,
+          "compressed": 0,
+          "local": 0,
+          "data": 35,
+          "descriptor": 35,
+          "end": 35,
+          "frames": []
+        },
+        {
+          "name": "docs/01-note.txt",
+          "directory": false,
+          "method": 95,
+          "size": 3400000,
+          "crc": 1519840269,
+          "sha256": "acb4134f646829e07f4b8290609ccc287ade479be681f432e9af65feac768640",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            14,
+            32
+          ],
+          "utc": null,
+          "compressed": 656,
+          "local": 35,
+          "data": 81,
+          "descriptor": 737,
+          "end": 749,
+          "frames": []
+        },
+        {
+          "name": "docs/02-empty.txt",
+          "directory": false,
+          "method": 95,
+          "size": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            15,
+            42
+          ],
+          "utc": null,
+          "compressed": 32,
+          "local": 749,
+          "data": 796,
+          "descriptor": 828,
+          "end": 840,
+          "frames": []
+        },
+        {
+          "name": "docs/03-blob.bin",
+          "directory": false,
+          "method": 95,
+          "size": 200000,
+          "crc": 1438013397,
+          "sha256": "4c79573122e7fa56ddfed6cde170781814490f7da326ae7f79d7263c3550b49a",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            16,
+            52
+          ],
+          "utc": null,
+          "compressed": 200068,
+          "local": 840,
+          "data": 886,
+          "descriptor": 200954,
+          "end": 200966,
+          "frames": []
+        },
+        {
+          "name": "empty-dir/",
+          "directory": true,
+          "method": 0,
+          "size": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            18,
+            2
+          ],
+          "utc": null,
+          "compressed": 0,
+          "local": 200966,
+          "data": 201006,
+          "descriptor": 201006,
+          "end": 201006,
+          "frames": []
+        },
+        {
+          "name": "tail.txt",
+          "directory": false,
+          "method": 12,
+          "size": 7200,
+          "crc": 4062406315,
+          "sha256": "ad2a15851a558014767688475bcab2d6de8fb687622632a99cba6fa3ba7c5d56",
+          "dos": [
+            2024,
+            5,
+            6,
+            7,
+            8,
+            10
+          ],
+          "utc": null,
+          "compressed": 109,
+          "local": 201006,
+          "data": 201044,
+          "descriptor": 201153,
+          "end": 201165,
+          "frames": []
+        }
+      ],
+      "classification": "metadata-derived control; actual encoded XZ streams preserved"
+    },
+    {
+      "name": "xz64-signed.zipx",
+      "zip64": true,
+      "signed": true,
+      "sha256": "79c8362e333d100c1ca6354fcd670ab19b445cfa82f58ffdd6b140de2719dbaf",
+      "lostSha256": "022cbe1186928f83e39e5b40ce805aa71da47a8f62e077e36fc9f8b51435fd61",
+      "central": 201293,
+      "entries": [
+        {
+          "name": "docs/",
+          "directory": true,
+          "method": 0,
+          "size": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            13,
+            22
+          ],
+          "utc": null,
+          "compressed": 0,
+          "local": 0,
+          "data": 35,
+          "descriptor": 35,
+          "end": 35,
+          "frames": []
+        },
+        {
+          "name": "docs/01-note.txt",
+          "directory": false,
+          "method": 95,
+          "size": 3400000,
+          "crc": 1519840269,
+          "sha256": "acb4134f646829e07f4b8290609ccc287ade479be681f432e9af65feac768640",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            14,
+            32
+          ],
+          "utc": null,
+          "compressed": 656,
+          "local": 35,
+          "data": 101,
+          "descriptor": 757,
+          "end": 781,
+          "frames": []
+        },
+        {
+          "name": "docs/02-empty.txt",
+          "directory": false,
+          "method": 95,
+          "size": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            15,
+            42
+          ],
+          "utc": null,
+          "compressed": 32,
+          "local": 781,
+          "data": 848,
+          "descriptor": 880,
+          "end": 904,
+          "frames": []
+        },
+        {
+          "name": "docs/03-blob.bin",
+          "directory": false,
+          "method": 95,
+          "size": 200000,
+          "crc": 1438013397,
+          "sha256": "4c79573122e7fa56ddfed6cde170781814490f7da326ae7f79d7263c3550b49a",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            16,
+            52
+          ],
+          "utc": null,
+          "compressed": 200068,
+          "local": 904,
+          "data": 970,
+          "descriptor": 201038,
+          "end": 201062,
+          "frames": []
+        },
+        {
+          "name": "empty-dir/",
+          "directory": true,
+          "method": 0,
+          "size": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            18,
+            2
+          ],
+          "utc": null,
+          "compressed": 0,
+          "local": 201062,
+          "data": 201102,
+          "descriptor": 201102,
+          "end": 201102,
+          "frames": []
+        },
+        {
+          "name": "tail.txt",
+          "directory": false,
+          "method": 12,
+          "size": 7200,
+          "crc": 4062406315,
+          "sha256": "ad2a15851a558014767688475bcab2d6de8fb687622632a99cba6fa3ba7c5d56",
+          "dos": [
+            2024,
+            5,
+            6,
+            7,
+            8,
+            10
+          ],
+          "utc": null,
+          "compressed": 109,
+          "local": 201102,
+          "data": 201160,
+          "descriptor": 201269,
+          "end": 201293,
+          "frames": []
+        }
+      ],
+      "classification": "metadata-derived control; actual encoded XZ streams preserved"
+    },
+    {
+      "name": "xz64-unsigned.zipx",
+      "zip64": true,
+      "signed": false,
+      "sha256": "f58841799f6ba9eb928ef31891011b4bb1403d6189852dac1f35dba059a6dbca",
+      "lostSha256": "643cae053dea03888e576fb03d14f5c6086ec7fd6f70c4b07598cb6966e83ee3",
+      "central": 201277,
+      "entries": [
+        {
+          "name": "docs/",
+          "directory": true,
+          "method": 0,
+          "size": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            13,
+            22
+          ],
+          "utc": null,
+          "compressed": 0,
+          "local": 0,
+          "data": 35,
+          "descriptor": 35,
+          "end": 35,
+          "frames": []
+        },
+        {
+          "name": "docs/01-note.txt",
+          "directory": false,
+          "method": 95,
+          "size": 3400000,
+          "crc": 1519840269,
+          "sha256": "acb4134f646829e07f4b8290609ccc287ade479be681f432e9af65feac768640",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            14,
+            32
+          ],
+          "utc": null,
+          "compressed": 656,
+          "local": 35,
+          "data": 101,
+          "descriptor": 757,
+          "end": 777,
+          "frames": []
+        },
+        {
+          "name": "docs/02-empty.txt",
+          "directory": false,
+          "method": 95,
+          "size": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            15,
+            42
+          ],
+          "utc": null,
+          "compressed": 32,
+          "local": 777,
+          "data": 844,
+          "descriptor": 876,
+          "end": 896,
+          "frames": []
+        },
+        {
+          "name": "docs/03-blob.bin",
+          "directory": false,
+          "method": 95,
+          "size": 200000,
+          "crc": 1438013397,
+          "sha256": "4c79573122e7fa56ddfed6cde170781814490f7da326ae7f79d7263c3550b49a",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            16,
+            52
+          ],
+          "utc": null,
+          "compressed": 200068,
+          "local": 896,
+          "data": 962,
+          "descriptor": 201030,
+          "end": 201050,
+          "frames": []
+        },
+        {
+          "name": "empty-dir/",
+          "directory": true,
+          "method": 0,
+          "size": 0,
+          "crc": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            18,
+            2
+          ],
+          "utc": null,
+          "compressed": 0,
+          "local": 201050,
+          "data": 201090,
+          "descriptor": 201090,
+          "end": 201090,
+          "frames": []
+        },
+        {
+          "name": "tail.txt",
+          "directory": false,
+          "method": 12,
+          "size": 7200,
+          "crc": 4062406315,
+          "sha256": "ad2a15851a558014767688475bcab2d6de8fb687622632a99cba6fa3ba7c5d56",
+          "dos": [
+            2024,
+            5,
+            6,
+            7,
+            8,
+            10
+          ],
+          "utc": null,
+          "compressed": 109,
+          "local": 201090,
+          "data": 201148,
+          "descriptor": 201257,
+          "end": 201277,
+          "frames": []
+        }
+      ],
+      "classification": "metadata-derived control; actual encoded XZ streams preserved"
+    }
+  ]
+}

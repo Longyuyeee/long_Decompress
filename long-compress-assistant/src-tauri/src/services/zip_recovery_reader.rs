@@ -71,6 +71,23 @@ mod streamed_tests {
     }
 
     #[test]
+    fn xzrescue1738_exact_consumption_limit_cancel_and_bounded_dictionary() {
+        let base=Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/zip-xz-rescue-1738");
+        let m:serde_json::Value=serde_json::from_slice(&std::fs::read(base.join("manifest.json")).unwrap()).unwrap();
+        let e=&m["cases"][0]["entries"][3];let start=e["data"].as_u64().unwrap();
+        let source=base.join("xz32-signed.zipx");let mut reader=ZipInputReader::open(&source).unwrap();
+        assert_eq!(xz_boundary(&mut reader,start,&AtomicBool::new(false),u64::MAX).unwrap(),
+            (e["compressed"].as_u64().unwrap(),e["size"].as_u64().unwrap(),e["crc"].as_u64().unwrap() as u32));
+        assert!(xz_boundary(&mut reader,start,&AtomicBool::new(false),1024).unwrap_err().to_string().contains("读取上限"));
+        assert!(xz_boundary(&mut reader,start,&AtomicBool::new(true),u64::MAX).unwrap_err().to_string().contains("cancelled"));
+        let mut raw=std::fs::read(source).unwrap();let at=start as usize;assert_eq!(&raw[at+14..at+16],&[0x21,1]);raw[at+16]=40;
+        let end=at+12+(raw[at+12] as usize+1)*4;let crc=crc32fast::hash(&raw[at+12..end-4]);raw[end-4..end].copy_from_slice(&crc.to_le_bytes());
+        let dir=tempfile::tempdir().unwrap();let path=dir.path().join("huge-dictionary.zipx");std::fs::write(&path,raw).unwrap();
+        let mut reader=ZipInputReader::open(&path).unwrap();let error=xz_boundary(&mut reader,start,&AtomicBool::new(false),u64::MAX).unwrap_err();
+        assert!(error.chain().any(|e|e.to_string().contains("memory limit")),"{error:#}");
+    }
+
+    #[test]
     fn zstdmulti1737_frame_budget_cumulative_output_limit_and_cancel() {
         let dir = tempfile::tempdir().unwrap();
         let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/zip-zstd-rescue-1736");
@@ -234,6 +251,36 @@ fn bzip2_boundary(reader: &mut ZipInputReader, start: u64, cancelled: &AtomicBoo
         // A decoder may emit buffered output without consuming more input.
         // At EOF keep draining it, but never accept a stream without its end marker.
         ensure!(used > 0 || produced > 0, "BZip2 数据无效或被截断");
+    }
+}
+
+fn xz_boundary(reader: &mut ZipInputReader, start: u64, cancelled: &AtomicBool, limit: u64) -> Result<(u64, u64, u32)> {
+    use xz2::stream::{Action, Status, Stream, TELL_UNSUPPORTED_CHECK};
+    ensure!(!cancelled.load(Ordering::SeqCst), "ZIP recovery cancelled");
+    // A single XZ stream only; no concatenation or ignored integrity checks.
+    let mut decoder = Stream::new_stream_decoder(256 * 1024 * 1024, TELL_UNSUPPORTED_CHECK)?;
+    let mut input = [0u8; 65536];
+    let mut output = [0u8; 65536];
+    let (mut length, mut at) = (0usize, 0usize);
+    let mut crc = crc32fast::Hasher::new();
+    loop {
+        ensure!(!cancelled.load(Ordering::SeqCst), "ZIP recovery cancelled");
+        if at == length {
+            reader.seek(SeekFrom::Start(start.checked_add(decoder.total_in()).context("ZIP offset overflow")?))?;
+            length = reader.read(&mut input)?;
+            at = 0;
+        }
+        let before_in = decoder.total_in();
+        let before_out = decoder.total_out();
+        let status = decoder.process(&input[at..length], &mut output, Action::Run)
+            .context("XZ 内容、块校验或索引/尾部无效，或解码内存超过 256 MiB")?;
+        let used = (decoder.total_in() - before_in) as usize;
+        let produced = (decoder.total_out() - before_out) as usize;
+        ensure!(decoder.total_out() <= limit, "ZIP 条目展开体积超过读取上限");
+        crc.update(&output[..produced]);
+        at += used;
+        if status == Status::StreamEnd { return Ok((decoder.total_in(), decoder.total_out(), crc.finalize())); }
+        ensure!(used > 0 || produced > 0, "XZ 数据无效或被截断");
     }
 }
 
@@ -567,8 +614,9 @@ impl RecoveryReader {
             let mut confirmed_descriptor_end = None;
             if flags & 8 != 0 && compressed == 0 {
                 let method = word(&header, 8);
-                if flags & 1 == 0 && matches!(method, 8 | 12 | 14 | 93) {
+                if flags & 1 == 0 && matches!(method, 8 | 12 | 14 | 93 | 95) {
                     let boundary = match method {
+                        95 => xz_boundary(&mut reader, header_end, cancelled, extraction_transaction::MAX_EXTRACTED_BYTES),
                         93 => zstd_boundary(&mut reader, header_end, cancelled, extraction_transaction::MAX_EXTRACTED_BYTES,
                             dword(&header, 18) == u32::MAX || dword(&header, 22) == u32::MAX)
                             .map(|(input, output, crc, end)| { confirmed_descriptor_end = Some(end); (input, output, crc) }),
@@ -578,7 +626,7 @@ impl RecoveryReader {
                     };
                     match boundary {
                         Ok((input, output, crc)) => {
-                            if matches!(method, 12 | 14 | 93) && expanded != 0 && expanded != output {
+                            if matches!(method, 12 | 14 | 93 | 95) && expanded != 0 && expanded != output {
                                 unknown!(Some(label.to_string()), format!("{label}: 本地声明体积与内容不一致，未扫描后续内容")); break;
                             }
                             compressed = input; expanded = output; decoded_crc = Some(crc);

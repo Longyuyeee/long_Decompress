@@ -1,0 +1,26 @@
+[
+  {
+    "probeOnly": true,
+    "kind": "padding",
+    "classification": "single-member metadata control with actual original XZ streams",
+    "originalSha256": "05fe6492dd3b2e9df7d6647a39ba418939b67b72a70b002e67c408064beea961",
+    "sha256": "0f79f892b5c5c9dd098029fdab90374de1155e56f3699f9d26ed0cce4ff3dcda",
+    "tool": "7-Zip 26.04",
+    "exitCode": 0,
+    "contentMatches": true,
+    "expanded": 200000,
+    "contentSha256": "4c79573122e7fa56ddfed6cde170781814490f7da326ae7f79d7263c3550b49a"
+  },
+  {
+    "probeOnly": true,
+    "kind": "concatenated",
+    "classification": "single-member metadata control with actual original XZ streams",
+    "originalSha256": "05fe6492dd3b2e9df7d6647a39ba418939b67b72a70b002e67c408064beea961",
+    "sha256": "396ca778a64f5f2abdc2df5eb19edd9176f014927268054a97136f511d38adf4",
+    "tool": "7-Zip 26.04",
+    "exitCode": 0,
+    "contentMatches": true,
+    "expanded": 3600000,
+    "contentSha256": "2777ab031dafc6a94014d267ef29fc6276698503ddc7bc96c41c0c9e54c13e1f"
+  }
+]

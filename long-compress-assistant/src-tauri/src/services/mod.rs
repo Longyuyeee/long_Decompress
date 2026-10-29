@@ -397,3 +397,6 @@ mod zip_zstd_rescue_1736_tests;
 
 #[cfg(test)]
 mod zip_zstd_multiframe_1737_tests;
+
+#[cfg(test)]
+mod zip_xz_rescue_1738_tests;
