@@ -1,0 +1,14 @@
+{
+  "probeOnly": true,
+  "source": "two actual libarchive nonempty frames in a metadata-derived ZIP control; not an independent multi-frame ZIP producer",
+  "originalSha256": "de75d645db16e48129a7a311a0072d6ac6643177b73df5b9fcb5baeba8dce3b2",
+  "controlSha256": "59094caaf402c3b7bd04ffa876f4a7961c94b378a29dd7d78274c0bb2fcdd755",
+  "recipe": "append actual tail frame after blob frame; adjust cumulative CRC, compressed/expanded descriptor and central values/offsets",
+  "originalCompressed": 200012,
+  "combinedCompressed": 200056,
+  "combinedExpanded": 208100,
+  "combinedContentSha256": "6a3822a6510b34727b3d3e3012fb40617678723d0d92a1b66e7b29ac41e1349f",
+  "externalTool": "7-Zip 26.04",
+  "exitCode": 0,
+  "contentMatches": true
+}
