@@ -59,6 +59,16 @@ mod streamed_tests {
             assert!(RecoveryReader::open(&path, &AtomicBool::new(false)).is_err());
         } }
     }
+
+    #[test]
+    fn bziprescue1733_decoder_obeys_the_output_limit_and_cancellation() {
+        let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives/zip-bzip2-rescue-1733");
+        let records: serde_json::Value = serde_json::from_slice(&std::fs::read(base.join("producer.json")).unwrap()).unwrap();
+        let start = records["originals"][0]["entries"][1]["data"].as_u64().unwrap();
+        let mut reader = ZipInputReader::open(&base.join("stream32.zip")).unwrap();
+        assert!(bzip2_boundary(&mut reader, start, &AtomicBool::new(false), 1024).unwrap_err().to_string().contains("读取上限"));
+        assert!(bzip2_boundary(&mut reader, start, &AtomicBool::new(true), u64::MAX).unwrap_err().to_string().contains("cancelled"));
+    }
 }
 impl RecoveryZipInput {
     fn original(path: &Path) -> Result<Self> {
@@ -142,6 +152,37 @@ fn deflate_boundary(reader: &mut ZipInputReader, start: u64, cancelled: &AtomicB
             ensure!(used > 0 || produced > 0, "Deflate 数据无效或被截断");
             if at == length { break; }
         }
+    }
+}
+
+fn bzip2_boundary(reader: &mut ZipInputReader, start: u64, cancelled: &AtomicBool, limit: u64) -> Result<(u64, u64, u32)> {
+    let mut decoder = bzip2::Decompress::new(false);
+    let mut crc = crc32fast::Hasher::new();
+    let mut input = [0u8; 65536];
+    let mut output = [0u8; 65536];
+    let mut length = 0;
+    let mut at = 0;
+    loop {
+        ensure!(!cancelled.load(Ordering::SeqCst), "ZIP recovery cancelled");
+        if at == length {
+            reader.seek(SeekFrom::Start(start.checked_add(decoder.total_in()).context("ZIP offset overflow")?))?;
+            length = reader.read(&mut input)?;
+            at = 0;
+        }
+        let before_in = decoder.total_in();
+        let before_out = decoder.total_out();
+        let status = decoder.decompress(&input[at..length], &mut output)
+            .context("BZip2 数据无效或内容校验失败")?;
+        ensure!(status != bzip2::Status::MemNeeded, "BZip2 解码内存不足");
+        let used = (decoder.total_in() - before_in) as usize;
+        let produced = (decoder.total_out() - before_out) as usize;
+        ensure!(decoder.total_out() <= limit, "ZIP 条目展开体积超过读取上限");
+        crc.update(&output[..produced]);
+        at += used;
+        if status == bzip2::Status::StreamEnd { return Ok((decoder.total_in(), decoder.total_out(), crc.finalize())); }
+        // A decoder may emit buffered output without consuming more input.
+        // At EOF keep draining it, but never accept a stream without its end marker.
+        ensure!(used > 0 || produced > 0, "BZip2 数据无效或被截断");
     }
 }
 
@@ -366,13 +407,23 @@ impl RecoveryReader {
                 Err(error) => { unknown!(Some(label.to_string()), format!("{label}: {error}；未扫描后续内容")); break; }
             };
             let mut decoded_crc = None;
-            if flags & 8 != 0 && compressed == 0 && !name.ends_with(b"/") {
-                if flags & 1 == 0 && word(&header, 8) == 8 {
-                    match deflate_boundary(&mut reader, header_end, cancelled) {
-                        Ok((input, output, crc)) => { compressed = input; expanded = output; decoded_crc = Some(crc); }
+            if flags & 8 != 0 && compressed == 0 {
+                let method = word(&header, 8);
+                if flags & 1 == 0 && matches!(method, 8 | 12) {
+                    let boundary = if method == 12 {
+                        bzip2_boundary(&mut reader, header_end, cancelled, extraction_transaction::MAX_EXTRACTED_BYTES)
+                    } else { deflate_boundary(&mut reader, header_end, cancelled) };
+                    match boundary {
+                        Ok((input, output, crc)) => {
+                            if method == 12 && expanded != 0 && expanded != output {
+                                unknown!(Some(label.to_string()), format!("{label}: BZip2 本地声明体积与内容不一致，未扫描后续内容")); break;
+                            }
+                            compressed = input; expanded = output; decoded_crc = Some(crc);
+                        }
+                        Err(error) if cancelled.load(Ordering::SeqCst) => return Err(error),
                         Err(error) => { unknown!(Some(label.to_string()), format!("{label}: {error}；未扫描后续内容")); break; }
                     }
-                } else {
+                } else if !name.ends_with(b"/") {
                     unknown!(Some(label.to_string()), format!("{label}: 数据描述符缺少可确定的文件边界，未扫描后续内容")); break;
                 }
             }

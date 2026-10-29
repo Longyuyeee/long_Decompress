@@ -384,3 +384,5 @@ mod zip_utc_read_1731_tests;
 
 #[cfg(test)]
 mod zip_utc_write_1732_tests;
+#[cfg(test)]
+mod zip_bzip2_rescue_1733_tests;
