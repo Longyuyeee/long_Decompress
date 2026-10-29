@@ -1,0 +1,434 @@
+{
+  "passed": true,
+  "producer": "tar (GNU tar) 1.35",
+  "recipeVersion": 1,
+  "variants": [
+    {
+      "format": "ustar",
+      "archive": "ustar.tar.lzo",
+      "sha256": "0061915008e8156af9759008c9b18d2cb786224d97c8f5a41320a1fbdced9532",
+      "tar": "ustar.tar",
+      "tarSha256": "eb7fc808adf485f9e967b42e5eec63f1f04c3d7916b565fbfb809e99cab6b856",
+      "entries": [
+        {
+          "name": "payload",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001730,
+          "headerOffset": 0,
+          "dataOffset": 512
+        },
+        {
+          "name": "links",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001730,
+          "headerOffset": 512,
+          "dataOffset": 1024
+        },
+        {
+          "name": "ordinary.zip",
+          "isDirectory": false,
+          "bytes": 562,
+          "sha256": "8ec7b0f767f047260bcc186da34d4857caf833b05cb8b09b4361cc4ae78534b8",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001730,
+          "headerOffset": 1024,
+          "dataOffset": 1536
+        },
+        {
+          "name": "links/copy.zip",
+          "isDirectory": false,
+          "bytes": 562,
+          "sha256": "8ec7b0f767f047260bcc186da34d4857caf833b05cb8b09b4361cc4ae78534b8",
+          "linkTarget": "payload/plain.data",
+          "targetId": 7,
+          "seconds": 1700001730,
+          "headerOffset": 2560,
+          "dataOffset": 3072
+        },
+        {
+          "name": "links/加密副本.7z",
+          "isDirectory": false,
+          "bytes": 383,
+          "sha256": "eb51209ebcc5f98c31e5e47f09ba83c45ff276a77d70383058a1dad8c017f3c9",
+          "linkTarget": "payload/locked.data",
+          "targetId": 8,
+          "seconds": 1700001730,
+          "headerOffset": 3072,
+          "dataOffset": 3584
+        },
+        {
+          "name": "links/fake.zip",
+          "isDirectory": false,
+          "bytes": 37,
+          "sha256": "a67449d2408c69f5c3b7fa29d2324e18c6356c8d13e5786a84071889be54ebee",
+          "linkTarget": "payload/fake.data",
+          "targetId": 9,
+          "seconds": 1700001730,
+          "headerOffset": 3584,
+          "dataOffset": 4096
+        },
+        {
+          "name": "after.txt",
+          "isDirectory": false,
+          "bytes": 31,
+          "sha256": "171dfb81b777180ae5430df27714b218b6b611a9da9b0e8ff8ac3adfbadd2233",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001730,
+          "headerOffset": 4096,
+          "dataOffset": 4608
+        },
+        {
+          "name": "payload/plain.data",
+          "isDirectory": false,
+          "bytes": 562,
+          "sha256": "8ec7b0f767f047260bcc186da34d4857caf833b05cb8b09b4361cc4ae78534b8",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001830,
+          "headerOffset": 5120,
+          "dataOffset": 5632
+        },
+        {
+          "name": "payload/locked.data",
+          "isDirectory": false,
+          "bytes": 383,
+          "sha256": "eb51209ebcc5f98c31e5e47f09ba83c45ff276a77d70383058a1dad8c017f3c9",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001830,
+          "headerOffset": 6656,
+          "dataOffset": 7168
+        },
+        {
+          "name": "payload/fake.data",
+          "isDirectory": false,
+          "bytes": 37,
+          "sha256": "a67449d2408c69f5c3b7fa29d2324e18c6356c8d13e5786a84071889be54ebee",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001830,
+          "headerOffset": 7680,
+          "dataOffset": 8192
+        }
+      ],
+      "aliases": [
+        "links/copy.zip",
+        "links/加密副本.7z",
+        "links/fake.zip"
+      ]
+    },
+    {
+      "format": "gnu",
+      "archive": "gnu.tar.lzo",
+      "sha256": "8e7df82f028d1f1a60993af63a625778784cf7227917d04ca5e696a114e9f146",
+      "tar": "gnu.tar",
+      "tarSha256": "0bd99aefe621834a9034747be4bec08705f708392d5d103b8c775afc461da049",
+      "entries": [
+        {
+          "name": "payload",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001730,
+          "headerOffset": 0,
+          "dataOffset": 512
+        },
+        {
+          "name": "links",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001730,
+          "headerOffset": 512,
+          "dataOffset": 1024
+        },
+        {
+          "name": "ordinary.zip",
+          "isDirectory": false,
+          "bytes": 562,
+          "sha256": "8ec7b0f767f047260bcc186da34d4857caf833b05cb8b09b4361cc4ae78534b8",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001730,
+          "headerOffset": 1024,
+          "dataOffset": 1536
+        },
+        {
+          "name": "links/copy.zip",
+          "isDirectory": false,
+          "bytes": 562,
+          "sha256": "8ec7b0f767f047260bcc186da34d4857caf833b05cb8b09b4361cc4ae78534b8",
+          "linkTarget": "payload/plain.data",
+          "targetId": 8,
+          "seconds": 1700001730,
+          "headerOffset": 2560,
+          "dataOffset": 3072
+        },
+        {
+          "name": "links/加密副本.7z",
+          "isDirectory": false,
+          "bytes": 383,
+          "sha256": "eb51209ebcc5f98c31e5e47f09ba83c45ff276a77d70383058a1dad8c017f3c9",
+          "linkTarget": "payload/locked.data",
+          "targetId": 9,
+          "seconds": 1700001730,
+          "headerOffset": 3072,
+          "dataOffset": 3584
+        },
+        {
+          "name": "links/fake.zip",
+          "isDirectory": false,
+          "bytes": 37,
+          "sha256": "a67449d2408c69f5c3b7fa29d2324e18c6356c8d13e5786a84071889be54ebee",
+          "linkTarget": "payload/fake.data",
+          "targetId": 10,
+          "seconds": 1700001730,
+          "headerOffset": 3584,
+          "dataOffset": 4096
+        },
+        {
+          "name": "links/长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本.zip",
+          "isDirectory": false,
+          "bytes": 562,
+          "sha256": "8ec7b0f767f047260bcc186da34d4857caf833b05cb8b09b4361cc4ae78534b8",
+          "linkTarget": "payload/长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容.zip",
+          "targetId": 11,
+          "seconds": 1700001730,
+          "headerOffset": 4096,
+          "dataOffset": 6656
+        },
+        {
+          "name": "after.txt",
+          "isDirectory": false,
+          "bytes": 31,
+          "sha256": "171dfb81b777180ae5430df27714b218b6b611a9da9b0e8ff8ac3adfbadd2233",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001730,
+          "headerOffset": 6656,
+          "dataOffset": 7168
+        },
+        {
+          "name": "payload/plain.data",
+          "isDirectory": false,
+          "bytes": 562,
+          "sha256": "8ec7b0f767f047260bcc186da34d4857caf833b05cb8b09b4361cc4ae78534b8",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001830,
+          "headerOffset": 7680,
+          "dataOffset": 8192
+        },
+        {
+          "name": "payload/locked.data",
+          "isDirectory": false,
+          "bytes": 383,
+          "sha256": "eb51209ebcc5f98c31e5e47f09ba83c45ff276a77d70383058a1dad8c017f3c9",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001830,
+          "headerOffset": 9216,
+          "dataOffset": 9728
+        },
+        {
+          "name": "payload/fake.data",
+          "isDirectory": false,
+          "bytes": 37,
+          "sha256": "a67449d2408c69f5c3b7fa29d2324e18c6356c8d13e5786a84071889be54ebee",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001830,
+          "headerOffset": 10240,
+          "dataOffset": 10752
+        },
+        {
+          "name": "payload/长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容.zip",
+          "isDirectory": false,
+          "bytes": 562,
+          "sha256": "8ec7b0f767f047260bcc186da34d4857caf833b05cb8b09b4361cc4ae78534b8",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001830,
+          "headerOffset": 11264,
+          "dataOffset": 12800
+        }
+      ],
+      "aliases": [
+        "links/copy.zip",
+        "links/加密副本.7z",
+        "links/fake.zip",
+        "links/长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本.zip"
+      ]
+    },
+    {
+      "format": "pax",
+      "archive": "pax.tar.lzo",
+      "sha256": "7fb3ceb6034d710bc04bc99a9b408f3543dbd4f909b08bd1d1a4a46ab35fbc50",
+      "tar": "pax.tar",
+      "tarSha256": "070d16635b3ee382083e41e93329f24a44c899fc57d21d71c5dcacb0e111cd27",
+      "entries": [
+        {
+          "name": "payload",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001730,
+          "headerOffset": 0,
+          "dataOffset": 512
+        },
+        {
+          "name": "links",
+          "isDirectory": true,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001730,
+          "headerOffset": 512,
+          "dataOffset": 1024
+        },
+        {
+          "name": "ordinary.zip",
+          "isDirectory": false,
+          "bytes": 562,
+          "sha256": "8ec7b0f767f047260bcc186da34d4857caf833b05cb8b09b4361cc4ae78534b8",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001730,
+          "headerOffset": 1024,
+          "dataOffset": 1536
+        },
+        {
+          "name": "links/copy.zip",
+          "isDirectory": false,
+          "bytes": 562,
+          "sha256": "8ec7b0f767f047260bcc186da34d4857caf833b05cb8b09b4361cc4ae78534b8",
+          "linkTarget": "payload/plain.data",
+          "targetId": 8,
+          "seconds": 1700001730,
+          "headerOffset": 2560,
+          "dataOffset": 3072
+        },
+        {
+          "name": "links/加密副本.7z",
+          "isDirectory": false,
+          "bytes": 383,
+          "sha256": "eb51209ebcc5f98c31e5e47f09ba83c45ff276a77d70383058a1dad8c017f3c9",
+          "linkTarget": "payload/locked.data",
+          "targetId": 9,
+          "seconds": 1700001730,
+          "headerOffset": 3072,
+          "dataOffset": 4608
+        },
+        {
+          "name": "links/fake.zip",
+          "isDirectory": false,
+          "bytes": 37,
+          "sha256": "a67449d2408c69f5c3b7fa29d2324e18c6356c8d13e5786a84071889be54ebee",
+          "linkTarget": "payload/fake.data",
+          "targetId": 10,
+          "seconds": 1700001730,
+          "headerOffset": 4608,
+          "dataOffset": 5120
+        },
+        {
+          "name": "links/长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本.zip",
+          "isDirectory": false,
+          "bytes": 562,
+          "sha256": "8ec7b0f767f047260bcc186da34d4857caf833b05cb8b09b4361cc4ae78534b8",
+          "linkTarget": "payload/长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容.zip",
+          "targetId": 11,
+          "seconds": 1700001730,
+          "headerOffset": 5120,
+          "dataOffset": 6656
+        },
+        {
+          "name": "after.txt",
+          "isDirectory": false,
+          "bytes": 31,
+          "sha256": "171dfb81b777180ae5430df27714b218b6b611a9da9b0e8ff8ac3adfbadd2233",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001730,
+          "headerOffset": 6656,
+          "dataOffset": 7168
+        },
+        {
+          "name": "payload/plain.data",
+          "isDirectory": false,
+          "bytes": 562,
+          "sha256": "8ec7b0f767f047260bcc186da34d4857caf833b05cb8b09b4361cc4ae78534b8",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001830,
+          "headerOffset": 7680,
+          "dataOffset": 8192
+        },
+        {
+          "name": "payload/locked.data",
+          "isDirectory": false,
+          "bytes": 383,
+          "sha256": "eb51209ebcc5f98c31e5e47f09ba83c45ff276a77d70383058a1dad8c017f3c9",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001830,
+          "headerOffset": 9216,
+          "dataOffset": 9728
+        },
+        {
+          "name": "payload/fake.data",
+          "isDirectory": false,
+          "bytes": 37,
+          "sha256": "a67449d2408c69f5c3b7fa29d2324e18c6356c8d13e5786a84071889be54ebee",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001830,
+          "headerOffset": 10240,
+          "dataOffset": 10752
+        },
+        {
+          "name": "payload/长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容长目标内容.zip",
+          "isDirectory": false,
+          "bytes": 562,
+          "sha256": "8ec7b0f767f047260bcc186da34d4857caf833b05cb8b09b4361cc4ae78534b8",
+          "linkTarget": null,
+          "targetId": null,
+          "seconds": 1700001830,
+          "headerOffset": 11264,
+          "dataOffset": 12800
+        }
+      ],
+      "aliases": [
+        "links/copy.zip",
+        "links/加密副本.7z",
+        "links/fake.zip",
+        "links/长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本长名称副本.zip"
+      ]
+    }
+  ],
+  "recipe": "GNU creates real Linux hardlinks, deletes the content records, then concatenates GNU-created targets; no header rewriting.",
+  "oracle": "Two ordered GNU extraction passes with inode/SHA checks; independent Python TAR bytes and own header dates.",
+  "childSha256": "8ec7b0f767f047260bcc186da34d4857caf833b05cb8b09b4361cc4ae78534b8",
+  "thirdSha256": "1f6fb13e235837e5afdceb40f79988cc1d6b5b9168c77e6ccfc4f157871671c7",
+  "encryptedSha256": "eb51209ebcc5f98c31e5e47f09ba83c45ff276a77d70383058a1dad8c017f3c9",
+  "textSha256": "d7a972c1b8d993a66deb62948c0cf321ef8d7507f9078c519b05968476ade0de",
+  "imageSha256": "76726d8dc18f7ce9e09a8ff0036d094493e1901f7f0fcb8e7ad316e95589698f",
+  "secretSha256": "0f1c810ec0026d400780f77f46e6ad2ba1e83b6c848273a164a1455c8fe4afde",
+  "credential": "Nested1730!"
+}
