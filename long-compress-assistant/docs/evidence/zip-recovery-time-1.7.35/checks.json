@@ -1,0 +1,29 @@
+{
+  "version": "1.7.35",
+  "date": "2026-10-29",
+  "passed": true,
+  "nativeTests": 3,
+  "relatedRegressions": 2,
+  "recoveredArchives": 10,
+  "encodedEntries": 92,
+  "nativeReadbackOutputs": 11,
+  "external7zipReadbacks": 10,
+  "shellExtensionBuilt": true,
+  "releaseIdentityPassed": true,
+  "testHarnessAdjustments": [
+    "Removed a nonexistent test-only extraction option after the initial compile error.",
+    "Initial executed run: two tests passed; real-source group asserted parallel workers for a directory archive, which intentionally uses sequential fallback.",
+    "Added the existing independent flat ZIP original to test actual parallel extraction; corrected that test group selection and reran only that group. The two passing groups were not rerun."
+  ],
+  "commands": [
+    "cargo test --manifest-path src-tauri/Cargo.toml --lib recoverytime1735 -- --nocapture --test-threads=1",
+    "cargo test --manifest-path src-tauri/Cargo.toml --lib recoverytime1735_real_plain_password_and_actual_volume_outputs_retain_dates -- --nocapture --test-threads=1",
+    "python scripts/verify-zip-recovery-time-1735.py",
+    "compiled unit executable: utcread1731_optional_invalid_duplicate_and_ambiguous_times_fall_back_without_losing_contents",
+    "compiled unit executable: lost_directory_recovery_preserves_complete_entries_and_excludes_bad_payloads",
+    "npm run build:shell-extension",
+    "npm run test:release-identity"
+  ],
+  "scope": "Recovered ZIP files and explicit directories keep confirmed central/local-rebuilt UT mtime and valid original DOS calendar; no UTC fabricated from DOS; invalid/missing DOS uses fixed 1980 compatibility value.",
+  "ui": "No frontend changes or desktop control; previously passed UI and unrelated matrices not rerun."
+}

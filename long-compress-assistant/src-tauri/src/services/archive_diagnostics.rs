@@ -876,6 +876,7 @@ pub fn repair_zip_with_encoding_to_new(
             Some(bytes) => options.with_aes_encryption_bytes(zip_aes::AesMode::Aes256, bytes),
             None => options,
         };
+        let options = super::zip_creation_time::from_zip_entry(&entry).file_options(options)?;
         if entry.is_dir() {
             if !written_names.insert(name.clone()) { continue; }
             writer.add_directory(name, options)?;

@@ -1,0 +1,12 @@
+{
+  "available": true,
+  "producer": "bsdtar 3.8.9 - libarchive 3.8.9 zlib/1.2.13.1-motley liblzma/5.8.3 bz2lib/1.0.8 libzstd/1.5.7 cng/2.0 libb2/bundled",
+  "method": 93,
+  "flags": 8,
+  "localSizes": [
+    0,
+    0
+  ],
+  "compressed": 48,
+  "expanded": 31000
+}

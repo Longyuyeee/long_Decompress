@@ -23,6 +23,26 @@ impl SourceTime {
         Ok(options)
     }
 }
+
+/// Keep the archive's DOS calendar verbatim and copy only a confirmed UTC
+/// field. Never manufacture a UTC timestamp from a DOS-only local calendar.
+pub(crate) fn from_zip_entry<R: std::io::Read + ?Sized>(
+    entry: &zip_aes::read::ZipFile<'_, R>,
+) -> SourceTime {
+    let date = entry
+        .last_modified()
+        .filter(|date| date.is_valid())
+        .unwrap_or(zip_aes::DateTime::DEFAULT);
+    let utc_seconds = super::zip_read_time::utc_modified(entry.extra_data())
+        .and_then(|time| time.duration_since(UNIX_EPOCH).ok())
+        .map(|time| time.as_secs() as u32);
+    SourceTime {
+        date,
+        clamped: false,
+        utc_seconds,
+    }
+}
+
 pub(crate) fn from_system_time(time: SystemTime) -> SourceTime {
     let utc_seconds = time
         .duration_since(UNIX_EPOCH)

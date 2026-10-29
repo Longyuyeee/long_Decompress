@@ -1,0 +1,90 @@
+{
+  "version": "1.7.35",
+  "passed": true,
+  "recoveredArchives": 10,
+  "encodedEntries": 92,
+  "nativeReadbackOutputs": 11,
+  "external7zipReadbacks": 10,
+  "checks": [
+    {
+      "name": "controls-full",
+      "entries": 23,
+      "localAndCentralTimesMatch": true,
+      "independentContentAndDates": true,
+      "sourceUnchanged": true,
+      "encrypted": false
+    },
+    {
+      "name": "controls-lost",
+      "entries": 23,
+      "localAndCentralTimesMatch": true,
+      "independentContentAndDates": true,
+      "sourceUnchanged": true,
+      "encrypted": false
+    },
+    {
+      "name": "plain-lost",
+      "entries": 7,
+      "localAndCentralTimesMatch": true,
+      "independentContentAndDates": true,
+      "sourceUnchanged": true,
+      "encrypted": false
+    },
+    {
+      "name": "parallel-flat",
+      "entries": 2,
+      "localAndCentralTimesMatch": true,
+      "independentContentAndDates": true,
+      "sourceUnchanged": true,
+      "encrypted": false
+    },
+    {
+      "name": "aes-damaged",
+      "entries": 6,
+      "localAndCentralTimesMatch": true,
+      "independentContentAndDates": true,
+      "sourceUnchanged": true,
+      "encrypted": true
+    },
+    {
+      "name": "aes-bad-ut-damaged",
+      "entries": 6,
+      "localAndCentralTimesMatch": true,
+      "independentContentAndDates": true,
+      "sourceUnchanged": true,
+      "encrypted": true
+    },
+    {
+      "name": "standard-crc",
+      "entries": 6,
+      "localAndCentralTimesMatch": true,
+      "independentContentAndDates": true,
+      "sourceUnchanged": true,
+      "encrypted": false
+    },
+    {
+      "name": "numeric-lost",
+      "entries": 7,
+      "localAndCentralTimesMatch": true,
+      "independentContentAndDates": true,
+      "sourceUnchanged": true,
+      "encrypted": false
+    },
+    {
+      "name": "bzip2-stream",
+      "entries": 6,
+      "localAndCentralTimesMatch": true,
+      "independentContentAndDates": true,
+      "sourceUnchanged": true,
+      "encrypted": false
+    },
+    {
+      "name": "lzma-stream",
+      "entries": 6,
+      "localAndCentralTimesMatch": true,
+      "independentContentAndDates": true,
+      "sourceUnchanged": true,
+      "encrypted": false
+    }
+  ]
+}

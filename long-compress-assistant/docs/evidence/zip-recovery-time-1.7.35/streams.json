@@ -1,0 +1,452 @@
+[
+  {
+    "name": "bzip2-stream",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\505404f7-9320-4887-9442-46ebeabe8337\\source\\source.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\505404f7-9320-4887-9442-46ebeabe8337\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\505404f7-9320-4887-9442-46ebeabe8337\\source\\source.zip",
+        "sha256": "82e6c092d541cf6ac1e177de95bb01a5b9c5f89b2a59dab456ecb1a15aaf7819"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料",
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "bytes": 3500000,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/blob.bin",
+        "directory": false,
+        "sha256": "440459d22a154465e0d3fa91aaca808ee35eab1916c85c96bc6c33b31a2faa84",
+        "bytes": 200000,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ],
+        "utc": null
+      },
+      {
+        "name": "空目录",
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ],
+        "utc": null
+      },
+      {
+        "name": "tail.txt",
+        "directory": false,
+        "sha256": "ec9c245778f4c90a56c248f9bd416294912b7fcb59df94ac1393df2eba493e6b",
+        "bytes": 8700,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ],
+        "utc": null
+      }
+    ],
+    "headers": [
+      {
+        "name": "资料/",
+        "utc": null,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ]
+      },
+      {
+        "name": "资料/说明.txt",
+        "utc": null,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ]
+      },
+      {
+        "name": "资料/empty.txt",
+        "utc": null,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ]
+      },
+      {
+        "name": "资料/blob.bin",
+        "utc": null,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ]
+      },
+      {
+        "name": "空目录/",
+        "utc": null,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ]
+      },
+      {
+        "name": "tail.txt",
+        "utc": null,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ]
+      }
+    ],
+    "restored": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\505404f7-9320-4887-9442-46ebeabe8337\\native-restored"
+    ],
+    "workers": 0,
+    "password": null,
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\505404f7-9320-4887-9442-46ebeabe8337\\recovered.zip",
+      "recoveredFiles": 4,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt",
+        "资料/blob.bin",
+        "tail.txt"
+      ],
+      "entryResults": [
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/blob.bin",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "tail.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 2,
+      "skippedEntries": [],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    }
+  },
+  {
+    "name": "lzma-stream",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\dee08712-8240-417f-914b-3ff14841fe41\\source\\source.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\dee08712-8240-417f-914b-3ff14841fe41\\recovered.zip",
+    "sources": [
+      {
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\dee08712-8240-417f-914b-3ff14841fe41\\source\\source.zip",
+        "sha256": "80ca857937f92133572d66ddf756de08a9e88ae026c4792abf088feaa0f8d552"
+      }
+    ],
+    "expected": [
+      {
+        "name": "资料",
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/说明.txt",
+        "directory": false,
+        "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+        "bytes": 3500000,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/empty.txt",
+        "directory": false,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ],
+        "utc": null
+      },
+      {
+        "name": "资料/blob.bin",
+        "directory": false,
+        "sha256": "775d8086c3912beb3d643976307dc59070dff59e0105ef8b4a1c1e7bf39922d1",
+        "bytes": 200000,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ],
+        "utc": null
+      },
+      {
+        "name": "空目录",
+        "directory": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "bytes": 0,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ],
+        "utc": null
+      },
+      {
+        "name": "tail.txt",
+        "directory": false,
+        "sha256": "87e37460f16f3464aaa66764938b19dcb3d019cc68de02a96527525c66c43a3e",
+        "bytes": 7800,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ],
+        "utc": null
+      }
+    ],
+    "headers": [
+      {
+        "name": "资料/",
+        "utc": null,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ]
+      },
+      {
+        "name": "资料/说明.txt",
+        "utc": null,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ]
+      },
+      {
+        "name": "资料/empty.txt",
+        "utc": null,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ]
+      },
+      {
+        "name": "资料/blob.bin",
+        "utc": null,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ]
+      },
+      {
+        "name": "空目录/",
+        "utc": null,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ]
+      },
+      {
+        "name": "tail.txt",
+        "utc": null,
+        "dos": [
+          2024,
+          5,
+          6,
+          7,
+          8,
+          10
+        ]
+      }
+    ],
+    "restored": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\dee08712-8240-417f-914b-3ff14841fe41\\native-restored"
+    ],
+    "workers": 0,
+    "password": null,
+    "result": {
+      "outputPath": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-recovery-time-1735\\dee08712-8240-417f-914b-3ff14841fe41\\recovered.zip",
+      "recoveredFiles": 4,
+      "recoveredEntries": [
+        "资料/说明.txt",
+        "资料/empty.txt",
+        "资料/blob.bin",
+        "tail.txt"
+      ],
+      "entryResults": [
+        {
+          "name": null,
+          "status": "unknown",
+          "reason": "原目录不完整，无法确认是否还有其他文件；仅列出已确认的本地条目"
+        },
+        {
+          "name": "资料/说明.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/empty.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "资料/blob.bin",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        },
+        {
+          "name": "tail.txt",
+          "status": "recovered",
+          "reason": "完整读取并通过内容校验"
+        }
+      ],
+      "recoveredDirectories": 2,
+      "skippedEntries": [],
+      "verified": true,
+      "partial": true,
+      "directoryRebuilt": true,
+      "outputEncrypted": false
+    }
+  }
+]

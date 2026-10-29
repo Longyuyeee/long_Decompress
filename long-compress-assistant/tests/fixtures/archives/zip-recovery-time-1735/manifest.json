@@ -1,0 +1,1578 @@
+{
+  "version": "1.7.35",
+  "cases": [
+    {
+      "name": "controls-full",
+      "archive": "controls-full.zip",
+      "recipe": {
+        "kind": "copy"
+      },
+      "sha256": "4380822bbe7d651610585304f38fdd36a1ac65b834f6c75231ecc62cff4fb443",
+      "entries": [
+        {
+          "name": "资料",
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 1700001635
+        },
+        {
+          "name": "资料/空目录",
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 1700001645
+        },
+        {
+          "name": "资料/valid.txt",
+          "directory": false,
+          "sha256": "2bc4c0f0aa2a00998b94d045c8c2a78c317c6bbbac408680121f6212ad75cd83",
+          "bytes": 13,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 1700001735
+        },
+        {
+          "name": "资料/flags7.txt",
+          "directory": false,
+          "sha256": "c2da4f38bd53dbf93edc9bac41caeb79ee83d3834b4d42a6c8cda456cc14c822",
+          "bytes": 14,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 1700001735
+        },
+        {
+          "name": "资料/flags5.txt",
+          "directory": false,
+          "sha256": "29db8b7a70ec7911d548bc24d54b0a7fa1bc7a2f738550efaa19e28bfcb032cd",
+          "bytes": 14,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 1700001735
+        },
+        {
+          "name": "资料/central-only.txt",
+          "directory": false,
+          "sha256": "daa8b603faac2428895ee1a2a50990cab09c741cf84e921ebd88460ad5f8bc03",
+          "bytes": 20,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 1700001735
+        },
+        {
+          "name": "资料/local-only.txt",
+          "directory": false,
+          "sha256": "6752a5d85106224f94197ab5688178580f2912f08d7cb59b8c76e34881ebb4d6",
+          "bytes": 18,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/central-wins.txt",
+          "directory": false,
+          "sha256": "e515996645f68d20d18efeaa0fc2d853f3d8c47a3a998d7a5ba2caa1d725dec5",
+          "bytes": 20,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 1700001735
+        },
+        {
+          "name": "资料/short-local.txt",
+          "directory": false,
+          "sha256": "d866ed37d68ae826c21418d78ddc7f531271cf5bf9b02ae5497e1e3d0672e250",
+          "bytes": 19,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 1700001735
+        },
+        {
+          "name": "资料/empty.txt",
+          "directory": false,
+          "sha256": "8d8b538fa33ad9b697c76dd1da783ab8c1690df529294e19ff8fea5abe2570a5",
+          "bytes": 13,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/malformed.txt",
+          "directory": false,
+          "sha256": "353543c8f8ca3776f6e7ec39375bb8f1c999c0c2e0317b6107d2a75e7a4b009b",
+          "bytes": 17,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/missing-mtime.txt",
+          "directory": false,
+          "sha256": "9027f0101d746579295dc7aac69ef172af20a295fb495d9580cbf70381536f99",
+          "bytes": 21,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/access-only.txt",
+          "directory": false,
+          "sha256": "6b61129f737268d727407a110a959fea093ae86c9914dfdf5445c256a48fbf01",
+          "bytes": 19,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/reserved.txt",
+          "directory": false,
+          "sha256": "1cd3502f701f1275aa14bd80c68c213ebc24c8f4df57f7a6e1792fce5f1af7d9",
+          "bytes": 16,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/duplicate.txt",
+          "directory": false,
+          "sha256": "26e470ec6d215cabdce706d46eb7236117c323eec48338663b75178f74f9fc92",
+          "bytes": 17,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/conflict.txt",
+          "directory": false,
+          "sha256": "9b084677e0ad5ffdb6dce50afc9b778dfcd794b59703b28d5d95cca549e22478",
+          "bytes": 16,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/high-bit.txt",
+          "directory": false,
+          "sha256": "e6611a5a8b78bae1c7d5e28b55fc7ea09b09b6f59c4b6364369f5462e6ff7a88",
+          "bytes": 16,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/zero.txt",
+          "directory": false,
+          "sha256": "a7a1fe8c5bee1bd53f56f4783ad7126cd98723244abf46f1d996e33fda07ffd1",
+          "bytes": 12,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 0
+        },
+        {
+          "name": "资料/signed-max.txt",
+          "directory": false,
+          "sha256": "f5b5c9cda9fa89bd0b5cf6e058a2cd4daf5b2286a70d83903cbb1eb2d17a5874",
+          "bytes": 18,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 2147483647
+        },
+        {
+          "name": "资料/unknown-before.txt",
+          "directory": false,
+          "sha256": "d3c996b3f04a8c647cf8cb31eb3b6298b080d60fb5cbf9d9f1ad6b80e4ae8799",
+          "bytes": 22,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 1700001735
+        },
+        {
+          "name": "资料/dos-only.txt",
+          "directory": false,
+          "sha256": "179f0013b1d2c8bf5b39ef972013370b72774f8bce2c73b94f40424eac2eabaa",
+          "bytes": 16,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/invalid-dos.txt",
+          "directory": false,
+          "sha256": "1b19b2ed0a922896a3287d552f04d65dcabd8a1e9fa4a6127695e69df9cf4873",
+          "bytes": 19,
+          "dos": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/invalid-dos-utc.txt",
+          "directory": false,
+          "sha256": "232b4567995d30f0ab8879e74b3d6eb92e5f8059ae9ac373d100c960844273ef",
+          "bytes": 23,
+          "dos": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "utc": 1700001735
+        }
+      ],
+      "encrypted": false,
+      "rebuilt": false,
+      "skipped": [
+        "资料/bad-content.txt"
+      ]
+    },
+    {
+      "name": "controls-lost",
+      "archive": "controls-lost.zip",
+      "recipe": {
+        "kind": "copy"
+      },
+      "sha256": "f81fe4b2b2d1ab15525ba036bc713e836234caebb99c57f7871cc9252bc4ed47",
+      "entries": [
+        {
+          "name": "资料",
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 1700001635
+        },
+        {
+          "name": "资料/空目录",
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 1700001645
+        },
+        {
+          "name": "资料/valid.txt",
+          "directory": false,
+          "sha256": "2bc4c0f0aa2a00998b94d045c8c2a78c317c6bbbac408680121f6212ad75cd83",
+          "bytes": 13,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 1700001735
+        },
+        {
+          "name": "资料/flags7.txt",
+          "directory": false,
+          "sha256": "c2da4f38bd53dbf93edc9bac41caeb79ee83d3834b4d42a6c8cda456cc14c822",
+          "bytes": 14,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 1700001735
+        },
+        {
+          "name": "资料/flags5.txt",
+          "directory": false,
+          "sha256": "29db8b7a70ec7911d548bc24d54b0a7fa1bc7a2f738550efaa19e28bfcb032cd",
+          "bytes": 14,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 1700001735
+        },
+        {
+          "name": "资料/central-only.txt",
+          "directory": false,
+          "sha256": "daa8b603faac2428895ee1a2a50990cab09c741cf84e921ebd88460ad5f8bc03",
+          "bytes": 20,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/local-only.txt",
+          "directory": false,
+          "sha256": "6752a5d85106224f94197ab5688178580f2912f08d7cb59b8c76e34881ebb4d6",
+          "bytes": 18,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 1700001735
+        },
+        {
+          "name": "资料/central-wins.txt",
+          "directory": false,
+          "sha256": "e515996645f68d20d18efeaa0fc2d853f3d8c47a3a998d7a5ba2caa1d725dec5",
+          "bytes": 20,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 1700001705
+        },
+        {
+          "name": "资料/short-local.txt",
+          "directory": false,
+          "sha256": "d866ed37d68ae826c21418d78ddc7f531271cf5bf9b02ae5497e1e3d0672e250",
+          "bytes": 19,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/empty.txt",
+          "directory": false,
+          "sha256": "8d8b538fa33ad9b697c76dd1da783ab8c1690df529294e19ff8fea5abe2570a5",
+          "bytes": 13,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/malformed.txt",
+          "directory": false,
+          "sha256": "353543c8f8ca3776f6e7ec39375bb8f1c999c0c2e0317b6107d2a75e7a4b009b",
+          "bytes": 17,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/missing-mtime.txt",
+          "directory": false,
+          "sha256": "9027f0101d746579295dc7aac69ef172af20a295fb495d9580cbf70381536f99",
+          "bytes": 21,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/access-only.txt",
+          "directory": false,
+          "sha256": "6b61129f737268d727407a110a959fea093ae86c9914dfdf5445c256a48fbf01",
+          "bytes": 19,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/reserved.txt",
+          "directory": false,
+          "sha256": "1cd3502f701f1275aa14bd80c68c213ebc24c8f4df57f7a6e1792fce5f1af7d9",
+          "bytes": 16,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/duplicate.txt",
+          "directory": false,
+          "sha256": "26e470ec6d215cabdce706d46eb7236117c323eec48338663b75178f74f9fc92",
+          "bytes": 17,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/conflict.txt",
+          "directory": false,
+          "sha256": "9b084677e0ad5ffdb6dce50afc9b778dfcd794b59703b28d5d95cca549e22478",
+          "bytes": 16,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/high-bit.txt",
+          "directory": false,
+          "sha256": "e6611a5a8b78bae1c7d5e28b55fc7ea09b09b6f59c4b6364369f5462e6ff7a88",
+          "bytes": 16,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/zero.txt",
+          "directory": false,
+          "sha256": "a7a1fe8c5bee1bd53f56f4783ad7126cd98723244abf46f1d996e33fda07ffd1",
+          "bytes": 12,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 0
+        },
+        {
+          "name": "资料/signed-max.txt",
+          "directory": false,
+          "sha256": "f5b5c9cda9fa89bd0b5cf6e058a2cd4daf5b2286a70d83903cbb1eb2d17a5874",
+          "bytes": 18,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 2147483647
+        },
+        {
+          "name": "资料/unknown-before.txt",
+          "directory": false,
+          "sha256": "d3c996b3f04a8c647cf8cb31eb3b6298b080d60fb5cbf9d9f1ad6b80e4ae8799",
+          "bytes": 22,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": 1700001735
+        },
+        {
+          "name": "资料/dos-only.txt",
+          "directory": false,
+          "sha256": "179f0013b1d2c8bf5b39ef972013370b72774f8bce2c73b94f40424eac2eabaa",
+          "bytes": 16,
+          "dos": [
+            2001,
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/invalid-dos.txt",
+          "directory": false,
+          "sha256": "1b19b2ed0a922896a3287d552f04d65dcabd8a1e9fa4a6127695e69df9cf4873",
+          "bytes": 19,
+          "dos": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/invalid-dos-utc.txt",
+          "directory": false,
+          "sha256": "232b4567995d30f0ab8879e74b3d6eb92e5f8059ae9ac373d100c960844273ef",
+          "bytes": 23,
+          "dos": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ],
+          "utc": 1700001735
+        }
+      ],
+      "encrypted": false,
+      "rebuilt": true,
+      "skipped": [
+        "资料/bad-content.txt"
+      ]
+    },
+    {
+      "name": "plain-lost",
+      "archive": "../zip-utc-read-1731/plain.zip",
+      "recipe": {
+        "kind": "prefix",
+        "length": 620833
+      },
+      "originalSha256": "f2d0e9527fab15302152332bdb4e9854382cddb70e0cebb9112763f6b3700834",
+      "sha256": "f42df51254be5c5eca915d04c92f187bb05feec1288281faa3a3536ec607aa25",
+      "entries": [
+        {
+          "name": "docs",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001551,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            10
+          ],
+          "utc": 1700001551
+        },
+        {
+          "name": "docs/empty",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001537,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            38,
+            56
+          ],
+          "utc": 1700001537
+        },
+        {
+          "name": "docs/nested",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001549,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            8
+          ],
+          "utc": 1700001549
+        },
+        {
+          "name": "docs/note.txt",
+          "bytes": 38,
+          "directory": false,
+          "sha256": "d28f534aa250cf195beb175fe5bb5702f948cf7b51fda117c8ec0fad32d58911",
+          "seconds": 1700001731,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            10
+          ],
+          "utc": 1700001731
+        },
+        {
+          "name": "docs/zero.txt",
+          "bytes": 0,
+          "directory": false,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001935,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            45,
+            34
+          ],
+          "utc": 1700001935
+        },
+        {
+          "name": "docs/nested/large-a.bin",
+          "bytes": 310000,
+          "directory": false,
+          "sha256": "5affd9561e6e7b2e6ee23ae772cb1eb6d999147efc90fbe4f3354366b713c127",
+          "seconds": 1700001833,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            43,
+            52
+          ],
+          "utc": 1700001833
+        },
+        {
+          "name": "docs/nested/large-b.bin",
+          "bytes": 310000,
+          "directory": false,
+          "sha256": "d488acfc5c852315f99625a1abaed1b05f605ebfec99a99db12dd59e045fba7e",
+          "seconds": 1710054133,
+          "dos": [
+            2024,
+            3,
+            10,
+            15,
+            2,
+            12
+          ],
+          "utc": 1710054133
+        }
+      ],
+      "encrypted": false,
+      "password": null,
+      "rebuilt": true,
+      "skipped": []
+    },
+    {
+      "name": "parallel-flat",
+      "archive": "../zip-utc-read-1731/parallel.zip",
+      "recipe": {
+        "kind": "prefix",
+        "length": 620356
+      },
+      "originalSha256": "b2f220b87d816a925fa5716aa469e7ca0004a28c9e4507ef47bacb475c118880",
+      "sha256": "ac16c44c176ea24de32e851a182367a2277c8ea0e53b4814f6ec2ff403a456eb",
+      "entries": [
+        {
+          "name": "a.bin",
+          "bytes": 310000,
+          "directory": false,
+          "sha256": "5affd9561e6e7b2e6ee23ae772cb1eb6d999147efc90fbe4f3354366b713c127",
+          "seconds": 1700001731,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            10
+          ],
+          "utc": 1700001731
+        },
+        {
+          "name": "b.bin",
+          "bytes": 310000,
+          "directory": false,
+          "sha256": "d488acfc5c852315f99625a1abaed1b05f605ebfec99a99db12dd59e045fba7e",
+          "seconds": 1710054133,
+          "dos": [
+            2024,
+            3,
+            10,
+            15,
+            2,
+            12
+          ],
+          "utc": 1710054133
+        }
+      ],
+      "encrypted": false,
+      "password": null,
+      "rebuilt": true,
+      "skipped": []
+    },
+    {
+      "name": "aes-damaged",
+      "archive": "../zip-utc-read-1731/aes.zip",
+      "recipe": {
+        "kind": "xor",
+        "position": 310836
+      },
+      "originalSha256": "9e7d2419c9682276b37373f55d658b9c897f288084b647133ee531f9b44ec876",
+      "sha256": "8c689fedf74adcf72df016e140a2235b4aed627600a1eb55f74ef3bc357d4d74",
+      "entries": [
+        {
+          "name": "docs",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001551,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            10
+          ],
+          "utc": 1700001551
+        },
+        {
+          "name": "docs/empty",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001537,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            38,
+            56
+          ],
+          "utc": 1700001537
+        },
+        {
+          "name": "docs/nested",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001549,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            8
+          ],
+          "utc": 1700001549
+        },
+        {
+          "name": "docs/note.txt",
+          "bytes": 38,
+          "directory": false,
+          "sha256": "d28f534aa250cf195beb175fe5bb5702f948cf7b51fda117c8ec0fad32d58911",
+          "seconds": 1700001731,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            10
+          ],
+          "utc": 1700001731
+        },
+        {
+          "name": "docs/zero.txt",
+          "bytes": 0,
+          "directory": false,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001935,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            45,
+            34
+          ],
+          "utc": 1700001935
+        },
+        {
+          "name": "docs/nested/large-a.bin",
+          "bytes": 310000,
+          "directory": false,
+          "sha256": "5affd9561e6e7b2e6ee23ae772cb1eb6d999147efc90fbe4f3354366b713c127",
+          "seconds": 1700001833,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            43,
+            52
+          ],
+          "utc": 1700001833
+        }
+      ],
+      "encrypted": true,
+      "password": "UtcRead1731!",
+      "rebuilt": false,
+      "skipped": [
+        "docs/nested/large-b.bin"
+      ]
+    },
+    {
+      "name": "aes-bad-ut-damaged",
+      "archive": "../zip-utc-read-1731/aes-malformed-ut.zip",
+      "recipe": {
+        "kind": "xor",
+        "position": 310836
+      },
+      "originalSha256": "b3526414e74c883100d86c5fc468dbd2eaf745c15c5ca194016ab7a03c30d2fd",
+      "sha256": "321f0a86b45f5a4a017d6afc52660979863d42ec7fd5d87c085a28dd86be5606",
+      "entries": [
+        {
+          "name": "docs",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001551,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            10
+          ],
+          "utc": null
+        },
+        {
+          "name": "docs/empty",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001537,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            38,
+            56
+          ],
+          "utc": null
+        },
+        {
+          "name": "docs/nested",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001549,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            8
+          ],
+          "utc": null
+        },
+        {
+          "name": "docs/note.txt",
+          "bytes": 38,
+          "directory": false,
+          "sha256": "d28f534aa250cf195beb175fe5bb5702f948cf7b51fda117c8ec0fad32d58911",
+          "seconds": 1700001731,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            10
+          ],
+          "utc": null
+        },
+        {
+          "name": "docs/zero.txt",
+          "bytes": 0,
+          "directory": false,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001935,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            45,
+            34
+          ],
+          "utc": null
+        },
+        {
+          "name": "docs/nested/large-a.bin",
+          "bytes": 310000,
+          "directory": false,
+          "sha256": "5affd9561e6e7b2e6ee23ae772cb1eb6d999147efc90fbe4f3354366b713c127",
+          "seconds": 1700001833,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            43,
+            52
+          ],
+          "utc": null
+        }
+      ],
+      "encrypted": true,
+      "password": "UtcRead1731!",
+      "rebuilt": false,
+      "skipped": [
+        "docs/nested/large-b.bin"
+      ]
+    },
+    {
+      "name": "standard-crc",
+      "archive": "../zip-utc-read-1731/plain.zip",
+      "recipe": {
+        "kind": "xor",
+        "position": 621346
+      },
+      "originalSha256": "f2d0e9527fab15302152332bdb4e9854382cddb70e0cebb9112763f6b3700834",
+      "sha256": "28e61965b31a4a30f3d50c56c921e1ae9a78de45cf69e20e4fca11fdd04d9411",
+      "entries": [
+        {
+          "name": "docs",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001551,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            10
+          ],
+          "utc": 1700001551
+        },
+        {
+          "name": "docs/empty",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001537,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            38,
+            56
+          ],
+          "utc": 1700001537
+        },
+        {
+          "name": "docs/nested",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001549,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            8
+          ],
+          "utc": 1700001549
+        },
+        {
+          "name": "docs/note.txt",
+          "bytes": 38,
+          "directory": false,
+          "sha256": "d28f534aa250cf195beb175fe5bb5702f948cf7b51fda117c8ec0fad32d58911",
+          "seconds": 1700001731,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            10
+          ],
+          "utc": 1700001731
+        },
+        {
+          "name": "docs/zero.txt",
+          "bytes": 0,
+          "directory": false,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001935,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            45,
+            34
+          ],
+          "utc": 1700001935
+        },
+        {
+          "name": "docs/nested/large-a.bin",
+          "bytes": 310000,
+          "directory": false,
+          "sha256": "5affd9561e6e7b2e6ee23ae772cb1eb6d999147efc90fbe4f3354366b713c127",
+          "seconds": 1700001833,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            43,
+            52
+          ],
+          "utc": 1700001833
+        }
+      ],
+      "encrypted": false,
+      "password": null,
+      "rebuilt": false,
+      "skipped": [
+        "docs/nested/large-b.bin"
+      ]
+    },
+    {
+      "name": "numeric-lost",
+      "archive": "../zip-utc-read-1731/plain.zip",
+      "recipe": {
+        "kind": "prefix",
+        "length": 620833
+      },
+      "originalSha256": "f2d0e9527fab15302152332bdb4e9854382cddb70e0cebb9112763f6b3700834",
+      "sha256": "f42df51254be5c5eca915d04c92f187bb05feec1288281faa3a3536ec607aa25",
+      "entries": [
+        {
+          "name": "docs",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001551,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            10
+          ],
+          "utc": 1700001551
+        },
+        {
+          "name": "docs/empty",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001537,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            38,
+            56
+          ],
+          "utc": 1700001537
+        },
+        {
+          "name": "docs/nested",
+          "bytes": 0,
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001549,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            8
+          ],
+          "utc": 1700001549
+        },
+        {
+          "name": "docs/note.txt",
+          "bytes": 38,
+          "directory": false,
+          "sha256": "d28f534aa250cf195beb175fe5bb5702f948cf7b51fda117c8ec0fad32d58911",
+          "seconds": 1700001731,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            10
+          ],
+          "utc": 1700001731
+        },
+        {
+          "name": "docs/zero.txt",
+          "bytes": 0,
+          "directory": false,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "seconds": 1700001935,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            45,
+            34
+          ],
+          "utc": 1700001935
+        },
+        {
+          "name": "docs/nested/large-a.bin",
+          "bytes": 310000,
+          "directory": false,
+          "sha256": "5affd9561e6e7b2e6ee23ae772cb1eb6d999147efc90fbe4f3354366b713c127",
+          "seconds": 1700001833,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            43,
+            52
+          ],
+          "utc": 1700001833
+        },
+        {
+          "name": "docs/nested/large-b.bin",
+          "bytes": 310000,
+          "directory": false,
+          "sha256": "d488acfc5c852315f99625a1abaed1b05f605ebfec99a99db12dd59e045fba7e",
+          "seconds": 1710054133,
+          "dos": [
+            2024,
+            3,
+            10,
+            15,
+            2,
+            12
+          ],
+          "utc": 1710054133
+        }
+      ],
+      "encrypted": false,
+      "password": null,
+      "rebuilt": true,
+      "skipped": []
+    },
+    {
+      "name": "bzip2-stream",
+      "archive": "../zip-bzip2-rescue-1733/lost64.zip",
+      "recipe": {
+        "kind": "copy"
+      },
+      "sha256": "82e6c092d541cf6ac1e177de95bb01a5b9c5f89b2a59dab456ecb1a15aaf7819",
+      "entries": [
+        {
+          "name": "资料",
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "dos": [
+            2024,
+            5,
+            6,
+            7,
+            8,
+            10
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/说明.txt",
+          "directory": false,
+          "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+          "bytes": 3500000,
+          "dos": [
+            2024,
+            5,
+            6,
+            7,
+            8,
+            10
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/empty.txt",
+          "directory": false,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "dos": [
+            2024,
+            5,
+            6,
+            7,
+            8,
+            10
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/blob.bin",
+          "directory": false,
+          "sha256": "440459d22a154465e0d3fa91aaca808ee35eab1916c85c96bc6c33b31a2faa84",
+          "bytes": 200000,
+          "dos": [
+            2024,
+            5,
+            6,
+            7,
+            8,
+            10
+          ],
+          "utc": null
+        },
+        {
+          "name": "空目录",
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "dos": [
+            2024,
+            5,
+            6,
+            7,
+            8,
+            10
+          ],
+          "utc": null
+        },
+        {
+          "name": "tail.txt",
+          "directory": false,
+          "sha256": "ec9c245778f4c90a56c248f9bd416294912b7fcb59df94ac1393df2eba493e6b",
+          "bytes": 8700,
+          "dos": [
+            2024,
+            5,
+            6,
+            7,
+            8,
+            10
+          ],
+          "utc": null
+        }
+      ],
+      "encrypted": false,
+      "rebuilt": true,
+      "skipped": []
+    },
+    {
+      "name": "lzma-stream",
+      "archive": "../zip-lzma-rescue-1734/lost32.zip",
+      "recipe": {
+        "kind": "copy"
+      },
+      "sha256": "80ca857937f92133572d66ddf756de08a9e88ae026c4792abf088feaa0f8d552",
+      "entries": [
+        {
+          "name": "资料",
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "dos": [
+            2024,
+            5,
+            6,
+            7,
+            8,
+            10
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/说明.txt",
+          "directory": false,
+          "sha256": "bd12b911d1bfb6f86611560d63e1ed55d262506fdad5bb6fe8388c98a68df00a",
+          "bytes": 3500000,
+          "dos": [
+            2024,
+            5,
+            6,
+            7,
+            8,
+            10
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/empty.txt",
+          "directory": false,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "dos": [
+            2024,
+            5,
+            6,
+            7,
+            8,
+            10
+          ],
+          "utc": null
+        },
+        {
+          "name": "资料/blob.bin",
+          "directory": false,
+          "sha256": "775d8086c3912beb3d643976307dc59070dff59e0105ef8b4a1c1e7bf39922d1",
+          "bytes": 200000,
+          "dos": [
+            2024,
+            5,
+            6,
+            7,
+            8,
+            10
+          ],
+          "utc": null
+        },
+        {
+          "name": "空目录",
+          "directory": true,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "bytes": 0,
+          "dos": [
+            2024,
+            5,
+            6,
+            7,
+            8,
+            10
+          ],
+          "utc": null
+        },
+        {
+          "name": "tail.txt",
+          "directory": false,
+          "sha256": "87e37460f16f3464aaa66764938b19dcb3d019cc68de02a96527525c66c43a3e",
+          "bytes": 7800,
+          "dos": [
+            2024,
+            5,
+            6,
+            7,
+            8,
+            10
+          ],
+          "utc": null
+        }
+      ],
+      "encrypted": false,
+      "rebuilt": true,
+      "skipped": []
+    }
+  ],
+  "provenance": "Independent Python metadata controls; recipes reference frozen bsdtar/libarchive 3.8.9 and CPython streaming originals. Mutations are labelled, not new external originals."
+}
