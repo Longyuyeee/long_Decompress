@@ -577,7 +577,7 @@ async fn forward1728_missing_ambiguous_chained_cyclic_directory_and_body_targets
 }
 
 #[tokio::test]
-async fn forward1728_nested_actions_explain_extract_first_without_outputs() {
+async fn forward1728_nonarchive_forward_alias_does_not_leave_nested_outputs() {
     let work = workspace();
     let source = root().join("gnu.tar.lzo");
     let cache = super::archive_entry_open::ArchiveEntryOpenCache::new(work.join("cache"));
@@ -597,7 +597,7 @@ async fn forward1728_nested_actions_explain_extract_first_without_outputs() {
     )
     .await
     .unwrap_err();
-    assert!(format!("{error:#}").contains("前向链接的嵌套浏览尚未接通"));
+    assert!(format!("{error:#}").contains("不是可识别的压缩包"));
     assert_eq!(
         walkdir::WalkDir::new(work.join("cache"))
             .into_iter()

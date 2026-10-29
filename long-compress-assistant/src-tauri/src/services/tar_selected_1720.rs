@@ -12,6 +12,7 @@ pub(crate) struct Plan {
     pub(crate) stats:crate::services::tar_compatibility::Plan,
 }
 impl Plan {
+    #[cfg(test)]
     pub(crate) fn has_forward_links(&self)->bool {
         self.entries.iter().any(|entry|entry.link_source.is_some_and(|source|source>entry.id))
     }

@@ -375,3 +375,5 @@ mod zip_directory_time_1725_tests;
 mod zip_creation_time_1724_tests;
 #[cfg(test)]
 mod tar_nested_links_1723_tests;
+#[cfg(test)]
+mod tar_forward_nested_1730_tests;
