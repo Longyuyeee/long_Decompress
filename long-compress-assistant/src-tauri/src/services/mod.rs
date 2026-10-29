@@ -381,3 +381,6 @@ mod tar_forward_nested_1730_tests;
 pub(crate) mod zip_read_time;
 #[cfg(test)]
 mod zip_utc_read_1731_tests;
+
+#[cfg(test)]
+mod zip_utc_write_1732_tests;

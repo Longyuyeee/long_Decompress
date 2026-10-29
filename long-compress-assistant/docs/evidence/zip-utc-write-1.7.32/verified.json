@@ -1,0 +1,755 @@
+{
+  "version": "1.7.32",
+  "passed": true,
+  "archives": 9,
+  "encodedEntries": 53,
+  "nativeReadbackOutputs": 10,
+  "actualParallelWorkers": 2,
+  "checks": [
+    {
+      "name": "bounds",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-utc-write-1732\\c10bcc99-180c-49b0-aad0-8518a2592269\\bounds.zip",
+      "encodedEntries": 7,
+      "headers": [
+        {
+          "name": "before.txt",
+          "utcSeconds": null,
+          "dos": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "epoch.txt",
+          "utcSeconds": 0,
+          "dos": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "odd.txt",
+          "utcSeconds": 1700001733,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            12
+          ]
+        },
+        {
+          "name": "fractional.txt",
+          "utcSeconds": 1,
+          "dos": [
+            1980,
+            1,
+            1,
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "name": "max.txt",
+          "utcSeconds": 2147483647,
+          "dos": [
+            2038,
+            1,
+            19,
+            11,
+            14,
+            6
+          ]
+        },
+        {
+          "name": "after.txt",
+          "utcSeconds": null,
+          "dos": [
+            2038,
+            1,
+            19,
+            11,
+            14,
+            8
+          ]
+        },
+        {
+          "name": "clamped.txt",
+          "utcSeconds": null,
+          "dos": [
+            2107,
+            12,
+            31,
+            23,
+            59,
+            58
+          ]
+        }
+      ],
+      "localAndCentralUtcMatch": true,
+      "legacyDosCompatible": true,
+      "external7zipReadback": true,
+      "sourceUnchanged": true,
+      "encrypted": false
+    },
+    {
+      "name": "plain",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\plain.zip",
+      "encodedEntries": 7,
+      "headers": [
+        {
+          "name": "资料",
+          "utcSeconds": 1700001553,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            12
+          ]
+        },
+        {
+          "name": "资料/a.bin",
+          "utcSeconds": 1700001733,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            12
+          ]
+        },
+        {
+          "name": "资料/b.bin",
+          "utcSeconds": 1710054135,
+          "dos": [
+            2024,
+            3,
+            10,
+            15,
+            2,
+            14
+          ]
+        },
+        {
+          "name": "资料/note.txt",
+          "utcSeconds": 1700001835,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            43,
+            54
+          ]
+        },
+        {
+          "name": "资料/zero.dat",
+          "utcSeconds": 1700001937,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            45,
+            36
+          ]
+        },
+        {
+          "name": "资料/空目录",
+          "utcSeconds": 1700001531,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            38,
+            50
+          ]
+        },
+        {
+          "name": "empty-root",
+          "utcSeconds": 1700001565,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            24
+          ]
+        }
+      ],
+      "localAndCentralUtcMatch": true,
+      "legacyDosCompatible": true,
+      "external7zipReadback": true,
+      "sourceUnchanged": true,
+      "encrypted": false
+    },
+    {
+      "name": "aes-standard",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\aes-standard.zip",
+      "encodedEntries": 7,
+      "headers": [
+        {
+          "name": "资料",
+          "utcSeconds": 1700001553,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            12
+          ]
+        },
+        {
+          "name": "资料/a.bin",
+          "utcSeconds": 1700001733,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            12
+          ]
+        },
+        {
+          "name": "资料/b.bin",
+          "utcSeconds": 1710054135,
+          "dos": [
+            2024,
+            3,
+            10,
+            15,
+            2,
+            14
+          ]
+        },
+        {
+          "name": "资料/note.txt",
+          "utcSeconds": 1700001835,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            43,
+            54
+          ]
+        },
+        {
+          "name": "资料/zero.dat",
+          "utcSeconds": 1700001937,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            45,
+            36
+          ]
+        },
+        {
+          "name": "资料/空目录",
+          "utcSeconds": 1700001531,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            38,
+            50
+          ]
+        },
+        {
+          "name": "empty-root",
+          "utcSeconds": 1700001565,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            24
+          ]
+        }
+      ],
+      "localAndCentralUtcMatch": true,
+      "legacyDosCompatible": true,
+      "external7zipReadback": true,
+      "sourceUnchanged": true,
+      "encrypted": true
+    },
+    {
+      "name": "legacy-numeric",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-utc-write-1732\\joined-3.zip",
+      "encodedEntries": 7,
+      "headers": [
+        {
+          "name": "资料",
+          "utcSeconds": 1700001553,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            12
+          ]
+        },
+        {
+          "name": "资料/a.bin",
+          "utcSeconds": 1700001733,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            12
+          ]
+        },
+        {
+          "name": "资料/b.bin",
+          "utcSeconds": 1710054135,
+          "dos": [
+            2024,
+            3,
+            10,
+            15,
+            2,
+            14
+          ]
+        },
+        {
+          "name": "资料/note.txt",
+          "utcSeconds": 1700001835,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            43,
+            54
+          ]
+        },
+        {
+          "name": "资料/zero.dat",
+          "utcSeconds": 1700001937,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            45,
+            36
+          ]
+        },
+        {
+          "name": "资料/空目录",
+          "utcSeconds": 1700001531,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            38,
+            50
+          ]
+        },
+        {
+          "name": "empty-root",
+          "utcSeconds": 1700001565,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            24
+          ]
+        }
+      ],
+      "localAndCentralUtcMatch": true,
+      "legacyDosCompatible": true,
+      "external7zipReadback": true,
+      "sourceUnchanged": true,
+      "encrypted": true
+    },
+    {
+      "name": "xz-aes-standard",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\test-results\\zip-utc-write-1732\\zipx-family-4\\same.zip",
+      "encodedEntries": 7,
+      "headers": [
+        {
+          "name": "资料",
+          "utcSeconds": 1700001553,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            12
+          ]
+        },
+        {
+          "name": "资料/a.bin",
+          "utcSeconds": 1700001733,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            12
+          ]
+        },
+        {
+          "name": "资料/b.bin",
+          "utcSeconds": 1710054135,
+          "dos": [
+            2024,
+            3,
+            10,
+            15,
+            2,
+            14
+          ]
+        },
+        {
+          "name": "资料/note.txt",
+          "utcSeconds": 1700001835,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            43,
+            54
+          ]
+        },
+        {
+          "name": "资料/zero.dat",
+          "utcSeconds": 1700001937,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            45,
+            36
+          ]
+        },
+        {
+          "name": "资料/空目录",
+          "utcSeconds": 1700001531,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            38,
+            50
+          ]
+        },
+        {
+          "name": "empty-root",
+          "utcSeconds": 1700001565,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            24
+          ]
+        }
+      ],
+      "localAndCentralUtcMatch": true,
+      "legacyDosCompatible": true,
+      "external7zipReadback": true,
+      "sourceUnchanged": true,
+      "encrypted": true
+    },
+    {
+      "name": "actual-parallel",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-utc-write-1732\\0a2712b3-9f30-4316-b1d5-0fbce9a1558e\\parallel.zip",
+      "encodedEntries": 2,
+      "headers": [
+        {
+          "name": "a.bin",
+          "utcSeconds": 1700001733,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            12
+          ]
+        },
+        {
+          "name": "b.bin",
+          "utcSeconds": 1710054135,
+          "dos": [
+            2024,
+            3,
+            10,
+            15,
+            2,
+            14
+          ]
+        }
+      ],
+      "localAndCentralUtcMatch": true,
+      "legacyDosCompatible": true,
+      "external7zipReadback": true,
+      "sourceUnchanged": true,
+      "encrypted": false
+    },
+    {
+      "name": "flat-renamed",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-utc-write-1732\\0a2712b3-9f30-4316-b1d5-0fbce9a1558e\\flat.zip",
+      "encodedEntries": 2,
+      "headers": [
+        {
+          "name": "同名.txt",
+          "utcSeconds": 1700001733,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            12
+          ]
+        },
+        {
+          "name": "同名 (1).txt",
+          "utcSeconds": 1700001835,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            43,
+            54
+          ]
+        }
+      ],
+      "localAndCentralUtcMatch": true,
+      "legacyDosCompatible": true,
+      "external7zipReadback": true,
+      "sourceUnchanged": true,
+      "encrypted": false
+    },
+    {
+      "name": "conversion",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-utc-write-1732\\d3b9ab48-1364-4bdd-815c-d52631a0c6fb\\converted.zip",
+      "encodedEntries": 7,
+      "headers": [
+        {
+          "name": "docs",
+          "utcSeconds": 1700001551,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            10
+          ]
+        },
+        {
+          "name": "docs/empty",
+          "utcSeconds": 1700001537,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            38,
+            56
+          ]
+        },
+        {
+          "name": "docs/nested",
+          "utcSeconds": 1700001549,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            8
+          ]
+        },
+        {
+          "name": "docs/nested/large-a.bin",
+          "utcSeconds": 1700001833,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            43,
+            52
+          ]
+        },
+        {
+          "name": "docs/nested/large-b.bin",
+          "utcSeconds": 1710054133,
+          "dos": [
+            2024,
+            3,
+            10,
+            15,
+            2,
+            12
+          ]
+        },
+        {
+          "name": "docs/note.txt",
+          "utcSeconds": 1700001731,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            10
+          ]
+        },
+        {
+          "name": "docs/zero.txt",
+          "utcSeconds": 1700001935,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            45,
+            34
+          ]
+        }
+      ],
+      "localAndCentralUtcMatch": true,
+      "legacyDosCompatible": true,
+      "external7zipReadback": true,
+      "sourceUnchanged": true,
+      "encrypted": true
+    },
+    {
+      "name": "conversion",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\..\\test-results\\zip-utc-write-1732\\d3b9ab48-1364-4bdd-815c-d52631a0c6fb\\converted.zipx",
+      "encodedEntries": 7,
+      "headers": [
+        {
+          "name": "docs",
+          "utcSeconds": 1700001551,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            10
+          ]
+        },
+        {
+          "name": "docs/empty",
+          "utcSeconds": 1700001537,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            38,
+            56
+          ]
+        },
+        {
+          "name": "docs/nested",
+          "utcSeconds": 1700001549,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            39,
+            8
+          ]
+        },
+        {
+          "name": "docs/nested/large-a.bin",
+          "utcSeconds": 1700001833,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            43,
+            52
+          ]
+        },
+        {
+          "name": "docs/nested/large-b.bin",
+          "utcSeconds": 1710054133,
+          "dos": [
+            2024,
+            3,
+            10,
+            15,
+            2,
+            12
+          ]
+        },
+        {
+          "name": "docs/note.txt",
+          "utcSeconds": 1700001731,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            10
+          ]
+        },
+        {
+          "name": "docs/zero.txt",
+          "utcSeconds": 1700001935,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            45,
+            34
+          ]
+        }
+      ],
+      "localAndCentralUtcMatch": true,
+      "legacyDosCompatible": true,
+      "external7zipReadback": true,
+      "sourceUnchanged": true,
+      "encrypted": false
+    }
+  ],
+  "policy": "Single UT modification field in both headers for 0..2147483647; integer seconds only, legacy DOS retained."
+}

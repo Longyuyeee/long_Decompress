@@ -1,0 +1,128 @@
+{
+  "workers": 2,
+  "cases": [
+    {
+      "name": "actual-parallel",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\0a2712b3-9f30-4316-b1d5-0fbce9a1558e\\parallel.zip",
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\0a2712b3-9f30-4316-b1d5-0fbce9a1558e\\parallel.zip",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\0a2712b3-9f30-4316-b1d5-0fbce9a1558e\\parallel.zip"
+      ],
+      "numeric": false,
+      "encrypted": false,
+      "sources": [
+        {
+          "name": "a.bin",
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\0a2712b3-9f30-4316-b1d5-0fbce9a1558e\\source\\资料\\a.bin",
+          "directory": false,
+          "seconds": 1700001733,
+          "nanos": 123456700,
+          "utcExpected": true,
+          "sha256": "dfb7f16429720d293c2f1373fb6bdb0bd0f6ec9f9a1eed66f11859c2cda98d55"
+        },
+        {
+          "name": "b.bin",
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\0a2712b3-9f30-4316-b1d5-0fbce9a1558e\\source\\资料\\b.bin",
+          "directory": false,
+          "seconds": 1710054135,
+          "nanos": 123456700,
+          "utcExpected": true,
+          "sha256": "605d075aabda68958555a7084667be2a5f07ba753b011259aba4d870ee5fcdce"
+        }
+      ],
+      "headers": [
+        {
+          "name": "a.bin",
+          "utcSeconds": 1700001733,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            12
+          ],
+          "method": "Stored"
+        },
+        {
+          "name": "b.bin",
+          "utcSeconds": 1710054135,
+          "dos": [
+            2024,
+            3,
+            10,
+            15,
+            2,
+            14
+          ],
+          "method": "Stored"
+        }
+      ],
+      "restored": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\0a2712b3-9f30-4316-b1d5-0fbce9a1558e\\sequential",
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\0a2712b3-9f30-4316-b1d5-0fbce9a1558e\\parallel"
+      ]
+    },
+    {
+      "name": "flat-renamed",
+      "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\0a2712b3-9f30-4316-b1d5-0fbce9a1558e\\flat.zip",
+      "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\0a2712b3-9f30-4316-b1d5-0fbce9a1558e\\flat.zip",
+      "parts": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\0a2712b3-9f30-4316-b1d5-0fbce9a1558e\\flat.zip"
+      ],
+      "numeric": false,
+      "encrypted": false,
+      "sources": [
+        {
+          "name": "同名.txt",
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\0a2712b3-9f30-4316-b1d5-0fbce9a1558e\\first\\同名.txt",
+          "directory": false,
+          "seconds": 1700001733,
+          "nanos": 123456700,
+          "utcExpected": true,
+          "sha256": "a7937b64b8caa58f03721bb6bacf5c78cb235febe0e70b1b84cd99541461a08e"
+        },
+        {
+          "name": "同名 (1).txt",
+          "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\0a2712b3-9f30-4316-b1d5-0fbce9a1558e\\second\\同名.txt",
+          "directory": false,
+          "seconds": 1700001835,
+          "nanos": 123456700,
+          "utcExpected": true,
+          "sha256": "16367aacb67a4a017c8da8ab95682ccb390863780f7114dda0a0e0c55644c7c4"
+        }
+      ],
+      "headers": [
+        {
+          "name": "同名.txt",
+          "utcSeconds": 1700001733,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            42,
+            12
+          ],
+          "method": "Stored"
+        },
+        {
+          "name": "同名 (1).txt",
+          "utcSeconds": 1700001835,
+          "dos": [
+            2023,
+            11,
+            15,
+            6,
+            43,
+            54
+          ],
+          "method": "Stored"
+        }
+      ],
+      "restored": [
+        "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\0a2712b3-9f30-4316-b1d5-0fbce9a1558e\\flat"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,716 @@
+[
+  {
+    "name": "plain",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\plain.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\plain.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\plain.zip"
+    ],
+    "numeric": false,
+    "encrypted": false,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料",
+        "directory": true,
+        "seconds": 1700001553,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": null
+      },
+      {
+        "name": "资料/a.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\a.bin",
+        "directory": false,
+        "seconds": 1700001733,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": "dfb7f16429720d293c2f1373fb6bdb0bd0f6ec9f9a1eed66f11859c2cda98d55"
+      },
+      {
+        "name": "资料/b.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\b.bin",
+        "directory": false,
+        "seconds": 1710054135,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": "605d075aabda68958555a7084667be2a5f07ba753b011259aba4d870ee5fcdce"
+      },
+      {
+        "name": "资料/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\note.txt",
+        "directory": false,
+        "seconds": 1700001835,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": "ed5c3bc9c222b4aa0b3aa44e62e4de0662c900f83621e66be1532f5c89f9191a"
+      },
+      {
+        "name": "资料/zero.dat",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\zero.dat",
+        "directory": false,
+        "seconds": 1700001937,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料/空目录",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\空目录",
+        "directory": true,
+        "seconds": 1700001531,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": null
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\empty-root",
+        "directory": true,
+        "seconds": 1700001565,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": null
+      }
+    ],
+    "headers": [
+      {
+        "name": "资料/",
+        "utcSeconds": 1700001553,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          12
+        ],
+        "method": "Stored"
+      },
+      {
+        "name": "资料/a.bin",
+        "utcSeconds": 1700001733,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          42,
+          12
+        ],
+        "method": "Deflated"
+      },
+      {
+        "name": "资料/b.bin",
+        "utcSeconds": 1710054135,
+        "dos": [
+          2024,
+          3,
+          10,
+          15,
+          2,
+          14
+        ],
+        "method": "Deflated"
+      },
+      {
+        "name": "资料/note.txt",
+        "utcSeconds": 1700001835,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          43,
+          54
+        ],
+        "method": "Deflated"
+      },
+      {
+        "name": "资料/zero.dat",
+        "utcSeconds": 1700001937,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          45,
+          36
+        ],
+        "method": "Deflated"
+      },
+      {
+        "name": "资料/空目录/",
+        "utcSeconds": 1700001531,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          38,
+          50
+        ],
+        "method": "Stored"
+      },
+      {
+        "name": "empty-root/",
+        "utcSeconds": 1700001565,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          24
+        ],
+        "method": "Stored"
+      }
+    ],
+    "restored": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\from-plain"
+    ]
+  },
+  {
+    "name": "aes-standard",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\aes-standard.zip",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\aes-standard.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\aes-standard.z01",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\aes-standard.z02",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\aes-standard.z03",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\aes-standard.z04",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\aes-standard.z05",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\aes-standard.z06",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\aes-standard.z07",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\aes-standard.z08",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\aes-standard.z09",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\aes-standard.z10",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\aes-standard.zip"
+    ],
+    "numeric": false,
+    "encrypted": true,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料",
+        "directory": true,
+        "seconds": 1700001553,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": null
+      },
+      {
+        "name": "资料/a.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\a.bin",
+        "directory": false,
+        "seconds": 1700001733,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": "dfb7f16429720d293c2f1373fb6bdb0bd0f6ec9f9a1eed66f11859c2cda98d55"
+      },
+      {
+        "name": "资料/b.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\b.bin",
+        "directory": false,
+        "seconds": 1710054135,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": "605d075aabda68958555a7084667be2a5f07ba753b011259aba4d870ee5fcdce"
+      },
+      {
+        "name": "资料/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\note.txt",
+        "directory": false,
+        "seconds": 1700001835,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": "ed5c3bc9c222b4aa0b3aa44e62e4de0662c900f83621e66be1532f5c89f9191a"
+      },
+      {
+        "name": "资料/zero.dat",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\zero.dat",
+        "directory": false,
+        "seconds": 1700001937,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料/空目录",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\空目录",
+        "directory": true,
+        "seconds": 1700001531,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": null
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\empty-root",
+        "directory": true,
+        "seconds": 1700001565,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": null
+      }
+    ],
+    "headers": [
+      {
+        "name": "资料/",
+        "utcSeconds": 1700001553,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          12
+        ],
+        "method": "Stored"
+      },
+      {
+        "name": "资料/a.bin",
+        "utcSeconds": 1700001733,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          42,
+          12
+        ],
+        "method": "Stored"
+      },
+      {
+        "name": "资料/b.bin",
+        "utcSeconds": 1710054135,
+        "dos": [
+          2024,
+          3,
+          10,
+          15,
+          2,
+          14
+        ],
+        "method": "Stored"
+      },
+      {
+        "name": "资料/note.txt",
+        "utcSeconds": 1700001835,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          43,
+          54
+        ],
+        "method": "Stored"
+      },
+      {
+        "name": "资料/zero.dat",
+        "utcSeconds": 1700001937,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          45,
+          36
+        ],
+        "method": "Stored"
+      },
+      {
+        "name": "资料/空目录/",
+        "utcSeconds": 1700001531,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          38,
+          50
+        ],
+        "method": "Stored"
+      },
+      {
+        "name": "empty-root/",
+        "utcSeconds": 1700001565,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          24
+        ],
+        "method": "Stored"
+      }
+    ],
+    "restored": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\from-aes-standard"
+    ]
+  },
+  {
+    "name": "legacy-numeric",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\legacy-numeric.zip.001",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\legacy-numeric.zip",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\legacy-numeric.zip.001",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\legacy-numeric.zip.002",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\legacy-numeric.zip.003",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\legacy-numeric.zip.004",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\legacy-numeric.zip.005",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\legacy-numeric.zip.006",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\legacy-numeric.zip.007",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\legacy-numeric.zip.008",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\legacy-numeric.zip.009",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\legacy-numeric.zip.010",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\legacy-numeric.zip.011"
+    ],
+    "numeric": true,
+    "encrypted": true,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料",
+        "directory": true,
+        "seconds": 1700001553,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": null
+      },
+      {
+        "name": "资料/a.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\a.bin",
+        "directory": false,
+        "seconds": 1700001733,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": "dfb7f16429720d293c2f1373fb6bdb0bd0f6ec9f9a1eed66f11859c2cda98d55"
+      },
+      {
+        "name": "资料/b.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\b.bin",
+        "directory": false,
+        "seconds": 1710054135,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": "605d075aabda68958555a7084667be2a5f07ba753b011259aba4d870ee5fcdce"
+      },
+      {
+        "name": "资料/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\note.txt",
+        "directory": false,
+        "seconds": 1700001835,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": "ed5c3bc9c222b4aa0b3aa44e62e4de0662c900f83621e66be1532f5c89f9191a"
+      },
+      {
+        "name": "资料/zero.dat",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\zero.dat",
+        "directory": false,
+        "seconds": 1700001937,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料/空目录",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\空目录",
+        "directory": true,
+        "seconds": 1700001531,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": null
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\empty-root",
+        "directory": true,
+        "seconds": 1700001565,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": null
+      }
+    ],
+    "headers": [
+      {
+        "name": "资料/",
+        "utcSeconds": 1700001553,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          12
+        ],
+        "method": "Stored"
+      },
+      {
+        "name": "资料/a.bin",
+        "utcSeconds": 1700001733,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          42,
+          12
+        ],
+        "method": "Deflated"
+      },
+      {
+        "name": "资料/b.bin",
+        "utcSeconds": 1710054135,
+        "dos": [
+          2024,
+          3,
+          10,
+          15,
+          2,
+          14
+        ],
+        "method": "Deflated"
+      },
+      {
+        "name": "资料/note.txt",
+        "utcSeconds": 1700001835,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          43,
+          54
+        ],
+        "method": "Deflated"
+      },
+      {
+        "name": "资料/zero.dat",
+        "utcSeconds": 1700001937,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          45,
+          36
+        ],
+        "method": "Deflated"
+      },
+      {
+        "name": "资料/空目录/",
+        "utcSeconds": 1700001531,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          38,
+          50
+        ],
+        "method": "Stored"
+      },
+      {
+        "name": "empty-root/",
+        "utcSeconds": 1700001565,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          24
+        ],
+        "method": "Stored"
+      }
+    ],
+    "restored": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\from-legacy-numeric"
+    ]
+  },
+  {
+    "name": "xz-aes-standard",
+    "input": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\xz-aes-standard.zipx",
+    "output": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\xz-aes-standard.zipx",
+    "parts": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\xz-aes-standard.zx01",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\xz-aes-standard.zx02",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\xz-aes-standard.zx03",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\xz-aes-standard.zx04",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\xz-aes-standard.zx05",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\xz-aes-standard.zx06",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\xz-aes-standard.zx07",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\xz-aes-standard.zx08",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\xz-aes-standard.zx09",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\xz-aes-standard.zx10",
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\xz-aes-standard.zipx"
+    ],
+    "numeric": false,
+    "encrypted": true,
+    "sources": [
+      {
+        "name": "资料",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料",
+        "directory": true,
+        "seconds": 1700001553,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": null
+      },
+      {
+        "name": "资料/a.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\a.bin",
+        "directory": false,
+        "seconds": 1700001733,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": "dfb7f16429720d293c2f1373fb6bdb0bd0f6ec9f9a1eed66f11859c2cda98d55"
+      },
+      {
+        "name": "资料/b.bin",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\b.bin",
+        "directory": false,
+        "seconds": 1710054135,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": "605d075aabda68958555a7084667be2a5f07ba753b011259aba4d870ee5fcdce"
+      },
+      {
+        "name": "资料/note.txt",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\note.txt",
+        "directory": false,
+        "seconds": 1700001835,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": "ed5c3bc9c222b4aa0b3aa44e62e4de0662c900f83621e66be1532f5c89f9191a"
+      },
+      {
+        "name": "资料/zero.dat",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\zero.dat",
+        "directory": false,
+        "seconds": 1700001937,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "name": "资料/空目录",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\资料\\空目录",
+        "directory": true,
+        "seconds": 1700001531,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": null
+      },
+      {
+        "name": "empty-root",
+        "path": "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\source\\empty-root",
+        "directory": true,
+        "seconds": 1700001565,
+        "nanos": 123456700,
+        "utcExpected": true,
+        "sha256": null
+      }
+    ],
+    "headers": [
+      {
+        "name": "资料/",
+        "utcSeconds": 1700001553,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          12
+        ],
+        "method": "Stored"
+      },
+      {
+        "name": "资料/a.bin",
+        "utcSeconds": 1700001733,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          42,
+          12
+        ],
+        "method": "Xz"
+      },
+      {
+        "name": "资料/b.bin",
+        "utcSeconds": 1710054135,
+        "dos": [
+          2024,
+          3,
+          10,
+          15,
+          2,
+          14
+        ],
+        "method": "Xz"
+      },
+      {
+        "name": "资料/note.txt",
+        "utcSeconds": 1700001835,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          43,
+          54
+        ],
+        "method": "Xz"
+      },
+      {
+        "name": "资料/zero.dat",
+        "utcSeconds": 1700001937,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          45,
+          36
+        ],
+        "method": "Stored"
+      },
+      {
+        "name": "资料/空目录/",
+        "utcSeconds": 1700001531,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          38,
+          50
+        ],
+        "method": "Stored"
+      },
+      {
+        "name": "empty-root/",
+        "utcSeconds": 1700001565,
+        "dos": [
+          2023,
+          11,
+          15,
+          6,
+          39,
+          24
+        ],
+        "method": "Stored"
+      }
+    ],
+    "restored": [
+      "E:\\Project\\AIProject\\GeminiProject\\long_Decompress\\long-compress-assistant\\src-tauri\\../test-results/zip-utc-write-1732\\7e6cac5b-5420-4490-afb1-08fa2fd50d47\\from-xz-aes-standard"
+    ]
+  }
+]
