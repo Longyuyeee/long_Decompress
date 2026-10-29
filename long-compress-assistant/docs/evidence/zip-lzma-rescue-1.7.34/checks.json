@@ -1,0 +1,30 @@
+{
+  "version": "1.7.34",
+  "date": "2026-10-29",
+  "passed": true,
+  "nativeTests": 5,
+  "relatedRegressions": 3,
+  "firstRun": {
+    "passed": 5,
+    "failed": 0
+  },
+  "independentOriginals": 2,
+  "recoveredArchives": 37,
+  "recoveredEntries": 134,
+  "independentReadbacks": 39,
+  "controlledStops": 30,
+  "noPublicationCases": 5,
+  "shellExtensionBuilt": true,
+  "releaseIdentityPassed": true,
+  "commands": [
+    "cargo test --manifest-path src-tauri/Cargo.toml --lib lzmarescue1734 -- --nocapture --test-threads=1",
+    "python scripts/verify-zip-lzma-rescue-1734.py",
+    "compiled unit executable: streamed_deflate_descriptors_recover_without_searching_for_payload_signatures",
+    "compiled unit executable: bziprescue1733_real_streaming_zip32_zip64_signed_and_unsigned_recover_complete_members",
+    "compiled unit executable: lzma1560_valid_eos_and_sized_no_eos_survive_raw_copy_and_independent_extraction",
+    "npm run build:shell-extension",
+    "npm run test:release-identity"
+  ],
+  "scope": "Unencrypted method 14; EOS declaration and actual marker required; ZIP LZMA properties validated, estimated decoder memory <=256 MiB, readahead excluded from boundary. No new password or format capability.",
+  "ui": "No frontend changes or desktop control; previously passed UI and unrelated algorithm matrices not rerun."
+}
