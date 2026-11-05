@@ -95,19 +95,31 @@ const COMPRESS_VERBS: &[&str] = &[
     "LongDecompress.compressZip",
     "LongDecompress.compress7z",
     "LongDecompress.compressCustom",
+    "LongDecompress.compressEncrypted",
+    "LongDecompress.compressSplit",
 ];
 
 #[cfg(target_os = "windows")]
 const ARCHIVE_VERBS: &[&str] = &[
     "LongDecompress.extractHere", "LongDecompress.extractTo", "LongDecompress.extractChoose",
     "LongDecompress.open", "LongDecompress.moreArchive",
+    "LongDecompress.compressZip", "LongDecompress.compress7z", "LongDecompress.compressCustom",
+    "LongDecompress.compressEncrypted", "LongDecompress.compressSplit",
 ];
 #[cfg(target_os = "windows")]
 const MORE_ARCHIVE_VERBS: &[&str] = &[
     "LongDecompress.testArchive", "LongDecompress.repairArchive", "LongDecompress.convertArchive",
-    "LongDecompress.reconfigureArchive", "LongDecompress.repackArchiveFiles",
+    "LongDecompress.reconfigureArchive",
 ];
 
+#[cfg(target_os = "windows")]
+const IMAGE_EXTENSIONS: &[&str] = &[".jpg", ".jpeg", ".png", ".webp"];
+#[cfg(target_os = "windows")]
+const IMAGE_VERBS: &[&str] = &[
+    "LongDecompress.imageCompress", "LongDecompress.imageWebp", "LongDecompress.imageResize",
+    "LongDecompress.compressZip", "LongDecompress.compress7z", "LongDecompress.compressCustom",
+    "LongDecompress.compressEncrypted", "LongDecompress.compressSplit",
+];
 #[cfg(target_os = "windows")]
 const BACKGROUND_VERBS: &[&str] = &[
     "LongDecompress.compressZipHere",
@@ -117,12 +129,26 @@ const BACKGROUND_VERBS: &[&str] = &[
 
 #[cfg(target_os = "windows")]
 fn recovery_extensions() -> Vec<String> {
-    std::iter::once(".rev".to_string()).chain((0..100).map(|n| format!(".r{n:02}"))).collect()
+    vec![".rev".into()]
+}
+
+#[cfg(target_os = "windows")]
+fn archive_menu_extensions() -> Vec<String> {
+    let mut extensions = ARCHIVE_EXTENSIONS.iter().map(|s|s.to_string()).collect::<std::collections::BTreeSet<_>>();
+    extensions.extend((0..100).map(|n|format!(".r{n:02}")));
+    extensions.extend((1..100).map(|n|format!(".z{n:02}")));
+    extensions.extend((1..1000).map(|n|format!(".{n:03}")));
+    extensions.into_iter().collect()
 }
 
 #[cfg(target_os = "windows")]
 fn verbs() -> Vec<VerbDef> {
     vec![
+        VerbDef { verb: "LongDecompress.compressEncrypted", label: "加密压缩…", cli: "--compress-encrypted \"%1\"" },
+        VerbDef { verb: "LongDecompress.compressSplit", label: "分卷压缩…", cli: "--compress-split \"%1\"" },
+        VerbDef { verb: "LongDecompress.imageCompress", label: "压缩图片…", cli: "--image-compress \"%1\"" },
+        VerbDef { verb: "LongDecompress.imageWebp", label: "转换为 WebP…", cli: "--image-webp \"%1\"" },
+        VerbDef { verb: "LongDecompress.imageResize", label: "缩小图片尺寸…", cli: "--image-resize \"%1\"" },
         VerbDef {
             verb: "LongDecompress.open",
             label: "浏览压缩包内容",
@@ -168,17 +194,17 @@ fn verbs() -> Vec<VerbDef> {
         },
         VerbDef {
             verb: "LongDecompress.compressZip",
-            label: "压缩为 ZIP…",
+            label: "压缩为 ZIP",
             cli: "--compress-zip \"%1\"",
         },
         VerbDef {
             verb: "LongDecompress.compress7z",
-            label: "压缩为 7Z…",
+            label: "压缩为 7Z",
             cli: "--compress-7z \"%1\"",
         },
         VerbDef {
             verb: "LongDecompress.compressCustom",
-            label: "更多压缩选项…",
+            label: "添加到压缩包…",
             cli: "--compress-custom \"%1\"",
         },
         VerbDef {
@@ -301,7 +327,7 @@ fn register_legacy_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
         "--quick-pack \"%1\"",
         app_path,
     )?;
-    for ext in ARCHIVE_EXTENSIONS {
+    for ext in archive_menu_extensions() {
         let association_root = format!(r"Software\Classes\SystemFileAssociations\{}\shell", ext);
         reg_shell_entry(
             hkcu,
@@ -313,6 +339,9 @@ fn register_legacy_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
 
     }
 
+    for extension in IMAGE_EXTENSIONS {
+        reg_shell_entry(hkcu, &format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", extension), &all_verbs, IMAGE_VERBS, app_path)?;
+    }
     for extension in recovery_extensions() {
         reg_shell_entry(hkcu, &format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", extension),
             &all_verbs, &["LongDecompress.repairArchive"], app_path)?;
@@ -595,6 +624,9 @@ fn unregister_native_menu(hkcu: &RegKey) -> Result<()> {
 #[cfg(target_os = "windows")]
 fn unregister_legacy_menu(hkcu: &RegKey) -> Result<()> {
     for (path, _, _) in checksum_menu_entries(r"Software\Classes") { delete_tree_if_present(hkcu, &path)?; }
+    for extension in IMAGE_EXTENSIONS {
+        delete_tree_if_present(hkcu, &format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", extension))?;
+    }
     for extension in recovery_extensions() {
         delete_tree_if_present(hkcu, &format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", extension))?;
     }
@@ -613,7 +645,7 @@ fn unregister_legacy_menu(hkcu: &RegKey) -> Result<()> {
     ] {
         delete_tree_if_present(hkcu, entry)?;
     }
-    for extension in ARCHIVE_EXTENSIONS {
+    for extension in archive_menu_extensions() {
         delete_tree_if_present(
             hkcu,
             &format!(
@@ -914,7 +946,7 @@ pub fn is_context_menu_registered() -> bool {
         &all_verbs,
         BACKGROUND_VERBS,
         &app_path,
-    ) && ARCHIVE_EXTENSIONS.iter().all(|extension| {
+    ) && archive_menu_extensions().iter().all(|extension| {
         legacy_shell_entry_is_current(
             &hkcu,
             &format!(
@@ -925,7 +957,9 @@ pub fn is_context_menu_registered() -> bool {
             ARCHIVE_VERBS,
             &app_path,
         )
-    }) && recovery_extensions().iter().all(|extension| legacy_shell_entry_is_current(&hkcu,
+    }) && IMAGE_EXTENSIONS.iter().all(|extension| legacy_shell_entry_is_current(&hkcu,
+        &format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", extension),
+        &all_verbs, IMAGE_VERBS, &app_path)) && recovery_extensions().iter().all(|extension| legacy_shell_entry_is_current(&hkcu,
         &format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", extension),
         &all_verbs, &["LongDecompress.repairArchive"], &app_path))
 }
@@ -1393,5 +1427,28 @@ mod explorer_checksum_1528_tests {
         for (path,_,_) in checksum_menu_entries(r"Software\Classes") {
             assert!(nsis.contains(&format!("DeleteRegKey HKCU \"{}\"", path)), "{}",path);
         }
+    }
+}
+
+#[cfg(all(test, windows))]
+mod explorer1740_tests {
+    use super::*;
+    #[test]
+    fn explorer1740_real_classic_registry_groups_and_stale_repair() {
+        let root=format!(r"Software\LongDecompressTests\Explorer1740.{}",std::process::id());
+        let hkcu=RegKey::predef(HKEY_CURRENT_USER);
+        struct Cleanup(String);impl Drop for Cleanup{fn drop(&mut self){let _=RegKey::predef(HKEY_CURRENT_USER).delete_subkey_all(&self.0);}}
+        let _cleanup=Cleanup(root.clone());let all=verbs();
+        for (label,selected) in [("ordinary",COMPRESS_VERBS),("archive",ARCHIVE_VERBS),("image",IMAGE_VERBS)]{
+            let path=format!(r"{}\{}",root,label);let exe=r"C:\Program Files\中文 路径\Long解压.exe";
+            reg_shell_entry(&hkcu,&path,&all,selected,exe).unwrap();assert!(legacy_shell_entry_is_current(&hkcu,&path,&all,selected,exe));
+            assert!(selected.contains(&"LongDecompress.compressZip"));assert!(selected.contains(&"LongDecompress.compress7z"));assert!(selected.contains(&"LongDecompress.compressEncrypted"));assert!(selected.contains(&"LongDecompress.compressSplit"));
+            let shell=hkcu.open_subkey(format!(r"{}\shell",path)).unwrap();assert_eq!(shell.enum_keys().count(),selected.len());
+            for (index,name) in selected.iter().enumerate(){let verb=all.iter().find(|v|v.verb==*name).unwrap();if verb.cli.is_empty(){continue}let command=shell.open_subkey(format!(r"{:02}.{}\command",index+1,name)).unwrap().get_value::<String,_>("").unwrap();assert_eq!(command,format!("\"{exe}\" {}",verb.cli));}
+            assert!(!legacy_shell_entry_is_current(&hkcu,&path,&all,selected,r"C:\stale.exe"));
+        }
+        assert!(!COMPRESS_VERBS.contains(&"LongDecompress.extractHere"));assert!(ARCHIVE_VERBS.contains(&"LongDecompress.extractChoose"));assert!(IMAGE_VERBS.contains(&"LongDecompress.imageCompress"));
+        for ext in [".r00",".r99",".z02",".001",".999"] { assert!(archive_menu_extensions().contains(&ext.to_owned())); assert!(!recovery_extensions().contains(&ext.to_owned())); }
+        let installer=include_str!("../../installer.nsi");for ext in IMAGE_EXTENSIONS {assert!(installer.contains(&format!(r"SystemFileAssociations\{}\shell\LongDecompress",ext)));}
     }
 }

@@ -109,6 +109,9 @@ const {
 } = navigation
 const loading = browseRequest.loading
 const extracting = ref(false)
+const copyRequestId = ref(''), copyProgress = ref(0), copyCancelling = ref(false)
+let unlistenCopyProgress: (() => void) | undefined
+const cancelCopy = () => { if (!copyRequestId.value || copyCancelling.value) return; copyCancelling.value = true; void invoke('cancel_compression', { taskId: copyRequestId.value }).catch(error => { copyCancelling.value = false; appStore.setError(String(error)) }) }
 const checkingSnapshot = ref(false)
 const diffVisible = ref(false)
 const recoveryVisible = ref(false)
@@ -116,7 +119,7 @@ const openingEntryPath = ref('')
 const nestedRequestId = ref('')
 let nestedSequence = 0
 const cancelNestedOpen = () => { const id=nestedRequestId.value; nestedRequestId.value=''; nestedSequence++; openingEntryPath.value=''; if(id)void commands.cancelArchiveBrowse(id).catch(()=>{}) }
-const inputBusy = computed(() => zipEditBusy.value || loading.value || extracting.value || checkingSnapshot.value || !!openingEntryPath.value)
+const inputBusy = computed(() => zipEditBusy.value || loading.value || extracting.value || !!copyRequestId.value || checkingSnapshot.value || !!openingEntryPath.value)
 const dangerousOpenEntry = ref<ArchiveEntryInfo | null>(null)
 const reading=useArchiveReadingStore()
 const readerOpen=ref(false),readerInitialPath=ref(''),readerResume=ref<ArchiveReadingRecord>(),readerCollectPaths=ref<string[]|null>(null),showAllReading=ref(false)
@@ -196,6 +199,7 @@ const detailCompressedSize = computed(() => detailFiles.value.reduce((sum, entry
 const detailTitle = computed(() => detailEntries.value.length === 1 ? detailEntries.value[0].name : `${detailEntries.value.length} 个条目`)
 const contextDisplayEntries = computed(() => {
   if (!contextMenu.value) return []
+  if (props.embedded) return [...directoryEntries.value, ...files.value].filter(entry=>paneSelection.value.has(entry.path))
   if (contextMenu.value.entry?.isDir) return [contextMenu.value.entry]
   return contextMenu.value.entries
 })
@@ -580,6 +584,7 @@ const activateEntry = (entry: ArchiveEntryInfo) => {
 }
 
 const contextEntriesFor = (entry: ArchiveEntryInfo | null) => {
+  if (props.embedded) return (result.value?.entries || []).filter(item=>[...paneSelection.value].some(root=>item.path===root || item.path.startsWith(root.replace(/\/+$/,'')+'/')))
   if (!entry) return files.value.filter(file => selected.value.has(file.path))
   if (entry.isDir) {
     const prefix = entry.path.replace(/\\/g, '/')
@@ -635,6 +640,26 @@ const copyContextText = async (kind: 'name' | 'path', entries: ArchiveEntryInfo[
   }
 }
 
+const copyRootPaths = (entry?: ArchiveEntryInfo | null) => {
+  if (props.embedded) return [...paneSelection.value]
+  if (entry?.isDir) return [entry.path]
+  return (contextMenu.value?.entries || files.value.filter(file => selected.value.has(file.path))).map(item => item.path)
+}
+const copyFiles = async (paths: string[]) => {
+  if (!paths.length || inputBusy.value || !result.value?.revision) return
+  closeContextMenu()
+  const taskId = `archive-copy-${crypto.randomUUID()}`
+  copyRequestId.value = taskId; copyProgress.value = 0; copyCancelling.value = false
+  try {
+    const count = await invoke<number>('copy_archive_entries', { taskId, filePath: archivePath.value, entryPaths: paths,
+      password: password.value || null, zipPasswordEncoding: inputEncoding.value || null,
+      zpaqSnapshot: selectedSnapshot.value || null, sourceRevision: result.value.revision })
+    if (!disposed) appStore.setSuccess(`已复制 ${count} 项，可在文件夹中粘贴`)
+  } catch (error) {
+    if (!disposed) appStore.setError(copyCancelling.value ? '复制已取消，原剪贴板保持不变' : `复制未完成：${String(error)}`)
+  } finally { copyRequestId.value = ''; copyCancelling.value = false }
+}
+
 const addingToLibrary=ref(false),addedToLibrary=ref(false)
 async function addToLibrary(){
   if(!archivePath.value||addingToLibrary.value)return
@@ -675,7 +700,7 @@ const extractPaths = async (paths: string[], destination: string, readerSelectio
 
 const extractContextEntries = async (chooseDestination: boolean) => {
   const entries = contextMenu.value?.entries ?? []
-  const paths = entries.filter(entry => !entry.isDir).map(entry => entry.path)
+  const paths = entries.map(entry => entry.path)
   if (chooseDestination) closeContextMenu()
   const destination = chooseDestination
     ? await requestOutputDirectory(outputPath.value)
@@ -725,7 +750,8 @@ const handleWorkspaceKeydown = (event: KeyboardEvent) => {
   if (event.defaultPrevented || readerOpen.value || props.embedded && !props.active) return
   if (document.querySelector('[role="dialog"], [role="alertdialog"]') && !previewEntry.value && !dangerousOpenEntry.value && !detailEntries.value.length) return
   if (event.key === 'Escape') {
-    if (nestedRequestId.value) {event.preventDefault();cancelNestedOpen()}
+    if (copyRequestId.value) { event.preventDefault(); cancelCopy() }
+    else if (nestedRequestId.value) {event.preventDefault();cancelNestedOpen()}
     else if (previewEntry.value) closePreview()
     else if (dangerousOpenEntry.value) dangerousOpenEntry.value = null
     else if (contextMenu.value) closeContextMenu()
@@ -772,6 +798,10 @@ const handleWorkspaceKeydown = (event: KeyboardEvent) => {
   } else if (event.ctrlKey && event.altKey && event.key.toLocaleLowerCase() === 'c' && keyboardDisplayEntries.length > 0) {
     event.preventDefault()
     void copyContextText('name', keyboardDisplayEntries)
+  } else if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'c') {
+    if (previewEntry.value || detailEntries.value.length || window.getSelection()?.toString()) return
+    const paths = copyRootPaths(focusedEntry)
+    if (paths.length) { event.preventDefault(); void copyFiles(paths) }
   } else if (event.key === 'F5') {
     event.preventDefault()
     void refreshDirectory()
@@ -818,6 +848,7 @@ onMounted(() => {
   window.addEventListener('keydown', handleWorkspaceKeydown)
   window.addEventListener('pointerdown', dismissPaneTools)
   void Promise.all([
+    listen<{task_id:string;progress:number}>('task-progress', event => { if(event.payload.task_id===copyRequestId.value) copyProgress.value=Math.min(99, Math.max(0,Math.round(event.payload.progress*100))) }).then(value => { if(disposed)value();else unlistenCopyProgress=value }),
     listen('tauri://file-drop-hover', () => { if (!props.embedded || props.active) isDraggingArchive.value = true }).then(value => { if (disposed) value(); else unlistenHover = value }),
     listen<string[]>('tauri://file-drop', event => {
       isDraggingArchive.value = false
@@ -831,6 +862,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('pointerdown', dismissPaneTools)
+  cancelCopy()
+  unlistenCopyProgress?.()
   cancelEntryPreview()
   cancelNestedOpen()
   disposed = true; sourceSequence++; archiveLoadSequence++
@@ -1106,6 +1139,7 @@ defineExpose({extractToDestination})
           <i :class="extracting ? 'pi pi-spin pi-spinner' : 'pi pi-download'"></i><span>{{ extracting ? '正在解压' : usesPeerOutput ? '解压到另一栏' : '解压所选文件' }}</span>
         </button>
       </footer>
+      <div v-if="copyRequestId" class="archive-copy-status" data-testid="archive-copy-status" role="status"><i class="pi pi-spin pi-spinner"/><span>{{copyCancelling?'正在取消复制…':`正在准备复制 · ${copyProgress}%`}}</span><progress :value="copyProgress" max="100" aria-label="复制准备进度"/><button type="button" :disabled="copyCancelling" @click="cancelCopy">取消</button></div>
       <footer v-if="embedded" class="pane-folder-footer"><button v-if="nestedRequestId" data-testid="archive-nested-cancel" type="button" @click="cancelNestedOpen"><i class="pi pi-spin pi-spinner"/> 正在打开… · 取消</button><span v-else>{{paneSelection.size?`已选择 ${paneSelection.size} 项`:paneSelectionMode?'多选模式 · 单击切换选择 · Esc 退出':'单击选择 · Ctrl 多选 · 双击打开 · 右键操作'}}</span><button v-if="paneSelectionMode" type="button" @click="paneSelectionMode=false;setPaneSelection(new Set())">退出多选</button></footer>
     </template>
 
@@ -1151,15 +1185,15 @@ defineExpose({extractToDestination})
         >
           <header class="archive-context-header">
             <i :class="contextMenu.entry?.isDir ? 'pi pi-folder' : contextDisplayEntries.length > 1 ? 'pi pi-clone' : 'pi pi-file'"></i>
-            <span class="min-w-0"><strong class="block truncate">{{ contextMenu.entry?.isDir ? contextMenu.entry.name : contextDisplayEntries.length > 1 ? `${contextDisplayEntries.length} 个已选文件` : contextMenu.entry?.name || '当前文件区' }}</strong><small>{{ contextMenu.entry?.isDir ? `${contextMenu.entries.length} 个文件` : contextDisplayEntries.length > 1 ? '批量操作' : contextMenu.entry?.linkTarget ? '链接内容 · 可预览或提取为独立文件' : contextMenu.entry && canPreviewEntry(contextMenu.entry) && entryPreviewSupported(contextMenu.entry) ? '可内部只读预览，也可用默认应用打开' : '可安全提取后用默认应用打开' }}</small></span>
+            <span class="min-w-0"><strong class="block truncate">{{ contextDisplayEntries.length > 1 ? `${contextDisplayEntries.length} 个已选项目` : contextMenu.entry?.isDir ? contextMenu.entry.name : contextMenu.entry?.name || '当前文件区' }}</strong><small>{{ contextDisplayEntries.length > 1 ? '批量操作' : contextMenu.entry?.isDir ? `${contextMenu.entries.length} 个项目` : contextMenu.entry?.linkTarget ? '链接内容 · 可预览或提取为独立文件' : contextMenu.entry && canPreviewEntry(contextMenu.entry) && entryPreviewSupported(contextMenu.entry) ? '可内部只读预览，也可用默认应用打开' : '可安全提取后用默认应用打开' }}</small></span>
           </header>
 
-          <button v-if="contextMenu.entry?.isDir" type="button" role="menuitem" data-testid="archive-context-open" @click="openContextEntry(contextMenu.entry)"><i class="pi pi-folder-open"></i><span>打开文件夹</span><kbd>Enter</kbd></button>
-          <button v-if="contextMenu.entry && !contextMenu.entry.isDir" type="button" role="menuitem" data-testid="archive-context-default-open" :disabled="Boolean(openingEntryPath)||!!contextMenu.entry.linkTarget" :title="contextMenu.entry.linkTarget?'请先提取后打开':''" @click="defaultOpenContextEntry(contextMenu.entry)"><i :class="openingEntryPath === contextMenu.entry.path ? 'pi pi-spin pi-spinner' : 'pi pi-external-link'"></i><span>使用默认应用打开</span><kbd>Enter</kbd></button>
-          <button v-if="contextMenu.entry && isNestedArchiveEntry(contextMenu.entry)" type="button" role="menuitem" data-testid="archive-context-enter-nested" :disabled="archiveDepth >= 3 || Boolean(openingEntryPath)" :title="archiveDepth >= 3 ? '已达到最多 3 层嵌套限制' : '在只读子工作区中打开'" @click="enterNestedArchive(contextMenu.entry)"><i class="pi pi-sitemap"></i><span>{{ archiveDepth >= 3 ? '已达到 3 层上限' : '进入压缩包' }}</span><kbd>Enter</kbd></button>
-          <button v-if="contextMenu.entry && !contextMenu.entry.isDir && canPreviewEntry(contextMenu.entry) && entryPreviewSupported(contextMenu.entry)" type="button" role="menuitem" data-testid="archive-context-preview" @click="previewContextEntry(contextMenu.entry)"><i class="pi pi-eye"></i><span>内部查看器打开</span><kbd>Ctrl+Enter</kbd></button>
+          <button v-if="contextDisplayEntries.length === 1 && contextMenu.entry?.isDir" type="button" role="menuitem" data-testid="archive-context-open" @click="openContextEntry(contextMenu.entry)"><i class="pi pi-folder-open"></i><span>打开文件夹</span><kbd>Enter</kbd></button>
+          <button v-if="contextDisplayEntries.length === 1 && contextMenu.entry && !contextMenu.entry.isDir" type="button" role="menuitem" data-testid="archive-context-default-open" :disabled="Boolean(openingEntryPath)||!!contextMenu.entry.linkTarget" :title="contextMenu.entry.linkTarget?'请先提取后打开':''" @click="defaultOpenContextEntry(contextMenu.entry)"><i :class="openingEntryPath === contextMenu.entry.path ? 'pi pi-spin pi-spinner' : 'pi pi-external-link'"></i><span>使用默认应用打开</span><kbd>Enter</kbd></button>
+          <button v-if="contextDisplayEntries.length === 1 && contextMenu.entry && isNestedArchiveEntry(contextMenu.entry)" type="button" role="menuitem" data-testid="archive-context-enter-nested" :disabled="archiveDepth >= 3 || Boolean(openingEntryPath)" :title="archiveDepth >= 3 ? '已达到最多 3 层嵌套限制' : '在只读子工作区中打开'" @click="enterNestedArchive(contextMenu.entry)"><i class="pi pi-sitemap"></i><span>{{ archiveDepth >= 3 ? '已达到 3 层上限' : '进入压缩包' }}</span><kbd>Enter</kbd></button>
+          <button v-if="contextDisplayEntries.length === 1 && contextMenu.entry && !contextMenu.entry.isDir && canPreviewEntry(contextMenu.entry) && entryPreviewSupported(contextMenu.entry)" type="button" role="menuitem" data-testid="archive-context-preview" @click="previewContextEntry(contextMenu.entry)"><i class="pi pi-eye"></i><span>内部查看器打开</span><kbd>Ctrl+Enter</kbd></button>
 
-          <button v-if="canEditZip && contextMenu.entry && !contextMenu.entry.isDir" type="button" role="menuitem" data-testid="archive-context-edit-replace" :disabled="inputBusy" @click="zipEditor?.replace(contextMenu.entry.path); closeContextMenu()"><i class="pi pi-file-edit"></i><span>替换此文件并另存…</span></button>
+          <button v-if="contextDisplayEntries.length === 1 && canEditZip && contextMenu.entry && !contextMenu.entry.isDir" type="button" role="menuitem" data-testid="archive-context-edit-replace" :disabled="inputBusy" @click="zipEditor?.replace(contextMenu.entry.path); closeContextMenu()"><i class="pi pi-file-edit"></i><span>替换此文件并另存…</span></button>
           <button v-if="canEditZip && contextMenu.entry" type="button" role="menuitem" data-testid="archive-context-edit-rename" :disabled="inputBusy" @click="zipEditor?.organize(contextDisplayEntries.map(entry=>entry.path),'rename'); closeContextMenu()"><i class="pi pi-pencil"></i><span>{{ contextDisplayEntries.length>1?'批量改名或移动…':'重命名或移动…' }}</span></button>
           <button v-if="canEditZip && contextMenu.entry" type="button" role="menuitem" data-testid="archive-context-edit-delete" :disabled="inputBusy" @click="zipEditor?.organize(contextDisplayEntries.map(entry=>entry.path),'delete'); closeContextMenu()"><i class="pi pi-trash"></i><span>从新 ZIP 删除…</span></button>
           <button v-if="canEditZip && !contextMenu.entry" type="button" role="menuitem" data-testid="archive-context-edit-add" :disabled="inputBusy" @click="zipEditor?.addFiles(); closeContextMenu()"><i class="pi pi-plus"></i><span>添加文件到当前目录…</span></button>
@@ -1168,6 +1202,7 @@ defineExpose({extractToDestination})
           <button v-if="contextMenu.entries.length > 0" type="button" role="menuitem" data-testid="archive-context-extract-choose" :disabled="extracting" @click="extractContextEntries(true)"><i class="pi pi-folder-open"></i><span>解压到指定目录…</span><kbd>Alt+Shift+E</kbd></button>
 
           <div v-if="contextDisplayEntries.length > 0" class="archive-context-separator"></div>
+          <button v-if="copyRootPaths(contextMenu.entry).length" type="button" role="menuitem" data-testid="archive-context-copy-files" :disabled="inputBusy" @click="copyFiles(copyRootPaths(contextMenu.entry))"><i class="pi pi-copy"/><span>复制</span><kbd>Ctrl+C</kbd></button>
           <button v-if="contextDisplayEntries.length > 0" type="button" role="menuitem" data-testid="archive-context-copy-name" @click="copyContextText('name', contextDisplayEntries)"><i class="pi pi-copy"></i><span>复制名称</span><kbd>Ctrl+Alt+C</kbd></button>
           <button v-if="contextDisplayEntries.length > 0" type="button" role="menuitem" data-testid="archive-context-copy-path" @click="copyContextText('path', contextDisplayEntries)"><i class="pi pi-link"></i><span>复制归档内路径</span><kbd>Ctrl+Shift+C</kbd></button>
           <button v-if="contextDisplayEntries.length > 0" type="button" role="menuitem" data-testid="archive-context-details" @click="showDetails(contextDisplayEntries)"><i class="pi pi-info-circle"></i><span>显示详细信息</span><kbd>Alt+Enter</kbd></button>
@@ -1367,4 +1402,8 @@ defineExpose({extractToDestination})
 @container archive-pane (max-width:360px){.archive-pane-browser .browser-table-head,.archive-pane-browser .browser-row{grid-template-columns:18px minmax(0,1fr) 44px;gap:5px;padding:8px}.archive-pane-browser .browser-navigation{flex-wrap:wrap}.archive-pane-browser .browser-navigation-actions{flex-shrink:0}.archive-pane-browser .browser-breadcrumbs{flex:1;min-width:0}}
 
 .archive-pane-browser>.pane-folder-footer{display:flex;min-height:2rem;align-items:center;justify-content:space-between;gap:.5rem;padding:.4rem .7rem;border-top:1px solid var(--border-subtle);color:var(--text-muted);font-size:.6rem;font-weight:700}.pane-folder-footer>span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pane-folder-footer>button{flex-shrink:0;color:var(--dynamic-accent);font-weight:800}.pane-search-options{display:flex;flex-wrap:wrap;gap:8px}.pane-search-options>.browser-search{flex:1 1 150px}.pane-search-options>button,.pane-source-facts>button{color:var(--dynamic-accent);font-size:11px}.pane-source-facts{display:flex;align-items:center;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--text-muted)}
+</style>
+
+<style scoped>
+.archive-copy-status{display:flex;align-items:center;gap:.6rem;padding:.55rem .8rem;border-top:1px solid var(--border-subtle);font-size:.75rem;color:var(--text-content);flex-shrink:0}.archive-copy-status progress{min-width:3rem;flex:1;height:5px;accent-color:var(--dynamic-accent)}.archive-copy-status button{color:var(--dynamic-accent);font-weight:700;padding:.3rem .5rem}
 </style>

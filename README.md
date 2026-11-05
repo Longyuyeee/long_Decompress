@@ -30,7 +30,7 @@
 
 ### 📂 压缩包，就是特殊文件夹
 
-两栏并排浏览，进入压缩包仍保留相同的导航、地址栏、列表和选择方式。在一栏找文件，在另一栏接收；TXT、常见文本和图片可直接预览，图片包支持连续阅读。
+两栏并排浏览，进入压缩包仍保留相同的导航、地址栏、列表和选择方式。在一栏找文件，在另一栏接收；TXT、常见文本和图片可直接预览，图片包支持连续阅读。包内选中文件或目录后，可用 Ctrl+C 复制，再到 Windows 文件夹粘贴。
 
 </td>
 <td width="50%" valign="top">
@@ -46,7 +46,7 @@
 
 ### 🖱️ 从 Windows 直接开始
 
-在设置中选择默认打开格式，经 Windows 确认后，双击可询问或直接执行：当前目录、同名文件夹、自选目录、双栏浏览。右键常用动作在前，其余收进“更多操作”。
+在设置中选择默认打开格式，经 Windows 确认后，双击可询问或直接执行：当前目录、同名文件夹、自选目录、双栏浏览。右键按所选内容提供压缩、解压或图片优化；维护操作收进“更多操作”，加密和分卷按需配置。
 
 </td>
 <td width="50%" valign="top">
@@ -119,7 +119,7 @@
 
 | 你想做什么 | 入口 |
 | --- | --- |
-| 只取出包里的几个文件，或先看 TXT / 图片 | 文件浏览器 → 在当前栏打开压缩包 |
+| 只取出几个文件，先看 TXT / 图片，或复制后粘贴到文件夹 | 文件浏览器 → 在当前栏打开压缩包 → 选中后右键 / Ctrl+C |
 | 修改内容、改名或整理 ZIP / ZIPX | 包内选项 → 编辑内容 → 复核后另存 |
 | 改归档格式、密码或分卷大小 | 压缩中心 → 转换压缩包 |
 | 查文件在哪个压缩包里 | 工具中心 → 归档资源库 → 建索引后搜索 |
@@ -213,10 +213,10 @@
 
 | 版本 | 主要更新 | 详情 |
 | --- | --- | --- |
+| **v1.7.40** | 包内文件 / 文件夹复制到 Windows 剪贴板；按类型补齐右键快捷操作，快速打包只处理本次选择 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.40.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.40) |
 | **v1.7.38** | 流式 ZIPX（XZ）丢目录后部分取回完整成员，接通 ZIP64、目录及完整数字切片 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.38.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.38) |
 | **v1.7.37** | 多帧 Zstandard ZIP 按整个成员确认后部分取回，接通空帧、ZIP64 和完整数字切片 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.37.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.37) |
 | **v1.7.36** | 单帧 Zstandard ZIP 丢目录后部分取回完整文件，接通 ZIP64、完整数字切片及来源日期 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.36.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.36) |
 | **v1.7.35** | ZIP 恢复新包保留已确认文件与目录修改时间，接通密码、分卷和流式取回结果 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.35.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.35) |
-| **v1.7.34** | 带结束标记的未加密流式 LZMA ZIP 丢目录部分取回，接通 ZIP64、目录与完整数字切片 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.34.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.34) |
 
 [查看全部历史版本 →](https://github.com/Longyuyeee/long_Decompress/releases)

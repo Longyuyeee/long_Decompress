@@ -24,6 +24,10 @@ describe('context action helpers', () => {
     ])
   })
 
+  it.each(['context-compress-zip','context-compress-7z'])('explorer1740 keeps %s launches from separate folders apart',action=>{
+    expect(groupContextActions([{action,files:['C:/one/a.txt','C:/one/b.txt']},{action,files:['D:/two/c.txt']}])).toEqual([{action,files:['C:/one/a.txt','C:/one/b.txt']},{action,files:['D:/two/c.txt']}])
+    expect(createQuickPackCandidate({outputDirectory:'C:/one',archiveName:'one'},1,'7z')).toEqual({archiveName:'one (1)',outputPath:'C:/one/one (1).7z'})
+  })
   it('builds a quick-pack name and output directory from the selection', () => {
     expect(createQuickPackPlan(['C:\\Users\\me\\Downloads\\one.txt', 'C:\\Users\\me\\Downloads\\two.txt']))
       .toEqual({ outputDirectory: 'C:\\Users\\me\\Downloads', archiveName: 'Downloads' })

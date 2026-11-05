@@ -1,0 +1,9 @@
+﻿{
+    "producerExited":  true,
+    "consumer":  "Windows Forms CF_HDROP + filesystem copy",
+    "selectedRoots":  2,
+    "preferredDropEffect":  "copy",
+    "nestedContent":  true,
+    "emptyDirectory":  true,
+    "unselectedExcluded":  true
+}

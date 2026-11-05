@@ -84,6 +84,24 @@ const modalStub = {
 }
 
 describe('App orchestration', () => {
+  it.each(['compress','webp','resize'])('explorer1740 routes image %s to the existing image workspace without auto starting',async mode=>{
+    mocks.contextActions=[{action:`context-image-${mode}`,files:['C:/照片 A.PNG','C:/照片 B.webp','C:/普通.txt']}]
+    const pinia=createPinia();setActivePinia(pinia);const store=useCompressionStore();store.globalSettings.format='tar'
+    const w=mount(App,{global:{plugins:[pinia],stubs:{MainLayout:true,ToastContainer:true,UpdateDialog:true,Modal:true}}});await flushPromises()
+    expect(store.imageItems).toHaveLength(2);expect(mocks.routerPush).toHaveBeenCalledWith({path:'/special-compression',query:{mode:'image'}})
+    expect(store.imageItems.every(i=>i.status==='inspecting')).toBe(true)
+    if(mode==='webp')expect(store.imageItems.every(i=>i.settings?.outputFormat==='webp')).toBe(true)
+    if(mode==='resize')expect(store.imageItems.every(i=>i.settings?.resizeMode==='limit')).toBe(true)
+    expect(store.globalSettings.format).toBe('tar');expect(store.autoStartRequested).toBe(false);w.unmount()
+  })
+  it.each(['encrypted','split'])('explorer1740 opens a %s draft and retains other waiting settings',async mode=>{
+    mocks.contextActions=[{action:`context-compress-${mode}`,files:['C:/新文件.txt']}]
+    const pinia=createPinia();setActivePinia(pinia);const store=useCompressionStore();store.addFile({name:'原任务',path:'C:/old.txt',size:1,type:'file',isDirectory:false});store.globalSettings.format='zip'
+    const w=mount(App,{global:{plugins:[pinia],stubs:{MainLayout:true,ToastContainer:true,UpdateDialog:true,Modal:true}}});await flushPromises()
+    const file=store.groups[0];expect(file.files.map(f=>f.path)).toEqual(['C:/新文件.txt']);expect(file.settings).toMatchObject({format:'7z',splitArchive:mode==='split',password:'',deleteAfter:false});expect(file.expanded).toBe(true)
+    expect(file.draftPasswordRequired).toBe(mode==='encrypted');expect(store.selectedFiles[0].settings).toBeUndefined();expect(store.autoStartRequested).toBe(false);w.unmount()
+  })
+
   it('explorer checksum 1528 routes and groups multiple create/verify requests without starting work', async () => {
     mocks.contextActions = [
       {action:'context-checksum-create',files:['C:/中文 空格/甲.bin','C:/中文 空格/乙.bin']},
@@ -212,12 +230,12 @@ describe('App orchestration', () => {
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'D', ctrlKey: true, shiftKey: true }))
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'L', ctrlKey: true, shiftKey: true }))
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'W', ctrlKey: true, shiftKey: true }))
-    expect(mocks.routerPush).toHaveBeenCalledWith('/compare')
-    expect(mocks.routerPush).toHaveBeenCalledWith('/library')
-    expect(mocks.routerPush).toHaveBeenCalledWith('/workflows')
+    expect(mocks.routerPush).toHaveBeenCalledWith('/tools/compare')
+    expect(mocks.routerPush).toHaveBeenCalledWith('/tools/library')
+    expect(mocks.routerPush).toHaveBeenCalledWith('/tools/workflows')
     expect(mocks.routerPush).toHaveBeenCalledWith('/decompress')
     expect(mocks.routerPush).toHaveBeenCalledWith('/special-compression')
-    expect(mocks.routerPush).toHaveBeenCalledWith('/integrity')
+    expect(mocks.routerPush).toHaveBeenCalledWith('/tools/integrity')
     expect(mocks.routerPush).toHaveBeenCalledWith('/history')
     expect(mocks.routerPush).toHaveBeenCalledWith('/settings')
 
@@ -249,7 +267,7 @@ describe('App orchestration', () => {
     expect(mocks.cleanupSystemWatcher).toHaveBeenCalledOnce()
   })
 
-  it('replaces a finished source row when Explorer requests another compression format', async () => {
+  it('keeps completed tasks and queues a scoped new pack when Explorer requests another format', async () => {
     mocks.contextActions = [{
       action: 'context-compress-7z',
       files: ['C:\\input\\alpha.txt'],
@@ -294,11 +312,13 @@ describe('App orchestration', () => {
     })
     await flushPromises()
 
-    expect(taskStore.tasks).toHaveLength(0)
-    expect(compressionStore.selectedFiles).toHaveLength(1)
-    expect(compressionStore.selectedFiles[0].path).toBe('C:\\input\\alpha.txt')
-    expect(compressionStore.selectedFiles[0]).not.toHaveProperty('taskId')
-    expect(compressionStore.globalSettings.format).toBe('7z')
+    expect(taskStore.tasks).toHaveLength(1)
+    expect(compressionStore.selectedFiles[0].taskId).toBe('finished-zip')
+    expect(compressionStore.groups).toHaveLength(1)
+    expect(compressionStore.groups[0].settings?.format).toBe('7z')
+    expect(compressionStore.groups[0].files.map(file=>file.path)).toEqual(['C:\\input\\alpha.txt'])
+    expect(compressionStore.takeAutoStartJobIds()).toEqual([compressionStore.groups[0].id])
+    expect(compressionStore.globalSettings.format).toBe('zip')
     expect(compressionStore.autoStartRequested).toBe(true)
     expect(mocks.routerPush).toHaveBeenCalledWith('/compress')
 

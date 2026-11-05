@@ -180,6 +180,7 @@ export const useCompressionStore = defineStore('compression', () => {
     archiveDefaultsInitialized = true
   }
   const autoStartRequested = ref(false)
+  const autoStartJobIds = ref<string[]>([])
   const imageItems = ref<ImageCompressionItem[]>([])
   const imageGlobalSettings = ref<ImageCompressionSettings>(createDefaultImageSettings())
   const imageLastRejections = ref<ImageCandidateRejection[]>([])
@@ -598,9 +599,18 @@ export const useCompressionStore = defineStore('compression', () => {
     compressionAnalysis.value = {}
   }
 
-  const addQuickPack = (files: FileObject[], name: string, outputPath: string) => {
+  const addExplorerDraft = (files: FileObject[], name: string, outputPath: string, preset: 'custom' | 'encrypted' | 'split') => {
+    groups.value.push({ id:`explorer-draft-${Date.now()}-${groups.value.length}`, name,
+      files:files.map(file=>({...file,expanded:false})), themeColor:'#3b82f6', expanded:true, outputPath,
+      draftPasswordRequired:preset==='encrypted',
+      settings:{...cloneSettings(globalSettings.value),format:preset==='custom'?globalSettings.value.format:'7z',
+        filename:name,password:'',encryptFilenames:false,deleteAfter:false,splitArchive:preset==='split'} })
+  }
+
+  const addQuickPack = (files: FileObject[], name: string, outputPath: string, format: 'zip' | '7z' = 'zip') => {
+    const id = `quick-pack-${Date.now()}-${groups.value.length}`
     groups.value.push({
-      id: `quick-pack-${Date.now()}-${groups.value.length}`,
+      id,
       name,
       files: files.map(file => ({ ...file, expanded: false })),
       themeColor: '#3b82f6',
@@ -608,11 +618,11 @@ export const useCompressionStore = defineStore('compression', () => {
       outputPath,
       settings: {
         ...cloneSettings(globalSettings.value),
-        format: 'zip',
+        format, password: '', encryptFilenames: false, splitArchive: false, deleteAfter: false,
         filename: name,
       },
     })
-    globalSettings.value.format = 'zip'
+    autoStartJobIds.value.push(id)
     autoStartRequested.value = true
   }
 
@@ -698,7 +708,10 @@ export const useCompressionStore = defineStore('compression', () => {
     selectedFiles.value = selectedFiles.value.filter(file => !file.taskId || !removed.has(file.taskId))
   }
 
+  const takeAutoStartJobIds = () => { const ids = [...autoStartJobIds.value]; autoStartJobIds.value = []; return ids }
+
   const requestAutoStart = () => {
+    autoStartJobIds.value = []
     autoStartRequested.value = true
   }
 
@@ -769,6 +782,7 @@ export const useCompressionStore = defineStore('compression', () => {
     createGroup,
     prepareQuickPacks,
     addQuickPack,
+    addExplorerDraft,
     addTemplateDraft,
     addHistoryDraft,
     replaceWithQuickPack,
@@ -777,6 +791,7 @@ export const useCompressionStore = defineStore('compression', () => {
     removeFile,
     removeJobsByTaskIds,
     requestAutoStart,
+    takeAutoStartJobIds,
     consumeAutoStart
   }
 })

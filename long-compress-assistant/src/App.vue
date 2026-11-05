@@ -303,79 +303,51 @@ onMounted(async () => {
       return
     }
 
+    if (request.action.startsWith('context-image-')) {
+      const metadata = await Promise.all(files.map(path => invoke<{size:number;is_dir:boolean}>('get_file_info', {path}).catch(() => null)))
+      const candidates = files.flatMap((path,index) => metadata[index] ? [createContextCompressionEntry(path,metadata[index])] : [])
+      const result = compressionStore.addImageCandidates(candidates)
+      if (request.action === 'context-image-webp') result.accepted.forEach(item => { item.settings = { ...compressionStore.imageGlobalSettings, outputFormat: 'webp' } })
+      if (request.action === 'context-image-resize') result.accepted.forEach(item => { item.settings = { ...compressionStore.imageGlobalSettings, resizeMode: 'limit' } })
+      void router.push({path:'/special-compression',query:{mode:'image'}})
+      if (result.rejected.length || candidates.length !== files.length) appStore.setError('部分项目不是可读取的 JPG、PNG 或 WebP 图片，已跳过')
+      else appStore.setSuccess('已带入图片，确认压缩选项后开始')
+      return
+    }
     if (request.action === 'context-quick-pack' || request.action.startsWith('context-compress-')) {
       const metadata = await Promise.all(files.map(path =>
         invoke<{ size: number; is_dir: boolean }>('get_file_info', { path }).catch(() => null)
       ))
-      const entries = files.map((path, index) => createContextCompressionEntry(path, metadata[index]))
-      let acceptedCount = entries.length
-      if (request.action === 'context-quick-pack') {
-        const plan = createQuickPackPlan(files)
-        let candidate = createQuickPackCandidate(plan)
+      const entries = files.flatMap((path,index) => metadata[index] ? [createContextCompressionEntry(path,metadata[index])] : [])
+      const acceptedCount = entries.length
+      if (!acceptedCount) { appStore.setError('所选文件无法读取，请刷新文件夹后重试'); return }
+      const acceptedPaths = entries.map(entry=>entry.path)
+      if (acceptedCount !== files.length) appStore.setError('部分所选文件无法读取，已跳过')
+      if (['context-quick-pack','context-compress-zip','context-compress-7z'].includes(request.action)) {
+        const plan = createQuickPackPlan(acceptedPaths)
+        const format = request.action === 'context-compress-7z' ? '7z' : 'zip'
+        let candidate = createQuickPackCandidate(plan, 0, format)
         let available = false
         for (let collisionIndex = 0; collisionIndex < 1000; collisionIndex++) {
-          candidate = createQuickPackCandidate(plan, collisionIndex)
+          candidate = createQuickPackCandidate(plan, collisionIndex, format)
           if (!await invoke<boolean>('path_exists', { path: candidate.outputPath })) {
             available = true
             break
           }
         }
-        if (!available) candidate = createQuickPackCandidate(plan, Date.now())
-        compressionStore.addQuickPack(entries, candidate.archiveName, plan.outputDirectory)
+        if (!available) candidate = createQuickPackCandidate(plan, Date.now(), format)
+        compressionStore.addQuickPack(entries, candidate.archiveName, plan.outputDirectory, request.action === 'context-compress-7z' ? '7z' : 'zip')
       } else {
-        const requestedPaths = new Set(files.map(path => path.replace(/\//g, '\\').toLowerCase()))
-        const finishedTaskIds = new Set(
-          taskStore.tasks
-            .filter(task =>
-              task.type === 'compression' &&
-              ['completed', 'failed', 'cancelled'].includes(task.status)
-            )
-            .map(task => task.id)
-        )
-        const replaceableTaskIds = new Set<string>()
-        compressionStore.selectedFiles.forEach(file => {
-          if (
-            file.taskId &&
-            finishedTaskIds.has(file.taskId) &&
-            requestedPaths.has(file.path.replace(/\//g, '\\').toLowerCase())
-          ) {
-            replaceableTaskIds.add(file.taskId)
-          }
-        })
-        compressionStore.groups.forEach(group => {
-          if (
-            group.taskId &&
-            finishedTaskIds.has(group.taskId) &&
-            group.files.some(file => requestedPaths.has(file.path.replace(/\//g, '\\').toLowerCase()))
-          ) {
-            replaceableTaskIds.add(group.taskId)
-          }
-        })
-        if (replaceableTaskIds.size > 0) {
-          const taskIds = [...replaceableTaskIds]
-          compressionStore.removeJobsByTaskIds(taskIds)
-          taskIds.forEach(taskId => taskStore.removeTask(taskId))
-        }
-
-        acceptedCount = entries.reduce(
-          (count, entry) => count + (compressionStore.addFile(entry) ? 1 : 0),
-          0
-        )
-        if (acceptedCount === 0) {
-          void router.push('/compress')
-          appStore.setError(appStore.t('compress.context_menu_duplicate'))
-          return
-        }
-      }
-      if (request.action === 'context-compress-zip') {
-        compressionStore.globalSettings.format = 'zip'
-        compressionStore.requestAutoStart()
-      } else if (request.action === 'context-compress-7z') {
-        compressionStore.globalSettings.format = '7z'
-        compressionStore.requestAutoStart()
+        const plan = createQuickPackPlan(acceptedPaths)
+        compressionStore.addExplorerDraft(entries, plan.archiveName, plan.outputDirectory,
+          request.action === 'context-compress-encrypted' ? 'encrypted' : request.action === 'context-compress-split' ? 'split' : 'custom')
       }
       void router.push('/compress')
-      appStore.setSuccess(appStore.t('compress.context_menu_custom').replace('{0}', String(acceptedCount)))
+      appStore.setSuccess(['context-quick-pack','context-compress-zip','context-compress-7z'].includes(request.action)
+        ? `已加入 ${request.action === 'context-compress-7z' ? '7Z' : 'ZIP'} 压缩队列 · ${acceptedCount} 项`
+        : request.action === 'context-compress-encrypted' ? `已添加 ${acceptedCount} 项，请填写密码后开始`
+        : request.action === 'context-compress-split' ? `已添加 ${acceptedCount} 项，请确认分卷大小后开始`
+        : appStore.t('compress.context_menu_custom').replace('{0}', String(acceptedCount)))
       return
     }
 
