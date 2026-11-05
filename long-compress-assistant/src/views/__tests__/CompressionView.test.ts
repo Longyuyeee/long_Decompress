@@ -920,6 +920,13 @@ describe('CompressionView', () => {
     }
   })
 
+  it('explorer1740 auto starts only the requested quick pack and leaves waiting tasks unchanged', async () => {
+    mountView();const store=useCompressionStore();store.addFile(source('D:/waiting/old.txt'));store.globalSettings.format='tar';store.globalSettings.password='old password';store.globalSettings.splitArchive=true
+    store.addQuickPack([source('C:/new/a.txt'),source('C:/new/b.txt')], 'new', 'C:/new','7z')
+    await flushPromises();expect(mocks.compressFiles).toHaveBeenCalledTimes(1);expect(mocks.compressFiles.mock.calls[0][2]).toBe('C:/new/new.7z')
+    expect(mocks.compressFiles.mock.calls[0][1]).toEqual(['C:/new/a.txt','C:/new/b.txt']);expect(store.selectedFiles[0].taskId).toBeUndefined();expect(store.globalSettings).toMatchObject({format:'tar',password:'old password',splitArchive:true})
+  })
+
   it('keeps quick packs from different Explorer directories as separate archives', async () => {
     vi.useFakeTimers()
     try {

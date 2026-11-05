@@ -98,6 +98,11 @@ fn parse_context_action(args: &[String]) -> Option<ContextAction> {
         ("--compress-zip", "context-compress-zip"),
         ("--compress-7z", "context-compress-7z"),
         ("--compress-custom", "context-compress-custom"),
+        ("--compress-encrypted", "context-compress-encrypted"),
+        ("--compress-split", "context-compress-split"),
+        ("--image-compress", "context-image-compress"),
+        ("--image-webp", "context-image-webp"),
+        ("--image-resize", "context-image-resize"),
         ("--browse-archive", "context-browse-archive"),
         ("--convert-archive", "context-convert-archive"),
         ("--reconfigure-archive", "context-reconfigure-archive"),
@@ -570,6 +575,7 @@ fn main() {
             long_compress_assistant::commands::compression::preview_archive_text,
             long_compress_assistant::commands::compression::materialize_nested_archive,
             long_compress_assistant::commands::compression::open_archive_entry,
+            long_compress_assistant::commands::compression::copy_archive_entries,
             long_compress_assistant::commands::compression::test_archive_integrity,
             long_compress_assistant::commands::compression::repair_zip,
             long_compress_assistant::commands::compression::scan_lzop_recovery,
@@ -732,6 +738,16 @@ mod explorer_checksum_1528_tests {
             let parsed = parse_context_action(&args).unwrap();
             assert_eq!(parsed.action, action);
             assert_eq!(parsed.files, vec![r"C:\中文 空格\甲.sha256", r"D:\乙.md5"]);
+        }
+    }
+}
+
+#[cfg(test)]
+mod explorer1740_tests {
+    #[test]
+    fn explorer1740_command_line_keeps_all_selected_paths() {
+        for (flag,action) in [("--image-compress","context-image-compress"),("--image-webp","context-image-webp"),("--image-resize","context-image-resize"),("--compress-encrypted","context-compress-encrypted"),("--compress-split","context-compress-split")] {
+            let args=vec!["app.exe",flag,r"C:\中文 空格\第一张.PNG",r"D:\second.webp"].into_iter().map(String::from).collect::<Vec<_>>();let parsed=super::parse_context_action(&args).unwrap();assert_eq!(parsed.action,action);assert_eq!(parsed.files,args[2..]);
         }
     }
 }

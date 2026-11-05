@@ -400,3 +400,8 @@ mod zip_zstd_multiframe_1737_tests;
 
 #[cfg(test)]
 mod zip_xz_rescue_1738_tests;
+
+pub(crate) mod archive_clipboard;
+
+#[cfg(test)]
+mod archive_clipboard_1740_tests;

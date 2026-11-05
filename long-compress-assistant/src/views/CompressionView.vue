@@ -332,7 +332,7 @@ const runCompressionResourcePreflight = async (
   return true
 }
 
-const runCompression = async () => {
+const runCompression = async (jobIds?: string[]) => {
   if (compressionStore.groups.length === 0 && compressionStore.selectedFiles.length === 0) return
   scope.value = 'all'
 
@@ -375,6 +375,7 @@ const runCompression = async () => {
     })
   ]
 
+  if (jobIds?.length) jobs = jobs.filter(job => jobIds.includes(job.id))
   if (jobs.length === 0) return
   const filenamePasswordError = '文件名加密仅支持 7Z/RAR，请先填写压缩密码。'
   if (jobs.some(job => job.settings.encryptFilenames && (!supportsFilenameEncryption(job.settings.format) || !job.settings.password))) {
@@ -609,11 +610,11 @@ const runCompression = async () => {
   }
 }
 
-const handleCompress = async () => {
+const handleCompress = async (jobIds?: string[]) => {
   if (isCompressing.value) return
   isCompressing.value = true
   try {
-    await runCompression()
+    await runCompression(jobIds)
   } finally {
     isCompressing.value = false
   }
@@ -654,7 +655,8 @@ const retryRarDetection = async () => {
 
 const consumePendingAutoStart = () => {
   if (!isCompressing.value && compressionStore.consumeAutoStart()) {
-    setTimeout(() => void handleCompress(), 100)
+    const ids = compressionStore.takeAutoStartJobIds()
+    void handleCompress(ids)
   }
 }
 
@@ -749,7 +751,7 @@ const drawerTransition = useDrawerTransition()
         @pause-active="pauseAllCompressionTasks"
         @resume-paused="resumeAllCompressionTasks"
         @open-settings="showGlobalSettingsModal = true"
-        @start="handleCompress"
+        @start="handleCompress()"
       />
     </header>
 

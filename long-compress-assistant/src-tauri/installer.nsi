@@ -712,6 +712,32 @@ FunctionEnd
   DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.md5\shell\LongDecompressChecksumVerify"
   DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.sha256\shell\LongDecompressChecksumVerify"
   DeleteRegKey HKCU "Software\Classes\*\shell\LongDecompress"
+  ; Volume suffixes registered by the classic context menu (leave other applications intact).
+  Push $R0
+  Push $R1
+  StrCpy $R1 1
+  longVolumeNumericLoop:
+    IntFmt $R0 ".%03d" $R1
+    DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\$R0\shell\LongDecompress"
+    IntOp $R1 $R1 + 1
+    IntCmp $R1 1000 longVolumeNumericDone longVolumeNumericLoop longVolumeNumericDone
+  longVolumeNumericDone:
+  StrCpy $R1 0
+  longVolumeLegacyLoop:
+    IntFmt $R0 ".r%02d" $R1
+    DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\$R0\shell\LongDecompress"
+    IntFmt $R0 ".z%02d" $R1
+    DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\$R0\shell\LongDecompress"
+    IntOp $R1 $R1 + 1
+    IntCmp $R1 100 longVolumeLegacyDone longVolumeLegacyLoop longVolumeLegacyDone
+  longVolumeLegacyDone:
+  Pop $R1
+  Pop $R0
+
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.jpg\shell\LongDecompress"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.jpeg\shell\LongDecompress"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.png\shell\LongDecompress"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.webp\shell\LongDecompress"
   DeleteRegKey HKCU "Software\Classes\*\shell\LongDecompressQuickExtract"
   DeleteRegKey HKCU "Software\Classes\*\shell\LongDecompressQuickPack"
   DeleteRegKey HKCU "Software\Classes\*\shell\LongDecompressNative"

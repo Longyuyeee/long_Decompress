@@ -1,0 +1,41 @@
+{
+  "version": "1.7.40",
+  "date": "2026-11-05",
+  "issue": 364,
+  "backend": {
+    "newLibraryTests": 6,
+    "realWindowsClipboard": 1,
+    "relatedRegistry": 1,
+    "commandLine": 1,
+    "shellComTests": 6
+  },
+  "frontend": {
+    "core": 63,
+    "viewGroupsPassedFirst": 5,
+    "viewFollowup": 1
+  },
+  "headlessUi": {
+    "viewports": [
+      [
+        1440,
+        900
+      ],
+      [
+        1024,
+        720
+      ],
+      [
+        920,
+        620
+      ]
+    ],
+    "passed": 3,
+    "screenshots": 6,
+    "backend": "mock IPC, native operations tested separately"
+  },
+  "notes": [
+    "Initial broad frontend run had 18 failures; frozen HEAD reproduced 17, the changed quick-pack expectation was updated. The stale tools-shortcut expectation was also corrected; unrelated preview assertions and missing media samples are not claimed as passing.",
+    "First cold browser navigation exceeded 30 seconds twice. With an explicit 60-second navigation budget the final three viewport cases passed.",
+    "The default Playwright output cleanup removed ignored historical test outputs. The run was stopped; subsequent runs use a version-specific output subdirectory. Committed evidence and unrelated design/audit files were preserved."
+  ]
+}

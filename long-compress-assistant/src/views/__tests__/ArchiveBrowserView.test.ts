@@ -69,6 +69,46 @@ vi.mock('@/composables/useTauriCommands', () => ({
 }))
 
 describe('ArchiveBrowserView', () => {
+  const clipboardListing = () => ({format:'ZIP',revision:'clipboard-revision',totalFiles:2,totalDirectories:1,totalUncompressedSize:8,entries:[
+    {path:'资料/a.txt',name:'a.txt',size:3,isDir:false},{path:'b.txt',name:'b.txt',size:5,isDir:false},{path:'空目录/',name:'空目录',size:0,isDir:true},
+  ]})
+  it('clipboard1740 right click on an unselected empty directory selects and copies only that root', async () => {
+    mocks.browseArchive.mockResolvedValueOnce(clipboardListing());mocks.invoke.mockResolvedValueOnce(3)
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,active:true,source:{id:1740,path:'C:/中文 包.zip'},destination:'D:/peer'},global:{stubs:{Teleport:true}}});await flushPromises()
+    await w.get('[data-entry-path="资料/"]').trigger('click');await w.get('[data-entry-path="b.txt"]').trigger('click',{ctrlKey:true});await w.get('[data-entry-path="空目录/"]').trigger('contextmenu',{ctrlKey:true});await flushPromises()
+    // Right-clicking an unselected item selects that item, like the disk pane.
+    await w.get('[data-testid="archive-context-copy-files"]').trigger('click');await flushPromises()
+    expect(mocks.invoke).toHaveBeenCalledWith('copy_archive_entries',expect.objectContaining({filePath:'C:/中文 包.zip',entryPaths:['空目录/'],sourceRevision:'clipboard-revision',password:null}))
+    expect(w.findAll('[data-testid="file-pane-navigation-left"]')).toHaveLength(1);w.unmount()
+  })
+  it('clipboard1740 context actions keep all selected files, folders and empty directories in one scope',async()=>{
+    mocks.browseArchive.mockResolvedValueOnce(clipboardListing());mocks.selectDirectory.mockResolvedValueOnce('D:/out')
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,active:true,source:{id:1743,path:'C:/包.zip'},destination:'D:/peer'},global:{stubs:{Teleport:true}}});await flushPromises()
+    await w.get('[data-entry-path="资料/"]').trigger('click');await w.get('[data-entry-path="b.txt"]').trigger('click',{ctrlKey:true});await w.get('[data-entry-path="空目录/"]').trigger('click',{ctrlKey:true});await w.get('[data-entry-path="资料/"]').trigger('contextmenu')
+    expect(w.get('[data-testid="archive-context-menu"]').text()).toContain('3 个已选项目');expect(w.find('[data-testid="archive-context-open"]').exists()).toBe(false)
+    await w.get('[data-testid="archive-context-extract-choose"]').trigger('click');await flushPromises()
+    expect(mocks.decompressFile).toHaveBeenCalledWith('C:/包.zip',expect.objectContaining({selectedEntries:['资料/a.txt','b.txt','空目录/'],outputPath:'D:/out'}));w.unmount()
+  })
+  it('clipboard1740 Ctrl+C uses selected roots and never intercepts text input copy', async () => {
+    mocks.browseArchive.mockResolvedValueOnce(clipboardListing());mocks.invoke.mockResolvedValue(2)
+    const w=mount(ArchiveBrowserView,{attachTo:document.body,props:{embedded:true,active:true,source:{id:1741,path:'C:/包.zip'}},global:{stubs:{Teleport:true}}});await flushPromises()
+    await w.get('[data-entry-path="资料/"]').trigger('click');await w.get('[data-entry-path="b.txt"]').trigger('click',{ctrlKey:true})
+    await w.get('.browser-page').trigger('keydown',{key:'c',ctrlKey:true});await flushPromises()
+    expect(mocks.invoke).toHaveBeenCalledWith('copy_archive_entries',expect.objectContaining({entryPaths:['资料/','b.txt']}))
+    const count=mocks.invoke.mock.calls.length;await w.get('input').trigger('keydown',{key:'c',ctrlKey:true});expect(mocks.invoke.mock.calls).toHaveLength(count);const selection=window.getSelection()!;const range=document.createRange();range.selectNodeContents(w.get('[data-entry-path="b.txt"]').element);selection.removeAllRanges();selection.addRange(range);await w.get('.browser-page').trigger('keydown',{key:'c',ctrlKey:true});expect(mocks.invoke.mock.calls).toHaveLength(count);selection.removeAllRanges();w.unmount()
+  })
+  it('clipboard1740 offers compact progress, cancels, keeps selection and permits retry after failure', async () => {
+    mocks.browseArchive.mockResolvedValueOnce(clipboardListing());let reject!:(e:Error)=>void
+    mocks.invoke.mockImplementation((cmd:string)=>cmd==='copy_archive_entries'?new Promise((_resolve,r)=>{reject=r}):Promise.resolve())
+    const w=mount(ArchiveBrowserView,{props:{embedded:true,active:true,source:{id:1742,path:'C:/包.zip'}},global:{stubs:{Teleport:true}}});await flushPromises()
+    await w.get('[data-entry-path="b.txt"]').trigger('click');await w.get('.browser-page').trigger('keydown',{key:'c',ctrlKey:true});await flushPromises()
+    expect(w.get('[data-testid="archive-copy-status"]').text()).toContain('正在准备复制')
+    await w.get('[data-testid="archive-copy-status"] button').trigger('click');expect(mocks.invoke).toHaveBeenCalledWith('cancel_compression',{taskId:expect.stringMatching(/^archive-copy-/)})
+    reject(new Error('cancelled'));await flushPromises();expect(mocks.setError).toHaveBeenCalledWith('复制已取消，原剪贴板保持不变')
+    expect(w.get('[data-entry-path="b.txt"]').classes()).toContain('selected');expect(w.find('[data-testid="archive-copy-status"]').exists()).toBe(false)
+    mocks.invoke.mockResolvedValue(1);await w.get('.browser-page').trigger('keydown',{key:'c',ctrlKey:true});await flushPromises();expect(mocks.setSuccess).toHaveBeenCalledWith('已复制 1 项，可在文件夹中粘贴');w.unmount()
+  })
+
   it('nested1723 opens a confirmed archive alias in the same pane and restores directory selection and scroll',async()=>{
     const entry=(path:string,linkTarget?:string)=>({path,name:path.split('/').pop()!,size:10,isDir:false,linkTarget})
     mocks.browseArchive.mockResolvedValueOnce({format:'TAR.LZO',revision:'outer-revision',totalFiles:2,totalDirectories:1,totalUncompressedSize:20,entries:[entry('links/copy.zip','payload/original.data'),entry('tail.txt')]}).mockResolvedValueOnce({format:'ZIP',revision:'inner-revision',totalFiles:1,totalDirectories:0,totalUncompressedSize:10,entries:[entry('readme.txt')]})

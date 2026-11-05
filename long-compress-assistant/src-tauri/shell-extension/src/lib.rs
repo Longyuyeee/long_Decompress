@@ -41,6 +41,9 @@ const ARCHIVE_EXTENSIONS: &[&str] = &[
 ];
 
 static OBJECT_COUNT: AtomicU32 = AtomicU32::new(0);
+#[cfg(test)]
+static TEST_APPLICATION_PATH: Mutex<Option<String>> = Mutex::new(None);
+
 static SERVER_LOCK_COUNT: AtomicU32 = AtomicU32::new(0);
 
 struct ObjectLifetime;
@@ -76,9 +79,17 @@ enum CommandKind {
     CompressZip,
     Compress7z,
     CompressCustom,
+    CompressEncrypted,
+    CompressSplit,
+    ImageCompress,
+    ImageWebp,
+    ImageResize,
 }
 
 const SUBCOMMANDS: &[CommandKind] = &[
+    CommandKind::ImageCompress,
+    CommandKind::ImageWebp,
+    CommandKind::ImageResize,
     CommandKind::ExtractHere,
     CommandKind::ExtractTo,
     CommandKind::ExtractChoose,
@@ -87,16 +98,28 @@ const SUBCOMMANDS: &[CommandKind] = &[
     CommandKind::CompressZip,
     CommandKind::Compress7z,
     CommandKind::CompressCustom,
+    CommandKind::CompressEncrypted,
+    CommandKind::CompressSplit,
 ];
 const MORE_ARCHIVE_COMMANDS: &[CommandKind] = &[
     CommandKind::TestArchive,
     CommandKind::RepairArchive,
     CommandKind::ConvertArchive,
     CommandKind::ReconfigureArchive,
-    CommandKind::RepackArchiveFiles,
 ];
 
 impl CommandKind {
+    fn accepts(self, paths: &[String]) -> bool {
+        if paths.is_empty() { return false; }
+        match self {
+            Self::QuickExtract => false,
+            Self::BrowseArchive => paths.len() == 1 && is_archive_path(&paths[0]),
+            Self::ImageCompress | Self::ImageWebp | Self::ImageResize => paths.iter().all(|p| is_image_path(p)),
+            Self::RepairArchive | Self::MoreArchive => paths.iter().all(|p| is_repair_path(p)),
+            _ if self.requires_archive() => paths.iter().all(|p| is_archive_path(p)),
+            _ => true,
+        }
+    }
     fn title(self) -> &'static str {
         match self {
             Self::Root => "Long解压",
@@ -112,9 +135,14 @@ impl CommandKind {
             Self::ConvertArchive => "转换压缩包格式…",
             Self::ReconfigureArchive => "修改密码 / 调整分卷…",
             Self::QuickPack => "一键打包为 ZIP",
-            Self::CompressZip => "压缩为 ZIP…",
-            Self::Compress7z => "压缩为 7Z…",
-            Self::CompressCustom => "更多压缩选项…",
+            Self::CompressZip => "压缩为 ZIP",
+            Self::Compress7z => "压缩为 7Z",
+            Self::CompressCustom => "添加到压缩包…",
+            Self::CompressEncrypted => "加密压缩…",
+            Self::CompressSplit => "分卷压缩…",
+            Self::ImageCompress => "压缩图片…",
+            Self::ImageWebp => "转换为 WebP…",
+            Self::ImageResize => "缩小图片尺寸…",
         }
     }
 
@@ -135,6 +163,11 @@ impl CommandKind {
             Self::CompressZip => Some("--compress-zip"),
             Self::Compress7z => Some("--compress-7z"),
             Self::CompressCustom => Some("--compress-custom"),
+            Self::CompressEncrypted => Some("--compress-encrypted"),
+            Self::CompressSplit => Some("--compress-split"),
+            Self::ImageCompress => Some("--image-compress"),
+            Self::ImageWebp => Some("--image-webp"),
+            Self::ImageResize => Some("--image-resize"),
         }
     }
 
@@ -171,6 +204,11 @@ impl CommandKind {
             Self::CompressZip => 6,
             Self::Compress7z => 7,
             Self::CompressCustom => 8,
+            Self::CompressEncrypted => 26,
+            Self::CompressSplit => 27,
+            Self::ImageCompress => 28,
+            Self::ImageWebp => 29,
+            Self::ImageResize => 30,
         };
         GUID::from_u128(0xd4bba0b2_6a58_4d40_8b79_ba50c54e8d40 + suffix)
     }
@@ -224,26 +262,15 @@ impl IExplorerCommand_Impl for ShellCommand_Impl {
         if count == 0 {
             return Ok(ECS_DISABLED.0 as u32);
         }
-        if matches!(self.kind, CommandKind::QuickPack | CommandKind::CompressZip | CommandKind::Compress7z | CommandKind::CompressCustom) {
-            let paths=selected_paths(selection).unwrap_or_default();
-            if !paths.is_empty() && paths.iter().all(|path|is_archive_path(path)){return Ok(ECS_HIDDEN.0 as u32)}
-        }
-        if matches!(self.kind, CommandKind::RepairArchive | CommandKind::MoreArchive) {
-            let paths = selected_paths(selection).unwrap_or_default();
-            if paths.is_empty() || !paths.iter().all(|path| is_repair_path(path) || self.kind == CommandKind::MoreArchive && is_archive_path(path)) { return Ok(ECS_HIDDEN.0 as u32); }
-        } else if self.kind.requires_archive() {
-            let paths = selected_paths(selection).unwrap_or_default();
-            if paths.is_empty() || !paths.iter().all(|path| is_archive_path(path)) {
-                return Ok(ECS_HIDDEN.0 as u32);
-            }
-        }
+        let paths = selected_paths(selection).unwrap_or_default();
+        if !self.kind.accepts(&paths) { return Ok(ECS_HIDDEN.0 as u32); }
         Ok(ECS_ENABLED.0 as u32)
     }
 
     fn Invoke(&self, items: Ref<IShellItemArray>, _bind_context: Ref<IBindCtx>) -> Result<()> {
         let flag = self.kind.cli_flag().ok_or_else(|| Error::from(E_NOTIMPL))?;
         let paths = selected_paths(items.ok()?)?;
-        if paths.is_empty() {
+        if !self.kind.accepts(&paths) {
             return Err(Error::from(E_FAIL));
         }
 
@@ -362,6 +389,7 @@ fn selected_paths(items: &IShellItemArray) -> Result<Vec<String>> {
 }
 
 fn is_repair_path(path: &str) -> bool {
+    if std::path::Path::new(path).is_dir() { return false; }
     if is_archive_path(path) { return true; }
     let extension = std::path::Path::new(path).extension().and_then(|e| e.to_str()).unwrap_or("").to_ascii_lowercase();
     extension == "rev" || extension.strip_prefix('r').is_some_and(|n| (2..=3).contains(&n.len()) && n.bytes().all(|b| b.is_ascii_digit()))
@@ -369,18 +397,27 @@ fn is_repair_path(path: &str) -> bool {
         || (extension.len() >= 3 && extension.bytes().all(|b| b.is_ascii_digit()))
 }
 
+fn is_image_path(path: &str) -> bool {
+    !std::path::Path::new(path).is_dir() && std::path::Path::new(path).extension().and_then(|e| e.to_str())
+        .is_some_and(|e| ["jpg", "jpeg", "png", "webp"].iter().any(|known| e.eq_ignore_ascii_case(known)))
+}
 fn is_archive_path(path: &str) -> bool {
+    if std::path::Path::new(path).is_dir() { return false; }
     std::path::Path::new(path)
         .extension()
         .and_then(|extension| extension.to_str())
         .is_some_and(|extension| {
-            ARCHIVE_EXTENSIONS
+            let ext = extension.to_ascii_lowercase();
+            let numbered = ext.len() >= 3 && ext.bytes().all(|b| b.is_ascii_digit());
+            let legacy = ext.strip_prefix('z').or_else(||ext.strip_prefix('r')).is_some_and(|n| n.len() >= 2 && n.bytes().all(|b|b.is_ascii_digit()));
+            numbered || legacy || ARCHIVE_EXTENSIONS
                 .iter()
                 .any(|known| extension.eq_ignore_ascii_case(known))
         })
 }
 
 fn read_application_path() -> Result<String> {
+    #[cfg(test)] if let Some(path) = TEST_APPLICATION_PATH.lock().unwrap().as_ref() { return Ok(path.clone()); }
     RegKey::predef(HKEY_CURRENT_USER)
         .open_subkey(REGISTRATION_KEY)
         .and_then(|key| key.get_value("ApplicationPath"))
@@ -504,11 +541,11 @@ mod tests {
 
     #[test]
     fn native_menu_contains_expected_commands() {
-        assert_eq!(SUBCOMMANDS.len(), 8);
-        assert_eq!(SUBCOMMANDS[0], CommandKind::ExtractHere);
-        assert_eq!(SUBCOMMANDS[2], CommandKind::ExtractChoose);
-        assert_eq!(SUBCOMMANDS[3], CommandKind::BrowseArchive);
-        assert_eq!(SUBCOMMANDS[4], CommandKind::MoreArchive);
+        assert_eq!(SUBCOMMANDS.len(), 13);
+        assert_eq!(SUBCOMMANDS[3], CommandKind::ExtractHere);
+        assert_eq!(SUBCOMMANDS[5], CommandKind::ExtractChoose);
+        assert_eq!(SUBCOMMANDS[6], CommandKind::BrowseArchive);
+        assert_eq!(SUBCOMMANDS[7], CommandKind::MoreArchive);
         assert!(!SUBCOMMANDS.contains(&CommandKind::QuickExtract));
         assert!(MORE_ARCHIVE_COMMANDS.contains(&CommandKind::ConvertArchive));
         assert!(MORE_ARCHIVE_COMMANDS.contains(&CommandKind::ReconfigureArchive));
@@ -548,7 +585,7 @@ mod tests {
             assert_eq!(fetched as usize, SUBCOMMANDS.len());
             assert!(commands.iter().all(Option::is_some));
             {
-                let more=commands[4].as_ref().unwrap();
+                let more=commands[7].as_ref().unwrap();
                 assert_eq!(more.GetFlags().unwrap(),ECF_HASSUBCOMMANDS.0 as u32);
                 let nested=more.EnumSubCommands().unwrap();
                 let mut children:[Option<IExplorerCommand>;MORE_ARCHIVE_COMMANDS.len()]=std::array::from_fn(|_|None);
@@ -601,4 +638,41 @@ mod tests {
             assert!(factory_pointer.is_null());
         }
     }
+    #[test]
+    fn explorer1740_real_shell_selections_and_process_arguments() {
+        use windows::Win32::UI::Shell::{SHParseDisplayName, SHCreateShellItemArrayFromIDLists, ECS_ENABLED, ECS_HIDDEN};
+        use windows::Win32::System::Com::{CoInitializeEx, CoUninitialize, CoTaskMemFree, COINIT_APARTMENTTHREADED};
+        use windows::core::HSTRING;
+        use std::{fs, path::PathBuf, time::{SystemTime,UNIX_EPOCH}};
+        let _guard=COM_LIFETIME_TEST_LOCK.lock().unwrap();
+        let root=std::env::temp_dir().join(format!("long-menu1740-{}-{}",std::process::id(),SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos()));fs::create_dir(&root).unwrap();
+        struct Cleanup(PathBuf);impl Drop for Cleanup {fn drop(&mut self){*super::TEST_APPLICATION_PATH.lock().unwrap()=None;let _=std::fs::remove_dir_all(&self.0);unsafe{CoUninitialize()}}}
+        unsafe{CoInitializeEx(None,COINIT_APARTMENTTHREADED).ok().unwrap()};let _cleanup=Cleanup(root.clone());
+        for name in ["中文 a.txt","图 片.PNG","另一张.webp","压缩 包.ZIP","next.zip.003","parts.z02","修复.rev","check.sha256"]{fs::write(root.join(name),b"selection").unwrap();}fs::create_dir(root.join("folder.zip")).unwrap();
+        let selection=|names:&[&str]| unsafe{
+            let pidls=names.iter().map(|name|{let mut pidl=std::ptr::null_mut();SHParseDisplayName(&HSTRING::from(root.join(name).to_string_lossy().as_ref()),None,&mut pidl,0,None).unwrap();pidl}).collect::<Vec<_>>();
+            let array=SHCreateShellItemArrayFromIDLists(&pidls.iter().map(|p|*p as *const _).collect::<Vec<_>>()).unwrap();
+            for pidl in pidls{CoTaskMemFree(Some(pidl.cast()))}array
+        };
+        for (names,archive,image,repair) in [
+            (vec!["中文 a.txt"],false,false,false),(vec!["图 片.PNG","另一张.webp"],false,true,false),
+            (vec!["压缩 包.ZIP"],true,false,true),(vec!["next.zip.003","parts.z02"],true,false,true),
+            (vec!["修复.rev"],false,false,true),(vec!["folder.zip"],false,false,false),
+            (vec!["图 片.PNG","中文 a.txt"],false,false,false),(vec!["压缩 包.ZIP","图 片.PNG"],false,false,false),
+        ] {
+            let array=selection(&names);
+            for kind in [CommandKind::CompressZip,CommandKind::Compress7z,CommandKind::CompressCustom,CommandKind::CompressEncrypted,CommandKind::CompressSplit]{let command:IExplorerCommand=super::ShellCommand::new(kind).into();assert_eq!(unsafe{command.GetState(Some(&array),true).unwrap()},ECS_ENABLED.0 as u32,"{names:?} {kind:?}");}
+            for (kind,enabled) in [(CommandKind::ExtractHere,archive),(CommandKind::ImageCompress,image),(CommandKind::ImageWebp,image),(CommandKind::ImageResize,image),(CommandKind::RepairArchive,repair)]{let command:IExplorerCommand=super::ShellCommand::new(kind).into();assert_eq!(unsafe{command.GetState(Some(&array),true).unwrap()},if enabled{ECS_ENABLED}else{ECS_HIDDEN}.0 as u32,"{names:?} {kind:?}");}
+        }
+        // A tiny native process receives exactly the argv Explorer launches (no shell quoting/parsing surrogate).
+        let probe=root.join("参数接收器.rs");fs::write(&probe,r#"fn main(){std::fs::write(std::env::current_exe().unwrap().with_extension("args"),std::env::args().skip(1).collect::<Vec<_>>().join("\n")).unwrap();}"#).unwrap();
+        let exe=root.join("receiver.exe");assert!(std::process::Command::new("rustc").args(["--crate-name","argument_probe"]).arg(&probe).arg("-o").arg(&exe).status().unwrap().success());*super::TEST_APPLICATION_PATH.lock().unwrap()=Some(exe.to_string_lossy().into_owned());
+        for (kind,names) in [(CommandKind::ImageWebp,vec!["图 片.PNG","另一张.webp"]),(CommandKind::CompressEncrypted,vec!["压缩 包.ZIP","中文 a.txt"]),(CommandKind::ExtractTo,vec!["next.zip.003","parts.z02"])]{
+            let receipt=exe.with_extension("args");let _=fs::remove_file(&receipt);let array=selection(&names);let command:IExplorerCommand=super::ShellCommand::new(kind).into();unsafe{command.Invoke(Some(&array),None).unwrap()};
+            for _ in 0..100{if receipt.exists(){break}std::thread::sleep(std::time::Duration::from_millis(20));}
+            let args=fs::read_to_string(&receipt).unwrap();assert_eq!(args.lines().next(),kind.cli_flag());assert_eq!(args.lines().skip(1).collect::<Vec<_>>(),names.iter().map(|name|root.join(name).to_string_lossy().into_owned()).collect::<Vec<_>>());
+        }
+        let mixed=selection(&["图 片.PNG","中文 a.txt"]);let command:IExplorerCommand=super::ShellCommand::new(CommandKind::ImageCompress).into();assert!(unsafe{command.Invoke(Some(&mixed),None)}.is_err());
+    }
+
 }

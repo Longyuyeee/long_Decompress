@@ -22,6 +22,46 @@ static COMPRESSION_ANALYSIS_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy
 static ARCHIVE_DIAGNOSTIC_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
 static ZIP_REPAIR_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
 static ARCHIVE_BROWSE_FLAGS: Lazy<DashMap<String, Arc<AtomicBool>>> = Lazy::new(DashMap::new);
+static ARCHIVE_COPY_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
+#[command]
+pub async fn copy_archive_entries(window: Window, task_id: String, file_path: String,
+    entry_paths: Vec<String>, password: Option<String>, zip_password_encoding: Option<ZipPasswordEncoding>,
+    zpaq_snapshot: Option<crate::models::compression::ZpaqSnapshot>, source_revision: String,
+) -> Result<usize, String> {
+    #[cfg(not(windows))] { let _ = (window, task_id, file_path, entry_paths, password, zip_password_encoding, zpaq_snapshot, source_revision); return Err("文件剪贴板暂仅支持 Windows".into()); }
+    #[cfg(windows)] {
+        let _lock = ARCHIVE_COPY_LOCK.try_lock().map_err(|_| "另一项文件复制尚未完成，请稍后重试".to_string())?;
+        let service = service_for_task(&task_id).await?;
+        let result = async {
+            use crate::services::{archive_clipboard::{PreparedCopy, windows}, image_reader};
+            image_reader::check_source(Path::new(&file_path), &source_revision)?;
+            let mut options = DecompressOptions { selected_entries: entry_paths.clone(), preserve_paths: true,
+                preserve_timestamps: true, preserve_mark_of_web: true, zip_password_encoding, zpaq_snapshot,
+                conflict_policy: "skip".into(), ..Default::default() };
+            let password = match password.filter(|p| !p.is_empty()) {
+                Some(p) => Some(p), None => service.resolve_archive_password_silent(&file_path, &options).await?
+            };
+            let metadata = crate::services::archive_browser::browse_archive_cancellable_at(Path::new(&file_path), password.as_deref(), service.cancellation_flag.clone(), zip_password_encoding, zpaq_snapshot).await?;
+            let cache = crate::utils::app_paths::app_data_dir().join("archive-clipboard");
+            // If the clipboard is busy, defer cleanup rather than delete a possibly referenced copy.
+            if let Ok(protected) = windows::read_files() { let _ = crate::services::archive_clipboard::cleanup(&cache, &protected, std::time::SystemTime::now()); }
+            let prepared = PreparedCopy::new(&cache, &metadata.entries, &entry_paths)?;
+            options.selected_entries = prepared.roots.clone();
+            service.extract(window, task_id.clone(), file_path.clone(), Some(prepared.path().to_string_lossy().into_owned()), password, options).await?;
+            anyhow::ensure!(!service.cancellation_flag.load(Ordering::Acquire), "复制已取消");
+            image_reader::check_source(Path::new(&file_path), &source_revision)?;
+            let paths = prepared.validate()?;
+            let count = paths.len();
+            anyhow::ensure!(!service.cancellation_flag.load(Ordering::Acquire), "复制已取消");
+            windows::publish(&paths)?;
+            prepared.persist();
+            Ok::<_, anyhow::Error>(count)
+        }.await;
+        cleanup_task(&task_id);
+        result.map_err(|e| format!("{e:#}"))
+    }
+}
 
 pub(crate) fn register_task_cancellation(task_id: &str) -> Result<Arc<AtomicBool>, String> {
     let cancellation_flag = crate::services::task_control::register(task_id)?;

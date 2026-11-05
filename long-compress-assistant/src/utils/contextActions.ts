@@ -10,7 +10,7 @@ export const groupContextActions = (actions: ContextAction[]): ContextAction[] =
       // Legacy Explorer verbs may launch once per selected item. Keep quick-pack
       // invocations separated by directory so selections from two Explorer
       // windows can never be merged into one unexpected archive.
-      const key = action === 'context-quick-pack'
+      const key = ['context-quick-pack','context-compress-zip','context-compress-7z'].includes(action)
         ? `${action}\u0000${getParentPath(file).toLocaleLowerCase()}`
         : action
       const paths = grouped.get(key) || new Set<string>()
@@ -45,13 +45,14 @@ export const createQuickPackPlan = (files: string[]) => {
 export const createQuickPackCandidate = (
   plan: { outputDirectory: string; archiveName: string },
   collisionIndex = 0,
+  format: 'zip' | '7z' = 'zip',
 ) => {
   const suffix = collisionIndex > 0 ? ` (${collisionIndex})` : ''
   const archiveName = `${plan.archiveName}${suffix}`
   const separator = plan.outputDirectory.includes('\\') ? '\\' : '/'
   const outputPath = plan.outputDirectory.endsWith('/') || plan.outputDirectory.endsWith('\\')
-    ? `${plan.outputDirectory}${archiveName}.zip`
-    : `${plan.outputDirectory}${separator}${archiveName}.zip`
+    ? `${plan.outputDirectory}${archiveName}.${format}`
+    : `${plan.outputDirectory}${separator}${archiveName}.${format}`
   return { archiveName, outputPath }
 }
 
