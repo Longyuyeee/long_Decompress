@@ -64,7 +64,7 @@ docs/               产品路线、格式说明和发布记录
 | [开发交接](docs/DEVELOPMENT_HANDOFF.md) / [产品路线](docs/PRODUCT_ENHANCEMENT_ROADMAP.md) | 当前状态、下一步及已有验证 |
 | [#366 减少动画修复](docs/REDUCED_MOTION_FIX_366.md) | 修复窗口偏移和无法关闭开关；包含编译样式与界面防回归检查，尚未发布维护版 |
 | [v1.7.0 范围](docs/ARCHIVE_ROADMAP_1.7.0.md) / [实现与检查](docs/WINDOWS_OPEN_AND_BROWSER_UI.md) | Windows 打开、双栏统一与历史菜单 |
-| [v1.7.41 Windows 菜单维护候选](docs/EXPLORER_MENU_AUDIT_1.7.41.md) | 单一分类菜单、真实 Shell 逐项派发、入口提示与修复；尚未正式发布 |
+| [v1.7.41 菜单与弹窗维护候选](docs/EXPLORER_MENU_AUDIT_1.7.41.md) | 单一分类菜单、入口提示与修复；[小窗口与长路径弹窗适配](docs/DIALOG_RESPONSIVE_FIX_1.7.41.md)；尚未正式发布 |
 | [v1.7.40 包内复制与右键](docs/EXPLORER_CLIPBOARD_FREEZE_1.7.40.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.42.md) | 文件剪贴板与分类快捷操作；原 XZ 多流/填充范围顺延 |
 | [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md) | 创建、读取、密码、分卷和限制 |
 | [桌面测试说明](docs/DESKTOP_E2E.md) / [测试指南](tests/README.md) | 本地和隔离场景 |

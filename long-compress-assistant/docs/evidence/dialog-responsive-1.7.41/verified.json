@@ -1,0 +1,106 @@
+{
+  "date": "2026-11-06",
+  "version": "1.7.41 candidate",
+  "status": "passed",
+  "baseline": {
+    "scrollWidth": 907,
+    "clientWidth": 338,
+    "unit": "CSS px"
+  },
+  "environment": {
+    "browser": "headless Chromium",
+    "scrollbars": "desktop scrollbars enabled by removing --hide-scrollbars",
+    "nativeIpc": "stubbed",
+    "desktopControl": false
+  },
+  "results": {
+    "screenshots": "reviewed",
+    "e2eScenarios": 5,
+    "productionBuild": "passed",
+    "unitTests": 15
+  },
+  "scenarios": [
+    {
+      "viewport": [
+        1024,
+        720
+      ],
+      "name": "reference",
+      "dpr": 1,
+      "font": "normal",
+      "theme": "sepia",
+      "rootFontPx": 16,
+      "liveResize": [
+        640,
+        360
+      ],
+      "uiScale": 100
+    },
+    {
+      "uiScale": 125,
+      "dpr": 1,
+      "viewport": [
+        920,
+        620
+      ],
+      "rootFontPx": 22.5,
+      "theme": "dark",
+      "name": "compact",
+      "font": "large"
+    },
+    {
+      "uiScale": 100,
+      "dpr": 2,
+      "viewport": [
+        640,
+        480
+      ],
+      "rootFontPx": 16,
+      "theme": "sepia",
+      "name": "high-dpi",
+      "font": "normal"
+    },
+    {
+      "uiScale": 200,
+      "dpr": 2,
+      "viewport": [
+        640,
+        360
+      ],
+      "rootFontPx": 40,
+      "theme": "dark",
+      "name": "short-large-type",
+      "font": "x-large"
+    },
+    {
+      "uiScale": 150,
+      "dpr": 1,
+      "viewport": [
+        360,
+        480
+      ],
+      "rootFontPx": 27,
+      "theme": "light",
+      "name": "narrow",
+      "font": "large"
+    }
+  ],
+  "sourceHashes": [
+    {
+      "sha256": "a0816b5d62d42e33f5ed70a19b4096108e87634f51ebb1f54e6e073ae3769429",
+      "path": "src/components/ui/Modal.vue"
+    },
+    {
+      "sha256": "23fa88c11838a0b8f39d69f273c07b7d00c66c0df96784b63bbe9392dc298775",
+      "path": "src/components/archive/ArchiveOpenDialog.vue"
+    },
+    {
+      "sha256": "051b45d0855c822370316a4651444fc9e3ba461278a2f86f9a20137c8ed91b02",
+      "path": "src/utils/archiveOpening.ts"
+    },
+    {
+      "sha256": "0b25405b87da6ef79e6a328316e80927c4a66b32331dbb6d0764db593173e9a3",
+      "path": "e2e/dialog-responsive.spec.ts"
+    }
+  ]
+}
