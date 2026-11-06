@@ -1,0 +1,63 @@
+{
+  "issue": 366,
+  "date": "2026-11-06",
+  "base_commit": "e389be58581d06e1318102af5b44941ed36e81b9",
+  "production_change": "Scope the reduced-motion stationary update indicator to its component target, never html.",
+  "baseline": {
+    "result": "failed",
+    "viewport": [
+      1920,
+      1040
+    ],
+    "root_left_px": 595.1875
+  },
+  "verified": {
+    "unit": {
+      "passed": 23,
+      "files": [
+        "src/composables/__tests__/useAccessibility.test.ts",
+        "src/components/update/__tests__/UpdateProgressStyles.test.ts",
+        "src/components/update/__tests__/UpdateProgressRegression.test.ts",
+        "src/components/update/__tests__/UpdateDialog.test.ts",
+        "src/stores/__tests__/update.test.ts"
+      ]
+    },
+    "chromium": {
+      "passed": 4,
+      "duration_seconds": 52.7,
+      "viewports": [
+        [
+          1920,
+          1040
+        ],
+        [
+          1024,
+          720
+        ],
+        [
+          920,
+          620
+        ]
+      ],
+      "root_left_px": 0,
+      "flows": [
+        "enable/disable",
+        "persisted true after reload",
+        "knob transform intact",
+        "reset confirmation cancel",
+        "compress/decompress navigation",
+        "app reduced motion update indicator",
+        "system reduced motion update indicator",
+        "system preference back to no-preference"
+      ]
+    },
+    "build": "npm run build passed (vue-tsc and vite production build)",
+    "screenshots_visually_reviewed": 4
+  },
+  "limitations": [
+    "Native IPC substituted for UI checks; no real updater download or install.",
+    "No desktop control or Windows settings changes.",
+    "No unrelated archive/media matrix reruns.",
+    "No version bump or release in this change."
+  ]
+}

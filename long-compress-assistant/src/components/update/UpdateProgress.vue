@@ -37,5 +37,6 @@ const percent = computed(() => update.installPhase === 'downloading' ? update.do
 .update-progress p{margin:8px 0 0;font-size:11px;line-height:1.6;color:var(--text-muted)}
 @keyframes update-download{from{transform:translateX(-110%)}to{transform:translateX(275%)}}
 @media(prefers-reduced-motion:reduce){.update-progress-track>.indeterminate{animation:none;margin-left:31%}.update-progress-track>div{transition:none}}
-:global(html.reduce-motion) .update-progress-track>.indeterminate{animation:none;margin-left:31%}
+/* Keep the target scoped: :global(ancestor) would discard the descendant selector. */
+html.reduce-motion .update-progress-track>.indeterminate{animation:none;margin-left:31%}
 </style>
