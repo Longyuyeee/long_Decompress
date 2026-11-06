@@ -10,9 +10,9 @@ $projectRoot = Split-Path -Parent $PSScriptRoot
 $resourceDirectory = Join-Path $projectRoot 'src-tauri\resources'
 $quickExtractPackagePath = Join-Path $resourceDirectory 'long_compress_context_menu_extract.msix'
 $quickPackPackagePath = Join-Path $resourceDirectory 'long_compress_context_menu_pack.msix'
-$packagePaths = @($quickExtractPackagePath, $quickPackPackagePath)
-$legacyPackagePath = Join-Path $resourceDirectory 'long_compress_context_menu.msix'
-$packageArtifacts = @($packagePaths + $legacyPackagePath)
+$menuPackagePath = Join-Path $resourceDirectory 'long_compress_context_menu.msix'
+$packagePaths = @($menuPackagePath, $quickExtractPackagePath, $quickPackPackagePath)
+$packageArtifacts = @($packagePaths)
 $registrationScript = Join-Path $resourceDirectory 'long_compress_context_menu_registration.ps1'
 $shellManifest = Join-Path $projectRoot 'src-tauri\shell-extension\Cargo.toml'
 $tauriConfig = Get-Content -Raw -Encoding utf8 -LiteralPath (Join-Path $projectRoot 'src-tauri\tauri.conf.json') | ConvertFrom-Json
@@ -91,7 +91,7 @@ try {
   $env:REQUIRE_WINDOWS_CONTEXT_MENU_PACKAGE = 'true'
   & (Join-Path $PSScriptRoot 'build-context-menu-package.ps1')
   if ($LASTEXITCODE -ne 0 -or @($packagePaths | Where-Object { -not (Test-Path -LiteralPath $_) }).Count -gt 0) {
-    throw 'Both signed development context-menu packages were not produced.'
+    throw 'All three signed development context-menu packages must be produced, including the complete menu.'
   }
 
   $shellDll = Get-ChildItem -LiteralPath $resourceDirectory -Filter 'long_compress_shell_extension_*.dll' -File | Select-Object -First 1
@@ -105,6 +105,7 @@ try {
   $packageVersion = '{0}.{1}.{2}.0' -f $versionMatch.Groups[1].Value, $versionMatch.Groups[2].Value, $versionMatch.Groups[3].Value
 
   & $registrationScript -Action Install `
+    -MenuPackagePath $menuPackagePath `
     -QuickExtractPackagePath $quickExtractPackagePath `
     -QuickPackPackagePath $quickPackPackagePath `
     -ExternalLocation $externalLocation `

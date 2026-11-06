@@ -1,4 +1,4 @@
-param(
+﻿param(
   [Parameter(Mandatory = $true)]
   [string]$PreviousInstaller,
   [Parameter(Mandatory = $true)]
@@ -18,6 +18,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'context-menu-status.ps1')
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $testResultsRoot = [IO.Path]::GetFullPath((Join-Path $projectRoot 'test-results'))
@@ -241,6 +242,7 @@ function Get-ContextMenuMode {
   $legacy = Test-Path -LiteralPath 'HKCU:\Software\Classes\*\shell\LongDecompress'
   $native = Test-Path -LiteralPath 'HKCU:\Software\Classes\*\shell\LongDecompressNative'
   if ($legacy -and $native) { return 'mixed' }
+  if ($native -and (Test-DynamicClassicContextMenu)) { return 'legacy' }
   if ($legacy) { return 'legacy' }
   if ($native) { return 'native' }
   return 'none'
@@ -283,6 +285,10 @@ function Restore-AutoStartRegistration {
 }
 
 function Get-ClassicContextMenuCommand {
+  if (Test-DynamicClassicContextMenu) {
+    $entry = Get-ItemProperty -LiteralPath 'HKCU:\Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4D}' -ErrorAction SilentlyContinue
+    return '"' + [string]$entry.ApplicationPath + '"'
+  }
   $commandKeys = @(
     'HKCU:\Software\Classes\SystemFileAssociations\.zip\shell\LongDecompress\shell\01.LongDecompress.open\command',
     'HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.open\command'
@@ -303,6 +309,8 @@ function Test-ClassicContextMenuTarget {
 
 function Get-ClassicContextMenuCascadeStatus {
   param([string]$ExpectedExecutable)
+  $dynamic = Get-DynamicClassicContextMenuStatus $ExpectedExecutable
+  if ($null -ne $dynamic) { return $dynamic }
   $definitions = @(
     @{ path = 'HKCU:\Software\Classes\*\shell\LongDecompress'; count = 3 },
     @{ path = 'HKCU:\Software\Classes\SystemFileAssociations\.zip\shell\LongDecompress'; count = 8 },
@@ -404,6 +412,7 @@ function Get-OwnedContextMenuRegistryPaths {
     'Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4A}',
     'Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4B}',
     'Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4C}'
+    'Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4D}'
   )
   return @($paths | Sort-Object -Unique)
 }
@@ -519,8 +528,8 @@ function Assert-ClassicContextMenu {
   param([string]$ExpectedExecutable)
   $legacyRoot = 'HKCU:\Software\Classes\*\shell\LongDecompress'
   $nativeRoot = 'HKCU:\Software\Classes\*\shell\LongDecompressNative'
-  Add-Check 'classic context-menu root is registered' (Test-Path -LiteralPath $legacyRoot) $legacyRoot
-  Add-Check 'unsigned native context-menu root is absent' (-not (Test-Path -LiteralPath $nativeRoot)) $nativeRoot
+  Add-Check 'classic context-menu root is registered' ((Test-Path -LiteralPath $legacyRoot) -or (Test-DynamicClassicContextMenu)) $legacyRoot
+  Add-Check 'Windows 11 sparse menu is not active' ((-not (Test-Path -LiteralPath $nativeRoot)) -or (Test-DynamicClassicContextMenu)) $nativeRoot
   $cascade = Get-ClassicContextMenuCascadeStatus $ExpectedExecutable
   Add-Check 'classic context-menu submenus are complete and target current executable' (
     $cascade.valid

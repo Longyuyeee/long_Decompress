@@ -10,6 +10,39 @@ vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
 describe('SettingsView archive engine diagnostics', () => {
   let autoStartEnabled = false
 
+  it('repairs the Windows file menu without toggling the saved preference and shows its actual location', async () => {
+    const fallback = mocks.invoke.getMockImplementation()!
+    mocks.invoke.mockImplementation((command: string, payload?: { enable?: boolean }) =>
+      command === 'context_menu_location' ? Promise.resolve('classic') :
+      command === 'is_context_menu_registered' || command === 'register_context_menu' ? Promise.resolve(true) : fallback(command, payload))
+    const wrapper = mount(SettingsView, { global: { plugins: [createPinia()] } })
+    await flushPromises()
+    await wrapper.get('[data-settings-section="behavior"]').trigger('click')
+    expect(wrapper.get('[data-testid="context-menu-location"]').text()).toContain('显示更多选项')
+    mocks.invoke.mockClear()
+    await wrapper.get('[data-testid="repair-context-menu"]').trigger('click')
+    await flushPromises()
+    expect(mocks.invoke.mock.calls.filter(([command]) => command === 'register_context_menu')).toHaveLength(1)
+    expect(mocks.invoke.mock.calls.some(([command]) => command === 'unregister_context_menu')).toBe(false)
+    expect(JSON.parse(localStorage.getItem('app-settings') || '{"contextMenuEnabled":true}').contextMenuEnabled).toBe(true)
+    wrapper.unmount()
+  })
+
+  it('does not claim a successful repair when the complete Windows registration is still missing', async () => {
+    const fallback = mocks.invoke.getMockImplementation()!
+    mocks.invoke.mockImplementation((command: string, payload?: { enable?: boolean }) => command === 'is_context_menu_registered'
+      ? Promise.resolve(true) : command === 'context_menu_location' ? Promise.resolve('classic') : fallback(command, payload))
+    const pinia = createPinia()
+    const wrapper = mount(SettingsView, { global: { plugins: [pinia] } })
+    await flushPromises()
+    mocks.invoke.mockImplementation((command: string) => Promise.resolve(command === 'register_context_menu'))
+    await wrapper.get('[data-testid="repair-context-menu"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="context-menu-location"]').text()).toContain('尚未就绪')
+    expect(wrapper.get('[data-testid="repair-context-menu"]').attributes('disabled')).toBeUndefined()
+    wrapper.unmount()
+  })
+
   it('advertises the bundled EGG read scope, never creation', async () => {
     const fallback=mocks.invoke.getMockImplementation()!
     mocks.invoke.mockImplementation((command: string, payload?: {enable?:boolean}) => command === 'get_archive_engine_capabilities'

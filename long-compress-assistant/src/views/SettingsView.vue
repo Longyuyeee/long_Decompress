@@ -97,6 +97,7 @@ const selectedAccentName = computed(() =>
 )
 
 const contextMenuBusy = ref(false)
+const contextMenuLocation = ref('')
 const autoStartBusy = ref(false)
 const autoStartSupported = ref(navigator.platform.toLowerCase().includes('win'))
 const toggleBruteForce = () => appStore.updateSettings({ enableBruteForce: !appStore.settings.enableBruteForce })
@@ -121,7 +122,24 @@ const checkContextMenu = async () => {
   if (!contextMenuSupported.value) return
   try {
     await appStore.synchronizeContextMenu()
+    contextMenuLocation.value = await tauriCommands.invoke<string>('context_menu_location')
   } catch { /* ignore */ }
+}
+
+const repairContextMenu = async () => {
+  if (contextMenuBusy.value || !appStore.settings.contextMenuEnabled) return
+  contextMenuBusy.value = true
+  try {
+    await tauriCommands.registerContextMenu()
+    if (!await tauriCommands.isContextMenuRegistered()) throw new Error(appStore.t('settings.behavior.context_menu.failed'))
+    contextMenuLocation.value = await tauriCommands.invoke<string>('context_menu_location')
+    appStore.setSuccess(appStore.t('settings.behavior.context_menu.repaired'))
+  } catch (error) {
+    contextMenuLocation.value = 'missing'
+    appStore.setError(String(error))
+  } finally {
+    contextMenuBusy.value = false
+  }
 }
 
 const checkAutoStart = async () => {
@@ -194,6 +212,7 @@ const toggleContextMenu = async () => {
   const enable = !appStore.settings.contextMenuEnabled
   try {
     await appStore.setContextMenuEnabled(enable)
+    contextMenuLocation.value = enable ? await tauriCommands.invoke<string>('context_menu_location') : ''
     appStore.setSuccess(appStore.t('common.success'))
   } catch (e: any) {
     appStore.setError(String(e))
@@ -529,6 +548,10 @@ const removeWordlist = (index: number) => {
                   <span class="settings-toggle-knob"></span>
                 </div>
               </button><HelpHint :label="appStore.t('settings.behavior.context_menu')+'说明'">{{ appStore.t('settings.behavior.context_menu.desc') }}</HelpHint></div>
+              <div v-if="contextMenuSupported && appStore.settings.contextMenuEnabled" class="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-subtle bg-input/40 px-3 py-2 text-xs">
+                <span class="text-muted" data-testid="context-menu-location">{{ appStore.t(`settings.behavior.context_menu.location.${contextMenuLocation || 'missing'}`) }}</span>
+                <button type="button" data-testid="repair-context-menu" :disabled="contextMenuBusy" class="shrink-0 rounded-lg px-2 py-1 font-bold text-primary hover:bg-primary/10 disabled:opacity-50" @click="repairContextMenu">{{ appStore.t(contextMenuBusy ? 'settings.behavior.context_menu.repairing' : 'settings.behavior.context_menu.repair') }}</button>
+              </div>
             </div>
             <ArchiveOpeningSettings />
           </section>

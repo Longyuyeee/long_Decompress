@@ -1,4 +1,4 @@
-param(
+﻿param(
   [Parameter(Mandatory = $true)]
   [string]$PreviousVersion,
   [Parameter(Mandatory = $true)]
@@ -6,6 +6,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+. (Join-Path $PSScriptRoot 'context-menu-status.ps1')
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $resultsRoot = [IO.Path]::GetFullPath((Join-Path $projectRoot 'test-results\public-update-validation'))
@@ -160,6 +161,7 @@ function Get-ContextMenuMode {
   $legacy = Test-Path -LiteralPath 'HKCU:\Software\Classes\*\shell\LongDecompress'
   $native = Test-Path -LiteralPath 'HKCU:\Software\Classes\*\shell\LongDecompressNative'
   if ($legacy -and $native) { return 'mixed' }
+  if ($native -and (Test-DynamicClassicContextMenu)) { return 'legacy' }
   if ($legacy) { return 'legacy' }
   if ($native) { return 'native' }
   return 'none'
@@ -167,6 +169,8 @@ function Get-ContextMenuMode {
 
 function Get-ClassicContextMenuCascadeStatus {
   param([string]$ExpectedExecutable)
+  $dynamic = Get-DynamicClassicContextMenuStatus $ExpectedExecutable
+  if ($null -ne $dynamic) { return $dynamic }
   $definitions = @(
     @{ path = 'HKCU:\Software\Classes\*\shell\LongDecompress'; count = 3 },
     @{ path = 'HKCU:\Software\Classes\SystemFileAssociations\.zip\shell\LongDecompress'; count = 8 },

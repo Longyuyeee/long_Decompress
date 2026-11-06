@@ -4,16 +4,18 @@ param(
   [string]$Action,
   [string]$QuickExtractPackagePath,
   [string]$QuickPackPackagePath,
+  [string]$MenuPackagePath,
   [string]$ExternalLocation,
   [string]$PackageVersion
 )
 
 $ErrorActionPreference = 'Stop'
 $packageNames = @(
+  'LongCompressAssistant.ContextMenu',
   'LongCompressAssistant.ContextMenu.QuickExtract',
   'LongCompressAssistant.ContextMenu.QuickPack'
 )
-$legacyPackageNames = @('LongCompressAssistant.ContextMenu')
+$legacyPackageNames = @()
 
 $installedPackages = @(
   @($packageNames + $legacyPackageNames) |
@@ -21,7 +23,7 @@ $installedPackages = @(
 )
 
 if ($Action -eq 'Install') {
-  $packagePaths = @($QuickExtractPackagePath, $QuickPackPackagePath)
+  $packagePaths = @($MenuPackagePath, $QuickExtractPackagePath, $QuickPackPackagePath)
   foreach ($packagePath in $packagePaths) {
     if (-not $packagePath -or -not (Test-Path -LiteralPath $packagePath)) {
       throw "Context-menu identity package not found: $packagePath"

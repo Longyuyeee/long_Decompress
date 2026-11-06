@@ -168,6 +168,10 @@ export const useAppStore = defineStore('app', () => {
       const registered = await invoke<boolean>('is_context_menu_registered')
       if (registered !== enabled) {
         await invoke(enabled ? 'register_context_menu' : 'unregister_context_menu')
+      } else if (!enabled && await invoke<string>('context_menu_location') === 'stale') {
+        // A partial old registration is not a complete menu, but it must still
+        // be removed when the user has disabled Windows integration.
+        await invoke('unregister_context_menu')
       }
     })
     contextMenuSyncQueue = operation.catch(() => {})

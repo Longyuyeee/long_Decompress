@@ -1,3 +1,4 @@
+param([switch]$PrintCatalog)
 $ErrorActionPreference = 'Stop'
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
@@ -6,6 +7,23 @@ $templatePath = Join-Path $projectRoot 'src-tauri\windows-context-menu\AppxManif
 $tauriConfig = Get-Content -Raw -Encoding utf8 -LiteralPath (Join-Path $projectRoot 'src-tauri\tauri.conf.json') | ConvertFrom-Json
 $appExecutableName = "$($tauriConfig.package.productName).exe"
 $packageDefinitions = @(
+  @{
+    FileName = 'long_compress_context_menu.msix'
+    PackageName = 'LongCompressAssistant.ContextMenu'
+    ApplicationId = 'LongCompressMenu'
+    DisplayNameBase64 = 'TG9uZ+ino+WOiw=='
+    DescriptionBase64 = 'TG9uZ+ino+WOiyBXaW5kb3dzIOWPs+mUruiPnOWNlQ=='
+    SurrogateDisplayNameBase64 = 'TG9uZ+ino+WOiyBTaGVsbA=='
+    Clsid = 'D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4A'
+    ContextMenuItems = @'
+            <desktop5:ItemType Type="*">
+              <desktop5:Verb Id="LongDecompressMenu" Clsid="D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4A" />
+            </desktop5:ItemType>
+            <desktop5:ItemType Type="Directory">
+              <desktop5:Verb Id="LongDecompressMenuDirectory" Clsid="D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4A" />
+            </desktop5:ItemType>
+'@
+  },
   @{
     FileName = 'long_compress_context_menu_extract.msix'
     PackageName = 'LongCompressAssistant.ContextMenu.QuickExtract'
@@ -38,10 +56,12 @@ $packageDefinitions = @(
 '@
   }
 )
+if ($PrintCatalog) {
+  $packageDefinitions | ConvertTo-Json -Depth 5
+  exit 0
+}
 $outputPackages = $packageDefinitions | ForEach-Object { Join-Path $resourceDirectory $_.FileName }
-$legacyOutputPackage = Join-Path $resourceDirectory 'long_compress_context_menu.msix'
-
-@($outputPackages + $legacyOutputPackage) | ForEach-Object {
+$outputPackages | ForEach-Object {
   Remove-Item -LiteralPath $_ -Force -ErrorAction SilentlyContinue
 }
 

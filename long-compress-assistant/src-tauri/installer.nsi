@@ -712,6 +712,9 @@ FunctionEnd
   DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.md5\shell\LongDecompressChecksumVerify"
   DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.sha256\shell\LongDecompressChecksumVerify"
   DeleteRegKey HKCU "Software\Classes\*\shell\LongDecompress"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.sfv\shell\LongDecompress"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.md5\shell\LongDecompress"
+  DeleteRegKey HKCU "Software\Classes\SystemFileAssociations\.sha256\shell\LongDecompress"
   ; Volume suffixes registered by the classic context menu (leave other applications intact).
   Push $R0
   Push $R1
@@ -754,6 +757,7 @@ FunctionEnd
   DeleteRegKey HKCU "Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4A}"
   DeleteRegKey HKCU "Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4B}"
   DeleteRegKey HKCU "Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4C}"
+  DeleteRegKey HKCU "Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4D}"
 
   ; Remove all CommandStore verbs owned by the application.
   DeleteRegKey HKCU "Software\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\LongDecompress.open"
