@@ -1,0 +1,80 @@
+{
+  "date": "2026-11-06",
+  "version": "1.7.41",
+  "status": "candidate, not formally released",
+  "base_commit": "7b873358db28dea648efcf1fb81d24e089f0306c",
+  "classic": {
+    "single_root_per_profile": true,
+    "profiles": {
+      "ordinary": 6,
+      "archive": 14,
+      "image": 9,
+      "manifest": 7,
+      "directory": 5
+    },
+    "real_shell_leaf_invocations": 41,
+    "checks": [
+      "actual SHCreateDefaultContextMenu/HMENU",
+      "real production registration in isolated hive",
+      "loaded compiled DLL factory",
+      "exact public label to CLI action",
+      "exact selected path received by native process",
+      "packing/maintenance groups",
+      "no leading submenu separators",
+      "stale target rejected"
+    ],
+    "signature_deployment_exercised": false
+  },
+  "native_com": {
+    "tests_passed": 6,
+    "native_process_actions_verified": 19,
+    "selection_coverage": [
+      "ordinary file",
+      "ZIP / 7Z / RAR",
+      "numbered and classic volumes",
+      "recovery volume",
+      "JPG / JPEG / PNG / WebP",
+      "SFV / MD5 / SHA256",
+      "folder with .zip name",
+      "mixed selection",
+      "Chinese and spaced paths",
+      "multiple paths"
+    ]
+  },
+  "frontend": {
+    "unique_related_tests_passed": 49,
+    "details": "35 unchanged tests in three files plus 14 app store tests after partial-registration cleanup change",
+    "settings_e2e_passed": 2,
+    "screenshots_reviewed": 2,
+    "viewports": [
+      [
+        1280,
+        720
+      ],
+      [
+        920,
+        720
+      ]
+    ],
+    "production_build": "passed"
+  },
+  "other_checks": {
+    "shell_build": "passed",
+    "release_identity_8_sources": "passed",
+    "package_catalog": "3 definitions, full root mapped for files and folders",
+    "powershell_parsing": 7,
+    "native_main_check": "passed"
+  },
+  "dll": {
+    "name": "long_compress_shell_extension_1_7_41.dll",
+    "sha256": "5bb490a76ca317e9d5ff1f12c6f99dd63d98d4f337e1189e62ce1dd126914ca1"
+  },
+  "limits": [
+    "No desktop control or real file association changes.",
+    "COM classes and registry remapping are confined to the test process and owned registry tree.",
+    "Shell dispatch tests use a native argument receiver, not reruns of compression/image/rescue algorithms.",
+    "Windows 11 signed package deployment and installed-release/update matrices were not rerun.",
+    "Earlier cold browser navigation exceeded 60 seconds; final isolated UI scenarios passed.",
+    "Public fixture paths were replaced with <fixture> in the saved report."
+  ]
+}

@@ -772,7 +772,7 @@ const drawerTransition = useDrawerTransition()
 
         <div class="compression-task-list flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden custom-scrollbar p-3 space-y-3">
         <BatchConfigBar v-if="selectedRows.size" :count="selectedRows.size" :subjects="selectedSubjects" mode="compression" @apply="applySelectedConfiguration" @clear="selectedRows = new Set()" />
-        <BatchResultActions v-if="scope === 'all' || scope === 'completed'" :locations="completedLocations" />
+        <BatchResultActions v-if="scope === 'completed'" :locations="completedLocations" />
         <div v-if="!visibleGroups.length && !visibleFiles.length" data-testid="task-scope-empty" class="rounded-xl border border-dashed border-subtle p-6 text-center text-sm text-muted"><p>当前分类没有任务。</p><button type="button" class="mt-3 text-primary" @click="changeScope('all')">返回全部任务</button></div>
 
         <!-- 1. 压缩组列表 -->

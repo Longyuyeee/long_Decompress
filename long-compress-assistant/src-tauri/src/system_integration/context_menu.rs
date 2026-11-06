@@ -13,6 +13,8 @@ use std::ffi::c_void;
 use std::os::windows::process::CommandExt;
 #[cfg(target_os = "windows")]
 use std::process::Command;
+#[cfg(target_os = "windows")]
+static REGISTRATION_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
 #[cfg(target_os = "windows")]
 const SHCNE_ASSOCCHANGED: i32 = 0x0800_0000;
@@ -32,6 +34,8 @@ extern "system" {
 
 #[cfg(target_os = "windows")]
 const NATIVE_COMMAND_CLSID: &str = "{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4A}";
+#[cfg(target_os = "windows")]
+const CLASSIC_COMMAND_CLSID: &str = "{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4D}";
 #[cfg(target_os = "windows")]
 const NATIVE_COMMAND_VERB: &str = "LongDecompressNative";
 #[cfg(target_os = "windows")]
@@ -53,6 +57,8 @@ const CONTEXT_MENU_QUICK_EXTRACT_PACKAGE_NAME: &str =
     "long_compress_context_menu_extract.msix";
 #[cfg(target_os = "windows")]
 const CONTEXT_MENU_QUICK_PACK_PACKAGE_NAME: &str = "long_compress_context_menu_pack.msix";
+#[cfg(target_os = "windows")]
+const CONTEXT_MENU_PACKAGE_NAME: &str = "long_compress_context_menu.msix";
 #[cfg(target_os = "windows")]
 const CONTEXT_MENU_REGISTRATION_SCRIPT: &str = "long_compress_context_menu_registration.ps1";
 #[cfg(target_os = "windows")]
@@ -98,13 +104,17 @@ const COMPRESS_VERBS: &[&str] = &[
     "LongDecompress.compressEncrypted",
     "LongDecompress.compressSplit",
 ];
+#[cfg(target_os = "windows")]
+const GENERAL_FILE_VERBS: &[&str] = &[
+    "LongDecompress.compressZip", "LongDecompress.compress7z", "LongDecompress.compressCustom",
+    "LongDecompress.compressEncrypted", "LongDecompress.compressSplit", "LongDecompress.checksumCreate",
+];
 
 #[cfg(target_os = "windows")]
 const ARCHIVE_VERBS: &[&str] = &[
-    "LongDecompress.extractHere", "LongDecompress.extractTo", "LongDecompress.extractChoose",
-    "LongDecompress.open", "LongDecompress.moreArchive",
-    "LongDecompress.compressZip", "LongDecompress.compress7z", "LongDecompress.compressCustom",
-    "LongDecompress.compressEncrypted", "LongDecompress.compressSplit",
+    "LongDecompress.open", "LongDecompress.extractHere", "LongDecompress.extractTo",
+    "LongDecompress.extractChoose", "LongDecompress.compressMenu", "LongDecompress.moreArchive",
+    "LongDecompress.checksumCreate",
 ];
 #[cfg(target_os = "windows")]
 const MORE_ARCHIVE_VERBS: &[&str] = &[
@@ -117,9 +127,11 @@ const IMAGE_EXTENSIONS: &[&str] = &[".jpg", ".jpeg", ".png", ".webp"];
 #[cfg(target_os = "windows")]
 const IMAGE_VERBS: &[&str] = &[
     "LongDecompress.imageCompress", "LongDecompress.imageWebp", "LongDecompress.imageResize",
-    "LongDecompress.compressZip", "LongDecompress.compress7z", "LongDecompress.compressCustom",
-    "LongDecompress.compressEncrypted", "LongDecompress.compressSplit",
+    "LongDecompress.compressMenu",
+    "LongDecompress.checksumCreate",
 ];
+#[cfg(target_os = "windows")]
+const MANIFEST_VERBS: &[&str] = &["LongDecompress.checksumVerify", "LongDecompress.compressMenu", "LongDecompress.checksumCreate"];
 #[cfg(target_os = "windows")]
 const BACKGROUND_VERBS: &[&str] = &[
     "LongDecompress.compressZipHere",
@@ -144,6 +156,9 @@ fn archive_menu_extensions() -> Vec<String> {
 #[cfg(target_os = "windows")]
 fn verbs() -> Vec<VerbDef> {
     vec![
+        VerbDef { verb: "LongDecompress.compressMenu", label: "压缩打包", cli: "" },
+        VerbDef { verb: "LongDecompress.checksumVerify", label: "核对校验清单…", cli: "--checksum-verify \"%1\"" },
+        VerbDef { verb: "LongDecompress.checksumCreate", label: "生成校验清单…", cli: "--checksum-create \"%1\"" },
         VerbDef { verb: "LongDecompress.compressEncrypted", label: "加密压缩…", cli: "--compress-encrypted \"%1\"" },
         VerbDef { verb: "LongDecompress.compressSplit", label: "分卷压缩…", cli: "--compress-split \"%1\"" },
         VerbDef { verb: "LongDecompress.imageCompress", label: "压缩图片…", cli: "--image-compress \"%1\"" },
@@ -252,6 +267,12 @@ fn checksum_menu_is_current(hkcu: &RegKey, root: &str, app_path: &str) -> bool {
 /// 在 Windows 注册表中添加全部级联右键菜单
 #[cfg(target_os = "windows")]
 pub fn register_context_menu(app_path: &str) -> Result<()> {
+    let _guard = REGISTRATION_LOCK.lock().unwrap_or_else(|error| error.into_inner());
+    register_context_menu_unlocked(app_path)
+}
+
+#[cfg(target_os = "windows")]
+fn register_context_menu_unlocked(app_path: &str) -> Result<()> {
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
 
     // Windows 11 uses a dynamic IExplorerCommand menu. Registering the legacy
@@ -272,6 +293,7 @@ pub fn register_context_menu(app_path: &str) -> Result<()> {
                 let clsid_path = format!(r"Software\Classes\CLSID\{}", NATIVE_COMMAND_CLSID);
                 let clsid_key = hkcu.open_subkey_with_flags(clsid_path, KEY_SET_VALUE)?;
                 clsid_key.set_value("SparsePackageRegistered", &1u32)?;
+                clsid_key.set_value("MenuSchemaVersion", &2u32)?;
             }
             Ok(true)
         })();
@@ -279,7 +301,7 @@ pub fn register_context_menu(app_path: &str) -> Result<()> {
             Ok(true) => {}
             Ok(false) => {
                 unregister_native_menu(&hkcu)?;
-                register_legacy_menu(&hkcu, app_path)?;
+                register_classic_command_menu(&hkcu, app_path)?;
             }
             Err(error) => {
                 // Public unsigned builds cannot deploy the Windows 11 sparse
@@ -292,96 +314,17 @@ pub fn register_context_menu(app_path: &str) -> Result<()> {
                     );
                 }
                 unregister_native_menu(&hkcu)?;
-                register_legacy_menu(&hkcu, app_path)?;
+                register_classic_command_menu(&hkcu, app_path)?;
             }
         }
     } else {
-        register_legacy_menu(&hkcu, app_path)?;
+        register_classic_command_menu(&hkcu, app_path)?;
     }
 
-    register_checksum_menu(&hkcu, r"Software\Classes", app_path)?;
     notify_shell_associations_changed();
-    Ok(())
-}
-
-#[cfg(target_os = "windows")]
-fn register_legacy_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
-    let all_verbs = verbs();
-
-    // CommandStore custom verbs are documented under HKLM. Putting them under
-    // HKCU leaves the cascade root visible while Explorer silently drops its
-    // children. On current Windows 11 builds the reliable per-user layout is
-    // an empty SubCommands value plus inline `shell` children. This also keeps
-    // every submenu self-contained and avoids requiring elevation.
-    reg_shell_entry(
-        hkcu,
-        r"Software\Classes\*\shell\LongDecompress",
-        &all_verbs,
-        COMPRESS_VERBS,
-        app_path,
-    )?;
-    reg_direct_shell_entry(
-        hkcu,
-        &format!(r"Software\Classes\*\shell\{}", LEGACY_QUICK_PACK_VERB),
-        "一键打包为 ZIP",
-        "--quick-pack \"%1\"",
-        app_path,
-    )?;
-    for ext in archive_menu_extensions() {
-        let association_root = format!(r"Software\Classes\SystemFileAssociations\{}\shell", ext);
-        reg_shell_entry(
-            hkcu,
-            &format!(r"{}\LongDecompress", association_root),
-            &all_verbs,
-            ARCHIVE_VERBS,
-            app_path,
-        )?;
-
+    if !context_menu_is_current(&hkcu, app_path) {
+        anyhow::bail!("Windows context menu registration is incomplete");
     }
-
-    for extension in IMAGE_EXTENSIONS {
-        reg_shell_entry(hkcu, &format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", extension), &all_verbs, IMAGE_VERBS, app_path)?;
-    }
-    for extension in recovery_extensions() {
-        reg_shell_entry(hkcu, &format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", extension),
-            &all_verbs, &["LongDecompress.repairArchive"], app_path)?;
-    }
-    // 文件夹和文件夹空白处压缩菜单。
-    reg_shell_entry(
-        hkcu,
-        r"Software\Classes\directory\shell\LongDecompress",
-        &all_verbs,
-        COMPRESS_VERBS,
-        app_path,
-    )?;
-    reg_direct_shell_entry(
-        hkcu,
-        &format!(
-            r"Software\Classes\directory\shell\{}",
-            LEGACY_QUICK_PACK_VERB
-        ),
-        "一键打包为 ZIP",
-        "--quick-pack \"%1\"",
-        app_path,
-    )?;
-    reg_shell_entry(
-        hkcu,
-        r"Software\Classes\directory\Background\shell\LongDecompress",
-        &all_verbs,
-        BACKGROUND_VERBS,
-        app_path,
-    )?;
-    reg_direct_shell_entry(
-        hkcu,
-        &format!(
-            r"Software\Classes\directory\Background\shell\{}",
-            LEGACY_QUICK_PACK_VERB
-        ),
-        "一键打包当前文件夹为 ZIP",
-        "--quick-pack \"%V\"",
-        app_path,
-    )?;
-
     Ok(())
 }
 
@@ -431,6 +374,16 @@ fn shell_extension_path(app_path: &str) -> std::path::PathBuf {
 
 #[cfg(target_os = "windows")]
 fn register_native_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
+    register_command_menu(hkcu, app_path, false)
+}
+
+#[cfg(target_os = "windows")]
+fn register_classic_command_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
+    register_command_menu(hkcu, app_path, true)
+}
+
+#[cfg(target_os = "windows")]
+fn register_command_menu(hkcu: &RegKey, app_path: &str, classic: bool) -> Result<()> {
     let dll_path = shell_extension_path(app_path);
     if !dll_path.is_file() {
         anyhow::bail!(
@@ -441,6 +394,7 @@ fn register_native_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
 
     for (clsid, label) in [
         (NATIVE_COMMAND_CLSID, "Long解压 Windows 11 原生菜单"),
+        (CLASSIC_COMMAND_CLSID, "Long解压分类菜单"),
         (QUICK_EXTRACT_COMMAND_CLSID, "Long解压一键解压"),
         (QUICK_PACK_COMMAND_CLSID, "Long解压一键打包"),
     ] {
@@ -463,7 +417,7 @@ fn register_native_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
         let (verb_key, _) = hkcu.create_subkey(&verb_path)?;
         verb_key.set_value("MUIVerb", &"Long解压")?;
         verb_key.set_value("Icon", &format!(r#""{}""#, app_path))?;
-        verb_key.set_value("ExplorerCommandHandler", &NATIVE_COMMAND_CLSID)?;
+        verb_key.set_value("ExplorerCommandHandler", &if classic { CLASSIC_COMMAND_CLSID } else { NATIVE_COMMAND_CLSID })?;
         verb_key.set_value("MultiSelectModel", &"Player")?;
     }
 
@@ -485,6 +439,9 @@ fn register_native_menu(hkcu: &RegKey, app_path: &str) -> Result<()> {
             app_path,
         )?;
     }
+    let root = hkcu.open_subkey_with_flags(format!(r"Software\Classes\CLSID\{}", NATIVE_COMMAND_CLSID), KEY_SET_VALUE)?;
+    root.set_value("MenuProvider", &if classic { "classic" } else { "native" })?;
+    reg_shell_entry(hkcu, r"Software\Classes\directory\Background\shell\LongDecompress", &verbs(), BACKGROUND_VERBS, app_path)?;
     Ok(())
 }
 
@@ -536,13 +493,16 @@ fn invoke_sparse_package_script(action: &str, app_path: Option<&str>) -> Result<
             context_menu_resource_path(app_path, CONTEXT_MENU_QUICK_EXTRACT_PACKAGE_NAME);
         let quick_pack_package =
             context_menu_resource_path(app_path, CONTEXT_MENU_QUICK_PACK_PACKAGE_NAME);
-        if !quick_extract_package.is_file() || !quick_pack_package.is_file() {
+        let menu_package = context_menu_resource_path(app_path, CONTEXT_MENU_PACKAGE_NAME);
+        if !quick_extract_package.is_file() || !quick_pack_package.is_file() || !menu_package.is_file() {
             return Ok(false);
         }
         let external_location = std::path::Path::new(app_path)
             .parent()
             .unwrap_or_else(|| std::path::Path::new("."));
         command
+            .arg("-MenuPackagePath")
+            .arg(menu_package)
             .arg("-QuickExtractPackagePath")
             .arg(quick_extract_package)
             .arg("-QuickPackPackagePath")
@@ -589,6 +549,7 @@ fn register_native_verb(
 
 #[cfg(target_os = "windows")]
 fn unregister_native_menu(hkcu: &RegKey) -> Result<()> {
+    delete_tree_if_present(hkcu, &format!(r"Software\Classes\CLSID\{}", CLASSIC_COMMAND_CLSID))?;
     // Remove the first native-menu prototype during migration.
     delete_tree_if_present(
         hkcu,
@@ -625,6 +586,9 @@ fn unregister_native_menu(hkcu: &RegKey) -> Result<()> {
 fn unregister_legacy_menu(hkcu: &RegKey) -> Result<()> {
     for (path, _, _) in checksum_menu_entries(r"Software\Classes") { delete_tree_if_present(hkcu, &path)?; }
     for extension in IMAGE_EXTENSIONS {
+        delete_tree_if_present(hkcu, &format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", extension))?;
+    }
+    for extension in [".sfv", ".md5", ".sha256"] {
         delete_tree_if_present(hkcu, &format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", extension))?;
     }
     for extension in recovery_extensions() {
@@ -673,7 +637,7 @@ fn reg_shell_entry(
     app_path: &str,
 ) -> Result<()> {
     let (key, _) = hkcu.create_subkey(path)?;
-    key.set_value("MUIVerb", &if selected_verbs == MORE_ARCHIVE_VERBS { "更多操作" } else { "Long解压" })?;
+    key.set_value("MUIVerb", &menu_title(path, selected_verbs))?;
     key.set_value("Icon", &format!(r#""{}""#, app_path))?;
     key.set_value("MultiSelectModel", &"Document")?;
     key.set_value("SubCommands", &"")?;
@@ -688,8 +652,8 @@ fn reg_shell_entry(
         // Prefixes make Explorer's registry enumeration deterministic while
         // the stable verb name remains available for diagnostics.
         let verb_path = format!(r"{}\{:02}.{}", submenu_path, index + 1, verb.verb);
-        if verb.verb == "LongDecompress.moreArchive" {
-            reg_shell_entry(hkcu, &verb_path, all_verbs, MORE_ARCHIVE_VERBS, app_path)?;
+        if let Some(children) = submenu_verbs(verb.verb) {
+            reg_shell_entry(hkcu, &verb_path, all_verbs, children, app_path)?;
             continue;
         }
         let (verb_key, _) = hkcu.create_subkey(&verb_path)?;
@@ -701,6 +665,22 @@ fn reg_shell_entry(
         command_key.set_value("", &format!(r#""{}" {}"#, app_path, verb.cli))?;
     }
     Ok(())
+}
+
+#[cfg(target_os = "windows")]
+fn submenu_verbs(verb: &str) -> Option<&'static [&'static str]> {
+    match verb {
+        "LongDecompress.moreArchive" => Some(MORE_ARCHIVE_VERBS),
+        "LongDecompress.compressMenu" => Some(COMPRESS_VERBS),
+        _ => None,
+    }
+}
+
+#[cfg(target_os = "windows")]
+fn menu_title(path: &str, selected: &[&str]) -> &'static str {
+    if selected == MORE_ARCHIVE_VERBS { "更多操作" }
+    else if path.ends_with("LongDecompress.compressMenu") { "压缩打包" }
+    else { "Long解压" }
 }
 
 #[cfg(target_os = "windows")]
@@ -723,6 +703,7 @@ fn reg_direct_shell_entry(
 
 #[cfg(target_os = "windows")]
 pub fn refresh_context_menu_if_present(app_path: &str) -> Result<bool> {
+    let _guard = REGISTRATION_LOCK.lock().unwrap_or_else(|error| error.into_inner());
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     let legacy_present = hkcu
         .open_subkey(r"Software\Classes\*\shell\LongDecompress")
@@ -733,16 +714,22 @@ pub fn refresh_context_menu_if_present(app_path: &str) -> Result<bool> {
             NATIVE_COMMAND_VERB
         ))
         .is_ok();
-    if !legacy_present && !native_present {
+    let classic_class_present = hkcu.open_subkey(format!(r"Software\Classes\CLSID\{}", CLASSIC_COMMAND_CLSID)).is_ok();
+    if !legacy_present && !native_present && !classic_class_present {
         return Ok(false);
     }
-    register_context_menu(app_path)?;
+    // Startup retries only repair stale registration. Deleting a current menu
+    // again races the frontend's settings synchronization and Explorer queries.
+    if !context_menu_is_current(&hkcu, app_path) {
+        register_context_menu_unlocked(app_path)?;
+    }
     Ok(true)
 }
 
 /// 从 Windows 注册表中移除所有右键菜单
 #[cfg(target_os = "windows")]
 pub fn unregister_context_menu() -> Result<()> {
+    let _guard = REGISTRATION_LOCK.lock().unwrap_or_else(|error| error.into_inner());
     let hkcu = RegKey::predef(HKEY_CURRENT_USER);
     if is_windows_11_or_newer() {
         unregister_sparse_identity_package()?;
@@ -783,7 +770,7 @@ fn legacy_shell_entry_is_current(
     };
     if root
         .get_value::<String, _>("MUIVerb")
-        .map(|label| label != if selected_verbs == MORE_ARCHIVE_VERBS { "更多操作" } else { "Long解压" })
+        .map(|label| label != menu_title(path, selected_verbs))
         .unwrap_or(true)
         || root
             .get_value::<String, _>("Position")
@@ -797,6 +784,10 @@ fn legacy_shell_entry_is_current(
         return false;
     }
 
+    if hkcu.open_subkey(format!(r"{}\shell", path))
+        .map(|shell| shell.enum_keys().filter_map(Result::ok).count() != selected_verbs.len())
+        .unwrap_or(true) { return false; }
+
     selected_verbs.iter().enumerate().all(|(index, verb_name)| {
         let Some(verb) = all_verbs
             .iter()
@@ -804,8 +795,8 @@ fn legacy_shell_entry_is_current(
         else {
             return false;
         };
-        if verb.verb == "LongDecompress.moreArchive" {
-            return legacy_shell_entry_is_current(hkcu, &format!(r"{}\shell\{:02}.{}", path, index+1, verb.verb), all_verbs, MORE_ARCHIVE_VERBS, app_path);
+        if let Some(children) = submenu_verbs(verb.verb) {
+            return legacy_shell_entry_is_current(hkcu, &format!(r"{}\shell\{:02}.{}", path, index+1, verb.verb), all_verbs, children, app_path);
         }
         let command_path = format!(
             r"{}\shell\{:02}.{}\command",
@@ -837,14 +828,19 @@ fn legacy_direct_entry_is_current(hkcu: &RegKey, path: &str, cli: &str, app_path
 
 #[cfg(target_os = "windows")]
 pub fn is_context_menu_registered() -> bool {
-    let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+    let _guard = REGISTRATION_LOCK.lock().unwrap_or_else(|error| error.into_inner());
     let Ok(exe_path) = std::env::current_exe() else { return false };
-    let exe_string = exe_path.to_string_lossy();
-    if !checksum_menu_is_current(&hkcu, r"Software\Classes", &exe_string) { return false; }
+    context_menu_is_current(&RegKey::predef(HKEY_CURRENT_USER), &exe_path.to_string_lossy())
+}
 
-    if is_windows_11_or_newer() {
+#[cfg(target_os = "windows")]
+fn context_menu_is_current(hkcu: &RegKey, exe_string: &str) -> bool {
+
+    {
         let clsid_path = format!(r"Software\Classes\CLSID\{}", NATIVE_COMMAND_CLSID);
+        let classic = hkcu.open_subkey(&clsid_path).and_then(|key| key.get_value::<String,_>("MenuProvider")).is_ok_and(|provider| provider == "classic");
         let expected_dll = shell_extension_path(&exe_string).to_string_lossy().into_owned();
+        if !std::path::Path::new(&expected_dll).is_file() { return false; }
         let root_registered = hkcu
             .open_subkey(&clsid_path)
             .and_then(|key| key.get_value::<String, _>("ApplicationPath"))
@@ -861,7 +857,7 @@ pub fn is_context_menu_registered() -> bool {
                     class, NATIVE_COMMAND_VERB
                 ))
                 .and_then(|key| key.get_value::<String, _>("ExplorerCommandHandler"))
-                .map(|handler| handler == NATIVE_COMMAND_CLSID)
+                .map(|handler| handler == if classic { CLASSIC_COMMAND_CLSID } else { NATIVE_COMMAND_CLSID })
                 .unwrap_or(false)
             });
         let quick_extract_registered = hkcu
@@ -882,6 +878,7 @@ pub fn is_context_menu_registered() -> bool {
             .unwrap_or(false)
         });
         let signed_packages_present = [
+            CONTEXT_MENU_PACKAGE_NAME,
             CONTEXT_MENU_QUICK_EXTRACT_PACKAGE_NAME,
             CONTEXT_MENU_QUICK_PACK_PACKAGE_NAME,
         ]
@@ -892,6 +889,9 @@ pub fn is_context_menu_registered() -> bool {
             .and_then(|key| key.get_value::<u32, _>("SparsePackageRegistered"))
             .map(|registered| registered == 1)
             .unwrap_or(false);
+        let full_menu_registered = hkcu.open_subkey(&clsid_path)
+            .and_then(|key| key.get_value::<u32,_>("MenuSchemaVersion"))
+            .map(|version| version == 2).unwrap_or(false);
         let package_registration_is_current = native_package_registration_is_current(
             signed_packages_present,
             sparse_package_registered,
@@ -899,69 +899,52 @@ pub fn is_context_menu_registered() -> bool {
         if root_registered
             && quick_extract_registered
             && quick_pack_registered
-            && package_registration_is_current
         {
-            return true;
+            if classic {
+                return hkcu.open_subkey(format!(r"Software\Classes\CLSID\{}\InprocServer32", CLASSIC_COMMAND_CLSID))
+                    .and_then(|key| key.get_value::<String,_>(""))
+                    .is_ok_and(|path| path.eq_ignore_ascii_case(&expected_dll))
+                    && hkcu.open_subkey(format!(r"Software\Classes\CLSID\{}", CLASSIC_COMMAND_CLSID))
+                        .and_then(|key| key.get_value::<String,_>("ApplicationPath"))
+                        .is_ok_and(|path| path.eq_ignore_ascii_case(exe_string))
+                    && legacy_shell_entry_is_current(hkcu, r"Software\Classes\directory\Background\shell\LongDecompress", &verbs(), BACKGROUND_VERBS, exe_string);
+            }
+            if package_registration_is_current && full_menu_registered { return true; }
         }
     }
 
-    let all_verbs = verbs();
-    let app_path = exe_path.to_string_lossy();
-    legacy_direct_entry_is_current(
-        &hkcu,
-        &format!(r"Software\Classes\*\shell\{}", LEGACY_QUICK_PACK_VERB),
-        "--quick-pack \"%1\"",
-        &app_path,
-    ) && legacy_direct_entry_is_current(
-        &hkcu,
-        &format!(
-            r"Software\Classes\directory\shell\{}",
-            LEGACY_QUICK_PACK_VERB
-        ),
-        "--quick-pack \"%1\"",
-        &app_path,
-    ) && legacy_direct_entry_is_current(
-        &hkcu,
-        &format!(
-            r"Software\Classes\directory\Background\shell\{}",
-            LEGACY_QUICK_PACK_VERB
-        ),
-        "--quick-pack \"%V\"",
-        &app_path,
-    ) && legacy_shell_entry_is_current(
-        &hkcu,
-        r"Software\Classes\*\shell\LongDecompress",
-        &all_verbs,
-        COMPRESS_VERBS,
-        &app_path,
-    ) && legacy_shell_entry_is_current(
-        &hkcu,
-        r"Software\Classes\directory\shell\LongDecompress",
-        &all_verbs,
-        COMPRESS_VERBS,
-        &app_path,
-    ) && legacy_shell_entry_is_current(
-        &hkcu,
+    // Static cascades are stale: their wildcard/type roots can duplicate.
+    false
+}
+
+#[cfg(target_os = "windows")]
+fn any_menu_present(hkcu: &RegKey) -> bool {
+    [r"Software\Classes\*\shell\LongDecompress", r"Software\Classes\*\shell\LongDecompressNative",
+        r"Software\Classes\Directory\shell\LongDecompress", r"Software\Classes\Directory\shell\LongDecompressNative",
         r"Software\Classes\directory\Background\shell\LongDecompress",
-        &all_verbs,
-        BACKGROUND_VERBS,
-        &app_path,
-    ) && archive_menu_extensions().iter().all(|extension| {
-        legacy_shell_entry_is_current(
-            &hkcu,
-            &format!(
-                r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress",
-                extension
-            ),
-            &all_verbs,
-            ARCHIVE_VERBS,
-            &app_path,
-        )
-    }) && IMAGE_EXTENSIONS.iter().all(|extension| legacy_shell_entry_is_current(&hkcu,
-        &format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", extension),
-        &all_verbs, IMAGE_VERBS, &app_path)) && recovery_extensions().iter().all(|extension| legacy_shell_entry_is_current(&hkcu,
-        &format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress", extension),
-        &all_verbs, &["LongDecompress.repairArchive"], &app_path))
+        r"Software\Classes\CLSID\{D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4D}"]
+        .iter().any(|path| hkcu.open_subkey(path).is_ok())
+        || checksum_menu_entries(r"Software\Classes").iter().any(|(path,_,_)|hkcu.open_subkey(path).is_ok())
+        || archive_menu_extensions().iter().chain(IMAGE_EXTENSIONS.iter().map(|s|s.to_string()).collect::<Vec<_>>().iter())
+            .any(|ext| hkcu.open_subkey(format!(r"Software\Classes\SystemFileAssociations\{}\shell\LongDecompress",ext)).is_ok())
+}
+
+/// Readiness and location are separate from the saved user preference.
+pub fn context_menu_location() -> &'static str {
+    #[cfg(target_os = "windows")]
+    {
+        let _guard = REGISTRATION_LOCK.lock().unwrap_or_else(|error| error.into_inner());
+        let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+        let Ok(exe) = std::env::current_exe() else { return "missing"; };
+        if !context_menu_is_current(&hkcu, &exe.to_string_lossy()) {
+            return if any_menu_present(&hkcu) { "stale" } else { "missing" };
+        }
+        if hkcu.open_subkey(format!(r"Software\Classes\CLSID\{}", NATIVE_COMMAND_CLSID))
+            .and_then(|key|key.get_value::<String,_>("MenuProvider")).is_ok_and(|provider|provider=="native") { "native" }
+        else if is_windows_11_or_newer() { "classic" } else { "classic-direct" }
+    }
+    #[cfg(not(target_os = "windows"))]
+    { "unsupported" }
 }
 
 // 非 Windows 空实现
@@ -1009,7 +992,7 @@ mod tests {
         assert!(CONTEXT_MENU_SOURCE.contains("unregister_legacy_menu(&hkcu)?;"));
         assert!(CONTEXT_MENU_SOURCE.contains("unregister_native_menu(&hkcu)?;"));
         assert!(CONTEXT_MENU_SOURCE.contains("register_native_menu(&hkcu, app_path)?;"));
-        assert!(CONTEXT_MENU_SOURCE.contains("register_legacy_menu(&hkcu, app_path)?;"));
+        assert!(CONTEXT_MENU_SOURCE.contains("register_classic_command_menu(&hkcu, app_path)?;"));
         assert!(CONTEXT_MENU_SOURCE.contains(
             "if !register_sparse_identity_package(app_path)?"
         ));
@@ -1442,7 +1425,8 @@ mod explorer1740_tests {
         for (label,selected) in [("ordinary",COMPRESS_VERBS),("archive",ARCHIVE_VERBS),("image",IMAGE_VERBS)]{
             let path=format!(r"{}\{}",root,label);let exe=r"C:\Program Files\中文 路径\Long解压.exe";
             reg_shell_entry(&hkcu,&path,&all,selected,exe).unwrap();assert!(legacy_shell_entry_is_current(&hkcu,&path,&all,selected,exe));
-            assert!(selected.contains(&"LongDecompress.compressZip"));assert!(selected.contains(&"LongDecompress.compress7z"));assert!(selected.contains(&"LongDecompress.compressEncrypted"));assert!(selected.contains(&"LongDecompress.compressSplit"));
+            let packing = if selected.contains(&"LongDecompress.compressMenu") { submenu_verbs("LongDecompress.compressMenu").unwrap() } else { selected };
+            assert!(packing.contains(&"LongDecompress.compressZip"));assert!(packing.contains(&"LongDecompress.compress7z"));assert!(packing.contains(&"LongDecompress.compressEncrypted"));assert!(packing.contains(&"LongDecompress.compressSplit"));
             let shell=hkcu.open_subkey(format!(r"{}\shell",path)).unwrap();assert_eq!(shell.enum_keys().count(),selected.len());
             for (index,name) in selected.iter().enumerate(){let verb=all.iter().find(|v|v.verb==*name).unwrap();if verb.cli.is_empty(){continue}let command=shell.open_subkey(format!(r"{:02}.{}\command",index+1,name)).unwrap().get_value::<String,_>("").unwrap();assert_eq!(command,format!("\"{exe}\" {}",verb.cli));}
             assert!(!legacy_shell_entry_is_current(&hkcu,&path,&all,selected,r"C:\stale.exe"));
@@ -1450,5 +1434,95 @@ mod explorer1740_tests {
         assert!(!COMPRESS_VERBS.contains(&"LongDecompress.extractHere"));assert!(ARCHIVE_VERBS.contains(&"LongDecompress.extractChoose"));assert!(IMAGE_VERBS.contains(&"LongDecompress.imageCompress"));
         for ext in [".r00",".r99",".z02",".001",".999"] { assert!(archive_menu_extensions().contains(&ext.to_owned())); assert!(!recovery_extensions().contains(&ext.to_owned())); }
         let installer=include_str!("../../installer.nsi");for ext in IMAGE_EXTENSIONS {assert!(installer.contains(&format!(r"SystemFileAssociations\{}\shell\LongDecompress",ext)));}
+    }
+}
+
+#[cfg(all(test, windows))]
+mod explorer_menu_audit_tests {
+    use super::*;
+
+    #[test]
+    fn windows_shell_materializes_every_classic_profile_and_detects_stale_children() {
+        let temp = tempfile::Builder::new().prefix("Long 菜单-").tempdir().unwrap();
+        let root = format!(r"Software\LongDecompressTests\MenuAudit.{}", uuid::Uuid::new_v4());
+        struct Cleanup(String);
+        impl Drop for Cleanup { fn drop(&mut self) { let _ = RegKey::predef(HKEY_CURRENT_USER).delete_subkey_all(&self.0); } }
+        let _cleanup = Cleanup(root.clone());
+        let hkcu = RegKey::predef(HKEY_CURRENT_USER);
+        let all = verbs();
+        let probe = temp.path().join("receiver.rs");
+        let exe = temp.path().join("菜单 接收.exe");
+        std::fs::write(&probe, r#"fn main(){std::fs::write(std::env::current_exe().unwrap().with_extension("args"),std::env::args().skip(1).collect::<Vec<_>>().join("\n")).unwrap();}"#).unwrap();
+        assert!(Command::new("rustc").args(["--crate-name","menu_probe"]).arg(&probe).arg("-o").arg(&exe).creation_flags(CREATE_NO_WINDOW).status().unwrap().success());
+        for (profile, selected) in [
+            ("ordinary", GENERAL_FILE_VERBS), ("archive", ARCHIVE_VERBS),
+            ("image", IMAGE_VERBS), ("manifest", MANIFEST_VERBS), ("directory", COMPRESS_VERBS),
+        ] {
+            let path = format!(r"{}\{}\shell\LongDecompress", root, profile);
+            reg_shell_entry(&hkcu, &path, &all, selected, &exe.to_string_lossy()).unwrap();
+            assert!(legacy_shell_entry_is_current(&hkcu, &path, &all, selected, &exe.to_string_lossy()));
+            // An upgrade must reject extra obsolete children, not just check
+            // that each expected command exists somewhere in the registry.
+            let stale = format!(r"{}\shell\99.obsolete", path);
+            hkcu.create_subkey(&stale).unwrap();
+            assert!(!legacy_shell_entry_is_current(&hkcu, &path, &all, selected, &exe.to_string_lossy()));
+            hkcu.delete_subkey_all(&stale).unwrap();
+            // Old type-specific and wildcard cascades become two identical
+            // Long menus in the real Shell. The new provider is registered
+            // once, under the wildcard (or Directory), and classifies at runtime.
+            hkcu.delete_subkey_all(&path).unwrap();
+            if profile == "ordinary" || profile == "directory" {
+                let (menu,_) = hkcu.create_subkey(format!(r"{}\{}\shell\LongDecompressNative", root, profile)).unwrap();
+                menu.set_value("MUIVerb", &"Long解压").unwrap();
+                menu.set_value("ExplorerCommandHandler", &CLASSIC_COMMAND_CLSID).unwrap();
+                menu.set_value("MultiSelectModel", &"Player").unwrap();
+            }
+        }
+        let dll = shell_extension_path(&exe.to_string_lossy());
+        assert!(dll.is_file(), "build the current shell extension before this test");
+        let (class,_) = hkcu.create_subkey(format!(r"{}\Software\Classes\CLSID\{}", root, CLASSIC_COMMAND_CLSID)).unwrap();
+        class.set_value("ApplicationPath", &exe.to_string_lossy().as_ref()).unwrap();
+        let (server,_) = class.create_subkey("InprocServer32").unwrap();
+        server.set_value("", &dll.to_string_lossy().as_ref()).unwrap();
+        server.set_value("ThreadingModel", &"Apartment").unwrap();
+        let fixture = hkcu.open_subkey_with_flags(&root, KEY_ALL_ACCESS).unwrap();
+        register_classic_command_menu(&fixture, &exe.to_string_lossy()).unwrap();
+        assert!(context_menu_is_current(&fixture, &exe.to_string_lossy()));
+        let target = fixture.open_subkey_with_flags(format!(r"Software\Classes\CLSID\{}", CLASSIC_COMMAND_CLSID), KEY_SET_VALUE).unwrap();
+        target.set_value("ApplicationPath", &r"C:\stale-version.exe").unwrap();
+        assert!(!context_menu_is_current(&fixture, &exe.to_string_lossy()));
+        target.set_value("ApplicationPath", &exe.to_string_lossy().as_ref()).unwrap();
+        for sample in ["ordinary.txt", "archive.zip", "image.png", "manifest.sha256"] { std::fs::write(temp.path().join(sample), b"menu selection").unwrap(); }
+        std::fs::create_dir(temp.path().join("folder.zip")).unwrap();
+        let report = temp.path().join("menu.json");
+        let script = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../scripts/test-explorer-menu-catalog.ps1");
+        let output = Command::new("powershell.exe").args(["-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File"])
+            .arg(script).arg("-RegistryRoot").arg(&root).arg("-SampleDirectory").arg(temp.path())
+            .arg("-ReportPath").arg(&report).arg("-ProbeExecutable").arg(&exe).arg("-IsolatedCom")
+            .creation_flags(CREATE_NO_WINDOW).output().unwrap();
+        assert!(output.status.success(), "{}\n{}", String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr));
+        let text = std::fs::read_to_string(&report).unwrap();
+        let menu: serde_json::Value = serde_json::from_str(text.trim_start_matches('\u{feff}')).unwrap();
+        fn leaves(node: &serde_json::Value, labels: &mut Vec<String>) {
+            for entry in node.as_array().unwrap() {
+                if entry["Children"].as_array().unwrap().is_empty() { labels.push(entry["Label"].as_str().unwrap().replace('&', "")); }
+                else { leaves(&entry["Children"], labels); }
+            }
+        }
+        let mut summary = serde_json::Map::new();
+        for (profile, count) in [("ordinary",6), ("archive",14), ("image",9), ("manifest",7), ("directory",5)] {
+            let mut labels = Vec::new(); leaves(&menu[profile], &mut labels);
+            assert_eq!(labels.len(), count, "Windows dropped {profile} menu items: {labels:?}");
+            let root_children = menu[profile][0]["Children"].as_array().unwrap();
+            if ["archive", "image", "manifest"].contains(&profile) { assert!(root_children.iter().any(|item|item["Label"]=="压缩打包")); }
+            if profile == "archive" { assert!(root_children.iter().any(|item|item["Label"]=="更多操作")); }
+            for label in ["压缩为 ZIP", "压缩为 7Z", "添加到压缩包…", "加密压缩…", "分卷压缩…"] { assert!(labels.iter().any(|v|v==label), "{profile}: {labels:?}"); }
+            if profile != "directory" { assert!(labels.iter().any(|v|v=="生成校验清单…")); }
+            summary.insert(profile.into(), serde_json::json!({"count":labels.len(),"labels":labels}));
+        }
+        let output_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../test-results/explorer-menu-audit");
+        std::fs::create_dir_all(&output_dir).unwrap();
+        std::fs::write(output_dir.join("classic-windows-shell.json"), serde_json::to_vec_pretty(&summary).unwrap()).unwrap();
+        std::fs::write(output_dir.join("classic-windows-shell-tree.json"), text).unwrap();
     }
 }

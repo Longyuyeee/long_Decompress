@@ -625,6 +625,7 @@ fn main() {
             long_compress_assistant::commands::system_integration::register_context_menu,
             long_compress_assistant::commands::system_integration::unregister_context_menu,
             long_compress_assistant::commands::system_integration::is_context_menu_registered,
+            long_compress_assistant::commands::system_integration::context_menu_location,
             long_compress_assistant::commands::system_integration::archive_file_associations,
             long_compress_assistant::commands::system_integration::configure_archive_file_associations,
             long_compress_assistant::commands::system_integration::open_default_archive_apps,

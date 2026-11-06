@@ -34,11 +34,11 @@ fn main() -> windows::core::Result<()> {
     let _apartment = ComApartment;
 
     let top_level_only = std::env::args().any(|argument| argument == "--top-level-only");
-    if !top_level_only {
+    {
         // SAFETY: the registered class is created in-process and no outer unknown
         // is supplied, matching the shell extension's class factory contract.
         let root: IExplorerCommand =
-            unsafe { CoCreateInstance(&EXPLORER_COMMAND_GUID, None, CLSCTX_INPROC_SERVER)? };
+            unsafe { CoCreateInstance(&EXPLORER_COMMAND_GUID, None, if top_level_only { CLSCTX_LOCAL_SERVER } else { CLSCTX_INPROC_SERVER })? };
         // SAFETY: the COM interface is valid for the lifetime of `root`.
         let flags = unsafe { root.GetFlags()? };
         assert_ne!(flags & ECF_HASSUBCOMMANDS.0 as u32, 0);
@@ -62,19 +62,24 @@ fn main() -> windows::core::Result<()> {
         }
 
         let expected = [
-            "压缩图片…",
-            "转换为 WebP…",
-            "缩小图片尺寸…",
+            "浏览压缩包内容",
             "解压到此处",
             "解压到同名文件夹",
             "选择解压文件夹…",
-            "浏览压缩包内容",
-            "更多操作",
+            "压缩图片…",
+            "转换为 WebP…",
+            "缩小图片尺寸…",
             "压缩为 ZIP",
             "压缩为 7Z",
             "添加到压缩包…",
             "加密压缩…",
             "分卷压缩…",
+            "测试压缩包完整性",
+            "检查与尝试修复…",
+            "转换压缩包格式…",
+            "修改密码 / 调整分卷…",
+            "核对校验清单…",
+            "生成校验清单…",
         ];
         assert_eq!(titles, expected);
         println!(

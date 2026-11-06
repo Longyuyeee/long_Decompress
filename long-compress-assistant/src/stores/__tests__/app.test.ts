@@ -57,6 +57,23 @@ describe('App Store Explorer context menu synchronization', () => {
     expect(mocks.invoke.mock.calls.filter(([command]) => command === 'register_context_menu')).toHaveLength(0)
   })
 
+  it('removes incomplete old menus when Windows integration is disabled', async () => {
+    localStorage.setItem('app-settings', JSON.stringify({ contextMenuEnabled: false }))
+    let stale = true
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'is_context_menu_registered') return false
+      if (command === 'context_menu_location') return stale ? 'stale' : 'missing'
+      if (command === 'unregister_context_menu') stale = false
+      if (command === 'load_app_settings') return '{}'
+    })
+    const store = useAppStore()
+    await store.synchronizeContextMenu()
+    expect(stale).toBe(false)
+    expect(store.settings.contextMenuEnabled).toBe(false)
+    expect(mocks.invoke.mock.calls.filter(([command]) => command === 'unregister_context_menu')).toHaveLength(1)
+    expect(mocks.invoke).not.toHaveBeenCalledWith('register_context_menu')
+  })
+
   it('keeps the saved preference when registration changes fail', async () => {
     const store = useAppStore()
     await store.synchronizeContextMenu()

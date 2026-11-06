@@ -71,12 +71,28 @@ watch([() => app.pendingArchiveOpenFiles.length, () => app.settingsLoaded, () =>
       <button v-for="option in archiveOpenOptions" :key="option.value" type="button" class="open-choice" :disabled="busy" :data-testid="`archive-open-${option.value}`" @click="choose(option.value)">
         <i :class="option.icon" aria-hidden="true"/><span><strong>{{ option.label }}</strong><small v-if="option.value === 'here' && destination" :title="destination">{{ destination }}</small><small v-if="option.value === 'subfolder' && subfolder" :title="subfolder">{{ subfolder }}</small></span><i class="pi pi-angle-right" aria-hidden="true"/>
       </button>
-      <div class="remember-choice"><label><input v-model="remember" type="checkbox" :disabled="busy" data-testid="archive-open-remember"/>记住我的选择</label><HelpHint label="默认打开方式说明">仅用于从 Windows 打开压缩包。可在设置 → 行为中恢复“每次询问”；软件内双击仍在当前栏浏览。多包选择同一个输出目录时，各自放入同名文件夹。</HelpHint></div>
       <p v-if="error" role="alert">{{ error }}</p>
     </div>
+    <template #footer>
+      <div class="remember-choice"><label><input v-model="remember" type="checkbox" :disabled="busy" data-testid="archive-open-remember"/>记住我的选择</label><HelpHint label="默认打开方式说明">仅用于从 Windows 打开压缩包。可在设置 → 行为中恢复“每次询问”；软件内双击仍在当前栏浏览。多包选择同一个输出目录时，各自放入同名文件夹。</HelpHint></div>
+    </template>
   </Modal>
 </template>
 
 <style scoped>
-.archive-open-dialog{display:grid;gap:8px;min-width:0}.open-source{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:6px;font-size:12px;color:var(--text-muted)}.open-source strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-base)}.open-source>span{flex-shrink:0}.open-choice{display:flex;width:100%;align-items:center;gap:12px;padding:12px;border:1px solid var(--border-subtle);border-radius:12px;background:var(--bg-input);text-align:left;transition:background .15s,border-color .15s}.open-choice:hover:not(:disabled),.open-choice:focus-visible{border-color:var(--dynamic-accent);background:color-mix(in srgb,var(--dynamic-accent) 8%,var(--bg-input));outline:none}.open-choice>i:first-child{display:grid;place-items:center;width:34px;height:34px;flex-shrink:0;border-radius:9px;background:color-mix(in srgb,var(--dynamic-accent) 10%,transparent);color:var(--dynamic-accent)}.open-choice>i:last-child{margin-left:auto;color:var(--text-muted)}.open-choice>span{min-width:0}.open-choice strong{display:block;font-size:13px;color:var(--text-base)}.open-choice small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:4px;color:var(--text-muted);font-size:11px}.open-choice:disabled{opacity:.55}.remember-choice{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:12px;color:var(--text-muted)}.remember-choice label{display:flex;align-items:center;gap:7px}.archive-open-dialog>p{overflow-wrap:anywhere;font-size:12px;color:#ef4444}
+.archive-open-dialog { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; min-width: 0; }
+.open-source { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-width: 0; margin-bottom: 6px; font-size: clamp(12px, .75rem, 16px); color: var(--text-muted); }
+.open-source strong { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-base); }
+.open-source > span { flex-shrink: 0; }
+.open-choice { display: flex; width: 100%; min-width: 0; max-width: 100%; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--bg-input); text-align: left; transition: background .15s, border-color .15s; }
+.open-choice:hover:not(:disabled), .open-choice:focus-visible { border-color: var(--dynamic-accent); background: color-mix(in srgb, var(--dynamic-accent) 8%, var(--bg-input)); outline: none; }
+.open-choice > i:first-child { display: grid; place-items: center; width: 34px; height: 34px; flex-shrink: 0; border-radius: 9px; background: color-mix(in srgb, var(--dynamic-accent) 10%, transparent); color: var(--dynamic-accent); font-size: clamp(16px, 1rem, 24px); }
+.open-choice > i:last-child { flex-shrink: 0; color: var(--text-muted); font-size: clamp(12px, .75rem, 18px); }
+.open-choice > span { flex: 1; min-width: 0; }
+.open-choice strong { display: block; overflow-wrap: anywhere; font-size: clamp(13px, .8125rem, 18px); color: var(--text-base); }
+.open-choice small { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; margin-top: 4px; line-height: 1.4; color: var(--text-muted); font-size: clamp(11px, .6875rem, 15px); }
+.open-choice:disabled { opacity: .55; }
+.remember-choice { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; width: 100%; min-width: 0; font-size: clamp(12px, .75rem, 16px); color: var(--text-muted); }
+.remember-choice label { display: flex; align-items: center; gap: 7px; }
+.archive-open-dialog > p { overflow-wrap: anywhere; font-size: 12px; color: #ef4444; }
 </style>

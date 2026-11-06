@@ -1,0 +1,20 @@
+{
+  "浏览压缩包内容": "--browse-archive",
+  "解压到此处": "--extract-here",
+  "解压到同名文件夹": "--extract-to",
+  "选择解压文件夹…": "--extract-choose",
+  "压缩图片…": "--image-compress",
+  "转换为 WebP…": "--image-webp",
+  "缩小图片尺寸…": "--image-resize",
+  "压缩为 ZIP": "--compress-zip",
+  "压缩为 7Z": "--compress-7z",
+  "添加到压缩包…": "--compress-custom",
+  "加密压缩…": "--compress-encrypted",
+  "分卷压缩…": "--compress-split",
+  "测试压缩包完整性": "--test-archive",
+  "检查与尝试修复…": "--repair-archive",
+  "转换压缩包格式…": "--convert-archive",
+  "修改密码 / 调整分卷…": "--reconfigure-archive",
+  "核对校验清单…": "--checksum-verify",
+  "生成校验清单…": "--checksum-create"
+}

@@ -1,0 +1,153 @@
+{
+  "description": "Controlled reproduction of the old wildcard + file-type registration model, using the pre-provider catalog. Not a remote snapshot of the user computer.",
+  "roots": [
+    {
+      "Label": "Long解压",
+      "Verb": "",
+      "Id": 4294967295,
+      "Children": [
+        {
+          "Label": "压缩为 ZIP",
+          "Verb": "01.LongDecompress.compressZip",
+          "Id": 46,
+          "Children": []
+        },
+        {
+          "Label": "压缩为 7Z",
+          "Verb": "02.LongDecompress.compress7z",
+          "Id": 47,
+          "Children": []
+        },
+        {
+          "Label": "添加到压缩包…",
+          "Verb": "03.LongDecompress.compressCustom",
+          "Id": 48,
+          "Children": []
+        },
+        {
+          "Label": "加密压缩…",
+          "Verb": "04.LongDecompress.compressEncrypted",
+          "Id": 49,
+          "Children": []
+        },
+        {
+          "Label": "分卷压缩…",
+          "Verb": "05.LongDecompress.compressSplit",
+          "Id": 50,
+          "Children": []
+        },
+        {
+          "Label": "生成校验清单…",
+          "Verb": "06.LongDecompress.checksumCreate",
+          "Id": 51,
+          "Children": []
+        }
+      ]
+    },
+    {
+      "Label": "Long解压",
+      "Verb": "",
+      "Id": 4294967295,
+      "Children": [
+        {
+          "Label": "浏览压缩包内容",
+          "Verb": "01.LongDecompress.open",
+          "Id": 29,
+          "Children": []
+        },
+        {
+          "Label": "解压到此处",
+          "Verb": "02.LongDecompress.extractHere",
+          "Id": 30,
+          "Children": []
+        },
+        {
+          "Label": "解压到同名文件夹",
+          "Verb": "03.LongDecompress.extractTo",
+          "Id": 31,
+          "Children": []
+        },
+        {
+          "Label": "选择解压文件夹…",
+          "Verb": "04.LongDecompress.extractChoose",
+          "Id": 32,
+          "Children": []
+        },
+        {
+          "Label": "压缩打包",
+          "Verb": "",
+          "Id": 4294967295,
+          "Children": [
+            {
+              "Label": "压缩为 ZIP",
+              "Verb": "01.LongDecompress.compressZip",
+              "Id": 34,
+              "Children": []
+            },
+            {
+              "Label": "压缩为 7Z",
+              "Verb": "02.LongDecompress.compress7z",
+              "Id": 35,
+              "Children": []
+            },
+            {
+              "Label": "添加到压缩包…",
+              "Verb": "03.LongDecompress.compressCustom",
+              "Id": 36,
+              "Children": []
+            },
+            {
+              "Label": "加密压缩…",
+              "Verb": "04.LongDecompress.compressEncrypted",
+              "Id": 37,
+              "Children": []
+            },
+            {
+              "Label": "分卷压缩…",
+              "Verb": "05.LongDecompress.compressSplit",
+              "Id": 38,
+              "Children": []
+            }
+          ]
+        },
+        {
+          "Label": "更多操作",
+          "Verb": "",
+          "Id": 4294967295,
+          "Children": [
+            {
+              "Label": "测试压缩包完整性",
+              "Verb": "01.LongDecompress.testArchive",
+              "Id": 40,
+              "Children": []
+            },
+            {
+              "Label": "检查与尝试修复...",
+              "Verb": "02.LongDecompress.repairArchive",
+              "Id": 41,
+              "Children": []
+            },
+            {
+              "Label": "转换压缩包格式...",
+              "Verb": "03.LongDecompress.convertArchive",
+              "Id": 42,
+              "Children": []
+            },
+            {
+              "Label": "修改密码 / 调整分卷...",
+              "Verb": "04.LongDecompress.reconfigureArchive",
+              "Id": 43,
+              "Children": []
+            }
+          ]
+        },
+        {
+          "Label": "生成校验清单…",
+          "Verb": "07.LongDecompress.checksumCreate",
+          "Id": 44,
+          "Children": []
+        }
+      ]
+    }
+  ]
+}

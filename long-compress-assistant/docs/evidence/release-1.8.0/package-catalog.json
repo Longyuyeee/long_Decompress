@@ -1,0 +1,32 @@
+[
+  {
+    "ApplicationId": "LongCompressMenu",
+    "FileName": "long_compress_context_menu.msix",
+    "ContextMenuItems": "            <desktop5:ItemType Type=\"*\">\r\n              <desktop5:Verb Id=\"LongDecompressMenu\" Clsid=\"D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4A\" />\r\n            </desktop5:ItemType>\r\n            <desktop5:ItemType Type=\"Directory\">\r\n              <desktop5:Verb Id=\"LongDecompressMenuDirectory\" Clsid=\"D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4A\" />\r\n            </desktop5:ItemType>",
+    "DisplayNameBase64": "TG9uZ+ino+WOiw==",
+    "Clsid": "D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4A",
+    "PackageName": "LongCompressAssistant.ContextMenu",
+    "SurrogateDisplayNameBase64": "TG9uZ+ino+WOiyBTaGVsbA==",
+    "DescriptionBase64": "TG9uZ+ino+WOiyBXaW5kb3dzIOWPs+mUruiPnOWNlQ=="
+  },
+  {
+    "ApplicationId": "LongCompressQuickExtract",
+    "FileName": "long_compress_context_menu_extract.msix",
+    "ContextMenuItems": "            <desktop5:ItemType Type=\"*\">\r\n              <desktop5:Verb Id=\"LongDecompressQuickExtract\" Clsid=\"D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4B\" />\r\n            </desktop5:ItemType>",
+    "DisplayNameBase64": "5LiA6ZSu6Kej5Y6L5Yiw5ZCM5ZCN5paH5Lu25aS5",
+    "Clsid": "D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4B",
+    "PackageName": "LongCompressAssistant.ContextMenu.QuickExtract",
+    "SurrogateDisplayNameBase64": "6IOn6Kej5Y6L5b+r5o236Kej5Y6L5ZG95Luk",
+    "DescriptionBase64": "5bCG5Y6L57yp5YyF6Kej5Y6L5Yiw5ZCM5ZCN5paH5Lu25aS5"
+  },
+  {
+    "ApplicationId": "LongCompressQuickPack",
+    "FileName": "long_compress_context_menu_pack.msix",
+    "ContextMenuItems": "            <desktop5:ItemType Type=\"*\">\r\n              <desktop5:Verb Id=\"LongDecompressQuickPack\" Clsid=\"D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4C\" />\r\n            </desktop5:ItemType>\r\n            <desktop5:ItemType Type=\"Directory\">\r\n              <desktop5:Verb Id=\"LongDecompressQuickPackDirectory\" Clsid=\"D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4C\" />\r\n            </desktop5:ItemType>",
+    "DisplayNameBase64": "5LiA6ZSu5omT5YyF5Li6IFpJUA==",
+    "Clsid": "D4BBA0B2-6A58-4D40-8B79-BA50C54E8D4C",
+    "PackageName": "LongCompressAssistant.ContextMenu.QuickPack",
+    "SurrogateDisplayNameBase64": "6IOn6Kej5Y6L5b+r5o235omT5YyF5ZG95Luk",
+    "DescriptionBase64": "5bCG5omA6YCJ5paH5Lu25omT5YyF5Li6IFpJUA=="
+  }
+]

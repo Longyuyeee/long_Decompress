@@ -1,7 +1,20 @@
 import { expect, test } from '@playwright/test'
 
 test('batch results keep failures scoped across navigation and fit compact windows', async ({ page }, testInfo) => {
-  await page.goto('/')
+  test.setTimeout(120000)
+  await page.addInitScript(() => {
+    localStorage.setItem('app-settings', JSON.stringify({ autoCheckUpdates: false, accessibility: { reduceMotion: true } }))
+    const win = window as any
+    win.__TAURI_IPC__ = (message: any) => {
+      let result: any
+      if (message.cmd === 'is_context_menu_registered') result = true
+      else if (message.cmd === 'load_history' || message.cmd === 'take_pending_context_actions') result = []
+      else if (message.cmd === 'get_archive_engine_capabilities') result = { available: true, fullEngine: true, formats: [], browseExtensions: [], nestedExtensions: [], boundedPreviewFormats: [], imagePreviewExtensions: [], textPreviewExtensions: [], message: 'ready' }
+      else if (message.cmd === 'tauri' && message.__tauriModule === 'App') result = '1.8.0'
+      win[`_${message.callback}`]?.(result)
+    }
+  })
+  await page.goto('/#/decompress', { waitUntil: 'domcontentloaded', timeout: 90000 })
   await page.waitForURL('**/#/decompress')
   // Synthetic task state verifies UI only, not actual extraction or persistence.
   await page.evaluate(async () => {
@@ -21,14 +34,15 @@ test('batch results keep failures scoped across navigation and fit compact windo
     }
   })
   const summary = page.getByTestId('decompression-batch-summary')
-  await expect(summary).toContainText('成功 17 · 失败 3')
+  await expect(summary).not.toContainText('本次运行 #')
+  await expect(page.getByTestId('show-batch-results')).toHaveCount(0)
   await page.getByTestId('show-batch-failures').click()
   await expect(page.getByTestId('decompression-batch-config-mode')).toHaveCount(0)
   await expect(page.getByRole('button', { name: '清理已完成', exact: true })).toHaveCount(0)
   await expect(page.getByTestId('task-row')).toHaveCount(3)
   await page.getByTestId('nav-Compress').click()
   await page.getByTestId('nav-Decompress').click()
-  await expect(summary).toContainText('成功 17 · 失败 3')
+  await expect(summary).not.toContainText('本次运行 #')
   await expect(page.getByTestId('task-row')).toHaveCount(3)
   for (const size of [{ width: 920, height: 620 }, { width: 760, height: 520 }]) {
     await page.setViewportSize(size)
@@ -68,5 +82,39 @@ test('batch results keep failures scoped across navigation and fit compact windo
   })
   await page.getByTestId('show-batch-failures').click()
   await expect(page.getByTestId('batch-failures-cleared')).toBeVisible()
-  await expect(summary).toContainText('失败 3')
+  await expect(page.getByTestId('show-all-decompression-tasks')).toBeVisible()
+  // A successful run needs only the existing status tabs, with results in their own tab.
+  await page.evaluate(async () => {
+    const taskPath = '/src/stores/task.ts', batchPath = '/src/stores/decompressionBatch.ts'
+    const tasks = (await import(taskPath)).useTaskStore()
+    tasks.addTask({ id: 'success-only', name: '项目资料.zip', type: 'decompression', sourceFiles: ['C:/fixtures/项目资料.zip'], outputPath: 'C:/output/项目资料' })
+    ;(await import(batchPath)).useDecompressionBatchStore().begin(['success-only'])
+    tasks.tasks[0].status = 'completed'
+  })
+  await expect(summary).toHaveCount(0)
+  await expect(page.getByTestId('batch-result-actions')).toHaveCount(0)
+  await expect(page.getByTestId('task-row')).toHaveCount(1)
+  await page.screenshot({ path: testInfo.outputPath('decompression-all.png') })
+  await page.getByTestId('task-scope-completed').click()
+  await expect(page.getByTestId('batch-result-actions')).toContainText('已完成结果 · 1 项')
+  await page.getByTestId('task-scope-all').click()
+  await expect(page.getByTestId('batch-result-actions')).toHaveCount(0)
+  await page.getByTestId('nav-Compress').click()
+  await page.evaluate(async () => {
+    const taskPath = '/src/stores/task.ts', compressionPath = '/src/stores/compression.ts'
+    const tasks = (await import(taskPath)).useTaskStore()
+    const compression = (await import(compressionPath)).useCompressionStore()
+    compression.addFile({ name: '项目资料.txt', path: 'C:/fixtures/项目资料.txt', size: 1024, type: 'file', isDirectory: false })
+    tasks.addTask({ id: 'compression-success', name: '项目资料.zip', type: 'compression', sourceFiles: ['C:/fixtures/项目资料.txt'], outputPath: 'C:/output/项目资料.zip' })
+    tasks.tasks.find(task => task.id === 'compression-success')!.status = 'completed'
+    compression.selectedFiles[0].taskId = 'compression-success'
+  })
+  await expect(page.getByTestId('compression-draft-row')).toHaveCount(1)
+  await expect(page.getByTestId('batch-result-actions')).toHaveCount(0)
+  await expect(page.getByText('本次运行', { exact: false })).toHaveCount(0)
+  await page.screenshot({ path: testInfo.outputPath('compression-all.png') })
+  await page.getByTestId('task-scope-completed').click()
+  await expect(page.getByTestId('batch-result-actions')).toContainText('已完成结果 · 1 项')
+  await page.getByTestId('task-scope-all').click()
+  await expect(page.getByTestId('batch-result-actions')).toHaveCount(0)
 })

@@ -1,0 +1,120 @@
+{
+  "date": "2026-11-06",
+  "version": "1.8.0",
+  "status": "local freeze verified; published assets supplied by tag workflow",
+  "implementationBase": "c4317664eb24b78171b8b7bf6158bc82496dfc9e",
+  "classic": {
+    "testPassed": 1,
+    "realWindowsShell": true,
+    "processLocalCom": true,
+    "productionRegistrationInOwnedHive": true,
+    "profiles": {
+      "ordinary": {
+        "count": 6,
+        "labels": [
+          "压缩为 ZIP",
+          "压缩为 7Z",
+          "添加到压缩包…",
+          "加密压缩…",
+          "分卷压缩…",
+          "生成校验清单…"
+        ]
+      },
+      "archive": {
+        "count": 14,
+        "labels": [
+          "浏览压缩包内容",
+          "解压到此处",
+          "解压到同名文件夹",
+          "选择解压文件夹…",
+          "压缩为 ZIP",
+          "压缩为 7Z",
+          "添加到压缩包…",
+          "加密压缩…",
+          "分卷压缩…",
+          "测试压缩包完整性",
+          "检查与尝试修复…",
+          "转换压缩包格式…",
+          "修改密码 / 调整分卷…",
+          "生成校验清单…"
+        ]
+      },
+      "image": {
+        "count": 9,
+        "labels": [
+          "压缩图片…",
+          "转换为 WebP…",
+          "缩小图片尺寸…",
+          "压缩为 ZIP",
+          "压缩为 7Z",
+          "添加到压缩包…",
+          "加密压缩…",
+          "分卷压缩…",
+          "生成校验清单…"
+        ]
+      },
+      "manifest": {
+        "count": 7,
+        "labels": [
+          "核对校验清单…",
+          "压缩为 ZIP",
+          "压缩为 7Z",
+          "添加到压缩包…",
+          "加密压缩…",
+          "分卷压缩…",
+          "生成校验清单…"
+        ]
+      },
+      "directory": {
+        "count": 5,
+        "labels": [
+          "压缩为 ZIP",
+          "压缩为 7Z",
+          "添加到压缩包…",
+          "加密压缩…",
+          "分卷压缩…"
+        ]
+      }
+    },
+    "leafInvocations": 41,
+    "uniqueRoot": true,
+    "staleTargetsRejected": true,
+    "dll": "src-tauri/resources/long_compress_shell_extension_1_8_0.dll",
+    "sha256": "4a866bd95f506db317072f0c99a5c9cd152d92407f7937f7a94a0f34e355d322"
+  },
+  "versionSources": 8,
+  "packageDefinitions": 3,
+  "compactUi": {
+    "passed": 1,
+    "viewport": [
+      920,
+      620
+    ],
+    "uiScale": 125,
+    "font": "large",
+    "actualRootFontPx": 22.5,
+    "screenshotsReviewed": 2
+  },
+  "reused": {
+    "menuFrontend": 49,
+    "nativeComTests": 6,
+    "nativeArgumentActions": 19,
+    "dialogUnit": 15,
+    "dialogScenarios": 5,
+    "taskListViews": 4,
+    "taskListScenarios": 2,
+    "historyViews": 18,
+    "historyScenarioWidths": [
+      920,
+      760
+    ],
+    "reducedMotionUnit": 23,
+    "reducedMotionScenarios": 4
+  },
+  "limits": [
+    "No desktop control or real association changes.",
+    "Dispatch receiver validates Shell actions and paths; existing engine checks are reused.",
+    "No new signed Windows 11 native package deployment or full installed/update matrix.",
+    "Initial binary target matched zero menu tests and is excluded; the library test ran one actual case."
+  ]
+}

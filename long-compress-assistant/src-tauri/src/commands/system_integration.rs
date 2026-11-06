@@ -383,6 +383,11 @@ pub async fn is_context_menu_registered() -> Result<bool, String> {
     Ok(crate::system_integration::context_menu::is_context_menu_registered())
 }
 
+#[command]
+pub async fn context_menu_location() -> Result<String, String> {
+    Ok(crate::system_integration::context_menu::context_menu_location().into())
+}
+
 #[cfg(test)]
 mod desktop_behavior_tests {
     use super::{

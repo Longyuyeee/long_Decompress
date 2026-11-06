@@ -1,29 +1,29 @@
 <template>
   <Teleport to="body">
   <Transition name="fade" :css="active">
-    <div v-if="visible && active" class="fixed inset-0 overflow-y-auto" :class="layerClass" role="dialog" aria-modal="true" :aria-labelledby="title ? modalTitleId : undefined">
+    <div v-if="visible && active" class="dialog-overlay fixed inset-0 overflow-hidden" :class="layerClass" role="dialog" aria-modal="true" :aria-labelledby="title ? modalTitleId : undefined">
       <div class="fixed inset-0 bg-black/60 transition-opacity" @click="handleBackdropClick"></div>
 
-      <div class="flex min-h-full items-center justify-center p-4 text-center">
+      <div class="dialog-viewport flex h-full items-center justify-center text-center">
         <Transition name="pop">
           <div
             ref="modalContent"
-            class="app-dialog modal-no-glass relative flex max-h-[min(88vh,48rem)] w-full transform flex-col overflow-hidden rounded-[1.4rem] bg-modal border border-subtle text-left shadow-2xl transition-all outline-none"
-            :class="sizeClasses"
+            class="app-dialog modal-no-glass relative flex w-full transform flex-col overflow-hidden rounded-[1.4rem] bg-modal border border-subtle text-left shadow-2xl transition-all outline-none"
+            :style="{ '--dialog-width': sizeWidth }"
             tabindex="-1"
           >
             <button
               v-if="showCloseButton"
               @click="handleClose"
               :aria-label="cancelText || 'Close dialog'"
-              class="absolute right-6 top-6 z-10 rounded-full p-2 hover:bg-input transition-all"
+              class="dialog-close absolute z-10 rounded-full hover:bg-input transition-all"
             >
               <i class="pi pi-times text-muted hover:text-content text-xs"></i>
             </button>
 
-            <div v-if="title || $slots.title" class="shrink-0 px-6 pt-6 pb-3">
-              <div class="flex items-center gap-4">
-                <div v-if="icon" class="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <div v-if="title || $slots.title" class="dialog-header shrink-0">
+              <div class="dialog-heading flex items-center">
+                <div v-if="icon" class="dialog-icon rounded-2xl bg-primary/10 flex items-center justify-center">
                    <i :class="[icon, 'text-primary']"></i>
                 </div>
                 <div class="min-w-0 flex-1"><div class="dialog-title-copy">
@@ -37,12 +37,12 @@
               </div>
             </div>
 
-            <div class="min-h-0 overflow-y-auto px-6 py-4 text-content custom-scrollbar">
+            <div class="dialog-body min-h-0 text-content custom-scrollbar">
               <slot></slot>
             </div>
 
-            <div v-if="showFooter || $slots.footer" class="shrink-0 px-6 pb-6 pt-2">
-              <div class="flex items-center justify-end gap-3">
+            <div v-if="showFooter || $slots.footer" class="dialog-footer shrink-0">
+              <div class="dialog-actions flex items-center justify-end">
                 <slot name="footer">
                   <button v-if="cancelText" @click="handleCancel" class="px-6 py-2.5 rounded-xl bg-input border border-subtle text-muted text-xs font-bold hover:text-content transition-all">
                     {{ cancelText }}
@@ -114,16 +114,16 @@ watch(() => props.visible && active.value, (isVisible) => {
   }
 })
 
-const sizeClasses = computed(() => {
-  const classes: Record<string, string> = {
-    xs: 'max-w-[320px]',
-    sm: 'max-w-[380px]',
-    md: 'max-w-[460px] md:max-w-lg',
-    lg: 'max-w-[min(46rem,calc(100vw-3rem))]',
-    xl: 'max-w-[min(58rem,calc(100vw-3rem))]',
-    full: 'max-w-full mx-4'
+const sizeWidth = computed(() => {
+  const widths: Record<string, string> = {
+    xs: '20rem',
+    sm: '24rem',
+    md: '32rem',
+    lg: '46rem',
+    xl: '58rem',
+    full: '100%'
   }
-  return classes[props.size]
+  return widths[props.size]
 })
 
 onMounted(() => {
@@ -175,7 +175,38 @@ defineExpose({ close: handleClose, open: () => emit('update:visible', true) })
 </script>
 
 <style scoped>
-.app-dialog>div.shrink-0{padding:16px 20px 10px}.app-dialog>div.min-h-0{padding:12px 20px}.app-dialog>div.shrink-0:last-child{padding:10px 20px 16px}.app-dialog>button.absolute{top:12px;right:12px}.dialog-title-copy{display:flex;align-items:center;gap:8px;min-width:0;padding-right:28px}.dialog-title-copy h3{margin:0;line-height:1.4;overflow-wrap:anywhere}.app-dialog>div.shrink-0:last-child>div{flex-wrap:wrap}
+.dialog-overlay { --dialog-gutter: clamp(8px, 2vmin, 16px); }
+.dialog-viewport { min-width: 0; padding: var(--dialog-gutter); }
+.app-dialog {
+  min-width: 0;
+  min-height: 0;
+  max-width: min(var(--dialog-width), 100%);
+  max-height: min(88vh, 48rem, calc(100vh - 2 * var(--dialog-gutter)));
+  max-height: min(88dvh, 48rem, calc(100dvh - 2 * var(--dialog-gutter)));
+}
+.dialog-header { padding: 16px 20px 10px; }
+.dialog-heading { min-width: 0; gap: clamp(8px, 1rem, 16px); }
+.dialog-icon { width: 40px; height: 40px; flex-shrink: 0; }
+.dialog-close { top: 12px; right: 12px; width: 32px; height: 32px; display: grid; place-items: center; }
+.dialog-close i { font-size: clamp(12px, .75rem, 20px); }
+.dialog-title-copy { display: flex; align-items: center; gap: 8px; min-width: 0; padding-right: 32px; }
+.dialog-title-copy h3 { margin: 0; font-size: clamp(18px, 1.125rem, 28px); line-height: 1.4; overflow-wrap: anywhere; }
+.dialog-header p { font-size: clamp(12px, .75rem, 16px); overflow-wrap: anywhere; }
+/* Only the content scrolls: the close button and action footer stay reachable. */
+.dialog-body { flex: 1 1 auto; min-width: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding: 12px 20px; overflow-wrap: anywhere; }
+.dialog-body::-webkit-scrollbar { width: 6px; }
+.dialog-body::-webkit-scrollbar-thumb { border-radius: 6px; background: var(--text-muted); }
+.dialog-body::-webkit-scrollbar-track { background: transparent; }
+.dialog-body > :deep(*) { min-width: 0; max-width: 100%; }
+.dialog-footer { min-width: 0; padding: 10px 20px 16px; }
+.dialog-actions { min-width: 0; flex-wrap: wrap; gap: clamp(8px, .75rem, 12px); }
+.dialog-actions > :deep(button) { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+.dialog-actions > button { padding: 10px clamp(12px, 1.5rem, 24px); font-size: clamp(12px, .75rem, 16px); }
+@media (max-height: 420px), (max-width: 420px) {
+  .dialog-header { padding: 12px 16px 8px; }
+  .dialog-body { padding: 10px 16px; }
+  .dialog-footer { padding: 8px 16px 12px; }
+}
 
 .fade-enter-active, .fade-leave-active { transition: opacity 0.3s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
