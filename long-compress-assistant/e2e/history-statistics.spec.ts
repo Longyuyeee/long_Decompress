@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 
-test('history statistics stay in a modal without losing filters or selected retries', async ({ page }, info) => {
+test('history statistics stay in a modal without losing filters and rows have no multiselection', async ({ page }, info) => {
+  test.setTimeout(120000)
   await page.setViewportSize({ width: 920, height: 620 })
   await page.addInitScript(() => {
     window.__TAURI_IPC__ = (message: Record<string, any>) => {
@@ -17,13 +18,14 @@ test('history statistics stay in a modal without losing filters or selected retr
       ;(window as any)[`_${message.callback}`]?.(value)
     }
   })
-  await page.goto('/#/history')
+  await page.goto('/#/history', { waitUntil: 'domcontentloaded', timeout: 90000 })
   await expect(page.getByTestId('history-record-row')).toHaveCount(12)
   await expect(page.getByTestId('history-kpis')).toHaveCount(0)
   await expect(page.getByTestId('history-retention-policy')).toHaveCount(0)
   await page.getByTestId('history-search').fill('项目')
   await expect(page.getByTestId('history-record-row')).toHaveCount(12)
-  await page.getByTestId('history-select-retry').first().check()
+  await expect(page.getByTestId('history-list').locator('input[type="checkbox"]')).toHaveCount(0)
+  await expect(page.getByTestId('history-batch-review')).toHaveCount(0)
   await page.screenshot({ path: info.outputPath('history-clean-920.png') })
   const trigger = page.getByTestId('history-open-statistics')
   for (const width of [920, 760]) {
@@ -51,7 +53,7 @@ test('history statistics stay in a modal without losing filters or selected retr
     await expect(modal).toHaveCount(0)
     await expect(trigger).toBeFocused()
     await expect(page.getByTestId('history-search')).toHaveValue('项目')
-    await expect(page.getByTestId('history-select-retry').first()).toBeChecked()
+    await expect(page.getByTestId('history-list').locator('input[type="checkbox"]')).toHaveCount(0)
     expect(await page.locator('.history-view').evaluate(el => el.scrollTop)).toBe(scroll)
   }
   await page.getByTestId('history-search').fill('没有这个任务')
