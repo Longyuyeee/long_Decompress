@@ -1,0 +1,14 @@
+{
+  "version": "1.8.0",
+  "expectedShellDll": "long_compress_shell_extension_1_8_0.dll",
+  "sources": {
+    "packageJson": "1.8.0",
+    "packageLock": "1.8.0",
+    "packageLockRoot": "1.8.0",
+    "tauriConfig": "1.8.0",
+    "tauriCargo": "1.8.0",
+    "tauriCargoLock": "1.8.0",
+    "shellCargo": "1.8.0",
+    "shellCargoLock": "1.8.0"
+  }
+}

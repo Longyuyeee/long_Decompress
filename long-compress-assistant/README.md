@@ -52,7 +52,7 @@ e2e/                浏览器与桌面场景
 docs/               产品路线、格式说明和发布记录
 ```
 
-- 单条任务行内展开，多选任务使用配置弹窗；编辑某条自然形成该条配置。
+- 压缩、解压任务单条行内展开，多选使用配置弹窗；编辑某条自然形成该条配置。历史页只保留单条操作。
 - 包内外共用导航与列表，左右等宽。返回时保留位置、选择和另一栏状态。
 - 常用操作就近展示，次要操作放菜单，复杂配置放二级界面，主区域留给内容。
 - Windows 默认应用由用户在系统设置确认。设置打开行为不会替用户更改关联；一次性提醒记录独立保存，升级和恢复偏好不重置。
@@ -62,10 +62,10 @@ docs/               产品路线、格式说明和发布记录
 | 文档 | 内容 |
 | --- | --- |
 | [开发交接](docs/DEVELOPMENT_HANDOFF.md) / [产品路线](docs/PRODUCT_ENHANCEMENT_ROADMAP.md) | 当前状态、下一步及已有验证 |
-| [#366 减少动画修复](docs/REDUCED_MOTION_FIX_366.md) | 修复窗口偏移和无法关闭开关；包含编译样式与界面防回归检查，尚未发布维护版 |
+| [#366 减少动画修复](docs/REDUCED_MOTION_FIX_366.md) | 修复窗口偏移和无法关闭开关，纳入 v1.8.0 |
 | [v1.7.0 范围](docs/ARCHIVE_ROADMAP_1.7.0.md) / [实现与检查](docs/WINDOWS_OPEN_AND_BROWSER_UI.md) | Windows 打开、双栏统一与历史菜单 |
-| [v1.7.41 菜单与弹窗维护候选](docs/EXPLORER_MENU_AUDIT_1.7.41.md) | 单一分类菜单、入口提示与修复；[小窗口与长路径弹窗适配](docs/DIALOG_RESPONSIVE_FIX_1.7.41.md)；尚未正式发布 |
-| [v1.7.40 包内复制与右键](docs/EXPLORER_CLIPBOARD_FREEZE_1.7.40.md) / [下一步](docs/ARCHIVE_ROADMAP_1.7.42.md) | 文件剪贴板与分类快捷操作；原 XZ 多流/填充范围顺延 |
+| [v1.8.0 封板](docs/RELEASE_AUDIT_1.8.0.md) / [发布说明](docs/RELEASE_NOTES_1.8.0.md) | 经典右键分类、菜单修复、弹窗适配与任务列表精简；合并原 v1.7.41 候选范围 |
+| [v1.7.40 包内复制与右键](docs/EXPLORER_CLIPBOARD_FREEZE_1.7.40.md) / [下一步 v1.8.1](docs/ARCHIVE_ROADMAP_1.8.1.md) | 文件剪贴板与分类快捷操作；下一步回到 XZ 多流/填充兼容 |
 | [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md) | 创建、读取、密码、分卷和限制 |
 | [桌面测试说明](docs/DESKTOP_E2E.md) / [测试指南](tests/README.md) | 本地和隔离场景 |
 

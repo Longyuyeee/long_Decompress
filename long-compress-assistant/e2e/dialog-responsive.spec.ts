@@ -25,7 +25,7 @@ async function openApp(page: Page, scenario: typeof scenarios[number]) {
       else if (message.cmd === 'get_archive_engine_capabilities') result = { available: true, fullEngine: true, formats: [], browseExtensions: [], nestedExtensions: [], boundedPreviewFormats: [], imagePreviewExtensions: [], textPreviewExtensions: [], message: 'ready' }
       else if (message.cmd === 'preview_extraction_output') result = message.outputPath + '\\' + message.filePath.split(/[\\/]/).pop().replace(/\.tar\.gz$/i, '')
       else if (message.cmd === 'archive_file_associations') result = ['zip','7z','rar','zipx','tar','gz','bz2','xz','zst','tgz','tbz2','txz','lz','lzo','lz4','br','cab','arj','alz','egg','zpaq'].map(extension => ({ extension: '.' + extension, registered: true, isDefault: false }))
-      else if (message.cmd === 'tauri' && message.__tauriModule === 'App') result = '1.7.41'
+      else if (message.cmd === 'tauri' && message.__tauriModule === 'App') result = '1.8.0'
       else if (message.cmd === 'tauri' && message.__tauriModule === 'Dialog') result = null
       win[`_${message.callback}`]?.(result)
     }

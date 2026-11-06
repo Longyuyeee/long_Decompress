@@ -10,7 +10,7 @@ test('batch results keep failures scoped across navigation and fit compact windo
       if (message.cmd === 'is_context_menu_registered') result = true
       else if (message.cmd === 'load_history' || message.cmd === 'take_pending_context_actions') result = []
       else if (message.cmd === 'get_archive_engine_capabilities') result = { available: true, fullEngine: true, formats: [], browseExtensions: [], nestedExtensions: [], boundedPreviewFormats: [], imagePreviewExtensions: [], textPreviewExtensions: [], message: 'ready' }
-      else if (message.cmd === 'tauri' && message.__tauriModule === 'App') result = '1.7.41'
+      else if (message.cmd === 'tauri' && message.__tauriModule === 'App') result = '1.8.0'
       win[`_${message.callback}`]?.(result)
     }
   })

@@ -37,7 +37,7 @@
 
 ### ⚡ 多个任务，一起处理
 
-拖入文件开始压缩、解压或转换。单条点击展开，多选集中弹窗配置；修改某条即使用该条配置。左右等宽展示参数与运行信息，完成后就近打开结果，失败后调整再继续。
+拖入文件开始压缩、解压或转换。压缩、解压任务单条点击展开，多选集中弹窗配置；修改某条即使用该条配置。左右等宽展示参数与运行信息，批量结果集中在“成功结果”，历史任务保留就近打开结果与单条再次执行。
 
 </td>
 </tr>
@@ -46,7 +46,7 @@
 
 ### 🖱️ 从 Windows 直接开始
 
-在设置中选择默认打开格式，经 Windows 确认后，双击可询问或直接执行：当前目录、同名文件夹、自选目录、双栏浏览。右键按所选内容提供压缩、解压或图片优化；维护操作收进“更多操作”，加密和分卷按需配置。
+在设置中选择默认打开格式，经 Windows 确认后，双击可询问或直接执行：当前目录、同名文件夹、自选目录、双栏浏览。经典右键由一个 Long解压入口按所选内容分类，压缩包的打包与维护操作分别收进“压缩打包”“更多操作”；图片优先显示图片优化，校验清单可直接核对。
 
 </td>
 <td width="50%" valign="top">
@@ -183,7 +183,7 @@
 <details>
 <summary><strong>Windows 11 右键菜单在哪里？</strong></summary>
 
-在设置中启用资源管理器菜单。当前公开包使用“显示更多选项”中的经典菜单；第一层原生菜单仍取决于可信签名身份包。常用解压与浏览在前，转换、测试、救援等收进“更多操作”。
+在“设置 → 行为 → Windows 文件右键菜单”启用。当前公开包的完整菜单位于“显示更多选项 → Long解压”；旧入口或功能未更新时，可直接点击“修复菜单”。常用浏览、解压在前，压缩打包与维护分组收纳。第一层原生菜单取决于可信签名身份包。
 
 </details>
 
@@ -213,10 +213,10 @@
 
 | 版本 | 主要更新 | 详情 |
 | --- | --- | --- |
+| **v1.8.0** | 经典右键统一分类、补齐菜单并支持修复；小窗口弹窗适配，精简任务列表和历史页 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.8.0.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.8.0) |
 | **v1.7.40** | 包内文件 / 文件夹复制到 Windows 剪贴板；按类型补齐右键快捷操作，快速打包只处理本次选择 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.40.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.40) |
 | **v1.7.38** | 流式 ZIPX（XZ）丢目录后部分取回完整成员，接通 ZIP64、目录及完整数字切片 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.38.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.38) |
 | **v1.7.37** | 多帧 Zstandard ZIP 按整个成员确认后部分取回，接通空帧、ZIP64 和完整数字切片 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.37.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.37) |
 | **v1.7.36** | 单帧 Zstandard ZIP 丢目录后部分取回完整文件，接通 ZIP64、完整数字切片及来源日期 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.36.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.36) |
-| **v1.7.35** | ZIP 恢复新包保留已确认文件与目录修改时间，接通密码、分卷和流式取回结果 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.35.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.35) |
 
 [查看全部历史版本 →](https://github.com/Longyuyeee/long_Decompress/releases)

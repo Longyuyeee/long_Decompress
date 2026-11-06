@@ -17,7 +17,7 @@ for (const width of [1280, 920]) {
         else if (message.cmd === 'check_auto_start') result = false
         else if (message.cmd === 'archive_file_associations') result = [{ extension: '.zip', registered: true, isDefault: true }, { extension: '.7z', registered: true, isDefault: false }]
         else if (message.cmd === 'load_history' || message.cmd === 'take_pending_context_actions') result = []
-        else if (message.cmd === 'tauri' && message.__tauriModule === 'App') result = '1.7.41'
+        else if (message.cmd === 'tauri' && message.__tauriModule === 'App') result = '1.8.0'
         win[`_${message.callback}`]?.(result)
       }
     })

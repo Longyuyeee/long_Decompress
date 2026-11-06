@@ -1,0 +1,494 @@
+{
+  "ordinary": [
+    {
+      "Label": "Long解压",
+      "Verb": "",
+      "Id": 4294967295,
+      "Children": [
+        {
+          "Label": "压缩为 ZIP",
+          "Verb": "",
+          "Id": 29,
+          "Children": [],
+          "Arguments": [
+            "--compress-zip",
+            "<fixture>\\ordinary.txt"
+          ]
+        },
+        {
+          "Label": "压缩为 7Z",
+          "Verb": "",
+          "Id": 30,
+          "Children": [],
+          "Arguments": [
+            "--compress-7z",
+            "<fixture>\\ordinary.txt"
+          ]
+        },
+        {
+          "Label": "添加到压缩包…",
+          "Verb": "",
+          "Id": 31,
+          "Children": [],
+          "Arguments": [
+            "--compress-custom",
+            "<fixture>\\ordinary.txt"
+          ]
+        },
+        {
+          "Label": "加密压缩…",
+          "Verb": "",
+          "Id": 32,
+          "Children": [],
+          "Arguments": [
+            "--compress-encrypted",
+            "<fixture>\\ordinary.txt"
+          ]
+        },
+        {
+          "Label": "分卷压缩…",
+          "Verb": "",
+          "Id": 33,
+          "Children": [],
+          "Arguments": [
+            "--compress-split",
+            "<fixture>\\ordinary.txt"
+          ]
+        },
+        {
+          "Label": "生成校验清单…",
+          "Verb": "",
+          "Id": 34,
+          "Children": [],
+          "Arguments": [
+            "--checksum-create",
+            "<fixture>\\ordinary.txt"
+          ]
+        }
+      ],
+      "Arguments": null
+    }
+  ],
+  "archive": [
+    {
+      "Label": "Long解压",
+      "Verb": "",
+      "Id": 4294967295,
+      "Children": [
+        {
+          "Label": "浏览压缩包内容",
+          "Verb": "",
+          "Id": 29,
+          "Children": [],
+          "Arguments": [
+            "--browse-archive",
+            "<fixture>\\archive.zip"
+          ]
+        },
+        {
+          "Label": "解压到此处",
+          "Verb": "",
+          "Id": 30,
+          "Children": [],
+          "Arguments": [
+            "--extract-here",
+            "<fixture>\\archive.zip"
+          ]
+        },
+        {
+          "Label": "解压到同名文件夹",
+          "Verb": "",
+          "Id": 31,
+          "Children": [],
+          "Arguments": [
+            "--extract-to",
+            "<fixture>\\archive.zip"
+          ]
+        },
+        {
+          "Label": "选择解压文件夹…",
+          "Verb": "",
+          "Id": 32,
+          "Children": [],
+          "Arguments": [
+            "--extract-choose",
+            "<fixture>\\archive.zip"
+          ]
+        },
+        {
+          "Label": "压缩打包",
+          "Verb": "",
+          "Id": 4294967295,
+          "Children": [
+            {
+              "Label": "压缩为 ZIP",
+              "Verb": "",
+              "Id": 34,
+              "Children": [],
+              "Arguments": [
+                "--compress-zip",
+                "<fixture>\\archive.zip"
+              ]
+            },
+            {
+              "Label": "压缩为 7Z",
+              "Verb": "",
+              "Id": 35,
+              "Children": [],
+              "Arguments": [
+                "--compress-7z",
+                "<fixture>\\archive.zip"
+              ]
+            },
+            {
+              "Label": "添加到压缩包…",
+              "Verb": "",
+              "Id": 36,
+              "Children": [],
+              "Arguments": [
+                "--compress-custom",
+                "<fixture>\\archive.zip"
+              ]
+            },
+            {
+              "Label": "加密压缩…",
+              "Verb": "",
+              "Id": 37,
+              "Children": [],
+              "Arguments": [
+                "--compress-encrypted",
+                "<fixture>\\archive.zip"
+              ]
+            },
+            {
+              "Label": "分卷压缩…",
+              "Verb": "",
+              "Id": 38,
+              "Children": [],
+              "Arguments": [
+                "--compress-split",
+                "<fixture>\\archive.zip"
+              ]
+            }
+          ],
+          "Arguments": null
+        },
+        {
+          "Label": "更多操作",
+          "Verb": "",
+          "Id": 4294967295,
+          "Children": [
+            {
+              "Label": "测试压缩包完整性",
+              "Verb": "",
+              "Id": 40,
+              "Children": [],
+              "Arguments": [
+                "--test-archive",
+                "<fixture>\\archive.zip"
+              ]
+            },
+            {
+              "Label": "检查与尝试修复…",
+              "Verb": "",
+              "Id": 41,
+              "Children": [],
+              "Arguments": [
+                "--repair-archive",
+                "<fixture>\\archive.zip"
+              ]
+            },
+            {
+              "Label": "转换压缩包格式…",
+              "Verb": "",
+              "Id": 42,
+              "Children": [],
+              "Arguments": [
+                "--convert-archive",
+                "<fixture>\\archive.zip"
+              ]
+            },
+            {
+              "Label": "修改密码 / 调整分卷…",
+              "Verb": "",
+              "Id": 43,
+              "Children": [],
+              "Arguments": [
+                "--reconfigure-archive",
+                "<fixture>\\archive.zip"
+              ]
+            }
+          ],
+          "Arguments": null
+        },
+        {
+          "Label": "生成校验清单…",
+          "Verb": "",
+          "Id": 44,
+          "Children": [],
+          "Arguments": [
+            "--checksum-create",
+            "<fixture>\\archive.zip"
+          ]
+        }
+      ],
+      "Arguments": null
+    }
+  ],
+  "image": [
+    {
+      "Label": "Long解压",
+      "Verb": "",
+      "Id": 4294967295,
+      "Children": [
+        {
+          "Label": "压缩图片…",
+          "Verb": "",
+          "Id": 29,
+          "Children": [],
+          "Arguments": [
+            "--image-compress",
+            "<fixture>\\image.png"
+          ]
+        },
+        {
+          "Label": "转换为 WebP…",
+          "Verb": "",
+          "Id": 30,
+          "Children": [],
+          "Arguments": [
+            "--image-webp",
+            "<fixture>\\image.png"
+          ]
+        },
+        {
+          "Label": "缩小图片尺寸…",
+          "Verb": "",
+          "Id": 31,
+          "Children": [],
+          "Arguments": [
+            "--image-resize",
+            "<fixture>\\image.png"
+          ]
+        },
+        {
+          "Label": "压缩打包",
+          "Verb": "",
+          "Id": 4294967295,
+          "Children": [
+            {
+              "Label": "压缩为 ZIP",
+              "Verb": "",
+              "Id": 33,
+              "Children": [],
+              "Arguments": [
+                "--compress-zip",
+                "<fixture>\\image.png"
+              ]
+            },
+            {
+              "Label": "压缩为 7Z",
+              "Verb": "",
+              "Id": 34,
+              "Children": [],
+              "Arguments": [
+                "--compress-7z",
+                "<fixture>\\image.png"
+              ]
+            },
+            {
+              "Label": "添加到压缩包…",
+              "Verb": "",
+              "Id": 35,
+              "Children": [],
+              "Arguments": [
+                "--compress-custom",
+                "<fixture>\\image.png"
+              ]
+            },
+            {
+              "Label": "加密压缩…",
+              "Verb": "",
+              "Id": 36,
+              "Children": [],
+              "Arguments": [
+                "--compress-encrypted",
+                "<fixture>\\image.png"
+              ]
+            },
+            {
+              "Label": "分卷压缩…",
+              "Verb": "",
+              "Id": 37,
+              "Children": [],
+              "Arguments": [
+                "--compress-split",
+                "<fixture>\\image.png"
+              ]
+            }
+          ],
+          "Arguments": null
+        },
+        {
+          "Label": "生成校验清单…",
+          "Verb": "",
+          "Id": 38,
+          "Children": [],
+          "Arguments": [
+            "--checksum-create",
+            "<fixture>\\image.png"
+          ]
+        }
+      ],
+      "Arguments": null
+    }
+  ],
+  "manifest": [
+    {
+      "Label": "Long解压",
+      "Verb": "",
+      "Id": 4294967295,
+      "Children": [
+        {
+          "Label": "核对校验清单…",
+          "Verb": "",
+          "Id": 29,
+          "Children": [],
+          "Arguments": [
+            "--checksum-verify",
+            "<fixture>\\manifest.sha256"
+          ]
+        },
+        {
+          "Label": "压缩打包",
+          "Verb": "",
+          "Id": 4294967295,
+          "Children": [
+            {
+              "Label": "压缩为 ZIP",
+              "Verb": "",
+              "Id": 31,
+              "Children": [],
+              "Arguments": [
+                "--compress-zip",
+                "<fixture>\\manifest.sha256"
+              ]
+            },
+            {
+              "Label": "压缩为 7Z",
+              "Verb": "",
+              "Id": 32,
+              "Children": [],
+              "Arguments": [
+                "--compress-7z",
+                "<fixture>\\manifest.sha256"
+              ]
+            },
+            {
+              "Label": "添加到压缩包…",
+              "Verb": "",
+              "Id": 33,
+              "Children": [],
+              "Arguments": [
+                "--compress-custom",
+                "<fixture>\\manifest.sha256"
+              ]
+            },
+            {
+              "Label": "加密压缩…",
+              "Verb": "",
+              "Id": 34,
+              "Children": [],
+              "Arguments": [
+                "--compress-encrypted",
+                "<fixture>\\manifest.sha256"
+              ]
+            },
+            {
+              "Label": "分卷压缩…",
+              "Verb": "",
+              "Id": 35,
+              "Children": [],
+              "Arguments": [
+                "--compress-split",
+                "<fixture>\\manifest.sha256"
+              ]
+            }
+          ],
+          "Arguments": null
+        },
+        {
+          "Label": "生成校验清单…",
+          "Verb": "",
+          "Id": 36,
+          "Children": [],
+          "Arguments": [
+            "--checksum-create",
+            "<fixture>\\manifest.sha256"
+          ]
+        }
+      ],
+      "Arguments": null
+    }
+  ],
+  "directory": [
+    {
+      "Label": "Long解压",
+      "Verb": "",
+      "Id": 4294967295,
+      "Children": [
+        {
+          "Label": "压缩为 ZIP",
+          "Verb": "",
+          "Id": 29,
+          "Children": [],
+          "Arguments": [
+            "--compress-zip",
+            "<fixture>\\folder.zip"
+          ]
+        },
+        {
+          "Label": "压缩为 7Z",
+          "Verb": "",
+          "Id": 30,
+          "Children": [],
+          "Arguments": [
+            "--compress-7z",
+            "<fixture>\\folder.zip"
+          ]
+        },
+        {
+          "Label": "添加到压缩包…",
+          "Verb": "",
+          "Id": 31,
+          "Children": [],
+          "Arguments": [
+            "--compress-custom",
+            "<fixture>\\folder.zip"
+          ]
+        },
+        {
+          "Label": "加密压缩…",
+          "Verb": "",
+          "Id": 32,
+          "Children": [],
+          "Arguments": [
+            "--compress-encrypted",
+            "<fixture>\\folder.zip"
+          ]
+        },
+        {
+          "Label": "分卷压缩…",
+          "Verb": "",
+          "Id": 33,
+          "Children": [],
+          "Arguments": [
+            "--compress-split",
+            "<fixture>\\folder.zip"
+          ]
+        }
+      ],
+      "Arguments": null
+    }
+  ]
+}
