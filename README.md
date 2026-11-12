@@ -1,222 +1,176 @@
 <div align="center">
+  <img src="long-compress-assistant/src-tauri/icons/128x128.png" width="76" height="76" alt="Long解压图标">
+  <h1>Long解压 · Archive Studio</h1>
+  <p><strong>做最好用的 Windows 解压缩软件</strong></p>
+  <p>从打开压缩包到交付文件，在同一个工作区完成压缩、解压、自动化和文件管理。</p>
 
-<img src="icon.png" width="104" height="104" alt="Long解压图标">
+  [![下载 Windows 安装包](https://img.shields.io/badge/%E4%B8%8B%E8%BD%BD-Windows%20x64-5B50E6?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![最新版本](https://img.shields.io/github/v/release/Longyuyeee/long_Decompress?style=for-the-badge&label=%E6%9C%80%E6%96%B0%E7%89%88%E6%9C%AC&color=0F766E)](https://github.com/Longyuyeee/long_Decompress/releases/latest) [![MIT License](https://img.shields.io/badge/License-MIT-475569?style=for-the-badge)](LICENSE)
 
-# Long解压 · Archive Studio
+  [功能亮点](#features) · [界面一览](#screenshots) · [操作指南](#quick-start) · [格式支持](#formats) · [最近更新](#updates)
 
-**从打开压缩包，到整理文件、找到结果。**
-
-双栏浏览 · 批量压缩与解压 · 图文预览 · 归档编辑 · 本地资料工具
-
-[![版本](https://img.shields.io/github/v/release/Longyuyeee/long_Decompress?style=for-the-badge&color=6366f1&label=VERSION)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
-[![Windows](https://img.shields.io/badge/Windows-10%20%2F%2011-0ea5e9?style=for-the-badge)](https://github.com/Longyuyeee/long_Decompress/releases/latest)
-[![License](https://img.shields.io/badge/License-MIT-14b8a6?style=for-the-badge)](LICENSE)
-
-### [↓ 下载 Windows 版](https://github.com/Longyuyeee/long_Decompress/releases/latest)
-
-[软件特点](#features) · [界面一览](#screenshots) · [快速上手](#quick-start) · [格式支持](#formats) · [常见问题](#faq) · [最近更新](#updates)
-
+  <a href="docs/screenshots/readme-dual-pane.png"><img src="docs/screenshots/readme-dual-pane.png" width="100%" alt="星云紫境主题下的双栏浏览器，左栏打开季度交付 ZIP，右栏显示交付归档目录"></a>
+  <p><sub>双栏文件浏览器 · 星云紫境主题 · 左栏浏览包内文件，右栏保留目标目录</sub></p>
 </div>
-
----
 
 <a id="features"></a>
 
-## ✨ 围绕文件，也围绕你的操作
+## 功能亮点
 
 <table>
-<tr>
-<td width="50%" valign="top">
-
-### 📂 压缩包，就是特殊文件夹
-
-两栏并排浏览，进入压缩包仍保留相同的导航、地址栏、列表和选择方式。在一栏找文件，在另一栏接收；TXT、常见文本和图片可直接预览，图片包支持连续阅读。包内选中文件或目录后，可用 Ctrl+C 复制，再到 Windows 文件夹粘贴。
-
-</td>
-<td width="50%" valign="top">
-
-### ⚡ 多个任务，一起处理
-
-拖入文件开始压缩、解压或转换。压缩、解压任务单条点击展开，多选集中弹窗配置；修改某条即使用该条配置。左右等宽展示参数与运行信息，批量结果集中在“成功结果”，历史任务保留就近打开结果与单条再次执行。
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-### 🖱️ 从 Windows 直接开始
-
-在设置中选择默认打开格式，经 Windows 确认后，双击可询问或直接执行：当前目录、同名文件夹、自选目录、双栏浏览。经典右键由一个 Long解压入口按所选内容分类，压缩包的打包与维护操作分别收进“压缩打包”“更多操作”；图片优先显示图片优化，校验清单可直接核对。
-
-</td>
-<td width="50%" valign="top">
-
-### 🧩 找到、整理，再取回
-
-工具中心集中资料对比、归档资源库、工作流与文件完整性。跨包搜索文件名和路径，保存常用搜索；比较两份资料，或整理 ZIP / ZIPX 内容后另存新包。
-
-</td>
-</tr>
-<tr>
-<td width="50%" valign="top">
-
-### 🔐 密码与分卷，接入同一流程
-
-密码保险箱管理常用密码，分卷按整组识别。浏览、预览、解压、转换和结果沿用同一套操作；针对可支持的损坏 ZIP 提供部分抢救，普通 LZOP 可取回已校验的完整前缀成员，TAR.LZO 可取回已确认的内部文件和目录，明确展示部分结果。
-
-</td>
-<td width="50%" valign="top">
-
-### 🎨 不止一种工作氛围
-
-多种主题与强调色，适配宽窄窗口。图片、视频、PDF 各有专门的体积优化入口；任务、历史、托盘与带下载进度的应用内更新陪你完成整个过程。
-
-</td>
-</tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>🗜️ 多格式压缩与解压</h3>
+      <p>从 ZIP、7Z、RAR 到 TAR 系列和 WIM，覆盖日常归档、旧包读取及格式转换。常见密码包与分卷可直接处理，受支持的损坏包可检查并尝试取回完整成员。</p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>⚡ 批量处理与自动化</h3>
+      <p>多选任务一次配置，单条任务可展开单独调整。把筛选、解压、压缩和转换保存为工作流，按目录变化或时间触发，逐步查看运行结果。</p>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <h3>🔐 全生命周期密码管理</h3>
+      <p>压缩时可生成密码，解压时可尝试保险箱中的候选并保存成功密码。用分类、收藏和使用记录整理常用密码，通过导入和加密导出迁移备份。</p>
+    </td>
+    <td width="50%" valign="top">
+      <h3>📂 一站式文件管理</h3>
+      <p>像打开文件夹一样进入压缩包，直接预览图文、提取所选文件或复制到 Windows。跨包搜索、资料对比、ZIP / ZIPX 内容编辑和文件校验都有各自的入口。</p>
+    </td>
+  </tr>
 </table>
+
+**图片、视频和 PDF 也能单独优化体积。** 在「特殊压缩」选择对应类型，按各自的质量和体积要求处理。
 
 <a id="screenshots"></a>
 
-## 🖼️ 界面一览
+## 界面一览
 
-<a href="long-compress-assistant/docs/evidence/windows-opening-ui/archive-1100x700.png"><img src="long-compress-assistant/docs/evidence/windows-opening-ui/archive-1100x700.png" width="100%" alt="双栏文件浏览器：进入压缩包后保留原导航、列表与另一栏"></a>
-
-<p align="center"><sub>包内外保持一致，主要空间留给文件列表。截图使用演示资料。</sub></p>
+在「设置中心 → 外观」切换主题或自选强调色。点击截图可看大图，所有条目均为演示资料。
 
 <table>
-<tr>
-<td width="50%" align="center">
-<a href="docs/screenshots/compression-center.png"><img src="docs/screenshots/compression-center.png" alt="压缩中心，单条任务行内展开"></a><br><strong>单条展开 · 参数与进度同屏</strong>
-</td>
-<td width="50%" align="center">
-<a href="docs/screenshots/batch-configuration-dialog.png"><img src="docs/screenshots/batch-configuration-dialog.png" alt="批量修改配置弹窗"></a><br><strong>批量配置 · 需要时再展开</strong>
-</td>
-</tr>
+  <tr>
+    <td width="50%" align="center">
+      <a href="docs/screenshots/readme-batch-configuration.png"><img src="docs/screenshots/readme-batch-configuration.png" width="100%" alt="雨林秘境主题下的压缩中心批量配置弹窗"></a><br>
+      <strong>批量配置</strong> · 雨林秘境
+    </td>
+    <td width="50%" align="center">
+      <a href="docs/screenshots/readme-password-vault.png"><img src="docs/screenshots/readme-password-vault.png" width="100%" alt="曜石鎏金主题下的密码保险箱，密码正文保持遮盖"></a><br>
+      <strong>密码保险箱</strong> · 曜石鎏金
+    </td>
+  </tr>
 </table>
 
-<details>
-<summary><strong>更多界面：四项打开选择、工具中心与主题</strong></summary>
+<a href="docs/screenshots/readme-automation.png"><img src="docs/screenshots/readme-automation.png" width="100%" alt="极地冰川主题下的工作流自动化页面，展示定时规则、目录规则与监控目录配置"></a>
 
-| 打开压缩包 | 曜石鎏金双栏 |
-| --- | --- |
-| ![四项打开选择](long-compress-assistant/docs/evidence/windows-opening-ui/four-open-actions-760x520.png) | ![曜石鎏金双栏](long-compress-assistant/docs/evidence/windows-opening-ui/archive-obsidian-760x520.png) |
-
-![工具中心与归档资源库](long-compress-assistant/docs/evidence/tools-center-1.6.7/ArchiveLibrary-glacier-1100x650.png)
-
-部分功能截图来自较早版本；具体外观以当前安装版本为准。
-
-</details>
+<p align="center"><sub>工作流中心 · 极地冰川主题 · 按目录变化触发自动归档</sub></p>
 
 <a id="quick-start"></a>
 
-## 🚀 从这里开始
+## 操作指南
 
-1. 从 [Releases](https://github.com/Longyuyeee/long_Decompress/releases/latest) 下载 Windows x64 的 `setup.exe` 并安装。
-2. 进入解压中心、压缩中心或文件浏览器，拖入文件，确认输出位置后开始。
-3. 如需双击压缩包使用本软件，进入 **设置 → 行为 → 默认打开压缩包**，选择格式，再到 Windows 设置确认 Long解压为默认应用。
+在 **Windows 10 / 11 x64** 下载并运行发布页中的 `setup.exe`。安装后可直接把压缩包拖进「解压中心」，或从「文件浏览器」打开。 [下载最新安装包](https://github.com/Longyuyeee/long_Decompress/releases/latest)
 
-“打开后”默认每次询问，也可以保存为四种动作之一；选择自选目录时，每次弹出目录选择。首次使用提供一次设置提醒，关闭后不再因升级重复提醒。
+<details open>
+<summary><strong>批量压缩或解压</strong></summary>
 
-| 你想做什么 | 入口 |
-| --- | --- |
-| 只取出几个文件，先看 TXT / 图片，或复制后粘贴到文件夹 | 文件浏览器 → 在当前栏打开压缩包 → 选中后右键 / Ctrl+C |
-| 修改内容、改名或整理 ZIP / ZIPX | 包内选项 → 编辑内容 → 复核后另存 |
-| 改归档格式、密码或分卷大小 | 压缩中心 → 转换压缩包 |
-| 查文件在哪个压缩包里 | 工具中心 → 归档资源库 → 建索引后搜索 |
-| 比较两份资料 / 重复执行处理方案 / 校验文件 | 工具中心 → 资料对比 / 工作流 / 文件完整性 |
-| 压缩图片、视频、PDF | 特殊压缩 → 对应类型 |
-| 找以前的输出，或用原配置再次处理 | 历史任务 → 结果位置 / 再次执行 |
+1. 压缩时打开「压缩中心」并加入文件或文件夹。解压时打开「解压中心」并加入压缩包。遇到分卷，先把整组文件放在同一目录。
+2. 点任务行展开单条设置，或勾选多个待处理任务后点击「修改所选配置」。确认输出目录，压缩时按需选格式、密码和分卷。
+3. 点击开始。完成后到「成功结果」打开输出目录或复制路径，也可以在「历史任务」找到单条记录并再次执行。
+
+</details>
+
+<details>
+<summary><strong>先查看包内文件，再提取或整理</strong></summary>
+
+1. 在「文件浏览器」双击压缩包，当前栏进入包内，另一栏选定目标目录。
+2. 用文件旁的预览按钮查看图片或文本。勾选文件后可提取到另一栏，也可按 `Ctrl+C` 后在 Windows 文件夹中粘贴。
+3. 要整理 ZIP / ZIPX，可打开包内选项进入「编辑内容」，复核后另存新包。要跨包查文件，可在「工具中心 → 归档资源库」添加来源并建立索引。
+
+</details>
+
+<details>
+<summary><strong>让固定流程自动运行</strong></summary>
+
+1. 进入「工具中心 → 工作流中心」，点击「新建方案」，选择「解压后重新打包」等模板，或自行组合步骤。确认参数后保存方案。
+2. 进入「自动化与队列」，添加目录规则或定时规则，选择方案与输出目录。
+3. 保持应用运行或驻留托盘。去「处理队列」看触发状态，到「运行与结果」查看各步产物和失败详情。
+
+</details>
+
+<details>
+<summary><strong>管理常用归档密码</strong></summary>
+
+1. 在「密码保险箱」添加或导入常用密码，为条目设置名称、分类和备注。
+2. 解压加密包时可直接填写密码，也可让保险箱尝试已保存的候选。需要复用成功密码时，在「设置中心 → 行为」开启「自动保存成功密码」。
+3. 从保险箱的使用统计查看命中记录。需要迁移或备份时，选择导出并设置导出密码。
+
+</details>
+
+<details>
+<summary><strong>从 Windows 双击或右键开始</strong></summary>
+
+- **双击打开**前，进入「设置中心 → 行为 → 默认打开压缩包」，选择格式，在 Windows 设置中确认 Long解压。回到应用设置「打开后」的行为，可选询问、解压到当前目录、解压到同名目录、自选目录或双栏查看。
+- **文件右键**需启用「设置中心 → 行为 → Windows 文件右键菜单」。Windows 11 的完整入口位于「显示更多选项 → Long解压」，按文件类型提供压缩、解压、图片优化和校验操作。菜单缺失时可在设置里点击「修复菜单」。
+
+</details>
 
 <details>
 <summary><strong>常用快捷键</strong></summary>
 
-| 工作区 | 快捷键 |
+| 打开工作区 | 快捷键 |
 | --- | --- |
 | 解压中心 / 压缩中心 | `Ctrl+O` / `Ctrl+N` |
 | 文件浏览器 / 特殊压缩 | `Ctrl+B` / `Ctrl+Shift+S` |
-| 工具中心 | `Ctrl+Shift+T` |
-| 资料对比 / 归档资源库 / 工作流 | `Ctrl+Shift+D` / `Ctrl+Shift+L` / `Ctrl+Shift+W` |
-| 文件完整性 / 密码保险箱 | `Ctrl+I` / `Ctrl+Shift+V` |
-| 历史任务 / 设置 | `Ctrl+H` / `Ctrl+,` |
+| 工具中心 / 工作流 | `Ctrl+Shift+T` / `Ctrl+Shift+W` |
+| 密码保险箱 / 历史任务 / 设置 | `Ctrl+Shift+V` / `Ctrl+H` / `Ctrl+,` |
 
 </details>
 
 <a id="formats"></a>
 
-## 🗃️ 格式能力，一眼看清
+## 格式支持
 
-| 能力 | 主要支持 |
+| 操作 | 代表格式与能力 |
 | --- | --- |
-| 创建归档 | ZIP / ZIPX、7Z、RAR¹、ZPAQ、TAR 及常用压缩组合（含 TAR.LZO）、GZ / BZ2 / XZ / ZST / LZ4 / Brotli / LZMA / LZIP / LZOP、WIM / ESD / SWM |
-| 浏览与解压 | 上述常用格式，以及 ALZ、EGG、ARJ、CAB、自解压归档和部分磁盘镜像 / 容器² |
-| 密码与分卷 | ZIP / 7Z / RAR / ZPAQ 密码和对应分卷；Long 自有 AES 密码容器及数字卷；7Z / RAR 可加密文件名 |
-| 压缩方法 | ZIP 的 Deflate / Store / Zstandard / BZip2 / PPMd / LZMA，ZIPX 的 XZ；7Z 多方法与可选 Delta / BCJ 预处理 |
-| 浏览与整理 | 按需提取、图文预览、嵌套浏览、连续看图、ZIP / ZIPX 内容编辑与另存；范围随格式而异 |
+| **创建与转换** | ZIP、ZIPX、7Z、RAR¹、ZPAQ、TAR 及常见压缩组合，GZ、BZ2、XZ、ZST、LZ4、Brotli、LZMA、LZIP、LZOP、WIM / ESD / SWM |
+| **浏览与解压** | 常见归档格式，以及 ALZ、EGG、ARJ、CAB、自解压归档与部分磁盘镜像 |
+| **加密与分卷** | ZIP、7Z、RAR、ZPAQ 的密码和相应卷型，支持 Long AES 容器及数字切片 |
+| **检查与取回** | 归档完整性检查、校验清单，以及受支持的 ZIP / ZIPX、LZOP / TAR.LZO 部分取回 |
 
-¹ 创建 RAR 需要用户安装 WinRAR。² “可读取”不代表都能创建、编辑或修复。
-
-完整能力与限制见 [格式支持说明](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)。设置中的格式数量按本机实际引擎能力显示。
-
-<details>
-<summary><strong>密码、分卷和兼容性须知</strong></summary>
-
-- 收到分卷时，将完整组放在同一目录。ZIP 可选择数字卷或标准 `.z01/…/.zip`；7Z、RAR 及其他格式使用各自支持的卷型。
-- `.aes` 是 Long 自有容器，接收方需使用 Long解压；普通 TAR 和多数单文件流格式没有原生密码。
-- ZIP 默认 AES-256，也可选 ZipCrypto。旧工具的非 ASCII 密码可能需要匹配密码编码；保持默认自动兼容，遇到已知编码再调整。
-- ZIPX 不等于支持全部专有算法。LZOP 支持一个或多个普通文件，重名自动编号；文件夹和空目录请选择 TAR.LZO。两者支持数字分卷创建与整组读取，不提供原生密码；其他软件需先按序合并切片。多成员名超过 255 字节时请选择 TAR.LZO。
-- 缺卷或损坏不保证能完整恢复；救援只输出能够读取并通过对应校验的内容，并标明部分恢复范围。
-- DOCX、XLSX、PPTX、EPUB 等文档容器不作为普通归档导入。已充分压缩的文件，继续压缩可能收益很小。
-
-</details>
+¹ 创建 RAR 需要安装 WinRAR。各格式能否创建、浏览、提取、编辑或恢复，以功能清单为准。 [查看完整格式清单](long-compress-assistant/docs/FORMAT_SUPPORT_LEVELS.md)
 
 <a id="faq"></a>
 
-## 💬 常见问题
-
-<details>
-<summary><strong>保存打开行为后，为什么双击仍由其他软件打开？</strong></summary>
-
-行为设置只决定 Long解压收到文件后怎么处理。在“默认打开压缩包”的同一个弹窗中，可全选或取消格式并确认；Windows 要求的默认应用选择仍需在系统设置完成。返回后会刷新“已默认、待确认、待更换”，不会把候选注册当作已生效。也可通过 Windows 的“打开方式”临时使用本软件。
-
-</details>
-
-<details>
-<summary><strong>Windows 11 右键菜单在哪里？</strong></summary>
-
-在“设置 → 行为 → Windows 文件右键菜单”启用。当前公开包的完整菜单位于“显示更多选项 → Long解压”；旧入口或功能未更新时，可直接点击“修复菜单”。常用浏览、解压在前，压缩打包与维护分组收纳。第一层原生菜单取决于可信签名身份包。
-
-</details>
+## 常见问题
 
 <details>
 <summary><strong>升级会保留设置和密码吗？</strong></summary>
 
-正常覆盖安装保留应用数据、常用密码与已配置的默认打开入口。一次性设置提醒独立于版本和“恢复默认”保存，不反复出现；主动删除用户数据后会重新视为首次使用。重要密码可通过保险箱导出备份。
+正常覆盖安装保留设置、应用数据和常用密码。迁移到其他设备时，可通过密码保险箱加密导出备份。
 
 </details>
 
 <details>
-<summary><strong>数据在哪里处理？安装与更新需要什么？</strong></summary>
+<summary><strong>文件和密码在哪里处理？</strong></summary>
 
-文件处理、归档浏览、密码匹配和校验在本机完成。应用内更新联网获取版本与安装包，并展示下载进度；诊断与使用选项可在设置查看。当前安装器没有商业 Windows 代码签名，请从本仓库发布页下载；应用内更新包另有签名校验。视频功能暂不保证支持 Windows N。
+归档、媒体、校验和密码匹配在本机执行。应用内更新通过网络检查版本、下载安装包并显示进度。
 
 </details>
 
-## 🤝 参与与反馈
+## 反馈与开发
 
-发现问题，请 [提交 Issue](https://github.com/Longyuyeee/long_Decompress/issues)，附版本、格式、操作步骤和诊断信息。参与开发可从 [开发说明](long-compress-assistant/README.md)、[产品路线](long-compress-assistant/docs/PRODUCT_ENHANCEMENT_ROADMAP.md)与 [开发交接](long-compress-assistant/docs/DEVELOPMENT_HANDOFF.md)开始。
-
-项目代码采用 [MIT License](LICENSE)；随包引擎遵循各自许可，详见 [第三方组件说明](long-compress-assistant/README.md#third-party)。
+提交问题时请附软件版本、文件格式、操作步骤及诊断信息。项目采用 MIT License，随包引擎适用各自许可证。 [提交 Issue](https://github.com/Longyuyeee/long_Decompress/issues) · [开发说明](long-compress-assistant/README.md) · [产品路线](long-compress-assistant/docs/PRODUCT_ENHANCEMENT_ROADMAP.md) · [许可证](LICENSE)
 
 <a id="updates"></a>
 
-## 📝 最近五个版本
+## 最近五个版本
 
-| 版本 | 主要更新 | 详情 |
-| --- | --- | --- |
-| **v1.8.0** | 经典右键统一分类、补齐菜单并支持修复；小窗口弹窗适配，精简任务列表和历史页 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.8.0.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.8.0) |
-| **v1.7.40** | 包内文件 / 文件夹复制到 Windows 剪贴板；按类型补齐右键快捷操作，快速打包只处理本次选择 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.40.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.40) |
-| **v1.7.38** | 流式 ZIPX（XZ）丢目录后部分取回完整成员，接通 ZIP64、目录及完整数字切片 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.38.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.38) |
-| **v1.7.37** | 多帧 Zstandard ZIP 按整个成员确认后部分取回，接通空帧、ZIP64 和完整数字切片 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.37.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.37) |
-| **v1.7.36** | 单帧 Zstandard ZIP 丢目录后部分取回完整文件，接通 ZIP64、完整数字切片及来源日期 | [说明](long-compress-assistant/docs/RELEASE_NOTES_1.7.36.md) · [下载](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.36) |
+| 版本 | 更新 |
+| --- | --- |
+| [v1.8.0](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.8.0) | 经典右键分类与修复，小窗口弹窗适配，任务列表精简 |
+| [v1.7.40](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.40) | 包内文件复制到 Windows 剪贴板，右键快捷操作 |
+| [v1.7.38](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.38) | ZIPX（XZ）丢目录时部分取回完整成员 |
+| [v1.7.37](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.37) | 多帧 Zstandard ZIP 部分取回 |
+| [v1.7.36](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.36) | 单帧 Zstandard ZIP 部分取回 |
 
-[查看全部历史版本 →](https://github.com/Longyuyeee/long_Decompress/releases)
+[查看全部版本](https://github.com/Longyuyeee/long_Decompress/releases)
