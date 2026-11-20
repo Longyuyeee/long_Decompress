@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import type { ZipPasswordEncoding } from '@/types/zipPassword'
 import { ref, computed } from 'vue'
 import type { BatchConfigPatch } from '@/types/batchConfig'
+import type { BrowserCompressionOrigin, BrowserReturnRequest } from '@/types/fileBrowser'
 import { supportsNativePassword, supportsFilenameEncryption, supportsArchiveSplit, type CompressionFormatId } from '@/utils/compressionFormat'
 import type { CompressionAnalysisResult } from '@/composables/useTauriCommands'
 import type { VideoCompressionPlan, VideoCompressionSettings } from '@/types/video'
@@ -68,6 +69,7 @@ export interface CompressionGroup {
   outputPath?: string
   taskId?: string
   draftPasswordRequired?: boolean
+  browserOrigin?: BrowserCompressionOrigin
 }
 
 export interface CompressionTask {
@@ -152,6 +154,8 @@ export interface VideoCandidateRejection {
 export const useCompressionStore = defineStore('compression', () => {
   const selectedFiles = ref<FileObject[]>([])
   const groups = ref<CompressionGroup[]>([])
+  const browserReturnRequest = ref<BrowserReturnRequest>()
+  const isCompressing = ref(false)
   const globalSettings = ref<CompressionOptions>({
     format: 'zip',
     level: 6,
@@ -607,7 +611,7 @@ export const useCompressionStore = defineStore('compression', () => {
         filename:name,password:'',encryptFilenames:false,deleteAfter:false,splitArchive:preset==='split'} })
   }
 
-  const addQuickPack = (files: FileObject[], name: string, outputPath: string, format: 'zip' | '7z' = 'zip') => {
+  const addQuickPack = (files: FileObject[], name: string, outputPath: string, format: 'zip' | '7z' = 'zip', browserOrigin?: BrowserCompressionOrigin) => {
     const id = `quick-pack-${Date.now()}-${groups.value.length}`
     groups.value.push({
       id,
@@ -616,6 +620,7 @@ export const useCompressionStore = defineStore('compression', () => {
       themeColor: '#3b82f6',
       expanded: true,
       outputPath,
+      browserOrigin,
       settings: {
         ...cloneSettings(globalSettings.value),
         format, password: '', encryptFilenames: false, splitArchive: false, deleteAfter: false,
@@ -724,6 +729,8 @@ export const useCompressionStore = defineStore('compression', () => {
   return {
     selectedFiles,
     groups,
+    browserReturnRequest,
+    isCompressing,
     globalSettings,
     initializeArchiveDefaults,
     restoreArchiveDefaults,

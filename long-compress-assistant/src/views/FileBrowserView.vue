@@ -7,13 +7,15 @@ import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import { useCompressionStore } from '@/stores/compression'
 import DualPaneFileManager, { type LocalFileEntry } from '@/components/file-manager/DualPaneFileManager.vue'
-import type { ArchivePaneSource } from '@/types/fileBrowser'
+import type { ArchivePaneSource, BrowserCompressionOrigin } from '@/types/fileBrowser'
 
 const reading=useArchiveReadingStore(),readingVisible=ref(false)
 const continueReading=(row:ArchiveReadingRecord)=>{readingVisible.value=false;appStore.openArchiveInBrowser(row.filePath,{focusEntryPath:row.path,entryAction:'read',resumeReading:true,zpaqSnapshot:row.snapshot,zipPasswordEncoding:row.encoding})}
 const router = useRouter()
 const appStore = useAppStore()
 const compressionStore = useCompressionStore()
+const returnRequest = compressionStore.browserReturnRequest
+compressionStore.browserReturnRequest = undefined
 const archiveRequest = ref<ArchivePaneSource>()
 let requestId = 0
 watch(() => appStore.pendingArchiveBrowserPath, path => {
@@ -23,13 +25,12 @@ watch(() => appStore.pendingArchiveBrowserPath, path => {
   archiveRequest.value = { id: ++requestId, path: source, options }
 }, { immediate: true })
 
-const compress = (entries: LocalFileEntry[], destination: string) => {
+const compress = (entries: LocalFileEntry[], destination: string, origin: BrowserCompressionOrigin) => {
   const baseName = entries.length === 1 ? entries[0].name.replace(/\.[^/.]+$/, '') : 'archive'
   compressionStore.addQuickPack(entries.map(entry => ({
     name: entry.name, path: entry.path, size: entry.size, type: entry.isDir ? 'folder' : 'file', isDirectory: entry.isDir,
-  })), baseName || 'archive', destination)
+  })), baseName || 'archive', destination, 'zip', origin)
   void router.push('/compress')
-  appStore.setSuccess(`已将 ${entries.length} 项送入压缩任务，输出目录为另一栏`)
 }
 
 const extract = (paths: string[], destination: string) => {
@@ -39,7 +40,7 @@ const extract = (paths: string[], destination: string) => {
 </script>
 
 <template>
-  <DualPaneFileManager :archive-request="archiveRequest" @compress="compress" @extract="extract"><template #header-actions><button v-if="reading.records.length" class="continue-reading" data-testid="reading-history-open" @click="readingVisible=true"><i class="pi pi-bookmark"/>继续阅读</button></template></DualPaneFileManager>
+  <DualPaneFileManager :archive-request="archiveRequest" :return-request="returnRequest" @compress="compress" @extract="extract"><template #header-actions><button v-if="reading.records.length" class="continue-reading" data-testid="reading-history-open" @click="readingVisible=true"><i class="pi pi-bookmark"/>继续阅读</button></template></DualPaneFileManager>
   <Modal :visible="readingVisible" title="继续上次阅读" icon="pi pi-bookmark" size="lg" :show-footer="false" @update:visible="readingVisible=$event"><div class="reading-shelf" data-testid="file-manager-reading-history"><p>仅保留本机阅读位置与明确所选图片，密码需要时重新填写。</p><article v-for="row in reading.records" :key="row.filePath+String(row.snapshot?.version||'')"><button class="reading-open" data-testid="reading-recent-open" :title="row.filePath" @click="continueReading(row)"><strong>{{ row.filePath.replace(/\\/g,'/').split('/').pop() }}<small v-if="row.snapshot"> · 快照 {{ row.snapshot.version }}</small></strong><span>{{ row.path }}</span><small>{{ row.selected.length?'已选 '+row.selected.length+' 张 · ':'' }}{{ row.scope==='archive'?'整包图片':'当前目录' }}</small></button><button class="reading-remove" aria-label="移除此阅读记录" @click="reading.remove(row)"><i class="pi pi-times"/></button></article><p v-if="!reading.records.length">阅读记录已清空，可以直接打开新的压缩包。</p></div></Modal>
 
 

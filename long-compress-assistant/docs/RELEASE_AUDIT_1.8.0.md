@@ -27,6 +27,6 @@
 
 本次菜单核对验证 Shell 派发与输入参数，压缩/图片/修复引擎沿用已有检查；Windows 11 第一层原生签名部署和完整安装/升级矩阵未重跑。公开包完整经典菜单的入口已在 README 和 Release 说明写明。
 
-八处版本身份统一为 1.8.0，随包扩展为 `long_compress_shell_extension_1_8_0.dll`。README 仍以功能介绍为主，末尾仅保留最近五个正式版本。原 XZ 兼容规划改为 [v1.8.1](ARCHIVE_ROADMAP_1.8.1.md)，尚未开发。
+八处版本身份统一为 1.8.0，随包扩展为 `long_compress_shell_extension_1_8_0.dll`。README 仍以功能介绍为主，末尾仅保留最近五个正式版本。XZ 兼容范围见[后续规划](ARCHIVE_ROADMAP_1.8.2.md)。
 
 本轮结果：新版 DLL 的实际 Shell 检查 1 项通过，五类共 41 次派发通过；八处版本身份、三份包目录、README 五版列表通过，920×620 / 125% / 大字体的两个弹窗通过且截图已查看。首次误选主程序目标的零用例结果未计通过，最终运行的是库中的实际菜单用例。见[检查记录与 DLL 哈希](evidence/release-1.8.0/verified.json)、[实际菜单树和接收参数](evidence/release-1.8.0/classic-menu-tree.json)、[版本身份](evidence/release-1.8.0/release-identity.json)。

@@ -2,6 +2,7 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { open } from '@tauri-apps/api/dialog'
 import DualPaneFileManager from '../DualPaneFileManager.vue'
+import type { FilePanePosition } from '@/types/fileBrowser'
 
 const invoke = vi.fn()
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: (...args: any[]) => invoke(...args) }))
@@ -121,6 +122,23 @@ describe('DualPaneFileManager', () => {
     expect((wrapper.get('[data-testid="file-manager-path-input-right"]').element as HTMLInputElement).value).toBe('D:\\')
     expect(wrapper.text()).toContain('photos.zip')
     expect(wrapper.text()).not.toContain('把压缩包拖到这里')
+    wrapper.unmount()
+  })
+
+  it('restores the source selection and explains a missing published archive', async () => {
+    const position = (path: string, selectedPaths: string[] = []): FilePanePosition => ({
+      path, selectedPaths, history: [path], historyIndex: 0, scrollTop: 0, selectionMode: false,
+    })
+    const wrapper = mount(DualPaneFileManager, { props: {
+      returnRequest: {
+        origin: { source: 'left', left: position('C:\\left', ['C:\\left\\notes.txt']), right: position('D:\\') },
+        outputPath: 'D:/gone.zip',
+      },
+    } })
+    await flushPromises()
+    expect(wrapper.get('[data-entry-path="C:\\\\left\\\\notes.txt"]').classes()).toContain('selected')
+    expect(wrapper.get('[data-testid="file-manager-notice"]').text()).toContain('找不到压缩结果')
+    expect(wrapper.find('[data-entry-path="D:/gone.zip"]').exists()).toBe(false)
     wrapper.unmount()
   })
 

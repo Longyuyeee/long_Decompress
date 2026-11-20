@@ -8,4 +8,4 @@
 4. 移除解压重复运行汇总，两中心批量结果放在成功分类；历史页取消多选与批量重做，保留单条操作。
 5. 统一应用、锁文件及版本独立菜单 DLL 身份，更新产品 README、最近五版和 Release；复用未受影响的检查。
 
-详见[发布说明](RELEASE_NOTES_1.8.0.md)、[核对记录](RELEASE_AUDIT_1.8.0.md)。下一阶段为 [v1.8.1 XZ 多流/合法填充](ARCHIVE_ROADMAP_1.8.1.md)。
+详见[发布说明](RELEASE_NOTES_1.8.0.md)、[核对记录](RELEASE_AUDIT_1.8.0.md)。后续为 [v1.8.1 双栏往返与任务配置](ARCHIVE_ROADMAP_1.8.1.md)和 [v1.8.2 XZ 多流与合法填充](ARCHIVE_ROADMAP_1.8.2.md)。

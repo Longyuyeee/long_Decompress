@@ -5,7 +5,7 @@ import { invoke } from '@tauri-apps/api/tauri'
 import { open } from '@tauri-apps/api/dialog'
 import { listen } from '@tauri-apps/api/event'
 import type { ArchiveReadOptions } from '@/stores/app'
-import type { ArchivePaneSource } from '@/types/fileBrowser'
+import type { ArchivePaneSource, BrowserCompressionOrigin, BrowserReturnRequest, FilePanePosition } from '@/types/fileBrowser'
 import ArchiveBrowserView from '@/views/ArchiveBrowserView.vue'
 import LocalFilePreview from './LocalFilePreview.vue'
 import FilePaneNavigation from './FilePaneNavigation.vue'
@@ -45,13 +45,13 @@ interface PaneState {
   scrollTop: number
 }
 
-const props = defineProps<{ archiveRequest?: ArchivePaneSource }>()
+const props = defineProps<{ archiveRequest?: ArchivePaneSource; returnRequest?: BrowserReturnRequest }>()
 const managerRoot = ref<HTMLElement | null>(null)
 const previewEntry = ref<LocalFileEntry | null>(null)
 let archiveId = 0, unmounted = false, unlistenDrop: (() => void) | undefined
 const emit = defineEmits<{
   openArchive: [path: string]
-  compress: [entries: LocalFileEntry[], destination: string]
+  compress: [entries: LocalFileEntry[], destination: string, origin: BrowserCompressionOrigin]
   extract: [paths: string[], destination: string]
 }>()
 
@@ -158,6 +158,63 @@ const parentPath = (path: string) => {
   if (index < 0) return path
   const parent = normalized.slice(0, index)
   return /^[A-Za-z]:$/.test(parent) ? `${parent}\\` : parent || '/'
+}
+
+const diskList = (pane: PaneState) => managerRoot.value?.querySelector<HTMLElement>(`[data-file-pane="${pane.id}"] > .file-pane-content .file-list`)
+const pathKey = (path: string) => path.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase()
+
+function rememberPanePosition(pane: PaneState): FilePanePosition {
+  return {
+    path: pane.path,
+    selectedPaths: [...pane.selected],
+    history: [...pane.history],
+    historyIndex: pane.historyIndex,
+    scrollTop: diskList(pane)?.scrollTop ?? 0,
+    selectionMode: pane.selectionMode,
+  }
+}
+
+async function restorePanePosition(pane: PaneState, position: FilePanePosition) {
+  if (!await loadPane(pane, position.path, false)) return false
+  const selected = new Set(position.selectedPaths.map(pathKey))
+  pane.selected = new Set(pane.entries.filter(entry => selected.has(pathKey(entry.path))).map(entry => entry.path))
+  pane.history = [...position.history]
+  pane.historyIndex = position.historyIndex
+  pane.selectionMode = position.selectionMode
+  await nextTick()
+  const list = diskList(pane)
+  if (list) list.scrollTop = position.scrollTop
+  return true
+}
+
+async function restoreCompressionOrigin({ origin, outputPath }: BrowserReturnRequest) {
+  activePane.value = origin.source
+  const restored = await Promise.all([restorePanePosition(left, origin.left), restorePanePosition(right, origin.right)])
+  if (unmounted) return
+  if (!outputPath) {
+    if (restored.includes(false)) notice.value = '发起位置有目录无法访问，请检查磁盘或网络连接。'
+    return
+  }
+  const destination = origin.source === 'left' ? right : left
+  const directory = parentPath(outputPath)
+  if (pathKey(destination.path) !== pathKey(directory) && !await loadPane(destination, directory)) {
+    if (!unmounted) notice.value = '无法打开结果所在目录，请检查磁盘或网络连接。'
+    return
+  }
+  if (unmounted) return
+  const output = destination.entries.find(entry => pathKey(entry.path) === pathKey(outputPath))
+  if (!output) {
+    notice.value = '找不到压缩结果，文件可能已被移动或删除。'
+    return
+  }
+  destination.selected = new Set([output.path])
+  activePane.value = destination.id
+  notice.value = `已定位 ${output.name}`
+  await nextTick()
+  const row = Array.from(diskList(destination)?.querySelectorAll<HTMLElement>('[data-entry-path]') ?? [])
+    .find(element => element.dataset.entryPath === output.path)
+  row?.scrollIntoView?.({ block: 'nearest' })
+  row?.focus({ preventScroll: true })
 }
 
 const breadcrumbs = (path: string) => {
@@ -352,9 +409,11 @@ const showProperties = async (pane: PaneState, entry: LocalFileEntry) => {
 
 const compressToOther = (pane: PaneState, entry?: LocalFileEntry) => {
   if (!requireDiskDestination(pane)) return
-  const entries = operationEntries(pane, entry)
-  if (entries.length) emit('compress', entries, otherPane(pane).path)
   context.value = null
+  const destination = otherPane(pane)
+  const entries = operationEntries(pane, entry)
+  if (!entries.length || !pane.path || !destination.path || pane.loading || destination.loading) return
+  emit('compress', entries, destination.path, { source: pane.id, left: rememberPanePosition(left), right: rememberPanePosition(right) })
 }
 
 const extractToOther = (pane: PaneState, entry?: LocalFileEntry) => {
@@ -413,13 +472,18 @@ const handleKeydown = (event: KeyboardEvent) => {
 onMounted(async () => {
   window.addEventListener('pointerdown', handleGlobalPointer)
   window.addEventListener('keydown', handleKeydown)
-  locations.value = await invoke<Location[]>('file_manager_locations')
+  locations.value = await invoke<Location[]>('file_manager_locations').catch(() => [])
   if (unmounted) return
   const defaults = locations.value.filter(item => item.kind === 'drive')
   const first = locations.value.find(item => item.kind === 'home') || defaults[0] || locations.value[0]
   const second = defaults.find(item => item.path !== first?.path) || locations.value.find(item => item.kind === 'known') || first
-  if (first && !left.archive && !left.path) await loadPane(left, first.path)
-  if (second && !right.archive && !right.path) await loadPane(right, second.path)
+  if (props.returnRequest && !props.archiveRequest) {
+    await restoreCompressionOrigin(props.returnRequest)
+  } else {
+    if (first && !left.archive && !left.path) await loadPane(left, first.path)
+    if (second && !right.archive && !right.path) await loadPane(right, second.path)
+  }
+  if (unmounted) return
   if (import.meta.env.MODE !== 'test') {
     const unlisten = await listen<string[]>('tauri://file-drop', event => { const pane=activePaneState(); if (!pane.archive && event.payload[0]) openInPane(pane,event.payload[0]) })
     if (unmounted) unlisten(); else unlistenDrop=unlisten

@@ -5,6 +5,7 @@ import { matchesTaskScope, type TaskScope } from '@/utils/taskScope'
 
 import { useDrawerTransition } from '@/composables/useDrawerTransition'
 import { ref, computed, watch, onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useAppStore } from '@/stores/app'
 import { useCompressionStore, type CompressionGroup, type FileObject } from '@/stores/compression'
 import { useTauriCommands } from '@/composables/useTauriCommands'
@@ -74,7 +75,7 @@ function applySelectedConfiguration(patch: BatchConfigPatch, complete?: (error?:
 const showGlobalSettingsModal = ref(false)
 const rarSupport = ref<{ available: boolean; encoder_path?: string | null; message: string } | null>(null)
 const checkingRarSupport = ref(false)
-const isCompressing = ref(false)
+const { isCompressing } = storeToRefs(compressionStore)
 const showRarResolution = ref(false)
 const installingWinRar = ref(false)
 const rarResolutionMessage = ref('')
@@ -116,9 +117,12 @@ const jobStatuses = computed(() => [...compressionStore.groups, ...compressionSt
 const visibleGroups = computed(() => compressionStore.groups.filter(job => matchesTaskScope(scope.value, taskForJob(job.taskId)?.status)))
 const visibleFiles = computed(() => compressionStore.selectedFiles.filter(job => matchesTaskScope(scope.value, taskForJob(job.taskId)?.status)))
 const selectedSubjects = computed(() => [
-  ...compressionStore.groups.filter(job => selectedRows.value.has(job.id)).map(job => ({ name: job.name, path: getGroupArchivePath(job), format: compressionStore.getEffectiveSettings(job.settings).format })),
-  ...compressionStore.selectedFiles.filter(job => selectedRows.value.has(job.path)).map(job => ({ name: job.name, path: job.path, format: compressionStore.getEffectiveSettings(job.settings).format })),
-])
+  ...compressionStore.groups.filter(job => !job.taskId && selectedRows.value.has(job.id)).map(job => ({ job, path: getGroupArchivePath(job) })),
+  ...compressionStore.selectedFiles.filter(job => !job.taskId && selectedRows.value.has(job.path)).map(job => ({ job, path: job.path })),
+].map(({ job, path }) => {
+  const settings = compressionStore.getEffectiveSettings(job.settings)
+  return { name: job.name, path, format: settings.format, encrypted: !!settings.password || !!job.draftPasswordRequired, split: settings.splitArchive }
+}))
 function changeScope(value: TaskScope) { if (scope.value !== value) selectedRows.value = new Set(); scope.value = value }
 watch(selectableJobIds, (ids, previous) => { if (scope.value !== 'all' && ids.some(id => !previous.includes(id))) scope.value = 'pending' })
 
@@ -952,7 +956,7 @@ const drawerTransition = useDrawerTransition()
                   </div>
                 </div>
 
-                <CompressionExecutionPanel :task="taskForJob(group.taskId)" @retry-prepared="scope = 'pending'" />
+                <CompressionExecutionPanel :task="taskForJob(group.taskId)" :browser-origin="group.browserOrigin" @retry-prepared="scope = 'pending'" />
               </div>
             </div>
           </Transition>
