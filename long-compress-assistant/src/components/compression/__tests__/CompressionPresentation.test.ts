@@ -43,6 +43,9 @@ describe('compression presentation components', () => {
     await wrapper.setProps({ task: { ...base, status: 'completed', stage: 'Finalizing', outputBytes: 2 * 1024 * 1024 } })
     expect(wrapper.text()).toContain('已完成')
     expect(wrapper.text()).toContain('节省 80.00%')
+    expect(wrapper.find('[data-testid="compression-return-to-browser"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="compression-locate-in-browser"]').exists()).toBe(false)
+    expect(wrapper.get('[aria-label="更多结果操作"]').attributes('aria-expanded')).toBe('false')
     for (const status of ['failed', 'cancelled']) {
       await wrapper.setProps({ task: { ...base, status } })
       expect(wrapper.text()).toContain('未生成有效结果')

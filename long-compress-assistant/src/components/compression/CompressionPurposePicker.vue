@@ -2,8 +2,8 @@
 import { computed, ref, watch } from 'vue'
 import { compressionPurposes, compressionPurposePatch, type CompressionPurposeId, type PurposePatch } from '@/utils/compressionPurpose'
 
-const props = withDefaults(defineProps<{ hasPassword?: boolean; allowSplit?: boolean; disabled?: boolean; staged?: boolean }>(), { allowSplit: true })
-const emit = defineEmits<{ apply: [patch: PurposePatch] }>()
+const props = withDefaults(defineProps<{ hasPassword?: boolean; allowSplit?: boolean; disabled?: boolean; staged?: boolean; livePreview?: boolean }>(), { allowSplit: true })
+const emit = defineEmits<{ apply: [patch: PurposePatch]; preview: [patch: PurposePatch | undefined] }>()
 const selected = ref<CompressionPurposeId>()
 const password = ref('')
 const reuse = ref(false)
@@ -11,17 +11,24 @@ const splitMiB = ref('1024')
 const message = ref('')
 const purpose = computed(() => compressionPurposes.find(item => item.id === selected.value))
 const valid = computed(() => selected.value === 'encrypted' ? reuse.value && props.hasPassword || password.value.length > 0
-  : selected.value === 'split' ? Number.isSafeInteger(Number(splitMiB.value)) && Number(splitMiB.value) >= 1 : !!selected.value)
+  : selected.value === 'split' ? Number.isSafeInteger(Number(splitMiB.value) * 1048576) && Number.isSafeInteger(Number(splitMiB.value)) && Number(splitMiB.value) >= 1 : !!selected.value)
+const showPreview = computed(() => purpose.value && (!props.livePreview || selected.value === 'encrypted' || selected.value === 'split'))
 function select(id: CompressionPurposeId) {
+  if (props.livePreview && selected.value === id) return
   selected.value = selected.value === id ? undefined : id
   password.value = ''; reuse.value = props.hasPassword; message.value = ''
 }
 watch(() => props.hasPassword, has => { if (!has) reuse.value = false })
-watch(() => props.disabled, disabled => { if (disabled) { selected.value = undefined; password.value = '' } })
+watch(() => props.disabled, disabled => { if (disabled && !props.livePreview) { selected.value = undefined; password.value = '' } })
+function buildPatch(id: CompressionPurposeId) {
+  return compressionPurposePatch(id, { password: reuse.value ? undefined : password.value, reusePassword: reuse.value && props.hasPassword, splitMiB: Number(splitMiB.value) })
+}
+watch([selected, password, reuse, splitMiB], () => {
+  if (props.livePreview && selected.value) emit('preview', valid.value ? buildPatch(selected.value) : undefined)
+})
 function apply() {
   if (!selected.value || !valid.value || props.disabled) return
-  const patch = compressionPurposePatch(selected.value, { password: reuse.value ? undefined : password.value, reusePassword: reuse.value && props.hasPassword, splitMiB: Number(splitMiB.value) })
-  emit('apply', patch)
+  emit('apply', buildPatch(selected.value))
   message.value = `${props.staged ? '已填入，确认弹窗后生效' : '已应用，可继续微调'} · ${purpose.value!.parameters}${selected.value === 'split' ? ` · ${splitMiB.value} MiB` : ''}`
   selected.value = undefined; password.value = ''
 }
@@ -29,13 +36,13 @@ function apply() {
 
 <template>
   <section class="purpose-picker" data-testid="purpose-picker" aria-label="按用途快捷配置">
-    <div class="purpose-heading"><span><i class="pi pi-sparkles" aria-hidden="true"></i> 用途方案</span><span class="text-muted">选择后确认应用</span></div>
+    <div class="purpose-heading"><span><i class="pi pi-sparkles" aria-hidden="true"></i> 用途方案</span><span v-if="!livePreview" class="text-muted">选择后确认应用</span></div>
     <div class="purpose-choices">
       <button v-for="item in compressionPurposes" :key="item.id" type="button" :data-testid="`purpose-${item.id}`" :disabled="disabled || item.id === 'split' && !allowSplit" :aria-pressed="selected === item.id" :title="item.parameters" @click="select(item.id)">
         <i :class="item.icon" aria-hidden="true"></i><span>{{ item.name }}</span>
       </button>
     </div>
-    <div v-if="purpose" class="purpose-preview" data-testid="purpose-preview">
+    <div v-if="purpose && showPreview" class="purpose-preview" data-testid="purpose-preview">
       <p class="font-semibold text-content">{{ purpose.parameters }}</p>
       <p class="text-muted">{{ purpose.hint }}</p>
       <p v-if="selected === 'share' || selected === 'split'" class="text-muted">关闭不适用的文件名加密；{{ selected === 'share' ? '密码、分卷大小与卷型保留。' : '已有密码保留。' }}</p>
@@ -46,7 +53,7 @@ function apply() {
         <p class="text-muted">分卷保留{{ staged ? '各自设置；填写时会统一新包密码。' : '当前设置。' }}</p>
       </div>
       <label v-if="selected === 'split'" class="purpose-field">每卷大小（MiB）<input v-model="splitMiB" data-testid="purpose-split-size" type="number" min="1" step="1" inputmode="numeric" /><span v-if="!valid" class="text-amber-600">请输入大于等于 1 的整数。</span></label>
-      <div class="purpose-footer"><span class="text-muted">名称、目录和其他参数保留{{ staged ? '各自设置' : '原值' }}；可继续微调。</span><button type="button" class="purpose-apply" data-testid="purpose-apply" :disabled="!valid || disabled" @click="apply">{{ staged ? '填入方案' : '应用方案' }}</button></div>
+      <div v-if="!livePreview" class="purpose-footer"><span class="text-muted">名称、目录和其他参数保留{{ staged ? '各自设置' : '原值' }}；可继续微调。</span><button type="button" class="purpose-apply" data-testid="purpose-apply" :disabled="!valid || disabled" @click="apply">{{ staged ? '填入方案' : '应用方案' }}</button></div>
     </div>
     <p v-if="message" class="purpose-message text-primary" role="status" data-testid="purpose-message">{{ message }}</p>
   </section>

@@ -124,10 +124,11 @@ async function generateManifest() {
 <template>
   <div class="min-w-0 space-y-2" data-testid="result-actions">
     <p v-if="showPath" class="select-text break-words text-xs leading-relaxed text-muted [overflow-wrap:anywhere]" :title="path">{{ path || '未记录输出位置' }}</p>
-    <div class="result-toolbar flex items-center gap-2" :class="compact ? 'flex-nowrap' : 'flex-wrap'" @keydown.enter.stop>
+    <div class="result-toolbar flex items-center gap-2" :class="compact && !$slots.leading ? 'flex-nowrap' : 'flex-wrap'" @keydown.enter.stop>
+      <slot name="leading" />
       <template v-if="available">
       <ZpaqRetrievalResult v-if="retrieval" :path="path" :selection="retrieval"/>
-      <button type="button" class="result-button bg-primary text-white hover:brightness-110" :disabled="busy || !path.trim()" @click.stop="openOutput"><i class="pi pi-folder-open" aria-hidden="true"></i>{{ busy && !preparingChecksum ? '正在打开…' : label }}</button>
+      <button type="button" class="result-button" :class="$slots.leading ? 'border border-subtle text-content hover:bg-input' : 'bg-primary text-white hover:brightness-110'" :disabled="busy || !path.trim()" @click.stop="openOutput"><i class="pi pi-folder-open" aria-hidden="true"></i>{{ busy && !preparingChecksum ? '正在打开…' : label }}</button>
       </template>
       <slot name="primary" />
       <template v-if="available">

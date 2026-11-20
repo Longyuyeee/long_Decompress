@@ -3,8 +3,10 @@ import { prepareCompressionRetryDraft } from '@/utils/compressionRetry'
 import { useCompressionStore } from '@/stores/compression'
 import TaskFailureHint from '@/components/tasks/TaskFailureHint.vue'
 import { computed, ref, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAppStore } from '@/stores/app'
 import type { Task } from '@/stores/task'
+import type { BrowserCompressionOrigin } from '@/types/fileBrowser'
 import { formatFileSize } from '@/utils'
 import ArchiveOutputSummary from './ArchiveOutputSummary.vue'
 import ResultActions from '@/components/tasks/ResultActions.vue'
@@ -15,10 +17,19 @@ import {
   emptyCompressionLogTranslationKey,
 } from '@/utils/compressionTaskPresentation'
 
-const props = defineProps<{ task?: Task }>()
+const props = defineProps<{ task?: Task; browserOrigin?: BrowserCompressionOrigin }>()
 const emit = defineEmits<{ 'retry-prepared': [] }>()
 const appStore = useAppStore()
 const compression = useCompressionStore()
+const router = useRouter()
+const resultPath = computed(() => props.task?.status === 'completed'
+  ? props.task.archiveOutput?.primaryPath || props.task.outputPath : undefined)
+
+function returnToBrowser(outputPath?: string) {
+  if (!props.browserOrigin) return
+  compression.browserReturnRequest = { origin: props.browserOrigin, outputPath }
+  void router.push('/browser')
+}
 const retryBusy = ref(false), retryError = ref('')
 const retryCreated = computed(()=>compression.groups.some(group=>group.retryOfTaskId===props.task?.id))
 async function prepareRetry() {
@@ -55,8 +66,21 @@ const savedRatio = computed(() => liveRatio.value === undefined ? undefined : 10
       <button v-if="task?.executionConfig?.kind==='archive-compression'" type="button" data-testid="compression-prepare-retry" class="retry-action" :disabled="retryBusy || retryCreated" @click="prepareRetry">{{ retryCreated ? '已创建待处理项，请在配置区确认并启动' : retryBusy ? '正在带入配置…' : '带入配置，创建待处理项' }}</button>
       <p v-if="retryError" role="alert" class="text-red-500">{{ retryError }}</p>
     </TaskFailureHint>
-    <ArchiveOutputSummary v-if="task?.status === 'completed' && task.archiveOutput" :output="task.archiveOutput" />
-    <ResultActions v-else-if="task?.status === 'completed' && task.outputPath" :path="task.outputPath" show-path class="mb-3" />
+    <component
+      :is="task?.archiveOutput ? ArchiveOutputSummary : ResultActions"
+      v-if="resultPath"
+      compact
+      v-bind="task?.archiveOutput ? { output: task.archiveOutput } : { path: resultPath, showPath: true, class: 'mb-3' }"
+    >
+      <template v-if="browserOrigin" #leading>
+        <button type="button" class="browser-result-button" data-testid="compression-locate-in-browser" @click="returnToBrowser(resultPath)">
+          <i class="pi pi-search" aria-hidden="true"></i>在双栏定位结果
+        </button>
+      </template>
+    </component>
+    <button v-if="browserOrigin" type="button" class="browser-return-button" data-testid="compression-return-to-browser" @click="returnToBrowser()">
+      <i class="pi pi-arrow-left" aria-hidden="true"></i>返回发起位置
+    </button>
     <TaskExecutionOverview
       :stage="appStore.t(compressionStageTranslationKey(task))"
       :status="task?.status" :progress="task?.progress" :speed="task?.speed" :current-file="task?.currentFile"
@@ -103,6 +127,9 @@ const savedRatio = computed(() => liveRatio.value === undefined ? undefined : 10
 </template>
 
 <style scoped>
+.browser-result-button, .browser-return-button { display:inline-flex; align-items:center; gap:.4rem; border-radius:.6rem; padding:.45rem .65rem; font-size:.75rem; font-weight:700; }
+.browser-result-button { background:var(--dynamic-accent); color:var(--accent-ink); }
+.browser-return-button { color:var(--dynamic-accent); margin-bottom:.65rem; padding-inline:.1rem; }
 .retry-action { align-self:flex-start; border:1px solid var(--border-subtle); color:var(--dynamic-accent); border-radius:.6rem; padding:.45rem .65rem; font-weight:600; }
 .retry-action:disabled { opacity:.6; cursor:default; }
 .detail-heading {

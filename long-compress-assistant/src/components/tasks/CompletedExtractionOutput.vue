@@ -12,6 +12,6 @@ withDefaults(defineProps<{ path: string; retrieval?: import('@/types/zpaqRetriev
         <p class="mt-1 select-text break-words text-xs leading-relaxed text-muted [overflow-wrap:anywhere]">{{ path || '未记录输出目录' }}</p>
       </div>
     </div>
-    <ResultActions :path="path" :retrieval="retrieval" directory />
+    <ResultActions :path="path" :retrieval="retrieval" directory compact />
   </section>
 </template>
