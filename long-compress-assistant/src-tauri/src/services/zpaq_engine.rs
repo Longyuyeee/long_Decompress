@@ -389,6 +389,41 @@ mod tests {
         let cancelled = flag(); cancelled.store(true, std::sync::atomic::Ordering::SeqCst);
         assert!(browse(&fixture("journal.zpaq"), None, cancelled).await.is_err());
     }
+    #[tokio::test]
+    async fn catalog_id_matches_previous_hash_for_real_snapshots() -> Result<()> {
+        use sha2::{Digest, Sha256};
+
+        let fixtures = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../tests/fixtures/archives/zpaq-snapshots-1530");
+        let manifest: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(fixtures.join("manifest.json"))?)?;
+        for case in manifest["cases"].as_array().unwrap() {
+            let source = fixtures.join(case["file"].as_str().unwrap());
+            let password = case["encrypted"]
+                .as_bool()
+                .unwrap()
+                .then(|| manifest["password"].as_str().unwrap());
+            let snapshot: ZpaqSnapshot = serde_json::from_value(case["snapshots"][0].clone())?;
+            let stamp = catalog_source_stamp(&source)?;
+            let bytes = run_catalog_mode(
+                &source, password, None, false, &[], flag(), None, Some(&snapshot), true, false,
+            )
+            .await?;
+            let text = String::from_utf8(bytes)?.replace("\r\n", "\n");
+            let json = text.split_once("\nLONG_ZPAQ_JSON\n").unwrap().1;
+            let directory: Directory = serde_json::from_str(json)?;
+            let mut digest = Sha256::new();
+            digest.update(stamp);
+            digest.update(serde_json::to_vec(&directory)?);
+            let expected = format!("{:x}", digest.finalize());
+            assert_eq!(
+                catalog(&source, password, &snapshot, flag()).await?.id,
+                expected
+            );
+        }
+        Ok(())
+    }
+
     #[test]
     fn transport_preserves_unicode_and_newlines_without_argv() {
         let p = "中文 密码\n-钥匙";
@@ -416,18 +451,34 @@ pub(crate) fn catalog_source_stamp(path:&Path)->Result<Vec<u8>> {
     let members=super::split_archive_detector::SplitArchiveDetector::detect_split_archive(&first)?.map(|g|g.parts).unwrap_or_else(||vec![first]);
     let mut stamp=Vec::new();for member in members {let metadata=std::fs::metadata(member)?;stamp.extend_from_slice(&metadata.len().to_le_bytes());stamp.extend_from_slice(format!("{:?};",metadata.modified()?).as_bytes());}Ok(stamp)
 }
+fn revision_from_json(stamp: &[u8], value: &impl serde::Serialize) -> Result<String> {
+    use sha2::{Digest, Sha256};
+    use std::io::{BufWriter, Write};
+
+    let mut digest = Sha256::new();
+    digest.update(stamp);
+    {
+        let mut writer = BufWriter::with_capacity(64 * 1024, &mut digest);
+        serde_json::to_writer(&mut writer, value)?;
+        writer.flush()?;
+    }
+    Ok(format!("{:x}", digest.finalize()))
+}
+
 pub(crate) async fn catalog(path: &Path,password: Option<&str>,snapshot: &ZpaqSnapshot,flag: Arc<AtomicBool>) -> Result<Catalog> {
-    use sha2::{Digest,Sha256};
     let stamp=catalog_source_stamp(path)?;
     let bytes=run_catalog_mode(path,password,None,false,&[],flag,None,Some(snapshot),true,false).await?;
-    let text=String::from_utf8(bytes)?.replace("\r\n","\n");
-    let directory:Directory=serde_json::from_str(text.split_once("\nLONG_ZPAQ_JSON\n").context("缺少ZPAQ目录响应")?.1)?;
+    let directory: Directory = {
+        let text = String::from_utf8(bytes)?.replace("\r\n", "\n");
+        let json = text.split_once("\nLONG_ZPAQ_JSON\n").context("缺少ZPAQ目录响应")?.1;
+        serde_json::from_str(json)?
+    };
     anyhow::ensure!(directory.kind=="journaling","仅支持完整日志式ZPAQ快照对比");
     let history=directory.history.clone().context("此归档没有历史快照")?;
     anyhow::ensure!(history.selected==*snapshot,"所选快照已变化，请重新对比");
     for e in &directory.entries { super::archive_entry_open::normalize_safe_entry_path(e.path.trim_end_matches('/'))?;anyhow::ensure!(e.size>=0&&e.content_ref.as_ref().is_some_and(|id|id.len()==64),"ZPAQ目录缺少完整内容引用，请修复引擎或重新获取归档"); }
     anyhow::ensure!(stamp==catalog_source_stamp(path)?,"读取期间来源已变化，请重新对比");
-    let mut digest=Sha256::new();digest.update(stamp);digest.update(serde_json::to_vec(&directory)?);let id=format!("{:x}",digest.finalize());
+    let id = revision_from_json(&stamp, &directory)?;
     Ok(Catalog{id,entries:directory.entries,history})
 }
 

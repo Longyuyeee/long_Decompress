@@ -1,4 +1,5 @@
 use super::*;
+use sha2::{Digest, Sha256};
 use std::fs;
 fn root()->PathBuf{PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("..")}
 fn flag()->Arc<AtomicBool>{Arc::new(AtomicBool::new(false))}
@@ -30,4 +31,31 @@ async fn zpaq163_password_directory_tail_missing_member_and_cancel_do_not_infer_
     let native=tempfile::tempdir().unwrap();let(group,members)=copy(native.path(),&m["cases"][3]);fs::remove_file(&members[1]).unwrap();assert!(diagnose(&group,Some(m["password"].as_str().unwrap()),None,None,flag()).await.is_err());
     let plain=tempfile::tempdir().unwrap();let(file,_)=copy(plain.path(),&m["cases"][0]);let stamp=catalog_source_stamp(&file).unwrap();let bytes=fs::read(&file).unwrap();fs::write(&file,&bytes[..bytes.len()-30]).unwrap();assert!(diagnose(&file,None,None,Some(&stamp),flag()).await.is_err());let r=super::super::super::archive_diagnostics::diagnose_archive_at(&file,None,None,flag(),None).await.unwrap();assert!(r.zpaq_blocks.is_none());assert_ne!(r.status,"healthy");
     let tail=root().join("tests/fixtures/archives/zpaq-interrupted-162/plain-single/backup.zpaq");let r=super::super::super::archive_diagnostics::diagnose_archive_at(&tail,None,None,flag(),None).await.unwrap();assert_eq!(r.status,"interrupted_tail");assert!(r.zpaq_blocks.is_none());assert!(!r.integrity_tested);
+}
+
+#[tokio::test]
+async fn zpaq163_report_and_revision_match_the_previous_encoding() -> Result<()> {
+    let manifest = manifest();
+    let temp = tempfile::tempdir()?;
+    let (source, _) = copy(temp.path(), &manifest["cases"][0]);
+    let stamp = catalog_source_stamp(&source)?;
+    let bytes = run_catalog_mode(&source, None, None, false, &[], flag(), None, None, false, true)
+        .await?;
+    let text = String::from_utf8(bytes)?.replace("\r\n", "\n");
+    let mut expected: Report = serde_json::from_str(
+        text.split_once("\nLONG_ZPAQ_BLOCKS\n")
+            .context("缺少 ZPAQ 数据块诊断响应")?
+            .1,
+    )?;
+    for entry in &mut expected.entries {
+        entry.path = crate::services::archive_entry_open::normalize_safe_entry_path(&entry.path)?;
+    }
+    let mut digest = Sha256::new();
+    digest.update(stamp);
+    digest.update(serde_json::to_vec(&expected)?);
+    expected.revision = format!("{:x}", digest.finalize());
+
+    let result = diagnose(&source, None, None, None, flag()).await?;
+    assert_eq!(serde_json::to_value(result)?, serde_json::to_value(expected)?);
+    Ok(())
 }

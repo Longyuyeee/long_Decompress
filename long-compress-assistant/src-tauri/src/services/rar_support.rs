@@ -759,10 +759,11 @@ impl RarSupportService {
             return false;
         }
 
-        let Ok(data) = std::fs::read(file_path) else {
-            return false;
-        };
-        if data.len() < 7 {
+        let mut data = [0; 7];
+        if std::fs::File::open(file_path)
+            .and_then(|mut file| std::io::Read::read_exact(&mut file, &mut data))
+            .is_err()
+        {
             return false;
         }
 
@@ -872,8 +873,13 @@ impl RarSupportService {
 
         // 尝试读取文件头（简化检测）
         // 真正的RAR文件以"Rar!"或"RE~"开头
-        match tokio::fs::read(file_path).await {
-            Ok(data) if data.len() >= 7 => {
+        let mut data = [0; 7];
+        let read = match tokio::fs::File::open(file_path).await {
+            Ok(mut file) => file.read_exact(&mut data).await,
+            Err(error) => Err(error),
+        };
+        match read {
+            Ok(_) => {
                 // 检查RAR文件签名
                 let is_rar = (data[0] == b'R' && data[1] == b'a' && data[2] == b'r' && data[3] == b'!' && data[4] == 0x1A && data[5] == 0x07 && data[6] == 0x00) ||
                              (data[0] == b'R' && data[1] == b'E' && data[2] == b'~' && data[3] == b'^' && data[4] == 0x1A && data[5] == 0x07 && data[6] == 0x00);
@@ -1066,9 +1072,22 @@ mod tests {
                     &options, Arc::new(AtomicBool::new(false)),
                     Arc::new(move |bytes, file| captured.lock().unwrap().push((bytes, file))),
                 ).await.unwrap();
-                let expected = case["expected"].as_array().unwrap().iter()
-                    .filter(|e| !selected || e["path"].as_str().unwrap().ends_with(".txt"))
-                    .map(|e| e["bytes"].as_u64().unwrap()).sum::<u64>();
+                use sha2::{Digest, Sha256};
+                let mut expected = 0;
+                for entry in case["expected"].as_array().unwrap() {
+                    let relative = entry["path"].as_str().unwrap();
+                    if selected && !relative.ends_with(".txt") {
+                        continue;
+                    }
+                    expected += entry["bytes"].as_u64().unwrap();
+                    let bytes = std::fs::read(temp.path().join(relative)).unwrap();
+                    assert_eq!(
+                        format!("{:x}", Sha256::digest(&bytes)),
+                        entry["sha256"].as_str().unwrap(),
+                        "{}: {relative}",
+                        case["name"],
+                    );
+                }
                 let events = events.lock().unwrap();
                 assert_eq!(events.last().unwrap().0, expected, "{} selected={selected}", case["name"]);
                 assert!(events.windows(2).all(|p| p[0].0 <= p[1].0));
@@ -1213,6 +1232,26 @@ mod tests {
         assert!(matches!(post_validation_error, RarError::ExtractionFailed(_)));
         assert!(matches!(post_validation_bad_password, RarError::ExtractionFailed(_)));
         assert!(matches!(unencrypted_error, RarError::ExtractionFailed(_)));
+    }
+
+    #[tokio::test]
+    async fn rar_cbr_signature_checks_preserve_accepted_headers_and_reject_short_reads() {
+        let temp = tempfile::tempdir().expect("temp dir");
+        let service = RarSupportService::new();
+        for (name, bytes, sync, asynchronous) in [
+            ("classic.RAR", &b"Rar!\x1a\x07\x00"[..], true, true),
+            ("classic.cbr", &b"RE~^\x1a\x07\x00"[..], true, true),
+            ("modern.rar", &b"Rar!\x1a\x07\x01\x00"[..], true, false),
+            ("short.rar", &b"Rar!\x1a\x07"[..], false, false),
+            ("empty.rar", &b""[..], false, false),
+            ("invalid.rar", &b"Rar!\x1a\x07\x04"[..], false, false),
+            ("invalid.txt", &b"Rar!\x1a\x07\x00"[..], false, false),
+        ] {
+            let path = temp.path().join(name);
+            std::fs::write(&path, bytes).expect("signature fixture");
+            assert_eq!(RarSupportService::is_valid_rar_file_sync(&path), sync, "{name}");
+            assert_eq!(service.is_valid_rar_file(&path).await, asynchronous, "{name}");
+        }
     }
 
     #[test]

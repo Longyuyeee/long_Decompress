@@ -1,7 +1,18 @@
 import {createPinia,setActivePinia} from 'pinia'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { DOMWrapper, flushPromises, mount } from '@vue/test-utils'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { DOMWrapper, flushPromises, mount as mountComponent } from '@vue/test-utils'
 import ArchiveBrowserView from '../ArchiveBrowserView.vue'
+
+const mounted = new Set<ReturnType<typeof mountComponent>>()
+const mount: typeof mountComponent = (...args) => {
+  const wrapper = mountComponent(...args)
+  mounted.add(wrapper)
+  return wrapper
+}
+afterEach(() => {
+  for (const wrapper of mounted) if (wrapper.exists()) wrapper.unmount()
+  mounted.clear()
+})
 
 const mocks = vi.hoisted(() => ({
   invoke: vi.fn(),
@@ -329,9 +340,9 @@ describe('ArchiveBrowserView', () => {
   beforeEach(() => {
     localStorage.clear();setActivePinia(createPinia())
 
-    vi.clearAllMocks()
-    mocks.invoke.mockReset(); mocks.invoke.mockResolvedValue(undefined)
-    mocks.capabilityRefresh.mockReset(); mocks.capabilityRefresh.mockResolvedValue(undefined)
+    vi.resetAllMocks()
+    mocks.invoke.mockResolvedValue(undefined)
+    mocks.capabilityRefresh.mockResolvedValue(undefined)
     mocks.pendingPath=''; mocks.readOptions={}
     mocks.currentError=null
     mocks.setError.mockImplementation(message=>{mocks.currentError=message})
@@ -588,7 +599,7 @@ describe('ArchiveBrowserView', () => {
     mocks.browseArchive.mockResolvedValueOnce({format:'EGG',revision:'c'.repeat(64),totalFiles:2,totalDirectories:0,totalUncompressedSize:30,totalCompressedSize:20,encrypted:false,entries:[{path:'readme.txt',name:'readme.txt',size:10,isDir:false},{path:'cover.png',name:'cover.png',size:20,isDir:false}]})
     mocks.previewArchiveText.mockResolvedValueOnce({entryPath:'readme.txt',content:'EGG 包内说明',encoding:'UTF-8',byteSize:10,totalSize:10,truncated:false,lineCount:1})
     const w=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:1612,path:'C:/read.egg'}},global:{stubs:{Teleport:true,RouterLink:true}}});await flushPromises()
-    expect(w.get('[data-entry-path="cover.png"] .preview-trigger').attributes('disabled')).toBeUndefined()
+    expect(w.get('[data-entry-path="cover.png"] [data-testid="file-manager-preview"]').attributes('disabled')).toBeUndefined()
     await w.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises();expect(w.get('[data-testid="archive-text-preview"]').text()).toContain('EGG 包内说明');expect(w.get('.preview-meta').text()).toContain('完整显示')
     expect(mocks.previewArchiveText).toHaveBeenCalledWith('C:/read.egg','readme.txt','',undefined,undefined,expect.objectContaining({sourceRevision:'c'.repeat(64),previewId:expect.stringMatching(/^egg-text-/)}));await w.get('.preview-close').trigger('click');await w.get('[data-entry-path="cover.png"]').trigger('dblclick');await flushPromises();expect(mocks.previewArchiveImage).toHaveBeenCalledWith('C:/read.egg','cover.png','',undefined,undefined,expect.objectContaining({sourceRevision:'c'.repeat(64),previewId:expect.stringMatching(/^egg-image-/)}));w.unmount()
   })
@@ -644,7 +655,7 @@ describe('ArchiveBrowserView', () => {
     ]})
     const wrapper=mount(ArchiveBrowserView,{props:{embedded:true,source:{id:169,path:'C:/sample.alz'}},global:{stubs:{Teleport:true,RouterLink:true}}})
     await flushPromises()
-    expect(wrapper.get('[data-entry-path="image.png"] .preview-trigger').attributes('disabled')).toBeUndefined()
+    expect(wrapper.get('[data-entry-path="image.png"] [data-testid="file-manager-preview"]').attributes('disabled')).toBeUndefined()
     await wrapper.get('[data-entry-path="readme.txt"]').trigger('dblclick');await flushPromises()
     expect(mocks.previewArchiveText).toHaveBeenCalledWith('C:/sample.alz','readme.txt','',undefined,undefined,expect.objectContaining({previewId:expect.stringContaining('alz-text-'),sourceRevision:'a'.repeat(64)}))
     expect(wrapper.get('[data-testid="archive-text-preview"]').text()).toContain('你好，归档文本')
@@ -717,7 +728,7 @@ describe('ArchiveBrowserView', () => {
       selectedEntries: ['docs/readme.txt'],
       conflictPolicy: 'rename',
     }))
-    expect(mocks.setSuccess).toHaveBeenCalledWith('已解压 1 个所选文件')
+    expect(mocks.setSuccess).toHaveBeenCalledWith('已取回所选内容')
   })
 
   it('shows unknown Z expanded size without treating the single file as empty', async () => {
@@ -995,7 +1006,7 @@ describe('ArchiveBrowserView', () => {
 
   it('keeps preview disabled when the archive route cannot prove bounded reading', async () => {
     mocks.browseArchive.mockResolvedValueOnce({
-      format: '7Z', totalFiles: 1, totalDirectories: 0,
+      format: 'RAR', totalFiles: 1, totalDirectories: 0,
       totalUncompressedSize: 20, totalCompressedSize: 12, encrypted: false,
       entries: [{ path: 'image.png', name: 'image.png', size: 20, compressedSize: 12, modified: null, crc: null, encrypted: false, isDir: false }],
     })
@@ -1174,10 +1185,14 @@ describe('ArchiveBrowserView', () => {
     expect(mocks.browseArchive).toHaveBeenCalledWith('C:/right.zip','right-key',expect.any(String))
     expect(left.text()).not.toContain('压缩包浏览中心')
     expect(left.get('.archive-options').isVisible()).toBe(false)
-    expect(left.get('footer').text()).toContain('已选择 0')
-    await left.get('[data-entry-path="image.png"] .browser-checkbox').trigger('click')
-    expect(right.get('footer').text()).toContain('已选择 0')
-    await left.get('footer .browser-primary').trigger('click');await flushPromises()
+    expect(left.findAll('.file-row.selected')).toHaveLength(0)
+    const image = left.get('[data-entry-path="image.png"]')
+    await image.trigger('click')
+    expect(left.get('footer').text()).toContain('已选择 1 项')
+    expect(right.findAll('.file-row.selected')).toHaveLength(0)
+    await image.trigger('contextmenu')
+    await left.get('[data-testid="archive-context-extract-current"]').trigger('click')
+    await flushPromises()
     expect(mocks.decompressFile).toHaveBeenCalledWith('C:/left.zip',expect.objectContaining({outputPath:'D:/target',password:'left-key',selectedEntries:['image.png']}))
     expect(left.emitted('extracted')?.[0]).toEqual(['D:/target'])
     left.unmount();right.unmount()

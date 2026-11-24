@@ -1,5 +1,5 @@
 use std::fs;
-use std::io::{Cursor, Read, Seek, SeekFrom};
+use std::io::{BufWriter, Cursor, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -637,12 +637,9 @@ fn apply_metadata_policy(
         })?;
     image.set_exif(expected.exif.clone().map(img_parts::Bytes::from));
     image.set_icc_profile(expected.icc.clone().map(img_parts::Bytes::from));
-    let mut output = Vec::new();
-    image
-        .encoder()
-        .write_to(&mut output)
-        .map_err(|error| ImageCompressionError::Encoder(error.to_string()))?;
-    fs::write(path, output)?;
+    let mut output = BufWriter::new(fs::File::create(path)?);
+    image.encoder().write_to(&mut output)?;
+    output.flush()?;
     Ok(expected)
 }
 
@@ -868,6 +865,41 @@ mod tests {
             max_dimensions: None,
             preserve_metadata: true,
             only_if_smaller: false,
+        }
+    }
+
+    #[test]
+    fn streamed_metadata_rewrite_matches_buffered_bytes() {
+        let temp = tempfile::tempdir().unwrap();
+        let expected_exif = build_orientation_exif(3);
+
+        for name in [
+            "exif-orientation.jpg",
+            "transparent.png",
+            "alpha-small.webp",
+        ] {
+            let source = fixture(name);
+            let staged = temp.path().join(name);
+            fs::copy(&source, &staged).unwrap();
+            let original_metadata = read_metadata(&source, true).unwrap();
+            let expected_metadata = MetadataPayload {
+                exif: Some(expected_exif.clone()),
+                icc: None,
+            };
+            assert_ne!(original_metadata, expected_metadata, "{name}");
+
+            let mut image =
+                DynImage::from_bytes(img_parts::Bytes::from(fs::read(&source).unwrap()))
+                    .unwrap()
+                    .unwrap();
+            image.set_exif(Some(img_parts::Bytes::from(expected_exif.clone())));
+            image.set_icc_profile(None);
+            let mut buffered = Vec::new();
+            image.encoder().write_to(&mut buffered).unwrap();
+
+            let actual = apply_metadata_policy(&staged, &original_metadata, false, 3).unwrap();
+            assert_eq!(actual, expected_metadata, "{name}");
+            assert_eq!(fs::read(&staged).unwrap(), buffered, "{name}");
         }
     }
 

@@ -1,7 +1,6 @@
 //! Read-only block verification for one explicitly identified journaling view.
 use super::*;
 use serde::Serialize;
-use sha2::{Digest,Sha256};
 
 #[derive(Debug,Clone,Serialize,Deserialize,PartialEq,Eq)]
 #[serde(rename_all="lowercase")]
@@ -26,13 +25,19 @@ pub async fn diagnose(path:&Path,password:Option<&str>,snapshot:Option<&ZpaqSnap
     let stamp=catalog_source_stamp(path)?;
     anyhow::ensure!(expected_stamp.is_none_or(|expected|expected==stamp.as_slice()),"诊断期间来源已变化，请重新检查；未沿用旧目录结论");
     let bytes=run_catalog_mode(path,password,None,false,&[],flag.clone(),None,snapshot,false,true).await?;
-    let text=String::from_utf8(bytes)?.replace("\r\n","\n");
-    let mut report:Report=serde_json::from_str(text.split_once("\nLONG_ZPAQ_BLOCKS\n").context("缺少 ZPAQ 数据块诊断响应")?.1)?;
+    let mut report: Report = {
+        let text = String::from_utf8(bytes)?.replace("\r\n", "\n");
+        let json = text
+            .split_once("\nLONG_ZPAQ_BLOCKS\n")
+            .context("缺少 ZPAQ 数据块诊断响应")?
+            .1;
+        serde_json::from_str(json)?
+    };
     anyhow::ensure!(snapshot.is_none_or(|s|*s==report.snapshot),"所选快照已变化，请重新检查");
     for entry in &mut report.entries { entry.path=super::super::archive_entry_open::normalize_safe_entry_path(&entry.path)?; }
     anyhow::ensure!(!flag.load(std::sync::atomic::Ordering::Relaxed),"ZPAQ 诊断已取消");
     anyhow::ensure!(stamp==catalog_source_stamp(path)?,"诊断期间来源已变化，请重新检查；未保存混合来源报告");
-    let mut digest=Sha256::new();digest.update(stamp);digest.update(serde_json::to_vec(&report)?);report.revision=format!("{:x}",digest.finalize());
+    report.revision = revision_from_json(&stamp, &report)?;
     Ok(report)
 }
 

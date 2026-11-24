@@ -394,7 +394,12 @@ fn main() {
                                 *service_lock = Some(profile_service);
                                 drop(service_lock);
 
-                                let watch_service = long_compress_assistant::services::watch_folder_service::WatchFolderService::new(pool.clone());
+                                let watch_handle = app.handle();
+                                let watch_service = long_compress_assistant::services::watch_folder_service::WatchFolderService::new(pool.clone(), move || {
+                                    if let Err(error) = watch_handle.emit_all("watch-folder-batches-ready", ()) {
+                                        log::warn!("Unable to notify the application about watch-folder drafts: {error}");
+                                    }
+                                });
                                 if let Err(e) = watch_service.restore_active().await {
                                     eprintln!("Failed to restore task-template watch folders: {}", e);
                                 }

@@ -34,12 +34,59 @@ pub struct CompressionAnalysisResult {
     pub reasons: Vec<String>,
 }
 
-#[derive(Debug)]
-struct SourceFile {
+struct SampleSource {
     path: PathBuf,
     size: u64,
     score: u64,
-    low_value: bool,
+}
+
+#[derive(Default)]
+struct SourceInventory {
+    file_count: usize,
+    total_size: u128,
+    low_value_bytes: u128,
+    low_value_file_count: usize,
+    candidates: Vec<SampleSource>,
+}
+
+impl SourceInventory {
+    fn check_capacity(&self) -> Result<()> {
+        anyhow::ensure!(
+            self.file_count < MAX_ENTRIES,
+            "Compression analysis source contains more than {MAX_ENTRIES} files"
+        );
+        Ok(())
+    }
+
+    fn record(&mut self, path: &Path, size: u64) {
+        self.file_count += 1;
+        self.total_size += u128::from(size);
+        if is_low_value_extension(path) {
+            self.low_value_bytes += u128::from(size);
+            self.low_value_file_count += 1;
+        }
+        if size == 0 {
+            return;
+        }
+
+        let score = path_score(path);
+        // The original stable sort kept discovery order when scores tied.
+        let index = self.candidates.partition_point(|file| file.score <= score);
+        if index == MAX_SAMPLE_FILES {
+            return;
+        }
+        if self.candidates.len() == MAX_SAMPLE_FILES {
+            self.candidates.pop();
+        }
+        self.candidates.insert(
+            index,
+            SampleSource {
+                path: path.to_path_buf(),
+                size,
+                score,
+            },
+        );
+    }
 }
 
 fn check_cancelled(cancelled: &AtomicBool) -> Result<()> {
@@ -90,8 +137,8 @@ fn is_low_value_extension(path: &Path) -> bool {
     )
 }
 
-fn collect_sources(paths: &[String], cancelled: &AtomicBool) -> Result<Vec<SourceFile>> {
-    let mut files = Vec::new();
+fn collect_sources(paths: &[String], cancelled: &AtomicBool) -> Result<SourceInventory> {
+    let mut inventory = SourceInventory::default();
     for source in paths {
         check_cancelled(cancelled)?;
         let source = Path::new(source);
@@ -101,15 +148,8 @@ fn collect_sources(paths: &[String], cancelled: &AtomicBool) -> Result<Vec<Sourc
             continue;
         }
         if metadata.is_file() {
-            if files.len() >= MAX_ENTRIES {
-                anyhow::bail!("Compression analysis source contains more than {MAX_ENTRIES} files");
-            }
-            files.push(SourceFile {
-                path: source.to_path_buf(),
-                size: metadata.len(),
-                score: path_score(source),
-                low_value: is_low_value_extension(source),
-            });
+            inventory.check_capacity()?;
+            inventory.record(source, metadata.len());
             continue;
         }
         if !metadata.is_dir() {
@@ -121,22 +161,14 @@ fn collect_sources(paths: &[String], cancelled: &AtomicBool) -> Result<Vec<Sourc
             if entry.file_type().is_symlink() || !entry.file_type().is_file() {
                 continue;
             }
-            if files.len() >= MAX_ENTRIES {
-                anyhow::bail!("Compression analysis source contains more than {MAX_ENTRIES} files");
-            }
-            let size = entry.metadata()?.len();
-            files.push(SourceFile {
-                path: entry.path().to_path_buf(),
-                size,
-                score: path_score(entry.path()),
-                low_value: is_low_value_extension(entry.path()),
-            });
+            inventory.check_capacity()?;
+            inventory.record(entry.path(), entry.metadata()?.len());
         }
     }
-    if files.is_empty() {
+    if inventory.file_count == 0 {
         anyhow::bail!("Compression analysis found no readable files");
     }
-    Ok(files)
+    Ok(inventory)
 }
 
 fn read_chunk(file: &mut File, offset: u64, length: usize, target: &mut Vec<u8>) -> Result<()> {
@@ -151,10 +183,7 @@ fn read_chunk(file: &mut File, offset: u64, length: usize, target: &mut Vec<u8>)
     Ok(())
 }
 
-fn sample_files(files: &[SourceFile], cancelled: &AtomicBool) -> Result<(Vec<u8>, usize, Vec<usize>)> {
-    let mut candidates: Vec<&SourceFile> = files.iter().filter(|file| file.size > 0).collect();
-    candidates.sort_by_key(|file| file.score);
-    candidates.truncate(MAX_SAMPLE_FILES);
+fn sample_files(candidates: &[SampleSource], cancelled: &AtomicBool) -> Result<(Vec<u8>, usize, Vec<usize>)> {
     let mut sample = Vec::new();
     let mut sampled_files = 0;
     let mut segments = Vec::new();
@@ -319,20 +348,14 @@ pub fn analyze_compression(
     cancelled: &AtomicBool,
 ) -> Result<CompressionAnalysisResult> {
     if format == "lzo" { super::lzop_writer::prepare_members(paths)?; }
-    let mut files = collect_sources(paths, cancelled)?;
-    let total_size = files
-        .iter()
-        .try_fold(0u64, |total, file| total.checked_add(file.size))
+    let inventory = collect_sources(paths, cancelled)?;
+    let total_size = u64::try_from(inventory.total_size)
         .context("Compression analysis source size overflowed")?;
-    let file_count = files.len();
-    let low_value_bytes = files
-        .iter()
-        .filter(|file| file.low_value)
-        .map(|file| file.size)
-        .sum();
-    let low_value_file_count = files.iter().filter(|file| file.low_value).count();
-    files.sort_by_key(|file| file.score);
-    let (sample, sampled_files, segments) = sample_files(&files, cancelled)?;
+    let file_count = inventory.file_count;
+    // This subtotal is bounded by the checked total.
+    let low_value_bytes = inventory.low_value_bytes as u64;
+    let low_value_file_count = inventory.low_value_file_count;
+    let (sample, sampled_files, segments) = sample_files(&inventory.candidates, cancelled)?;
     check_cancelled(cancelled)?;
     let sample_ratio = if sample.is_empty() {
         1.0
@@ -435,6 +458,28 @@ mod tests {
     use std::sync::atomic::AtomicBool;
 
     #[test]
+    fn sample_limit_keeps_the_earliest_equal_scores_and_counts_empty_files() {
+        use super::{SourceInventory, MAX_SAMPLE_FILES};
+        use std::path::Path;
+
+        let mut inventory = SourceInventory::default();
+        let path = Path::new("repeated.jpg");
+        for size in 0..=MAX_SAMPLE_FILES as u64 + 2 {
+            inventory.record(path, size);
+        }
+
+        assert_eq!(inventory.file_count, MAX_SAMPLE_FILES + 3);
+        assert_eq!(inventory.low_value_file_count, inventory.file_count);
+        assert_eq!(inventory.low_value_bytes, inventory.total_size);
+        assert_eq!(inventory.candidates.len(), MAX_SAMPLE_FILES);
+        assert!(inventory
+            .candidates
+            .iter()
+            .map(|file| file.size)
+            .eq(1..=MAX_SAMPLE_FILES as u64));
+    }
+
+    #[test]
     fn sevenz1649_copy_duration_ignores_retained_strength() {
         assert_eq!(super::duration_range(4*1024*1024*1024,"7z-copy",0,3),super::duration_range(4*1024*1024*1024,"7z-copy",9,3));
     }
@@ -467,7 +512,8 @@ mod tests {
             &AtomicBool::new(false),
         )
         .unwrap();
-        assert_eq!(media_result.recommended_level, 1);
+        assert_eq!(media_result.recommended_zip_method.as_deref(), Some("store"));
+        assert_eq!(media_result.recommended_level, 9);
         assert!(media_result.low_value_bytes > 0);
     }
 

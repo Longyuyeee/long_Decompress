@@ -9,6 +9,7 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     fs,
     io::{Read, Write},
+    ops::Bound::{Included, Unbounded},
     path::{Component, Path, PathBuf},
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -137,10 +138,17 @@ pub(super) fn identity(meta: &fs::Metadata) -> Result<String> {
             .as_nanos()
     ))
 }
-fn finish(path: &Path, kind: &str, map: BTreeMap<String, Entry>, base: &str) -> Result<Source> {
+fn finish(
+    path: &Path,
+    kind: &str,
+    map: BTreeMap<String, Entry>,
+    base: &str,
+    include_entries: bool,
+) -> Result<Source> {
     let mut hash = blake3::Hasher::new();
     hash.update(base.as_bytes());
     let mut names = BTreeSet::new();
+    let mut encrypted = false;
     for (path, entry) in &map {
         ensure!(
             names.insert(path.to_lowercase()),
@@ -150,26 +158,39 @@ fn finish(path: &Path, kind: &str, map: BTreeMap<String, Entry>, base: &str) -> 
         hash.update(&[0]);
         hash.update(entry.fingerprint.as_bytes());
         hash.update(&[0]);
+        encrypted |= entry.encrypted;
     }
-    let entries = map
-        .values()
-        .map(|entry| {
-            let mut e = entry.clone();
-            let prefix = e.path.clone() + "/";
-            e.selectable = !e.directory
-                || !map
-                    .range(prefix.clone()..)
-                    .next()
-                    .is_some_and(|(p, _)| p.starts_with(&prefix));
-            e
-        })
-        .collect();
+    drop(names);
+
+    let entries = if include_entries {
+        let selectable: Vec<_> = map
+            .values()
+            .map(|entry| {
+                !entry.directory || {
+                    let prefix = format!("{}/", entry.path);
+                    !map.range::<str, _>((Included(prefix.as_str()), Unbounded))
+                        .next()
+                        .is_some_and(|(path, _)| path.starts_with(&prefix))
+                }
+            })
+            .collect();
+        map
+            .into_values()
+            .zip(selectable)
+            .map(|(mut entry, selectable)| {
+                entry.selectable = selectable;
+                entry
+            })
+            .collect()
+    } else {
+        Vec::new()
+    };
     Ok(Source {
         source: SourceRef {
             path: display_path(path),
             kind: kind.into(),
             revision: hash.finalize().to_hex().to_string(),
-            encrypted: map.values().any(|entry| entry.encrypted),
+            encrypted,
         },
         name: path
             .file_name()
@@ -218,15 +239,28 @@ fn insert(map: &mut BTreeMap<String, Entry>, entry: Entry) -> Result<()> {
 pub fn read(
     path: &Path,
     flag: Arc<AtomicBool>,
+    progress: impl FnMut(Progress),
+) -> Result<Source> {
+    read_source(path, flag, progress, true)
+}
+
+pub(super) fn read_reference(path: &Path, flag: Arc<AtomicBool>) -> Result<SourceRef> {
+    Ok(read_source(path, flag, |_| {}, false)?.source)
+}
+
+fn read_source(
+    path: &Path,
+    flag: Arc<AtomicBool>,
     mut progress: impl FnMut(Progress),
+    include_entries: bool,
 ) -> Result<Source> {
     check(&flag)?;
     metadata(path)?;
     let path = fs::canonicalize(path)?;
     if path.is_dir() {
-        let first = read_folder(&path, &flag, &mut progress)?;
+        let first = read_folder(&path, &flag, &mut progress, include_entries)?;
         check(&flag)?;
-        let second = read_folder(&path, &flag, &mut |_| {})?;
+        let second = read_folder(&path, &flag, &mut |_| {}, false)?;
         ensure!(
             first.source.revision == second.source.revision,
             "读取期间来源有变化，请重新读取这一侧"
@@ -234,13 +268,14 @@ pub fn read(
         Ok(first)
     } else {
         let path = super::split_archive_detector::SplitArchiveDetector::complete_source(&path)?;
-        read_zip(&fs::canonicalize(path)?, &flag, &mut progress)
+        read_zip(&fs::canonicalize(path)?, &flag, &mut progress, include_entries)
     }
 }
 fn read_folder(
     root: &Path,
     flag: &Arc<AtomicBool>,
     progress: &mut impl FnMut(Progress),
+    include_entries: bool,
 ) -> Result<Source> {
     let mut map = BTreeMap::new();
     let mut pending = vec![root.to_path_buf()];
@@ -297,12 +332,13 @@ fn read_folder(
             }
         }
     }
-    finish(root, "directory", map, "")
+    finish(root, "directory", map, "", include_entries)
 }
 fn read_zip(
     path: &Path,
     flag: &Arc<AtomicBool>,
     progress: &mut impl FnMut(Progress),
+    include_entries: bool,
 ) -> Result<Source> {
     let before = source_identity(path)?;
     let mut file = super::numeric_volume_reader::ZipInputReader::open(path)?;
@@ -372,7 +408,7 @@ fn read_zip(
         before == source_identity(path)?,
         "读取期间 ZIP 有变化，请重新读取这一侧"
     );
-    finish(path, "zip", map, &before)
+    finish(path, "zip", map, &before, include_entries)
 }
 pub(super) fn source_identity(path: &Path) -> Result<String> {
     if let Some(group) =
@@ -718,10 +754,22 @@ mod tests {
     #[test]
     fn comparison1554_folder_zip_inventory_keeps_implicit_directories_and_empty_selection() {
         let (dir, source, _out) = fixture();
+        // This sibling sorts before "nested/" without being a descendant.
+        fs::write(source.join("nested-neighbor.txt"), b"sibling").unwrap();
         let folder = read(&source, flag(), |_| {}).unwrap();
+        assert!(folder
+            .entries
+            .iter()
+            .any(|entry| entry.path == "nested-neighbor.txt" && entry.selectable));
         let path = dir.path().join("sample.zip");
         zip(&path);
         let archive = read(&path, flag(), |_| {}).unwrap();
+        for (path, source) in [(&source, &folder), (&path, &archive)] {
+            assert_eq!(
+                serde_json::to_value(read_reference(path, flag()).unwrap()).unwrap(),
+                serde_json::to_value(&source.source).unwrap()
+            );
+        }
         for entries in [folder.entries, archive.entries] {
             assert!(
                 entries

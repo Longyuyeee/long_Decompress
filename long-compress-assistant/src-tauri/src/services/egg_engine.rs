@@ -15,20 +15,40 @@ pub fn command_path()->Option<PathBuf>{
     roots.into_iter().map(|p|p.join("egg-engine/long-egg.exe")).find(|p|p.is_file())
 }
 async fn run(op:&str,path:&Path,pwd:Option<&str>,output:Option<&Path>,selected:&[String],cancelled:Arc<AtomicBool>,preserve_timestamps:bool,encoding:Option<ZipPasswordEncoding>)->Result<serde_json::Value>{
+    let result = run_helper(op, path, pwd, output, selected, cancelled, preserve_timestamps, encoding).await?;
+    read_result(&result)
+}
+
+async fn run_helper(op:&str,path:&Path,pwd:Option<&str>,output:Option<&Path>,selected:&[String],cancelled:Arc<AtomicBool>,preserve_timestamps:bool,encoding:Option<ZipPasswordEncoding>)->Result<std::process::Output>{
     let group=super::egg_volumes::complete(path)?;
     let tool=command_path().context("[archive-inspection:engine-unavailable] 缺少随附 EGG 读取引擎，请修复安装")?;
     let mut cmd=crate::utils::process::async_command(tool);cmd.arg(op).arg(group.first);
     let input=serde_json::to_vec(&serde_json::json!({"password":pwd,"output":output,"selected":selected,"preserve_timestamps":preserve_timestamps,"encoding":source_encoding(encoding)?}))?;
-    let result=if matches!(op,"preview-text"|"preview-image") {
+    if matches!(op,"preview-text"|"preview-image") {
         crate::utils::process::cancellable_output_with_stdin(&mut cmd,&cancelled,Duration::from_secs(30),Some(input)).await
-    } else {crate::utils::process::cancellable_archive_output_with_stdin(&mut cmd,&cancelled,Duration::from_secs(24*60*60),Some(input)).await}.context("EGG 引擎取消或运行失败")?;
-    let response:serde_json::Value=serde_json::from_slice(&result.stdout).context("EGG 引擎没有返回有效结果")?;
+    } else {crate::utils::process::cancellable_archive_output_with_stdin(&mut cmd,&cancelled,Duration::from_secs(24*60*60),Some(input)).await}.context("EGG 引擎取消或运行失败")
+}
+
+fn read_result(result: &std::process::Output) -> Result<serde_json::Value> {
+    let mut response:serde_json::Value=serde_json::from_slice(&result.stdout).context("EGG 引擎没有返回有效结果")?;
     if let Some(e)=response.get("error").and_then(|v|v.as_str()){anyhow::bail!("{e}")}
     anyhow::ensure!(result.status.success(),"EGG 引擎异常退出：{}",String::from_utf8_lossy(&result.stderr));
-    response.get("result").cloned().context("EGG 引擎缺少结果")
+    response.get_mut("result").map(serde_json::Value::take).context("EGG 引擎缺少结果")
 }
+fn read_directory(output: &std::process::Output, invalid_result: Option<&'static str>) -> Result<ArchiveBrowseResult> {
+    if let Some(directory) = super::archive_helper_output::decode_directory(output) {
+        return Ok(directory);
+    }
+    let legacy = serde_json::from_value(read_result(output)?);
+    match invalid_result {
+        Some(message) => legacy.context(message),
+        None => Ok(legacy?),
+    }
+}
+
 pub async fn browse(path:&Path,cancelled:Arc<AtomicBool>)->Result<ArchiveBrowseResult>{
-    let d:ArchiveBrowseResult=serde_json::from_value(run("list",path,None,None,&[],cancelled,false,None).await?)?;
+    let output = run_helper("list", path, None, None, &[], cancelled, false, None).await?;
+    let d = read_directory(&output, None)?;
     for e in &d.entries{super::archive_entry_open::normalize_safe_entry_path(&e.path)?;}
     super::extraction_transaction::validate_resource_limits(path,d.entries.len(),d.total_uncompressed_size)?;Ok(d)
 }
@@ -36,7 +56,8 @@ pub async fn plan(path:&Path,options:&DecompressOptions,cancelled:Arc<AtomicBool
     let d=browse(path,cancelled.clone()).await?;let filter=super::extraction_transaction::compile_file_filter(options.file_filter.as_deref());
     let selected=d.entries.iter().filter(|e|super::extraction_transaction::matches_selected_entries(Path::new(&e.path),&options.selected_entries)&&super::extraction_transaction::matches_compiled_file_filter(Path::new(&e.path),&filter)).map(|e|e.path.clone()).collect::<Vec<_>>();
     anyhow::ensure!(!selected.is_empty()||!super::zip_selection::has_selection(options),"所选范围内没有 EGG 条目，请重新选择文件或修改筛选条件");
-    serde_json::from_value(run("plan",path,None,None,&selected,cancelled,false,options.zip_password_encoding).await?).context("EGG 预检结果无效")
+    let output = run_helper("plan", path, None, None, &selected, cancelled, false, options.zip_password_encoding).await?;
+    read_directory(&output, Some("EGG 预检结果无效"))
 }
 pub async fn requires_password(path:&Path,options:&DecompressOptions,cancelled:Arc<AtomicBool>)->Result<bool>{Ok(plan(path,options,cancelled).await?.encrypted)}
 pub async fn verify(path:&Path,pwd:Option<&str>,options:&DecompressOptions,cancelled:Arc<AtomicBool>)->Result<()>{
@@ -56,13 +77,22 @@ pub async fn extract(path:&Path,output:&Path,pwd:Option<&str>,options:&Decompres
 async fn preview_entry(path:&Path,entry:&str,password:Option<&str>,encoding:Option<ZipPasswordEncoding>,cancelled:Arc<AtomicBool>,image:bool)->Result<(Vec<u8>,u64)>{
     anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Acquire),"EGG 预览已取消");
     let entry=super::archive_entry_open::normalize_safe_entry_path(entry)?;
-    let value=run(if image{"preview-image"}else{"preview-text"},path,password,None,&[entry],cancelled.clone(),false,encoding).await?;
-    let bytes:Vec<u8>=serde_json::from_value(value["bytes"].clone())?;
-    let size=value["totalSize"].as_u64().context("EGG 内容大小缺失")?;
-    let limit=if image{8*1024*1024}else{1024*1024};
-    let content_ok=if !image && size>limit {value["partial"]==true && bytes.len() as u64==limit}
-        else {value["partial"]!=true && size<=limit && bytes.len() as u64==size};
-    anyhow::ensure!(content_ok&&value["inputBytes"].as_u64().is_some_and(|n|n<=64*1024*1024),"EGG 预览大小不符，请刷新后重试");
+    use super::preview_helper_output::PreviewPayload;
+
+    let output = run_helper(if image { "preview-image" } else { "preview-text" }, path, password, None, &[entry], cancelled.clone(), false, encoding).await?;
+    let preview = match PreviewPayload::decode(&output) {
+        Some(preview) => preview,
+        None => PreviewPayload::from_result(read_result(&output)?, "EGG 内容大小缺失")?,
+    };
+    let size = preview.total_size;
+    let bytes = preview.bytes;
+    let limit = if image { 8 * 1024 * 1024 } else { 1024 * 1024 };
+    let content_ok = if !image && size > limit {
+        preview.partial && bytes.len() as u64 == limit
+    } else {
+        !preview.partial && size <= limit && bytes.len() as u64 == size
+    };
+    anyhow::ensure!(content_ok && preview.input_bytes.is_some_and(|n| n <= 64 * 1024 * 1024), "EGG 预览大小不符，请刷新后重试");
     anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Acquire),"EGG 预览已取消");
     Ok((bytes,size))
 }

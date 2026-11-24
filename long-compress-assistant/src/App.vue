@@ -96,7 +96,9 @@ let contextDrainTimer: ReturnType<typeof setTimeout> | null = null
 let contextDrainPromise: Promise<void> | null = null
 let contextDrainAgain = false
 let watchBatchTimer: ReturnType<typeof setInterval> | null = null
+let watchBatchRetryTimer: ReturnType<typeof setTimeout> | null = null
 let watchBatchDrainPromise: Promise<void> | null = null
+let watchBatchDrainAgain = false
 const appUnlisteners: Array<() => void> = []
 let isUnmounted = false
 const showExitConfirmation = ref(false)
@@ -159,7 +161,15 @@ const keepAppListener = (unlisten: () => void) => {
 }
 
 const drainWatchFolderBatches = () => {
-  if (watchBatchDrainPromise) return watchBatchDrainPromise
+  if (isUnmounted) return
+  if (watchBatchDrainPromise) {
+    watchBatchDrainAgain = true
+    return watchBatchDrainPromise
+  }
+  if (watchBatchRetryTimer) {
+    clearTimeout(watchBatchRetryTimer)
+    watchBatchRetryTimer = null
+  }
   watchBatchDrainPromise = (async () => {
     try {
       const batches = await taskTemplates.listPendingTaskTemplateWatchBatches()
@@ -184,9 +194,19 @@ const drainWatchFolderBatches = () => {
       }
     } catch (error) {
       console.warn('Unable to drain watch-folder draft batches:', error)
+      if (!isUnmounted) {
+        watchBatchRetryTimer = setTimeout(() => {
+          watchBatchRetryTimer = null
+          void drainWatchFolderBatches()
+        }, 1_500)
+      }
     }
   })().finally(() => {
     watchBatchDrainPromise = null
+    if (watchBatchDrainAgain) {
+      watchBatchDrainAgain = false
+      void drainWatchFolderBatches()
+    }
   })
   return watchBatchDrainPromise
 }
@@ -436,10 +456,20 @@ onMounted(async () => {
   }
 
   workflowAutomation.begin()
+  let watchBatchInterval = 60_000
+  try {
+    keepAppListener(await listen('watch-folder-batches-ready', () => {
+      void drainWatchFolderBatches()
+    }))
+  } catch (error) {
+    console.warn('Watch-folder draft listener is unavailable:', error)
+    watchBatchInterval = 1_500
+  }
+  // Read persisted batches on startup and reconcile occasionally if a notification was missed.
+  if (!isUnmounted) {
+    watchBatchTimer = setInterval(() => void drainWatchFolderBatches(), watchBatchInterval)
+  }
   void drainWatchFolderBatches()
-  watchBatchTimer = setInterval(() => {
-    void drainWatchFolderBatches()
-  }, 1_500)
 
   // Expose the desktop test bridge only after native event listeners are ready.
   // This is the application-readiness boundary for desktop lifecycle assertions.
@@ -457,6 +487,7 @@ onUnmounted(() => {
   if (saveWindowTimer) clearTimeout(saveWindowTimer)
   if (contextDrainTimer) clearTimeout(contextDrainTimer)
   if (watchBatchTimer) clearInterval(watchBatchTimer)
+  if (watchBatchRetryTimer) clearTimeout(watchBatchRetryTimer)
   if (unlistenResize) unlistenResize()
   if (cleanupSystemWatcher) cleanupSystemWatcher()
   cleanupDesktopE2EBridge?.()

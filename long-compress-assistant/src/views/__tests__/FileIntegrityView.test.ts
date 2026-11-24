@@ -26,6 +26,7 @@ vi.mock('@tauri-apps/api/dialog', () => ({
   save: mocks.save,
 }))
 vi.mock('@tauri-apps/api/tauri', () => ({ invoke: mocks.invoke }))
+vi.mock('@tauri-apps/api/event', () => ({ listen: async () => () => {} }))
 vi.mock('vue-router', async importOriginal => ({ ...(await importOriginal<typeof import('vue-router')>()), useRouter: () => ({push:mocks.routerPush}) }))
 vi.mock('@/composables/useTauriCommands', () => ({
   useTauriCommands: () => ({
@@ -245,12 +246,8 @@ describe('FileIntegrityView', () => {
       configurable: true,
       value: { writeText: mocks.clipboardWrite },
     })
-    mocks.invoke.mockImplementation(async (command: string, payload?: any) => {
+    mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'load_app_settings') return '{}'
-      if (command === 'calculate_checksum') {
-        if (payload.path.endsWith('broken.bin')) throw new Error('read failed')
-        return 'abc123'
-      }
       return undefined
     })
   })
@@ -259,9 +256,22 @@ describe('FileIntegrityView', () => {
     const pinia = createPinia()
     setActivePinia(pinia)
     const appStore = useAppStore()
-    mocks.open.mockResolvedValue(['C:\\data\\good.bin', 'C:\\data\\broken.bin'])
+    const goodPath = 'C:\\data\\good.bin'
+    const brokenPath = 'C:\\data\\broken.bin'
+    const checksum = 'a'.repeat(64)
+    mocks.open.mockResolvedValue([goodPath, brokenPath])
     mocks.save.mockResolvedValue('C:\\data\\checksums.sha256')
     mocks.clipboardWrite.mockResolvedValue(undefined)
+    mocks.invoke.mockImplementation(async (command: string) => {
+      if (command === 'load_app_settings') return '{}'
+      if (command === 'calculate_checksum_batch') {
+        return [
+          { path: goodPath, fileName: 'good.bin', algorithm: 'SHA256', checksum, status: 'success' },
+          { path: brokenPath, fileName: 'broken.bin', algorithm: 'SHA256', checksum: '', status: 'error', error: 'read failed' },
+        ]
+      }
+      return undefined
+    })
 
     const wrapper = mount(FileIntegrityView, {
       global: { plugins: [pinia] },
@@ -273,31 +283,30 @@ describe('FileIntegrityView', () => {
     await flushPromises()
     expect(wrapper.text()).toContain('已选择 2 个文件')
 
-    await wrapper.findAll('button').find(
-      button => button.text() === appStore.t('integrity.calculate'),
-    )?.trigger('click')
+    await wrapper.get('[data-testid="checksum-calculate-start"]').trigger('click')
     await flushPromises()
 
+    expect(mocks.invoke).toHaveBeenCalledWith('calculate_checksum_batch', {
+      paths: [goodPath, brokenPath], algorithm: 'sha256', operationId: expect.any(String),
+    })
     expect(wrapper.text()).toContain('good.bin')
     expect(wrapper.text()).toContain('broken.bin')
-    expect(wrapper.text()).toContain('abc123')
+    expect(wrapper.text()).toContain(checksum)
     expect(wrapper.text()).toContain('read failed')
-    expect(appStore.successMessage).toBe(appStore.t('integrity.calc_complete', '校验和计算完成'))
+    expect(appStore.error).toContain('1 个文件未能计算')
 
     await wrapper.findAll('button').find(
       button => button.text() === appStore.t('integrity.copy'),
     )?.trigger('click')
-    expect(mocks.clipboardWrite).toHaveBeenCalledWith('abc123')
-
-    await wrapper.findAll('button').find(
-      button => button.text() === appStore.t('integrity.export'),
-    )?.trigger('click')
+    expect(mocks.clipboardWrite).toHaveBeenCalledWith(checksum)
+    await wrapper.get('[data-testid="checksum-export"]').trigger('click')
     await flushPromises()
     expect(mocks.invoke).toHaveBeenCalledWith('export_checksum_file', {
       path: 'C:\\data\\checksums.sha256',
-      results: [{ file_name: 'good.bin', checksum: 'abc123' }],
+      results: [{ path: goodPath, checksum, status: 'success' }],
       algorithm: 'sha256',
     })
+    wrapper.unmount()
   })
 
   it('verifies a checksum file and surfaces an invalid result', async () => {
@@ -327,6 +336,7 @@ describe('FileIntegrityView', () => {
 
     expect(mocks.invoke).toHaveBeenCalledWith('verify_checksum_file', {
       checksumPath: 'C:\\data\\checksums.md5',
+      operationId: expect.any(String),
     })
     expect(wrapper.get('[data-testid="checksum-heading"]').text()).toBe('还有文件需要处理')
     expect(wrapper.get('[data-testid="checksum-entry"]').text()).toContain('内容不符')
@@ -339,6 +349,7 @@ describe('FileIntegrityView', () => {
     expect(mocks.invoke.mock.calls.filter(call=>call[0]==='verify_checksum_file')).toHaveLength(1)
     await wrapper.get('[data-testid="checksum-go-tasks"]').trigger('click')
     expect(mocks.routerPush).toHaveBeenCalledWith('/decompress')
+    wrapper.unmount()
   })
 
   it('diagnoses a damaged archive, copies evidence, and repairs to a new verified file', async () => {

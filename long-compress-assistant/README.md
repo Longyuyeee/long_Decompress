@@ -64,6 +64,7 @@ docs/               产品路线、格式说明和发布记录
 | [开发交接](docs/DEVELOPMENT_HANDOFF.md) / [产品路线](docs/PRODUCT_ENHANCEMENT_ROADMAP.md) | 当前状态、下一步及已有验证 |
 | [#366 减少动画修复](docs/REDUCED_MOTION_FIX_366.md) | 修复窗口偏移和无法关闭开关，纳入 v1.8.0 |
 | [v1.7.0 范围](docs/ARCHIVE_ROADMAP_1.7.0.md) / [实现与检查](docs/WINDOWS_OPEN_AND_BROWSER_UI.md) | Windows 打开、双栏统一与历史菜单 |
+| [v1.9.0 发布说明](docs/RELEASE_NOTES_1.9.0.md) | 资源占用优化，覆盖双栏浏览、大包预览、归档处理和目录监控 |
 | [v1.8.0 封板](docs/RELEASE_AUDIT_1.8.0.md) / [发布说明](docs/RELEASE_NOTES_1.8.0.md) | 经典右键分类、菜单修复、弹窗适配与任务列表精简；合并原 v1.7.41 候选范围 |
 | [v1.7.40 包内复制与右键](docs/EXPLORER_CLIPBOARD_FREEZE_1.7.40.md) / [下一步 v1.8.1](docs/ARCHIVE_ROADMAP_1.8.1.md) | 文件剪贴板与分类快捷操作；下一步回到 XZ 多流/填充兼容 |
 | [格式支持说明](docs/FORMAT_SUPPORT_LEVELS.md) | 创建、读取、密码、分卷和限制 |

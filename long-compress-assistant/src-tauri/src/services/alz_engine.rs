@@ -23,17 +23,36 @@ pub fn command_path() -> Option<PathBuf> {
 }
 
 async fn run(operation: &str, path: &Path, password: Option<&str>, output: Option<&Path>, selected: &[String], cancelled: Arc<AtomicBool>, encoding: Option<ZipPasswordEncoding>, preserve_timestamps: bool) -> Result<serde_json::Value> {
+    let result = run_helper(operation, path, password, output, selected, cancelled, encoding, preserve_timestamps).await?;
+    read_result(&result)
+}
+
+async fn run_helper(operation: &str, path: &Path, password: Option<&str>, output: Option<&Path>, selected: &[String], cancelled: Arc<AtomicBool>, encoding: Option<ZipPasswordEncoding>, preserve_timestamps: bool) -> Result<std::process::Output> {
     let group = super::alz_volumes::complete(path)?;
     let tool = command_path().context("[archive-inspection:engine-unavailable] 缺少随附 ALZ 读取引擎，请修复安装")?;
     let mut command = crate::utils::process::async_command(tool);
     command.arg(operation).arg(&group.first);
     let input = serde_json::to_vec(&serde_json::json!({"password":password,"output":output,"selected":selected,"encoding":source_encoding(encoding)?,"preserve_timestamps":preserve_timestamps}))?;
-    let result = crate::utils::process::cancellable_archive_output_with_stdin(&mut command, &cancelled,
-        Duration::from_secs(24*60*60), Some(input)).await.context("ALZ 引擎读取取消或运行失败")?;
-    let response: serde_json::Value = serde_json::from_slice(&result.stdout).context("ALZ 引擎没有返回有效结果")?;
+    crate::utils::process::cancellable_archive_output_with_stdin(&mut command, &cancelled,
+        Duration::from_secs(24*60*60), Some(input)).await.context("ALZ 引擎读取取消或运行失败")
+}
+
+fn read_result(result: &std::process::Output) -> Result<serde_json::Value> {
+    let mut response: serde_json::Value = serde_json::from_slice(&result.stdout).context("ALZ 引擎没有返回有效结果")?;
     if let Some(error) = response.get("error").and_then(|v| v.as_str()) { anyhow::bail!("{}", error); }
     anyhow::ensure!(result.status.success(), "ALZ 引擎异常退出：{}", String::from_utf8_lossy(&result.stderr));
-    response.get("result").cloned().context("ALZ 缺少引擎结果")
+    response.get_mut("result").map(serde_json::Value::take).context("ALZ 缺少引擎结果")
+}
+
+fn read_directory(output: &std::process::Output, invalid_result: Option<&'static str>) -> Result<ArchiveBrowseResult> {
+    if let Some(directory) = super::archive_helper_output::decode_directory(output) {
+        return Ok(directory);
+    }
+    let legacy = serde_json::from_value(read_result(output)?);
+    match invalid_result {
+        Some(message) => legacy.context(message),
+        None => Ok(legacy?),
+    }
 }
 
 pub async fn browse(path: &Path, cancelled: Arc<AtomicBool>) -> Result<ArchiveBrowseResult> {
@@ -41,7 +60,8 @@ pub async fn browse(path: &Path, cancelled: Arc<AtomicBool>) -> Result<ArchiveBr
 }
 
 pub async fn browse_with_encoding(path: &Path, encoding: Option<ZipPasswordEncoding>, cancelled: Arc<AtomicBool>) -> Result<ArchiveBrowseResult> {
-    let directory: ArchiveBrowseResult = serde_json::from_value(run("list", path, None, None, &[], cancelled, encoding, false).await?)?;
+    let output = run_helper("list", path, None, None, &[], cancelled, encoding, false).await?;
+    let directory = read_directory(&output, None)?;
     for entry in &directory.entries { super::archive_entry_open::normalize_safe_entry_path(&entry.path)?; }
     super::extraction_transaction::validate_resource_limits(path, directory.entries.len(), directory.total_uncompressed_size)?;
     Ok(directory)
@@ -62,7 +82,8 @@ pub async fn plan(path: &Path, options: &DecompressOptions, cancelled: Arc<Atomi
     let directory = browse_with_encoding(path, options.zip_password_encoding, cancelled.clone()).await?;
     let selected = selection(&directory, options)?;
     // Empty archive is distinct from an empty requested selection (rejected above).
-    serde_json::from_value(run("plan", path, None, None, &selected, cancelled, options.zip_password_encoding, false).await?).context("ALZ 所选内容预检结果无效")
+    let output = run_helper("plan", path, None, None, &selected, cancelled, options.zip_password_encoding, false).await?;
+    read_directory(&output, Some("ALZ 所选内容预检结果无效"))
 }
 
 pub async fn requires_password(path: &Path, options: &DecompressOptions, cancelled: Arc<AtomicBool>) -> Result<bool> {
@@ -110,17 +131,32 @@ async fn preview_entry(path: &Path, entry: &str, password: Option<&str>, encodin
     command.arg(if image { "preview-image" } else if prefix { "preview-text-prefix" } else { "preview-text" }).arg(&group.first);
     let input = serde_json::to_vec(&serde_json::json!({"password":password,"selected":[entry],"encoding":source_encoding(encoding)?}))?;
     let result = crate::utils::process::cancellable_output_with_stdin(&mut command, &cancelled, Duration::from_secs(30), Some(input)).await.context("ALZ 文件预览已取消或读取未完成")?;
-    let response: serde_json::Value = serde_json::from_slice(&result.stdout).context("ALZ 文件预览没有返回有效结果")?;
-    if let Some(error) = response.get("error").and_then(|v| v.as_str()) { anyhow::bail!("{error}"); }
-    anyhow::ensure!(result.status.success(), "ALZ 文件预览未完成，请先提取后打开");
-    let value = response.get("result").context("ALZ 文件预览结果缺失")?;
-    let bytes: Vec<u8> = serde_json::from_value(value["bytes"].clone())?;
-    let size = value["totalSize"].as_u64().context("ALZ 文件大小缺失")?;
-    let valid = if prefix { value["partial"]==true && value["inputBytes"].as_u64().is_some_and(|n|n<=MAX_INPUT) && bytes.len() as u64==max_output }
-        else { bytes.len() as u64==size && size<=max_output };
+    let preview = read_preview_response(&result)?;
+    let size = preview.total_size;
+    let bytes = preview.bytes;
+    let valid = if prefix {
+        preview.partial && preview.input_bytes.is_some_and(|n| n <= MAX_INPUT) && bytes.len() as u64 == max_output
+    } else {
+        bytes.len() as u64 == size && size <= max_output
+    };
     anyhow::ensure!(size == selected.size && valid, "ALZ 文件预览大小不一致，请刷新后重试");
     anyhow::ensure!(!cancelled.load(std::sync::atomic::Ordering::Acquire), "ALZ 文件预览已取消");
     Ok((bytes, size))
+}
+
+fn read_preview_response(result: &std::process::Output) -> Result<super::preview_helper_output::PreviewPayload> {
+    use super::preview_helper_output::PreviewPayload;
+
+    if let Some(preview) = PreviewPayload::decode(result) {
+        return Ok(preview);
+    }
+    let mut response: serde_json::Value = serde_json::from_slice(&result.stdout).context("ALZ 文件预览没有返回有效结果")?;
+    if let Some(error) = response.get("error").and_then(|v| v.as_str()) {
+        anyhow::bail!("{error}");
+    }
+    anyhow::ensure!(result.status.success(), "ALZ 文件预览未完成，请先提取后打开");
+    let value = response.get_mut("result").map(serde_json::Value::take).context("ALZ 文件预览结果缺失")?;
+    PreviewPayload::from_result(value, "ALZ 文件大小缺失")
 }
 
 pub async fn preview_text_entry(path: &Path, entry: &str, password: Option<&str>, encoding: Option<ZipPasswordEncoding>, cancelled: Arc<AtomicBool>) -> Result<(Vec<u8>, u64)> {

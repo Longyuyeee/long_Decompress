@@ -25,6 +25,8 @@ pub mod zpaq_update;
 pub mod zpaq_diff;
 pub mod alz_engine;
 pub mod egg_engine;
+mod archive_helper_output;
+mod preview_helper_output;
 pub mod egg_volumes;
 pub mod alz_volumes;
 pub mod compression_format;

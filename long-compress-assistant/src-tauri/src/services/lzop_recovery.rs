@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
     fs::{self, File, OpenOptions},
-    io::{Read, Seek, SeekFrom, Write},
+    io::{BufWriter, Read, Seek, SeekFrom, Write},
     path::{Path, PathBuf},
     sync::atomic::{AtomicBool, Ordering},
 };
@@ -56,6 +56,29 @@ pub struct Report {
     pub available_volumes: usize,
     pub ignored_volumes: usize,
 }
+impl Report {
+    pub(super) fn revision_id(&self, stamp: &str) -> Result<String> {
+        let mut hash = Sha256::new();
+        hash.update(stamp.as_bytes());
+        {
+            let mut writer = BufWriter::with_capacity(64 * 1024, &mut hash);
+            serde_json::to_writer(&mut writer, self)?;
+            for entry in &self.entries {
+                writer.write_all(&entry.offset.to_le_bytes())?;
+                if let Some(id) = entry.link_source {
+                    writer.write_all(b"hardlink")?;
+                    writer.write_all(&(id as u64).to_le_bytes())?;
+                }
+                if let Some(layout) = &entry.sparse {
+                    serde_json::to_writer(&mut writer, layout)?;
+                }
+            }
+            writer.flush()?;
+        }
+        Ok(format!("{:x}", hash.finalize()))
+    }
+}
+
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Outcome {
@@ -347,13 +370,7 @@ pub(super) fn scan_source(
         report.stop_reason = format!("{}；{}", report.stop_reason, reason)
     }
     check(cancelled)?;
-    let mut h = Sha256::new();
-    h.update(src.stamp.as_bytes());
-    h.update(serde_json::to_vec(&report)?);
-    for e in &report.entries {
-        h.update(e.offset.to_le_bytes())
-    }
-    report.revision = format!("{:x}", h.finalize());
+    report.revision = report.revision_id(&src.stamp)?;
     progress(src.length, src.length);
     Ok(report)
 }
@@ -503,4 +520,45 @@ pub(crate) fn recover(
         stop_reason: report.stop_reason,
         partial: true,
     })
+}
+
+#[cfg(test)]
+mod revision_tests {
+    use super::*;
+
+    #[test]
+    fn recovery_revision_matches_buffered_hash_for_real_archives() -> Result<()> {
+        let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("../tests/fixtures/archives");
+        let cancelled = AtomicBool::new(false);
+        for (name, format, sparse, links) in [
+            ("lzop-members-1660/members-9.lzo", "LZOP", false, false),
+            ("tar-sparse-1713/gnu.tar.lzo", "TAR.LZO", true, false),
+            ("tar-hardlink-1717/hardlinks.tar.lzo", "TAR.LZO", true, true),
+        ] {
+            let src = source(&fixtures.join(name))?;
+            let mut report = scan_complete_source(&src, None, &cancelled, &mut |_, _| {})?;
+            assert_eq!(report.format, format, "{name}");
+            assert!(report.complete && !report.entries.is_empty(), "{name}");
+            assert_eq!(report.entries.iter().any(|entry| entry.sparse.is_some()), sparse);
+            assert_eq!(report.entries.iter().any(|entry| entry.link_source.is_some()), links);
+            let revision = std::mem::take(&mut report.revision);
+            let mut hash = Sha256::new();
+            hash.update(src.stamp.as_bytes());
+            hash.update(serde_json::to_vec(&report)?);
+            for entry in &report.entries {
+                hash.update(entry.offset.to_le_bytes());
+                if format == "TAR.LZO" {
+                    if let Some(id) = entry.link_source {
+                        hash.update(b"hardlink");
+                        hash.update((id as u64).to_le_bytes());
+                    }
+                    if let Some(layout) = &entry.sparse {
+                        hash.update(serde_json::to_vec(layout)?);
+                    }
+                }
+            }
+            assert_eq!(revision, format!("{:x}", hash.finalize()), "{name}");
+        }
+        Ok(())
+    }
 }

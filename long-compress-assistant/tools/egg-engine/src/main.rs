@@ -1,9 +1,9 @@
 //! EGG basic read-only decoder. Keys arrive on stdin, not process arguments.
 use anyhow::{ensure, Context, Result};
-use serde::Deserialize;
-use serde_json::{json, Value};
-use std::{collections::HashSet, fs::{self,File}, io::{self,Read,Seek,SeekFrom,Write},path::{Path,PathBuf}};
-use unegg::{archive::{EggArchive,EggFileEntry,CompressionMethod,EncryptionMethod},crypto::{ZipCrypto,Decryptor},decompress,error::EggError};
+use serde::{ser::SerializeSeq, Deserialize, Serialize, Serializer};
+use serde_json::json;
+use std::{borrow::Cow, collections::HashSet, fs::{self,File}, io::{self,Read,Seek,SeekFrom,Write},path::{Path,PathBuf}};
+use unegg::{archive::{EggArchive,EggBlock,EggFileEntry,CompressionMethod,EncryptionMethod},crypto::{ZipCrypto,Decryptor},decompress,error::EggError};
 #[path = "../../../src-tauri/src/services/egg_volumes.rs"] mod egg_volumes;
 mod complex;
 mod prefix;
@@ -14,8 +14,17 @@ fn password_bytes(password:&str,encoding:Option<&str>)->Result<Vec<u8>> {
     let (bytes,_,loss)=codec.encode(password);let (roundtrip,invalid)=codec.decode_without_bom_handling(&bytes);
     ensure!(!loss&&!invalid&&roundtrip==password,"[archive-inspection:password-encoding] [egg-password-encoding] 此密码不能按所选 EGG 代码页无损表示，未替换字符或据此判定密码错误");Ok(bytes.into_owned())
 }
+fn normalize_separators(name: &str) -> Cow<'_, str> {
+    if name.contains('\\') {
+        Cow::Owned(name.replace('\\', "/"))
+    } else {
+        Cow::Borrowed(name)
+    }
+}
+
 fn safe_name(name:&str)->Result<String> {
-    let n=name.replace('\\',"/");let n=n.trim_end_matches('/');
+    let normalized = normalize_separators(name);
+    let n = normalized.trim_end_matches('/');
     ensure!(!n.is_empty()&&!n.starts_with('/')&&!n.chars().any(|c|c.is_control()||":?*|<>\"".contains(c))&&n.split('/').all(|s|!s.is_empty()&&s!="."&&s!=".."),"[archive-inspection:unsupported] EGG 条目路径不能写入 Windows：{name}");
     Ok(n.to_string())
 }
@@ -56,15 +65,110 @@ fn entries(a:&EggArchive<egg_volumes::Reader>,selected:&[String])->Result<Vec<Eg
 fn plan(a:&EggArchive<egg_volumes::Reader>,entries:&[EggFileEntry])->Result<()> {
     complex::validate(a,entries)
 }
-fn metadata(a:&EggArchive<egg_volumes::Reader>,entries:&[EggFileEntry])->Result<Value> {
-    let mut list=vec![];let mut total=0;let mut compressed=0;let mut files=0;let mut encrypted=false;
-    for e in entries {
-        let path=safe_name(&e.file_name)?;let is_dir=e.is_directory();let packed=e.blocks.iter().map(|b|b.compressed_size as u64).sum::<u64>();
-        if !is_dir {files+=1;total+=e.uncompressed_size;encrypted|=e.encrypt_info.is_some()};compressed+=packed;
-        list.push(json!({"name":path.rsplit('/').next(),"path":path,"size":e.uncompressed_size,"sizeKnown":true,"compressedSize":if a.is_solid{None}else{Some(packed)},"modified":null,"crc":null,"encrypted":e.encrypt_info.is_some(),"isDir":is_dir,"methods":e.blocks.iter().map(|b|b.compression_method.name()).collect::<Vec<_>>(),"encryption":e.encrypt_info.as_ref().map(|i|i.method.name())}));
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Metadata {
+    encrypted: bool,
+    entries: MetadataEntries,
+    format: &'static str,
+    solid: bool,
+    total_compressed_size: u64,
+    total_directories: usize,
+    total_files: usize,
+    total_uncompressed_size: u64,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct MetadataEntry<'a> {
+    compressed_size: Option<u64>,
+    crc: (),
+    encrypted: bool,
+    encryption: Option<&'static str>,
+    is_dir: bool,
+    methods: MetadataMethods<'a>,
+    modified: (),
+    name: &'a str,
+    path: &'a str,
+    size: u64,
+    size_known: bool,
+}
+
+struct MetadataMethods<'a>(&'a [EggBlock]);
+
+impl Serialize for MetadataMethods<'_> {
+    fn serialize<S: Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
+        serializer.collect_seq(self.0.iter().map(|block| block.compression_method.name()))
     }
-    if a.is_solid {encrypted=a.entries.iter().any(|e|e.encrypt_info.is_some()&&!e.blocks.is_empty());compressed=a.entries.iter().flat_map(|e|&e.blocks).map(|b|b.compressed_size as u64).sum();}
-    Ok(json!({"format":"EGG","entries":list,"totalFiles":files,"totalDirectories":entries.len()-files,"totalUncompressedSize":total,"totalCompressedSize":compressed,"encrypted":encrypted,"solid":a.is_solid}))
+}
+
+struct MetadataEntries {
+    files: Vec<EggFileEntry>,
+    solid: bool,
+}
+
+fn packed_size(entry: &EggFileEntry) -> u64 {
+    entry.blocks.iter().map(|block| block.compressed_size as u64).sum()
+}
+
+impl Serialize for MetadataEntries {
+    fn serialize<S: Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
+        let mut rows = serializer.serialize_seq(Some(self.files.len()))?;
+        for entry in &self.files {
+            // Open validates every path before any response is written.
+            let normalized = normalize_separators(&entry.file_name);
+            let path = normalized.trim_end_matches('/');
+            rows.serialize_element(&MetadataEntry {
+                compressed_size: (!self.solid).then(|| packed_size(entry)),
+                crc: (),
+                encrypted: entry.encrypt_info.is_some(),
+                encryption: entry.encrypt_info.as_ref().map(|info| info.method.name()),
+                is_dir: entry.is_directory(),
+                methods: MetadataMethods(&entry.blocks),
+                modified: (),
+                name: path.rsplit('/').next().unwrap_or_default(),
+                path,
+                size: entry.uncompressed_size,
+                size_known: true,
+            })?;
+        }
+        rows.end()
+    }
+}
+
+fn metadata(a: EggArchive<egg_volumes::Reader>, selected: Option<Vec<EggFileEntry>>) -> Metadata {
+    let entries = selected.as_deref().unwrap_or(&a.entries);
+    let mut total = 0u64;
+    let mut files = 0usize;
+    let mut encrypted = false;
+    for entry in entries {
+        if !entry.is_directory() {
+            files += 1;
+            total += entry.uncompressed_size;
+            encrypted |= entry.encrypt_info.is_some();
+        }
+    }
+    // A solid selection keeps the complete shared stream's size and password state.
+    let compressed = if a.is_solid {
+        encrypted = a.entries.iter().any(|e| e.encrypt_info.is_some() && !e.blocks.is_empty());
+        a.entries.iter().map(packed_size).sum()
+    } else {
+        entries.iter().map(packed_size).sum()
+    };
+    let total_directories = entries.len() - files;
+    Metadata {
+        encrypted,
+        entries: MetadataEntries {
+            files: selected.unwrap_or(a.entries),
+            solid: a.is_solid,
+        },
+        format: "EGG",
+        solid: a.is_solid,
+        total_compressed_size: compressed,
+        total_directories,
+        total_files: files,
+        total_uncompressed_size: total,
+    }
 }
 struct CheckedWriter<W>{inner:W,bytes:u64,limit:u64}
 impl<W:Write>Write for CheckedWriter<W>{
@@ -97,7 +201,17 @@ impl<R:Read>Read for PreviewInput<R>{
     }
 }
 impl<R:Seek>Seek for PreviewInput<R>{fn seek(&mut self,pos:SeekFrom)->io::Result<u64>{self.inner.seek(pos)}}
-fn preview_entry(a:&mut EggArchive<egg_volumes::Reader>,chosen:&[EggFileEntry],req:&Request,image:bool)->Result<Value>{
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Preview {
+    bytes: Vec<u8>,
+    input_bytes: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    partial: Option<bool>,
+    total_size: u64,
+}
+
+fn preview_entry(a:&mut EggArchive<egg_volumes::Reader>,chosen:&[EggFileEntry],req:&Request,image:bool)->Result<Preview>{
     let (kind,limit)=if image{("图片",MAX_IMAGE)}else{("文本",MAX_TEXT)};
     ensure!(req.selected.len()==1&&chosen.len()==1&&!chosen[0].is_directory(),"请选择一份 EGG {kind}预览");
     let e=&chosen[0];
@@ -113,18 +227,32 @@ fn preview_entry(a:&mut EggArchive<egg_volumes::Reader>,chosen:&[EggFileEntry],r
     let mut output=CheckedWriter{inner:Vec::with_capacity(e.uncompressed_size as usize),bytes:0,limit};
     decode_reader(&mut input,e,req.password.as_deref(),req.encoding.as_deref(),&mut output)?;
     ensure!(output.bytes==e.uncompressed_size,"EGG {kind}大小不符，未显示内容");
-    Ok(json!({"bytes":output.inner,"totalSize":e.uncompressed_size,"inputBytes":MAX_TEXT_INPUT-input.left}))
+    Ok(Preview {
+        bytes: output.inner,
+        input_bytes: MAX_TEXT_INPUT - input.left,
+        partial: None,
+        total_size: e.uncompressed_size,
+    })
 }
-fn run()->Result<Value>{
+fn run() -> Result<Response> {
     let args=std::env::args_os().skip(1).collect::<Vec<_>>();ensure!(args.len()==2,"Usage: long-egg list|plan|verify|extract|preview-text|preview-image archive (JSON stdin)");
     let op=args[0].to_str().context("Invalid operation")?;let mut data=Vec::new();io::stdin().take(32*1024*1024+1).read_to_end(&mut data)?;
     ensure!(data.len()<=32*1024*1024,"EGG 请求过大");let req:Request=serde_json::from_slice(&data)?;data.fill(0);ensure!(req.selected.len()<=100000,"EGG 所选条目过多");
-    let mut a=open(Path::new(&args[1]))?;let mut chosen=entries(&a,&req.selected)?;
-    if op=="list" {return metadata(&a,&chosen)}
-    if matches!(op,"preview-text"|"preview-image") {return preview_entry(&mut a,&chosen,&req,op=="preview-image")}
+    let mut a = open(Path::new(&args[1]))?;
+    if op == "list" && req.selected.is_empty() {
+        return Ok(Response::Metadata(metadata(a, None)));
+    }
+    let mut chosen = entries(&a, &req.selected)?;
+    if op == "list" {
+        return Ok(Response::Metadata(metadata(a, Some(chosen))));
+    }
+    if matches!(op,"preview-text"|"preview-image") {return preview_entry(&mut a, &chosen, &req, op == "preview-image").map(Response::Preview)}
     plan(&a,&chosen)?;
-    if op=="plan" {return metadata(&a,&chosen)}ensure!(matches!(op,"verify"|"extract"),"Unsupported operation");
-    if a.is_solid {complex::solid(&mut a,&chosen,&req,op=="extract")?;return Ok(json!({"verified":true}));}
+    if op == "plan" {
+        return Ok(Response::Metadata(metadata(a, Some(chosen))));
+    }
+    ensure!(matches!(op, "verify" | "extract"), "Unsupported operation");
+    if a.is_solid {complex::solid(&mut a,&chosen,&req,op=="extract")?;return Ok(Response::Verified { verified: true });}
     chosen.sort_by_key(|e|e.encrypt_info.is_some());
     for e in chosen {
         if op=="verify" {decode(&mut a,&e,req.password.as_deref(),req.encoding.as_deref(),io::sink())?;continue;}
@@ -135,9 +263,38 @@ fn run()->Result<Value>{
         decode(&mut a,&e,req.password.as_deref(),req.encoding.as_deref(),&mut f)?;f.sync_all().context("[archive-inspection:io] [egg-io] EGG 文件刷盘失败")?;
         complex::set_time(&f,&e,req.preserve_timestamps)?;
     }
-    Ok(json!({"verified":true}))
+    Ok(Response::Verified { verified: true })
 }
-fn main(){let (value,code)=match run(){Ok(v)=>(json!({"result":v}),0),Err(e)=>(json!({"error":format!("{e:#}")}),2)};println!("{value}");std::process::exit(code);}
+#[derive(Serialize)]
+#[serde(untagged)]
+enum Response {
+    Metadata(Metadata),
+    Preview(Preview),
+    Verified { verified: bool },
+}
+
+fn write_response(response: Response) -> Result<()> {
+    #[derive(Serialize)]
+    struct Envelope {
+        result: Response,
+    }
+
+    let mut output = io::BufWriter::new(io::stdout().lock());
+    serde_json::to_writer(&mut output, &Envelope { result: response })?;
+    writeln!(output)?;
+    output.flush()?;
+    Ok(())
+}
+
+fn main() {
+    match run() {
+        Ok(response) => write_response(response).expect("failed printing to stdout"),
+        Err(error) => {
+            println!("{}", json!({"error": format!("{error:#}")}));
+            std::process::exit(2);
+        }
+    }
+}
 
 #[cfg(test)]mod tests{
     use super::*;
@@ -160,7 +317,8 @@ fn main(){let (value,code)=match run(){Ok(v)=>(json!({"result":v}),0),Err(e)=>(j
         // Metadata-only dependency unit: not a synthesized positive archive.
         let owner=a.entries.iter().position(|e|!e.blocks.is_empty()).unwrap();a.entries[owner].encrypt_info=encrypted.entries.iter().find_map(|e|e.encrypt_info.clone());
         let chosen=vec![a.entries.iter().find(|e|e.file_name=="hello.txt").unwrap().clone()];assert!(chosen[0].encrypt_info.is_none());
-        assert_eq!(metadata(&a,&chosen).unwrap()["encrypted"],true);assert!(plan(&a,&chosen).is_ok());
+        assert!(plan(&a, &chosen).is_ok());
+        assert_eq!(serde_json::to_value(metadata(a, Some(chosen))).unwrap()["encrypted"], true);
     }
     #[test]fn altered_bzip2_lzma_streams_cannot_pass_complete_content_checks(){
         let root=PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/fixtures/archives/egg-153/upstream");
