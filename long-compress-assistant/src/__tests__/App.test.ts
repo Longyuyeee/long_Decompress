@@ -353,14 +353,68 @@ describe('App orchestration', () => {
     wrapper.unmount()
   })
 
-  it('turns persistent watch batches into inert drafts before acknowledging them', async () => {
+  it('reconciles watch drafts once per minute while idle', async () => {
+    vi.useFakeTimers()
+    mocks.contextActions = []
+    const wrapper = mount(App, {
+      global: { plugins: [createPinia()], stubs: { MainLayout: true, ToastContainer: true, UpdateDialog: true, Modal: true } },
+    })
+    try {
+      await flushPromises()
+      const reads = () => mocks.invoke.mock.calls.filter(([command]) => command === 'list_pending_task_template_watch_batches').length
+      expect(reads()).toBe(1)
+      await vi.advanceTimersByTimeAsync(120_000)
+      expect(reads()).toBe(3)
+    } finally {
+      wrapper.unmount()
+      vi.useRealTimers()
+    }
+  })
+
+  it('drains batches signalled during a read and retries a transient error', async () => {
+    vi.useFakeTimers()
+    mocks.contextActions = []
+    const original = mocks.invoke.getMockImplementation()!
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    let reads = 0
+    let finishRead!: (value: unknown[]) => void
+    mocks.invoke.mockImplementation(async (command, ...args) => {
+      if (command !== 'list_pending_task_template_watch_batches') return original(command, ...args)
+      reads++
+      if (reads === 2) return new Promise<unknown[]>(resolve => { finishRead = resolve })
+      if (reads === 3) throw Error('Database temporarily unavailable')
+      return []
+    })
+    const wrapper = mount(App, {
+      global: { plugins: [createPinia()], stubs: { MainLayout: true, ToastContainer: true, UpdateDialog: true, Modal: true } },
+    })
+    try {
+      await flushPromises()
+      const ready = mocks.listeners.get('watch-folder-batches-ready')!
+      ready({ payload: null })
+      ready({ payload: null })
+      expect(reads).toBe(2)
+      finishRead([])
+      await flushPromises()
+      expect(reads).toBe(3)
+      await vi.advanceTimersByTimeAsync(1_500)
+      expect(reads).toBe(4)
+    } finally {
+      wrapper.unmount()
+      warn.mockRestore()
+      vi.useRealTimers()
+    }
+  })
+
+  it.each(['startup', 'notification'])('turns persistent watch batches into inert drafts before acknowledging them (%s)', async (trigger) => {
     mocks.contextActions = []
     let batchRead = false
+    let batchReady = trigger === 'startup'
     mocks.invoke.mockImplementation(async (command: string) => {
       if (command === 'load_app_settings') return '{}'
       if (command === 'take_pending_context_actions') return []
       if (command === 'list_pending_task_template_watch_batches') {
-        if (batchRead) return []
+        if (!batchReady || batchRead) return []
         batchRead = true
         return [{
           id: 'batch-1',
@@ -433,6 +487,12 @@ describe('App orchestration', () => {
       },
     })
 
+    if (trigger === 'notification') {
+      await flushPromises()
+      expect(compressionStore.groups).toHaveLength(0)
+      batchReady = true
+      mocks.listeners.get('watch-folder-batches-ready')!({ payload: null })
+    }
     await vi.waitFor(() => expect(compressionStore.groups).toHaveLength(1))
     const draft = compressionStore.groups[0]
     expect(draft.name).toBe('日志归档 · 监控草稿')

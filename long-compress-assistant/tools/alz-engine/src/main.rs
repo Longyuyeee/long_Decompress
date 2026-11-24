@@ -1,8 +1,8 @@
 //! Isolated ALZ decoder. No passwords in command arguments; stdin JSON only.
 use anyhow::{ensure, Context, Result};
-use serde::Deserialize;
-use serde_json::{json, Value};
-use std::{collections::HashSet, fs::{self, File}, io::{self, Read, Seek, SeekFrom, Write}, path::{Path, PathBuf}};
+use serde::{ser::SerializeSeq, Deserialize, Serialize, Serializer};
+use serde_json::json;
+use std::{borrow::Cow, collections::HashSet, fs::{self, File}, io::{self, Read, Seek, SeekFrom, Write}, path::{Path, PathBuf}};
 use unalz::{archive::{AlzArchive, AlzFileEntry, CompressionMethod}, crypto::ZipCrypto,
     decompress::{bzip2, deflate, raw}, error::AlzError, multivolume::MultiVolumeReader};
 
@@ -19,8 +19,16 @@ struct Request {
     // The app resolves its existing regex filter against the original names.
 }
 
+fn normalize_separators(name: &str) -> Cow<'_, str> {
+    if name.contains('\\') {
+        Cow::Owned(name.replace('\\', "/"))
+    } else {
+        Cow::Borrowed(name)
+    }
+}
+
 fn safe_name(name: &str) -> Result<String> {
-    let name = name.replace('\\', "/");
+    let name = normalize_separators(name);
     let name = name.trim_end_matches('/');
     ensure!(!name.is_empty() && !name.starts_with('/') && !name.contains([':', '\0', '?', '*', '|', '<', '>', '"'])
         && name.split('/').all(|p| !p.is_empty() && p != "." && p != ".."),
@@ -71,13 +79,17 @@ fn open(path: &Path, codec: &'static encoding_rs::Encoding) -> Result<AlzArchive
     Ok(archive)
 }
 
-fn chosen(entries: &[AlzFileEntry], selected: &[String]) -> Result<Vec<AlzFileEntry>> {
+fn chosen<'a>(entries: &'a [AlzFileEntry], selected: &[String]) -> Result<Cow<'a, [AlzFileEntry]>> {
+    // Open already checked every entry. A full listing can use the original index.
+    if selected.is_empty() {
+        return Ok(Cow::Borrowed(entries));
+    }
     let selected = selected.iter().map(|s| safe_name(s)).collect::<Result<Vec<_>>>()?;
     let mut found = vec![false; selected.len()];
     let mut result = Vec::new();
     for e in entries {
         let name = safe_name(&e.file_name)?;
-        let mut matched = selected.is_empty();
+        let mut matched = false;
         for (i, s) in selected.iter().enumerate() {
             // The app has already expanded directory selections and intersected
             // its file filter. Do not silently expand them a second time.
@@ -86,28 +98,89 @@ fn chosen(entries: &[AlzFileEntry], selected: &[String]) -> Result<Vec<AlzFileEn
         if matched { result.push(e.clone()); }
     }
     ensure!(found.iter().all(|v| *v), "所选 ALZ 条目不存在，请刷新目录后重新选择");
-    Ok(result)
+    Ok(Cow::Owned(result))
 }
 
-fn metadata(entries: &[AlzFileEntry]) -> Result<Value> {
-    let mut result = Vec::new();
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Metadata {
+    encrypted: bool,
+    entries: MetadataEntries,
+    format: &'static str,
+    total_compressed_size: u64,
+    total_directories: usize,
+    total_files: usize,
+    total_uncompressed_size: u64,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct MetadataEntry<'a> {
+    compressed_size: u64,
+    #[serde(serialize_with = "serialize_crc")]
+    crc: u32,
+    encrypted: bool,
+    is_dir: bool,
+    modified: (),
+    name: &'a str,
+    path: &'a str,
+    size: u64,
+    size_known: bool,
+}
+
+fn serialize_crc<S: Serializer>(crc: &u32, serializer: S) -> std::result::Result<S::Ok, S::Error> {
+    serializer.collect_str(&format_args!("{crc:08X}"))
+}
+
+struct MetadataEntries(Vec<AlzFileEntry>);
+
+impl Serialize for MetadataEntries {
+    fn serialize<S: Serializer>(&self, serializer: S) -> std::result::Result<S::Ok, S::Error> {
+        let mut rows = serializer.serialize_seq(Some(self.0.len()))?;
+        for entry in &self.0 {
+            // Open validates every path before any response is written.
+            let normalized = normalize_separators(&entry.file_name);
+            let path = normalized.trim_end_matches('/');
+            rows.serialize_element(&MetadataEntry {
+                compressed_size: entry.compressed_size,
+                crc: entry.file_crc,
+                encrypted: entry.is_encrypted(),
+                is_dir: entry.is_directory(),
+                modified: (),
+                name: path.rsplit('/').next().unwrap_or_default(),
+                path,
+                size: entry.uncompressed_size,
+                size_known: true,
+            })?;
+        }
+        rows.end()
+    }
+}
+
+fn metadata(entries: Vec<AlzFileEntry>) -> Metadata {
     let mut total = 0u64;
     let mut compressed = 0u64;
     let mut files = 0usize;
     let mut encrypted = false;
-    for e in entries {
-        let path = safe_name(&e.file_name)?;
+    for e in &entries {
         let is_dir = e.is_directory();
-        if !is_dir { total += e.uncompressed_size; files += 1; }
+        if !is_dir {
+            total += e.uncompressed_size;
+            files += 1;
+        }
         compressed += e.compressed_size;
         encrypted |= e.is_encrypted() && !is_dir;
-        result.push(json!({"name":path.rsplit('/').next(), "path":path, "size":e.uncompressed_size,
-            "sizeKnown":true, "compressedSize":e.compressed_size, "modified":null,
-            "crc":format!("{:08X}", e.file_crc), "encrypted":e.is_encrypted(), "isDir":is_dir}));
     }
-    Ok(json!({"format":"ALZ", "entries":result, "totalFiles":files,
-        "totalDirectories":entries.len()-files, "totalUncompressedSize":total,
-        "totalCompressedSize":compressed, "encrypted":encrypted}))
+    let total_directories = entries.len() - files;
+    Metadata {
+        encrypted,
+        entries: MetadataEntries(entries),
+        format: "ALZ",
+        total_compressed_size: compressed,
+        total_directories,
+        total_files: files,
+        total_uncompressed_size: total,
+    }
 }
 
 fn map_error(error: AlzError, encrypted: bool) -> anyhow::Error {
@@ -190,7 +263,18 @@ impl Write for PreviewBuffer {
     fn flush(&mut self) -> io::Result<()> { Ok(()) }
 }
 
-fn preview_entry(archive: &mut AlzArchive, entries: &[AlzFileEntry], password: Option<&str>, codec: &'static encoding_rs::Encoding, image: bool) -> Result<Value> {
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct Preview {
+    bytes: Vec<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    input_bytes: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    partial: Option<bool>,
+    total_size: u64,
+}
+
+fn preview_entry(archive: &mut AlzArchive, entries: &[AlzFileEntry], password: Option<&str>, codec: &'static encoding_rs::Encoding, image: bool) -> Result<Preview> {
     ensure!(entries.len() == 1 && !entries[0].is_directory(), "请选择一个 ALZ 文件预览");
     let entry = &entries[0];
     let limit = if image { 8 * 1024 * 1024 } else { MAX_TEXT_PREVIEW };
@@ -198,7 +282,12 @@ fn preview_entry(archive: &mut AlzArchive, entries: &[AlzFileEntry], password: O
     ensure!(entry.compressed_size <= MAX_TEXT_PREVIEW_INPUT, "所选 ALZ 内容压缩数据超过 64 MiB 预览范围，请先提取后打开");
     let mut buffer = PreviewBuffer { bytes: Vec::with_capacity(entry.uncompressed_size as usize), limit: limit as usize };
     decode(archive, entry, password, codec, &mut buffer)?;
-    Ok(json!({"bytes":buffer.bytes,"totalSize":entry.uncompressed_size}))
+    Ok(Preview {
+        bytes: buffer.bytes,
+        input_bytes: None,
+        partial: None,
+        total_size: entry.uncompressed_size,
+    })
 }
 
 // An intentional preview boundary is distinct from decoding/I/O failures.
@@ -225,7 +314,7 @@ impl<R:Read> Read for PrefixInput<R> {
         let count=self.inner.read(&mut buffer[..count])?;self.remaining-=count as u64;self.read+=count as u64;Ok(count)
     }
 }
-fn preview_text_prefix(archive:&mut AlzArchive,entries:&[AlzFileEntry],password:Option<&str>,codec:&'static encoding_rs::Encoding)->Result<Value>{
+fn preview_text_prefix(archive:&mut AlzArchive,entries:&[AlzFileEntry],password:Option<&str>,codec:&'static encoding_rs::Encoding)->Result<Preview>{
     ensure!(entries.len()==1&&!entries[0].is_directory(),"请选择一份 ALZ 文本预览");
     let entry=&entries[0];
     ensure!(entry.uncompressed_size>MAX_TEXT_PREVIEW,"小文本应使用完整预览");
@@ -247,10 +336,15 @@ fn preview_text_prefix(archive:&mut AlzArchive,entries:&[AlzFileEntry],password:
         Ok(_)=>anyhow::bail!("ALZ 文本在预览范围前已结束且与声明大小不符，请先检查或重新获取来源"),
     }
     ensure!(output.0.len()==MAX_TEXT_PREVIEW as usize,"ALZ 文本前缀未完成");
-    Ok(json!({"bytes":output.0,"totalSize":entry.uncompressed_size,"partial":true,"inputBytes":input.read}))
+    Ok(Preview {
+        bytes: output.0,
+        input_bytes: Some(input.read),
+        partial: Some(true),
+        total_size: entry.uncompressed_size,
+    })
 }
 
-fn run() -> Result<Value> {
+fn run() -> Result<Response> {
     let args = std::env::args_os().skip(1).collect::<Vec<_>>();
     ensure!(args.len() == 2, "Usage: long-alz list|plan|verify|extract|preview-text|preview-image|preview-text-prefix archive (request on stdin)");
     let operation = args[0].to_str().context("Invalid operation")?;
@@ -262,24 +356,33 @@ fn run() -> Result<Value> {
     let codec = codec(request.encoding.as_deref())?;
     let mut archive = open(Path::new(&args[1]), codec)?;
     let entries = chosen(&archive.entries, &request.selected)?;
-    if operation == "list" { return metadata(&entries); }
-    for e in &entries {
-        if let CompressionMethod::Unknown(m) = e.compression_method {
-            return Err(map_error(AlzError::UnknownCompressionMethod(m), false));
+    if operation != "list" {
+        for entry in entries.iter() {
+            if let CompressionMethod::Unknown(method) = entry.compression_method {
+                return Err(map_error(AlzError::UnknownCompressionMethod(method), false));
+            }
         }
     }
-    if operation == "plan" { return metadata(&entries); }
+    if matches!(operation, "list" | "plan") {
+        let entries = match entries {
+            Cow::Borrowed(_) => archive.entries,
+            Cow::Owned(entries) => entries,
+        };
+        return Ok(Response::Metadata(metadata(entries)));
+    }
     if operation == "preview-text-prefix" {
         ensure!(request.selected.len()==1,"ALZ 前缀预览必须指定一个精确条目");
-        return preview_text_prefix(&mut archive,&entries,request.password.as_deref(),codec);
+        let entries = entries.into_owned();
+        return preview_text_prefix(&mut archive,&entries,request.password.as_deref(),codec).map(Response::Preview);
     }
     if matches!(operation, "preview-text" | "preview-image") {
         ensure!(request.selected.len() == 1, "ALZ 预览必须指定一个精确条目");
-        return preview_entry(&mut archive, &entries, request.password.as_deref(), codec, operation == "preview-image");
+        let entries = entries.into_owned();
+        return preview_entry(&mut archive, &entries, request.password.as_deref(), codec, operation == "preview-image").map(Response::Preview);
     }
     ensure!(matches!(operation, "verify" | "extract"), "Unsupported operation");
     // Plain corruption is definitive evidence; inspect it before password trials.
-    let mut entries = entries;
+    let mut entries = entries.into_owned();
     entries.sort_by_key(|e| e.is_encrypted());
     for e in entries {
         if e.is_directory() {
@@ -298,16 +401,38 @@ fn run() -> Result<Value> {
             }
         }
     }
-    Ok(json!({"verified":true}))
+    Ok(Response::Verified { verified: true })
+}
+
+#[derive(Serialize)]
+#[serde(untagged)]
+enum Response {
+    Metadata(Metadata),
+    Preview(Preview),
+    Verified { verified: bool },
+}
+
+fn write_response(response: Response) -> Result<()> {
+    #[derive(Serialize)]
+    struct Envelope {
+        result: Response,
+    }
+
+    let mut output = io::BufWriter::new(io::stdout().lock());
+    serde_json::to_writer(&mut output, &Envelope { result: response })?;
+    writeln!(output)?;
+    output.flush()?;
+    Ok(())
 }
 
 fn main() {
-    let (value, code) = match run() {
-        Ok(directory) => (json!({"result":directory}), 0),
-        Err(error) => (json!({"error":format!("{error:#}")}), 2),
-    };
-    println!("{value}");
-    std::process::exit(code);
+    match run() {
+        Ok(response) => write_response(response).expect("failed printing to stdout"),
+        Err(error) => {
+            println!("{}", json!({"error": format!("{error:#}")}));
+            std::process::exit(2);
+        }
+    }
 }
 
 #[cfg(test)]

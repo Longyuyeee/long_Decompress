@@ -420,6 +420,17 @@ fn image_identity(bytes: &[u8]) -> Result<(&'static str, u32, u32)> {
     Ok((mime, width, height))
 }
 
+fn image_data_url(mime_type: &str, bytes: &[u8]) -> String {
+    let encoded_len = base64::encoded_len(bytes.len(), true)
+        .expect("preview Base64 length fits in usize");
+    let mut url = String::with_capacity("data:;base64,".len() + mime_type.len() + encoded_len);
+    url.push_str("data:");
+    url.push_str(mime_type);
+    url.push_str(";base64,");
+    general_purpose::STANDARD.encode_string(bytes, &mut url);
+    url
+}
+
 fn preview_archive_image_sync(
     archive_path: &Path,
     entry_path: &str,
@@ -453,10 +464,7 @@ fn preview_archive_image_sync(
     Ok(ArchiveImagePreview {
         entry_path,
         mime_type: mime_type.to_string(),
-        data_url: format!(
-            "data:{mime_type};base64,{}",
-            general_purpose::STANDARD.encode(&bytes)
-        ),
+        data_url: image_data_url(mime_type, &bytes),
         byte_size: bytes.len() as u64,
         width,
         height,
@@ -614,8 +622,14 @@ pub(crate) fn preview_local_image(path: &Path) -> Result<ArchiveImagePreview> {
     file.take(MAX_PREVIEW_BYTES+1).read_to_end(&mut bytes)?;
     anyhow::ensure!(bytes.len() as u64 <= MAX_PREVIEW_BYTES, "图片超过预览大小");
     let (mime, width, height) = image_identity(&bytes)?;
-    Ok(ArchiveImagePreview {entry_path:path.to_string_lossy().into_owned(),mime_type:mime.into(),
-        data_url:format!("data:{mime};base64,{}",general_purpose::STANDARD.encode(&bytes)),byte_size:bytes.len() as u64,width,height})
+    Ok(ArchiveImagePreview {
+        entry_path: path.to_string_lossy().into_owned(),
+        mime_type: mime.into(),
+        data_url: image_data_url(mime, &bytes),
+        byte_size: bytes.len() as u64,
+        width,
+        height,
+    })
 }
 
 fn preview_archive_text_sync(
@@ -858,6 +872,32 @@ mod tests {
         assert_eq!(preview.mime_type, "image/png");
         assert!(preview.data_url.starts_with("data:image/png;base64,"));
         assert_eq!(std::fs::read_dir(temp.path()).unwrap().count(), 1);
+    }
+
+    #[tokio::test]
+    async fn local_and_zip_image_previews_encode_identical_bytes() {
+        let temp = tempfile::tempdir().unwrap();
+        let archive = temp.path().join("images.zip");
+        let local_path = temp.path().join("像素.png");
+        write_zip(&archive, "art/像素.png", PNG_1X1);
+        std::fs::write(&local_path, PNG_1X1).unwrap();
+
+        let local = preview_local_image(&local_path).unwrap();
+        let archived = preview_archive_image(&archive, "art/像素.png", None)
+            .await
+            .unwrap();
+        assert_eq!(local.entry_path, local_path.to_string_lossy());
+        assert_eq!(archived.entry_path, "art/像素.png");
+        assert_eq!(local.data_url, archived.data_url);
+        assert_eq!(local.mime_type, archived.mime_type);
+        assert_eq!(
+            (local.width, local.height, local.byte_size),
+            (1, 1, PNG_1X1.len() as u64)
+        );
+
+        let (prefix, encoded) = local.data_url.split_once(',').unwrap();
+        assert_eq!(prefix, "data:image/png;base64");
+        assert_eq!(general_purpose::STANDARD.decode(encoded).unwrap(), PNG_1X1);
     }
 
     #[tokio::test]

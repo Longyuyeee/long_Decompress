@@ -161,10 +161,10 @@
 
 | 版本 | 更新 |
 | --- | --- |
+| [v1.9.0](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.9.0) | 降低大目录、压缩包预览和后台监控的资源占用 |
 | [v1.8.1](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.8.1) | 双栏返回与定位产物，批量用途预览，紧凑的结果菜单 |
 | [v1.8.0](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.8.0) | 经典右键分类与修复，小窗口弹窗适配，任务列表精简 |
 | [v1.7.40](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.40) | 包内文件复制到 Windows 剪贴板，右键快捷操作 |
 | [v1.7.38](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.38) | ZIPX（XZ）丢目录时部分取回完整成员 |
-| [v1.7.37](https://github.com/Longyuyeee/long_Decompress/releases/tag/v1.7.37) | 多帧 Zstandard ZIP 部分取回 |
 
 [查看全部版本](https://github.com/Longyuyeee/long_Decompress/releases)

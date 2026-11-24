@@ -93,7 +93,7 @@ pub struct WatchFolderService {
 }
 
 impl WatchFolderService {
-    pub fn new(pool: SqlitePool) -> Self {
+    pub fn new(pool: SqlitePool, notify_batch: impl Fn() + Send + Sync + 'static) -> Self {
         let runtimes = Arc::new(StdMutex::new(HashMap::new()));
         let pending_events = Arc::new(StdMutex::new(HashSet::new()));
         // The channel is only a wake-up edge. Watch IDs live in a bounded set,
@@ -108,6 +108,7 @@ impl WatchFolderService {
                 worker_runtimes,
                 worker_pending_events,
                 event_rx,
+                notify_batch,
             )
             .await;
         });
@@ -537,6 +538,7 @@ async fn run_event_worker(
     runtimes: Arc<StdMutex<HashMap<String, WatchRuntime>>>,
     pending_events: Arc<StdMutex<HashSet<String>>>,
     mut event_rx: mpsc::Receiver<()>,
+    notify_batch: impl Fn() + Send + Sync,
 ) {
     while event_rx.recv().await.is_some() {
         tokio::time::sleep(Duration::from_millis(WATCH_EVENT_DEBOUNCE_MS)).await;
@@ -547,7 +549,7 @@ async fn run_event_worker(
             .unwrap_or_default();
 
         for watch_id in watch_ids {
-            if let Err(error) = process_watch_folder_event(&pool, &runtimes, &watch_id).await {
+            if let Err(error) = process_watch_folder_event(&pool, &runtimes, &watch_id, &notify_batch).await {
                 log::warn!("处理监控目录事件 {watch_id} 失败: {error}");
             }
         }
@@ -558,6 +560,7 @@ async fn process_watch_folder_event(
     pool: &SqlitePool,
     runtimes: &Arc<StdMutex<HashMap<String, WatchRuntime>>>,
     watch_id: &str,
+    notify_batch: &(impl Fn() + Sync),
 ) -> Result<()> {
     let row = sqlx::query(
         r#"
@@ -652,6 +655,7 @@ async fn process_watch_folder_event(
     .execute(&mut *tx)
     .await?;
     tx.commit().await?;
+    notify_batch();
     // Only advance fingerprints after the durable batch commits. A transient
     // SQLite failure must leave the candidate eligible for a later retry.
     if let Some(runtime) = runtimes
@@ -689,6 +693,12 @@ mod tests {
     }
 
     async fn setup() -> (SqlitePool, WatchFolderService, String, tempfile::TempDir) {
+        setup_with_notification(|| {}).await
+    }
+
+    async fn setup_with_notification(
+        notify_batch: impl Fn() + Send + Sync + 'static,
+    ) -> (SqlitePool, WatchFolderService, String, tempfile::TempDir) {
         let pool = SqlitePoolOptions::new()
             .max_connections(1)
             .connect("sqlite::memory:")
@@ -723,7 +733,7 @@ mod tests {
         profile.auto_apply.exclude_patterns = vec!["*.tmp".to_string()];
         let profile_id = profile.id.clone();
         profile_service.create_profile(profile).await.unwrap();
-        let service = WatchFolderService::new(pool.clone());
+        let service = WatchFolderService::new(pool.clone(), notify_batch);
         (pool, service, profile_id, tempdir().unwrap())
     }
 
@@ -808,7 +818,9 @@ mod tests {
 
     #[tokio::test]
     async fn watcher_coalesces_changes_into_one_inert_persistent_batch() {
-        let (_pool, service, profile_id, directory) = setup().await;
+        let (notices, mut received) = mpsc::unbounded_channel();
+        let (_pool, service, profile_id, directory) =
+            setup_with_notification(move || { let _ = notices.send(()); }).await;
         let registration = service
             .create_watch_folder(&profile_id, directory.path().to_str().unwrap())
             .await
@@ -817,24 +829,22 @@ mod tests {
         fs::write(&path, "one").unwrap();
         fs::write(&path, "two-two").unwrap();
 
-        let deadline = tokio::time::Instant::now() + Duration::from_secs(8);
-        let batches = loop {
-            let batches = service.list_pending_batches().await.unwrap();
-            if !batches.is_empty() {
-                break batches;
-            }
-            assert!(
-                tokio::time::Instant::now() < deadline,
-                "watch batch timed out"
-            );
-            tokio::time::sleep(Duration::from_millis(100)).await;
-        };
+        assert_eq!(
+            tokio::time::timeout(Duration::from_secs(8), received.recv())
+                .await
+                .expect("watch batch notification timed out"),
+            Some(())
+        );
+        let batches = service.list_pending_batches().await.unwrap();
         assert_eq!(batches.len(), 1);
         assert_eq!(batches[0].watch_folder_id, registration.id);
         assert_eq!(batches[0].candidates.len(), 1);
         assert_eq!(batches[0].candidates[0].name, "fresh.log");
         service.acknowledge_batch(&batches[0].id).await.unwrap();
-        tokio::time::sleep(Duration::from_millis(2_000)).await;
+        assert!(
+            tokio::time::timeout(Duration::from_secs(2), received.recv()).await.is_err(),
+            "duplicate changes must not notify the application"
+        );
         assert!(service.list_pending_batches().await.unwrap().is_empty());
     }
 

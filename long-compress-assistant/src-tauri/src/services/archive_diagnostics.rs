@@ -430,7 +430,17 @@ pub async fn diagnose_archive_at(
                         }
                     }
                 }
-                report.total_directories=prefix.entries.iter().flat_map(|e|Path::new(&e.name).ancestors().skip(if e.is_directory {0}else{1}).filter(|p|!p.as_os_str().is_empty()).map(|p|p.to_path_buf()).collect::<Vec<_>>()).collect::<std::collections::HashSet<_>>().len();
+                report.total_directories = prefix
+                    .entries
+                    .iter()
+                    .flat_map(|entry| {
+                        Path::new(&entry.name)
+                            .ancestors()
+                            .skip(usize::from(!entry.is_directory))
+                    })
+                    .filter(|path| !path.as_os_str().is_empty())
+                    .collect::<std::collections::HashSet<_>>()
+                    .len();
                 report.total_files=prefix.entries.iter().filter(|e|!e.is_directory).count();report.total_uncompressed_size=prefix.entries.iter().map(|e|e.bytes).sum();report.total_uncompressed_size_known=prefix.complete;
                 report.integrity_tested=prefix.complete;
                 report.status=if prefix.complete {"healthy"}else if prefix.entries.is_empty(){if prefix.stop_reason.contains("[archive-inspection:unsupported]"){"unsupported_feature"}else if prefix.stop_reason.contains("未提供内容校验"){"structure_only"}else if prefix.stop_reason.contains("[lzop-encoding]"){"password_encoding"}else{"damaged"}}else{"partial_recovery"}.into();

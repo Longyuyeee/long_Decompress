@@ -377,15 +377,7 @@ fn scan_source_with_links(
         report.stop_reason = "TAR 条目及外层 LZOP 已完整结束".into();
     }
     check(cancelled)?;
-    let mut hash = Sha256::new();
-    hash.update(src.stamp.as_bytes());
-    hash.update(serde_json::to_vec(&report)?);
-    for e in &report.entries {
-        hash.update(e.offset.to_le_bytes());
-        if let Some(id)=e.link_source {hash.update(b"hardlink");hash.update((id as u64).to_le_bytes());}
-        if let Some(layout) = &e.sparse { hash.update(serde_json::to_vec(layout)?); }
-    }
-    report.revision = format!("{:x}", hash.finalize());
+    report.revision = report.revision_id(&src.stamp)?;
     progress(src.length, src.length);
     Ok(report)
 }

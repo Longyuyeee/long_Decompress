@@ -106,11 +106,30 @@ pub async fn add(pool:&SqlitePool,paths:Vec<String>)->Result<Vec<Source>>{
     for item in items{let result=sqlx::query("INSERT OR IGNORE INTO archive_library_sources(id,path,name,format) VALUES(?,?,?,?)").bind(uuid::Uuid::new_v4().to_string()).bind(item.path).bind(item.name).bind(item.format).execute(&mut *transaction).await?;inserted+=result.rows_affected() as i64;ensure!(count+inserted<=MAX_SOURCES,"资料库暂支持 10000 份来源，请先移除不用的记录");}
     transaction.commit().await?;list(pool).await
 }
-pub async fn list(pool:&SqlitePool)->Result<Vec<Source>>{
-    let rows:Vec<Source>=sqlx::query_as("SELECT * FROM archive_library_sources ORDER BY name COLLATE NOCASE,path").fetch_all(pool).await?;
-    let active=JOBS.lock().unwrap().keys().cloned().collect::<HashSet<_>>();
-    let mut result=vec![];
-    for mut row in rows{if row.status=="indexing"&&!active.contains(&row.id){row.status="interrupted".into();row.note="上次建库已中断，可手动继续；其他已完成来源可搜索".into();sqlx::query("UPDATE archive_library_sources SET status=?,note=? WHERE id=? AND status='indexing'").bind(&row.status).bind(&row.note).bind(&row.id).execute(pool).await?;}result.push(row)}Ok(result)
+pub async fn list(pool: &SqlitePool) -> Result<Vec<Source>> {
+    let mut rows: Vec<Source> = sqlx::query_as(
+        "SELECT * FROM archive_library_sources ORDER BY name COLLATE NOCASE,path",
+    )
+    .fetch_all(pool)
+    .await?;
+    let active = JOBS.lock().unwrap().keys().cloned().collect::<HashSet<_>>();
+
+    for row in &mut rows {
+        if row.status == "indexing" && !active.contains(&row.id) {
+            row.status = "interrupted".into();
+            row.note = "上次建库已中断，可手动继续；其他已完成来源可搜索".into();
+            sqlx::query(
+                "UPDATE archive_library_sources SET status=?,note=? WHERE id=? AND status='indexing'",
+            )
+            .bind(&row.status)
+            .bind(&row.note)
+            .bind(&row.id)
+            .execute(pool)
+            .await?;
+        }
+    }
+
+    Ok(rows)
 }
 pub async fn source(pool:&SqlitePool,id:&str)->Result<Source>{sqlx::query_as("SELECT * FROM archive_library_sources WHERE id=?").bind(id).fetch_optional(pool).await?.context("来源已移出资料库，请返回重新选择")}
 pub async fn remove(pool:&SqlitePool,id:&str)->Result<()>{ensure!(!JOBS.lock().unwrap().contains_key(id),"请先停止这份来源的建库，再移除");let mut tx=pool.begin().await?;sqlx::query("DELETE FROM archive_library_organization WHERE source_id=?").bind(id).execute(&mut *tx).await?;sqlx::query("DELETE FROM archive_library_entries WHERE source_id=?").bind(id).execute(&mut *tx).await?;sqlx::query("DELETE FROM archive_library_sources WHERE id=?").bind(id).execute(&mut *tx).await?;tx.commit().await?;Ok(())}

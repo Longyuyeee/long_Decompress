@@ -191,6 +191,7 @@ pub fn save_encrypted_guarded(source:&Path,revision:&str,changes:&[Change],origi
         if let Some(target)=&edit.target_path {ensure!(normalized_path(target,original.is_dir)?==*target,"新包内路径不规范：{target}");}
         ensure!(edits.insert(edit.source_path.as_str(),edit.target_path.as_deref()).is_none(),"同一原条目重复整理：{}",edit.source_path);
     }
+    drop(originals);
     let mut expected=BTreeMap::new();
     for entry in &catalog.entries {
         let target=edits.get(entry.path.as_str()).copied().unwrap_or(Some(entry.path.as_str()));
@@ -228,6 +229,7 @@ pub fn save_encrypted_guarded(source:&Path,revision:&str,changes:&[Change],origi
             }
         }}
     }
+    drop(original_facts);
     let mut buffer=vec![0u8;256*1024];
     for change in changes {checkpoint(&flag)?;let input=&change.input;progress(&observer,"writing",0.3,&input.target_path,0,estimate,None);
         written_paths.insert(input.target_path.clone());
@@ -244,17 +246,27 @@ pub fn save_encrypted_guarded(source:&Path,revision:&str,changes:&[Change],origi
         loop{checkpoint(&flag)?;let n=file.read(&mut buffer)?;if n==0{break}writer.write_all(&buffer[..n])?;copied+=n as u64;}
         ensure!(copied==input.size&&file_revision(Path::new(&input.source_path),false)?==input.source_revision,"添加来源在保存期间变化，请重新添加：{}",input.source_path);
     }
+    drop(catalog);
     // An implicit directory can become empty after removing its last file. Keep the projected directory usable.
     fn mark_parents(path:&str,represented:&mut HashSet<String>){let parts:Vec<_>=path.trim_end_matches('/').split('/').collect();for i in 1..parts.len(){represented.insert(format!("{}/",parts[..i].join("/")));}if path.ends_with('/'){represented.insert(path.into());}}
     let mut represented=HashSet::new();for path in &written_paths{mark_parents(path,&mut represented);}
     let mut directories:Vec<_>=expected.values().filter(|entry|entry.is_dir).collect();directories.sort_by_key(|entry|std::cmp::Reverse(entry.path.len()));
     for directory in directories {checkpoint(&flag)?;if !represented.contains(&directory.path){writer.add_directory(&directory.path,SimpleFileOptions::default().compression_method(CompressionMethod::Stored))?;written_paths.insert(directory.path.clone());mark_parents(&directory.path,&mut represented);}}
+    drop(represented);
+    drop(expected);
     let file=writer.finish()?;file.file.sync_all()?;drop(file);checkpoint(&flag)?;
     let mut rebuilt=ZipArchive::new(ControlledFile{file:File::open(&staged.0)?,flag:flag.clone(),observer:None,position:0,high:0,estimate:0})?;
     let facts=validate_contents(&mut rebuilt,&flag,&observer,"verifying",0.75,0.23,output_password,Some(credentials.output_encoding))?;
-    for (path,fact) in &retained_facts {ensure!(facts.get(path)==Some(fact),"保留条目的内容或新位置不一致：{path}");}
-    ensure!(facts.keys().cloned().collect::<HashSet<_>>()==written_paths,"新包条目与确认的修改清单不一致");
+    for (path, fact) in retained_facts {
+        ensure!(facts.get(&path) == Some(&fact), "保留条目的内容或新位置不一致：{path}");
+    }
+    ensure!(
+        facts.len() == written_paths.len()
+            && written_paths.into_iter().all(|path| facts.contains_key(&path)),
+        "新包条目与确认的修改清单不一致"
+    );
     for change in changes{ensure!(facts.get(&change.input.target_path).is_some_and(|(size,_)|*size==change.input.size),"新增内容大小不一致：{}",change.input.target_path);}
+    drop(facts);
     drop(rebuilt);ensure!(inspect(source)?.revision==revision,"原包在保存期间变化，请重新确认后再编辑");
     before_publish()?;checkpoint(&flag)?;progress(&observer,"publishing",0.99,"",0,0,None);
     super::output_publish_transaction::transfer_no_replace(&staged.0,output)?;

@@ -18,7 +18,7 @@ impl Write for PrefixWriter {
     }
     fn flush(&mut self)->io::Result<()> { Ok(()) }
 }
-pub fn preview(a:&mut EggArchive<egg_volumes::Reader>,chosen:&[EggFileEntry],req:&Request)->Result<Value> {
+pub fn preview(a:&mut EggArchive<egg_volumes::Reader>,chosen:&[EggFileEntry],req:&Request)->Result<Preview> {
     ensure!(!a.is_solid && chosen.len()==1 && !chosen[0].is_directory(),"请选择一份非固实 EGG 文本");
     let e=&chosen[0];
     ensure!(e.uncompressed_size>MAX_TEXT,"小文本应使用完整预览");
@@ -42,7 +42,12 @@ pub fn preview(a:&mut EggArchive<egg_volumes::Reader>,chosen:&[EggFileEntry],req
         match result {
             Err(EggError::Io(error)) if error.get_ref().is_some_and(|e|e.is::<PrefixComplete>())=>{
                 ensure!(output.bytes.len()==MAX_TEXT as usize,"EGG 文本前缀未完成");
-                return Ok(json!({"bytes":output.bytes,"totalSize":e.uncompressed_size,"inputBytes":MAX_TEXT_INPUT-input.left,"partial":true}));
+                return Ok(Preview {
+                    bytes: output.bytes,
+                    input_bytes: MAX_TEXT_INPUT - input.left,
+                    partial: Some(true),
+                    total_size: e.uncompressed_size,
+                });
             }
             Err(error)=>return Err(map_error(error,e.encrypt_info.is_some())),
             Ok(crc)=>ensure!(written==b.uncompressed_size as u64 && crc==b.crc32,
@@ -50,7 +55,12 @@ pub fn preview(a:&mut EggArchive<egg_volumes::Reader>,chosen:&[EggFileEntry],req
         }
         // Blocks wholly within the prefix still require full size, CRC and end checks.
         if output.bytes.len()==MAX_TEXT as usize {
-            return Ok(json!({"bytes":output.bytes,"totalSize":e.uncompressed_size,"inputBytes":MAX_TEXT_INPUT-input.left,"partial":true}));
+            return Ok(Preview {
+                bytes: output.bytes,
+                input_bytes: MAX_TEXT_INPUT - input.left,
+                partial: Some(true),
+                total_size: e.uncompressed_size,
+            });
         }
     }
     anyhow::bail!("[archive-inspection:damaged] EGG 文本在预览范围前已结束且与声明大小不符，请先检查或重新获取来源")

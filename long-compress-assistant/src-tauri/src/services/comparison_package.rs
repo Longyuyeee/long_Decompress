@@ -80,17 +80,18 @@ pub fn save(source:&Path,revision:&str,changes:&[edit::Change],original_edits:&[
     let originals=sources(&inputs,flag.clone())?;
     let staging=tempfile::Builder::new().prefix(".long-compose-").tempdir_in(output.parent().context("请选择保存位置")?)?;
     let mut materialized=changes.to_vec();
-    for (source_path,catalog) in &originals {
-        let secret=source_credentials.iter().find(|c|c.path==*source_path);
-        let mut archive=if catalog.source.kind=="zip"{Some(comparison::open_zip(catalog)?)}else{None};
+    // Release each source catalog after staging its entries, before re-reading sources below.
+    for (source_path,catalog) in originals {
+        let secret=source_credentials.iter().find(|c|c.path==source_path);
+        let mut archive=if catalog.source.kind=="zip"{Some(comparison::open_zip(&catalog)?)}else{None};
         for (index,change) in materialized.iter_mut().enumerate() {
             let input=&mut change.input;
-            let Some(reference)=&input.comparison else{continue};if reference.source.path!=*source_path{continue}
-            check(&flag)?;let e=entry(catalog,reference,input)?;
+            let Some(reference)=&input.comparison else{continue};if reference.source.path!=source_path{continue}
+            check(&flag)?;let e=entry(&catalog,reference,input)?;
             observer(edit::Progress{phase:"reading",progress:0.0,current_file:e.path.clone(),processed_bytes:0,total_bytes:input.size,output_bytes:None});
             let path=staging.path().join(index.to_string());
             if input.is_dir{std::fs::create_dir(&path)?;}else{
-                let mut reader:Box<dyn Read+'_>=if let Some(archive)=&mut archive{Box::new(comparison::open_entry(archive,&e.raw,secret.map(|c|c.password.as_str()),secret.and_then(|c|c.encoding).or(reference.encoding))?)}else{Box::new(File::open(Path::new(source_path).join(&e.path))?)};
+                let mut reader:Box<dyn Read+'_>=if let Some(archive)=&mut archive{Box::new(comparison::open_entry(archive,&e.raw,secret.map(|c|c.password.as_str()),secret.and_then(|c|c.encoding).or(reference.encoding))?)}else{Box::new(File::open(Path::new(&source_path).join(&e.path))?)};
                 let mut file=File::create(&path)?;let mut copied=0;let mut buffer=[0u8;65536];
                 loop {check(&flag)?;let n=reader.read(&mut buffer).with_context(||format!("组包内容读取失败：{}；请核对来源密码和编码",e.path))?;if n==0{break}file.write_all(&buffer[..n])?;copied+=n as u64;observer(edit::Progress{phase:"reading",progress:0.0,current_file:e.path.clone(),processed_bytes:copied,total_bytes:input.size,output_bytes:None});}
                 ensure!(copied==input.size,"组包来源大小已变化，请重新确认");

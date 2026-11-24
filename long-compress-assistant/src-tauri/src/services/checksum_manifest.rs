@@ -81,11 +81,15 @@ pub fn verify_with_progress(checksum_file: &Path, base_dir: &Path, only_lines: O
         let _ = algorithm;
         row.status = ChecksumEntryStatus::NotChecked; row.reason = "尚未读取文件".into(); entries.push(row);
     }
+    drop(bytes);
     let changed = expected_manifest_id.is_some_and(|id| id != manifest_id);
     let mut report = ChecksumVerificationReport { valid: false, message: String::new(), checksum_path: checksum_file.to_string_lossy().into_owned(), manifest_id, entries, cancelled: false };
     let chosen: Vec<_> = report.entries.iter().enumerate().filter(|(_, row)| !changed && row.status == ChecksumEntryStatus::NotChecked && selected.as_ref().is_none_or(|lines| lines.contains(&row.line))).map(|(index, _)| index).collect();
     let mut state = super::checksum_progress::ChecksumProgress { total_files: chosen.len(), total_bytes: chosen.iter().filter_map(|&i| std::fs::metadata(&report.entries[i].path).ok()).filter(|m| m.is_file()).map(|m| m.len()).sum(), ..Default::default() };
-    state.report = Some(report.clone()); progress(state.clone()); state.report = None;
+    progress(super::checksum_progress::ChecksumProgress {
+        report: Some(report.clone()),
+        ..state.clone()
+    });
     for index in chosen {
         if cancelled() { report.cancelled = true; break; }
         let row = &mut report.entries[index];

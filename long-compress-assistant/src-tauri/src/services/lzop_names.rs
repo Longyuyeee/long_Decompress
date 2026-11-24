@@ -93,7 +93,8 @@ fn decode_legacy(raw: &[u8], encoding: ZipPasswordEncoding) -> Result<String> {
 #[derive(Default)]
 pub(super) struct Names {
     occupied: HashSet<String>,
-    directories: HashMap<String, String>,
+    // A directory whose resolved path equals its key needs no separate value.
+    directories: HashMap<String, Option<String>>,
 }
 fn component(raw: &str, index: usize) -> String {
     let mut name: String = raw
@@ -200,11 +201,12 @@ impl Names {
             }
             original.push_str(part);
             let key = original.to_lowercase();
-            parent = if let Some(path) = self.directories.get(&key) {
-                path.clone()
+            parent = if let Some((key, path)) = self.directories.get_key_value(&key) {
+                path.as_ref().unwrap_or(key).clone()
             } else {
                 let path = self.unique(&parent, &component(part, index), index);
-                self.directories.insert(key, path.clone());
+                let remapped_path = (path != key).then(|| path.clone());
+                self.directories.insert(key, remapped_path);
                 path
             };
         }

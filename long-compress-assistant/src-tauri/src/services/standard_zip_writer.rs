@@ -6,6 +6,7 @@ use std::{
     collections::HashMap,
     fs::{File, OpenOptions},
     io::{Read, Seek, SeekFrom, Write},
+    ops::Range,
     path::{Path, PathBuf},
 };
 
@@ -35,9 +36,19 @@ fn read_at(file: &mut File, at: u64, len: usize) -> Result<Vec<u8>> {
 
 struct Directory {
     start: u64,
-    records: Vec<Vec<u8>>,
+    bytes: Vec<u8>,
+    record_ranges: Vec<Range<usize>>,
     comment: Vec<u8>,
 }
+
+impl Directory {
+    fn records(&self) -> impl ExactSizeIterator<Item = &[u8]> + '_ {
+        self.record_ranges
+            .iter()
+            .map(|range| &self.bytes[range.clone()])
+    }
+}
+
 fn directory(file: &mut File) -> Result<Directory> {
     let length = file.metadata()?.len();
     let tail_start = length.saturating_sub(65_557);
@@ -83,7 +94,7 @@ fn directory(file: &mut File) -> Result<Directory> {
     );
     let bytes = read_at(file, start, size as usize)?;
     let mut cursor = 0;
-    let mut records = Vec::new();
+    let mut record_ranges = Vec::new();
     for _ in 0..count {
         ensure!(
             cursor + 46 <= bytes.len() && &bytes[cursor..cursor + 4] == b"PK\x01\x02",
@@ -94,13 +105,14 @@ fn directory(file: &mut File) -> Result<Directory> {
             + u16_at(&bytes, cursor + 30) as usize
             + u16_at(&bytes, cursor + 32) as usize;
         ensure!(cursor + len <= bytes.len(), "ZIP 中央目录条目被截断");
-        records.push(bytes[cursor..cursor + len].to_vec());
+        record_ranges.push(cursor..cursor + len);
         cursor += len;
     }
     ensure!(cursor == bytes.len(), "ZIP 目录含有无法重新分卷的额外记录");
     Ok(Directory {
         start,
-        records,
+        bytes,
+        record_ranges,
         comment: tail[end + 22..].to_vec(),
     })
 }
@@ -292,6 +304,7 @@ pub(crate) fn split(
     let dir = directory(&mut file)?;
     // A small archive remains one ordinary ZIP, with no unnecessary z01 file.
     if length <= limit {
+        drop(dir);
         let mut writer = OpenOptions::new()
             .write(true)
             .create_new(true)
@@ -335,8 +348,7 @@ pub(crate) fn split(
     };
     disks.record(b"PK\x07\x08")?;
     let mut order = dir
-        .records
-        .iter()
+        .records()
         .enumerate()
         .map(|(index, record)| Ok((extra_parts(record)?.2, index)))
         .collect::<Result<Vec<_>>>()?;
@@ -345,7 +357,7 @@ pub(crate) fn split(
         order.first().is_some_and(|entry| entry.0 == 0),
         "ZIP 含有自解压前缀或没有可分卷的本地条目"
     );
-    let mut locations = vec![(0, 0); dir.records.len()];
+    let mut locations = vec![(0, 0); dir.records().len()];
     let mut buffer = vec![0; 256 * 1024];
     progress(0, length);
     for (position, &(offset, index)) in order.iter().enumerate() {
@@ -377,7 +389,7 @@ pub(crate) fn split(
     let mut cd_location = None;
     let mut cd_size = 0u64;
     let mut counts = HashMap::<u32, u64>::new();
-    for (index, record) in dir.records.iter().enumerate() {
+    for (index, record) in dir.records().enumerate() {
         check()?;
         let (disk, offset) = locations[index];
         let record = relocate(record, disk, offset)?;
@@ -390,7 +402,7 @@ pub(crate) fn split(
     let (cd_disk, cd_offset) = cd_location.context("ZIP 中央目录为空")?;
     let disk = disks.disk();
     let zip64_offset = disks.position;
-    let count = dir.records.len() as u64;
+    let count = dir.records().len() as u64;
     let disk_count = counts.get(&disk).copied().unwrap_or(0);
     let mut end = vec![0u8; 98];
     end[..4].copy_from_slice(b"PK\x06\x06");

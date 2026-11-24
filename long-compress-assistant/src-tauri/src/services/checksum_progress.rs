@@ -38,7 +38,10 @@ pub fn calculate_batch(
         algorithm: label.to_ascii_uppercase(), checksum: String::new(), status: "pending".into(), error: None,
     }).collect();
     let mut state = ChecksumProgress { total_files: paths.len(), total_bytes: paths.iter().filter_map(|p| std::fs::metadata(p).ok()).filter(|m| m.is_file()).map(|m| m.len()).sum(), ..Default::default() };
-    state.calculation_results = Some(rows.clone()); progress(state.clone()); state.calculation_results = None;
+    progress(ChecksumProgress {
+        calculation_results: Some(rows.clone()),
+        ..state.clone()
+    });
     for index in 0..rows.len() {
         if cancelled() { break; }
         state.current_file = rows[index].path.clone(); state.file_bytes = 0; state.file_size = 0;

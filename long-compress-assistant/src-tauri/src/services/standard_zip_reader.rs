@@ -59,12 +59,16 @@ fn u64_at(bytes: &[u8], index: usize) -> u64 {
 fn read_at(reader: &mut NumericVolumeReader, offset: u64, size: usize) -> Result<Vec<u8>> {
     reader.seek(SeekFrom::Start(offset))?;
     let mut bytes = vec![0; size];
-    reader.read_exact(&mut bytes).map_err(|error| {
+    read_exact(reader, &mut bytes)?;
+    Ok(bytes)
+}
+
+fn read_exact(reader: &mut NumericVolumeReader, bytes: &mut [u8]) -> Result<()> {
+    reader.read_exact(bytes).map_err(|error| {
         if error.kind() == io::ErrorKind::UnexpectedEof {
             anyhow::Error::new(error).context("[archive-inspection:damaged] ZIP 分卷目录或文件头被截断，请重新获取完整原卷")
         } else { error.into() }
-    })?;
-    Ok(bytes)
+    })
 }
 fn absolute(starts: &[u64], disk: u32, relative: u64) -> Result<u64> {
     let start = *starts
@@ -199,9 +203,22 @@ impl StandardZipReader {
             cd_size <= 256 * 1024 * 1024,
             "[archive-inspection:unsupported] ZIP 中央目录超出当前元数据读取范围"
         );
-        let original = read_at(&mut source, directory_start, cd_size as usize)?;
-        let mut directory = Vec::with_capacity(original.len());
-        let mut cursor = 0usize;
+        const HEADER_LEN: usize = 46;
+        const ZIP64_OFFSET_EXTRA_LEN: usize = 12;
+        const ZIP64_FOOTER_LEN: usize = 98;
+        let input_len = cd_size as usize;
+        let max_entries = count.min((input_len / HEADER_LEN) as u64) as usize;
+        // Each converted record adds at most a ZIP64 tag, length and offset.
+        // Leave room before the input so conversion cannot overwrite unread records.
+        let input_start = max_entries * ZIP64_OFFSET_EXTRA_LEN;
+        let input_end = input_start + input_len;
+        let comment_len = footer.len() - 22;
+
+        source.seek(SeekFrom::Start(directory_start))?;
+        let mut directory = vec![0; input_end + ZIP64_FOOTER_LEN + comment_len];
+        read_exact(&mut source, &mut directory[input_start..input_end])?;
+        let mut cursor = input_start;
+        let mut written = 0usize;
         let mut retained = 0u64;
         let mut recovery_notes = Vec::new();
         let mut recovery_encrypted = false;
@@ -212,17 +229,20 @@ impl StandardZipReader {
         for _ in 0..count {
             ensure!(!cancelled.is_some_and(|flag| flag.load(Ordering::SeqCst)), "ZIP recovery cancelled");
             ensure!(
-                cursor + 46 <= original.len() && &original[cursor..cursor + 4] == b"PK\x01\x02",
+                cursor + HEADER_LEN <= input_end && &directory[cursor..cursor + 4] == b"PK\x01\x02",
                 "[archive-inspection:damaged] ZIP 中央目录条目损坏或被截断"
             );
-            let mut header = original[cursor..cursor + 46].to_vec();
+            let mut header = [0; HEADER_LEN];
+            header.copy_from_slice(&directory[cursor..cursor + HEADER_LEN]);
             let name_len = u16_at(&header, 28) as usize;
             let extra_len = u16_at(&header, 30) as usize;
             let comment_len = u16_at(&header, 32) as usize;
-            let entry_end = cursor + 46 + name_len + extra_len + comment_len;
-            ensure!(entry_end <= original.len(), "[archive-inspection:damaged] ZIP 中央目录条目被截断");
-            let original_extra =
-                &original[cursor + 46 + name_len..cursor + 46 + name_len + extra_len];
+            let name_start = cursor + HEADER_LEN;
+            let extra_start = name_start + name_len;
+            let comment_start = extra_start + extra_len;
+            let entry_end = comment_start + comment_len;
+            ensure!(entry_end <= input_end, "[archive-inspection:damaged] ZIP 中央目录条目被截断");
+            let original_extra = &directory[extra_start..comment_start];
             let mut offset = u32_at(&header, 42) as u64;
             let mut disk = u16_at(&header, 34) as u32;
             let mut compressed = u32_at(&header, 20) as u64;
@@ -285,14 +305,14 @@ impl StandardZipReader {
                     ensure!(data_start.checked_add(compressed).is_some_and(|end| end <= available),
                         "内容涉及缺失分卷或被截断，请补齐原卷后重试");
                     let name = read_at(&mut source, offset + 30, name_size as usize)?;
-                    ensure!(name == original[cursor + 46..cursor + 46 + name_len], "文件名与目录记录不一致");
+                    ensure!(name == directory[name_start..extra_start], "文件名与目录记录不一致");
                 }
                 Ok(offset)
             })();
             let offset = match entry_offset {
                 Ok(offset) => offset,
                 Err(error) if partial => {
-                    let name = String::from_utf8_lossy(&original[cursor + 46..cursor + 46 + name_len]);
+                    let name = String::from_utf8_lossy(&directory[name_start..extra_start]);
                     recovery_notes.push(format!("{name}：{error}，未恢复"));
                     // Only name a missing-volume cause when a referenced disk,
                     // header or declared payload actually crosses a known gap.
@@ -328,16 +348,23 @@ impl StandardZipReader {
                     .context("ZIP extra field too long")?
                     .to_le_bytes(),
             );
-            directory.extend_from_slice(&header);
-            directory.extend_from_slice(&original[cursor + 46..cursor + 46 + name_len]);
-            directory.extend_from_slice(&extra);
-            directory.extend_from_slice(&original[entry_end - comment_len..entry_end]);
+            let output_name = written + HEADER_LEN;
+            let output_extra = output_name + name_len;
+            let output_comment = output_extra + extra.len();
+            debug_assert!(output_name <= name_start);
+            debug_assert!(output_comment <= comment_start);
+            directory[written..output_name].copy_from_slice(&header);
+            directory.copy_within(name_start..extra_start, output_name);
+            directory[output_extra..output_comment].copy_from_slice(&extra);
+            directory.copy_within(comment_start..entry_end, output_comment);
+            written = output_comment + comment_len;
             cursor = entry_end;
             retained += 1;
         }
         ensure!(!partial || retained > 0, "现有卷中未找到可完整读取的条目，请补齐所缺分卷后重试");
         let count = retained;
-        let size = directory.len() as u64;
+        directory.truncate(written);
+        let size = written as u64;
         let zip64_position = directory_start + size;
         directory.extend_from_slice(b"PK\x06\x06");
         directory.extend_from_slice(&44u64.to_le_bytes());
@@ -360,6 +387,9 @@ impl StandardZipReader {
         directory.extend_from_slice(&u32::MAX.to_le_bytes());
         directory.extend_from_slice(&u32::MAX.to_le_bytes());
         directory.extend_from_slice(&footer[20..]);
+        if partial || directory.len() < input_len {
+            directory.shrink_to_fit();
+        }
         Ok(Some(Self {
             source,
             directory_start,

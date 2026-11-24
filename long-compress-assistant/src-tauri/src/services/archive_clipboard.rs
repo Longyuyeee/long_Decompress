@@ -100,14 +100,19 @@ impl PreparedCopy {
     }
     pub fn validate(&self) -> Result<Vec<PathBuf>> {
         // Verify the exact requested tree, including empty directories, before exposing any file to Explorer.
-        let mut allowed = self.expected.clone();
-        for path in self.expected.keys() {
-            let mut parent = Path::new(path).parent();
-            while let Some(p) = parent.filter(|p| !p.as_os_str().is_empty()) {
-                allowed
-                    .entry(p.to_string_lossy().replace('\\', "/"))
-                    .or_insert((true, 0));
-                parent = p.parent();
+        let mut allowed = BTreeMap::new();
+        for (path, &metadata) in &self.expected {
+            // Preparation normalizes all separators to '/'. Borrow path slices
+            // for validation so a large selection keeps only one copy of its names.
+            let path = path.as_str();
+            allowed.insert(path, metadata);
+            let mut child = path;
+            while let Some((parent, _)) = child.rsplit_once('/') {
+                let std::collections::btree_map::Entry::Vacant(entry) = allowed.entry(parent) else {
+                    break;
+                };
+                entry.insert((true, 0));
+                child = parent;
             }
         }
         for entry in walkdir::WalkDir::new(self.path())
@@ -121,7 +126,7 @@ impl PreparedCopy {
                 .to_string_lossy()
                 .replace('\\', "/");
             let (directory, size) = allowed
-                .remove(&name)
+                .remove(name.as_str())
                 .with_context(|| format!("复制缓存包含未选择的项目：{name}"))?;
             let meta = fs::symlink_metadata(entry.path())?;
             anyhow::ensure!(

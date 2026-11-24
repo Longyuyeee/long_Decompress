@@ -114,6 +114,31 @@ describe('DualPaneFileManager', () => {
     })
   })
 
+  it('keeps existing numeric ordering, directory priority and collation ties', async () => {
+    const original = invoke.getMockImplementation()!
+    const entries = [
+      { name: 'report-10.txt', is_dir: false },
+      { name: '目录10', is_dir: true },
+      { name: 'Café-2.txt', is_dir: false },
+      { name: 'Cafe-2.txt', is_dir: false },
+      { name: '目录2', is_dir: true },
+      { name: 'report-2.txt', is_dir: false },
+    ].map(entry => ({ ...entry, path: 'C:\\left\\' + entry.name, size: 1 }))
+    invoke.mockImplementation((command, args) =>
+      command === 'list_files' && args.path === 'C:\\left'
+        ? Promise.resolve(entries)
+        : original(command, args),
+    )
+
+    const wrapper = mount(DualPaneFileManager)
+    await flushPromises()
+    const rows = wrapper.findAll('[data-file-pane="left"] .file-row strong')
+    expect(rows.map(row => row.text())).toEqual([
+      '目录2', '目录10', 'Café-2.txt', 'Cafe-2.txt', 'report-2.txt', 'report-10.txt',
+    ])
+    wrapper.unmount()
+  })
+
   it('opens as a real dual-pane disk browser instead of an archive dropzone', async () => {
     const wrapper = mount(DualPaneFileManager, { attachTo: document.body })
     await flushPromises()

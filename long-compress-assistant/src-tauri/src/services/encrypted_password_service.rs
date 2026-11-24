@@ -9,6 +9,7 @@ use crate::services::password_strength_service::{
 };
 use crate::database::models::{PasswordEntryDb, PasswordGroupDb};
 use serde::{Deserialize, Serialize};
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -478,9 +479,9 @@ impl EncryptedPasswordService {
                 let (svc, _) = EncryptionService::from_password(password, None)?;
                 svc
             };
-            encryption_service.decrypt(&encrypted_data)?
+            Cow::Owned(encryption_service.decrypt(&encrypted_data)?)
         } else {
-            import_data.to_vec()
+            Cow::Borrowed(import_data)
         };
 
         let export_data: ExportData = serde_json::from_slice(&data)?;
@@ -776,6 +777,56 @@ impl PasswordGroupService {
 mod tests {
     use super::*;
     use crate::models::password::PasswordCategory;
+    use crate::services::password_strength_service::ImportExportFormat;
+
+    #[tokio::test]
+    async fn imports_plain_and_encrypted_backups_with_the_same_entries() {
+        let source_dir = tempfile::tempdir().unwrap();
+        let mut source = EncryptedPasswordService::new(source_dir.path());
+        source.initialize("test-source-key").await.unwrap();
+        let mut entry = PasswordEntry::new(
+            "备份条目".into(),
+            "test-only-password".into(),
+            PasswordCategory::Other,
+        );
+        entry.notes = Some("备份备注".into());
+        source.add_password(entry.clone()).await.unwrap();
+
+        for encrypt in [false, true] {
+            let options = PasswordImportExportOptions {
+                format: ImportExportFormat::Json,
+                encrypt,
+                include_passwords: true,
+                include_metadata: true,
+            };
+            let export_password = "test-export-key";
+            let backup = source
+                .export_passwords(&options, export_password)
+                .await
+                .unwrap();
+            let target_dir = tempfile::tempdir().unwrap();
+            let mut target = EncryptedPasswordService::new(target_dir.path());
+            target.initialize("test-target-key").await.unwrap();
+
+            if encrypt {
+                assert!(target
+                    .import_passwords(&backup, &options, Some("wrong-key"))
+                    .await
+                    .is_err());
+                assert!(target.list_passwords().await.unwrap().is_empty());
+            }
+            let count = target
+                .import_passwords(&backup, &options, encrypt.then_some(export_password))
+                .await
+                .unwrap();
+            assert_eq!(count, 1);
+            let entries = target.list_passwords().await.unwrap();
+            assert_eq!(entries.len(), 1);
+            assert_eq!(entries[0].name, entry.name);
+            assert_eq!(entries[0].password, entry.password);
+            assert_eq!(entries[0].notes, entry.notes);
+        }
+    }
 
     #[tokio::test]
     async fn legacy_plaintext_entry_is_migrated_without_changing_the_password() {

@@ -349,7 +349,7 @@ pub fn preview_solid(
     req: &Request,
     kind: &str,
     limit: u64,
-) -> Result<Value> {
+) -> Result<Preview> {
     ensure!(!a.entries.iter().any(|e| e.encrypt_info.is_some()),
         "EGG 加密固实{kind}暂不支持预览，请先提取后打开");
     let blocks = a.entries.iter().flat_map(|e| &e.blocks).collect::<Vec<_>>();
@@ -364,7 +364,12 @@ pub fn preview_solid(
     let (bytes, read) = solid_output(a, chosen, req, false, Some(limit))?;
     ensure!(read == packed && bytes.len() as u64 == chosen[0].uncompressed_size,
         "[archive-inspection:damaged] EGG 固实{kind}共享数据未完整读取或所选大小不符");
-    Ok(json!({"bytes": bytes, "totalSize": chosen[0].uncompressed_size, "inputBytes": read}))
+    Ok(Preview {
+        bytes,
+        input_bytes: read,
+        partial: None,
+        total_size: chosen[0].uncompressed_size,
+    })
 }
 
 fn solid_output(

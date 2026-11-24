@@ -1,6 +1,6 @@
 use crate::services::aes_stream_v2::{AesStreamKind, AesStreamV2, TAR_AES_MAGIC_V2};
 use aes_gcm::{
-    aead::{Aead, KeyInit},
+    aead::{AeadInPlace, KeyInit},
     Aes256Gcm, Key, Nonce,
 };
 use anyhow::{anyhow, Context, Result};
@@ -202,7 +202,8 @@ impl TarAesEngine {
     ) -> Result<Zeroizing<Vec<u8>>> {
         check_cancellation()?;
         let mut file = super::aes_stream_v2::open_input(archive_path)?;
-        if file.seek(SeekFrom::End(0))? > MAX_LEGACY_TAR_AES_BYTES + 128 {
+        let length = file.seek(SeekFrom::End(0))?;
+        if length > MAX_LEGACY_TAR_AES_BYTES + 128 {
             return Err(anyhow!(
                 "Legacy TAR.AES container exceeds the safe 512 MiB in-memory limit"
             ));
@@ -219,17 +220,18 @@ impl TarAesEngine {
         let mut nonce_bytes = [0u8; NONCE_SIZE];
         file.read_exact(&mut nonce_bytes)
             .context("读取 nonce 失败")?;
-        let mut ciphertext = Vec::new();
+        let header_size = (LEGACY_MAGIC.len() + SALT_SIZE + NONCE_SIZE) as u64;
+        let mut ciphertext = Vec::with_capacity(length.saturating_sub(header_size) as usize);
         file.read_to_end(&mut ciphertext)
             .context("读取旧版加密数据失败")?;
         check_cancellation()?;
 
         let key = Self::derive_legacy_key(password, &salt)?;
         let cipher = Aes256Gcm::new(&key);
-        let plaintext = cipher
-            .decrypt(Nonce::from_slice(&nonce_bytes), ciphertext.as_ref())
-            .map(Zeroizing::new)
+        cipher
+            .decrypt_in_place(Nonce::from_slice(&nonce_bytes), b"", &mut ciphertext)
             .map_err(|_| anyhow!("解密失败: 密码错误或文件已损坏"))?;
+        let plaintext = Zeroizing::new(ciphertext);
         check_cancellation()?;
         Ok(plaintext)
     }
@@ -323,6 +325,7 @@ impl TarAesEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use aes_gcm::aead::Aead;
     use rand::RngCore;
     use std::fs;
     use std::io::Write;

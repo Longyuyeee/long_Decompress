@@ -99,13 +99,28 @@ pub fn complete(path: &Path) -> Result<Group> {
     ensure!(group.missing.is_empty(), "[archive-inspection:incomplete] 缺少 EGG 原生分卷：{}；请补齐原卷后重试，不必反复尝试密码",group.missing.iter().map(|p|p.file_name().unwrap_or_default().to_string_lossy()).collect::<Vec<_>>().join("、"));
     Ok(group)
 }
-pub struct Reader { segments:Vec<(File,u64,u64,u64)>,pos:u64,len:u64 }
+struct Segment {
+    file: File,
+    source_start: u64,
+    virtual_start: u64,
+    len: u64,
+    file_offset: Option<u64>,
+}
+
+pub struct Reader { segments:Vec<Segment>,pos:u64,len:u64 }
 impl Reader {
     pub fn open(group:&Group)->Result<Self> {
         let mut segments=Vec::new();let mut len=0u64;
         for (i,p) in group.parts.iter().enumerate() {
             let h=header(p)?;let skip=if i==0 {0} else {h.start};
-            segments.push((File::open(p)?,skip,len,h.size-skip));len+=h.size-skip;
+            segments.push(Segment {
+                file: File::open(p)?,
+                source_start: skip,
+                virtual_start: len,
+                len: h.size - skip,
+                file_offset: None,
+            });
+            len += h.size - skip;
         }
         Ok(Self{segments,pos:0,len})
     }
@@ -114,9 +129,18 @@ impl Reader {
 impl Read for Reader {
     fn read(&mut self,b:&mut[u8])->io::Result<usize> {
         if self.pos>=self.len {return Ok(0)}
-        let s=self.segments.iter_mut().find(|s|self.pos>=s.2&&self.pos<s.2+s.3).ok_or_else(||io::Error::other("EGG invalid segment"))?;
-        s.0.seek(SeekFrom::Start(s.1+self.pos-s.2))?;
-        let n=(s.2+s.3-self.pos).min(b.len() as u64) as usize;let n=s.0.read(&mut b[..n])?;
+        let segment = self.segments.iter_mut()
+            .find(|segment| self.pos >= segment.virtual_start && self.pos < segment.virtual_start + segment.len)
+            .ok_or_else(|| io::Error::other("EGG invalid segment"))?;
+        let segment_pos = self.pos - segment.virtual_start;
+        let offset = segment.source_start + segment_pos;
+        // Clear the cached position before fallible I/O so a retry always repositions.
+        if segment.file_offset.take() != Some(offset) {
+            segment.file.seek(SeekFrom::Start(offset))?;
+        }
+        let limit = (segment.len - segment_pos).min(b.len() as u64) as usize;
+        let n = segment.file.read(&mut b[..limit])?;
+        segment.file_offset = Some(offset + n as u64);
         if n==0&&!b.is_empty(){return Err(io::Error::new(io::ErrorKind::UnexpectedEof,"EGG volume truncated during reading"))}
         self.pos+=n as u64;Ok(n)
     }

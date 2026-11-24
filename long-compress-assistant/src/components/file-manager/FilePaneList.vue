@@ -1,23 +1,48 @@
 <script setup lang="ts">
 export type FilePaneModified = string | number | { secs_since_epoch:number; nanos_since_epoch?:number } | null
 export interface FilePaneEntry { path:string; name:string; size:number; isDir:boolean; extension?:string|null; modified?:FilePaneModified; icon?:string; preview?:boolean; previewDisabled?:boolean; sizeKnown?:boolean; linkTarget?:string }
-withDefaults(defineProps<{ entries: FilePaneEntry[]; selected: Set<string>; selectionMode?:boolean; loading?:boolean; error?:string }>(), { loading:false, error:'' })
+const props = withDefaults(defineProps<{ entries: FilePaneEntry[]; selected: Set<string>; selectionMode?:boolean; loading?:boolean; error?:string }>(), { loading:false, error:'' })
 const emit = defineEmits<{ select:[entry:FilePaneEntry,event:MouseEvent]; activate:[entry:FilePaneEntry]; preview:[entry:FilePaneEntry]; context:[entry:FilePaneEntry|null,event:MouseEvent] }>()
 function bytes(value:number){if(!value)return '0 B';const units=['B','KiB','MiB','GiB','TiB'],index=Math.min(Math.floor(Math.log(value)/Math.log(1024)),4);return `${(value/1024**index).toFixed(index>1?1:0)} ${units[index]}`}
-function date(value?:FilePaneModified){
-  if(value===null||value===undefined||value==='')return '—'
-  const timestamp=typeof value==='object'?value.secs_since_epoch*1000+(value.nanos_since_epoch||0)/1e6:typeof value==='number'&&value<1e12?value*1000:value
-  const parsed=new Date(timestamp)
-  return Number.isNaN(parsed.getTime())?'—':parsed.toLocaleString('zh-CN',{hour12:false})
+let dateTimeZone: string | undefined
+let dateLabels = new WeakMap<FilePaneEntry, { timestamp: number; label: string }>()
+
+function rowsWithDates() {
+  let formatter: Intl.DateTimeFormat | undefined
+  return props.entries.map(entry => {
+    const value = entry.modified
+    if (value === null || value === undefined || value === '') return { entry, modified: '—' }
+    const timestamp = typeof value === 'object'
+      ? value.secs_since_epoch * 1000 + (value.nanos_since_epoch || 0) / 1e6
+      : typeof value === 'string' ? Date.parse(value)
+      : value < 1e12 ? value * 1000 : value
+    if (!formatter) {
+      formatter = new Intl.DateTimeFormat('zh-CN', {
+        year: 'numeric', month: 'numeric', day: 'numeric',
+        hour: 'numeric', minute: 'numeric', second: 'numeric', hour12: false,
+      })
+      const timeZone = formatter.resolvedOptions().timeZone
+      if (timeZone !== dateTimeZone) {
+        dateTimeZone = timeZone
+        dateLabels = new WeakMap()
+      }
+    }
+    const previous = dateLabels.get(entry)
+    if (previous && Object.is(previous.timestamp, timestamp)) return { entry, modified: previous.label }
+    const date = new Date(timestamp)
+    const label = Number.isNaN(date.getTime()) ? '—' : formatter.format(date)
+    dateLabels.set(entry, { timestamp, label })
+    return { entry, modified: label }
+  })
 }
 </script>
 <template>
   <div class="file-pane-content">
     <div class="file-head"><span>名称</span><span>大小</span><span>修改时间</span></div>
     <div class="file-list custom-scrollbar" @contextmenu.prevent.self="emit('context',null,$event)">
-      <div v-for="entry in entries" :key="entry.path" class="file-row" role="row" tabindex="0" :class="{selected:selected.has(entry.path)}" :data-path="entry.path" :data-entry-path="entry.path" @click="emit('select',entry,$event)" @dblclick="emit('activate',entry)" @contextmenu.prevent.stop="emit('context',entry,$event)" @keydown.enter.prevent="emit('activate',entry)" @keydown.space.prevent="emit('select',entry,$event as unknown as MouseEvent)">
+      <div v-for="{ entry, modified } in rowsWithDates()" :key="entry.path" v-memo="[entry, entry.name, entry.size, entry.isDir, entry.extension, entry.icon, entry.preview, entry.previewDisabled, entry.sizeKnown, entry.linkTarget, modified, selected.has(entry.path), selectionMode]" class="file-row" role="row" tabindex="0" :class="{selected:selected.has(entry.path)}" :data-path="entry.path" :data-entry-path="entry.path" @click="emit('select',entry,$event)" @dblclick="emit('activate',entry)" @contextmenu.prevent.stop="emit('context',entry,$event)" @keydown.enter.prevent="emit('activate',entry)" @keydown.space.prevent="emit('select',entry,$event as unknown as MouseEvent)">
         <span class="file-name"><input v-if="selectionMode" type="checkbox" tabindex="-1" :checked="selected.has(entry.path)" :aria-label="`选择 ${entry.name}`" @click.stop="emit('select',entry,$event)"/><i :class="entry.icon || (entry.isDir?'pi pi-folder':'pi pi-file')"/><span class="file-label" :title="entry.linkTarget?`${entry.name}\n内容来源：${entry.linkTarget}\n可预览或提取为独立文件`:entry.name"><strong>{{ entry.name }}</strong><small>{{ entry.isDir?'文件夹':(entry.extension || entry.name.split('.').pop() || '文件').toUpperCase() }}{{entry.linkTarget?' · 链接内容':''}}</small></span><button v-if="entry.preview" type="button" class="file-preview-trigger" data-testid="file-manager-preview" :aria-label="`预览 ${entry.name}`" title="预览" :disabled="entry.previewDisabled" @click.stop="emit('preview',entry)" @dblclick.stop @keydown.space.stop @keydown.enter.stop.prevent="emit('preview',entry)"><i class="pi pi-eye"/></button></span>
-        <span :title="entry.isDir?'文件夹':bytes(entry.size)">{{ entry.isDir?'—':entry.sizeKnown===false?'大小未知':bytes(entry.size) }}</span><span :title="date(entry.modified)">{{ date(entry.modified) }}</span>
+        <span :title="entry.isDir?'文件夹':bytes(entry.size)">{{ entry.isDir?'—':entry.sizeKnown===false?'大小未知':bytes(entry.size) }}</span><span :title="modified">{{ modified }}</span>
       </div>
       <div v-if="loading" class="pane-empty"><i class="pi pi-spin pi-spinner"/><span>正在读取…</span></div>
       <div v-else-if="error" class="pane-empty error"><i class="pi pi-exclamation-triangle"/><span>{{ error }}</span><slot name="error"/></div>

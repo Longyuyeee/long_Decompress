@@ -1,7 +1,6 @@
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, QueryBuilder, Sqlite};
-use std::collections::HashSet;
 
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -220,53 +219,45 @@ fn is_high_frequency_log(message: &str) -> bool {
             && (message.contains("未匹配") || message.contains("验证异常")))
 }
 
-fn evenly_sample(indices: &[usize], count: usize) -> Vec<usize> {
-    if indices.len() <= count {
-        return indices.to_vec();
-    }
-    if count == 0 {
-        return Vec::new();
-    }
-    if count == 1 {
-        return vec![indices[0]];
-    }
-    (0..count)
-        .map(|position| indices[position * (indices.len() - 1) / (count - 1)])
-        .collect()
-}
-
 fn retain_auditable_logs(logs: Vec<TaskHistoryLog>) -> Vec<TaskHistoryLog> {
     if logs.len() <= MAX_LOGS {
         return logs;
     }
+
     let last = logs.len() - 1;
-    let priority = logs.iter().enumerate()
-        .filter(|(index, log)| {
-            *index == 0
-                || *index == last
+    let priorities: Vec<bool> = logs.iter().enumerate()
+        .map(|(index, log)| {
+            index == 0
+                || index == last
                 || !log.severity.eq_ignore_ascii_case("info")
                 || !is_high_frequency_log(&log.message)
         })
-        .map(|(index, _)| index)
-        .collect::<Vec<_>>();
-    let selected = if priority.len() >= MAX_LOGS {
-        evenly_sample(&priority, MAX_LOGS)
+        .collect();
+    let priority_count = priorities.iter().filter(|&&priority| priority).count();
+    let sample_priority = priority_count >= MAX_LOGS;
+    let (available, sample_count) = if sample_priority {
+        (priority_count, MAX_LOGS)
     } else {
-        let priority_set = priority.iter().copied().collect::<HashSet<_>>();
-        let candidates = (0..logs.len())
-            .filter(|index| !priority_set.contains(index))
-            .collect::<Vec<_>>();
-        let mut selected = priority;
-        let remaining = MAX_LOGS - selected.len();
-        selected.extend(evenly_sample(&candidates, remaining));
-        selected.sort_unstable();
-        selected.dedup();
-        selected
+        (logs.len() - priority_count, MAX_LOGS - priority_count)
     };
-    let selected = selected.into_iter().collect::<HashSet<_>>();
-    logs.into_iter().enumerate()
-        .filter_map(|(index, log)| selected.contains(&index).then_some(log))
-        .collect()
+    // These positions are relative to the sampled group, in original order.
+    let mut sample_positions = (0..sample_count)
+        .map(|position| position * (available - 1) / (sample_count - 1).max(1));
+    let mut next_sample = sample_positions.next();
+    let mut position = 0;
+    let mut retained = Vec::with_capacity(MAX_LOGS);
+    for (log, priority) in logs.into_iter().zip(priorities) {
+        if priority == sample_priority {
+            if next_sample == Some(position) {
+                retained.push(log);
+                next_sample = sample_positions.next();
+            }
+            position += 1;
+        } else if priority {
+            retained.push(log);
+        }
+    }
+    retained
 }
 
 fn sanitize_record(mut record: TaskHistoryRecord) -> Result<TaskHistoryRecord, String> {
@@ -677,6 +668,7 @@ pub async fn clear_task_history() -> Result<(), String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashSet;
     #[tokio::test]
     async fn recovery1542_precheck_conflict_survives_history_filtering() {
         let dir=tempfile::tempdir().unwrap();let db=crate::database::connection::DatabaseConnection::new(&dir.path().join("precheck.db"),None).await.unwrap();
@@ -1161,6 +1153,22 @@ mod tests {
         assert_eq!(
             redact_sensitive_text("解压密码：open-sesame"),
             "解压密码： [已隐藏]"
+        );
+    }
+
+    #[test]
+    fn history_log_sampling_with_one_remaining_slot_keeps_the_first_progress_event() {
+        let logs = (0..=MAX_LOGS)
+            .map(|index| TaskHistoryLog {
+                timestamp: index.to_string(),
+                message: "候选 [1/2] → 未匹配".into(),
+                severity: if matches!(index, 17 | 117) { "info" } else { "warning" }.into(),
+            })
+            .collect();
+        let retained = retain_auditable_logs(logs);
+        assert_eq!(
+            retained.into_iter().map(|log| log.timestamp).collect::<Vec<_>>(),
+            (0..=MAX_LOGS).filter(|&index| index != 117).map(|index| index.to_string()).collect::<Vec<_>>(),
         );
     }
 

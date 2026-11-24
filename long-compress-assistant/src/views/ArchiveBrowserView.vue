@@ -15,7 +15,7 @@ import { useArchiveLibraryStore } from '@/stores/archiveLibrary'
 import { invoke } from '@tauri-apps/api/tauri'
 import ZipEditBar from '@/components/archive/ZipEditBar.vue'
 import { useZipEditStore } from '@/stores/zipEdit'
-import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from 'vue'
 import { listen } from '@tauri-apps/api/event'
 import { useAppStore, type ArchiveReadOptions } from '@/stores/app'
 import ZipPasswordEncodingField from '@/components/ui/ZipPasswordEncodingField.vue'
@@ -84,7 +84,7 @@ const zipPasswordEncoding = ref<ZipPasswordEncoding>()
 const usesPeerOutput = computed(() => props.embedded && !customOutput.value && !!props.destination)
 const inputEncoding = computed(() => result.value
   ? zipPasswordEncodingForSource(archivePath.value, zipPasswordEncoding.value, result.value.format) : zipPasswordEncoding.value)
-const result = ref<ArchiveBrowseResult | null>(null)
+const result = shallowRef<ArchiveBrowseResult | null>(null)
 const requestedSnapshot = ref<ZpaqSnapshot>()
 const selectedSnapshot = computed(() => result.value?.zpaqHistory?.selected || requestedSnapshot.value)
 const snapshotReadArguments = computed((): [ZipPasswordEncoding?, ZpaqSnapshot?] => selectedSnapshot.value
@@ -144,7 +144,7 @@ const textPreview = ref<ArchiveTextPreview | null>(null)
 const previewEntry = ref<ArchiveEntryInfo | null>(null)
 const previewLoading = ref(false)
 const previewError = ref('')
-const parentFrames = ref<ArchiveWorkspaceFrame[]>([])
+const parentFrames = shallowRef<ArchiveWorkspaceFrame[]>([])
 const currentContentSha256 = ref('')
 const nestedLoadError = ref('')
 const nestedLoadRevision = ref(0)

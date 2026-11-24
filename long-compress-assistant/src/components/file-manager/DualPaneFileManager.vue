@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import HelpHint from '@/components/ui/HelpHint.vue'
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, markRaw, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import { invoke } from '@tauri-apps/api/tauri'
 import { open } from '@tauri-apps/api/dialog'
 import { listen } from '@tauri-apps/api/event'
@@ -88,9 +88,13 @@ const normalizeEntry = (raw: any): LocalFileEntry => ({
   modified: raw.modified,
 })
 
-const sortEntries = (entries: LocalFileEntry[]) => entries.sort((a, b) => a.isDir === b.isDir
-  ? a.name.localeCompare(b.name, 'zh-CN', { numeric: true, sensitivity: 'base' })
-  : a.isDir ? -1 : 1)
+const sortEntries = (entries: LocalFileEntry[]) => {
+  if (entries.length < 2) return entries
+  const compareNames = new Intl.Collator('zh-CN', { numeric: true, sensitivity: 'base' }).compare
+  return entries.sort((a, b) => a.isDir === b.isDir
+    ? compareNames(a.name, b.name)
+    : a.isDir ? -1 : 1)
+}
 
 const loadPane = async (pane: PaneState, path: string, pushHistory = true) => {
   const request = ++paneRequest[pane.id]
@@ -99,7 +103,8 @@ const loadPane = async (pane: PaneState, path: string, pushHistory = true) => {
   try {
     const raw = await invoke<any[]>('list_files', { path })
     if (request !== paneRequest[pane.id]) return false
-    pane.entries = sortEntries(raw.map(normalizeEntry))
+    // Directory reads replace the entire snapshot, so the entries need no deep proxies.
+    pane.entries = markRaw(sortEntries(raw.map(normalizeEntry)))
     pane.path = path
     pane.pathDraft = path
     pane.locationMenuOpen = false
@@ -497,6 +502,22 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeydown)
 })
 
+function paneListing(pane: PaneState) {
+  const folders = pane.entries.filter(entry => entry.isDir).length
+  return {
+    folders,
+    files: pane.entries.length - folders,
+    entries: pane.entries.map(entry => ({
+      ...entry,
+      icon: icon(entry),
+      preview: !entry.isDir && !!localPreviewKind(entry.name),
+    })),
+  }
+}
+const listings = {
+  left: computed(() => paneListing(left)),
+  right: computed(() => paneListing(right)),
+}
 const activeSelectionCount = computed(() => {const pane=activePane.value==='left'?left:right;return pane.archive?pane.archiveSelected:pane.selected.size})
 </script>
 
@@ -512,8 +533,8 @@ const activeSelectionCount = computed(() => {const pane=activePane.value==='left
       <section v-for="pane in [left, right]" :key="pane.id" class="file-pane" :data-file-pane="pane.id" :class="{ active: activePane === pane.id }" @pointerdown="activePane = pane.id" @focusin="activePane = pane.id">
         <ArchiveBrowserView v-if="pane.archiveCache" v-show="!!pane.archive" :ref="component=>bindArchiveApi(pane.id,component)" :key="pane.archiveCache.id" embedded :pane-id="pane.id" :locations="locations" :saved-locations="savedLocations" :source="pane.archiveCache" :destination="otherPane(pane).archive ? '' : otherPane(pane).path" :active="activePane===pane.id && !!pane.archive" @leave="leaveArchive(pane)" @navigate-disk="navigateDisk(pane,$event)" @pane-state="state=>{pane.archiveBusy=state.busy;pane.archiveSelected=state.selected}" @extracted="refreshDestination(pane,$event)"/>
         <template v-if="!pane.archive">
-        <FilePaneNavigation :pane-id="pane.id" :path="pane.path" :crumbs="browserBreadcrumbs(pane.path)" :folders="pane.entries.filter(item=>item.isDir).length" :files="pane.entries.filter(item=>!item.isDir).length" :locations="locations" :saved="savedLocations" :loading="pane.loading" :selection-mode="pane.selectionMode" :can-back="pane.historyIndex>0" :can-forward="pane.historyIndex<pane.history.length-1 || canResumeArchive(pane)" :can-up="parentPath(pane.path)!==pane.path" @back="navigateHistory(pane,-1)" @forward="navigateHistory(pane,1)" @up="loadPane(pane,parentPath(pane.path))" @refresh="loadPane(pane,pane.path,false)" @create="beginEditor('mkdir',pane)" @selection="toggleSelectionMode(pane)" @tools="openBlankContext(pane,$event)" @navigate="path=>{pane.pathDraft=path;submitPath(pane)}" @breadcrumb="index=>loadPane(pane,browserBreadcrumbs(pane.path)[index].path)"/>
-        <FilePaneList :entries="pane.entries.map(entry=>({...entry,icon:icon(entry),preview:!entry.isDir && !!localPreviewKind(entry.name)}))" :selected="pane.selected" :selection-mode="pane.selectionMode" :loading="pane.loading" :error="pane.error" @select="(entry,event)=>toggle(pane,entry,event)" @activate="entry=>activate(pane,entry)" @preview="previewLocal" @context="(entry,event)=>entry ? openContext(pane,entry,event) : openBlankContext(pane,event)">
+        <FilePaneNavigation :pane-id="pane.id" :path="pane.path" :crumbs="browserBreadcrumbs(pane.path)" :folders="listings[pane.id].value.folders" :files="listings[pane.id].value.files" :locations="locations" :saved="savedLocations" :loading="pane.loading" :selection-mode="pane.selectionMode" :can-back="pane.historyIndex>0" :can-forward="pane.historyIndex<pane.history.length-1 || canResumeArchive(pane)" :can-up="parentPath(pane.path)!==pane.path" @back="navigateHistory(pane,-1)" @forward="navigateHistory(pane,1)" @up="loadPane(pane,parentPath(pane.path))" @refresh="loadPane(pane,pane.path,false)" @create="beginEditor('mkdir',pane)" @selection="toggleSelectionMode(pane)" @tools="openBlankContext(pane,$event)" @navigate="path=>{pane.pathDraft=path;submitPath(pane)}" @breadcrumb="index=>loadPane(pane,browserBreadcrumbs(pane.path)[index].path)"/>
+        <FilePaneList :entries="listings[pane.id].value.entries" :selected="pane.selected" :selection-mode="pane.selectionMode" :loading="pane.loading" :error="pane.error" @select="(entry,event)=>toggle(pane,entry,event)" @activate="entry=>activate(pane,entry)" @preview="previewLocal" @context="(entry,event)=>entry ? openContext(pane,entry,event) : openBlankContext(pane,event)">
           <template #error><button v-if="savedLocations.isBookmarked(pane.pathDraft)" :data-testid="`remove-unavailable-bookmark-${pane.id}`" @click="savedLocations.toggleBookmark(pane.pathDraft)">移除此位置的书签（不删除文件）</button></template>
         </FilePaneList>
         <footer><span>{{ pane.selected.size ? `已选择 ${pane.selected.size} 项` : pane.selectionMode ? '多选模式 · 单击切换选择 · Esc 退出' : '单击选择 · Ctrl 多选 · 双击打开 · 右键操作' }}</span><button v-if="pane.selectionMode" @click="toggleSelectionMode(pane)">退出多选</button></footer>

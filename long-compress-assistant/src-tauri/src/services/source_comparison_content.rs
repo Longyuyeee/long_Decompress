@@ -62,11 +62,16 @@ fn check(flag: &AtomicBool) -> Result<()> {
 }
 fn current(reference: &SourceRef, flag: Arc<AtomicBool>) -> Result<Source> {
     let source = catalog::read(Path::new(&reference.path), flag, |_| {})?;
+    ensure_current(reference, &source.source)?;
+    Ok(source)
+}
+
+fn ensure_current(reference: &SourceRef, observed: &SourceRef) -> Result<()> {
     ensure!(
-        source.source.kind == reference.kind && source.source.revision == reference.revision,
+        observed.kind == reference.kind && observed.revision == reference.revision,
         "[comparison:changed] 来源已变化，请重新读取后核对；旧内容结论已撤销"
     );
-    Ok(source)
+    Ok(())
 }
 type Archive = zip_aes::ZipArchive<super::numeric_volume_reader::ZipInputReader>;
 fn digest(
@@ -126,6 +131,15 @@ fn digest(
     }
     Ok(hash.finalize().to_vec())
 }
+fn find_entry<'a>(source: &'a Source, path: &str) -> Option<&'a Entry> {
+    // The catalog returns entries sorted by exact path.
+    source
+        .entries
+        .binary_search_by(|entry| entry.path.as_str().cmp(path))
+        .ok()
+        .map(|index| &source.entries[index])
+}
+
 pub fn run(
     request: &Request,
     flag: Arc<AtomicBool>,
@@ -146,25 +160,17 @@ pub fn run(
     check(&flag)?;
     let left = current(&request.left, flag.clone())?;
     let right = current(&request.right, flag.clone())?;
-    let a: std::collections::BTreeMap<_, _> =
-        left.entries.iter().map(|e| (e.path.as_str(), e)).collect();
-    let b: std::collections::BTreeMap<_, _> =
-        right.entries.iter().map(|e| (e.path.as_str(), e)).collect();
     let pairs = request
         .paths
         .iter()
         .map(|path| {
-            let l = a
-                .get(path.as_str())
-                .context("左侧所选路径不存在，请重新读取")?;
-            let r = b
-                .get(path.as_str())
-                .context("右侧所选路径不存在，请重新读取")?;
+            let l = find_entry(&left, path).context("左侧所选路径不存在，请重新读取")?;
+            let r = find_entry(&right, path).context("右侧所选路径不存在，请重新读取")?;
             ensure!(
                 !l.directory && !r.directory,
                 "内容核对请选择两边均存在的普通文件"
             );
-            Ok((path, *l, *r))
+            Ok((path, l, r))
         })
         .collect::<Result<Vec<_>>>()?;
     let total_bytes = pairs
@@ -281,8 +287,13 @@ pub fn run(
     }
     let stopped = flag.load(Ordering::SeqCst);
     if !stopped {
-        current(&request.left, flag.clone())?;
-        current(&request.right, flag.clone())?;
+        drop(pairs);
+        drop(left);
+        drop(right);
+        for reference in [&request.left, &request.right] {
+            let observed = catalog::read_reference(Path::new(&reference.path), flag.clone())?;
+            ensure_current(reference, &observed)?;
+        }
     }
     Ok(Batch { entries, stopped })
 }
@@ -358,6 +369,10 @@ mod tests {
                 .map(|e| e.kind.as_str())
                 .collect::<Vec<_>>(),
             ["different", "same", "metadata", "different"]
+        );
+        assert_eq!(
+            batch.entries.iter().map(|entry| &entry.path).collect::<Vec<_>>(),
+            request.paths.iter().collect::<Vec<_>>()
         );
         assert_eq!(bytes, 26);
         assert!(!batch.stopped);

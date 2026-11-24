@@ -46,22 +46,39 @@ impl Resolver {
     }
     /// Publish no unresolved sizes. All targets must be unique contents in the
     /// complete, checksum-confirmed stream, regardless of physical ordering.
-    pub(crate) fn finish(self,mut check:impl FnMut()->Result<()>)->Result<Vec<View>> {
-        use super::tar_link_targets::{Record,resolve};
-        let records=self.records.iter().map(|r|Record{key:r.key.clone(),target:r.target.clone(),content:r.view.link_target.is_none()&&r.view.source.is_some()}).collect::<Vec<_>>();
-        let targets=resolve(&records,&mut check)?;
-        let mut total=0u64;let mut views=Vec::with_capacity(self.records.len());
-        for(index,target)in targets.into_iter().enumerate(){
-            check()?;let mut view=self.records[index].view.clone();
-            if let Some(target)=target {
-                let source=self.records[target].view.source.clone().context("[archive-inspection:unsupported] TAR.LZO 链接内容无法确认")?;
-                view.size=source.size;view.source=Some(source);
+    pub(crate) fn finish(self, mut check: impl FnMut() -> Result<()>) -> Result<Vec<View>> {
+        use super::tar_link_targets::{Record, resolve};
+
+        let Self {
+            mut records,
+            sources,
+            visible,
+            ..
+        } = self;
+        drop((sources, visible));
+
+        let identities = records.iter_mut().map(|record| Record {
+            key: std::mem::take(&mut record.key),
+            target: record.target.take(),
+            content: record.view.link_target.is_none() && record.view.source.is_some(),
+        }).collect::<Vec<_>>();
+        let targets = resolve(&identities, &mut check)?;
+        drop(identities);
+
+        let mut total = 0u64;
+        for (index, target) in targets.into_iter().enumerate() {
+            check()?;
+            if let Some(target) = target {
+                let source = records[target].view.source.clone()
+                    .context("[archive-inspection:unsupported] TAR.LZO 链接内容无法确认")?;
+                records[index].view.size = source.size;
+                records[index].view.source = Some(source);
             }
-            total=total.checked_add(view.size).context("TAR.LZO 逻辑大小溢出")?;
-            anyhow::ensure!(total<=super::extraction_transaction::MAX_EXTRACTED_BYTES,"[archive-inspection:unsupported] TAR.LZO 逻辑总量超过支持范围");
-            views.push(view);
+            total = total.checked_add(records[index].view.size).context("TAR.LZO 逻辑大小溢出")?;
+            anyhow::ensure!(total <= super::extraction_transaction::MAX_EXTRACTED_BYTES,
+                "[archive-inspection:unsupported] TAR.LZO 逻辑总量超过支持范围");
         }
-        Ok(views)
+        Ok(records.into_iter().map(|record| record.view).collect())
     }
 }
 
